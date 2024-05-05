@@ -4505,6 +4505,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGeAsBool)(DeeObject *sel
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object); /* DEPRECATED! */
 
+
+
 /* @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs > rhs'

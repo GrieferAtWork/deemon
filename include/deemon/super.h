@@ -79,18 +79,30 @@ DeeSuper_Of(DeeObject *__restrict self);
  * <=> DeeObject_Foo(DeeSuper_New(tp_self, self), ...)
  */
 
+/* Constructor-related operators */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TCopy(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDeepCopy(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TAssign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TMoveAssign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+
+/* str/repr/bool operators */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TStr(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TRepr(DeeTypeObject *tp_self, DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrint)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrintRepr)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_TBool(DeeTypeObject *tp_self, DeeObject *self);
+
+/* Call operators */
 DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TCall(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TCallKw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TThisCall(DeeTypeObject *tp_self, DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TThisCallKw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv, DeeObject *kw);
-DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1, 2)) Dee_hash_t (DCALL DeeObject_THash)(DeeTypeObject *tp_self, DeeObject *self);
+#define DeeObject_TCallTuple(tp_self, self, args)                     DeeObject_TCall(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_TCallTupleKw(tp_self, self, args, kw)               DeeObject_TCallKw(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeObject_TThisCallTuple(tp_self, self, this_arg, args)       DeeObject_TThisCall(tp_self, self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_TThisCallTupleKw(tp_self, self, this_arg, args, kw) DeeObject_TThisCallKw(tp_self, self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+
+/* Math operators */
 DFUNDEF WUNUSED ATTR_OUT(3) NONNULL((1, 2)) int (DCALL DeeObject_TGet32Bit)(DeeTypeObject *tp_self, DeeObject *self, int32_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(3) NONNULL((1, 2)) int (DCALL DeeObject_TGet64Bit)(DeeTypeObject *tp_self, DeeObject *self, int64_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(3) NONNULL((1, 2)) int (DCALL DeeObject_TAsDouble)(DeeTypeObject *tp_self, DeeObject *self, double *__restrict result);
@@ -123,6 +135,8 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TInplaceOr)(DeeTypeObjec
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TInplaceXor)(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TInplacePow)(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self, DeeObject *some_object);
 
+/* Compare operators */
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_hash_t (DCALL DeeObject_THash)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCmpEq)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCmpNe)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCmpLo)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
@@ -133,6 +147,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TCompare)(DeeTypeObject 
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TCompareEq)(DeeTypeObject *tp_lhs, DeeObject *lhs, DeeObject *rhs);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TTryCompareEq)(DeeTypeObject *tp_lhs, DeeObject *lhs, DeeObject *rhs);
 
+/* Sequence operators */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TForeach)(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TForeachPair)(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIter)(DeeTypeObject *tp_self, DeeObject *self);
@@ -182,9 +197,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_THasItemIndex)(DeeTypeObjec
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrint)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrintRepr)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
-
+/* Attribute operators */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TSetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
@@ -216,18 +229,18 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundAttrStringLenHash)
 #define DeeObject_TCallAttrTupleKw(tp_self, self, attr, args, kw) DeeObject_TCallAttrKw(tp_self, self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
 
+/* With operators */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TEnter)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TLeave)(DeeTypeObject *tp_self, DeeObject *self);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TGetBuf)(DeeTypeObject *tp_self, DeeObject *self, DeeBuffer *__restrict info, unsigned int flags);
-#define DeeObject_TCallTuple(tp_self, self, args)                     DeeObject_TCall(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeObject_TCallTupleKw(tp_self, self, args, kw)               DeeObject_TCallKw(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#define DeeObject_TThisCallTuple(tp_self, self, this_arg, args)       DeeObject_TThisCall(tp_self, self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeObject_TThisCallTupleKw(tp_self, self, this_arg, args, kw) DeeObject_TThisCallKw(tp_self, self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 
-/* GC operator invocation. */
+/* Buffer operators */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TGetBuf)(DeeTypeObject *tp_self, DeeObject *self, DeeBuffer *__restrict info, unsigned int flags);
+
+/* GC operators */
 DFUNDEF NONNULL((1, 2, 3)) void (DCALL DeeObject_TVisit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_TClear)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_TPClear)(DeeTypeObject *tp_self, DeeObject *self, unsigned int gc_priority);
+
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
