@@ -98,11 +98,11 @@ next_keyitem:
 				int temp;
 				if likely(item->di_hash != hash)
 					continue;
-				temp = DeeObject_TryCmpEqAsBool(item->di_key, key);
-				if likely(temp == 0)
-					continue;
-				if unlikely(temp < 0)
+				temp = DeeObject_TryCompareEq(item->di_key, key);
+				if unlikely(temp == Dee_COMPARE_ERR)
 					goto err;
+				if likely(temp != 0)
+					continue;
 
 				/* Another duplicate key. */
 				ASSERT(extra_duplicates_c <= extra_duplicates_a);
@@ -208,11 +208,11 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems,
 					int temp;
 					if likely(item->di_hash != hash)
 						continue;
-					temp = DeeObject_TryCmpEqAsBool(item->di_key, key);
-					if likely(temp == 0)
-						continue;
-					if unlikely(temp < 0)
+					temp = DeeObject_TryCompareEq(item->di_key, key);
+					if unlikely(temp == Dee_COMPARE_ERR)
 						goto err_r_elem;
+					if likely(temp != 0)
+						continue;
 
 					/* Duplicate key. */
 					key_items -= 2;
@@ -567,11 +567,10 @@ remove_duplicate_key:
 					break;
 				}
 				if (Dee_TYPE(item->di_key) == Dee_TYPE(items[i].e_key)) {
-					int error;
-					error = DeeObject_TryCmpEqAsBool(item->di_key, items[i].e_key);
-					if unlikely(error < 0)
+					int error = DeeObject_TryCompareEq(item->di_key, items[i].e_key);
+					if unlikely(error == Dee_COMPARE_ERR)
 						goto err_items_v_new_map;
-					if (error)
+					if (error == 0)
 						goto remove_duplicate_key;
 				}
 				/* Slot already in use */
@@ -1471,7 +1470,6 @@ dict_contains(Dict *self, DeeObject *key) {
 	size_t mask;
 	struct dict_item *vector;
 	dhash_t i, perturb;
-	int error;
 	dhash_t hash = DeeObject_Hash(key);
 	DeeDict_LockRead(self);
 restart:
@@ -1479,6 +1477,7 @@ restart:
 	mask    = self->d_mask;
 	perturb = i = hash & mask;
 	for (;; DeeDict_HashNx(i, perturb)) {
+		int error;
 		DREF DeeObject *item_key;
 		struct dict_item *item = &vector[i & mask];
 		if (!item->di_key)
@@ -1492,12 +1491,12 @@ restart:
 		DeeDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if (error > 0)
-			return_true; /* Found the item. */
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
+		if (error == 0)
+			return_true; /* Found the item. */
 		DeeDict_LockRead(self);
 
 		/* Check if the Dict was modified. */
@@ -1541,12 +1540,12 @@ restart:
 		DeeDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if (error > 0)
+		if (error == 0)
 			return item_value; /* Found the item. */
 		Dee_Decref(item_value);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 
@@ -1591,12 +1590,12 @@ restart:
 		DeeDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if (error > 0)
+		if (error == 0)
 			return item_value; /* Found the item. */
 		Dee_Decref(item_value);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 
@@ -1639,11 +1638,11 @@ restart:
 		DeeDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if (error > 0)
+		if (error == 0)
 			return 1; /* Found the item. */
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 
@@ -1686,11 +1685,11 @@ restart:
 		DeeDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if (error > 0)
+		if (error == 0)
 			return 1; /* Found the item. */
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(self);
 
@@ -1737,12 +1736,12 @@ restart:
 		DeeDict_LockEndRead(me);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if (error > 0)
+		if (error == 0)
 			return item_value; /* Found the item. */
 		Dee_Decref(item_value);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
 		DeeDict_LockRead(me);
 
@@ -1839,7 +1838,6 @@ dict_popitem(Dict *self, DeeObject *key, DeeObject *def) {
 	size_t mask;
 	struct dict_item *vector;
 	dhash_t i, perturb;
-	int error;
 	dhash_t hash = DeeObject_Hash(key);
 	DeeDict_LockRead(self);
 restart:
@@ -1847,6 +1845,7 @@ restart:
 	mask    = self->d_mask;
 	perturb = i = hash & mask;
 	for (;; DeeDict_HashNx(i, perturb)) {
+		int error;
 		DREF DeeObject *item_key;
 		struct dict_item *item = &vector[i & mask];
 		if (!item->di_key)
@@ -1859,11 +1858,11 @@ restart:
 		Dee_Incref(item_key);
 		DeeDict_LockEndRead(self);
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
-		if (error > 0) {
+		if (error == 0) {
 			DREF DeeObject *item_value;
 			/* Found it! */
 			DeeDict_LockWrite(self);
@@ -1912,7 +1911,6 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 dict_setitem(Dict *self, DeeObject *key, DeeObject *value) {
 	size_t mask;
 	struct dict_item *vector;
-	int error;
 	struct dict_item *first_dummy;
 	dhash_t i, perturb, hash = DeeObject_Hash(key);
 again_lock:
@@ -1923,6 +1921,7 @@ again:
 	mask        = self->d_mask;
 	perturb = i = hash & mask;
 	for (;; DeeDict_HashNx(i, perturb)) {
+		int error;
 		DREF DeeObject *item_key;
 		struct dict_item *item = &vector[i & mask];
 		if (!item->di_key) {
@@ -1940,11 +1939,11 @@ again:
 		Dee_Incref(item_key);
 		DeeDict_LockEndRead(self);
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
-		if (error > 0) {
+		if (error == 0) {
 			DREF DeeObject *item_value;
 			/* Found an existing item. */
 			DeeDict_LockWrite(self);
@@ -2030,7 +2029,6 @@ dict_setitem_ex(Dict *self,
                 DREF DeeObject **p_old_value) {
 	size_t mask;
 	struct dict_item *vector;
-	int error;
 	struct dict_item *first_dummy;
 	dhash_t i, perturb, hash = DeeObject_Hash(key);
 again_lock:
@@ -2041,6 +2039,7 @@ again:
 	mask        = self->d_mask;
 	perturb = i = hash & mask;
 	for (;; DeeDict_HashNx(i, perturb)) {
+		int error;
 		DREF DeeObject *item_key;
 		struct dict_item *item = &vector[i & mask];
 		if (!item->di_key) {
@@ -2058,11 +2057,11 @@ again:
 		Dee_Incref(item_key);
 		DeeDict_LockEndRead(self);
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
-		if (error > 0) {
+		if (error == 0) {
 			DREF DeeObject *item_value;
 			/* Found an existing key. */
 			if (mode == SETITEM_SETOLD) {

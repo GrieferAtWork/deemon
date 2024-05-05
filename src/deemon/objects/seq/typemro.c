@@ -576,7 +576,7 @@ typemro_nsi_find(TypeMRO *self, size_t start, size_t end,
 		do {
 			if (result >= start) {
 				int status;
-				status = DeeObject_CompareKeyEq((DeeObject *)keyed_search_item,
+				status = DeeObject_TryCmpKeyEqAsBool((DeeObject *)keyed_search_item,
 				                                (DeeObject *)iter, key);
 				if unlikely(status < 0)
 					goto err;
@@ -614,7 +614,7 @@ typemro_nsi_rfind(TypeMRO *self, size_t start, size_t end,
 		do {
 			if (i >= start) {
 				int status;
-				status = DeeObject_CompareKeyEq((DeeObject *)keyed_search_item,
+				status = DeeObject_TryCmpKeyEqAsBool((DeeObject *)keyed_search_item,
 				                                (DeeObject *)iter, key);
 				if unlikely(status < 0)
 					goto err;
@@ -654,7 +654,7 @@ typebases_nsi_find(TypeMRO *self, size_t start, size_t end,
 				if (result >= end)
 					break;
 				int status;
-				status = DeeObject_CompareKeyEq((DeeObject *)keyed_search_item,
+				status = DeeObject_TryCmpKeyEqAsBool((DeeObject *)keyed_search_item,
 				                                (DeeObject *)iter, key);
 				if unlikely(status < 0)
 					goto err;
@@ -690,7 +690,7 @@ typebases_nsi_rfind(TypeMRO *self, size_t start, size_t end,
 		while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL) {
 			if (i >= start) {
 				int status;
-				status = DeeObject_CompareKeyEq((DeeObject *)keyed_search_item,
+				status = DeeObject_TryCmpKeyEqAsBool((DeeObject *)keyed_search_item,
 				                                (DeeObject *)iter, key);
 				if unlikely(status < 0)
 					goto err;

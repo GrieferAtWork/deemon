@@ -638,7 +638,7 @@ again:
 		this_elem = DeeList_GET(me, i);
 		Dee_Incref(this_elem);
 		DeeList_LockEndRead(me);
-		temp = DeeObject_CompareKeyEq(keyed_search_item, this_elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, this_elem, key);
 		Dee_Decref(this_elem);
 		if unlikely(temp < 0)
 			return temp;
@@ -708,7 +708,7 @@ again:
 		this_elem = DeeList_GET(me, i);
 		Dee_Incref(this_elem);
 		DeeList_LockEndRead(me);
-		temp = DeeObject_CompareKeyEq(keyed_search_item, this_elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, this_elem, key);
 		Dee_Decref(this_elem);
 		if unlikely(temp < 0)
 			return temp;
@@ -941,7 +941,7 @@ again:
 		DeeList_LockEndRead(me);
 
 		/* Invoke a predicate. */
-		temp = DeeObject_CompareKeyEq(keyed_search_item, this_elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, this_elem, key);
 		if unlikely(temp < 0)
 			goto err;
 		if (temp) {
@@ -1401,12 +1401,12 @@ again:
 		list_elem = *iter;
 		Dee_Incref(list_elem);
 		DeeList_LockEndRead(me);
-		error = DeeObject_TryCmpEqAsBool(elem, list_elem);
+		error = DeeObject_TryCompareEq(elem, list_elem);
 		Dee_Decref_unlikely(list_elem);
-		if unlikely(error < 0)
-			goto err;
-		if (error)
+		if (error == 0)
 			return_true;
+		if unlikely(error == Dee_COMPARE_ERR)
+			goto err;
 		DeeList_LockRead(me);
 		/* Check if the list was changed. */
 		if unlikely(end != me->l_list.ol_elemv + me->l_list.ol_elemc ||
@@ -2249,7 +2249,7 @@ list_nsi_find(List *me,
 		list_elem = DeeList_GET(me, i);
 		Dee_Incref(list_elem);
 		DeeList_LockEndRead(me);
-		temp = DeeObject_CompareKeyEq(keyed_search_item, list_elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, list_elem, key);
 		Dee_Decref_unlikely(list_elem);
 		if (temp != 0) {
 			if unlikely(temp < 0)
@@ -2282,7 +2282,7 @@ list_nsi_rfind(List *me, size_t start, size_t end,
 		list_elem = DeeList_GET(me, i);
 		Dee_Incref(list_elem);
 		DeeList_LockEndRead(me);
-		temp = DeeObject_CompareKeyEq(keyed_search_item, list_elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, list_elem, key);
 		Dee_Decref_unlikely(list_elem);
 		if (temp != 0) {
 			if unlikely(temp < 0)

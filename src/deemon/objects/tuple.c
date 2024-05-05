@@ -1445,10 +1445,10 @@ tuple_contains(Tuple *self, DeeObject *item) {
 	for (i = 0; i < mylen; ++i) {
 		DeeObject *ob;
 		ob = DeeTuple_GET(self, i);
-		error = DeeObject_TryCmpEqAsBool(item, ob);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(item, ob);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (error)
+		if (error == 0)
 			return_true;
 	}
 	return_false;
@@ -1547,7 +1547,7 @@ tuple_nsi_find(Tuple *__restrict self, size_t start, size_t end,
 	if (end > self->t_size)
 		end = self->t_size;
 	for (i = start; i < end; ++i) {
-		temp = DeeObject_CompareKeyEq(keyed_search_item, self->t_elem[i], key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, self->t_elem[i], key);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err;
@@ -1570,7 +1570,7 @@ tuple_nsi_rfind(Tuple *__restrict self, size_t start, size_t end,
 	i = end;
 	while (i > start) {
 		--i;
-		temp = DeeObject_CompareKeyEq(keyed_search_item, self->t_elem[i], key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, self->t_elem[i], key);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err;

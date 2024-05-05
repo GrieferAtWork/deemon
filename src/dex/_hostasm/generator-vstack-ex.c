@@ -4965,18 +4965,18 @@ again:
 
 				if (it->ti_hash == hash) {
 					int temp;
-					/* Verify that `DeeObject_TryCmpEqAsBool(key, it->ti_key)' is a constant call. */
+					/* Verify that `DeeObject_TryCompareEq(key, it->ti_key)' is a constant call. */
 					if (!DeeMethodFlags_VerifyConstCallCondition(eq_flags, key, 1, &it->ti_key, NULL))
 						goto next_key;
 
 					/* Check if this is a duplicate key. */
-					temp = DeeObject_TryCmpEqAsBool(key, it->ti_key);
-					if unlikely(temp < 0) {
+					temp = DeeObject_TryCompareEq(key, it->ti_key);
+					if unlikely(temp == Dee_COMPARE_ERR) {
 						if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
 							goto err;
 						DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 						goto next_key;
-					} else if (temp) {
+					} else if (temp == 0) {
 						/* Duplicate key (just get rid of this second instance by removing it from the v-stack) */
 						if (asmap) {
 							ASSERT(key_voffset >= 2);

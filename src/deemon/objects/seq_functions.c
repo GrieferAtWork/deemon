@@ -902,7 +902,7 @@ DeeSeq_Count(DeeObject *self,
 	if unlikely((iterator = DeeObject_Iter(self)) == NULL)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err_elem;
@@ -934,7 +934,7 @@ DeeSeq_Locate(DeeObject *self,
 	if unlikely(!iterator)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err_elem;
@@ -968,7 +968,7 @@ DeeSeq_RLocate(DeeObject *self,
 	if unlikely(!iterator)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err_elem;
@@ -1007,7 +1007,7 @@ DeeSeq_Contains(DeeObject *self,
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		temp = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 		if (temp != 0) {
 			Dee_Decref(iter);
 			return temp;
@@ -1050,7 +1050,7 @@ DeeSeq_StartsWith(DeeObject *self,
 					goto err;
 				}
 check:
-				error = DeeObject_CompareKeyEq(keyed_search_item, result, key);
+				error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, result, key);
 				Dee_Decref(result);
 				return error;
 			}
@@ -1121,7 +1121,7 @@ DeeSeq_EndsWith(DeeObject *self,
 					if unlikely(!result)
 						goto err;
 check:
-					error = DeeObject_CompareKeyEq(keyed_search_item, result, key);
+					error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, result, key);
 					Dee_Decref(result);
 					return error;
 				}
@@ -1220,7 +1220,7 @@ iterator_find(DeeObject *__restrict iterator,
 			goto err;
 	}
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 		Dee_Decref(elem);
 		if (temp != 0) {
 			if unlikely(temp < 0)
@@ -1269,7 +1269,7 @@ iterator_rfind(DeeObject *__restrict iterator,
 			goto err;
 	}
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 		Dee_Decref(elem);
 		if (temp != 0) {
 			if unlikely(temp < 0)
@@ -1334,7 +1334,7 @@ DeeSeq_Find(DeeObject *self,
 						temp = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, i);
 						if unlikely(!temp)
 							continue;
-						error = DeeObject_CompareKeyEq(keyed_search_item, temp, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, temp, key);
 						Dee_Decref(temp);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -1363,7 +1363,7 @@ DeeSeq_Find(DeeObject *self,
 								continue;
 							goto err;
 						}
-						error = DeeObject_CompareKeyEq(keyed_search_item, temp, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, temp, key);
 						Dee_Decref(temp);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -1398,7 +1398,7 @@ do_lookup_tpget:
 								continue;
 							goto err;
 						}
-						error = DeeObject_CompareKeyEq(keyed_search_item, temp, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, temp, key);
 						Dee_Decref(temp);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -1483,7 +1483,7 @@ DeeSeq_RFind(DeeObject *self,
 						temp = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, i);
 						if unlikely(!temp)
 							continue;
-						error = DeeObject_CompareKeyEq(keyed_search_item, temp, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, temp, key);
 						Dee_Decref(temp);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -1513,7 +1513,7 @@ DeeSeq_RFind(DeeObject *self,
 								continue;
 							goto err;
 						}
-						error = DeeObject_CompareKeyEq(keyed_search_item, temp, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, temp, key);
 						Dee_Decref(temp);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -1549,7 +1549,7 @@ do_lookup_tpget:
 								continue;
 							goto err;
 						}
-						error = DeeObject_CompareKeyEq(keyed_search_item, temp, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, temp, key);
 						Dee_Decref(temp);
 						if (error != 0) {
 							if unlikely(error < 0)

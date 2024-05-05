@@ -239,20 +239,21 @@ array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 		}
 		temp->l_ptr.ptr = iter.ptr;
 		iter.uint += siz;
-		error = DeeObject_TryCmpEqAsBool(other, (DeeObject *)temp);
-		if (error != 0) {
-			/* Error, or found. */
+		error = DeeObject_TryCompareEq(other, (DeeObject *)temp);
+		if unlikely(error == Dee_COMPARE_ERR)
+			goto err_lval_type_temp;
+		if (error == 0) {
+			/* Item was found! */
 			Dee_Decref(temp);
 			Dee_Decref(DeeLValueType_AsType(lval_type));
-			if unlikely(error < 0)
-				goto err;
-			/* Item was found! */
 			return_true;
 		}
 	}
 	Dee_XDecref(temp);
 	Dee_Decref(DeeLValueType_AsType(lval_type));
 	return_false;
+err_lval_type_temp:
+	Dee_Decref(temp);
 err_lval_type:
 	Dee_Decref(DeeLValueType_AsType(lval_type));
 err:

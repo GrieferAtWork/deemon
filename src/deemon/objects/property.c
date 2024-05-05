@@ -135,9 +135,9 @@ property_visit(Property *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->p_set);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 property_hash(Property *__restrict self) {
-	dhash_t result = 0;
+	Dee_hash_t result = 0;
 	if (self->p_get != NULL)
 		result = Dee_HashCombine(result, DeeObject_Hash(self->p_get));
 	if (self->p_del != NULL)
@@ -147,9 +147,9 @@ property_hash(Property *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-property_eq(Property *self, Property *other) {
-	int temp;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+property_compare_eq(Property *self, Property *other) {
+	int result = 0;
 	if (DeeObject_AssertType(other, &DeeProperty_Type))
 		goto err;
 
@@ -162,37 +162,22 @@ property_eq(Property *self, Property *other) {
 		goto nope;
 
 	/* Compare individual callbacks. */
-	if (self->p_get) {
-		temp = DeeObject_TryCmpEqAsBool(self->p_get, other->p_get);
-		if (temp <= 0)
-			goto handle_temp;
-	}
-	if (self->p_del) {
-		temp = DeeObject_TryCmpEqAsBool(self->p_del, other->p_del);
-		if (temp <= 0)
-			goto handle_temp;
-	}
-	if (self->p_set) {
-		temp = DeeObject_TryCmpEqAsBool(self->p_set, other->p_set);
-		if (temp <= 0)
-			goto handle_temp;
-	}
-	return_true;
-handle_temp:
-	if unlikely(temp < 0)
-		goto err;
+	if (self->p_get)
+		result = DeeObject_TryCompareEq(self->p_get, other->p_get);
+	if (self->p_del && result == 0)
+		result = DeeObject_TryCompareEq(self->p_del, other->p_del);
+	if (self->p_set && result == 0)
+		result = DeeObject_TryCompareEq(self->p_set, other->p_set);
+	return result;
 nope:
-	return_false;
+	return 1;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp property_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&property_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&property_eq,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&property_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&property_compare_eq,
 };
 
 PRIVATE struct type_member tpconst property_members[] = {

@@ -95,9 +95,9 @@ attr_visit(Attr *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->a_info.a_attrtype);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 attr_hash(Attr *__restrict self) {
-	dhash_t result;
+	Dee_hash_t result;
 	result = self->a_info.a_perm;
 	result = Dee_HashCombine(result, DeeObject_Hash(self->a_info.a_decl));
 	result = Dee_HashCombine(result, Dee_HashPointer(self->a_info.a_attrtype));
@@ -111,21 +111,14 @@ attr_hash(Attr *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-attr_eq(Attr *self, Attr *other) {
-	int result;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+attr_compare_eq(Attr *self, Attr *other) {
 	if (DeeObject_AssertType(other, &DeeAttribute_Type))
 		goto err;
 	if (self->a_info.a_attrtype != other->a_info.a_attrtype)
 		goto nope;
-	if (self->a_info.a_decl != other->a_info.a_decl) {
-		result = DeeObject_TryCmpEqAsBool(self->a_info.a_decl,
-		                             other->a_info.a_decl);
-		if unlikely(result < 0)
-			goto err;
-		if (!result)
-			goto nope;
-	}
+	if (self->a_info.a_decl != other->a_info.a_decl)
+		Dee_return_DeeObject_TryCompareEq_if_ne(self->a_info.a_decl, other->a_info.a_decl);
 	if ((self->a_info.a_perm & ~(ATTR_NAMEOBJ | ATTR_DOCOBJ)) !=
 	    (other->a_info.a_perm & ~(ATTR_NAMEOBJ | ATTR_DOCOBJ)))
 		goto nope;
@@ -144,19 +137,16 @@ attr_eq(Attr *self, Attr *other) {
 			goto nope;
 	}
 yup:
-	return_true;
+	return 0;
 nope:
-	return_false;
+	return 1;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp attr_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&attr_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&attr_eq,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&attr_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&attr_compare_eq,
 };
 
 PRIVATE struct type_member tpconst attr_members[] = {
@@ -905,7 +895,7 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 enumattr_hash(EnumAttr *__restrict self) {
 	return ((self->ea_obj ? DeeObject_Hash(self->ea_obj) : 0) ^
 	        Dee_HashPointer(self->ea_type));
@@ -936,7 +926,7 @@ err:
 }
 
 PRIVATE struct type_cmp enumattr_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&enumattr_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&enumattr_hash,
 	/* .tp_compare_eq    = */ NULL,
 	/* .tp_compare       = */ NULL,
 	/* .tp_trycompare_eq = */ NULL,

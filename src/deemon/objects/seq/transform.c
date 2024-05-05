@@ -95,42 +95,37 @@ PRIVATE struct type_member tpconst transiter_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_TRANSFORMATIONITERATOR_COMPARE(name, base, opname)                        \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                \
-	name(TransformationIterator *self, TransformationIterator *other) {                  \
-		if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type))           \
-			goto err;                                                                    \
-		if (self->ti_func != other->ti_func) {                                           \
-			int temp = DeeObject_TryCmpEqAsBool(self->ti_func, other->ti_func);               \
-			if (temp <= 0) {                                                             \
-				if (temp == 0)                                                           \
-					err_unimplemented_operator(&SeqTransformationIterator_Type, opname); \
-				goto err;                                                                \
-			}                                                                            \
-		}                                                                                \
-		return base((DeeObject *)self, (DeeObject *)other);                              \
-	err:                                                                                 \
-		return NULL;                                                                     \
-	}
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_eq, DeeObject_CmpEq, OPERATOR_EQ)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_ne, DeeObject_CmpNe, OPERATOR_NE)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_lo, DeeObject_CmpLo, OPERATOR_LO)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_le, DeeObject_CmpLe, OPERATOR_LE)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_gr, DeeObject_CmpGr, OPERATOR_GR)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_ge, DeeObject_CmpGe, OPERATOR_GE)
-#undef DEFINE_TRANSFORMATIONITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+transiter_hash(TransformationIterator *self) {
+	return Dee_HashCombine(DeeObject_HashGeneric(self->ti_func),
+	                       DeeObject_Hash(self->ti_iter));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+transiter_compare_eq(TransformationIterator *self, TransformationIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type))
+		goto err;
+	if (self->ti_func != other->ti_func)
+		return 1;
+	return DeeObject_CompareEq(self->ti_iter, other->ti_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+transiter_compare(TransformationIterator *self, TransformationIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type))
+		goto err;
+	Dee_return_compare_if_ne(self->ti_func, other->ti_func);
+	return DeeObject_Compare(self->ti_iter, other->ti_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp transiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&transiter_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&transiter_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&transiter_compare,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

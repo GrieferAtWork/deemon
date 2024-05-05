@@ -294,10 +294,10 @@ DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict p_self,
 			continue;
 
 		/* Same hash. -> Check if it's also the same key. */
-		error = DeeObject_TryCmpEqAsBool(key, item->rsi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rsi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Not the same key. */
 
 		/* It _is_ the same key! (override it...) */
@@ -427,10 +427,10 @@ roset_contains(RoSet *self,
 			break;
 		if (item->rsi_hash != hash)
 			continue;
-		error = DeeObject_TryCmpEqAsBool(key, item->rsi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rsi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Non-equal keys. */
 		/* Found it! */
 		return_true;

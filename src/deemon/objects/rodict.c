@@ -355,10 +355,10 @@ DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict p_self,
 			continue;
 
 		/* Same hash. -> Check if it's also the same key. */
-		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Not the same key. */
 
 		/* It _is_ the same key! (override it...) */
@@ -484,10 +484,10 @@ rodict_contains(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Non-equal keys. */
 		/* Found it! */
 		return_true;
@@ -510,10 +510,10 @@ DeeRoDict_GetItemNR(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Non-equal keys. */
 		/* Found it! */
 		return item->rdi_value;
@@ -579,10 +579,10 @@ DeeRoDict_TryGetItemNR(DeeRoDictObject *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Non-equal keys. */
 		/* Found it! */
 		return item->rdi_value;
@@ -688,10 +688,10 @@ rodict_getitem(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Non-equal keys. */
 		/* Found it! */
 		return_reference_(item->rdi_value);
@@ -759,10 +759,10 @@ rodict_nsi_getdefault(DeeObject *self, DeeObject *key, DeeObject *def) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Non-equal keys. */
 		/* Found it! */
 		return_reference_(item->rdi_value);
@@ -866,10 +866,10 @@ rodict_hasitem(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Non-equal keys. */
 		return 1;
 	}
@@ -933,10 +933,10 @@ rodict_trygetitem(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err;
-		if (!error)
+		if (error != 0)
 			continue; /* Non-equal keys. */
 		return_reference_(item->rdi_value);
 	}

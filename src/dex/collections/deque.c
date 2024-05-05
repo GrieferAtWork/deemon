@@ -1002,13 +1002,12 @@ deq_contains(Deque *self, DeeObject *item) {
 			elem = DequeIterator_ITEM(&iter);
 			Dee_Incref(elem);
 			Deque_LockEndRead(self);
-			temp = DeeObject_TryCmpEqAsBool(item, elem);
+			temp = DeeObject_TryCompareEq(item, elem);
 			Dee_Decref(elem);
-			if (temp != 0) {
-				if unlikely(temp < 0)
-					goto err;
+			if unlikely(temp == Dee_COMPARE_ERR)
+				goto err;
+			if (temp == 0)
 				return_true; /* Found it! */
-			}
 			Deque_LockRead(self);
 			if (self->d_version != version)
 				break;

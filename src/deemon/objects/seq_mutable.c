@@ -2681,7 +2681,7 @@ DeeSeq_Remove(DeeObject *self, size_t start, size_t end,
 							item = (*nsi->nsi_seqlike.nsi_getitem)(self, i);
 							if unlikely(!item)
 								goto err_keyed_search_item;
-							result = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+							result = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 							Dee_Decref(item);
 							if (result != 0) {
 								Dee_Decref(keyed_search_item);
@@ -2738,7 +2738,7 @@ do_delete_i:
 							Dee_Decref(index_ob);
 							goto err_keyed_search_item;
 						}
-						result = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+						result = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 						Dee_Decref(item);
 						if (result != 0) {
 							Dee_Decref(keyed_search_item);
@@ -2802,7 +2802,7 @@ do_tp_del_i:
 						Dee_Decref(index_ob);
 						goto err_erase_func_keyed_search_item;
 					}
-					result = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+					result = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 					Dee_Decref(item);
 					if (result != 0) {
 						Dee_Decref(keyed_search_item);
@@ -2862,7 +2862,7 @@ do_erase_func_i:
 						Dee_Decref(index_ob);
 						goto err_keyed_search_item;
 					}
-					result = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+					result = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 					Dee_Decref(item);
 					if (result != 0) {
 						Dee_Decref(keyed_search_item);
@@ -2969,7 +2969,7 @@ DeeSeq_RRemove(DeeObject *self, size_t start, size_t end,
 								item = (*nsi->nsi_seqlike.nsi_getitem)(self, i);
 								if unlikely(!item)
 									goto err_keyed_search_item;
-								result = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+								result = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 								Dee_Decref(item);
 								if (result != 0) {
 									Dee_Decref(keyed_search_item);
@@ -3030,7 +3030,7 @@ do_delete_i:
 								Dee_Decref(index_ob);
 								goto err_keyed_search_item;
 							}
-							result = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+							result = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 							Dee_Decref(item);
 							if (result != 0) {
 								Dee_Decref(keyed_search_item);
@@ -3098,7 +3098,7 @@ do_tp_del_i:
 							Dee_Decref(index_ob);
 							goto err_erase_func_keyed_search_item;
 						}
-						result = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+						result = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 						Dee_Decref(item);
 						if (result != 0) {
 							Dee_Decref(keyed_search_item);
@@ -3162,7 +3162,7 @@ do_erase_func_i:
 							Dee_Decref(index_ob);
 							goto err_keyed_search_item;
 						}
-						result = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+						result = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 						Dee_Decref(item);
 						if (result != 0) {
 							Dee_Decref(keyed_search_item);
@@ -3465,7 +3465,7 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 								item = (*nsi->nsi_seqlike.nsi_getitem)(self, i);
 								if unlikely(!item)
 									goto err_keyed_search_item;
-								error = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+								error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 								Dee_Decref(item);
 								if (error != 0) {
 									if unlikely(error < 0)
@@ -3621,7 +3621,7 @@ err_index_ob_del_key:
 							Dee_Decref(index_ob);
 							goto err_keyed_search_item;
 						}
-						error = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 						Dee_Decref(item);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -3697,7 +3697,7 @@ err_index_ob_key:
 							Dee_Decref(index_ob);
 							goto err_erase_func_keyed_search_item;
 						}
-						error = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 						Dee_Decref(item);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -3774,7 +3774,7 @@ err_index_ob_delrange_key:
 							Dee_Decref(index_ob);
 							goto err_keyed_search_item;
 						}
-						error = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+						error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 						Dee_Decref(item);
 						if (error != 0) {
 							DREF DeeObject *index_plus1_ob;

@@ -1485,7 +1485,6 @@
 #define DEFINE_SEO_UNARY_INPLACE(n,...) int n(SeqEachOperator**p_self){}
 #define DEFINE_SEO_BINARY_INPLACE(n,...) int n(SeqEachOperator**p_self,DeeObject*other){}
 #define DEFINE_SUBRANGEITERATOR_COMPARE(n,...) DeeObject*n(SubRangeIterator*self,SubRangeIterator*other){}
-#define DEFINE_TRANSFORMATIONITERATOR_COMPARE(n,...) DeeObject*n(TransformationIterator*self,TransformationIterator*other){}
 #define DEFINE_FOLD_COMPARE(n,T) size_t n(T const*data,size_t datalen,uint32_t fold[UNICODE_FOLDED_MAX],size_t fold_len);
 #define DEFINE_MEMCASECHR(n,rname,T,dee_foldcmp) \
 	T*n(T const*haystack,T needle,size_t haystack_length){}\

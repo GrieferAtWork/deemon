@@ -2184,12 +2184,13 @@ map_getitem(DeeObject *self, DeeObject *key) {
 		if (DeeObject_Hash(item_key_and_value[0]) != key_hash) {
 			Dee_Decref(item_key_and_value[0]);
 		} else {
-			temp = DeeObject_TryCmpEqAsBool(key, item_key_and_value[0]);
+			temp = DeeObject_TryCompareEq(key, item_key_and_value[0]);
 			Dee_Decref(item_key_and_value[0]);
-			if (temp != 0) {
-				if unlikely(temp < 0)
-					Dee_Clear(item_key_and_value[1]);
-
+			if unlikely(temp == Dee_COMPARE_ERR) {
+				Dee_Decref(item_key_and_value[1]);
+				goto err_iter;
+			}
+			if (temp == 0) {
 				/* Found it! */
 				Dee_Decref(iter);
 				return item_key_and_value[1];
@@ -2235,12 +2236,13 @@ map_getitem_def(DeeObject *self, DeeObject *key, DeeObject *defl) {
 		if (DeeObject_Hash(item_key_and_value[0]) != key_hash) {
 			Dee_Decref(item_key_and_value[0]);
 		} else {
-			temp = DeeObject_TryCmpEqAsBool(key, item_key_and_value[0]);
+			temp = DeeObject_TryCompareEq(key, item_key_and_value[0]);
 			Dee_Decref(item_key_and_value[0]);
-			if (temp != 0) {
-				if unlikely(temp < 0)
-					Dee_Clear(item_key_and_value[1]);
-
+			if unlikely(temp == Dee_COMPARE_ERR) {
+				Dee_Decref(item_key_and_value[1]);
+				goto err_iter;
+			}
+			if (temp == 0) {
 				/* Found it! */
 				Dee_Decref(iter);
 				return item_key_and_value[1];
@@ -2322,12 +2324,14 @@ map_eq_impl(DeeObject *__restrict self,
 				goto err;
 			return 0; /* Key wasn't provided by `other' */
 		}
-		temp = DeeObject_TryCmpEqAsBool(pair[1], other_value);
+		temp = DeeObject_TryCompareEq(pair[1], other_value);
 		Dee_Decref(other_value);
 		Dee_Decref(pair[1]);
-		if (temp <= 0) {
+		if (temp != 0) {
+			if unlikely(temp == Dee_COMPARE_ERR)
+				goto err_iter;
 			Dee_Decref(iter);
-			return temp;
+			return 0;
 		}
 		/* Track the number of pairs found in `self' */
 		++pair_count;

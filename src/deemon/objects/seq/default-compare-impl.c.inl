@@ -1344,11 +1344,9 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_sizeob_and_getitem)(DeeObject 
 	DREF DeeObject *index_ob;
 	DeeObject *common_sizeob = lhs_sizeob;
 #ifdef DEFINE_compareeq
-	temp = DeeObject_TryCmpEqAsBool(common_sizeob, rhs_sizeob);
-	if unlikely(temp < 0)
-		goto err;
-	if (!temp)
-		return 1; /* Not-equal */
+	temp = DeeObject_TryCompareEq(common_sizeob, rhs_sizeob);
+	if (temp != 0)
+		return temp; /* Not-equal or error */
 #else /* DEFINE_compareeq */
 	temp = DeeObject_CmpLoAsBool(common_sizeob, rhs_sizeob);
 	if unlikely(temp < 0)
@@ -1411,10 +1409,11 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_sizeob_and_getitem)(DeeObject 
 #else /* DEFINE_compareeq */
 	if (!common_sizeob__is__lhs_sizeob)
 		return 1; /* lhs_size > rhs_size */
-	temp = DeeObject_TryCmpEqAsBool(lhs_sizeob, rhs_sizeob);
-	if unlikely(temp < 0)
-		goto err;
-	return temp ? 0 : -1;
+	temp = DeeObject_TryCompareEq(lhs_sizeob, rhs_sizeob);
+	if (temp > 0)
+		temp = -1;
+	ASSERT(temp == Dee_COMPARE_ERR || temp == -1 || temp == 0);
+	return temp;
 #endif /* !DEFINE_compareeq */
 err_index_ob:
 	Dee_Decref(index_ob);
@@ -1645,11 +1644,9 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem)(DeeTypeOb
 	DREF DeeObject *index_ob;
 	DeeObject *common_sizeob = lhs_sizeob;
 #ifdef DEFINE_compareeq
-	temp = DeeObject_TryCmpEqAsBool(common_sizeob, rhs_sizeob);
-	if unlikely(temp < 0)
-		goto err;
-	if (!temp)
-		return 1; /* Not-equal */
+	temp = DeeObject_TryCompareEq(common_sizeob, rhs_sizeob);
+	if (temp != 0)
+		return temp; /* Not-equal or error */
 #else /* DEFINE_compareeq */
 	temp = DeeObject_CmpLoAsBool(common_sizeob, rhs_sizeob);
 	if unlikely(temp < 0)
@@ -1712,10 +1709,11 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem)(DeeTypeOb
 #else /* DEFINE_compareeq */
 	if (!common_sizeob__is__lhs_sizeob)
 		return 1; /* lhs_size > rhs_size */
-	temp = DeeObject_TryCmpEqAsBool(lhs_sizeob, rhs_sizeob);
-	if unlikely(temp < 0)
-		goto err;
-	return temp ? 0 : -1;
+	temp = DeeObject_TryCompareEq(lhs_sizeob, rhs_sizeob);
+	if (temp > 0)
+		temp = -1;
+	ASSERT(temp == Dee_COMPARE_ERR || temp == -1 || temp == 0);
+	return temp;
 #endif /* !DEFINE_compareeq */
 err_index_ob:
 	Dee_Decref(index_ob);

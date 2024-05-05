@@ -232,6 +232,7 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 /* Helper macros for implementing compare operators. */
 #define Dee_CompareNe(a, b) ((a) < (b) ? -1 : 1)
 #define Dee_Compare(a, b)   ((a) == (b) ? 0 : Dee_CompareNe(a, b))
+
 #define Dee_return_compare_if_ne(a, b)  \
 	do {                                \
 		if ((a) != (b))                 \
@@ -240,6 +241,27 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define Dee_return_compare(a, b)  \
 	do {                          \
 		return Dee_Compare(a, b); \
+	}	__WHILE0
+#define Dee_return_DeeObject_Compare_if_ne(a, b)                                    \
+	do {                                                                            \
+		int _rtceqin_temp = DeeObject_Compare((DeeObject *)Dee_REQUIRES_OBJECT(a),  \
+		                                      (DeeObject *)Dee_REQUIRES_OBJECT(b)); \
+		if (_rtceqin_temp != 0)                                                     \
+			return _rtceqin_temp;                                                   \
+	}	__WHILE0
+#define Dee_return_DeeObject_CompareEq_if_ne(a, b)                                    \
+	do {                                                                              \
+		int _rtceqin_temp = DeeObject_CompareEq((DeeObject *)Dee_REQUIRES_OBJECT(a),  \
+		                                        (DeeObject *)Dee_REQUIRES_OBJECT(b)); \
+		if (_rtceqin_temp != 0)                                                       \
+			return _rtceqin_temp;                                                     \
+	}	__WHILE0
+#define Dee_return_DeeObject_TryCompareEq_if_ne(a, b)                                    \
+	do {                                                                                 \
+		int _rtceqin_temp = DeeObject_TryCompareEq((DeeObject *)Dee_REQUIRES_OBJECT(a),  \
+		                                           (DeeObject *)Dee_REQUIRES_OBJECT(b)); \
+		if (_rtceqin_temp != 0)                                                          \
+			return _rtceqin_temp;                                                        \
 	}	__WHILE0
 
 
@@ -4502,8 +4524,16 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGeAsBool)(DeeObject *sel
  * @return: 1 : Compare returns "true"
  * @return: 0 : Compare returns "false"
  * @return: -1: Error */
-DFUNDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object); /* DEPRECATED! */
+DFUNDEF WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
+(DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object);
+
+/* Deprecated wrapper around "DeeObject_TryCompareEqKey()"
+ * @return: 1 : Compare returns "true"
+ * @return: 0 : Compare returns "false"
+ * @return: -1: Error */
+DFUNDEF WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
+(DCALL DeeObject_TryCmpKeyEqAsBool)(DeeObject *keyed_search_item,
+                                    DeeObject *elem, /*nullable*/ DeeObject *key);
 
 
 
@@ -4544,13 +4574,24 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
                              DeeObject *rhs, /*nullable*/ DeeObject *key);
 
-/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
- * @return:  > 0: `keyed_search_item == key(elem)'
- * @return: == 0: `keyed_search_item != key(elem)'
- * @return:  < 0: An error occurred. */
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+ * @return: == -1: `lhs_keyed != key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,
-                               DeeObject *elem, /*nullable*/ DeeObject *key);
+(DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
+                               DeeObject *rhs, /*nullable*/ DeeObject *key);
+
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+ * @return: == -1: `lhs_keyed != key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,
+                                  DeeObject *rhs, /*nullable*/ DeeObject *key);
+
 
 /* Sequence operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) size_t (DCALL DeeObject_Size)(DeeObject *__restrict self); /* @return: (size_t)-1: Error */

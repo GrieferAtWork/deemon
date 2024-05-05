@@ -336,13 +336,12 @@ rvec_contains(RefVector *self, DeeObject *other) {
 		RefVector_XLockEndRead(self);
 		if (!item)
 			continue;
-		temp = DeeObject_TryCmpEqAsBool(other, item);
+		temp = DeeObject_TryCompareEq(other, item);
 		Dee_Decref(item);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
 			return_true;
-		}
 	}
 	return_false;
 err:
@@ -485,7 +484,7 @@ rvec_nsi_find(RefVector *self, size_t start, size_t end,
 		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
-		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
@@ -512,7 +511,7 @@ rvec_nsi_rfind(RefVector *self, size_t start, size_t end,
 		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
-		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
@@ -541,7 +540,7 @@ again:
 		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
-		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
@@ -574,7 +573,7 @@ again:
 		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
-		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
@@ -606,7 +605,7 @@ again:
 		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
-		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp == 0)
 			continue;
@@ -1280,13 +1279,12 @@ svec_contains(SharedVector *self, DeeObject *other) {
 		item = self->sv_vector[index];
 		Dee_Incref(item);
 		SharedVector_LockEndRead(self);
-		temp = DeeObject_TryCmpEqAsBool(other, item);
+		temp = DeeObject_TryCompareEq(other, item);
 		Dee_Decref(item);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
 			return_true;
-		}
 		SharedVector_LockRead(self);
 	}
 	SharedVector_LockEndRead(self);
@@ -1347,7 +1345,7 @@ svec_nsi_find(SharedVector *__restrict self,
 		item = self->sv_vector[i];
 		Dee_Incref(item);
 		SharedVector_LockEndRead(self);
-		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp != 0) {
 			if unlikely(temp < 0)
@@ -1380,7 +1378,7 @@ svec_nsi_rfind(SharedVector *__restrict self,
 		item = self->sv_vector[i];
 		Dee_Incref(item);
 		SharedVector_LockEndRead(self);
-		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
+		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
 		Dee_Decref(item);
 		if (temp != 0) {
 			if unlikely(temp < 0)

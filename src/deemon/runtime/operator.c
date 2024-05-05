@@ -6307,10 +6307,12 @@ default_contains_with_foreach_cb(void *arg, DeeObject *elem);
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
-	int temp = DeeObject_TryCmpEqAsBool((DeeObject *)arg, elem);
-	if (temp > 0)
-		temp = -2;
-	return temp;
+	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		return -1;
+	if (temp == 0)
+		return -2;
+	return 0;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -6786,13 +6788,17 @@ default_map_getitem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *v
 	int temp;
 	struct default_map_getitem_with_foreach_pair_data *data;
 	data = (struct default_map_getitem_with_foreach_pair_data *)arg;
-	temp = DeeObject_TryCmpEqAsBool(data->mgifpd_key, key);
-	if (temp > 0) {
+	temp = DeeObject_TryCompareEq(data->mgifpd_key, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0) {
 		Dee_Incref(value);
 		data->mgifpd_result = value;
-		temp = -2;
+		return -2;
 	}
-	return temp;
+	return 0;
+err:
+	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -7087,22 +7093,26 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_map_getitem_index_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
 
 #ifndef DEFINE_TYPED_OPERATORS
+/* @return: 1 : Not-equal
+ * @return: 0 : Equal
+ * @return: -1: Not-equal
+ * @return: Dee_COMPARE_ERR: Error */
 PRIVATE WUNUSED NONNULL((2)) int DCALL
 size_t_equals_object(size_t lhs, DeeObject *rhs) {
 	int result;
 	DREF DeeObject *lhs_value;
 	if (DeeInt_Check(rhs)) {
 		size_t rhs_value;
-		return (DeeInt_TryAsSize(rhs, &rhs_value) && lhs == rhs_value) ? 1 : 0;
+		return (DeeInt_TryAsSize(rhs, &rhs_value) && lhs == rhs_value) ? 0 : 1;
 	}
 	lhs_value = DeeInt_NewSize(lhs);
 	if unlikely(!lhs_value)
 		goto err;
-	result = DeeObject_TryCmpEqAsBool(lhs_value, rhs);
+	result = DeeObject_TryCompareEq(lhs_value, rhs);
 	Dee_Decref(lhs_value);
 	return result;
 err:
-	return -1;
+	return Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
@@ -7111,12 +7121,16 @@ default_map_getitem_index_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObj
 	struct default_map_getitem_index_with_foreach_pair_data *data;
 	data = (struct default_map_getitem_index_with_foreach_pair_data *)arg;
 	temp = size_t_equals_object(data->mgiifpd_key, key);
-	if (temp > 0) {
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0) {
 		Dee_Incref(value);
 		data->mgiifpd_result = value;
-		temp = -2;
+		return -2;
 	}
-	return temp;
+	return 0;
+err:
+	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -8824,10 +8838,14 @@ INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_map_bounditem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	(void)value;
-	temp = DeeObject_TryCmpEqAsBool((DeeObject *)arg, key);
-	if (temp > 0)
-		temp = -2; /* Stop iteration */
-	return temp;
+	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0)
+		return -2; /* Stop iteration */
+	return 0;
+err:
+	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -9092,9 +9110,13 @@ default_map_bounditem_index_with_foreach_pair_cb(void *arg, DeeObject *key, DeeO
 	int temp;
 	(void)value;
 	temp = size_t_equals_object((size_t)(uintptr_t)arg, key);
-	if (temp > 0)
-		temp = -2;
-	return temp;
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0)
+		return -2;
+	return 0;
+err:
+	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -12401,6 +12423,19 @@ DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpGeAsBool, DeeObject_CmpGe)
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object) {
 	int result = DeeObject_TryCompareEq(self, some_object);
+	if unlikely(result == Dee_COMPARE_ERR)
+		return -1;
+	return result == 0 ? 1 : 0;
+}
+
+/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
+ * @return:  > 0: `keyed_search_item == key(elem)'
+ * @return: == 0: `keyed_search_item != key(elem)'
+ * @return:  < 0: An error occurred. */
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_TryCmpKeyEqAsBool)(DeeObject *keyed_search_item,
+                                    DeeObject *elem, /*nullable*/ DeeObject *key) {
+	int result = DeeObject_TryCompareKeyEq(keyed_search_item, elem, key);
 	if unlikely(result == Dee_COMPARE_ERR)
 		return -1;
 	return result == 0 ? 1 : 0;
@@ -17611,27 +17646,46 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-
-/* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
- * @return:  > 0: `keyed_search_item == key(elem)'
- * @return: == 0: `keyed_search_item != key(elem)'
- * @return:  < 0: An error occurred. */
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+ * @return: == -1: `lhs_keyed != key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,
-                               DeeObject *elem, /*nullable*/ DeeObject *key) {
+(DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
+                               DeeObject *rhs, /*nullable*/ DeeObject *key) {
 	int result;
 	if (!key)
-		return DeeObject_TryCmpEqAsBool(keyed_search_item, elem);
-
-	/* TODO: Special optimizations for specific keys (e.g. `string.lower') */
-	elem = DeeObject_Call(key, 1, (DeeObject **)&elem);
-	if unlikely(!elem)
+		return DeeObject_CompareEq(lhs_keyed, rhs);
+	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
+	if unlikely(!rhs)
 		goto err;
-	result = DeeObject_TryCmpEqAsBool(keyed_search_item, elem);
-	Dee_Decref(elem);
+	result = DeeObject_CompareEq(lhs_keyed, rhs);
+	Dee_Decref(rhs);
 	return result;
 err:
-	return -1;
+	return Dee_COMPARE_ERR;
+}
+
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+ * @return: == -1: `lhs_keyed != key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed != key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,
+                                  DeeObject *rhs, /*nullable*/ DeeObject *key) {
+	int result;
+	if (!key)
+		return DeeObject_TryCompareEq(lhs_keyed, rhs);
+	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
+	if unlikely(!rhs)
+		goto err;
+	result = DeeObject_TryCompareEq(lhs_keyed, rhs);
+	Dee_Decref(rhs);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
 }
 
 #endif /* !DEFINE_TYPED_OPERATORS */

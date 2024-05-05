@@ -914,7 +914,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 compare_objtabs(JITObjectTable *__restrict a,
                 JITObjectTable *__restrict b) {
 	size_t i;
-	int temp;
 	for (i = 0; i <= a->ot_mask; ++i) {
 		if (!ITER_ISOK(a->ot_list[i].oe_namestr)) {
 			if (b->ot_list[i].oe_namestr != a->ot_list[i].oe_namestr)
@@ -933,10 +932,10 @@ compare_objtabs(JITObjectTable *__restrict a,
 				if (!b->ot_list[i].oe_value)
 					goto nope;
 				if (a->ot_list[i].oe_value != b->ot_list[i].oe_value) {
-					temp = DeeObject_TryCmpEqAsBool(a->ot_list[i].oe_value,
-					                           b->ot_list[i].oe_value);
-					if unlikely(temp <= 0)
-						goto err_temp;
+					int temp = DeeObject_TryCompareEq(a->ot_list[i].oe_value,
+					                                  b->ot_list[i].oe_value);
+					if unlikely(temp != 0)
+						return temp;
 				}
 			} else {
 				if (b->ot_list[i].oe_value)
@@ -944,17 +943,16 @@ compare_objtabs(JITObjectTable *__restrict a,
 			}
 		}
 	}
-	return 1;
-nope:
 	return 0;
-err_temp:
-	return temp;
+nope:
+	return 1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-jf_equal(JITFunction *__restrict a,
-         JITFunction *__restrict b) {
+jf_compare_eq(JITFunction *a, JITFunction *b) {
 	int temp;
+	if (DeeObject_AssertTypeExact(b, &JITFunction_Type))
+		goto err;
 	if (a == b)
 		goto yes;
 	if (a->jf_selfarg != b->jf_selfarg)
@@ -993,39 +991,40 @@ jf_equal(JITFunction *__restrict a,
 	if (a->jf_globals != b->jf_globals) {
 		if (!a->jf_globals || !b->jf_globals)
 			goto nope;
-		temp = DeeObject_TryCmpEqAsBool(a->jf_globals,
-		                           b->jf_globals);
-		if (temp <= 0)
-			goto err_temp;
+		temp = DeeObject_TryCompareEq(a->jf_globals, b->jf_globals);
+		if (temp != 0)
+			goto done_temp;
 	}
 	if (a->jf_impbase != b->jf_impbase) {
 		if (!a->jf_impbase || !b->jf_impbase)
 			goto nope;
-		temp = DeeObject_TryCmpEqAsBool((DeeObject *)a->jf_impbase,
-		                           (DeeObject *)b->jf_impbase);
-		if (temp <= 0)
-			goto err_temp;
+		temp = DeeObject_TryCompareEq((DeeObject *)a->jf_impbase,
+		                              (DeeObject *)b->jf_impbase);
+		if (temp != 0)
+			goto done_temp;
 	}
 	if (a->jf_import != b->jf_import) {
 		if (!a->jf_import || !b->jf_import)
 			goto nope;
-		temp = DeeObject_TryCmpEqAsBool(a->jf_import,
-		                           b->jf_import);
-		if (temp <= 0)
-			goto err_temp;
+		temp = DeeObject_TryCompareEq(a->jf_import,
+		                              b->jf_import);
+		if (temp != 0)
+			goto done_temp;
 	}
 	temp = compare_objtabs(&a->jf_args, &b->jf_args);
-	if (temp <= 0)
-		goto err_temp;
+	if (temp != 0)
+		goto done_temp;
 	temp = compare_objtabs(&a->jf_refs, &b->jf_refs);
-	if (temp <= 0)
-		goto err_temp;
+	if (temp != 0)
+		goto done_temp;
 yes:
-	return 1;
-nope:
 	return 0;
-err_temp:
+nope:
+	return 1;
+done_temp:
 	return temp;
+err:
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
@@ -1035,42 +1034,9 @@ jf_hash(JITFunction *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-jf_eq(JITFunction *self,
-      JITFunction *other) {
-	int result;
-	if (DeeObject_AssertTypeExact(other, &JITFunction_Type))
-		goto err;
-	result = jf_equal(self, other);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-jf_ne(JITFunction *self,
-      JITFunction *other) {
-	int result;
-	if (DeeObject_AssertTypeExact(other, &JITFunction_Type))
-		goto err;
-	result = jf_equal(self, other);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(!result);
-err:
-	return NULL;
-}
-
-
 PRIVATE struct type_cmp jf_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&jf_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jf_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jf_ne
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&jf_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&jf_compare_eq,
 };
 
 

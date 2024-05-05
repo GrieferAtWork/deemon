@@ -71,11 +71,11 @@ next_keyitem:
 				int temp;
 				if likely(item->hsi_hash != hash)
 					continue;
-				temp = DeeObject_TryCmpEqAsBool(item->hsi_key, key);
-				if likely(temp == 0)
-					continue;
-				if unlikely(temp < 0)
+				temp = DeeObject_TryCompareEq(item->hsi_key, key);
+				if unlikely(temp == Dee_COMPARE_ERR)
 					goto err;
+				if likely(temp != 0)
+					continue;
 
 				/* Another duplicate key. */
 				ASSERT(extra_duplicates_c <= extra_duplicates_a);
@@ -175,11 +175,11 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 					int temp;
 					if likely(item->hsi_hash != hash)
 						continue;
-					temp = DeeObject_TryCmpEqAsBool(item->hsi_key, key);
-					if likely(temp == 0)
-						continue;
-					if unlikely(temp < 0)
+					temp = DeeObject_TryCompareEq(item->hsi_key, key);
+					if unlikely(temp == Dee_COMPARE_ERR)
 						goto err_r_elem;
+					if likely(temp != 0)
+						continue;
 
 					/* Duplicate key. */
 					--items;
@@ -508,11 +508,10 @@ remove_duplicate_key:
 					break;
 				}
 				if (Dee_TYPE(item->hsi_key) == Dee_TYPE(items[i])) {
-					int error;
-					error = DeeObject_TryCmpEqAsBool(item->hsi_key, items[i]);
-					if unlikely(error < 0)
+					int error = DeeObject_TryCompareEq(item->hsi_key, items[i]);
+					if unlikely(error == Dee_COMPARE_ERR)
 						goto err_items_v_new_map;
-					if (error)
+					if (error == 0)
 						goto remove_duplicate_key;
 				}
 
@@ -711,7 +710,6 @@ DeeHashSet_Unify(DeeObject *self, DeeObject *search_item) {
 	HashSet *me = (HashSet *)self;
 	size_t mask;
 	struct hashset_item *vector;
-	int error;
 	struct hashset_item *first_dummy;
 	dhash_t i, perturb, hash = DeeObject_Hash(search_item);
 again_lock:
@@ -722,6 +720,7 @@ again:
 	mask        = me->hs_mask;
 	perturb = i = hash & mask;
 	for (;; DeeHashSet_HashNx(i, perturb)) {
+		int error;
 		DREF DeeObject *item_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->hsi_key) {
@@ -740,11 +739,11 @@ again:
 		DeeHashSet_LockEndRead(me);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(search_item, item_key);
+		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
-		if (error > 0) {
+		if (error == 0) {
 			DeeHashSet_LockWrite(me);
 
 			/* Check if the set was modified. */
@@ -816,7 +815,6 @@ DeeHashSet_Insert(DeeObject *self,
 	HashSet *me = (HashSet *)self;
 	size_t mask;
 	struct hashset_item *vector;
-	int error;
 	struct hashset_item *first_dummy;
 	dhash_t i, perturb, hash = DeeObject_Hash(search_item);
 again_lock:
@@ -827,6 +825,7 @@ again:
 	mask        = me->hs_mask;
 	perturb = i = hash & mask;
 	for (;; DeeHashSet_HashNx(i, perturb)) {
+		int error;
 		DREF DeeObject *item_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->hsi_key) {
@@ -845,9 +844,9 @@ again:
 		DeeHashSet_LockEndRead(me);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(search_item, item_key);
+		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
 		DeeHashSet_LockRead(me);
 
@@ -856,7 +855,7 @@ again:
 		    me->hs_mask != mask ||
 		    item->hsi_key != item_key)
 			goto again;
-		if (error > 0) {
+		if (error == 0) {
 			DeeHashSet_LockEndRead(me);
 			return 0; /* Already exists. */
 		}
@@ -908,7 +907,6 @@ DeeHashSet_Remove(DeeObject *self,
 	size_t mask;
 	struct hashset_item *vector;
 	dhash_t i, perturb;
-	int error;
 	dhash_t hash = DeeObject_Hash(search_item);
 	DeeHashSet_LockRead(me);
 restart:
@@ -916,6 +914,7 @@ restart:
 	mask    = me->hs_mask;
 	perturb = i = hash & mask;
 	for (;; DeeHashSet_HashNx(i, perturb)) {
+		int error;
 		DREF DeeObject *item_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->hsi_key)
@@ -929,11 +928,11 @@ restart:
 		DeeHashSet_LockEndRead(me);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(search_item, item_key);
+		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
-		if (error > 0) {
+		if (error == 0) {
 			/* Found it! */
 			DeeHashSet_LockWrite(me);
 
@@ -1227,7 +1226,6 @@ DeeHashSet_Contains(DeeObject *self, DeeObject *search_item) {
 	size_t mask;
 	struct hashset_item *vector;
 	dhash_t i, perturb;
-	int error;
 	dhash_t hash = DeeObject_Hash(search_item);
 	DeeHashSet_LockRead(me);
 restart:
@@ -1235,6 +1233,7 @@ restart:
 	mask    = me->hs_mask;
 	perturb = i = hash & mask;
 	for (;; DeeHashSet_HashNx(i, perturb)) {
+		int error;
 		DREF DeeObject *item_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->hsi_key)
@@ -1247,11 +1246,11 @@ restart:
 		Dee_Incref(item_key);
 		DeeHashSet_LockEndRead(me);
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(search_item, item_key);
+		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
-		if (error > 0)
+		if (error == 0)
 			return 1; /* Found the item. */
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
 		DeeHashSet_LockRead(me);
 		/* Check if the set was modified. */

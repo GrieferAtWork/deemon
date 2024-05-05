@@ -499,11 +499,11 @@ again:
 		Dee_Incref(item_key);
 		DeeCachedDict_LockEndRead(self);
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
+		error = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
-		if unlikely(error < 0)
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
-		if (error > 0) {
+		if (error == 0) {
 			DREF DeeObject *item_value;
 			/* Found an existing item. */
 			DeeCachedDict_LockWrite(self);
@@ -712,11 +712,11 @@ restart:
 		DeeCachedDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
-		if (error > 0)
-			return item_value; /* Found the item. */
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
+		if (error == 0)
+			return item_value; /* Found the item. */
 		DeeCachedDict_LockRead(self);
 
 		/* Check if the CachedDict was modified. */
@@ -808,11 +808,11 @@ restart:
 		DeeCachedDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
-		if (error > 0)
-			return item_value; /* Found the item. */
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
+		if (error == 0)
+			return item_value; /* Found the item. */
 		DeeCachedDict_LockRead(self);
 
 		/* Check if the CachedDict was modified. */
@@ -902,11 +902,11 @@ restart:
 		DeeCachedDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCmpEqAsBool(key, item_key);
-		if (error > 0)
-			return 1; /* Found the item. */
-		if unlikely(error < 0)
+		error = DeeObject_TryCompareEq(key, item_key);
+		if unlikely(error == Dee_COMPARE_ERR)
 			goto err; /* Error in compare operator. */
+		if (error == 0)
+			return 1; /* Found the item. */
 		DeeCachedDict_LockRead(self);
 
 		/* Check if the CachedDict was modified. */

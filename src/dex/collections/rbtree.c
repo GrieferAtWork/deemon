@@ -2754,12 +2754,12 @@ again_nextnode:
 			}
 
 			/* Compare keys */
-			temp = DeeObject_TryCmpEqAsBool(prev_maxkey_succ, next_minkey);
+			temp = DeeObject_TryCompareEq(prev_maxkey_succ, next_minkey);
 			Dee_Decref(prev_maxkey_succ);
 			Dee_Decref(next_minkey);
-			if (temp != 0) {
-				if unlikely(temp < 0)
-					goto err;
+			if unlikely(temp == Dee_COMPARE_ERR)
+				goto err;
+			if (temp == 0) {
 				/* Yes! can merge these 2 nodes! */
 				RBTree_LockWrite(self);
 				if unlikely(version != self->rbt_version) {

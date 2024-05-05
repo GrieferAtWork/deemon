@@ -137,7 +137,7 @@ LOCAL_bfind_with_xxx(
 						goto err;
 				}
 #endif /* !DEFINE_LOCAL_bfind_with_nsi_getitem_fast */
-				diff = DeeObject_CompareKeyEq(keyed_search_item, seq_elem, key);
+				diff = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, seq_elem, key);
 				Dee_Decref(seq_elem);
 				if (diff > 0) {
 					/* Still part of returned range! */
@@ -173,7 +173,7 @@ LOCAL_bfind_with_xxx(
 						goto err;
 				}
 #endif /* !DEFINE_LOCAL_bfind_with_nsi_getitem_fast */
-				diff = DeeObject_CompareKeyEq(keyed_search_item, seq_elem, key);
+				diff = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, seq_elem, key);
 				Dee_Decref(seq_elem);
 				if (diff > 0) {
 					/* Still part of returned range! */

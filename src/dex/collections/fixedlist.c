@@ -614,13 +614,12 @@ fl_contains(FixedList *self, DeeObject *value) {
 		elem = self->fl_elem[i];
 		Dee_Incref(elem);
 		FixedList_LockEndRead(self);
-		temp = DeeObject_TryCmpEqAsBool(value, elem);
+		temp = DeeObject_TryCompareEq(value, elem);
 		Dee_Decref(elem);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
 			return_true;
-		}
 	}
 	return_false;
 err:
@@ -839,7 +838,7 @@ fl_nsi_find(FixedList *self, size_t start, size_t end,
 		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
-			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+			error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 			Dee_Decref(elem);
 			if unlikely(error < 0)
 				goto err;
@@ -867,7 +866,7 @@ fl_nsi_rfind(FixedList *self, size_t start, size_t end,
 		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
-			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+			error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 			Dee_Decref(elem);
 			if unlikely(error < 0)
 				goto err;
@@ -918,7 +917,7 @@ again_elem:
 		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
-			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+			error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 			Dee_Decref(elem);
 			if unlikely(error < 0)
 				goto err;
@@ -957,7 +956,7 @@ again_elem:
 		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
-			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+			error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 			Dee_Decref(elem);
 			if unlikely(error < 0)
 				goto err;
@@ -996,7 +995,7 @@ again_elem:
 		FixedList_LockEndRead(self);
 		if (elem) {
 			int error;
-			error = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
+			error = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, elem, key);
 			Dee_Decref(elem);
 			if unlikely(error < 0)
 				goto err;

@@ -1112,7 +1112,7 @@ repeatitem_nsi_find(RepeatItem *self,
 	int error;
 	if (start >= self->rpit_num || start >= end)
 		return (size_t)-1;
-	error = DeeObject_CompareKeyEq(self->rpit_obj, keyed_search_item, key);
+	error = DeeObject_TryCmpKeyEqAsBool(self->rpit_obj, keyed_search_item, key);
 	if unlikely(error < 0)
 		return (size_t)-2;
 	if (!error)

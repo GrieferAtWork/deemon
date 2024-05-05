@@ -151,7 +151,7 @@ locatoriter_next(LocatorIterator *__restrict self) {
 		result = DeeObject_IterNext(self->li_iter);
 		if (!ITER_ISOK(result))
 			break;
-		temp = DeeObject_CompareKeyEq(self->li_elem, result, self->li_pred);
+		temp = DeeObject_TryCmpKeyEqAsBool(self->li_elem, result, self->li_pred);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err_r;
