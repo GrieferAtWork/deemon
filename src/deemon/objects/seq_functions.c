@@ -2085,8 +2085,11 @@ DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc,
 	} else {
 		DREF DeeObject *rhs_iter;
 		rhs_iter = DeeObject_Iter(rhs);
-		if unlikely(!rhs_iter)
+		if unlikely(!rhs_iter) {
+			if (DeeError_Catch(&DeeError_NotImplemented))
+				return 0;
 			return -1;
+		}
 		result = DeeSeq_EqVI(lhsv, lhsc, rhs_iter);
 		Dee_Decref(rhs_iter);
 	}
@@ -2183,8 +2186,11 @@ DeeSeq_EqFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 	} else {
 		DREF DeeObject *rhs_iter;
 		rhs_iter = DeeObject_Iter(rhs);
-		if unlikely(!rhs_iter)
+		if unlikely(!rhs_iter) {
+			if (DeeError_Catch(&DeeError_NotImplemented))
+				return 0;
 			return -1;
+		}
 		result = DeeSeq_EqFI(lhs, lhsc, rhs_iter);
 		Dee_Decref(rhs_iter);
 	}
@@ -2300,8 +2306,11 @@ DeeSeq_EqIS(DeeObject *lhs, DeeObject *rhs) {
 	} else {
 		DREF DeeObject *rhs_iter;
 		rhs_iter = DeeObject_Iter(rhs);
-		if unlikely(!rhs_iter)
+		if unlikely(!rhs_iter) {
+			if (DeeError_Catch(&DeeError_NotImplemented))
+				return 0;
 			return -1;
+		}
 		result = DeeSeq_EqII(lhs, rhs_iter);
 		Dee_Decref(rhs_iter);
 	}

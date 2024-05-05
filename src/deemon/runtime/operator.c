@@ -1558,12 +1558,9 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultStrWithPrint, (DeeObject *REST
 	Dee_ssize_t print_error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	LOAD_TP_SELF;
-	ASSERT(tp_self->tp_cast.tp_print);
-	ASSERT(tp_self->tp_cast.tp_print != &DeeObject_DefaultPrintWithStr);
-	print_error = DeeType_INVOKE_PRINTREPR_NODEFAULT(tp_self, self, &unicode_printer_print, &printer);
 	ASSERT(tp_self->tp_cast.tp_print &&
 	       tp_self->tp_cast.tp_print != &DeeObject_DefaultPrintWithStr);
-	print_error = DeeType_INVOKE_PRINT(tp_self, self, &unicode_printer_print, &printer);
+	print_error = DeeType_INVOKE_PRINT_NODEFAULT(tp_self, self, &unicode_printer_print, &printer);
 	if unlikely(print_error < 0)
 		goto err;
 	return unicode_printer_pack(&printer);

@@ -1956,7 +1956,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 relint_trycompare_eq(DeeRelIntObject *self, DeeRelIntObject *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeRelInt_Type))
+	if (!DeeObject_InstanceOfExact(other, &DeeRelInt_Type))
 		return -1;
 	return (self->ri_sym == other->ri_sym &&
 	        self->ri_add == other->ri_add &&
@@ -1977,7 +1977,7 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RelInt",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL|TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,

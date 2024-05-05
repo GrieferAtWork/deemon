@@ -1079,7 +1079,7 @@ again:
 	} else {
 		new_attribute->a_info.a_doc = attr_doc;
 	}
-	Dee_XIncref(declarator);
+	Dee_Incref(declarator);
 	Dee_XIncref(attr_type);
 	DeeObject_Init(new_attribute, &DeeAttribute_Type);
 
