@@ -13871,10 +13871,10 @@ INTERN struct type_cmp DeeSet_DefaultCmpWithForeachDefault = {
 	/* .tp_hash       = */ &DeeSet_DefaultHashWithForeachDefault,
 	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
 	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
-	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
-	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
-	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_lo         = */ &DeeSet_DefaultLoWithForeachDefault,
+	/* .tp_le         = */ &DeeSet_DefaultLeWithForeachDefault,
+	/* .tp_gr         = */ &DeeSet_DefaultGrWithForeachDefault,
+	/* .tp_ge         = */ &DeeSet_DefaultGeWithForeachDefault,
 	/* .tp_compare_eq = */ &DeeSet_DefaultCompareEqWithForeachDefault,
 	/* .tp_compare    = */ NULL,
 };
@@ -13882,10 +13882,10 @@ INTERN struct type_cmp DeeMap_DefaultCmpWithForeachPairDefault = {
 	/* .tp_hash       = */ &DeeMap_DefaultHashWithForeachPairDefault,
 	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
 	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
-	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
-	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
-	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_lo         = */ &DeeMap_DefaultLoWithForeachPairDefault,
+	/* .tp_le         = */ &DeeMap_DefaultLeWithForeachPairDefault,
+	/* .tp_gr         = */ &DeeMap_DefaultGrWithForeachPairDefault,
+	/* .tp_ge         = */ &DeeMap_DefaultGeWithForeachPairDefault,
 	/* .tp_compare_eq = */ &DeeMap_DefaultCompareEqWithForeachPairDefault,
 	/* .tp_compare    = */ NULL,
 };
@@ -15023,7 +15023,14 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_compare_eq(DeeObject *lhs, 
 PRIVATE NONNULL((1)) DeeType_tp_bool_t DCALL
 DeeType_Optimize_tp_bool(DeeTypeObject *__restrict dst,
                          DeeType_tp_bool_t tp_bool) {
-	if (tp_bool == &generic_seq_bool) {
+	if (tp_bool == &generic_seq_bool ||
+	    tp_bool == &DeeSeq_DefaultBoolWithSize ||
+	    tp_bool == &DeeSeq_DefaultBoolWithSizeOb ||
+	    tp_bool == &DeeSeq_DefaultBoolWithForeach ||
+	    tp_bool == &DeeSeq_DefaultBoolWithCompareEq ||
+	    tp_bool == &DeeSeq_DefaultBoolWithEq ||
+	    tp_bool == &DeeSeq_DefaultBoolWithNe ||
+	    tp_bool == &DeeSeq_DefaultBoolWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (Dee_type_seq_has_custom_tp_size(dst_seq)) {
@@ -15044,6 +15051,7 @@ DeeType_Optimize_tp_bool(DeeTypeObject *__restrict dst,
 				return &DeeSeq_DefaultBoolWithForeachDefault;
 			}
 		}
+		return &generic_seq_bool;
 	}
 	return tp_bool;
 }
@@ -15051,7 +15059,12 @@ DeeType_Optimize_tp_bool(DeeTypeObject *__restrict dst,
 PRIVATE NONNULL((1)) struct type_cmp *DCALL
 DeeType_Optimize_tp_cmp(DeeTypeObject *__restrict dst,
                         struct type_cmp *tp_cmp) {
-	if (tp_cmp == &generic_seq_cmp) {
+	if (tp_cmp == &generic_seq_cmp ||
+	    tp_cmp == &DeeSeq_DefaultCmpWithSizeAndGetItemIndexFast ||
+	    tp_cmp == &DeeSeq_DefaultCmpWithSizeAndTryGetItemIndex ||
+	    tp_cmp == &DeeSeq_DefaultCmpWithSizeAndGetItemIndex ||
+	    tp_cmp == &DeeSeq_DefaultCmpWithSizeObAndGetItem ||
+	    tp_cmp == &DeeSeq_DefaultCmpWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			bool has_tp_size = Dee_type_seq_has_custom_tp_size(dst_seq);
@@ -15068,18 +15081,23 @@ DeeType_Optimize_tp_cmp(DeeTypeObject *__restrict dst,
 				return &DeeSeq_DefaultCmpWithForeachDefault;
 			}
 		}
-	} else if (tp_cmp == &generic_set_cmp) {
+		return &generic_seq_cmp;
+	} else if (tp_cmp == &generic_set_cmp ||
+	           tp_cmp == &DeeSet_DefaultCmpWithForeachDefault) {
 		if (DeeType_InheritIter(dst)) {
 			struct type_seq *dst_seq = dst->tp_seq;
 			if (dst_seq && dst_seq->tp_foreach)
 				return &DeeSet_DefaultCmpWithForeachDefault;
 		}
-	} else if (tp_cmp == &generic_map_cmp) {
+		return &generic_set_cmp;
+	} else if (tp_cmp == &generic_map_cmp ||
+	           tp_cmp == &DeeMap_DefaultCmpWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst)) {
 			struct type_seq *dst_seq = dst->tp_seq;
 			if (dst_seq && dst_seq->tp_foreach_pair)
 				return &DeeMap_DefaultCmpWithForeachPairDefault;
 		}
+		return &generic_map_cmp;
 	}
 	return tp_cmp;
 }
@@ -15087,7 +15105,13 @@ DeeType_Optimize_tp_cmp(DeeTypeObject *__restrict dst,
 PRIVATE NONNULL((1)) DeeType_tp_hash_t DCALL
 DeeType_Optimize_tp_hash(DeeTypeObject *__restrict dst,
                          DeeType_tp_hash_t tp_hash) {
-	if (tp_hash == &generic_seq_hash) {
+	if (tp_hash == &generic_seq_hash ||
+	    tp_hash == &DeeSeq_DefaultHashWithSizeAndGetItemIndexFast ||
+	    tp_hash == &DeeSeq_DefaultHashWithForeach ||
+	    tp_hash == &DeeSeq_DefaultHashWithSizeAndTryGetItemIndex ||
+	    tp_hash == &DeeSeq_DefaultHashWithSizeAndGetItemIndex ||
+	    tp_hash == &DeeSeq_DefaultHashWithSizeObAndGetItem ||
+	    tp_hash == &DeeSeq_DefaultHashWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			bool has_tp_size = Dee_type_seq_has_custom_tp_size(dst_seq);
@@ -15106,18 +15130,23 @@ DeeType_Optimize_tp_hash(DeeTypeObject *__restrict dst,
 				return &DeeSeq_DefaultHashWithForeachDefault;
 			}
 		}
-	} else if (tp_hash == &generic_set_hash) {
+		return &generic_seq_hash;
+	} else if (tp_hash == &generic_set_hash ||
+	           tp_hash == &DeeSet_DefaultHashWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach)
 				return &DeeSet_DefaultHashWithForeachDefault;
 		}
-	} else if (tp_hash == &generic_map_hash) {
+		return &generic_set_hash;
+	} else if (tp_hash == &generic_map_hash ||
+	           tp_hash == &DeeMap_DefaultHashWithForeachPairDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach_pair)
 				return &DeeMap_DefaultHashWithForeachPairDefault;
 		}
+		return &generic_map_hash;
 	}
 	return tp_hash;
 }
@@ -15148,18 +15177,22 @@ DeeType_Optimize_tp_lo(DeeTypeObject *__restrict dst,
 	if (tp_lo == &generic_seq_lo) {
 		if (dst->tp_cmp->tp_compare)
 			return &DeeObject_DefaultLoWithCompareDefault;
-	} else if (tp_lo == &generic_set_lo) {
+	} else if (tp_lo == &generic_set_lo ||
+	           tp_lo == &DeeSet_DefaultLoWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach)
 				return &DeeSet_DefaultLoWithForeachDefault;
 		}
-	} else if (tp_lo == &generic_map_lo) {
+		return &generic_set_lo;
+	} else if (tp_lo == &generic_map_lo ||
+	           tp_lo == &DeeMap_DefaultLoWithForeachPairDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach_pair)
 				return &DeeMap_DefaultLoWithForeachPairDefault;
 		}
+		return &generic_map_lo;
 	}
 	return tp_lo;
 }
@@ -15170,18 +15203,22 @@ DeeType_Optimize_tp_le(DeeTypeObject *__restrict dst,
 	if (tp_le == &generic_seq_le) {
 		if (dst->tp_cmp->tp_compare)
 			return &DeeObject_DefaultLeWithCompareDefault;
-	} else if (tp_le == &generic_set_le) {
+	} else if (tp_le == &generic_set_le ||
+	           tp_le == &DeeSet_DefaultLeWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach)
 				return &DeeSet_DefaultLeWithForeachDefault;
 		}
-	} else if (tp_le == &generic_map_le) {
+		return &generic_set_le;
+	} else if (tp_le == &generic_map_le ||
+	           tp_le == &DeeMap_DefaultLeWithForeachPairDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach_pair)
 				return &DeeMap_DefaultLeWithForeachPairDefault;
 		}
+		return &generic_map_le;
 	}
 	return tp_le;
 }
@@ -15192,18 +15229,22 @@ DeeType_Optimize_tp_gr(DeeTypeObject *__restrict dst,
 	if (tp_gr == &generic_seq_gr) {
 		if (dst->tp_cmp->tp_compare)
 			return &DeeObject_DefaultGrWithCompareDefault;
-	} else if (tp_gr == &generic_set_gr) {
+	} else if (tp_gr == &generic_set_gr ||
+	           tp_gr == &DeeSet_DefaultGrWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach)
 				return &DeeSet_DefaultGrWithForeachDefault;
 		}
-	} else if (tp_gr == &generic_map_gr) {
+		return &generic_set_gr;
+	} else if (tp_gr == &generic_map_gr ||
+	           tp_gr == &DeeMap_DefaultGrWithForeachPairDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach_pair)
 				return &DeeMap_DefaultGrWithForeachPairDefault;
 		}
+		return &generic_map_gr;
 	}
 	return tp_gr;
 }
@@ -15214,18 +15255,22 @@ DeeType_Optimize_tp_ge(DeeTypeObject *__restrict dst,
 	if (tp_ge == &generic_seq_ge) {
 		if (dst->tp_cmp->tp_compare)
 			return &DeeObject_DefaultGeWithCompareDefault;
-	} else if (tp_ge == &generic_set_ge) {
+	} else if (tp_ge == &generic_set_ge ||
+	           tp_ge == &DeeSet_DefaultGeWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach)
 				return &DeeSet_DefaultGeWithForeachDefault;
 		}
-	} else if (tp_ge == &generic_map_ge) {
+		return &generic_set_ge;
+	} else if (tp_ge == &generic_map_ge ||
+	           tp_ge == &DeeMap_DefaultGeWithForeachPairDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach_pair)
 				return &DeeMap_DefaultGeWithForeachPairDefault;
 		}
+		return &generic_map_ge;
 	}
 	return tp_ge;
 }
@@ -15233,7 +15278,12 @@ DeeType_Optimize_tp_ge(DeeTypeObject *__restrict dst,
 PRIVATE NONNULL((1)) DeeType_tp_compare_t DCALL
 DeeType_Optimize_tp_compare(DeeTypeObject *__restrict dst,
                             DeeType_tp_compare_t tp_compare) {
-	if (tp_compare == &generic_seq_compare) {
+	if (tp_compare == &generic_seq_compare ||
+	    tp_compare == &DeeSeq_DefaultCompareWithSizeAndGetItemIndexFast ||
+	    tp_compare == &DeeSeq_DefaultCompareWithSizeAndTryGetItemIndex ||
+	    tp_compare == &DeeSeq_DefaultCompareWithSizeAndGetItemIndex ||
+	    tp_compare == &DeeSeq_DefaultCompareWithSizeObAndGetItem ||
+	    tp_compare == &DeeSeq_DefaultCompareWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			bool has_tp_size = Dee_type_seq_has_custom_tp_size(dst_seq);
@@ -15250,6 +15300,7 @@ DeeType_Optimize_tp_compare(DeeTypeObject *__restrict dst,
 				return &DeeSeq_DefaultCompareWithForeachDefault;
 			}
 		}
+		return &generic_seq_compare;
 	}
 	return tp_compare;
 }
@@ -15257,7 +15308,12 @@ DeeType_Optimize_tp_compare(DeeTypeObject *__restrict dst,
 PRIVATE NONNULL((1)) DeeType_tp_compare_eq_t DCALL
 DeeType_Optimize_tp_compare_eq(DeeTypeObject *__restrict dst,
                                DeeType_tp_compare_eq_t tp_compare_eq) {
-	if (tp_compare_eq == &generic_seq_compare_eq) {
+	if (tp_compare_eq == &generic_seq_compare_eq ||
+	    tp_compare_eq == &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndexFast ||
+	    tp_compare_eq == &DeeSeq_DefaultCompareEqWithSizeAndTryGetItemIndex ||
+	    tp_compare_eq == &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndex ||
+	    tp_compare_eq == &DeeSeq_DefaultCompareEqWithSizeObAndGetItem ||
+	    tp_compare_eq == &DeeSeq_DefaultCompareEqWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			bool has_tp_size = Dee_type_seq_has_custom_tp_size(dst_seq);
@@ -15274,18 +15330,23 @@ DeeType_Optimize_tp_compare_eq(DeeTypeObject *__restrict dst,
 				return &DeeSeq_DefaultCompareEqWithForeachDefault;
 			}
 		}
-	} else if (tp_compare_eq == &generic_set_compare_eq) {
+		return &generic_seq_compare_eq;
+	} else if (tp_compare_eq == &generic_set_compare_eq ||
+	           tp_compare_eq == &DeeSet_DefaultCompareEqWithForeachDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach)
 				return &DeeSet_DefaultCompareEqWithForeachDefault;
 		}
-	} else if (tp_compare_eq == &generic_map_compare_eq) {
+		return &generic_set_compare_eq;
+	} else if (tp_compare_eq == &generic_map_compare_eq ||
+	           tp_compare_eq == &DeeMap_DefaultCompareEqWithForeachPairDefault) {
 		struct type_seq *dst_seq = dst->tp_seq;
 		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
 			if (dst_seq->tp_foreach_pair)
 				return &DeeMap_DefaultCompareEqWithForeachPairDefault;
 		}
+		return &generic_map_compare_eq;
 	}
 	return DeeType_Optimize_tp_compare(dst, tp_compare_eq);
 }
