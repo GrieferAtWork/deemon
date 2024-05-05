@@ -179,34 +179,33 @@ PRIVATE struct type_member tpconst segiter_members[] = {
 
 INTDEF DeeTypeObject SeqSegmentsIterator_Type;
 
-#define DEFINE_SEGITER_COMPARE(name, func)                               \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
-	name(SegmentsIterator *self, SegmentsIterator *other) {              \
-		if (DeeObject_AssertTypeExact(other, &SeqSegmentsIterator_Type)) \
-			goto err;                                                    \
-		return func(self->si_iter, other->si_iter);                      \
-	err:                                                                 \
-		return NULL;                                                     \
-	}
-DEFINE_SEGITER_COMPARE(segiter_eq, DeeObject_CmpEq)
-DEFINE_SEGITER_COMPARE(segiter_ne, DeeObject_CmpNe)
-DEFINE_SEGITER_COMPARE(segiter_lo, DeeObject_CmpLo)
-DEFINE_SEGITER_COMPARE(segiter_le, DeeObject_CmpLe)
-DEFINE_SEGITER_COMPARE(segiter_gr, DeeObject_CmpGr)
-DEFINE_SEGITER_COMPARE(segiter_ge, DeeObject_CmpGe)
-#undef DEFINE_SEGITER_COMPARE
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+segiter_compare(SegmentsIterator *self, SegmentsIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &SeqSegmentsIterator_Type))
+		goto err;
+	return DeeObject_Compare(self->si_iter, other->si_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+segiter_compare_eq(SegmentsIterator *self, SegmentsIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &SeqSegmentsIterator_Type))
+		goto err;
+	return DeeObject_CompareEq(self->si_iter, other->si_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+segiter_hash(SegmentsIterator *self) {
+	return DeeObject_Hash(self->si_iter);
+}
 
 PRIVATE struct type_cmp segiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&segiter_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&segiter_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&segiter_compare,
 };
 
 

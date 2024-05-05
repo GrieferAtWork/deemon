@@ -620,7 +620,7 @@ EXPORTS
 	DeeObject_CompareKeyEq@12=_DeeObject_CompareKeyEq@12
 	DeeObject_ConcatInherited@8=_DeeObject_ConcatInherited@8
 	DeeObject_Contains@8=_DeeObject_Contains@8
-	DeeObject_ContainsObject@8=_DeeObject_ContainsObject@8
+	DeeObject_ContainsAsBool@8=_DeeObject_ContainsAsBool@8
 	DeeObject_Copy@4=_DeeObject_Copy@4
 	DeeObject_Dec@4=_DeeObject_Dec@4
 	DeeObject_DeepCopy@4=_DeeObject_DeepCopy@4
@@ -760,7 +760,7 @@ EXPORTS
 	DeeObject_ShrUInt8@8=_DeeObject_ShrUInt8@8
 	DeeObject_Size@4=_DeeObject_Size@4
 	DeeObject_SizeFast@4=_DeeObject_SizeFast@4
-	DeeObject_SizeObject@4=_DeeObject_SizeObject@4
+	DeeObject_SizeOb@4=_DeeObject_SizeOb@4
 	DeeObject_Str@4=_DeeObject_Str@4
 	DeeObject_Sub@8=_DeeObject_Sub@8
 	DeeObject_SubInt8@8=_DeeObject_SubInt8@8
@@ -797,7 +797,7 @@ EXPORTS
 	DeeObject_TCmpNe@12=_DeeObject_TCmpNe@12
 	DeeObject_TCompare@12=_DeeObject_TCompare@12
 	DeeObject_TCompareEq@12=_DeeObject_TCompareEq@12
-	DeeObject_TContainsObject@12=_DeeObject_TContainsObject@12
+	DeeObject_TContains@12=_DeeObject_TContains@12
 	DeeObject_TCopy@8=_DeeObject_TCopy@8
 	DeeObject_TDec@8=_DeeObject_TDec@8
 	DeeObject_TDeepCopy@8=_DeeObject_TDeepCopy@8
@@ -903,7 +903,7 @@ EXPORTS
 	DeeObject_TShr@12=_DeeObject_TShr@12
 	DeeObject_TSize@8=_DeeObject_TSize@8
 	DeeObject_TSizeFast@8=_DeeObject_TSizeFast@8
-	DeeObject_TSizeObject@8=_DeeObject_TSizeObject@8
+	DeeObject_TSizeOb@8=_DeeObject_TSizeOb@8
 	DeeObject_TStr@8=_DeeObject_TStr@8
 	DeeObject_TSub@12=_DeeObject_TSub@12
 	DeeObject_TThisCall@20=_DeeObject_TThisCall@20

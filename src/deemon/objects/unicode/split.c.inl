@@ -194,41 +194,31 @@ splititer_bool(StringSplitIterator *__restrict self) {
 	return GET_SPLIT_NEXT(self) != NULL;
 }
 
-#define DEFINE_STRINGSPLITITER_COMPARE(name, op)                  \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL         \
-	name(StringSplitIterator *self, StringSplitIterator *other) { \
-		uint8_t *x, *y;                                           \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))     \
-			goto err;                                             \
-		x = GET_SPLIT_NEXT(self);                                 \
-		y = GET_SPLIT_NEXT(other);                                \
-		if (!x)                                                   \
-			x = (uint8_t *)(uintptr_t)-1;                         \
-		if (!y)                                                   \
-			y = (uint8_t *)(uintptr_t)-1;                         \
-		return_bool(x op y);                                      \
-	err:                                                          \
-		return NULL;                                              \
-	}
-DEFINE_STRINGSPLITITER_COMPARE(splititer_eq, ==)
-DEFINE_STRINGSPLITITER_COMPARE(splititer_ne, !=)
-DEFINE_STRINGSPLITITER_COMPARE(splititer_lo, <)
-DEFINE_STRINGSPLITITER_COMPARE(splititer_le, <=)
-DEFINE_STRINGSPLITITER_COMPARE(splititer_gr, >)
-DEFINE_STRINGSPLITITER_COMPARE(splititer_ge, >=)
-#undef DEFINE_STRINGSPLITITER_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+splititer_hash(StringSplitIterator *self) {
+	return Dee_HashPointer(GET_SPLIT_NEXT(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+splititer_compare(StringSplitIterator *self, StringSplitIterator *other) {
+	uint8_t *x, *y;
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	x = GET_SPLIT_NEXT(self);
+	y = GET_SPLIT_NEXT(other);
+	if (!x)
+		x = (uint8_t *)(uintptr_t)-1;
+	if (!y)
+		y = (uint8_t *)(uintptr_t)-1;
+	Dee_return_compare(x, y);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp splititer_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&splititer_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&splititer_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&splititer_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&splititer_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&splititer_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&splititer_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&splititer_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&splititer_compare,
 };
 
 

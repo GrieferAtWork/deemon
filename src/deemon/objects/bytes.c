@@ -131,34 +131,29 @@ err:
 	return -1;
 }
 
-#define DEFINE_BYTESITER_COMPARE(name, expr)                       \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
-	name(BytesIterator *self, BytesIterator *other) {              \
-		if (DeeObject_AssertTypeExact(other, &BytesIterator_Type)) \
-			goto err;                                              \
-		return_bool(expr);                                         \
-	err:                                                           \
-		return NULL;                                               \
-	}
-DEFINE_BYTESITER_COMPARE(bytesiter_eq, (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) == BytesIterator_GetIter(other)));
-DEFINE_BYTESITER_COMPARE(bytesiter_ne, (self->bi_bytes != other->bi_bytes || BytesIterator_GetIter(self) != BytesIterator_GetIter(other)));
-DEFINE_BYTESITER_COMPARE(bytesiter_lo, (self->bi_bytes < other->bi_bytes || (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) < BytesIterator_GetIter(other))));
-DEFINE_BYTESITER_COMPARE(bytesiter_le, (self->bi_bytes < other->bi_bytes || (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) <= BytesIterator_GetIter(other))));
-DEFINE_BYTESITER_COMPARE(bytesiter_gr, (self->bi_bytes > other->bi_bytes || (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) > BytesIterator_GetIter(other))));
-DEFINE_BYTESITER_COMPARE(bytesiter_ge, (self->bi_bytes > other->bi_bytes || (self->bi_bytes == other->bi_bytes && BytesIterator_GetIter(self) >= BytesIterator_GetIter(other))));
-#undef DEFINE_BYTESITER_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+bytesiter_hash(BytesIterator *self) {
+	return Dee_HashCombine(Dee_HashPointer(self->bi_bytes),
+	                       Dee_HashPointer(BytesIterator_GetIter(self)));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bytesiter_compare(BytesIterator *self, BytesIterator *other) {
+	byte_t *lhs_ptr, *rhs_ptr;
+	if (DeeObject_AssertTypeExact(other, &BytesIterator_Type))
+		goto err;
+	Dee_return_compare_if_ne(self->bi_bytes, other->bi_bytes);
+	lhs_ptr = BytesIterator_GetIter(self);
+	rhs_ptr = BytesIterator_GetIter(other);
+	Dee_return_compare(lhs_ptr, rhs_ptr);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp bytesiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&bytesiter_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytesiter_compare,
 };
 
 PRIVATE struct type_member tpconst bytesiter_members[] = {

@@ -1459,22 +1459,22 @@ hashsetiterator_bool(HashSetIterator *__restrict self) {
 	        item < set->hs_elem + (set->hs_mask + 1));
 }
 
-#define DEFINE_HASHSETITERATOR_COMPARE(name, op)                \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
-	name(HashSetIterator *self, HashSetIterator *other) {       \
-		if (DeeObject_AssertType(other, &HashSetIterator_Type)) \
-			goto err;                                           \
-		return_bool(READ_ITEM(self) op READ_ITEM(other));       \
-	err:                                                        \
-		return NULL;                                            \
-	}
-DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_eq, ==)
-DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_ne, !=)
-DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_lo, <)
-DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_le, <=)
-DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_gr, >)
-DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_ge, >=)
-#undef DEFINE_HASHSETITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+hashsetiterator_hash(HashSetIterator *self) {
+	return Dee_HashPointer(READ_ITEM(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+hashsetiterator_compare(HashSetIterator *self, HashSetIterator *other) {
+	struct hashset_item *lhs_item, *rhs_item;
+	if (DeeObject_AssertType(other, &HashSetIterator_Type))
+		goto err;
+	lhs_item = READ_ITEM(self);
+	rhs_item = READ_ITEM(other);
+	Dee_return_compare(lhs_item, rhs_item);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_member tpconst hashsetiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(HashSetIterator, si_set), "->?DHashSet"),
@@ -1664,16 +1664,16 @@ PRIVATE struct type_nii tpconst hashsetiterator_nii = {
 };
 
 PRIVATE struct type_cmp hashsetiterator_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&hashsetiterator_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&hashsetiterator_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&hashsetiterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&hashsetiterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&hashsetiterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&hashsetiterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&hashsetiterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&hashsetiterator_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &hashsetiterator_nii
 };
 

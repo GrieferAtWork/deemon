@@ -233,35 +233,27 @@ PRIVATE struct type_member tpconst bcfi_members[] = {
 #endif /* !CONFIG_NO_DOC */
 
 
-#define DEFINE_BYTESFINDITERATOR_COMPARE(name, op)            \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
-	name(BytesFindIterator *self, BytesFindIterator *other) { \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			goto err;                                         \
-		return_bool(READ_PTR(self) op READ_PTR(other));       \
-	err:                                                      \
-		return NULL;                                          \
-	}
-DEFINE_BYTESFINDITERATOR_COMPARE(bfi_eq, ==)
-DEFINE_BYTESFINDITERATOR_COMPARE(bfi_ne, !=)
-DEFINE_BYTESFINDITERATOR_COMPARE(bfi_lo, <)
-DEFINE_BYTESFINDITERATOR_COMPARE(bfi_le, <=)
-DEFINE_BYTESFINDITERATOR_COMPARE(bfi_gr, >)
-DEFINE_BYTESFINDITERATOR_COMPARE(bfi_ge, >=)
-#undef DEFINE_BYTESFINDITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+bfi_hash(BytesFindIterator *self) {
+	return Dee_HashPointer(READ_PTR(self));
+}
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bfi_compare(BytesFindIterator *self, BytesFindIterator *other) {
+	byte_t *lhs_ptr, *rhs_ptr;
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	lhs_ptr = READ_PTR(self);
+	rhs_ptr = READ_PTR(other);
+	Dee_return_compare(lhs_ptr, rhs_ptr);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp bfi_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bfi_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bfi_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bfi_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bfi_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bfi_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bfi_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&bfi_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&bfi_compare,
 };
 
 

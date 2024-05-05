@@ -1464,14 +1464,6 @@
 #define CONFIG_DEEMON_PATH(x)
 #define DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(n,...) DeeObject*n(DeeBlackListKwdsIterator*self,DeeBlackListKwdsIterator*other){}
 #define DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(n,...) DeeObject*n(DeeBlackListKwIterator*self,DeeBlackListKwIterator*other){}
-#define DEFINE_ITER_COMPARE(n,...) DeeObject*n(SeqSimpleProxyIterator*self,SeqSimpleProxyIterator*other){}
-#define DEFINE_SIITER_COMPARE(n,...) DeeObject*n(SetIntersectionIterator*self,SetIntersectionIterator*other){}
-#define DEFINE_SEGITER_COMPARE(n,...) DeeObject*n(SegmentsIterator*self,SegmentsIterator*other){}
-#define DEFINE_REPEATITER_COMPARE(n,...) DeeObject*n(RepeatIterator*self,RepeatIterator*other){}
-#define DEFINE_RANGEITERATOR_COMPARE(n,...) DeeObject*n(RangeIterator*self,RangeIterator*other){}
-#define DEFINE_RANGEITERATOR_COMPARE_R(n,...) DeeObject*n(RangeIterator*self,RangeIterator*other){}
-#define DEFINE_IRI_COMPARE(n,...) DeeObject*n(IntRangeIterator*self,IntRangeIterator*other){}
-#define DEFINE_IRI_COMPARE_R(n,...) DeeObject*n(IntRangeIterator*self,IntRangeIterator*other){}
 #define DEFINE_KWDSITERATOR_COMPARE(n,...) DeeObject*n(KwdsIterator*self,KwdsIterator*other){}
 #define SEQ_EACH_HEAD OBJECT_HEAD DeeObject*se_seq;
 #define DEFINE_SEQ_EACH_UNARY(n,...) SeqEachOperator*n(SeqEachBase*self){}
@@ -1484,7 +1476,6 @@
 #define DEFINE_SEW_TRINARY(n,...) SeqEachOperator*n(DeeObject*self,DeeObject*a,DeeObject*b){}
 #define DEFINE_SEO_UNARY_INPLACE(n,...) int n(SeqEachOperator**p_self){}
 #define DEFINE_SEO_BINARY_INPLACE(n,...) int n(SeqEachOperator**p_self,DeeObject*other){}
-#define DEFINE_SUBRANGEITERATOR_COMPARE(n,...) DeeObject*n(SubRangeIterator*self,SubRangeIterator*other){}
 #define DEFINE_FOLD_COMPARE(n,T) size_t n(T const*data,size_t datalen,uint32_t fold[UNICODE_FOLDED_MAX],size_t fold_len);
 #define DEFINE_MEMCASECHR(n,rname,T,dee_foldcmp) \
 	T*n(T const*haystack,T needle,size_t haystack_length){}\
@@ -1512,33 +1503,18 @@
 #define DEFINE_CASEFIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_t scan_size,T*open_str,size_t open_size,T*clos_str,size_t clos_size,size_t*p_match_length){}
 #define DEFINE_RFIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_tscan_size,T*open_str,size_topen_size,T*clos_str,size_tclos_size){}
 #define DEFINE_CASERFIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_t scan_size,T*open_str,size_t open_size,T*clos_str,size_t clos_size,size_t*p_match_length){}
-#define DEFINE_STRINGFINDITERATOR_COMPARE(n,...) DeeObject*n(StringFindIterator*self,StringFindIterator*other){}
-#define DEFINE_STRINGSCANITERATOR_COMPARE(n,...) DeeObject*n(StringScanIterator*self,StringScanIterator*other){}
 #define SWITCH_BUILTIN_CODECS(n,...) {}
-#define DEFINE_BYTESSPLITITERATOR_COMPARE(n,...) DeeObject*n(BytesSplitIterator*self,BytesSplitIterator*other){}
-#define DEFINE_BYTESFINDITERATOR_COMPARE(n,...) DeeObject*n(BytesFindIterator*self,BytesFindIterator*other){}
 #define DEFINE_REGRUPSITERATOR_COMPARE(n,...) DeeObject*n(ReGroupsIterator*self,ReGroupsIterator*other){}
-#define DEFINE_RESEQUENCEITARTOR_COMPARE(n,...) DeeObject*n(ReSequenceIterator*self,ReSequenceIterator*other){}
-#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(n,...) DeeObject*n(StringSegmentsIterator*self,StringSegmentsIterator*other){}
-#define DEFINE_STRINGSPLITITER_COMPARE(n,...) DeeObject*n(StringSplitIterator*self,StringSplitIterator*other){}
 #define DEFINE_WEAKREF_COMPARE(n,...) DeeObject*n(WeakRef*self,WeakRef*other){}
 #define DEFINE_DEPRECATED_INPLACE_BINARY(n,...) DeeObject*object_##n(DeeObject*self,size_t argc,DeeObject*const*argv){}
 #define DEFINE_NUMERIC_ISCMP(n,...) DeeObject*numeric_##n(DeeObject*self,size_t argc,DeeObject*const*argv){}
-#define DEFINE_LISTITERATOR_COMPARE(n,...) DeeObject*n(ListIterator*self,ListIterator*other){}
-#define DEFINE_ITERATOR_COMPARE(n,...) DeeObject*n(DeeObject*self,DeeObject*other){}
 #define DEFINE_INT_COMPARE_FUNCTION(n,...) DeeObject*int_##n(DeeIntObject*self,size_t argc,DeeObject*const*argv){}
-#define DEFINE_DOCKWDSITERATOR_COMPARE(n,...) DeeObject*n(DocKwdsIterator*self,DocKwdsIterator*other){}
-#define DEFINE_CLSMEMBER_COMPARE(n,...) DeeObject*n(DeeClsMemberObject*self,DeeClsMemberObject*other){}
-#define DEFINE_HASHSETITERATOR_COMPARE(n,...) DeeObject*n(HashSetIterator*self,HashSetIterator*other){}
-#define DEFINE_GCSETITERATOR_COMPARE(n,...) DeeObject*n(GCSetIterator*self,GCSetIterator*other){}
 #define DEFINE_FLOAT_COMPARE(n,...) DeeObject*n(Float*self,DeeObject*other){}
 #define DEFINE_FLOAT_COMPARE_FUNCTION(n,...) DeeObject*float_##n(Float*self,size_t argc,DeeObject*const*argv){}
 #define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx,...) \
 	DeeObject*file_class_get_##stdxxx(DeeObject*self){}\
 	int file_class_del_##stdxxx(DeeObject*self){}\
 	int file_class_set_##stdxxx(DeeObject*self,DeeObject*value){}
-#define DEFINE_DICTITERATOR_COMPARE(n,...) DeeObject*n(DictIterator*self,DictIterator*other){}
-#define DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(n,...) DeeObject*n(ClassOperatorTableIterator*self,ClassOperatorTableIterator*other){}
 #define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx,instance_xxx,...) \
 	DeeObject*instance_txxx(DeeTypeObject*tp_self,DeeObject*self){}\
 	DeeObject*instance_xxx(DeeObject*self){}
@@ -1566,10 +1542,7 @@
 #define DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx,instance_xxx,...) \
 	int instance_txxx(DeeTypeObject*tp_self,DeeObject**p_self,DeeObject*other){}\
 	int instance_xxx(DeeObject**p_self,DeeObject*other){}
-#define DEFINE_CELL_COMPARE(n,...) DeeObject*n(Cell*self,Cell*other){}
 #define DEFINE_BYTES_COMPARE(n,...) DeeObject*n(Bytes*self,DeeObject*other){}
-#define DEFINE_RODICTITERATOR_COMPARE(n,...) DeeObject*n(RoDictIterator*self,RoDictIterator*other){}
-#define DEFINE_ROSETITERATOR_COMPARE(n,...) DeeObject*n(RoSetIterator*self,RoSetIterator*other){}
 #define DEFINE_SEQITERATOR_COMPARE(n,...) DeeObject*n(SeqIterator*self,SeqIterator*other){}
 #define DEFINE_STRINGITERATOR_COMPARE(n,...) DeeObject*n(StringIterator*self,StringIterator*other){}
 #define DEFINE_TRACEITER_COMPARE(n,...) DeeObject*n(TraceIterator*self,TraceIterator*other){}

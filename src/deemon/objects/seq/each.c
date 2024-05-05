@@ -2187,7 +2187,7 @@ sew_size_fast(SeqEachBase *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sew_sizeob(SeqEachBase *__restrict self) {
-	return DeeObject_SizeObject(self->se_seq);
+	return DeeObject_SizeOb(self->se_seq);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

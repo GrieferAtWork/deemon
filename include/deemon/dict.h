@@ -142,7 +142,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_ByHash(DeeObject *__re
 #define DeeDict_SetItemString(self, key, value)             DeeDict_SetItemStringHash(self, key, Dee_HashStr(key), value)
 #define DeeDict_SetItemStringLen(self, key, keylen, value)  DeeDict_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
 
-#define DeeDict_HasItem(self, key)        DeeObject_Contains(self, key)
+#define DeeDict_HasItem(self, key)        DeeObject_ContainsAsBool(self, key)
 #define DeeDict_GetItem(self, key)        DeeObject_GetItem(self, key)
 #define DeeDict_DelItem(self, key)        DeeObject_DelItem(self, key)
 #define DeeDict_SetItem(self, key, value) DeeObject_SetItem(self, key, value)

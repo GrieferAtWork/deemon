@@ -567,12 +567,12 @@ super_iter(Super *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_sizeob(Super *__restrict self) {
-	return DeeObject_TSizeObject(self->s_type, self->s_self);
+	return DeeObject_TSizeOb(self->s_type, self->s_self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_contains(Super *self, DeeObject *some_object) {
-	return DeeObject_TContainsObject(self->s_type, self->s_self, some_object);
+	return DeeObject_TContains(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

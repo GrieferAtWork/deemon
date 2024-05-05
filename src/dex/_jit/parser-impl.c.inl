@@ -688,7 +688,7 @@ done_y1:
 		LOAD_LVALUE(result, err);
 		{
 			DREF DeeObject *new_result;
-			new_result = DeeObject_SizeObject(result);
+			new_result = DeeObject_SizeOb(result);
 			if unlikely(!new_result)
 				goto err_r_invoke;
 			Dee_Decref(result);
@@ -2877,7 +2877,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 #ifdef JIT_EVAL
 				LOAD_LVALUE(rhs, err_r);
 				{
-					merge = DeeObject_ContainsObject(rhs, lhs);
+					merge = DeeObject_Contains(rhs, lhs);
 					if unlikely(!merge)
 						goto err_rhs;
 					Dee_Decref(rhs);
@@ -2980,7 +2980,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 			lhs = rhs; /* Inherit reference */
 			goto continue_expr;
 		case JIT_KEYWORD:
-			merge = DeeObject_ContainsObject(rhs, lhs);
+			merge = DeeObject_Contains(rhs, lhs);
 			break;
 		default: __builtin_unreachable();
 		}

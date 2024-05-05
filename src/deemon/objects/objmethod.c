@@ -171,97 +171,26 @@ objmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
 	return DeeObjMethod_CallFunc(self->om_func, self->om_this, argc, argv);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 objmethod_hash(DeeObjMethodObject *__restrict self) {
-	return DeeObject_Hash(self->om_this) ^
-	       Dee_HashPointer(self->om_func);
+	return Dee_HashCombine(Dee_HashPointer(self->om_func),
+	                       DeeObject_Hash(self->om_this));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-objmethod_eq(DeeObjMethodObject *self, DeeObjMethodObject *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+objmethod_compare_eq(DeeObjMethodObject *self, DeeObjMethodObject *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	if (self->om_func != other->om_func)
-		return_false;
-	return DeeObject_CmpEq(self->om_this, other->om_this);
+	Dee_return_compare_if_ne(self->om_func, other->om_func);
+	return DeeObject_CompareEq(self->om_this, other->om_this);
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-objmethod_ne(DeeObjMethodObject *self, DeeObjMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	if (self->om_func != other->om_func)
-		return_true;
-	return DeeObject_CmpNe(self->om_this, other->om_this);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-objmethod_lo(DeeObjMethodObject *self, DeeObjMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	if (self->om_func < other->om_func)
-		return_true;
-	if (self->om_func > other->om_func)
-		return_false;
-	return DeeObject_CmpLo(self->om_this, other->om_this);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-objmethod_gr(DeeObjMethodObject *self, DeeObjMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	if (self->om_func > other->om_func)
-		return_true;
-	if (self->om_func < other->om_func)
-		return_false;
-	return DeeObject_CmpGr(self->om_this, other->om_this);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-objmethod_le(DeeObjMethodObject *self, DeeObjMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	if (self->om_func < other->om_func)
-		return_true;
-	if (self->om_func > other->om_func)
-		return_false;
-	return DeeObject_CmpLe(self->om_this, other->om_this);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-objmethod_ge(DeeObjMethodObject *self, DeeObjMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	if (self->om_func > other->om_func)
-		return_true;
-	if (self->om_func < other->om_func)
-		return_false;
-	return DeeObject_CmpGe(self->om_this, other->om_this);
-err:
-	return NULL;
-}
 
 PRIVATE struct type_cmp objmethod_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&objmethod_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&objmethod_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&objmethod_compare_eq,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -595,34 +524,27 @@ dockwdsiter_visit(DocKwdsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->dki_kwds);
 }
 
-#define DEFINE_DOCKWDSITERATOR_COMPARE(name, op)                            \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
-	name(DocKwdsIterator *self, DocKwdsIterator *other) {                   \
-		if (DeeObject_AssertTypeExact(other, &DocKwdsIterator_Type))        \
-			goto err;                                                       \
-		return_bool(DOCKWDSITER_RDITER(self) op DOCKWDSITER_RDITER(other)); \
-	err:                                                                    \
-		return NULL;                                                        \
-	}
-DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_eq, ==)
-DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_ne, !=)
-DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_lo, <)
-DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_le, <=)
-DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_gr, >)
-DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_ge, >=)
-#undef DEFINE_DOCKWDSITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+dockwdsiter_hash(DocKwdsIterator *self) {
+	return Dee_HashPointer(DOCKWDSITER_RDITER(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dockwdsiter_compare(DocKwdsIterator *self, DocKwdsIterator *other) {
+	char const *lhs_iter, *rhs_iter;
+	if (DeeObject_AssertTypeExact(other, &DocKwdsIterator_Type))
+		goto err;
+	lhs_iter = DOCKWDSITER_RDITER(self);
+	rhs_iter = DOCKWDSITER_RDITER(other);
+	Dee_return_compare(lhs_iter, rhs_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp dockwdsiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&dockwdsiter_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_compare,
 };
 
 
@@ -1085,76 +1007,23 @@ clsmethod_printrepr(DeeClsMethodObject *__restrict self,
 	                        self->cm_type, name);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 clsmethod_hash(DeeClsMethodObject *__restrict self) {
 	return Dee_HashPointer(self->cm_func);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_eq(DeeClsMethodObject *self, DeeClsMethodObject *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+clsmethod_compare_eq(DeeClsMethodObject *self, DeeClsMethodObject *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	return_bool_(self->cm_func == other->cm_func);
+	return self->cm_func == other->cm_func ? 0 : 1;
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_ne(DeeClsMethodObject *self, DeeClsMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return_bool_(self->cm_func != other->cm_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_lo(DeeClsMethodObject *self, DeeClsMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return_bool_(self->cm_func < other->cm_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_le(DeeClsMethodObject *self, DeeClsMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return_bool_(self->cm_func <= other->cm_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_gr(DeeClsMethodObject *self, DeeClsMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return_bool_(self->cm_func > other->cm_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_ge(DeeClsMethodObject *self, DeeClsMethodObject *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return_bool_(self->cm_func >= other->cm_func);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp clsmethod_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsmethod_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&clsmethod_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&clsmethod_compare_eq,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1457,104 +1326,32 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 clsproperty_hash(DeeClsPropertyObject *__restrict self) {
-	return (Dee_HashPointer(self->cp_get) ^
-	        Dee_HashPointer(self->cp_del) ^
-	        Dee_HashPointer(self->cp_set));
+	Dee_hash_t result;
+	result = Dee_HashPointer(self->cp_get);
+	result = Dee_HashCombine(result, Dee_HashPointer(self->cp_del));
+	result = Dee_HashCombine(result, Dee_HashPointer(self->cp_set));
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsproperty_eq(DeeClsPropertyObject *self,
-               DeeClsPropertyObject *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+clsproperty_compare_eq(DeeClsPropertyObject *self,
+                       DeeClsPropertyObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
 		goto err;
-	return_bool(self->cp_get == other->cp_get &&
-	            self->cp_del == other->cp_del &&
-	            self->cp_set == other->cp_set);
+	return (self->cp_get == other->cp_get &&
+	        self->cp_del == other->cp_del &&
+	        self->cp_set == other->cp_set)
+	       ? 0
+	       : 1;
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsproperty_ne(DeeClsPropertyObject *self,
-               DeeClsPropertyObject *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
-		goto err;
-	return_bool(self->cp_get != other->cp_get ||
-	            self->cp_del != other->cp_del ||
-	            self->cp_set != other->cp_set);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsproperty_lo(DeeClsPropertyObject *self,
-               DeeClsPropertyObject *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
-		goto err;
-	return_bool(self->cp_get < other->cp_get ||
-	            (self->cp_get == other->cp_get &&
-	             (self->cp_del < other->cp_del ||
-	              (self->cp_del == other->cp_del &&
-	               self->cp_set < other->cp_set))));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsproperty_le(DeeClsPropertyObject *self,
-               DeeClsPropertyObject *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
-		goto err;
-	return_bool(self->cp_get < other->cp_get ||
-	            (self->cp_get == other->cp_get &&
-	             (self->cp_del < other->cp_del ||
-	              (self->cp_del == other->cp_del &&
-	               self->cp_set <= other->cp_set))));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsproperty_gr(DeeClsPropertyObject *self,
-               DeeClsPropertyObject *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
-		goto err;
-	return_bool(self->cp_get > other->cp_get ||
-	            (self->cp_get == other->cp_get &&
-	             (self->cp_del > other->cp_del ||
-	              (self->cp_del == other->cp_del &&
-	               self->cp_set > other->cp_set))));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsproperty_ge(DeeClsPropertyObject *self,
-               DeeClsPropertyObject *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
-		goto err;
-	return_bool(self->cp_get > other->cp_get ||
-	            (self->cp_get == other->cp_get &&
-	             (self->cp_del > other->cp_del ||
-	              (self->cp_del == other->cp_del &&
-	               self->cp_set >= other->cp_set))));
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp clsproperty_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsproperty_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&clsproperty_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&clsproperty_compare_eq,
 };
 
 INTERN struct keyword getter_kwlist[] = { K(thisarg), KEND };
@@ -1954,46 +1751,30 @@ PRIVATE struct type_method tpconst clsmember_methods[] = {
 	TYPE_METHOD_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 clsmember_hash(DeeClsMemberObject *__restrict self) {
 	return (Dee_HashPointer(self->cm_type) ^
 	        Dee_HashPointer(self->cm_memb.m_name) ^
 	        Dee_HashPointer(self->cm_memb.m_const));
 }
-#define CLSMEMBER_CMP(a, b) \
-	memcmp(&(a)->cm_memb, &(b)->cm_memb, sizeof(DeeClsMemberObject) - offsetof(DeeClsMemberObject, cm_memb))
-#define CLSMEMBER_BCMP(a, b) \
-	bcmp(&(a)->cm_memb, &(b)->cm_memb, sizeof(DeeClsMemberObject) - offsetof(DeeClsMemberObject, cm_memb))
-#define DEFINE_CLSMEMBER_COMPARE(name, CLSMEMBER_CMP, op)         \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL         \
-	name(DeeClsMemberObject *self, DeeClsMemberObject *other) {   \
-		if (DeeObject_AssertTypeExact(other, &DeeClsMember_Type)) \
-			goto err;                                             \
-		return_bool(CLSMEMBER_CMP(self, other) op 0);             \
-	err:                                                          \
-		return NULL;                                              \
-	}
-DEFINE_CLSMEMBER_COMPARE(clsmember_eq, CLSMEMBER_BCMP, ==)
-DEFINE_CLSMEMBER_COMPARE(clsmember_ne, CLSMEMBER_BCMP, !=)
-DEFINE_CLSMEMBER_COMPARE(clsmember_lo, CLSMEMBER_CMP, <)
-DEFINE_CLSMEMBER_COMPARE(clsmember_le, CLSMEMBER_CMP, <=)
-DEFINE_CLSMEMBER_COMPARE(clsmember_gr, CLSMEMBER_CMP, >)
-DEFINE_CLSMEMBER_COMPARE(clsmember_ge, CLSMEMBER_CMP, >=)
-#undef DEFINE_CLSMEMBER_COMPARE
-#undef CLSMEMBER_BCMP
-#undef CLSMEMBER_CMP
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+clsmember_compare_eq(DeeClsMemberObject *self,
+                     DeeClsMemberObject *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeClsMember_Type))
+		goto err;
+	return ((self->cm_type == other->cm_type) &&
+	        (self->cm_memb.m_name == other->cm_memb.m_name) &&
+	        (self->cm_memb.m_const == other->cm_memb.m_const))
+	       ? 0
+	       : 1;
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp clsmember_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsmember_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&clsmember_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&clsmember_compare_eq,
 };
 
 PRIVATE struct type_member tpconst clsmember_members[] = {

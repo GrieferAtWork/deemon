@@ -283,7 +283,7 @@ PRIVATE struct type_member tpconst trans_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 trans_sizeob(Transformation *__restrict self) {
-	return DeeObject_SizeObject(self->t_seq);
+	return DeeObject_SizeOb(self->t_seq);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

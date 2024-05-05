@@ -269,6 +269,32 @@ PRIVATE struct type_math bool_math = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bool_compare_eq(DeeObject *self, DeeObject *other) {
+	int error;
+	if (DeeBool_Check(other))
+		return self == other ? 0 : 1;
+	error = DeeObject_Bool(other);
+	if unlikely(error < 0)
+		goto err;
+	return (!error) != DeeBool_IsTrue(self) ? 0 : 1;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bool_compare(DeeObject *self, DeeObject *other) {
+	int error;
+	if (DeeBool_Check(other))
+		return self == other ? 0 : 1;
+	error = DeeObject_Bool(other);
+	if unlikely(error < 0)
+		goto err;
+	Dee_return_compare(DeeBool_IsTrue(self), !!error);
+err:
+	return Dee_COMPARE_ERR;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_eq(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
@@ -343,8 +369,8 @@ err:
 
 PRIVATE struct type_cmp bool_cmp = {
 	/* .tp_hash          = */ &bool_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare_eq    = */ &bool_compare_eq,
+	/* .tp_compare       = */ &bool_compare,
 	/* .tp_trycompare_eq = */ NULL,
 	/* .tp_eq            = */ &bool_eq,
 	/* .tp_ne            = */ &bool_ne,

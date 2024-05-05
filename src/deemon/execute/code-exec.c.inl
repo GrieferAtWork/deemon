@@ -3038,7 +3038,7 @@ do_fprint_c_nl:
 		/* Sequence operators. */
 		TARGET(ASM_GETSIZE, -1, +1) {
 			DREF DeeObject *object_size;
-			object_size = DeeObject_SizeObject(TOP);
+			object_size = DeeObject_SizeOb(TOP);
 			if unlikely(!object_size)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -3048,7 +3048,7 @@ do_fprint_c_nl:
 
 		TARGET(ASM_CONTAINS, -2, +1) {
 			DREF DeeObject *does_contain;
-			does_contain = DeeObject_ContainsObject(SECOND, FIRST);
+			does_contain = DeeObject_Contains(SECOND, FIRST);
 			if unlikely(!does_contain)
 				HANDLE_EXCEPT();
 			POPREF();
@@ -3063,7 +3063,7 @@ do_fprint_c_nl:
 do_contains_c:
 			ASSERT_USAGE(-1, +1);
 			ASSERT_CONSTimm();
-			value = DeeObject_ContainsObject(CONSTimm, TOP);
+			value = DeeObject_Contains(CONSTimm, TOP);
 			if unlikely(!value)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);

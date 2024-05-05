@@ -144,34 +144,28 @@ iter_exhausted:
 }
 
 INTDEF DeeTypeObject RoSetIterator_Type;
-#define DEFINE_ROSETITERATOR_COMPARE(name, op)                \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
-	name(RoSetIterator *self, RoSetIterator *other) {         \
-		if (DeeObject_AssertType(other, &RoSetIterator_Type)) \
-			goto err;                                         \
-		return_bool(READ_ITEM(self) op READ_ITEM(other));     \
-	err:                                                      \
-		return NULL;                                          \
-	}
-DEFINE_ROSETITERATOR_COMPARE(rosetiterator_eq, ==)
-DEFINE_ROSETITERATOR_COMPARE(rosetiterator_ne, !=)
-DEFINE_ROSETITERATOR_COMPARE(rosetiterator_lo, <)
-DEFINE_ROSETITERATOR_COMPARE(rosetiterator_le, <=)
-DEFINE_ROSETITERATOR_COMPARE(rosetiterator_gr, >)
-DEFINE_ROSETITERATOR_COMPARE(rosetiterator_ge, >=)
-#undef DEFINE_ROSETITERATOR_COMPARE
+
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+rosetiterator_hash(RoSetIterator *self) {
+	return Dee_HashPointer(READ_ITEM(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rosetiterator_compare(RoSetIterator *self, RoSetIterator *other) {
+	struct roset_item *lhs_item, *rhs_item;
+	if (DeeObject_AssertType(other, &RoSetIterator_Type))
+		goto err;
+	lhs_item = READ_ITEM(self);
+	rhs_item = READ_ITEM(other);
+	Dee_return_compare(lhs_item, rhs_item);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp rosetiterator_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&rosetiterator_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&rosetiterator_compare,
 };
 
 

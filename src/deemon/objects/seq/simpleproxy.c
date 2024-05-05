@@ -786,35 +786,33 @@ STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) ==
 #define iter_bool proxy_bool
 #define iter_visit proxy_visit
 
-#define DEFINE_ITER_COMPARE(name, func)                       \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
-	name(SeqSimpleProxyIterator *self,                        \
-	     SeqSimpleProxyIterator *other) {                     \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			goto err;                                         \
-		return func(self->si_iter, other->si_iter);           \
-	err:                                                      \
-		return NULL;                                          \
-	}
-DEFINE_ITER_COMPARE(iter_eq, DeeObject_CmpEq)
-DEFINE_ITER_COMPARE(iter_ne, DeeObject_CmpNe)
-DEFINE_ITER_COMPARE(iter_lo, DeeObject_CmpLo)
-DEFINE_ITER_COMPARE(iter_le, DeeObject_CmpLe)
-DEFINE_ITER_COMPARE(iter_gr, DeeObject_CmpGr)
-DEFINE_ITER_COMPARE(iter_ge, DeeObject_CmpGe)
-#undef DEFINE_ITER_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+iter_hash(SeqSimpleProxyIterator *self) {
+	return DeeObject_Hash(self->si_iter);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+iter_compare(SeqSimpleProxyIterator *self, SeqSimpleProxyIterator *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	return DeeObject_Compare(self->si_iter, other->si_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+iter_compare_eq(SeqSimpleProxyIterator *self, SeqSimpleProxyIterator *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	return DeeObject_CompareEq(self->si_iter, other->si_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp iter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iter_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&iter_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&iter_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&iter_compare,
 };
 
 PRIVATE struct type_member tpconst iter_members[] = {

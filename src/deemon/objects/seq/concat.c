@@ -522,7 +522,7 @@ cat_contains(Cat *self, DeeObject *search_item) {
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		DREF DeeObject *result;
 		int error;
-		result = DeeObject_ContainsObject(DeeTuple_GET(self, i), search_item);
+		result = DeeObject_Contains(DeeTuple_GET(self, i), search_item);
 		if unlikely(!result)
 			goto err;
 		error = DeeObject_Bool(result);

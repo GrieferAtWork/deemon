@@ -28,6 +28,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
+#include <deemon/util/atomic.h>
 
 /**/
 #include "../../runtime/runtime_error.h"
@@ -281,65 +282,51 @@ PRIVATE struct type_nii tpconst typebasesiter_nii = {
 	}
 };
 
-#define typebasesiter_eq typemroiter_eq
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-typemroiter_eq(TypeMROIterator *self, TypeMROIterator *other) {
-	DeeTypeObject *lhs_iter, *rhs_iter;
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	TypeMROIterator_LockAcquire(self);
-	lhs_iter = self->tmi_iter;
-	TypeMROIterator_LockRelease(self);
-	TypeMROIterator_LockAcquire(other);
-	rhs_iter = other->tmi_iter;
-	TypeMROIterator_LockRelease(other);
-	return_bool_(lhs_iter == rhs_iter);
-err:
-	return NULL;
+#define typebasesiter_hash       typemroiter_hash
+#define typebasesiter_compare_eq typemroiter_compare_eq
+
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+typemroiter_hash(TypeMROIterator *self) {
+	return Dee_HashPointer(atomic_read(&self->tmi_iter));
 }
 
-#define typebasesiter_ne typemroiter_ne
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-typemroiter_ne(TypeMROIterator *self, TypeMROIterator *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+typemroiter_compare_eq(TypeMROIterator *self, TypeMROIterator *other) {
 	DeeTypeObject *lhs_iter, *rhs_iter;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	TypeMROIterator_LockAcquire(self);
-	lhs_iter = self->tmi_iter;
-	TypeMROIterator_LockRelease(self);
-	TypeMROIterator_LockAcquire(other);
-	rhs_iter = other->tmi_iter;
-	TypeMROIterator_LockRelease(other);
-	return_bool_(lhs_iter != rhs_iter);
+	lhs_iter = atomic_read(&self->tmi_iter);
+	rhs_iter = atomic_read(&other->tmi_iter);
+	return lhs_iter == rhs_iter ? 0 : 1;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp typemroiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&typemroiter_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&typemroiter_compare_eq,
 	/* .tp_compare       = */ NULL,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemroiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemroiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &typemroiter_nii,
 };
 
 PRIVATE struct type_cmp typebasesiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&typebasesiter_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&typebasesiter_compare_eq,
 	/* .tp_compare       = */ NULL,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebasesiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebasesiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &typebasesiter_nii,
 };
 

@@ -194,35 +194,27 @@ done:
 	return result;
 }
 
-#define DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(name, op)                     \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                       \
-	name(ClassOperatorTableIterator *self,                                      \
-	     ClassOperatorTableIterator *other) {                                   \
-		if (DeeObject_AssertTypeExact(other, &ClassOperatorTableIterator_Type)) \
-			goto err;                                                           \
-		return_bool(COTI_GETITER(self) op COTI_GETITER(other));                 \
-	err:                                                                        \
-		return NULL;                                                            \
-	}
-DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_eq, ==)
-DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_ne, !=)
-DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_lo, <)
-DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_le, <=)
-DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_gr, >)
-DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_ge, >=)
-#undef DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+coti_hash(ClassOperatorTableIterator *self) {
+	return Dee_HashPointer(COTI_GETITER(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+coti_compare(ClassOperatorTableIterator *self, ClassOperatorTableIterator *other) {
+	struct class_operator *lhs_iter, *rhs_iter;
+	if (DeeObject_AssertTypeExact(other, &ClassOperatorTableIterator_Type))
+		goto err;
+	lhs_iter = COTI_GETITER(self);
+	rhs_iter = COTI_GETITER(other);
+	Dee_return_compare(lhs_iter, rhs_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp coti_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&coti_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&coti_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&coti_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&coti_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&coti_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&coti_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&coti_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&coti_compare,
 };
 
 PRIVATE struct type_getset tpconst coti_getsets[] = {
@@ -726,7 +718,7 @@ cat_size(ClassAttributeTable *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_trygetitem(ClassAttributeTable *self, DeeObject *key) {
-	dhash_t hash, i, perturb;
+	Dee_hash_t hash, i, perturb;
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	hash = DeeString_Hash(key);
@@ -754,7 +746,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_trygetitem_string_hash(ClassAttributeTable *self,
                            char const *key, Dee_hash_t hash) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	i = perturb = hash & self->ca_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
 		struct class_attribute const *at;
@@ -774,7 +766,7 @@ cat_trygetitem_string_hash(ClassAttributeTable *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_trygetitem_string_len_hash(ClassAttributeTable *self, char const *key,
                                size_t keylen, Dee_hash_t hash) {
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	i = perturb = hash & self->ca_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
 		struct class_attribute const *at;
@@ -1361,8 +1353,7 @@ nope:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cd_eq(ClassDescriptor *self,
-      ClassDescriptor *other) {
+cd_eq(ClassDescriptor *self, ClassDescriptor *other) {
 	size_t i;
 	if (!DeeClassDescriptor_Check(other))
 		goto nope;
@@ -1932,7 +1923,7 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 		goto err_iter;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		struct class_attribute *ent;
-		dhash_t hash, j, perturb;
+		Dee_hash_t hash, j, perturb;
 		if (iattr_used >= (imask / 3) * 2) {
 			ClassDescriptor *new_result;
 			size_t i, new_mask;
@@ -2202,7 +2193,7 @@ got_flag:
 			goto err_r_imemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			struct class_attribute *ent;
-			dhash_t hash, i, perturb;
+			Dee_hash_t hash, i, perturb;
 			if (DeeObject_Unpack(elem, 2, data))
 				goto err_r_imemb_iter_elem;
 			Dee_Decref(elem);
@@ -3049,29 +3040,28 @@ PRIVATE struct type_member tpconst instancemember_members[] = {
 /* NOTE: Must also hash and compare the type because if the class is
  *       created multiple times, then the member descriptor remains
  *       the same and is shared between all instances. */
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 instancemember_hash(DeeInstanceMemberObject *__restrict self) {
-	return (Dee_HashPointer(self->im_type) ^
-	        Dee_HashPointer(self->im_attribute));
+	return Dee_HashCombine(Dee_HashPointer(self->im_type),
+	                       Dee_HashPointer(self->im_attribute));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-instancemember_eq(DeeInstanceMemberObject *self,
-                  DeeInstanceMemberObject *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+instancemember_compare_eq(DeeInstanceMemberObject *self,
+                          DeeInstanceMemberObject *other) {
 	if (DeeObject_AssertType(other, &DeeInstanceMember_Type))
 		goto err;
-	return_bool(self->im_type == other->im_type &&
-	            self->im_attribute == other->im_attribute);
+	return (self->im_type == other->im_type &&
+	        self->im_attribute == other->im_attribute)
+	       ? 0
+	       : 1;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp instancemember_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&instancemember_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&instancemember_eq,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&instancemember_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&instancemember_compare_eq,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -4622,9 +4612,9 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
  * @return: NULL: Attribute could not be found (no error is thrown) */
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryClassAttributeHash(DeeClassDescriptorObject *self,
-                                           /*String*/ DeeObject *name, dhash_t hash) {
+                                           /*String*/ DeeObject *name, Dee_hash_t hash) {
 	struct class_attribute *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	i = perturb = hash & self->cd_cattr_mask;
 	for (;; DeeClassDescriptor_CATTRNEXT(i, perturb)) {
@@ -4641,9 +4631,9 @@ DeeClassDescriptor_QueryClassAttributeHash(DeeClassDescriptorObject *self,
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryClassAttributeStringHash(DeeClassDescriptorObject *__restrict self,
-                                                 char const *__restrict name, dhash_t hash) {
+                                                 char const *__restrict name, Dee_hash_t hash) {
 	struct class_attribute *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	i = perturb = hash & self->cd_cattr_mask;
 	for (;; DeeClassDescriptor_CATTRNEXT(i, perturb)) {
 		result = &self->cd_cattr_list[i & self->cd_cattr_mask];
@@ -4662,9 +4652,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryClassAttributeStringLenHash(DeeClassDescriptorObject *__restrict self,
                                                     char const *__restrict name,
                                                     size_t attrlen,
-                                                    dhash_t hash) {
+                                                    Dee_hash_t hash) {
 	struct class_attribute *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	i = perturb = hash & self->cd_cattr_mask;
 	for (;; DeeClassDescriptor_CATTRNEXT(i, perturb)) {
 		result = &self->cd_cattr_list[i & self->cd_cattr_mask];
@@ -4680,9 +4670,9 @@ DeeClassDescriptor_QueryClassAttributeStringLenHash(DeeClassDescriptorObject *__
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryInstanceAttributeHash(DeeClassDescriptorObject *self,
-                                              /*String*/ DeeObject *name, dhash_t hash) {
+                                              /*String*/ DeeObject *name, Dee_hash_t hash) {
 	struct class_attribute *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	i = perturb = hash & self->cd_iattr_mask;
 	for (;; DeeClassDescriptor_IATTRNEXT(i, perturb)) {
@@ -4699,9 +4689,9 @@ DeeClassDescriptor_QueryInstanceAttributeHash(DeeClassDescriptorObject *self,
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryInstanceAttributeStringHash(DeeClassDescriptorObject *__restrict self,
-                                                    char const *__restrict name, dhash_t hash) {
+                                                    char const *__restrict name, Dee_hash_t hash) {
 	struct class_attribute *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	i = perturb = hash & self->cd_iattr_mask;
 	for (;; DeeClassDescriptor_IATTRNEXT(i, perturb)) {
 		result = &self->cd_iattr_list[i & self->cd_iattr_mask];
@@ -4719,9 +4709,9 @@ DeeClassDescriptor_QueryInstanceAttributeStringHash(DeeClassDescriptorObject *__
 PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryInstanceAttributeStringLenHash(DeeClassDescriptorObject *__restrict self,
                                                        char const *__restrict name,
-                                                       size_t attrlen, dhash_t hash) {
+                                                       size_t attrlen, Dee_hash_t hash) {
 	struct class_attribute *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	i = perturb = hash & self->cd_iattr_mask;
 	for (;; DeeClassDescriptor_IATTRNEXT(i, perturb)) {
 		result = &self->cd_iattr_list[i & self->cd_iattr_mask];

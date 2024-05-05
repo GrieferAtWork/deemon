@@ -487,7 +487,7 @@ seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *ar
 	ASSERT(tp_iter->tp_seq);
 	ASSERT(tp_iter->tp_seq->tp_getitem);
 	self->si_getitem = tp_iter->tp_seq->tp_getitem;
-	self->si_size    = DeeObject_SizeObject(self->si_seq);
+	self->si_size    = DeeObject_SizeOb(self->si_seq);
 	if unlikely(!self->si_size)
 		goto err;
 	Dee_atomic_rwlock_init(&self->si_lock);
@@ -3577,7 +3577,7 @@ seq_contains(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	/* Without a key function, invoke the regular contains-operator. */
 	if (DeeNone_Check(key))
-		return DeeObject_ContainsObject(self, elem);
+		return DeeObject_Contains(self, elem);
 	elem = DeeObject_Call(key, 1, &elem);
 	if unlikely(!elem)
 		goto err;
@@ -6424,7 +6424,7 @@ err:
 
 
 PRIVATE struct type_getset tpconst seq_getsets[] = {
-	TYPE_GETTER("length", &DeeObject_SizeObject, "->?Dint\nAlias for ${##this}"),
+	TYPE_GETTER("length", &DeeObject_SizeOb, "->?Dint\nAlias for ${##this}"),
 	TYPE_GETSET(STR_first, &DeeSeq_Front, &seq_del_first, &seq_set_first,
 	            "->\n"
 	            "Access the first item of the Sequence\n"

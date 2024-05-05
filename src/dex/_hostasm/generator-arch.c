@@ -282,8 +282,8 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_CmpGr, 8);
 	CASE(DeeObject_CmpGe, 8);
 	CASE(DeeObject_Iter, 4);
-	CASE(DeeObject_SizeObject, 4);
-	CASE(DeeObject_Contains, 8);
+	CASE(DeeObject_SizeOb, 4);
+	CASE(DeeObject_ContainsAsBool, 8);
 	CASE(DeeObject_GetItem, 8);
 	CASE(DeeObject_DelItem, 8);
 	CASE(DeeObject_SetItem, 12);

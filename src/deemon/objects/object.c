@@ -2012,7 +2012,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_size))
 		goto err;
-	return DeeObject_SizeObject(self);
+	return DeeObject_SizeOb(self);
 err:
 	return NULL;
 }
@@ -2022,7 +2022,7 @@ object_contains(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_contains, &other))
 		goto err;
-	return DeeObject_ContainsObject(self, other);
+	return DeeObject_Contains(self, other);
 err:
 	return NULL;
 }
@@ -4635,12 +4635,26 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-type_hash(DeeObject *__restrict self) {
+type_hash(DeeTypeObject *__restrict self) {
 	return Dee_HashPointer(self);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_compare_eq(DeeTypeObject *self, DeeTypeObject *some_object) {
+	if (DeeObject_AssertType(some_object, &DeeType_Type))
+		goto err;
+	return self == some_object ? 0 : 1;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_trycompare_eq(DeeTypeObject *self, DeeTypeObject *some_object) {
+	return self == some_object ? 0 : 1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_eq(DeeObject *self, DeeObject *some_object) {
+type_eq(DeeTypeObject *self, DeeTypeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
 	return_bool_(self == some_object);
@@ -4649,7 +4663,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_ne(DeeObject *self, DeeObject *some_object) {
+type_ne(DeeTypeObject *self, DeeTypeObject *some_object) {
 	if (DeeObject_AssertType(some_object, &DeeType_Type))
 		goto err;
 	return_bool_(self != some_object);
@@ -4658,12 +4672,12 @@ err:
 }
 
 PRIVATE struct type_cmp type_cmp_data = {
-	/* .tp_hash          = */ &type_hash,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&type_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&type_compare_eq,
 	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ &type_eq,
-	/* .tp_ne            = */ &type_ne,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&type_trycompare_eq,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&type_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&type_ne,
 };
 
 

@@ -330,35 +330,33 @@ cell_hash(Cell *__restrict self) {
 }
 
 
-#define DEFINE_CELL_COMPARE(name, op)                              \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
-	name(Cell *self, Cell *other) {                                \
-		if (DeeObject_AssertType(other, &DeeCell_Type))            \
-			goto err;                                              \
-		return_bool(DeeObject_Id(DeeCell_GetItemPointer(self)) op  \
-		            DeeObject_Id(DeeCell_GetItemPointer(other)));  \
-	err:                                                           \
-		return NULL;                                               \
-	}
-DEFINE_CELL_COMPARE(cell_eq, ==)
-DEFINE_CELL_COMPARE(cell_ne, !=)
-DEFINE_CELL_COMPARE(cell_lo, <)
-DEFINE_CELL_COMPARE(cell_le, <=)
-DEFINE_CELL_COMPARE(cell_gr, >)
-DEFINE_CELL_COMPARE(cell_ge, >=)
-#undef DEFINE_CELL_COMPARE
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cell_compare(Cell *self, Cell *other) {
+	uintptr_t lhs_id, rhs_id;
+	if (DeeObject_AssertType(other, &DeeCell_Type))
+		goto err;
+	lhs_id = DeeObject_Id(DeeCell_GetItemPointer(self));
+	rhs_id = DeeObject_Id(DeeCell_GetItemPointer(other));
+	Dee_return_compare(lhs_id, rhs_id);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cell_trycompare_eq(Cell *self, Cell *other) {
+	uintptr_t lhs_id, rhs_id;
+	if unlikely(!DeeCell_Check(other))
+		return 1;
+	lhs_id = DeeObject_Id(DeeCell_GetItemPointer(self));
+	rhs_id = DeeObject_Id(DeeCell_GetItemPointer(other));
+	return lhs_id == rhs_id ? 0 : 1;
+}
 
 PRIVATE struct type_cmp cell_cmp = {
 	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&cell_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_ge
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_compare,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_trycompare_eq,
 };
 
 

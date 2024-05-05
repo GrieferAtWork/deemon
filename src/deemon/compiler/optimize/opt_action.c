@@ -408,7 +408,7 @@ after_target_symbol_optimization:
 		if (self->a_action.a_act0->a_type == AST_CONSTEXPR &&
 		    self->a_action.a_act1->a_type == AST_CONSTEXPR) {
 			/* Propagate constants. */
-			expr_result = DeeObject_ContainsObject(self->a_action.a_act1->a_constexpr,
+			expr_result = DeeObject_Contains(self->a_action.a_act1->a_constexpr,
 			                                       self->a_action.a_act0->a_constexpr);
 action_set_expr_result:
 			if (!expr_result) {

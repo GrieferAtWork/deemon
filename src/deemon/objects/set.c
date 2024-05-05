@@ -199,7 +199,7 @@ invset_iterself(DeeSetInversionObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 invset_tpcontains(DeeSetInversionObject *self, DeeObject *key) {
-	int result = DeeObject_Contains(self->si_set, key);
+	int result = DeeObject_ContainsAsBool(self->si_set, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(!result);
@@ -356,7 +356,7 @@ set_issubset_impl(DeeObject *lhs, DeeObject *rhs) {
 		goto err;
 	while (ITER_ISOK(lhs_item = DeeObject_IterNext(lhs_iter))) {
 		/* Check if this item appears in `rhs' */
-		temp = DeeObject_Contains(rhs, lhs_item);
+		temp = DeeObject_ContainsAsBool(rhs, lhs_item);
 		Dee_Decref(lhs_item);
 		if unlikely(temp < 0)
 			goto err_iter;
@@ -475,7 +475,7 @@ DeeSet_IsDisjoint(DeeObject *lhs, DeeObject *rhs) {
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
 		/* Make sure that `rhs' doesn't contain this item. */
-		int temp = DeeObject_Contains(rhs, item);
+		int temp = DeeObject_ContainsAsBool(rhs, item);
 		Dee_Decref(item);
 		if unlikely(temp < 0)
 			goto err_iter;

@@ -2919,7 +2919,7 @@ public:
 	}
 
 	bool contains(DeeObject *value) {
-		return throw_if_negative(DeeObject_Contains(this, value)) > 0;
+		return throw_if_negative(DeeObject_ContainsAsBool(this, value)) > 0;
 	}
 	size_t size() {
 		return throw_if_minusone(DeeObject_Size(this));

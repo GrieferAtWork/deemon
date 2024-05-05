@@ -358,70 +358,55 @@ PRIVATE struct type_member tpconst ri_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_RANGEITERATOR_COMPARE(name, compare_object)            \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
-	name(RangeIterator *self, RangeIterator *other) {                 \
-		DREF DeeObject *my_index, *ot_index, *result;                 \
-		if (DeeObject_AssertTypeExact(other, &SeqRangeIterator_Type)) \
-			goto err;                                                 \
-		my_index = ri_get_next_index(self);                           \
-		if unlikely(!my_index)                                        \
-			goto err;                                                 \
-		ot_index = ri_get_next_index(other);                          \
-		if unlikely(!my_index)                                        \
-			goto err_myi;                                             \
-		result = compare_object(my_index, ot_index);                  \
-		Dee_Decref(ot_index);                                         \
-		Dee_Decref(my_index);                                         \
-		return result;                                                \
-	err_myi:                                                          \
-		Dee_Decref(my_index);                                         \
-	err:                                                              \
-		return NULL;                                                  \
-	}
-#define DEFINE_RANGEITERATOR_COMPARE_R(name, compare_object)          \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
-	name(RangeIterator *self, RangeIterator *other) {                 \
-		DREF DeeObject *my_index, *ot_index, *result;                 \
-		if (DeeObject_AssertTypeExact(other, &SeqRangeIterator_Type)) \
-			goto err;                                                 \
-		my_index = ri_get_next_index(self);                           \
-		if unlikely(!my_index)                                        \
-			goto err;                                                 \
-		ot_index = ri_get_next_index(other);                          \
-		if unlikely(!my_index)                                        \
-			goto err_myi;                                             \
-		result = unlikely(self->ri_range->r_rev)                      \
-		         ? compare_object(my_index, ot_index)                 \
-		         : compare_object(ot_index, my_index);                \
-		Dee_Decref(ot_index);                                         \
-		Dee_Decref(my_index);                                         \
-		return result;                                                \
-	err_myi:                                                          \
-		Dee_Decref(my_index);                                         \
-	err:                                                              \
-		return NULL;                                                  \
-	}
-DEFINE_RANGEITERATOR_COMPARE(ri_eq, DeeObject_CmpEq)
-DEFINE_RANGEITERATOR_COMPARE(ri_ne, DeeObject_CmpNe)
-DEFINE_RANGEITERATOR_COMPARE_R(ri_lo, DeeObject_CmpLo)
-DEFINE_RANGEITERATOR_COMPARE_R(ri_le, DeeObject_CmpLe)
-DEFINE_RANGEITERATOR_COMPARE_R(ri_gr, DeeObject_CmpGr)
-DEFINE_RANGEITERATOR_COMPARE_R(ri_ge, DeeObject_CmpGe)
-#undef DEFINE_RANGEITERATOR_COMPARE_R
-#undef DEFINE_RANGEITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ri_compare(RangeIterator *self, RangeIterator *other) {
+	int result;
+	DREF DeeObject *my_index, *ot_index;
+	if (DeeObject_AssertTypeExact(other, &SeqRangeIterator_Type))
+		goto err;
+	my_index = ri_get_next_index(self);
+	if unlikely(!my_index)
+		goto err;
+	ot_index = ri_get_next_index(other);
+	if unlikely(!my_index)
+		goto err_my_index;
+	result = DeeObject_Compare(my_index, ot_index);
+	Dee_Decref(ot_index);
+	Dee_Decref(my_index);
+	return result;
+err_my_index:
+	Dee_Decref(my_index);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ri_compare_eq(RangeIterator *self, RangeIterator *other) {
+	int result;
+	DREF DeeObject *my_index, *ot_index;
+	if (DeeObject_AssertTypeExact(other, &SeqRangeIterator_Type))
+		goto err;
+	my_index = ri_get_next_index(self);
+	if unlikely(!my_index)
+		goto err;
+	ot_index = ri_get_next_index(other);
+	if unlikely(!my_index)
+		goto err_my_index;
+	result = DeeObject_CompareEq(my_index, ot_index);
+	Dee_Decref(ot_index);
+	Dee_Decref(my_index);
+	return result;
+err_my_index:
+	Dee_Decref(my_index);
+err:
+	return Dee_COMPARE_ERR;
+}
+
 
 PRIVATE struct type_cmp ri_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ri_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ri_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ri_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ri_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ri_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ri_ge,
+	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&ri_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ri_compare,
 };
 
 
@@ -1199,46 +1184,24 @@ PRIVATE struct type_member tpconst iri_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_IRI_COMPARE(name, op)                                     \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
-	name(IntRangeIterator *self, IntRangeIterator *other) {              \
-		if (DeeObject_AssertTypeExact(other, &SeqIntRangeIterator_Type)) \
-			goto err;                                                    \
-		return_bool(READ_INDEX(self) op READ_INDEX(other));              \
-	err:                                                                 \
-		return NULL;                                                     \
-	}
-#define DEFINE_IRI_COMPARE_R(name, op)                                   \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
-	name(IntRangeIterator *self, IntRangeIterator *other) {              \
-		if (DeeObject_AssertTypeExact(other, &SeqIntRangeIterator_Type)) \
-			goto err;                                                    \
-		return_bool(self->iri_step >= 0                                  \
-		            ? READ_INDEX(self) op READ_INDEX(other)              \
-		            : READ_INDEX(other) op READ_INDEX(self));            \
-	err:                                                                 \
-		return NULL;                                                     \
-	}
-DEFINE_IRI_COMPARE(iri_eq, ==)
-DEFINE_IRI_COMPARE(iri_ne, !=)
-DEFINE_IRI_COMPARE_R(iri_lo, <)
-DEFINE_IRI_COMPARE_R(iri_le, <=)
-DEFINE_IRI_COMPARE_R(iri_gr, >)
-DEFINE_IRI_COMPARE_R(iri_ge, >=)
-#undef DEFINE_IRI_COMPARE_R
-#undef DEFINE_IRI_COMPARE
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+iri_compare(IntRangeIterator *lhs, IntRangeIterator *rhs) {
+	Dee_ssize_t lhs_index, rhs_index;
+	if (DeeObject_AssertTypeExact(rhs, &SeqIntRangeIterator_Type))
+		goto err;
+	lhs_index = READ_INDEX(lhs);
+	rhs_index = READ_INDEX(rhs);
+	return Dee_Compare(lhs_index, rhs_index);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp iri_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iri_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iri_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iri_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iri_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iri_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&iri_ge
+	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&iri_compare,
 };
 
 

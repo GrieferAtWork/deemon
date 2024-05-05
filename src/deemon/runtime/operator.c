@@ -15726,10 +15726,10 @@ err:
 
 
 #ifndef DEFINE_TYPED_OPERATORS
-DEFINE_OPERATOR(int, Contains,
+DEFINE_OPERATOR(int, ContainsAsBool,
                 (DeeObject *self, DeeObject *some_object)) {
 	DREF DeeObject *resultob;
-	resultob = DeeObject_ContainsObject(self, some_object);
+	resultob = DeeObject_Contains(self, some_object);
 	if unlikely(!resultob)
 		goto err;
 	return DeeObject_BoolInherited(resultob);
@@ -15738,7 +15738,8 @@ err:
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
-DEFINE_OPERATOR(DREF DeeObject *, SizeObject, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+DEFINE_OPERATOR(DREF DeeObject *, SizeOb,
+                (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_sizeob) ||
 	          DeeType_InheritSize(tp_self))
@@ -15747,7 +15748,7 @@ DEFINE_OPERATOR(DREF DeeObject *, SizeObject, (DeeObject *RESTRICT_IF_NOTYPE sel
 	return NULL;
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, ContainsObject,
+DEFINE_OPERATOR(DREF DeeObject *, Contains,
                 (DeeObject *self, DeeObject *some_object)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_contains) ||

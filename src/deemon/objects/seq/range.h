@@ -77,16 +77,16 @@ typedef struct {
 	OBJECT_HEAD
 	/* NOTE: Iteration stops when `index >= ir_end' (ir_step > 0) / `index <= ir_end' (ir_step < 0) or
 	 *      `index += ir_step' would roll over. (returning `ITER_DONE' immediately) */
-	dssize_t ir_start; /* [const] Starting index. */
-	dssize_t ir_end;   /* [const] Ending index. */
-	dssize_t ir_step;  /* [const][!0] Step size (may be negative). */
+	Dee_ssize_t ir_start; /* [const] Starting index. */
+	Dee_ssize_t ir_end;   /* [const] Ending index. */
+	Dee_ssize_t ir_step;  /* [const][!0] Step size (may be negative). */
 } IntRange;
 
 typedef struct {
 	OBJECT_HEAD
-	dssize_t        iri_index; /* [atomic] The current index operated on using using `tp_inplace_add()' or `tp_inc()'. */
-	dssize_t        iri_end;   /* [weak(const)] Ending index. */
-	dssize_t        iri_step;  /* [weak(const)] Step size (may be negative). */
+	Dee_ssize_t     iri_index; /* [atomic] The current index operated on using using `tp_inplace_add()' or `tp_inc()'. */
+	Dee_ssize_t     iri_end;   /* [weak(const)] Ending index. */
+	Dee_ssize_t     iri_step;  /* [weak(const)] Step size (may be negative). */
 	DREF IntRange  *iri_range; /* [1..1][const] The underlying range object. */
 } IntRangeIterator;
 

@@ -1922,7 +1922,7 @@ struct Dee_type_math {
 struct Dee_type_nii;
 struct Dee_type_cmp {
 	/* Compare operators. */
-	WUNUSED_T NONNULL_T((1))    Dee_hash_t      (DCALL *tp_hash)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *tp_hash)(DeeObject *__restrict self);
 
 	/* Same as "tp_compare", but only needs to support equal/not-equal compare:
 	 * @return: Dee_COMPARE_ERR: An error occurred.
@@ -4596,9 +4596,9 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 /* Sequence operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) size_t (DCALL DeeObject_Size)(DeeObject *__restrict self); /* @return: (size_t)-1: Error */
 DFUNDEF WUNUSED NONNULL((1)) size_t (DCALL DeeObject_SizeFast)(DeeObject *__restrict self); /* @return: (size_t)-1: Fast size cannot be determined */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SizeObject)(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_Contains)(DeeObject *self, DeeObject *some_object); /* @return: 1: found */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ContainsObject)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SizeOb)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_ContainsAsBool)(DeeObject *self, DeeObject *some_object); /* @return: 1: found */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_Contains)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetItemIndex)(DeeObject *__restrict self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);

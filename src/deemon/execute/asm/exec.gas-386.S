@@ -5422,8 +5422,8 @@ target_leave:
 
 
 
-define_unary_op target_getsize, fSYM(DeeObject_SizeObject,4)
-define_binary_op target_contains, fSYM(DeeObject_ContainsObject,8)
+define_unary_op target_getsize, fSYM(DeeObject_SizeOb,4)
+define_binary_op target_contains, fSYM(DeeObject_Contains,8)
 define_binary_op target_getitem, fSYM(DeeObject_GetItem,8)
 
 
@@ -5537,7 +5537,7 @@ target_contains_c:
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Constant set. */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_ContainsObject,8)
+	call   fSYM(DeeObject_Contains,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	jz     .except /* Check for errors. */

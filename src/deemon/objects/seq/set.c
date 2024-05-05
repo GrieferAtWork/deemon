@@ -244,7 +244,7 @@ read_from_iter:
 			/* Check if the found item is also part of the second set.
 			 * If it is, don't yield it now, but yield it later, as
 			 * part of the enumeration of the second set. */
-			temp = DeeObject_Contains(self->sui_union->su_b, result);
+			temp = DeeObject_ContainsAsBool(self->sui_union->su_b, result);
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
@@ -299,39 +299,26 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-suiter_eq(SetUnionIterator *self,
-          SetUnionIterator *other) {
-	DREF DeeObject *my_iter, *ot_iter, *result;
-	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+suiter_hash(SetUnionIterator *self) {
+	Dee_hash_t result;
+	bool my_2nd;
+	DREF DeeObject *my_iter;
 	SetUnionIterator_LockRead(self);
 	my_iter = self->sui_iter;
 	my_2nd  = self->sui_in2nd;
 	SetUnionIterator_LockEndRead(self);
-	SetUnionIterator_LockRead(other);
-	ot_iter = other->sui_iter;
-	ot_2nd  = other->sui_in2nd;
-	SetUnionIterator_LockEndRead(other);
-	if (my_2nd != ot_2nd) {
-		result = Dee_False;
-		Dee_Incref(result);
-	} else {
-		result = DeeObject_CmpEq(my_iter, ot_iter);
-	}
-	Dee_Decref(ot_iter);
+	result = Dee_HashCombine(my_2nd ? 1 : 0, DeeObject_Hash(my_iter));
 	Dee_Decref(my_iter);
 	return result;
-err:
-	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-suiter_ne(SetUnionIterator *self,
-          SetUnionIterator *other) {
-	DREF DeeObject *my_iter, *ot_iter, *result;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+suiter_compare(SetUnionIterator *self,
+               SetUnionIterator *other) {
+	int result;
 	bool my_2nd, ot_2nd;
+	DREF DeeObject *my_iter, *ot_iter;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	SetUnionIterator_LockRead(self);
@@ -343,23 +330,23 @@ suiter_ne(SetUnionIterator *self,
 	ot_2nd  = other->sui_in2nd;
 	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
-		result = Dee_True;
-		Dee_Incref(result);
+		result = Dee_CompareNe(my_2nd, ot_2nd);
 	} else {
-		result = DeeObject_CmpNe(my_iter, ot_iter);
+		result = DeeObject_Compare(my_iter, ot_iter);
 	}
 	Dee_Decref(ot_iter);
 	Dee_Decref(my_iter);
 	return result;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-suiter_lo(SetUnionIterator *self,
-          SetUnionIterator *other) {
-	DREF DeeObject *my_iter, *ot_iter, *result;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+suiter_compare_eq(SetUnionIterator *self,
+                  SetUnionIterator *other) {
+	int result;
 	bool my_2nd, ot_2nd;
+	DREF DeeObject *my_iter, *ot_iter;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	SetUnionIterator_LockRead(self);
@@ -371,113 +358,21 @@ suiter_lo(SetUnionIterator *self,
 	ot_2nd  = other->sui_in2nd;
 	SetUnionIterator_LockEndRead(other);
 	if (my_2nd != ot_2nd) {
-		result = DeeBool_For(!my_2nd);
-		Dee_Incref(result);
+		result = 1;
 	} else {
-		result = DeeObject_CmpLo(my_iter, ot_iter);
+		result = DeeObject_CompareEq(my_iter, ot_iter);
 	}
 	Dee_Decref(ot_iter);
 	Dee_Decref(my_iter);
 	return result;
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-suiter_le(SetUnionIterator *self,
-          SetUnionIterator *other) {
-	DREF DeeObject *my_iter, *ot_iter, *result;
-	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	SetUnionIterator_LockRead(self);
-	my_iter = self->sui_iter;
-	my_2nd  = self->sui_in2nd;
-	SetUnionIterator_LockEndRead(self);
-	SetUnionIterator_LockRead(other);
-	ot_iter = other->sui_iter;
-	ot_2nd  = other->sui_in2nd;
-	SetUnionIterator_LockEndRead(other);
-	if (my_2nd != ot_2nd) {
-		result = DeeBool_For(!my_2nd);
-		Dee_Incref(result);
-	} else {
-		result = DeeObject_CmpLe(my_iter, ot_iter);
-	}
-	Dee_Decref(ot_iter);
-	Dee_Decref(my_iter);
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-suiter_gr(SetUnionIterator *self,
-          SetUnionIterator *other) {
-	DREF DeeObject *my_iter, *ot_iter, *result;
-	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	SetUnionIterator_LockRead(self);
-	my_iter = self->sui_iter;
-	my_2nd  = self->sui_in2nd;
-	SetUnionIterator_LockEndRead(self);
-	SetUnionIterator_LockRead(other);
-	ot_iter = other->sui_iter;
-	ot_2nd  = other->sui_in2nd;
-	SetUnionIterator_LockEndRead(other);
-	if (my_2nd != ot_2nd) {
-		result = DeeBool_For(my_2nd);
-		Dee_Incref(result);
-	} else {
-		result = DeeObject_CmpGr(my_iter, ot_iter);
-	}
-	Dee_Decref(ot_iter);
-	Dee_Decref(my_iter);
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-suiter_ge(SetUnionIterator *self,
-          SetUnionIterator *other) {
-	DREF DeeObject *my_iter, *ot_iter, *result;
-	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	SetUnionIterator_LockRead(self);
-	my_iter = self->sui_iter;
-	my_2nd  = self->sui_in2nd;
-	SetUnionIterator_LockEndRead(self);
-	SetUnionIterator_LockRead(other);
-	ot_iter = other->sui_iter;
-	ot_2nd  = other->sui_in2nd;
-	SetUnionIterator_LockEndRead(other);
-	if (my_2nd != ot_2nd) {
-		result = DeeBool_For(my_2nd);
-		Dee_Incref(result);
-	} else {
-		result = DeeObject_CmpGe(my_iter, ot_iter);
-	}
-	Dee_Decref(ot_iter);
-	Dee_Decref(my_iter);
-	return result;
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp suiter_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&suiter_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&suiter_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&suiter_compare,
 };
 
 PRIVATE struct type_member tpconst suiter_members[] = {
@@ -610,7 +505,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 su_contains(SetUnion *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int temp;
-	result = DeeObject_ContainsObject(self->su_a, item);
+	result = DeeObject_Contains(self->su_a, item);
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
@@ -621,7 +516,7 @@ su_contains(SetUnion *self, DeeObject *item) {
 	Dee_Decref(result);
 
 	/* Check the second set, and forward the return value. */
-	result = DeeObject_ContainsObject(self->su_b, item);
+	result = DeeObject_Contains(self->su_b, item);
 done:
 	return result;
 err_r:
@@ -640,7 +535,7 @@ su_foreach_if_not_contained_in_cb(void *arg, DeeObject *elem) {
 	struct su_foreach_if_contained_in_data *data;
 	int contains;
 	data = (struct su_foreach_if_contained_in_data *)arg;
-	contains = DeeObject_Contains(data->feicid_seq, elem);
+	contains = DeeObject_ContainsAsBool(data->feicid_seq, elem);
 	if unlikely(contains < 0)
 		goto err;
 	if (contains)
@@ -655,7 +550,7 @@ su_foreach_if_contained_in_cb(void *arg, DeeObject *elem) {
 	struct su_foreach_if_contained_in_data *data;
 	int contains;
 	data = (struct su_foreach_if_contained_in_data *)arg;
-	contains = DeeObject_Contains(data->feicid_seq, elem);
+	contains = DeeObject_ContainsAsBool(data->feicid_seq, elem);
 	if unlikely(contains < 0)
 		goto err;
 	if (!contains)
@@ -782,7 +677,7 @@ read_from_iter:
 		if (result) {
 			int temp;
 			/* Only yield the item if it's not contained in the other set. */
-			temp = DeeObject_Contains(is_second
+			temp = DeeObject_ContainsAsBool(is_second
 			                          ? self->ssd_set->ssd_b
 			                          : self->ssd_set->ssd_a,
 			                          result);
@@ -934,10 +829,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ssd_contains(SetSymmetricDifference *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int cona, conb;
-	cona = DeeObject_Contains(self->ssd_a, item);
+	cona = DeeObject_ContainsAsBool(self->ssd_a, item);
 	if unlikely(cona < 0)
 		goto err;
-	conb = DeeObject_Contains(self->ssd_b, item);
+	conb = DeeObject_ContainsAsBool(self->ssd_b, item);
 	if unlikely(conb < 0)
 		goto err;
 	result = DeeBool_For(!!cona ^ !!conb);
@@ -1133,7 +1028,7 @@ again:
 		goto done;
 
 	/* Check if contained in the second set. */
-	temp = DeeObject_Contains(self->sii_other, result);
+	temp = DeeObject_ContainsAsBool(self->sii_other, result);
 	if (temp <= 0) {
 		Dee_Decref(result);
 		if (!temp) {
@@ -1146,34 +1041,33 @@ done:
 	return result;
 }
 
-#define DEFINE_SIITER_COMPARE(name, func)                                 \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
-	name(SetIntersectionIterator *self, SetIntersectionIterator *other) { \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))             \
-			goto err;                                                     \
-		return func(self->sii_iter, other->sii_iter);                     \
-	err:                                                                  \
-		return NULL;                                                      \
-	}
-DEFINE_SIITER_COMPARE(siiter_eq, DeeObject_CmpEq)
-DEFINE_SIITER_COMPARE(siiter_ne, DeeObject_CmpNe)
-DEFINE_SIITER_COMPARE(siiter_lo, DeeObject_CmpLo)
-DEFINE_SIITER_COMPARE(siiter_le, DeeObject_CmpLe)
-DEFINE_SIITER_COMPARE(siiter_gr, DeeObject_CmpGr)
-DEFINE_SIITER_COMPARE(siiter_ge, DeeObject_CmpGe)
-#undef DEFINE_SIITER_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+siiter_hash(SetIntersectionIterator *self) {
+	return DeeObject_Hash(self->sii_iter);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+siiter_compare(SetIntersectionIterator *self, SetIntersectionIterator *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	return DeeObject_Compare(self->sii_iter, other->sii_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+siiter_compare_eq(SetIntersectionIterator *self, SetIntersectionIterator *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	return DeeObject_CompareEq(self->sii_iter, other->sii_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp siiter_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&siiter_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&siiter_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&siiter_compare,
 };
 
 PRIVATE struct type_member tpconst siiter_members[] = {
@@ -1270,7 +1164,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 si_contains(SetIntersection *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int temp;
-	result = DeeObject_ContainsObject(self->si_a, item);
+	result = DeeObject_Contains(self->si_a, item);
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
@@ -1281,7 +1175,7 @@ si_contains(SetIntersection *self, DeeObject *item) {
 	Dee_Decref(result);
 
 	/* Check the second set, and forward the return value. */
-	result = DeeObject_ContainsObject(self->si_b, item);
+	result = DeeObject_Contains(self->si_b, item);
 done:
 	return result;
 err_r:
@@ -1386,7 +1280,7 @@ again:
 	if (!ITER_ISOK(result))
 		goto done;
 	/* Check if contained in the second set. */
-	temp = DeeObject_Contains(self->sdi_other, result);
+	temp = DeeObject_ContainsAsBool(self->sdi_other, result);
 	if (temp != 0) {
 		Dee_Decref(result);
 		if (temp) {
@@ -1494,7 +1388,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	int temp;
 
 	/* Check the primary set for the object. */
-	temp = DeeObject_Contains(self->sd_a, item);
+	temp = DeeObject_ContainsAsBool(self->sd_a, item);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -1504,7 +1398,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	/* The object is apart of the primary set.
 	 * -> Return true if it's not apart of the secondary set.
 	 * -> Return false otherwise. */
-	temp = DeeObject_Contains(self->sd_b, item);
+	temp = DeeObject_ContainsAsBool(self->sd_b, item);
 	if unlikely(temp < 0)
 		goto err;
 	return_bool_(!temp);

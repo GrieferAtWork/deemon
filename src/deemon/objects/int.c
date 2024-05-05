@@ -3782,6 +3782,38 @@ int_hash(DeeIntObject *__restrict self) {
 	return x * sign;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+int_compare(DeeIntObject *self, DeeObject *some_object) {
+	dssize_t compare_value;
+	DREF DeeIntObject *rhs;
+	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+	if unlikely(!rhs)
+		goto err;
+	compare_value = int_compareint(self, rhs);
+	Dee_Decref(rhs);
+	if (compare_value < 0)
+		return -1;
+	if (compare_value > 0)
+		return 1;
+	return 0;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+int_compare_eq(DeeIntObject *self, DeeObject *some_object) {
+	dssize_t compare_value;
+	DREF DeeIntObject *rhs;
+	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+	if unlikely(!rhs)
+		goto err;
+	compare_value = int_compareint(self, rhs);
+	Dee_Decref(rhs);
+	return compare_value != 0 ? 1 : 0;
+err:
+	return Dee_COMPARE_ERR;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 int_cmp_eq(DeeIntObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
@@ -3869,8 +3901,8 @@ err:
 
 PRIVATE struct type_cmp int_cmp = {
 	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&int_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&int_compare_eq,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&int_compare,
 	/* .tp_trycompare_eq = */ NULL,
 	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_eq,
 	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_ne,

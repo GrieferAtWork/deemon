@@ -1010,6 +1010,12 @@ INTDEF struct type_gc Dee_tpconst instance_gc;
 /* Builtin (standard) operators for hashing and comparing class objects. */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL instance_builtin_thash(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL instance_builtin_hash(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tcompare(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_compare(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tcompare_eq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_compare_eq(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_ttrycompare_eq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_trycompare_eq(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_builtin_teq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_eq(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_builtin_tne(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
@@ -1336,6 +1342,18 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *t
 	 : (tp_hash) == &instance_builtin_hash                           \
 	   ? instance_builtin_thash(tp_self, self)                       \
 	   : (*(tp_hash))(self))
+#define DeeType_invoke_cmp_tp_compare_eq_NODEFAULT(tp_self, tp_compare_eq, self, other) \
+	((tp_compare_eq) == &instance_builtin_compare_eq                                    \
+	   ? instance_builtin_tcompare_eq(tp_self, self, other)                             \
+	   : (*(tp_compare_eq))(self, other))
+#define DeeType_invoke_cmp_tp_compare_NODEFAULT(tp_self, tp_compare, self, other) \
+	((tp_compare) == &instance_builtin_compare                                    \
+	   ? instance_builtin_tcompare(tp_self, self, other)                          \
+	   : (*(tp_compare))(self, other))
+#define DeeType_invoke_cmp_tp_trycompare_eq_NODEFAULT(tp_self, tp_trycompare_eq, self, other) \
+	((tp_trycompare_eq) == &instance_builtin_trycompare_eq                                    \
+	   ? instance_builtin_ttrycompare_eq(tp_self, self, other)                                \
+	   : (*(tp_trycompare_eq))(self, other))
 #define DeeType_invoke_cmp_tp_eq_NODEFAULT(tp_self, tp_eq, self, other) \
 	((tp_eq) == &instance_eq                                            \
 	 ? instance_teq(tp_self, self, other)                               \
@@ -1372,9 +1390,6 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *t
 	 : (tp_ge) == &instance_builtin_ge                                  \
 	   ? instance_builtin_tge(tp_self, self, other)                     \
 	   : (*(tp_ge))(self, other))
-#define DeeType_invoke_cmp_tp_compare_eq_NODEFAULT(tp_self, tp_compare_eq, self, other)       (*(tp_compare_eq))(self, other)
-#define DeeType_invoke_cmp_tp_compare_NODEFAULT(tp_self, tp_compare, self, other)             (*(tp_compare))(self, other)
-#define DeeType_invoke_cmp_tp_trycompare_eq_NODEFAULT(tp_self, tp_trycompare_eq, self, other) (*(tp_trycompare_eq))(self, other)
 #define DeeType_invoke_seq_tp_iter_NODEFAULT(tp_self, tp_iter, self) \
 	((tp_iter) == &instance_iter                                     \
 	 ? instance_titer(tp_self, self)                                 \

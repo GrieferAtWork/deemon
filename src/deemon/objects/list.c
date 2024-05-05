@@ -3463,16 +3463,9 @@ list_hash(List *__restrict me) {
 
 
 PRIVATE struct type_cmp list_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&list_hash,
-	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_compare_eq,
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_compare,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ NULL,
-	/* .tp_ne            = */ NULL,
-	/* .tp_lo            = */ NULL,
-	/* .tp_le            = */ NULL,
-	/* .tp_gr            = */ NULL,
-	/* .tp_ge            = */ NULL,
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&list_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_compare,
 };
 
 
@@ -3756,38 +3749,24 @@ again:
 }
 
 
-#define DEFINE_LISTITERATOR_COMPARE(name, expr)                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL            \
-	name(ListIterator *self, ListIterator *other) {                  \
-		if (DeeObject_AssertTypeExact(other, &DeeListIterator_Type)) \
-			goto err;                                                \
-		return_bool(expr);                                           \
-	err:                                                             \
-		return NULL;                                                 \
-	}
-DEFINE_LISTITERATOR_COMPARE(li_eq,
-                            self->li_list == other->li_list &&
-                            LI_GETINDEX(self) == LI_GETINDEX(other))
-DEFINE_LISTITERATOR_COMPARE(li_ne,
-                            self->li_list != other->li_list ||
-                            LI_GETINDEX(self) != LI_GETINDEX(other))
-DEFINE_LISTITERATOR_COMPARE(li_lo,
-                            self->li_list < other->li_list ||
-                            (self->li_list == other->li_list &&
-                             LI_GETINDEX(self) < LI_GETINDEX(other)))
-DEFINE_LISTITERATOR_COMPARE(li_le,
-                            self->li_list < other->li_list ||
-                            (self->li_list == other->li_list &&
-                             LI_GETINDEX(self) <= LI_GETINDEX(other)))
-DEFINE_LISTITERATOR_COMPARE(li_gr,
-                            self->li_list > other->li_list ||
-                            (self->li_list == other->li_list &&
-                             LI_GETINDEX(self) > LI_GETINDEX(other)))
-DEFINE_LISTITERATOR_COMPARE(li_ge,
-                            self->li_list > other->li_list ||
-                            (self->li_list == other->li_list &&
-                             LI_GETINDEX(self) >= LI_GETINDEX(other)))
-#undef DEFINE_LISTITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+li_hash(ListIterator *self) {
+	return Dee_HashCombine(Dee_HashPointer(self->li_list),
+	                       LI_GETINDEX(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+li_compare(ListIterator *self, ListIterator *other) {
+	size_t lhs_index, rhs_index;
+	if (DeeObject_AssertTypeExact(other, &DeeListIterator_Type))
+		goto err;
+	Dee_return_compare_if_ne(self->li_list, other->li_list);
+	lhs_index = LI_GETINDEX(self);
+	rhs_index = LI_GETINDEX(other);
+	Dee_return_compare(lhs_index, rhs_index);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF List *DCALL
 list_iterator_nii_getseq(ListIterator *__restrict self) {
@@ -3897,16 +3876,16 @@ PRIVATE struct type_nii tpconst list_iterator_nii = {
 
 
 PRIVATE struct type_cmp li_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&li_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&li_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&li_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&li_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&li_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&li_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&li_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&li_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &list_iterator_nii
 };
 

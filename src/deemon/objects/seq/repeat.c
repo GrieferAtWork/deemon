@@ -139,87 +139,79 @@ repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->rpi_iter);
 }
 
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+repeatiter_hash(RepeatIterator *self) {
+	Dee_hash_t result;
+	DREF DeeObject *my_iter;
+	result = REPEATITER_READ_NUM(self);
+	RepeatIterator_LockRead(self);
+	my_iter = self->rpi_iter;
+	Dee_Incref(my_iter);
+	RepeatIterator_LockEndRead(self);
+	result = Dee_HashCombine(result, DeeObject_Hash(my_iter));
+	Dee_Decref(my_iter);
+	return result;
+}
 
-#define DEFINE_REPEATITER_COMPARE(name, check_diffnum, if_sameiter, compare_iter) \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                         \
-	name(RepeatIterator *self, RepeatIterator *other) {                           \
-		DREF DeeObject *my_iter, *ot_iter;                                        \
-		DREF DeeObject *result;                                                   \
-		if (DeeObject_AssertTypeExact(other, &SeqRepeatIterator_Type))            \
-			goto err;                                                             \
-		check_diffnum;                                                            \
-		RepeatIterator_LockRead(self);                                            \
-		my_iter = self->rpi_iter;                                                 \
-		Dee_Incref(my_iter);                                                      \
-		RepeatIterator_LockEndRead(self);                                         \
-		RepeatIterator_LockRead(other);                                           \
-		ot_iter = other->rpi_iter;                                                \
-		Dee_Incref(ot_iter);                                                      \
-		RepeatIterator_LockEndRead(other);                                        \
-		if (my_iter == ot_iter) {                                                 \
-			result = if_sameiter;                                                 \
-			Dee_Incref(if_sameiter);                                              \
-		} else {                                                                  \
-			result = compare_iter(my_iter, ot_iter);                              \
-		}                                                                         \
-		Dee_Decref(ot_iter);                                                      \
-		Dee_Decref(my_iter);                                                      \
-		return result;                                                            \
-	err:                                                                          \
-		return NULL;                                                              \
-	}
-
-DEFINE_REPEATITER_COMPARE(repeatiter_eq, {
-	if (REPEATITER_READ_NUM(self) != REPEATITER_READ_NUM(other))
-		return_false;
-}, Dee_True, DeeObject_CmpEq)
-
-DEFINE_REPEATITER_COMPARE(repeatiter_ne, {
-	if (REPEATITER_READ_NUM(self) != REPEATITER_READ_NUM(other))
-		return_true;
-}, Dee_False, DeeObject_CmpNe)
-
-DEFINE_REPEATITER_COMPARE(repeatiter_lo, {
-	size_t my_len = REPEATITER_READ_NUM(self);
-	size_t ot_len = REPEATITER_READ_NUM(other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeatiter_compare(RepeatIterator *self, RepeatIterator *other) {
+	int result;
+	size_t my_len, ot_len;
+	DREF DeeObject *my_iter, *ot_iter;
+	if (DeeObject_AssertTypeExact(other, &SeqRepeatIterator_Type))
+		goto err;
+	my_len = REPEATITER_READ_NUM(self);
+	ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
-		return_bool_(ot_len < my_len);
-}, Dee_False, DeeObject_CmpLo)
+		return Dee_CompareNe(my_len, ot_len);
+	RepeatIterator_LockRead(self);
+	my_iter = self->rpi_iter;
+	Dee_Incref(my_iter);
+	RepeatIterator_LockEndRead(self);
+	RepeatIterator_LockRead(other);
+	ot_iter = other->rpi_iter;
+	Dee_Incref(ot_iter);
+	RepeatIterator_LockEndRead(other);
+	result = DeeObject_Compare(my_iter, ot_iter);
+	Dee_Decref(ot_iter);
+	Dee_Decref(my_iter);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
 
-DEFINE_REPEATITER_COMPARE(repeatiter_le, {
-	size_t my_len = REPEATITER_READ_NUM(self);
-	size_t ot_len = REPEATITER_READ_NUM(other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeatiter_compare_eq(RepeatIterator *self, RepeatIterator *other) {
+	int result;
+	size_t my_len, ot_len;
+	DREF DeeObject *my_iter, *ot_iter;
+	if (DeeObject_AssertTypeExact(other, &SeqRepeatIterator_Type))
+		goto err;
+	my_len = REPEATITER_READ_NUM(self);
+	ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
-		return_bool_(ot_len < my_len);
-}, Dee_True, DeeObject_CmpLe)
-
-DEFINE_REPEATITER_COMPARE(repeatiter_gr, {
-	size_t my_len = REPEATITER_READ_NUM(self);
-	size_t ot_len = REPEATITER_READ_NUM(other);
-	if (my_len != ot_len)
-		return_bool_(ot_len > my_len);
-}, Dee_False, DeeObject_CmpGr)
-
-DEFINE_REPEATITER_COMPARE(repeatiter_ge, {
-	size_t my_len = REPEATITER_READ_NUM(self);
-	size_t ot_len = REPEATITER_READ_NUM(other);
-	if (my_len != ot_len)
-		return_bool_(ot_len > my_len);
-}, Dee_True, DeeObject_CmpGe)
-#undef DEFINE_REPEATITER_COMPARE
+		return 1;
+	RepeatIterator_LockRead(self);
+	my_iter = self->rpi_iter;
+	Dee_Incref(my_iter);
+	RepeatIterator_LockEndRead(self);
+	RepeatIterator_LockRead(other);
+	ot_iter = other->rpi_iter;
+	Dee_Incref(ot_iter);
+	RepeatIterator_LockEndRead(other);
+	result = DeeObject_CompareEq(my_iter, ot_iter);
+	Dee_Decref(ot_iter);
+	Dee_Decref(my_iter);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
 
 
 PRIVATE struct type_cmp repeatiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&repeatiter_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&repeatiter_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&repeatiter_compare,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -451,7 +443,7 @@ err_r:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeat_contains(Repeat *self, DeeObject *item) {
-	return DeeObject_ContainsObject(self->rp_seq, item);
+	return DeeObject_Contains(self->rp_seq, item);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -825,102 +817,30 @@ repeatitemiter_visit(RepeatItemIterator *__restrict self, dvisit_t proc, void *a
 	Dee_Visit(self->rii_rep);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeatitemiter_eq(RepeatItemIterator *self,
-                  RepeatItemIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
-		goto err;
-	if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
-		return_false;
-	return DeeObject_CmpEq(self->rii_obj, other->rii_obj);
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+repeatitemiter_hash(RepeatItemIterator *self) {
+	return Dee_HashCombine(DeeObject_HashGeneric(self->rii_obj),
+	                       REPEATITEMPITER_READ_NUM(self));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeatitemiter_ne(RepeatItemIterator *self,
-                  RepeatItemIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+repeatitemiter_compare(RepeatItemIterator *lhs,
+                       RepeatItemIterator *rhs) {
+	size_t lhs_num, rhs_num;
+	if (DeeObject_AssertTypeExact(rhs, &SeqItemRepeatIterator_Type))
 		goto err;
-	if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
-		return_true;
-	return DeeObject_CmpNe(self->rii_obj, other->rii_obj);
+	Dee_return_compare_if_ne(lhs->rii_obj, rhs->rii_obj);
+	lhs_num = REPEATITEMPITER_READ_NUM(lhs);
+	rhs_num = REPEATITEMPITER_READ_NUM(rhs);
+	Dee_return_compare(lhs_num, rhs_num);
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeatitemiter_lo(RepeatItemIterator *self,
-                  RepeatItemIterator *other) {
-	size_t my_num, ot_num;
-	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
-		goto err;
-	my_num = REPEATITEMPITER_READ_NUM(self);
-	ot_num = REPEATITEMPITER_READ_NUM(other);
-	if (my_num != ot_num)
-		return_bool_(my_num < ot_num);
-	return DeeObject_CmpLo(self->rii_obj, other->rii_obj);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeatitemiter_le(RepeatItemIterator *self,
-                  RepeatItemIterator *other) {
-	size_t my_num, ot_num;
-	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
-		goto err;
-	my_num = REPEATITEMPITER_READ_NUM(self);
-	ot_num = REPEATITEMPITER_READ_NUM(other);
-	if (my_num != ot_num)
-		return_bool_(my_num < ot_num);
-	return DeeObject_CmpLe(self->rii_obj, other->rii_obj);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeatitemiter_gr(RepeatItemIterator *self,
-                  RepeatItemIterator *other) {
-	size_t my_num, ot_num;
-	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
-		goto err;
-	my_num = REPEATITEMPITER_READ_NUM(self);
-	ot_num = REPEATITEMPITER_READ_NUM(other);
-	if (my_num != ot_num)
-		return_bool_(my_num > ot_num);
-	return DeeObject_CmpGr(self->rii_obj, other->rii_obj);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeatitemiter_ge(RepeatItemIterator *self,
-                  RepeatItemIterator *other) {
-	size_t my_num, ot_num;
-	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
-		goto err;
-	my_num = REPEATITEMPITER_READ_NUM(self);
-	ot_num = REPEATITEMPITER_READ_NUM(other);
-	if (my_num != ot_num)
-		return_bool_(my_num > ot_num);
-	return DeeObject_CmpGe(self->rii_obj, other->rii_obj);
-err:
-	return NULL;
-}
-
 
 PRIVATE struct type_cmp repeatitemiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&repeatitemiter_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_compare,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

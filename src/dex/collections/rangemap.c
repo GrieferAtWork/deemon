@@ -897,7 +897,7 @@ proxy_visit(RangeMapProxy *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_size(RangeMapProxy *__restrict self) {
-	return DeeObject_SizeObject(self->rmp_rmap);
+	return DeeObject_SizeOb(self->rmp_rmap);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -907,7 +907,7 @@ proxy_bool(RangeMapProxy *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 proxy_keys_contains(RangeMapProxy *self, DeeObject *key) {
-	return DeeObject_ContainsObject(self->rmp_rmap, key);
+	return DeeObject_Contains(self->rmp_rmap, key);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

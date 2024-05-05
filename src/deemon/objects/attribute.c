@@ -901,37 +901,20 @@ enumattr_hash(EnumAttr *__restrict self) {
 	        Dee_HashPointer(self->ea_type));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-enumattr_eq(EnumAttr *self,
-            EnumAttr *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+enumattr_compare_eq(EnumAttr *self, EnumAttr *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeEnumAttr_Type))
 		goto err;
 	if (self->ea_type != other->ea_type)
-		return_false;
-	return DeeObject_CmpEq(self->ea_obj, other->ea_obj);
+		return 1;
+	return DeeObject_TryCompareEq(self->ea_obj, other->ea_obj);
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-enumattr_ne(EnumAttr *self,
-            EnumAttr *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeEnumAttr_Type))
-		goto err;
-	if (self->ea_type != other->ea_type)
-		return_true;
-	return DeeObject_CmpNe(self->ea_obj, other->ea_obj);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp enumattr_cmp = {
-	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&enumattr_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&enumattr_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&enumattr_ne
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&enumattr_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&enumattr_compare_eq,
 };
 
 PRIVATE struct type_seq enumattr_seq = {

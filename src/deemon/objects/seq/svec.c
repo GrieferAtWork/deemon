@@ -113,74 +113,23 @@ rveciter_bool(RefVectorIterator *__restrict self) {
 	return 1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rveciter_eq(RefVectorIterator *self,
-            RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		goto err;
-	return_bool(self->rvi_vector == other->rvi_vector &&
-	            RVI_GETPOS(self) == RVI_GETPOS(other));
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+rveciter_hash(RefVectorIterator *self) {
+	return Dee_HashCombine(Dee_HashPointer(self->rvi_vector),
+	                       Dee_HashPointer(RVI_GETPOS(self)));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rveciter_ne(RefVectorIterator *self,
-            RefVectorIterator *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rveciter_compare(RefVectorIterator *self, RefVectorIterator *other) {
+	DeeObject **lhs_pos, **rhs_pos;
 	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
 		goto err;
-	return_bool(self->rvi_vector != other->rvi_vector ||
-	            RVI_GETPOS(self) != RVI_GETPOS(other));
+	Dee_return_compare_if_ne(self->rvi_vector, other->rvi_vector);
+	lhs_pos = RVI_GETPOS(self);
+	rhs_pos = RVI_GETPOS(other);
+	Dee_return_compare(lhs_pos, rhs_pos);
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rveciter_lo(RefVectorIterator *self,
-            RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		goto err;
-	return_bool(self->rvi_vector == other->rvi_vector
-	            ? RVI_GETPOS(self) < RVI_GETPOS(other)
-	            : self->rvi_vector < other->rvi_vector);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rveciter_le(RefVectorIterator *self,
-            RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		goto err;
-	return_bool(self->rvi_vector == other->rvi_vector
-	            ? RVI_GETPOS(self) <= RVI_GETPOS(other)
-	            : self->rvi_vector <= other->rvi_vector);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rveciter_gr(RefVectorIterator *self,
-            RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		goto err;
-	return_bool(self->rvi_vector == other->rvi_vector
-	            ? RVI_GETPOS(self) > RVI_GETPOS(other)
-	            : self->rvi_vector > other->rvi_vector);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rveciter_ge(RefVectorIterator *self,
-            RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		goto err;
-	return_bool(self->rvi_vector == other->rvi_vector
-	            ? RVI_GETPOS(self) >= RVI_GETPOS(other)
-	            : self->rvi_vector >= other->rvi_vector);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF RefVector *DCALL
@@ -227,16 +176,16 @@ PRIVATE struct type_nii tpconst rveciter_nii = {
 };
 
 PRIVATE struct type_cmp rveciter_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&rveciter_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&rveciter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &rveciter_nii,
 };
 
@@ -1110,87 +1059,29 @@ PRIVATE struct type_member tpconst sveciter_members[] = {
 
 #define READ_INDEX(x) atomic_read(&(x)->si_index)
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sveciter_eq(SharedVectorIterator *self,
-            SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
-		goto err;
-	return_bool_(self->si_seq == other->si_seq &&
-	             READ_INDEX(self) == READ_INDEX(other));
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+sveciter_hash(SharedVectorIterator *self) {
+	return Dee_HashCombine(Dee_HashPointer(self->si_seq),
+	                       READ_INDEX(self));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sveciter_ne(SharedVectorIterator *self,
-            SharedVectorIterator *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sveciter_compare(SharedVectorIterator *self, SharedVectorIterator *other) {
+	size_t lhs_index, rhs_index;
 	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
 		goto err;
-	return_bool(self->si_seq != other->si_seq ||
-	            READ_INDEX(self) != READ_INDEX(other));
+	Dee_return_compare_if_ne(self->si_seq, other->si_seq);
+	lhs_index = READ_INDEX(self);
+	rhs_index = READ_INDEX(other);
+	Dee_return_compare(lhs_index, rhs_index);
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sveciter_lo(SharedVectorIterator *self,
-            SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
-		goto err;
-	return_bool(self->si_seq == other->si_seq
-	            ? READ_INDEX(self) < READ_INDEX(other)
-	            : self->si_seq < other->si_seq);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sveciter_le(SharedVectorIterator *self,
-            SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
-		goto err;
-	return_bool(self->si_seq == other->si_seq
-	            ? READ_INDEX(self) <= READ_INDEX(other)
-	            : self->si_seq <= other->si_seq);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sveciter_gr(SharedVectorIterator *self,
-            SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
-		goto err;
-	return_bool(self->si_seq == other->si_seq
-	            ? READ_INDEX(self) > READ_INDEX(other)
-	            : self->si_seq > other->si_seq);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sveciter_ge(SharedVectorIterator *self,
-            SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
-		goto err;
-	return_bool(self->si_seq == other->si_seq
-	            ? READ_INDEX(self) >= READ_INDEX(other)
-	            : self->si_seq >= other->si_seq);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 INTERN struct type_cmp sveciter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&sveciter_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sveciter_compare,
 };
 
 

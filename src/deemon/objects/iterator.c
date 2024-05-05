@@ -93,10 +93,10 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 iterator_printrepr(DeeObject *__restrict self,
                    dformatprinter printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	DREF DeeObject *iterator;
 	DREF DeeObject *elem;
 	bool is_first;
@@ -161,9 +161,9 @@ iterator_iternext(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 get_remaining_iterations(DeeObject *__restrict self) {
-	dssize_t result;
+	size_t result;
 	DREF DeeObject *elem;
 	if unlikely((self = DeeObject_Copy(self)) == NULL)
 		goto err;
@@ -181,47 +181,32 @@ get_remaining_iterations(DeeObject *__restrict self) {
 err_self:
 	Dee_Decref(self);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 
-#define DEFINE_ITERATOR_COMPARE(name, op, if_same)            \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
-	name(DeeObject *self, DeeObject *other) {                 \
-		dssize_t mylen, otlen;                                \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			goto err;                                         \
-		if (self == other)                                    \
-			if_same;                                          \
-		mylen = get_remaining_iterations(self);               \
-		if unlikely(mylen < 0)                                \
-			goto err;                                         \
-		otlen = get_remaining_iterations(other);              \
-		if unlikely(otlen < 0)                                \
-			goto err;                                         \
-		return_bool_(otlen op mylen);                         \
-	err:                                                      \
-		return NULL;                                          \
-	}
-DEFINE_ITERATOR_COMPARE(iterator_eq, ==, return_true)
-DEFINE_ITERATOR_COMPARE(iterator_ne, !=, return_false)
-DEFINE_ITERATOR_COMPARE(iterator_lo, <, return_false)
-DEFINE_ITERATOR_COMPARE(iterator_le, <=, return_true)
-DEFINE_ITERATOR_COMPARE(iterator_gr, >, return_false)
-DEFINE_ITERATOR_COMPARE(iterator_ge, >=, return_true)
-#undef DEFINE_ITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+iterator_compare(DeeObject *self, DeeObject *other) {
+	size_t mylen, otlen;
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	if (self == other)
+		return 0;
+	mylen = get_remaining_iterations(self);
+	if unlikely(mylen == (size_t)-1)
+		goto err;
+	otlen = get_remaining_iterations(other);
+	if unlikely(otlen == (size_t)-1)
+		goto err;
+	Dee_return_compare(otlen, mylen); /* Reverse, since "remaining iterations" will reduce over time. */
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp iterator_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ &iterator_eq,
-	/* .tp_ne            = */ &iterator_ne,
-	/* .tp_lo            = */ &iterator_lo,
-	/* .tp_le            = */ &iterator_le,
-	/* .tp_gr            = */ &iterator_gr,
-	/* .tp_ge            = */ &iterator_ge
+	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ &iterator_compare,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -379,7 +364,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				temp2 = minus_count_ob;
 				Dee_Incref(temp2);
 			} else {
-				temp2 = DeeInt_NewSSize(-(dssize_t)count);
+				temp2 = DeeInt_NewSSize(-(Dee_ssize_t)count);
 				if unlikely(!temp2)
 					goto err;
 			}
@@ -403,7 +388,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 				temp = minus_count_ob;
 				Dee_Incref(temp);
 			} else {
-				temp = DeeInt_NewSSize(-(dssize_t)count);
+				temp = DeeInt_NewSSize(-(Dee_ssize_t)count);
 				if unlikely(!temp)
 					goto err;
 			}
@@ -461,7 +446,7 @@ iterator_do_revert(DeeObject *__restrict self, size_t count,
 					temp2 = minus_count_ob;
 					Dee_Incref(temp2);
 				} else {
-					temp2 = DeeInt_NewSSize(-(dssize_t)count);
+					temp2 = DeeInt_NewSSize(-(Dee_ssize_t)count);
 					if unlikely(!temp2)
 						goto err;
 				}
@@ -634,7 +619,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 				temp2 = minus_count_ob;
 				Dee_Incref(temp2);
 			} else {
-				temp2 = DeeInt_NewSSize(-(dssize_t)count);
+				temp2 = DeeInt_NewSSize(-(Dee_ssize_t)count);
 				if unlikely(!temp2)
 					goto err;
 			}
@@ -658,7 +643,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 				temp = minus_count_ob;
 				Dee_Incref(temp);
 			} else {
-				temp = DeeInt_NewSSize(-(dssize_t)count);
+				temp = DeeInt_NewSSize(-(Dee_ssize_t)count);
 				if unlikely(!temp)
 					goto err;
 			}
@@ -710,7 +695,7 @@ iterator_do_advance(DeeObject *__restrict self, size_t count,
 					temp2 = minus_count_ob;
 					Dee_Incref(temp2);
 				} else {
-					temp2 = DeeInt_NewSSize(-(dssize_t)count);
+					temp2 = DeeInt_NewSSize(-(Dee_ssize_t)count);
 					if unlikely(!temp2)
 						goto err;
 				}
@@ -784,7 +769,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_revert(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	dssize_t count;
+	Dee_ssize_t count;
 	int error;
 	if (DeeArg_Unpack(argc, argv, UNPdSIZ ":revert", &count))
 		goto err;
@@ -805,7 +790,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_advance(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	dssize_t count;
+	Dee_ssize_t count;
 	int error;
 	if (DeeArg_Unpack(argc, argv, UNPdSIZ ":advance", &count))
 		goto err;
@@ -2282,7 +2267,7 @@ iterator_dec(DeeObject **__restrict p_self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 iterator_inplace_add(DeeObject **__restrict p_self,
                      DeeObject *countob) {
-	dssize_t count;
+	Dee_ssize_t count;
 	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
@@ -2299,7 +2284,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 iterator_inplace_sub(DeeObject **__restrict p_self,
                      DeeObject *countob) {
-	dssize_t count;
+	Dee_ssize_t count;
 	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
@@ -2317,7 +2302,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 iterator_add(DeeObject *self,
              DeeObject *countob) {
 	DREF DeeObject *result;
-	dssize_t count;
+	Dee_ssize_t count;
 	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;
@@ -2340,7 +2325,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 iterator_sub(DeeObject *self,
              DeeObject *countob) {
 	DREF DeeObject *result;
-	dssize_t count;
+	Dee_ssize_t count;
 	/* Increment the Iterator by `count.operator int()' */
 	if (DeeObject_AsSSize(countob, &count))
 		goto err;

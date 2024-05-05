@@ -258,7 +258,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_index_out_of_bounds_ob)(DeeObject *self, DeeObject *index) {
 	return DeeError_Throwf(&DeeError_IndexError,
 	                       "Index `%r' lies outside the valid bounds `0...%R' of sequence of type `%k'",
-	                       index, DeeObject_SizeObject(self), Dee_TYPE(self));
+	                       index, DeeObject_SizeOb(self), Dee_TYPE(self));
 }
 
 INTERN ATTR_COLD NONNULL((1, 2, 3)) int

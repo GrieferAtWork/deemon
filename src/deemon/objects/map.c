@@ -818,7 +818,7 @@ proxy_visit(MapProxy *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_sizeob(MapProxy *__restrict self) {
-	return DeeObject_SizeObject(self->mp_map);
+	return DeeObject_SizeOb(self->mp_map);
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -833,7 +833,7 @@ proxy_size_fast(MapProxy *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 proxy_contains_key(MapProxy *self, DeeObject *key) {
-	return DeeObject_ContainsObject(self->mp_map, key);
+	return DeeObject_Contains(self->mp_map, key);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF MapProxyIterator *DCALL

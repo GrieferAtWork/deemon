@@ -143,22 +143,28 @@ cdictiterator_bool(CachedDictIterator *__restrict self) {
 }
 
 
-#define DEFINE_DICTITERATOR_COMPARE(name, DeeObject_CmpXX)         \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
-	name(CachedDictIterator *self, CachedDictIterator *other) {    \
-		if (DeeObject_AssertType(other, &CachedDictIterator_Type)) \
-			goto err;                                              \
-		return DeeObject_CmpXX(self->cdi_iter, other->cdi_iter);   \
-	err:                                                           \
-		return NULL;                                               \
-	}
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_eq, DeeObject_CmpEq)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_ne, DeeObject_CmpNe)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_lo, DeeObject_CmpLo)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_le, DeeObject_CmpLe)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_gr, DeeObject_CmpGr)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_ge, DeeObject_CmpGe)
-#undef DEFINE_DICTITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+cdictiterator_hash(CachedDictIterator *self) {
+	return DeeObject_Hash(self->cdi_iter);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdictiterator_compare(CachedDictIterator *self, CachedDictIterator *other) {
+	if (DeeObject_AssertType(other, &CachedDictIterator_Type))
+		goto err;
+	return DeeObject_Compare(self->cdi_iter, other->cdi_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdictiterator_compare_eq(CachedDictIterator *self, CachedDictIterator *other) {
+	if (DeeObject_AssertType(other, &CachedDictIterator_Type))
+		goto err;
+	return DeeObject_CompareEq(self->cdi_iter, other->cdi_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -213,16 +219,9 @@ err:
 
 
 PRIVATE struct type_cmp cdictiterator_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdictiterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdictiterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdictiterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdictiterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdictiterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdictiterator_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&cdictiterator_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdictiterator_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdictiterator_compare,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF CachedDict *DCALL
@@ -999,7 +998,7 @@ DeeCachedDict_GetItemNRStringLenHashDef(DeeCachedDictObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_sizeob(CachedDict *__restrict self) {
-	return DeeObject_SizeObject(self->cd_map);
+	return DeeObject_SizeOb(self->cd_map);
 }
 
 /* This one's basically your hasitem operator. */
@@ -1058,28 +1057,48 @@ cdict_hash(CachedDict *__restrict self) {
 	return DeeObject_Hash(self->cd_map);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_eq(CachedDict *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdict_compare_eq(CachedDict *self, DeeObject *other) {
+	return DeeObject_CompareEq(self->cd_map, other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdict_compare(CachedDict *self, DeeObject *other) {
+	return DeeObject_Compare(self->cd_map, other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdict_trycompare_eq(CachedDict *self, DeeObject *other) {
+	return DeeObject_TryCompareEq(self->cd_map, other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_eq(CachedDict *self, DeeObject *other) {
 	return DeeObject_CmpEq(self->cd_map, other);
 }
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_ne(CachedDict *__restrict self, DeeObject *__restrict other) {
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_ne(CachedDict *self, DeeObject *other) {
 	return DeeObject_CmpNe(self->cd_map, other);
 }
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_lo(CachedDict *__restrict self, DeeObject *__restrict other) {
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_lo(CachedDict *self, DeeObject *other) {
 	return DeeObject_CmpLo(self->cd_map, other);
 }
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_le(CachedDict *__restrict self, DeeObject *__restrict other) {
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_le(CachedDict *self, DeeObject *other) {
 	return DeeObject_CmpLe(self->cd_map, other);
 }
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_gr(CachedDict *__restrict self, DeeObject *__restrict other) {
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_gr(CachedDict *self, DeeObject *other) {
 	return DeeObject_CmpGr(self->cd_map, other);
 }
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_ge(CachedDict *__restrict self, DeeObject *__restrict other) {
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_ge(CachedDict *self, DeeObject *other) {
 	return DeeObject_CmpGe(self->cd_map, other);
 }
 
@@ -1250,9 +1269,9 @@ err:
 
 PRIVATE struct type_cmp cdict_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&cdict_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdict_compare_eq,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdict_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdict_trycompare_eq,
 	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_eq,
 	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_ne,
 	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_lo,

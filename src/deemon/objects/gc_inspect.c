@@ -135,34 +135,28 @@ PRIVATE struct type_member tpconst gcset_iterator_members[] = {
 };
 
 INTDEF DeeTypeObject DeeGCSetIterator_Type;
-#define DEFINE_GCSETITERATOR_COMPARE(name, op)                                        \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                             \
-	name(GCSetIterator *self, GCSetIterator *other) {                                 \
-		if (DeeObject_AssertTypeExact(other, &DeeGCSetIterator_Type))                 \
-			goto err;                                                                 \
-		return_bool(atomic_read(&self->gsi_index) op atomic_read(&other->gsi_index)); \
-	err:                                                                              \
-		return NULL;                                                                  \
-	}
-DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_eq, ==)
-DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_ne, !=)
-DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_lo, <)
-DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_le, <=)
-DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_gr, >)
-DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_ge, >=)
-#undef DEFINE_GCSETITERATOR_COMPARE
+
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+gcset_iterator_hash(GCSetIterator *self) {
+	return atomic_read(&self->gsi_index);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+gcset_iterator_compare(GCSetIterator *self, GCSetIterator *other) {
+	size_t lhs_index, rhs_index;
+	if (DeeObject_AssertTypeExact(other, &DeeGCSetIterator_Type))
+		goto err;
+	lhs_index = atomic_read(&self->gsi_index);
+	rhs_index = atomic_read(&other->gsi_index);
+	Dee_return_compare(lhs_index, rhs_index);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp gcset_iterator_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&gcset_iterator_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&gcset_iterator_compare,
 };
 
 

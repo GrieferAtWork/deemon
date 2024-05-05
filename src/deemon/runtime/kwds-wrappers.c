@@ -1639,7 +1639,7 @@ blkw_contains(DeeBlackListKwObject *self,
 	if (DeeString_Check(key) &&
 	    DeeBlackListKw_IsBlackListed(self, key))
 		return_false;
-	return DeeObject_ContainsObject(self->blkw_kw, key);
+	return DeeObject_Contains(self->blkw_kw, key);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL

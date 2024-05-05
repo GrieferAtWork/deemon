@@ -1052,7 +1052,7 @@ vcall_getmethod(struct fungen *__restrict self,
 	if (func == &DeeObject_NewRef) {
 		/* This right here optimizes stuff like `Object.this' */
 		return 0;
-	} else if (func == &DeeObject_SizeObject) {
+	} else if (func == &DeeObject_SizeOb) {
 		return fg_vopsize(self);
 	} else if (func == &DeeObject_Iter) {
 		return fg_vop(self, OPERATOR_ITER, 1, VOP_F_PUSHRES);
@@ -4379,7 +4379,7 @@ fg_vopsize(struct fungen *__restrict self) {
 		if (memval_direct_isconst(vtop)) {
 			DeeObject *constval = memval_const_getobj(vtop);
 			if (DeeType_GetOperatorFlags(Dee_TYPE(constval), OPERATOR_SIZE) & METHOD_FCONSTCALL) {
-				DREF DeeObject *sizeval = DeeObject_SizeObject(constval);
+				DREF DeeObject *sizeval = DeeObject_SizeOb(constval);
 				if unlikely(!sizeval) {
 					if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
 						goto err;
@@ -4436,7 +4436,7 @@ fg_vopsize(struct fungen *__restrict self) {
 
 	/* Fallback: emit a dynamic call. */
 	DO(fg_vnotoneref_if_operator(self, OPERATOR_SIZE, 1));
-	DO(fg_vcallapi(self, &DeeObject_SizeObject, VCALL_CC_OBJECT, 1));
+	DO(fg_vcallapi(self, &DeeObject_SizeOb, VCALL_CC_OBJECT, 1));
 do_set_return_type:
 	if (return_type)
 		return fg_vsettyp_noalias(self, return_type);
@@ -5403,7 +5403,7 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_GE]           = */ { (void const *)&DeeObject_CmpGe, (void const *)&DeeObject_TCmpGe, 2, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_ITER]         = */ { (void const *)&DeeObject_Iter, (void const *)&DeeObject_TIter, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_SIZE]         = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_CONTAINS]     = */ { (void const *)&DeeObject_ContainsObject, (void const *)&DeeObject_TContainsObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_CONTAINS]     = */ { (void const *)&DeeObject_Contains, (void const *)&DeeObject_TContains, 2, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_GETITEM]      = */ { (void const *)&DeeObject_GetItem, (void const *)&DeeObject_TGetItem, 2, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_DELITEM]      = */ { (void const *)&DeeObject_DelItem, (void const *)&DeeObject_TDelItem, 2, VCALL_CC_INT, false },
 	/* [OPERATOR_SETITEM]      = */ { (void const *)&DeeObject_SetItem, (void const *)&DeeObject_TSetItem, 3, VCALL_CC_INT, false },

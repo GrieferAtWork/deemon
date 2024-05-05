@@ -158,41 +158,31 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 }
 
 
-#define DEFINE_BYTESSPLITITERATOR_COMPARE(name, op)             \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
-	name(BytesSplitIterator *self, BytesSplitIterator *other) { \
-		byte_t *x, *y;                                          \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))   \
-			goto err;                                           \
-		x = READ_BSI_ITER(self);                                \
-		y = READ_BSI_ITER(other);                               \
-		if (!x)                                                 \
-			x = (byte_t *)(uintptr_t)-1;                        \
-		if (!y)                                                 \
-			y = (byte_t *)(uintptr_t)-1;                        \
-		return_bool(x op y);                                    \
-	err:                                                        \
-		return NULL;                                            \
-	}
-DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_eq, ==)
-DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_ne, !=)
-DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_lo, <)
-DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_le, <=)
-DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_gr, >)
-DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_ge, >=)
-#undef DEFINE_BYTESSPLITITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+bsi_hash(BytesSplitIterator *self) {
+	return Dee_HashPointer(READ_BSI_ITER(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsi_compare(BytesSplitIterator *self, BytesSplitIterator *other) {
+	byte_t *x, *y;
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	x = READ_BSI_ITER(self);
+	y = READ_BSI_ITER(other);
+	if (!x)
+		x = (byte_t *)(uintptr_t)-1;
+	if (!y)
+		y = (byte_t *)(uintptr_t)-1;
+	Dee_return_compare(x, y);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp bsi_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&bsi_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&bsi_compare,
 };
 
 

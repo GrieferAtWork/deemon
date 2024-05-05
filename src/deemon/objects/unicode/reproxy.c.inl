@@ -309,39 +309,29 @@ rebfaiter_getseq(ReSequenceIterator *__restrict self) {
 
 #define REITER_GETDATAPTR(x) atomic_read(&(x)->rsi_exec.rx_startoff)
 
-#define DEFINE_RESEQUENCEITARTOR_COMPARE(name, op)              \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
-	name(ReSequenceIterator *self, ReSequenceIterator *other) { \
-		size_t x, y;                                            \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))   \
-			goto err;                                           \
-		x = REITER_GETDATAPTR(self);                            \
-		y = REITER_GETDATAPTR(other);                           \
-		return_bool(x op y);                                    \
-	err:                                                        \
-		return NULL;                                            \
-	}
-DEFINE_RESEQUENCEITARTOR_COMPARE(refa_eq, ==)
-DEFINE_RESEQUENCEITARTOR_COMPARE(refa_ne, !=)
-DEFINE_RESEQUENCEITARTOR_COMPARE(refa_lo, <)
-DEFINE_RESEQUENCEITARTOR_COMPARE(refa_le, <=)
-DEFINE_RESEQUENCEITARTOR_COMPARE(refa_gr, >)
-DEFINE_RESEQUENCEITARTOR_COMPARE(refa_ge, >=)
-#undef DEFINE_RESEQUENCEITARTOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+refa_hash(ReSequenceIterator *self) {
+	return (Dee_hash_t)REITER_GETDATAPTR(self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+refa_compare(ReSequenceIterator *self, ReSequenceIterator *other) {
+	size_t x, y;
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	x = REITER_GETDATAPTR(self);
+	y = REITER_GETDATAPTR(other);
+	Dee_return_compare(x, y);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 
 #define rebfaiter_cmp refaiter_cmp
 PRIVATE struct type_cmp refaiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&refa_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&refa_compare,
 };
 
 

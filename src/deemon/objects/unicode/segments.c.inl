@@ -147,35 +147,28 @@ PRIVATE struct type_getset tpconst ssegiter_getsets[] = {
 };
 
 
-#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                 \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL               \
-	name(StringSegmentsIterator *self, StringSegmentsIterator *other) { \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))           \
-			goto err;                                                   \
-		return_bool(READ_PTR(self) op READ_PTR(other));                 \
-	err:                                                                \
-		return NULL;                                                    \
-	}
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_eq, ==)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_ne, !=)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_lo, <)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_le, <=)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_gr, >)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(ssegiter_ge, >=)
-#undef DEFINE_STRINGSEGMENTSITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+ssegiter_hash(StringSegmentsIterator *self) {
+	return Dee_HashPointer(READ_PTR(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ssegiter_compare(StringSegmentsIterator *self, StringSegmentsIterator *other) {
+	uint8_t *lhs_ptr, *rhs_ptr;
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	lhs_ptr = READ_PTR(self);
+	rhs_ptr = READ_PTR(other);
+	Dee_return_compare(lhs_ptr, rhs_ptr);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 
 PRIVATE struct type_cmp ssegiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssegiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssegiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssegiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssegiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssegiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssegiter_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&ssegiter_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ssegiter_compare,
 };
 
 

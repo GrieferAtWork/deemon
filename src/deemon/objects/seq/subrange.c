@@ -83,34 +83,27 @@ subrangeiterator_next(SubRangeIterator *__restrict self) {
 
 INTDEF DeeTypeObject SeqSubRangeIterator_Type;
 
-#define DEFINE_SUBRANGEITERATOR_COMPARE(name, op)                        \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
-	name(SubRangeIterator *self, SubRangeIterator *other) {              \
-		if (DeeObject_AssertTypeExact(other, &SeqSubRangeIterator_Type)) \
-			goto err;                                                    \
-		return_bool(READ_SIZE(other) op READ_SIZE(self));                \
-	err:                                                                 \
-		return NULL;                                                     \
-	}
-DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_eq, ==)
-DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_ne, !=)
-DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_lo, <)
-DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_le, <=)
-DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_gr, >)
-DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_ge, >=)
-#undef DEFINE_SUBRANGEITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+subrangeiterator_hash(SubRangeIterator *self) {
+	return READ_SIZE(self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+subrangeiterator_compare(SubRangeIterator *self, SubRangeIterator *other) {
+	size_t lhs_size, rhs_size;
+	if (DeeObject_AssertTypeExact(other, &SeqSubRangeIterator_Type))
+		goto err;
+	lhs_size = READ_SIZE(self);
+	rhs_size = READ_SIZE(other);
+	return Dee_Compare(rhs_size, lhs_size); /* Yes: reverse order (because sizes decrease) */
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp subrangeiterator_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangeiterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangeiterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangeiterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangeiterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangeiterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangeiterator_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&subrangeiterator_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&subrangeiterator_compare,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

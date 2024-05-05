@@ -538,34 +538,27 @@ ssi_visit(StringScanIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_scanner);
 }
 
-#define DEFINE_STRINGSCANITERATOR_COMPARE(name, op)                         \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
-	name(StringScanIterator *self, StringScanIterator *other) {             \
-		if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type))     \
-			goto err;                                                       \
-		return_bool(GET_FORMAT_POINTER(self) op GET_FORMAT_POINTER(other)); \
-	err:                                                                    \
-		return NULL;                                                        \
-	}
-DEFINE_STRINGSCANITERATOR_COMPARE(ssi_eq, ==)
-DEFINE_STRINGSCANITERATOR_COMPARE(ssi_ne, !=)
-DEFINE_STRINGSCANITERATOR_COMPARE(ssi_lo, <)
-DEFINE_STRINGSCANITERATOR_COMPARE(ssi_le, <=)
-DEFINE_STRINGSCANITERATOR_COMPARE(ssi_gr, >)
-DEFINE_STRINGSCANITERATOR_COMPARE(ssi_ge, >=)
-#undef DEFINE_STRINGSCANITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+ssi_hash(StringScanIterator *self) {
+	return Dee_HashPointer(GET_FORMAT_POINTER(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ssi_compare(StringScanIterator *self, StringScanIterator *other) {
+	char *lhs_ptr, *rhs_ptr;
+	if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type))
+		goto err;
+	lhs_ptr = GET_FORMAT_POINTER(self);
+	rhs_ptr = GET_FORMAT_POINTER(other);
+	Dee_return_compare(lhs_ptr, rhs_ptr);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp ssi_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&ssi_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ssi_compare,
 };
 
 PRIVATE struct type_member tpconst ssi_members[] = {
