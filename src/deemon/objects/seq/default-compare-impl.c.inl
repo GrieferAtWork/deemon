@@ -41,7 +41,7 @@
 DECL_BEGIN
 
 #ifdef DEFINE_compareeq
-#define LOCAL_DeeObject_Compare                   DeeObject_CompareForEquality
+#define LOCAL_DeeObject_Compare                   DeeObject_TryCompareForEquality
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_EQUAL    SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_ERROR    SEQ_COMPAREEQ_FOREACH_RESULT_ERROR
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS     SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL

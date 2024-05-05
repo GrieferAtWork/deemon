@@ -3379,7 +3379,7 @@ list_compare_eq_v(List *lhs, DeeObject *const *rhsv, size_t elemc) {
 		lhs_elem = DeeList_GET(lhs, i);
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
-		temp = DeeObject_CompareForEquality(lhs_elem, rhsv[i]);
+		temp = DeeObject_TryCompareForEquality(lhs_elem, rhsv[i]);
 		Dee_Decref(lhs_elem);
 		if (temp != 0)
 			return temp;

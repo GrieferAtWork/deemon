@@ -1150,8 +1150,8 @@ function_compare_eq(Function *self, Function *other) {
 		goto done;
 	ASSERT(code->co_refc == other->fo_code->co_refc);
 	for (i = 0; i < code->co_refc; ++i) {
-		result = DeeObject_CompareForEquality(self->fo_refv[i],
-		                                      other->fo_refv[i]);
+		result = DeeObject_TryCompareForEquality(self->fo_refv[i],
+		                                         other->fo_refv[i]);
 		if (result != 0)
 			goto done;
 	}
@@ -1180,8 +1180,8 @@ function_compare_eq(Function *self, Function *other) {
 				Dee_Decref_unlikely(rhs);
 			goto not_equal;
 		} else {
-			result = DeeObject_CompareForEquality(self->fo_refv[i],
-			                                      other->fo_refv[i]);
+			result = DeeObject_TryCompareForEquality(self->fo_refv[i],
+			                                         other->fo_refv[i]);
 			Dee_Decref_unlikely(lhs);
 			Dee_Decref_unlikely(rhs);
 			if (result != 0)
