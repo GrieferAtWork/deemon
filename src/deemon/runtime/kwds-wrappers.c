@@ -1269,12 +1269,12 @@ err_r:
 	err:                                                                    \
 		return NULL;                                                        \
 	}
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_eq, DeeObject_CompareEqObject)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_ne, DeeObject_CompareNeObject)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_lo, DeeObject_CompareLoObject)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_le, DeeObject_CompareLeObject)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_gr, DeeObject_CompareGrObject)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_ge, DeeObject_CompareGeObject)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_eq, DeeObject_CmpEq)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_ne, DeeObject_CmpNe)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_lo, DeeObject_CmpLo)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_le, DeeObject_CmpLe)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_gr, DeeObject_CmpGr)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_ge, DeeObject_CmpGe)
 #undef DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE
 
 PRIVATE struct type_cmp blmi_cmp = {

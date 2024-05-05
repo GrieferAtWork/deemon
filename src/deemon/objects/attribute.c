@@ -119,7 +119,7 @@ attr_eq(Attr *self, Attr *other) {
 	if (self->a_info.a_attrtype != other->a_info.a_attrtype)
 		goto nope;
 	if (self->a_info.a_decl != other->a_info.a_decl) {
-		result = DeeObject_TryCompareEq(self->a_info.a_decl,
+		result = DeeObject_TryCmpEqAsBool(self->a_info.a_decl,
 		                             other->a_info.a_decl);
 		if unlikely(result < 0)
 			goto err;
@@ -918,7 +918,7 @@ enumattr_eq(EnumAttr *self,
 		goto err;
 	if (self->ea_type != other->ea_type)
 		return_false;
-	return DeeObject_CompareEqObject(self->ea_obj, other->ea_obj);
+	return DeeObject_CmpEq(self->ea_obj, other->ea_obj);
 err:
 	return NULL;
 }
@@ -930,7 +930,7 @@ enumattr_ne(EnumAttr *self,
 		goto err;
 	if (self->ea_type != other->ea_type)
 		return_true;
-	return DeeObject_CompareNeObject(self->ea_obj, other->ea_obj);
+	return DeeObject_CmpNe(self->ea_obj, other->ea_obj);
 err:
 	return NULL;
 }

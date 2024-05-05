@@ -355,7 +355,7 @@ DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict p_self,
 			continue;
 
 		/* Same hash. -> Check if it's also the same key. */
-		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
@@ -484,7 +484,7 @@ rodict_contains(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
@@ -510,7 +510,7 @@ DeeRoDict_GetItemNR(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
@@ -579,7 +579,7 @@ DeeRoDict_TryGetItemNR(DeeRoDictObject *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
@@ -688,7 +688,7 @@ rodict_getitem(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
@@ -759,7 +759,7 @@ rodict_nsi_getdefault(DeeObject *self, DeeObject *key, DeeObject *def) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
@@ -866,7 +866,7 @@ rodict_hasitem(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)
@@ -933,7 +933,7 @@ rodict_trygetitem(RoDict *self, DeeObject *key) {
 			break;
 		if (item->rdi_hash != hash)
 			continue;
-		error = DeeObject_TryCompareEq(key, item->rdi_key);
+		error = DeeObject_TryCmpEqAsBool(key, item->rdi_key);
 		if unlikely(error < 0)
 			goto err;
 		if (!error)

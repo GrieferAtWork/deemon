@@ -503,37 +503,37 @@ PRIVATE struct type_math super_math = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_eq(Super *self, DeeObject *some_object) {
-	return DeeObject_TCompareEqObject(self->s_type, self->s_self, some_object);
+	return DeeObject_TCmpEq(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_ne(Super *self, DeeObject *some_object) {
-	return DeeObject_TCompareNeObject(self->s_type, self->s_self, some_object);
+	return DeeObject_TCmpNe(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_lo(Super *self, DeeObject *some_object) {
-	return DeeObject_TCompareLoObject(self->s_type, self->s_self, some_object);
+	return DeeObject_TCmpLo(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_le(Super *self, DeeObject *some_object) {
-	return DeeObject_TCompareLeObject(self->s_type, self->s_self, some_object);
+	return DeeObject_TCmpLe(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_gr(Super *self, DeeObject *some_object) {
-	return DeeObject_TCompareGrObject(self->s_type, self->s_self, some_object);
+	return DeeObject_TCmpGr(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_ge(Super *self, DeeObject *some_object) {
-	return DeeObject_TCompareGeObject(self->s_type, self->s_self, some_object);
+	return DeeObject_TCmpGe(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_compare_eq(Super *self, DeeObject *some_object) {
-	return DeeObject_TCompareForEquality(self->s_type, self->s_self, some_object);
+	return DeeObject_TCompareEq(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -543,7 +543,7 @@ super_compare(Super *self, DeeObject *some_object) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_trycompare_eq(Super *self, DeeObject *some_object) {
-	return DeeObject_TTryCompareForEquality(self->s_type, self->s_self, some_object);
+	return DeeObject_TTryCompareEq(self->s_type, self->s_self, some_object);
 }
 
 PRIVATE struct type_cmp super_cmp = {

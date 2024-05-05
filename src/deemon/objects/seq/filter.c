@@ -152,7 +152,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 filteriterator_compare_eq(FilterIterator *self, FilterIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &SeqFilterIterator_Type))
 		goto err;
-	return DeeObject_CompareForEquality(self->fi_iter, other->fi_iter);
+	return DeeObject_CompareEq(self->fi_iter, other->fi_iter);
 err:
 	return Dee_COMPARE_ERR;
 }

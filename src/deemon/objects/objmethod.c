@@ -183,7 +183,7 @@ objmethod_eq(DeeObjMethodObject *self, DeeObjMethodObject *other) {
 		goto err;
 	if (self->om_func != other->om_func)
 		return_false;
-	return DeeObject_CompareEqObject(self->om_this, other->om_this);
+	return DeeObject_CmpEq(self->om_this, other->om_this);
 err:
 	return NULL;
 }
@@ -194,7 +194,7 @@ objmethod_ne(DeeObjMethodObject *self, DeeObjMethodObject *other) {
 		goto err;
 	if (self->om_func != other->om_func)
 		return_true;
-	return DeeObject_CompareNeObject(self->om_this, other->om_this);
+	return DeeObject_CmpNe(self->om_this, other->om_this);
 err:
 	return NULL;
 }
@@ -207,7 +207,7 @@ objmethod_lo(DeeObjMethodObject *self, DeeObjMethodObject *other) {
 		return_true;
 	if (self->om_func > other->om_func)
 		return_false;
-	return DeeObject_CompareLoObject(self->om_this, other->om_this);
+	return DeeObject_CmpLo(self->om_this, other->om_this);
 err:
 	return NULL;
 }
@@ -220,7 +220,7 @@ objmethod_gr(DeeObjMethodObject *self, DeeObjMethodObject *other) {
 		return_true;
 	if (self->om_func < other->om_func)
 		return_false;
-	return DeeObject_CompareGrObject(self->om_this, other->om_this);
+	return DeeObject_CmpGr(self->om_this, other->om_this);
 err:
 	return NULL;
 }
@@ -233,7 +233,7 @@ objmethod_le(DeeObjMethodObject *self, DeeObjMethodObject *other) {
 		return_true;
 	if (self->om_func > other->om_func)
 		return_false;
-	return DeeObject_CompareLeObject(self->om_this, other->om_this);
+	return DeeObject_CmpLe(self->om_this, other->om_this);
 err:
 	return NULL;
 }
@@ -246,7 +246,7 @@ objmethod_ge(DeeObjMethodObject *self, DeeObjMethodObject *other) {
 		return_true;
 	if (self->om_func < other->om_func)
 		return_false;
-	return DeeObject_CompareGeObject(self->om_this, other->om_this);
+	return DeeObject_CmpGe(self->om_this, other->om_this);
 err:
 	return NULL;
 }

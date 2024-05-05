@@ -379,7 +379,7 @@ same_constant_value(DeeObject *__restrict a,
 		return true;
 	if (Dee_TYPE(a) != Dee_TYPE(b))
 		return false;
-	temp = DeeObject_TryCompareForEquality(a, b);
+	temp = DeeObject_TryCompareEq(a, b);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 	return temp == 0;

@@ -474,7 +474,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_get_abs(DeeObject *__restrict self) {
 	int isneg;
-	isneg = DeeObject_CompareLo(self, DeeInt_Zero);
+	isneg = DeeObject_CmpLoAsBool(self, DeeInt_Zero);
 	if unlikely(isneg < 0)
 		goto err;
 	return isneg ? DeeObject_Neg(self)
@@ -513,7 +513,7 @@ numeric_get_isfloat(DeeObject *__restrict self) {
 			flt_trunc_val = float_get_trunc(flt_val);
 			if unlikely(!flt_trunc_val)
 				goto err_flt_val;
-			error = DeeObject_CompareNe((DeeObject *)flt_val,
+			error = DeeObject_CmpNeAsBool((DeeObject *)flt_val,
 			                            (DeeObject *)flt_trunc_val);
 			Dee_Decref(flt_trunc_val);
 			if unlikely(error < 0)
@@ -533,7 +533,7 @@ numeric_get_isfloat(DeeObject *__restrict self) {
 			Dee_Decref(int_val);
 			if unlikely(!int_as_flt_val)
 				goto err_flt_val;
-			error = DeeObject_CompareNe((DeeObject *)flt_val,
+			error = DeeObject_CmpNeAsBool((DeeObject *)flt_val,
 			                            (DeeObject *)int_as_flt_val);
 			Dee_Decref(int_as_flt_val);
 			if unlikely(error < 0)
@@ -581,7 +581,7 @@ numeric_get_trunc(DeeObject *__restrict self) {
 
 	/* >> if (this == res)
 	 * >>     return this; */
-	error = DeeObject_CompareEq(self, res);
+	error = DeeObject_CmpEqAsBool(self, res);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -619,7 +619,7 @@ numeric_get_floor(DeeObject *__restrict self) {
 
 	/* >> if (this == res)
 	 * >>     return this; */
-	error = DeeObject_CompareEq(self, res);
+	error = DeeObject_CmpEqAsBool(self, res);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -629,7 +629,7 @@ numeric_get_floor(DeeObject *__restrict self) {
 
 	/* >> if (this < 0)
 	 * >>     --res; */
-	error = DeeObject_CompareLo(self, DeeInt_Zero);
+	error = DeeObject_CmpLoAsBool(self, DeeInt_Zero);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -667,7 +667,7 @@ numeric_get_ceil(DeeObject *__restrict self) {
 
 	/* >> if (this == res)
 	 * >>     return this; */
-	error = DeeObject_CompareEq(self, res);
+	error = DeeObject_CmpEqAsBool(self, res);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -677,7 +677,7 @@ numeric_get_ceil(DeeObject *__restrict self) {
 
 	/* >> if (this > 0)
 	 * >>     ++res; */
-	error = DeeObject_CompareGr(self, DeeInt_Zero);
+	error = DeeObject_CmpGrAsBool(self, DeeInt_Zero);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -717,7 +717,7 @@ numeric_get_round(DeeObject *__restrict self) {
 
 	/* >> if (this == res)
 	 * >>     return this; */
-	error = DeeObject_CompareEq(self, res);
+	error = DeeObject_CmpEqAsBool(self, res);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -726,7 +726,7 @@ numeric_get_round(DeeObject *__restrict self) {
 	}
 
 	/* >> if (this > 0) { ... */
-	error = DeeObject_CompareGr(self, DeeInt_Zero);
+	error = DeeObject_CmpGrAsBool(self, DeeInt_Zero);
 	if unlikely(error < 0)
 		goto err_res;
 	if (error) {
@@ -739,7 +739,7 @@ numeric_get_round(DeeObject *__restrict self) {
 		delta = DeeObject_Sub(self, res);
 		if unlikely(!delta)
 			goto err_res;
-		error = DeeObject_CompareGe(delta, (DeeObject *)&flt_half);
+		error = DeeObject_CmpGeAsBool(delta, (DeeObject *)&flt_half);
 		Dee_Decref(delta);
 		if unlikely(error < 0)
 			goto err_res;
@@ -757,7 +757,7 @@ numeric_get_round(DeeObject *__restrict self) {
 		delta = DeeObject_Sub(res, self);
 		if unlikely(!delta)
 			goto err_res;
-		error = DeeObject_CompareGr(delta, (DeeObject *)&flt_half);
+		error = DeeObject_CmpGrAsBool(delta, (DeeObject *)&flt_half);
 		Dee_Decref(delta);
 		if unlikely(error < 0)
 			goto err_res;
@@ -793,7 +793,7 @@ numeric_get_isnan(DeeObject *__restrict self) {
 	res = DeeObject_Float(self);
 	if unlikely(!res)
 		goto err;
-	error = DeeObject_CompareEq(self, res);
+	error = DeeObject_CmpEqAsBool(self, res);
 	if unlikely(error < 0)
 		goto err_res;
 	if (!error) {
@@ -826,7 +826,7 @@ numeric_get_isinf(DeeObject *__restrict self) {
 	res = DeeObject_Float(self);
 	if unlikely(!res)
 		goto err;
-	error = DeeObject_CompareEq(self, res);
+	error = DeeObject_CmpEqAsBool(self, res);
 	if unlikely(error < 0)
 		goto err_res;
 	if (!error) {
@@ -1695,7 +1695,7 @@ numeric_nextafter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 
 	/* >> if (this > y)
 	 * >>     return this - 1; */
-	error = DeeObject_CompareGr(self, y);
+	error = DeeObject_CmpGrAsBool(self, y);
 	if unlikely(error < 0)
 		goto err;
 	if (error)
@@ -1703,7 +1703,7 @@ numeric_nextafter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 
 	/* >> if (this < y)
 	 * >>     return this + 1; */
-	error = DeeObject_CompareLo(self, y);
+	error = DeeObject_CmpLoAsBool(self, y);
 	if unlikely(error < 0)
 		goto err;
 	if (error)
@@ -1741,11 +1741,11 @@ err:
 	err:                                                                   \
 		return NULL;                                                       \
 	}
-DEFINE_NUMERIC_ISCMP(isgreater, DeeObject_CompareGrObject)
-DEFINE_NUMERIC_ISCMP(isgreaterequal, DeeObject_CompareGeObject)
-DEFINE_NUMERIC_ISCMP(isless, DeeObject_CompareLoObject)
-DEFINE_NUMERIC_ISCMP(islessequal, DeeObject_CompareLeObject)
-DEFINE_NUMERIC_ISCMP(islessgreater, DeeObject_CompareNeObject)
+DEFINE_NUMERIC_ISCMP(isgreater, DeeObject_CmpGr)
+DEFINE_NUMERIC_ISCMP(isgreaterequal, DeeObject_CmpGe)
+DEFINE_NUMERIC_ISCMP(isless, DeeObject_CmpLo)
+DEFINE_NUMERIC_ISCMP(islessequal, DeeObject_CmpLe)
+DEFINE_NUMERIC_ISCMP(islessgreater, DeeObject_CmpNe)
 #undef DEFINE_NUMERIC_ISCMP
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

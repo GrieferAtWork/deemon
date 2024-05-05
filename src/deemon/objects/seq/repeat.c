@@ -172,40 +172,40 @@ repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 DEFINE_REPEATITER_COMPARE(repeatiter_eq, {
 	if (REPEATITER_READ_NUM(self) != REPEATITER_READ_NUM(other))
 		return_false;
-}, Dee_True, DeeObject_CompareEqObject)
+}, Dee_True, DeeObject_CmpEq)
 
 DEFINE_REPEATITER_COMPARE(repeatiter_ne, {
 	if (REPEATITER_READ_NUM(self) != REPEATITER_READ_NUM(other))
 		return_true;
-}, Dee_False, DeeObject_CompareNeObject)
+}, Dee_False, DeeObject_CmpNe)
 
 DEFINE_REPEATITER_COMPARE(repeatiter_lo, {
 	size_t my_len = REPEATITER_READ_NUM(self);
 	size_t ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
 		return_bool_(ot_len < my_len);
-}, Dee_False, DeeObject_CompareLoObject)
+}, Dee_False, DeeObject_CmpLo)
 
 DEFINE_REPEATITER_COMPARE(repeatiter_le, {
 	size_t my_len = REPEATITER_READ_NUM(self);
 	size_t ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
 		return_bool_(ot_len < my_len);
-}, Dee_True, DeeObject_CompareLeObject)
+}, Dee_True, DeeObject_CmpLe)
 
 DEFINE_REPEATITER_COMPARE(repeatiter_gr, {
 	size_t my_len = REPEATITER_READ_NUM(self);
 	size_t ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
 		return_bool_(ot_len > my_len);
-}, Dee_False, DeeObject_CompareGrObject)
+}, Dee_False, DeeObject_CmpGr)
 
 DEFINE_REPEATITER_COMPARE(repeatiter_ge, {
 	size_t my_len = REPEATITER_READ_NUM(self);
 	size_t ot_len = REPEATITER_READ_NUM(other);
 	if (my_len != ot_len)
 		return_bool_(ot_len > my_len);
-}, Dee_True, DeeObject_CompareGeObject)
+}, Dee_True, DeeObject_CmpGe)
 #undef DEFINE_REPEATITER_COMPARE
 
 
@@ -832,7 +832,7 @@ repeatitemiter_eq(RepeatItemIterator *self,
 		goto err;
 	if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
 		return_false;
-	return DeeObject_CompareEqObject(self->rii_obj, other->rii_obj);
+	return DeeObject_CmpEq(self->rii_obj, other->rii_obj);
 err:
 	return NULL;
 }
@@ -844,7 +844,7 @@ repeatitemiter_ne(RepeatItemIterator *self,
 		goto err;
 	if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
 		return_true;
-	return DeeObject_CompareNeObject(self->rii_obj, other->rii_obj);
+	return DeeObject_CmpNe(self->rii_obj, other->rii_obj);
 err:
 	return NULL;
 }
@@ -859,7 +859,7 @@ repeatitemiter_lo(RepeatItemIterator *self,
 	ot_num = REPEATITEMPITER_READ_NUM(other);
 	if (my_num != ot_num)
 		return_bool_(my_num < ot_num);
-	return DeeObject_CompareLoObject(self->rii_obj, other->rii_obj);
+	return DeeObject_CmpLo(self->rii_obj, other->rii_obj);
 err:
 	return NULL;
 }
@@ -874,7 +874,7 @@ repeatitemiter_le(RepeatItemIterator *self,
 	ot_num = REPEATITEMPITER_READ_NUM(other);
 	if (my_num != ot_num)
 		return_bool_(my_num < ot_num);
-	return DeeObject_CompareLeObject(self->rii_obj, other->rii_obj);
+	return DeeObject_CmpLe(self->rii_obj, other->rii_obj);
 err:
 	return NULL;
 }
@@ -889,7 +889,7 @@ repeatitemiter_gr(RepeatItemIterator *self,
 	ot_num = REPEATITEMPITER_READ_NUM(other);
 	if (my_num != ot_num)
 		return_bool_(my_num > ot_num);
-	return DeeObject_CompareGrObject(self->rii_obj, other->rii_obj);
+	return DeeObject_CmpGr(self->rii_obj, other->rii_obj);
 err:
 	return NULL;
 }
@@ -904,7 +904,7 @@ repeatitemiter_ge(RepeatItemIterator *self,
 	ot_num = REPEATITEMPITER_READ_NUM(other);
 	if (my_num != ot_num)
 		return_bool_(my_num > ot_num);
-	return DeeObject_CompareGeObject(self->rii_obj, other->rii_obj);
+	return DeeObject_CmpGe(self->rii_obj, other->rii_obj);
 err:
 	return NULL;
 }
@@ -1055,7 +1055,7 @@ done:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitem_contains(RepeatItem *self,
                     DeeObject *item) {
-	return DeeObject_CompareEqObject(self->rpit_obj, item);
+	return DeeObject_CmpEq(self->rpit_obj, item);
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL

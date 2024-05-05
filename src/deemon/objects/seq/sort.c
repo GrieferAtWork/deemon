@@ -45,7 +45,7 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 		break;
 
 	case 2:
-		error = DeeObject_CompareLo(src[0], src[1]);
+		error = DeeObject_CmpLoAsBool(src[0], src[1]);
 		if unlikely(error < 0 &&
 		            !DeeError_Catch(&DeeError_TypeError) &&
 		            !DeeError_Catch(&DeeError_NotImplemented))
@@ -74,7 +74,7 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 		iter1 = temp;
 		iter2 = temp + s1;
 		while (s1 && s2) {
-			error = DeeObject_CompareLo(*iter1, *iter2);
+			error = DeeObject_CmpLoAsBool(*iter1, *iter2);
 			if unlikely(error < 0) {
 				if (!DeeError_Catch(&DeeError_TypeError) &&
 				    !DeeError_Catch(&DeeError_NotImplemented))
@@ -114,7 +114,7 @@ compare_lo(DeeObject *lhs, DeeObject *rhs, DeeObject *key) {
 	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
 	if unlikely(!rhs)
 		goto err_lhs;
-	result = DeeObject_CompareLo(lhs, rhs);
+	result = DeeObject_CmpLoAsBool(lhs, rhs);
 	Dee_Decref(rhs);
 	Dee_Decref(lhs);
 	return result;
@@ -211,7 +211,7 @@ insertsort_impl(DREF DeeObject **__restrict dst,
 		DeeObject *ob = src[i];
 		for (j = 0; j < i; ++j) {
 			/* Check if we need to insert the object in this location. */
-			temp = DeeObject_CompareLo(ob, dst[j]);
+			temp = DeeObject_CmpLoAsBool(ob, dst[j]);
 			if unlikely(temp < 0 &&
 			            !DeeError_Catch(&DeeError_TypeError) &&
 			            !DeeError_Catch(&DeeError_NotImplemented))
@@ -277,7 +277,7 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 		/* Optimization for sorting 2 objects. */
 		temp = key
 		       ? compare_lo(src[0], src[1], key)
-		       : DeeObject_CompareLo(src[0], src[1]);
+		       : DeeObject_CmpLoAsBool(src[0], src[1]);
 		if (temp <= 0) {
 			if unlikely(temp < 0 &&
 			            !DeeError_Catch(&DeeError_TypeError) &&
@@ -335,7 +335,7 @@ DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
 		/* Optimization for sorting 2 objects. */
 		temp = key
 		       ? compare_lo(src[0], src[1], key)
-		       : DeeObject_CompareLo(src[0], src[1]);
+		       : DeeObject_CmpLoAsBool(src[0], src[1]);
 		if unlikely(temp < 0 &&
 		            !DeeError_Catch(&DeeError_TypeError) &&
 		            !DeeError_Catch(&DeeError_NotImplemented))

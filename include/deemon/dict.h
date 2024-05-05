@@ -169,7 +169,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems,
  * >>              break; // Not found
  * >>          if (item->di_hash != hash)
  * >>              continue; // Non-matching hash
- * >>          if (DeeObject_TryCompareForEquality(key, item->di_key) == 0)
+ * >>          if (DeeObject_TryCompareEq(key, item->di_key) == 0)
  * >>              return item->di_item;
  * >>     }
  * >>     return NULL;

@@ -2771,16 +2771,16 @@ DEFINE_SECONDARY(CmpOperand) {
 #ifdef JIT_EVAL
 			switch (cmd) {
 			case TOK_LOWER:
-				merge = DeeObject_CompareLoObject(lhs, rhs);
+				merge = DeeObject_CmpLo(lhs, rhs);
 				break;
 			case TOK_LOWER_EQUAL:
-				merge = DeeObject_CompareLeObject(lhs, rhs);
+				merge = DeeObject_CmpLe(lhs, rhs);
 				break;
 			case TOK_GREATER:
-				merge = DeeObject_CompareGrObject(lhs, rhs);
+				merge = DeeObject_CmpGr(lhs, rhs);
 				break;
 			case TOK_GREATER_EQUAL:
-				merge = DeeObject_CompareGeObject(lhs, rhs);
+				merge = DeeObject_CmpGe(lhs, rhs);
 				break;
 			default: __builtin_unreachable();
 			}
@@ -2961,10 +2961,10 @@ DEFINE_SECONDARY(CmpEQOperand) {
 		LOAD_LVALUE(rhs, err_r);
 		switch (cmd) {
 		case TOK_EQUAL:
-			merge = DeeObject_CompareEqObject(lhs, rhs);
+			merge = DeeObject_CmpEq(lhs, rhs);
 			break;
 		case TOK_NOT_EQUAL:
-			merge = DeeObject_CompareNeObject(lhs, rhs);
+			merge = DeeObject_CmpNe(lhs, rhs);
 			break;
 		case TOK_EQUAL3:
 			merge = DeeBool_For(lhs == rhs);

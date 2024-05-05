@@ -942,7 +942,7 @@ again:
 	DefaultIterator_WithSizeAndGetItem_LockRelease(self);
 	new_index = old_index; /* Inherit reference */
 	for (;;) {
-		int temp = DeeObject_CompareGe(new_index, self->disg_end);
+		int temp = DeeObject_CmpGeAsBool(new_index, self->disg_end);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err_new_index;
@@ -992,7 +992,7 @@ again:
 	DefaultIterator_WithTSizeAndGetItem_LockRelease(self);
 	new_index = old_index; /* Inherit reference */
 	for (;;) {
-		int temp = DeeObject_CompareGe(new_index, self->ditsg_end);
+		int temp = DeeObject_CmpGeAsBool(new_index, self->ditsg_end);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err_new_index;

@@ -1580,7 +1580,7 @@
 #define DEFINE_MATH_OPERATOR2(n,...) DEFINE_OPERATOR(DeeObject*,n,(DeeObject*self,DeeObject*some_object)){}
 #define DEFINE_MATH_INPLACE_OPERATOR2(n,...) DEFINE_OPERATOR(int,n,(DeeObject**p_self,DeeObject*some_object)){}
 #define DEFINE_OBJECT_COMPARE_OPERATOR(n,...) DEFINE_OPERATOR(DeeObject*,n,(DeeObject*self,DeeObject*some_object)){}
-#define DEFINE_COMPARE_OPERATOR(n,...) int n(DeeObject*self,DeeObject*some_object){}
+#define DEFINE_COMPARE_ASBOOL_OPERATOR(n,...) int n(DeeObject*self,DeeObject*some_object){}
 #define DEFINE_TYPEOPREATORITEARTOR_COMPARE(n,...) DeeObject*n(TypeOperatorsIterator*self,TypeOperatorsIterator*other){}
 #define DEE_DEFINE_BYTEWRITER_PUTX(n,T,x) int n(struct Dee_bytewriter*self,T x){}
 #define DEE_DEFINE_ATOMIC_HELPERS(n,T) \

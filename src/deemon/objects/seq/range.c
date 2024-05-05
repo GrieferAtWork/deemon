@@ -219,8 +219,8 @@ again:
 
 	/* Check if the end has been reached */
 	temp = likely(!self->ri_range->r_rev)
-	       ? DeeObject_CompareLo(new_index, self->ri_end)
-	       : DeeObject_CompareGr(new_index, self->ri_end);
+	       ? DeeObject_CmpLoAsBool(new_index, self->ri_end)
+	       : DeeObject_CmpGrAsBool(new_index, self->ri_end);
 	if (temp <= 0) {
 		/* Error, or done. */
 		if unlikely(temp < 0)
@@ -295,8 +295,8 @@ ri_bool(RangeIterator *__restrict self) {
 	ni = ri_get_next_index(self);
 	/* Check if the end has been reached */
 	result = likely(!self->ri_range->r_rev)
-	         ? DeeObject_CompareLo(ni, self->ri_end)
-	         : DeeObject_CompareGr(ni, self->ri_end);
+	         ? DeeObject_CmpLoAsBool(ni, self->ri_end)
+	         : DeeObject_CmpGrAsBool(ni, self->ri_end);
 	Dee_Decref(ni);
 	return result;
 }
@@ -402,12 +402,12 @@ PRIVATE struct type_member tpconst ri_members[] = {
 	err:                                                              \
 		return NULL;                                                  \
 	}
-DEFINE_RANGEITERATOR_COMPARE(ri_eq, DeeObject_CompareEqObject)
-DEFINE_RANGEITERATOR_COMPARE(ri_ne, DeeObject_CompareNeObject)
-DEFINE_RANGEITERATOR_COMPARE_R(ri_lo, DeeObject_CompareLoObject)
-DEFINE_RANGEITERATOR_COMPARE_R(ri_le, DeeObject_CompareLeObject)
-DEFINE_RANGEITERATOR_COMPARE_R(ri_gr, DeeObject_CompareGrObject)
-DEFINE_RANGEITERATOR_COMPARE_R(ri_ge, DeeObject_CompareGeObject)
+DEFINE_RANGEITERATOR_COMPARE(ri_eq, DeeObject_CmpEq)
+DEFINE_RANGEITERATOR_COMPARE(ri_ne, DeeObject_CmpNe)
+DEFINE_RANGEITERATOR_COMPARE_R(ri_lo, DeeObject_CmpLo)
+DEFINE_RANGEITERATOR_COMPARE_R(ri_le, DeeObject_CmpLe)
+DEFINE_RANGEITERATOR_COMPARE_R(ri_gr, DeeObject_CmpGr)
+DEFINE_RANGEITERATOR_COMPARE_R(ri_ge, DeeObject_CmpGe)
 #undef DEFINE_RANGEITERATOR_COMPARE_R
 #undef DEFINE_RANGEITERATOR_COMPARE
 
@@ -511,13 +511,13 @@ range_contains(Range *self, DeeObject *index) {
 	if likely(!self->r_rev) {
 		/* >> if (!(self->r_start <= index))
 		 * >>     return false; */
-		error = DeeObject_CompareLe(self->r_start, index);
+		error = DeeObject_CmpLeAsBool(self->r_start, index);
 		if (error <= 0) /* if false-or-error */
 			goto err_or_false;
 
 		/* >> if (self->r_end <= index)
 		 * >>     return false; */
-		error = DeeObject_CompareLe(self->r_end, index);
+		error = DeeObject_CmpLeAsBool(self->r_end, index);
 		if (error != 0) /* if true-or-error */
 			goto err_or_false;
 		if (self->r_step) {
@@ -553,13 +553,13 @@ range_contains(Range *self, DeeObject *index) {
 
 		/* >> if (self->r_start < index)
 		 * >>     return false; */
-		error = DeeObject_CompareLo(self->r_start, index);
+		error = DeeObject_CmpLoAsBool(self->r_start, index);
 		if (error != 0) /* if true-or-error */
 			goto err_or_false;
 
 		/* >> if (!(self->r_end < index))
 		 * >>     return false; */
-		error = DeeObject_CompareLo(self->r_end, index);
+		error = DeeObject_CmpLoAsBool(self->r_end, index);
 		if (error <= 0) /* if false-or-error */
 			goto err_or_false;
 
@@ -605,8 +605,8 @@ range_bool(Range *__restrict self) {
 	 * >> }
 	 */
 	return likely(!self->r_rev)
-	       ? DeeObject_CompareLo(self->r_start, self->r_end)
-	       : DeeObject_CompareGr(self->r_start, self->r_end);
+	       ? DeeObject_CmpLoAsBool(self->r_start, self->r_end)
+	       : DeeObject_CmpGrAsBool(self->r_start, self->r_end);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -645,7 +645,7 @@ range_size(Range *__restrict self) {
 			goto err_temp;
 		Dee_Decref(temp);
 	}
-	error = DeeObject_CompareLo(result, DeeInt_Zero);
+	error = DeeObject_CmpLoAsBool(result, DeeInt_Zero);
 	if unlikely(error != 0) {
 		if unlikely(error < 0)
 			goto err_r;
@@ -688,7 +688,7 @@ range_getitem(Range *self, DeeObject *index) {
 		if unlikely(!result)
 			goto err;
 do_compare_positive:
-		error = DeeObject_CompareGe(result, self->r_end);
+		error = DeeObject_CmpGeAsBool(result, self->r_end);
 	} else {
 		temp = DeeObject_Mul(self->r_step, index);
 		if unlikely(!temp)
@@ -699,7 +699,7 @@ do_compare_positive:
 			goto err;
 		if likely(!self->r_rev)
 			goto do_compare_positive;
-		error = DeeObject_CompareLe(result, self->r_end);
+		error = DeeObject_CmpLeAsBool(result, self->r_end);
 	}
 	if unlikely(error != 0) {
 		if unlikely(error < 0)
@@ -749,7 +749,7 @@ range_getrange(Range *self,
 		 * new_start = self->r_start;
 		 * goto got_ns_ne;
 		 */
-		error = DeeObject_CompareLo(end, DeeInt_Zero);
+		error = DeeObject_CmpLoAsBool(end, DeeInt_Zero);
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -766,7 +766,7 @@ range_getrange(Range *self,
 			mylen = range_size(self);
 			if unlikely(!mylen)
 				goto err;
-			error = DeeObject_CompareGe(mylen, end);
+			error = DeeObject_CmpGeAsBool(mylen, end);
 			if (error != 0) {
 				if unlikely(error < 0)
 					goto err;
@@ -797,7 +797,7 @@ range_getrange(Range *self,
 	 *     new_start = start;
 	 * }
 	 */
-	error = DeeObject_CompareLo(start, DeeInt_Zero);
+	error = DeeObject_CmpLoAsBool(start, DeeInt_Zero);
 	if (error != 0) {
 		if unlikely(error < 0)
 			goto err_mylen;
@@ -813,7 +813,7 @@ reuse_old_end:
 		/* if (mylen <= new_start)
 		 *     return_reference_(Dee_EmptySeq);
 		 */
-		error = DeeObject_CompareLe(mylen, new_start);
+		error = DeeObject_CmpLeAsBool(mylen, new_start);
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err_mylen_ns;
@@ -832,7 +832,7 @@ return_empty_seq_mylen_ns:
 		 *     new_end = end;
 		 * }
 		 */
-		error = DeeObject_CompareLo(end, DeeInt_Zero);
+		error = DeeObject_CmpLoAsBool(end, DeeInt_Zero);
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err_mylen_ns;
@@ -843,7 +843,7 @@ return_empty_seq_mylen_ns:
 			/* if (mylen <= new_end)
 			 *     goto reuse_old_end;
 			 */
-			error = DeeObject_CompareLe(mylen, end);
+			error = DeeObject_CmpLeAsBool(mylen, end);
 			if (error != 0) {
 				if unlikely(error < 0)
 					goto err_mylen_ns;
@@ -860,8 +860,8 @@ return_empty_seq_mylen_ns:
 		 * new_end = self->r_end - new_end;
 		 */
 		error = new_end == end
-		        ? DeeObject_CompareGe(new_start, new_end)
-		        : DeeObject_CompareLe(new_end, new_start);
+		        ? DeeObject_CmpGeAsBool(new_start, new_end)
+		        : DeeObject_CmpLeAsBool(new_end, new_start);
 		if (error != 0) {
 			if unlikely(error < 0)
 				goto err_mylen_ns_ne;
@@ -1015,7 +1015,7 @@ range_deep(Range *__restrict self,
 		self->r_step = DeeObject_DeepCopy(other->r_step);
 		if unlikely(!self->r_step)
 			goto err_end;
-		temp = DeeObject_CompareLo(self->r_step, DeeInt_Zero);
+		temp = DeeObject_CmpLoAsBool(self->r_step, DeeInt_Zero);
 		if unlikely(temp < 0)
 			goto err_step;
 		self->r_rev = !!temp;
@@ -1042,7 +1042,7 @@ range_init(Range *__restrict self,
 		goto err;
 	if (self->r_step) {
 		int temp;
-		temp = DeeObject_CompareLo(self->r_step, DeeInt_Zero);
+		temp = DeeObject_CmpLoAsBool(self->r_step, DeeInt_Zero);
 		if unlikely(temp < 0)
 			goto err;
 		self->r_rev = !!temp;
@@ -1757,7 +1757,7 @@ do_object_range:
 
 	/* Check if `step' is negative (required for proper compare operations of the range iterator). */
 	if (step) {
-		temp = DeeObject_CompareLo(step, DeeInt_Zero);
+		temp = DeeObject_CmpLoAsBool(step, DeeInt_Zero);
 		if unlikely(temp < 0)
 			goto err;
 	}

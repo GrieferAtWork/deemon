@@ -41,7 +41,7 @@
 DECL_BEGIN
 
 #ifdef DEFINE_compareeq
-#define LOCAL_DeeObject_Compare                   DeeObject_TryCompareForEquality
+#define LOCAL_DeeObject_Compare                   DeeObject_TryCompareEq
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_EQUAL    SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_ERROR    SEQ_COMPAREEQ_FOREACH_RESULT_ERROR
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS     SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL
@@ -222,7 +222,7 @@ LOCAL_seq_compare__(lhs_foreach__rhs_sizeob_and_getitem__cb)(void *arg, DeeObjec
 	DREF DeeObject *rhs_elem;
 	struct seq_compare_foreach__sizeob_and_getitem__data *data;
 	data = (struct seq_compare_foreach__sizeob_and_getitem__data *)arg;
-	temp = DeeObject_CompareLo(data->scf_sg_oindex, data->scf_sg_osize);
+	temp = DeeObject_CmpLoAsBool(data->scf_sg_oindex, data->scf_sg_osize);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -255,7 +255,7 @@ LOCAL_seq_compare__(lhs_sizeob_and_getitem__rhs_foreach__cb)(void *arg, DeeObjec
 	DREF DeeObject *lhs_elem;
 	struct seq_compare_foreach__sizeob_and_getitem__data *data;
 	data = (struct seq_compare_foreach__sizeob_and_getitem__data *)arg;
-	temp = DeeObject_CompareLo(data->scf_sg_oindex, data->scf_sg_osize);
+	temp = DeeObject_CmpLoAsBool(data->scf_sg_oindex, data->scf_sg_osize);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -296,7 +296,7 @@ LOCAL_seq_compare__(tlhs_sizeob_and_getitem__rhs_foreach__cb)(void *arg, DeeObje
 	DREF DeeObject *lhs_elem;
 	struct seq_compare_foreach__tsizeob_and_getitem__data *data;
 	data = (struct seq_compare_foreach__tsizeob_and_getitem__data *)arg;
-	temp = DeeObject_CompareLo(data->scf_tsg_oindex, data->scf_tsg_osize);
+	temp = DeeObject_CmpLoAsBool(data->scf_tsg_oindex, data->scf_tsg_osize);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -1344,13 +1344,13 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_sizeob_and_getitem)(DeeObject 
 	DREF DeeObject *index_ob;
 	DeeObject *common_sizeob = lhs_sizeob;
 #ifdef DEFINE_compareeq
-	temp = DeeObject_TryCompareEq(common_sizeob, rhs_sizeob);
+	temp = DeeObject_TryCmpEqAsBool(common_sizeob, rhs_sizeob);
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
 		return 1; /* Not-equal */
 #else /* DEFINE_compareeq */
-	temp = DeeObject_CompareLo(common_sizeob, rhs_sizeob);
+	temp = DeeObject_CmpLoAsBool(common_sizeob, rhs_sizeob);
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp) {
@@ -1364,7 +1364,7 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_sizeob_and_getitem)(DeeObject 
 		goto err;
 	for (;;) {
 		DREF DeeObject *lhs_elem, *rhs_elem;
-		temp = DeeObject_CompareLo(index_ob, common_sizeob);
+		temp = DeeObject_CmpLoAsBool(index_ob, common_sizeob);
 		if unlikely(temp < 0)
 			goto err_index_ob;
 		if (!temp)
@@ -1411,7 +1411,7 @@ LOCAL_seq_docompare__(lhs_sizeob_and_getitem__rhs_sizeob_and_getitem)(DeeObject 
 #else /* DEFINE_compareeq */
 	if (!common_sizeob__is__lhs_sizeob)
 		return 1; /* lhs_size > rhs_size */
-	temp = DeeObject_TryCompareEq(lhs_sizeob, rhs_sizeob);
+	temp = DeeObject_TryCmpEqAsBool(lhs_sizeob, rhs_sizeob);
 	if unlikely(temp < 0)
 		goto err;
 	return temp ? 0 : -1;
@@ -1645,13 +1645,13 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem)(DeeTypeOb
 	DREF DeeObject *index_ob;
 	DeeObject *common_sizeob = lhs_sizeob;
 #ifdef DEFINE_compareeq
-	temp = DeeObject_TryCompareEq(common_sizeob, rhs_sizeob);
+	temp = DeeObject_TryCmpEqAsBool(common_sizeob, rhs_sizeob);
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp)
 		return 1; /* Not-equal */
 #else /* DEFINE_compareeq */
-	temp = DeeObject_CompareLo(common_sizeob, rhs_sizeob);
+	temp = DeeObject_CmpLoAsBool(common_sizeob, rhs_sizeob);
 	if unlikely(temp < 0)
 		goto err;
 	if (!temp) {
@@ -1665,7 +1665,7 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem)(DeeTypeOb
 		goto err;
 	for (;;) {
 		DREF DeeObject *lhs_elem, *rhs_elem;
-		temp = DeeObject_CompareLo(index_ob, common_sizeob);
+		temp = DeeObject_CmpLoAsBool(index_ob, common_sizeob);
 		if unlikely(temp < 0)
 			goto err_index_ob;
 		if (!temp)
@@ -1712,7 +1712,7 @@ LOCAL_seq_docompare__(lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem)(DeeTypeOb
 #else /* DEFINE_compareeq */
 	if (!common_sizeob__is__lhs_sizeob)
 		return 1; /* lhs_size > rhs_size */
-	temp = DeeObject_TryCompareEq(lhs_sizeob, rhs_sizeob);
+	temp = DeeObject_TryCmpEqAsBool(lhs_sizeob, rhs_sizeob);
 	if unlikely(temp < 0)
 		goto err;
 	return temp ? 0 : -1;

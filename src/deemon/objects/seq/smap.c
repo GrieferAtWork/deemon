@@ -350,7 +350,7 @@ again_search:
 			goto endread_and_not_found;
 		Dee_Incref(item_key);
 		SharedMap_LockEndRead(self);
-		temp = DeeObject_TryCompareForEquality(key, item->si_key);
+		temp = DeeObject_TryCompareEq(key, item->si_key);
 		Dee_Decref(item_key);
 		if unlikely(temp == Dee_COMPARE_ERR)
 			goto err;
@@ -385,7 +385,7 @@ again_search:
 			/* Check if this is the key we're looking for. */
 			Dee_Decref(item_value);
 			if (item_hash == hash) {
-				int temp = DeeObject_TryCompareForEquality(key, item_key);
+				int temp = DeeObject_TryCompareEq(key, item_key);
 				Dee_Decref(item_key);
 				if unlikely(temp == Dee_COMPARE_ERR)
 					goto err;
@@ -439,7 +439,7 @@ again_search:
 		Dee_Incref(item_key);
 		Dee_Incref(item_value);
 		SharedMap_LockEndRead(self);
-		temp = DeeObject_TryCompareForEquality(key, item_key);
+		temp = DeeObject_TryCompareEq(key, item_key);
 		Dee_Decref(item_key);
 		if (temp == 0)
 			return item_value;
@@ -474,7 +474,7 @@ again_search:
 
 			/* Check if this is the key we're looking for. */
 			if (item_hash == hash) {
-				int temp = DeeObject_TryCompareForEquality(key, item_key);
+				int temp = DeeObject_TryCompareEq(key, item_key);
 				Dee_Decref(item_key);
 				if (temp == 0)
 					return item_value;

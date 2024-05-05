@@ -1648,7 +1648,7 @@ code_compare_eq_impl(DeeCodeObject *self, DeeCodeObject *other) {
 				int temp;
 				if (other->co_defaultv[i] == NULL)
 					goto nope;
-				temp = DeeObject_TryCompareForEquality(self->co_defaultv[i],
+				temp = DeeObject_TryCompareEq(self->co_defaultv[i],
 				                                       other->co_defaultv[i]);
 				if (temp != 0)
 					return temp;
@@ -1658,7 +1658,7 @@ code_compare_eq_impl(DeeCodeObject *self, DeeCodeObject *other) {
 	if (self->co_constv) {
 		uint16_t i;
 		for (i = 0; i < self->co_constc; ++i) {
-			int temp = DeeObject_TryCompareForEquality(self->co_constv[i], other->co_constv[i]);
+			int temp = DeeObject_TryCompareEq(self->co_constv[i], other->co_constv[i]);
 			if (temp != 0)
 				return temp;
 		}
@@ -1682,7 +1682,7 @@ code_compare_eq_impl(DeeCodeObject *self, DeeCodeObject *other) {
 	}
 	if (bcmp(self->co_code, other->co_code, self->co_codebytes) != 0)
 		goto nope;
-	return DeeObject_TryCompareForEquality((DeeObject *)self->co_ddi,
+	return DeeObject_TryCompareEq((DeeObject *)self->co_ddi,
 	                                       (DeeObject *)other->co_ddi);
 nope:
 	return 1;

@@ -1064,7 +1064,7 @@ ds_sg_mapindex(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
 	used_index = DeeObject_Add(self->dssg_start, index);
 	if unlikely(!used_index)
 		goto err;
-	temp = DeeObject_CompareGe(used_index, self->dssg_end);
+	temp = DeeObject_CmpGeAsBool(used_index, self->dssg_end);
 	if unlikely(temp < 0)
 		goto err_used_index;
 	return used_index;
@@ -1264,7 +1264,7 @@ ds_sg_foreach(DefaultSequence_WithSizeAndGetItem *self, Dee_foreach_t proc, void
 	DREF DeeObject *index;
 	Dee_ssize_t temp, result = 0;
 	int error;
-	error = DeeObject_CompareGe(self->dssg_start, self->dssg_end);
+	error = DeeObject_CmpGeAsBool(self->dssg_start, self->dssg_end);
 	if unlikely(error < 0)
 		goto err;
 	if (!error) {
@@ -1287,7 +1287,7 @@ ds_sg_foreach(DefaultSequence_WithSizeAndGetItem *self, Dee_foreach_t proc, void
 			result += temp;
 			if (DeeThread_CheckInterrupt())
 				goto err_index;
-			error = DeeObject_CompareGe(self->dssg_start, self->dssg_end);
+			error = DeeObject_CmpGeAsBool(self->dssg_start, self->dssg_end);
 			if unlikely(error < 0)
 				goto err_index;
 			if (!error)
@@ -1312,7 +1312,7 @@ ds_tsg_foreach(DefaultSequence_WithTSizeAndGetItem *self, Dee_foreach_t proc, vo
 	DREF DeeObject *index;
 	Dee_ssize_t temp, result = 0;
 	int error;
-	error = DeeObject_CompareGe(self->dstsg_start, self->dstsg_end);
+	error = DeeObject_CmpGeAsBool(self->dstsg_start, self->dstsg_end);
 	if unlikely(error < 0)
 		goto err;
 	if (!error) {
@@ -1335,7 +1335,7 @@ ds_tsg_foreach(DefaultSequence_WithTSizeAndGetItem *self, Dee_foreach_t proc, vo
 			result += temp;
 			if (DeeThread_CheckInterrupt())
 				goto err_index;
-			error = DeeObject_CompareGe(self->dstsg_start, self->dstsg_end);
+			error = DeeObject_CmpGeAsBool(self->dstsg_start, self->dstsg_end);
 			if unlikely(error < 0)
 				goto err_index;
 			if (!error)

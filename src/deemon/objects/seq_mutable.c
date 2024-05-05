@@ -2694,7 +2694,7 @@ DeeSeq_Remove(DeeObject *self, size_t start, size_t end,
 							item = (*nsi->nsi_seqlike.nsi_getitem)(self, i);
 							if unlikely(!item)
 								goto err;
-							result = DeeObject_TryCompareEq(elem, item);
+							result = DeeObject_TryCmpEqAsBool(elem, item);
 							Dee_Decref(item);
 							if (result != 0) {
 do_delete_i:
@@ -2758,7 +2758,7 @@ err_index_ob_del:
 							Dee_Decref(index_ob);
 							goto err;
 						}
-						result = DeeObject_TryCompareEq(elem, item);
+						result = DeeObject_TryCmpEqAsBool(elem, item);
 						Dee_Decref(item);
 						if (result != 0) {
 do_tp_del_i:
@@ -2822,7 +2822,7 @@ err_index_ob:
 						Dee_Decref(index_ob);
 						goto err_erase_func;
 					}
-					result = DeeObject_TryCompareEq(elem, item);
+					result = DeeObject_TryCmpEqAsBool(elem, item);
 					Dee_Decref(item);
 					if (result != 0) {
 do_erase_func_i:
@@ -2882,7 +2882,7 @@ err_index_ob_delrange:
 						Dee_Decref(index_ob);
 						goto err;
 					}
-					result = DeeObject_TryCompareEq(elem, item);
+					result = DeeObject_TryCmpEqAsBool(elem, item);
 					Dee_Decref(item);
 					if (result != 0) {
 						DREF DeeObject *index_plus1_ob;
@@ -2983,7 +2983,7 @@ DeeSeq_RRemove(DeeObject *self, size_t start, size_t end,
 								item = (*nsi->nsi_seqlike.nsi_getitem)(self, i);
 								if unlikely(!item)
 									goto err;
-								result = DeeObject_TryCompareEq(elem, item);
+								result = DeeObject_TryCmpEqAsBool(elem, item);
 								Dee_Decref(item);
 								if (result != 0) {
 do_delete_i:
@@ -3051,7 +3051,7 @@ err_index_ob_del:
 								Dee_Decref(index_ob);
 								goto err;
 							}
-							result = DeeObject_TryCompareEq(elem, item);
+							result = DeeObject_TryCmpEqAsBool(elem, item);
 							Dee_Decref(item);
 							if (result != 0) {
 do_tp_del_i:
@@ -3119,7 +3119,7 @@ err_index_ob:
 							Dee_Decref(index_ob);
 							goto err_erase_func;
 						}
-						result = DeeObject_TryCompareEq(elem, item);
+						result = DeeObject_TryCmpEqAsBool(elem, item);
 						Dee_Decref(item);
 						if (result != 0) {
 do_erase_func_i:
@@ -3183,7 +3183,7 @@ err_index_ob_delrange:
 							Dee_Decref(index_ob);
 							goto err;
 						}
-						result = DeeObject_TryCompareEq(elem, item);
+						result = DeeObject_TryCmpEqAsBool(elem, item);
 						Dee_Decref(item);
 						if (result != 0) {
 							DREF DeeObject *index_plus1_ob;
@@ -3257,10 +3257,10 @@ ria_call(RemoveIfAllWrapper *self, size_t argc, DeeObject *const *argv) {
 		key_elem = DeeObject_Call(self->ria_pred, 1, argv);
 		if unlikely(!key_elem)
 			goto err;
-		result = DeeObject_CompareEqObject(self->ria_elem, key_elem);
+		result = DeeObject_CmpEq(self->ria_elem, key_elem);
 		Dee_Decref(key_elem);
 	} else {
-		result = DeeObject_CompareEqObject(self->ria_elem, argv[0]);
+		result = DeeObject_CmpEq(self->ria_elem, argv[0]);
 	}
 	return result;
 err:
@@ -3493,7 +3493,7 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 								item = (*nsi->nsi_seqlike.nsi_getitem)(self, i);
 								if unlikely(!item)
 									goto err;
-								error = DeeObject_TryCompareEq(elem, item);
+								error = DeeObject_TryCmpEqAsBool(elem, item);
 								Dee_Decref(item);
 								if (error != 0) {
 									if unlikely(error < 0)
@@ -3650,7 +3650,7 @@ err_index_ob_del:
 							Dee_Decref(index_ob);
 							goto err;
 						}
-						error = DeeObject_TryCompareEq(elem, item);
+						error = DeeObject_TryCmpEqAsBool(elem, item);
 						Dee_Decref(item);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -3728,7 +3728,7 @@ err_index_ob:
 							Dee_Decref(index_ob);
 							goto err_erase_func;
 						}
-						error = DeeObject_TryCompareEq(elem, item);
+						error = DeeObject_TryCmpEqAsBool(elem, item);
 						Dee_Decref(item);
 						if (error != 0) {
 							if unlikely(error < 0)
@@ -3808,7 +3808,7 @@ err_index_ob_delrange:
 							Dee_Decref(index_ob);
 							goto err;
 						}
-						error = DeeObject_TryCompareEq(elem, item);
+						error = DeeObject_TryCmpEqAsBool(elem, item);
 						Dee_Decref(item);
 						if (error != 0) {
 							DREF DeeObject *index_plus1_ob;

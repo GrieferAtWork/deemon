@@ -796,12 +796,12 @@ STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) ==
 	err:                                                      \
 		return NULL;                                          \
 	}
-DEFINE_ITER_COMPARE(iter_eq, DeeObject_CompareEqObject)
-DEFINE_ITER_COMPARE(iter_ne, DeeObject_CompareNeObject)
-DEFINE_ITER_COMPARE(iter_lo, DeeObject_CompareLoObject)
-DEFINE_ITER_COMPARE(iter_le, DeeObject_CompareLeObject)
-DEFINE_ITER_COMPARE(iter_gr, DeeObject_CompareGrObject)
-DEFINE_ITER_COMPARE(iter_ge, DeeObject_CompareGeObject)
+DEFINE_ITER_COMPARE(iter_eq, DeeObject_CmpEq)
+DEFINE_ITER_COMPARE(iter_ne, DeeObject_CmpNe)
+DEFINE_ITER_COMPARE(iter_lo, DeeObject_CmpLo)
+DEFINE_ITER_COMPARE(iter_le, DeeObject_CmpLe)
+DEFINE_ITER_COMPARE(iter_gr, DeeObject_CmpGr)
+DEFINE_ITER_COMPARE(iter_ge, DeeObject_CmpGe)
 #undef DEFINE_ITER_COMPARE
 
 PRIVATE struct type_cmp iter_cmp = {

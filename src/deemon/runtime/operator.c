@@ -3625,7 +3625,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithSizeObAndGetItem, (DeeOb
 	indexob = DeeObject_NewDefault(Dee_TYPE(sizeob));
 	if unlikely(!indexob)
 		goto err_sizeob;
-	temp = DeeObject_CompareLo(indexob, sizeob);
+	temp = DeeObject_CmpLoAsBool(indexob, sizeob);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err_sizeob_indexob;
@@ -3646,7 +3646,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithSizeObAndGetItem, (DeeOb
 		Dee_hash_t elem_hash;
 		if (DeeObject_Inc(&indexob))
 			goto err_sizeob_indexob;
-		temp = DeeObject_CompareLo(indexob, sizeob);
+		temp = DeeObject_CmpLoAsBool(indexob, sizeob);
 		if (temp <= 0) {
 			if unlikely(temp < 0)
 				goto err_sizeob_indexob;
@@ -4540,7 +4540,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareEqWithForeachDefault,
 			data.scf_sg_ogetitem = tp_other->tp_seq->tp_getitem;
 			result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compareeq__lhs_foreach__rhs_sizeob_and_getitem__cb, &data);
 			if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
-				int temp = DeeObject_CompareLo(data.scf_sg_oindex, data.scf_sg_osize);
+				int temp = DeeObject_CmpLoAsBool(data.scf_sg_oindex, data.scf_sg_osize);
 				Dee_Decref(data.scf_sg_oindex);
 				if unlikely(temp < 0) {
 					result = SEQ_COMPAREEQ_FOREACH_RESULT_ERROR;
@@ -5241,7 +5241,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareWithForeachDefault,
 			data.scf_sg_ogetitem = tp_other->tp_seq->tp_getitem;
 			result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compare__lhs_foreach__rhs_sizeob_and_getitem__cb, &data);
 			if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
-				int temp = DeeObject_CompareLo(data.scf_sg_oindex, data.scf_sg_osize);
+				int temp = DeeObject_CmpLoAsBool(data.scf_sg_oindex, data.scf_sg_osize);
 				Dee_Decref(data.scf_sg_oindex);
 				if unlikely(temp < 0) {
 					result = SEQ_COMPARE_FOREACH_RESULT_ERROR;
@@ -6092,7 +6092,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeObAndGetItem,
 	for (;;) {
 		DREF DeeObject *elem;
 		int cmp_status;
-		cmp_status = DeeObject_CompareLo(i, size);
+		cmp_status = DeeObject_CmpLoAsBool(i, size);
 		if unlikely(cmp_status < 0)
 			goto err_size_i;
 		if (!cmp_status)
@@ -6307,7 +6307,7 @@ default_contains_with_foreach_cb(void *arg, DeeObject *elem);
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
-	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
+	int temp = DeeObject_TryCmpEqAsBool((DeeObject *)arg, elem);
 	if (temp > 0)
 		temp = -2;
 	return temp;
@@ -6674,7 +6674,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemWithTryGetItemAndSi
 		sizeob = DeeType_INVOKE_SIZEOB_NODEFAULT(tp_self, self);
 		if unlikely(!sizeob)
 			goto err;
-		temp = DeeObject_CompareGe(index, sizeob);
+		temp = DeeObject_CmpGeAsBool(index, sizeob);
 		if likely(temp >= 0) {
 			if (temp) {
 				err_index_out_of_bounds_ob_x(self, index, sizeob);
@@ -6786,7 +6786,7 @@ default_map_getitem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *v
 	int temp;
 	struct default_map_getitem_with_foreach_pair_data *data;
 	data = (struct default_map_getitem_with_foreach_pair_data *)arg;
-	temp = DeeObject_TryCompareEq(data->mgifpd_key, key);
+	temp = DeeObject_TryCmpEqAsBool(data->mgifpd_key, key);
 	if (temp > 0) {
 		Dee_Incref(value);
 		data->mgifpd_result = value;
@@ -7098,7 +7098,7 @@ size_t_equals_object(size_t lhs, DeeObject *rhs) {
 	lhs_value = DeeInt_NewSize(lhs);
 	if unlikely(!lhs_value)
 		goto err;
-	result = DeeObject_TryCompareEq(lhs_value, rhs);
+	result = DeeObject_TryCmpEqAsBool(lhs_value, rhs);
 	Dee_Decref(lhs_value);
 	return result;
 err:
@@ -8675,7 +8675,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemWithTryGetItemAndSizeOb,
 		sizeob = DeeType_INVOKE_SIZEOB_NODEFAULT(tp_self, self);
 		if unlikely(!sizeob)
 			goto err;
-		temp = DeeObject_CompareLo(index, sizeob);
+		temp = DeeObject_CmpLoAsBool(index, sizeob);
 		Dee_Decref(sizeob);
 		if unlikely(temp < 0)
 			goto err;
@@ -8824,7 +8824,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_map_bounditem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	(void)value;
-	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
+	temp = DeeObject_TryCmpEqAsBool((DeeObject *)arg, key);
 	if (temp > 0)
 		temp = -2; /* Stop iteration */
 	return temp;
@@ -10003,7 +10003,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultHasItemWithSizeOb,
 	sizeob = DeeType_INVOKE_SIZEOB(tp_self, self);
 	if unlikely(!sizeob)
 		goto err;
-	result = DeeObject_CompareLo(index, sizeob);
+	result = DeeObject_CmpLoAsBool(index, sizeob);
 	Dee_Decref(sizeob);
 	return result;
 err:
@@ -12365,42 +12365,42 @@ DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorUInt32, DeeObject_InplaceXo
 		err_unimplemented_operator(tp_self, operator_name);                       \
 		return NULL;                                                              \
 	}
-DEFINE_OBJECT_COMPARE_OPERATOR(CompareEqObject, eq, OPERATOR_EQ, DeeType_INVOKE_EQ)
-DEFINE_OBJECT_COMPARE_OPERATOR(CompareNeObject, ne, OPERATOR_NE, DeeType_INVOKE_NE)
-DEFINE_OBJECT_COMPARE_OPERATOR(CompareLoObject, lo, OPERATOR_LO, DeeType_INVOKE_LO)
-DEFINE_OBJECT_COMPARE_OPERATOR(CompareLeObject, le, OPERATOR_LE, DeeType_INVOKE_LE)
-DEFINE_OBJECT_COMPARE_OPERATOR(CompareGrObject, gr, OPERATOR_GR, DeeType_INVOKE_GR)
-DEFINE_OBJECT_COMPARE_OPERATOR(CompareGeObject, ge, OPERATOR_GE, DeeType_INVOKE_GE)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpEq, eq, OPERATOR_EQ, DeeType_INVOKE_EQ)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpNe, ne, OPERATOR_NE, DeeType_INVOKE_NE)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpLo, lo, OPERATOR_LO, DeeType_INVOKE_LO)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpLe, le, OPERATOR_LE, DeeType_INVOKE_LE)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpGr, gr, OPERATOR_GR, DeeType_INVOKE_GR)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpGe, ge, OPERATOR_GE, DeeType_INVOKE_GE)
 #undef DEFINE_OBJECT_COMPARE_OPERATOR
 
 
 #ifndef DEFINE_TYPED_OPERATORS
-#define DEFINE_COMPARE_OPERATOR(name)               \
-	PUBLIC WUNUSED NONNULL((1, 2)) int DCALL        \
-	name(DeeObject *self, DeeObject *some_object) { \
-		DREF DeeObject *result;                     \
-		result = name##Object(self, some_object);   \
-		if unlikely(!result)                        \
-			goto err;                               \
-		return DeeObject_BoolInherited(result);     \
-	err:                                            \
-		return -1;                                  \
+#define DEFINE_COMPARE_ASBOOL_OPERATOR(name_asbool, name)  \
+	PUBLIC WUNUSED NONNULL((1, 2)) int DCALL               \
+	name_asbool(DeeObject *self, DeeObject *some_object) { \
+		DREF DeeObject *result;                            \
+		result = name(self, some_object);                  \
+		if unlikely(!result)                               \
+			goto err;                                      \
+		return DeeObject_BoolInherited(result);            \
+	err:                                                   \
+		return -1;                                         \
 	}
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareEq)
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareNe)
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareLo)
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareLe)
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareGr)
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareGe)
-#undef DEFINE_COMPARE_OPERATOR
+DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpEqAsBool, DeeObject_CmpEq)
+DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpNeAsBool, DeeObject_CmpNe)
+DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpLoAsBool, DeeObject_CmpLo)
+DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpLeAsBool, DeeObject_CmpLe)
+DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpGrAsBool, DeeObject_CmpGr)
+DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpGeAsBool, DeeObject_CmpGe)
+#undef DEFINE_COMPARE_ASBOOL_OPERATOR
 
-/* Deprecated wrapper around "DeeObject_TryCompareForEquality()"
+/* Deprecated wrapper around "DeeObject_TryCompareEq()"
  * @return: 1 : Compare returns "true"
  * @return: 0 : Compare returns "false"
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_TryCompareEq)(DeeObject *self, DeeObject *some_object) {
-	int result = DeeObject_TryCompareForEquality(self, some_object);
+(DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object) {
+	int result = DeeObject_TryCompareEq(self, some_object);
 	if unlikely(result == Dee_COMPARE_ERR)
 		return -1;
 	return result == 0 ? 1 : 0;
@@ -12425,7 +12425,7 @@ DEFINE_OPERATOR(int, Compare, (DeeObject *self, DeeObject *rhs)) {
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
-DEFINE_OPERATOR(int, CompareForEquality, (DeeObject *self, DeeObject *rhs)) {
+DEFINE_OPERATOR(int, CompareEq, (DeeObject *self, DeeObject *rhs)) {
 	LOAD_TP_SELF;
 	if ((tp_self->tp_cmp && tp_self->tp_cmp->tp_compare_eq) ||
 	    (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_compare_eq))
@@ -12434,7 +12434,7 @@ DEFINE_OPERATOR(int, CompareForEquality, (DeeObject *self, DeeObject *rhs)) {
 	return Dee_COMPARE_ERR;
 }
 
-/* Same as `DeeObject_CompareForEquality()', but automatically handles errors
+/* Same as `DeeObject_CompareEq()', but automatically handles errors
  * that usually indicate that "lhs" and "rhs" cannot be compared by returning
  * either `-1' or `1' instead. The following errors get handled (so-long as
  * the effective `tp_trycompare_eq' callback doesn't end up throwing these):
@@ -12445,12 +12445,12 @@ DEFINE_OPERATOR(int, CompareForEquality, (DeeObject *self, DeeObject *rhs)) {
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
-DEFINE_OPERATOR(int, TryCompareForEquality, (DeeObject *self, DeeObject *rhs)) {
+DEFINE_OPERATOR(int, TryCompareEq, (DeeObject *self, DeeObject *rhs)) {
 	LOAD_TP_SELF;
 	if ((tp_self->tp_cmp && tp_self->tp_cmp->tp_trycompare_eq) ||
 	    (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_trycompare_eq))
 		return DeeType_INVOKE_TRYCOMPAREEQ(tp_self, self, rhs);
-	return -1; /* Implicit "NotImplemented" caught */
+	return -1; /* Implicit "NotImplemented" caught (would also be allowed to return "1" instead) */
 }
 
 
@@ -17621,13 +17621,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
                                DeeObject *elem, /*nullable*/ DeeObject *key) {
 	int result;
 	if (!key)
-		return DeeObject_TryCompareEq(keyed_search_item, elem);
+		return DeeObject_TryCmpEqAsBool(keyed_search_item, elem);
 
 	/* TODO: Special optimizations for specific keys (e.g. `string.lower') */
 	elem = DeeObject_Call(key, 1, (DeeObject **)&elem);
 	if unlikely(!elem)
 		goto err;
-	result = DeeObject_TryCompareEq(keyed_search_item, elem);
+	result = DeeObject_TryCmpEqAsBool(keyed_search_item, elem);
 	Dee_Decref(elem);
 	return result;
 err:

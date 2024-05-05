@@ -394,7 +394,7 @@ again:
 	Dee_Incref(old_index);
 	SeqIterator_LockEndRead(self);
 	/* Check if the Iterator has been exhausted. */
-	error = DeeObject_CompareGe(old_index, self->si_size);
+	error = DeeObject_CmpGeAsBool(old_index, self->si_size);
 	if unlikely(error < 0)
 		goto err_old_index;
 	if (error)
@@ -413,7 +413,7 @@ again:
 		for (;;) {
 			if (DeeObject_Inc(&new_index))
 				goto err_new_index;
-			error = DeeObject_CompareGe(new_index, self->si_size);
+			error = DeeObject_CmpGeAsBool(new_index, self->si_size);
 			if unlikely(error < 0)
 				goto err_new_index;
 			if (error)
@@ -522,12 +522,12 @@ err:
 	err:                                                           \
 		return NULL;                                               \
 	}
-DEFINE_SEQITERATOR_COMPARE(seqiterator_eq, DeeObject_CompareEqObject)
-DEFINE_SEQITERATOR_COMPARE(seqiterator_ne, DeeObject_CompareNeObject)
-DEFINE_SEQITERATOR_COMPARE(seqiterator_lo, DeeObject_CompareLoObject)
-DEFINE_SEQITERATOR_COMPARE(seqiterator_le, DeeObject_CompareLeObject)
-DEFINE_SEQITERATOR_COMPARE(seqiterator_gr, DeeObject_CompareGrObject)
-DEFINE_SEQITERATOR_COMPARE(seqiterator_ge, DeeObject_CompareGeObject)
+DEFINE_SEQITERATOR_COMPARE(seqiterator_eq, DeeObject_CmpEq)
+DEFINE_SEQITERATOR_COMPARE(seqiterator_ne, DeeObject_CmpNe)
+DEFINE_SEQITERATOR_COMPARE(seqiterator_lo, DeeObject_CmpLo)
+DEFINE_SEQITERATOR_COMPARE(seqiterator_le, DeeObject_CmpLe)
+DEFINE_SEQITERATOR_COMPARE(seqiterator_gr, DeeObject_CmpGr)
+DEFINE_SEQITERATOR_COMPARE(seqiterator_ge, DeeObject_CmpGe)
 #undef DEFINE_SEQITERATOR_COMPARE
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -767,7 +767,7 @@ again:
 	Dee_Incref(index);
 	SeqIterator_LockEndRead(self);
 	/* Check if the Iterator has been exhausted. */
-	error = DeeObject_CompareGe(index, self->si_size);
+	error = DeeObject_CmpGeAsBool(index, self->si_size);
 	if unlikely(error < 0)
 		goto err_index;
 	if (error)
@@ -784,7 +784,7 @@ again:
 		for (;;) {
 			if (DeeObject_Inc(&index))
 				goto err_index;
-			error = DeeObject_CompareGe(index, self->si_size);
+			error = DeeObject_CmpGeAsBool(index, self->si_size);
 			if unlikely(error < 0)
 				goto err_index;
 			if (error)
@@ -2501,7 +2501,7 @@ generic_seq_contains(DeeObject *self, DeeObject *other) {
 				Dee_Decref(wanted_key_value[1]);
 				return_false;
 			}
-			result = DeeObject_CompareEqObject(wanted_key_value[1], value);
+			result = DeeObject_CmpEq(wanted_key_value[1], value);
 			Dee_Decref(wanted_key_value[1]);
 			Dee_Decref(value);
 			return result;

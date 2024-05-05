@@ -2357,23 +2357,23 @@ do_push_module:
 			DISPATCH();
 		}
 
-#define DEFINE_COMPARE_INSTR(EQ, Eq)                             \
-		TARGET(ASM_CMP_##EQ, -2, +1) {                           \
-			DREF DeeObject *temp;                                \
-			temp = DeeObject_Compare##Eq##Object(SECOND, FIRST); \
-			if unlikely(!temp)                                   \
-				HANDLE_EXCEPT();                                 \
-			POPREF();                                            \
-			Dee_Decref(TOP);                                     \
-			TOP = temp; /* Inherit reference. */                 \
-			DISPATCH();                                          \
+#define DEFINE_COMPARE_INSTR(ASM_CMP_EQ, DeeObject_CmpEq) \
+		TARGET(ASM_CMP_EQ, -2, +1) {                      \
+			DREF DeeObject *temp;                         \
+			temp = DeeObject_CmpEq(SECOND, FIRST);        \
+			if unlikely(!temp)                            \
+				HANDLE_EXCEPT();                          \
+			POPREF();                                     \
+			Dee_Decref(TOP);                              \
+			TOP = temp; /* Inherit reference. */          \
+			DISPATCH();                                   \
 		}
-		DEFINE_COMPARE_INSTR(EQ, Eq)
-		DEFINE_COMPARE_INSTR(NE, Ne)
-		DEFINE_COMPARE_INSTR(LO, Lo)
-		DEFINE_COMPARE_INSTR(LE, Le)
-		DEFINE_COMPARE_INSTR(GR, Gr)
-		DEFINE_COMPARE_INSTR(GE, Ge)
+		DEFINE_COMPARE_INSTR(ASM_CMP_EQ, DeeObject_CmpEq)
+		DEFINE_COMPARE_INSTR(ASM_CMP_NE, DeeObject_CmpNe)
+		DEFINE_COMPARE_INSTR(ASM_CMP_LO, DeeObject_CmpLo)
+		DEFINE_COMPARE_INSTR(ASM_CMP_LE, DeeObject_CmpLe)
+		DEFINE_COMPARE_INSTR(ASM_CMP_GR, DeeObject_CmpGr)
+		DEFINE_COMPARE_INSTR(ASM_CMP_GE, DeeObject_CmpGe)
 #undef DEFINE_COMPARE_INSTR
 
 		TARGET(ASM_CLASS_C, -1, +1) {

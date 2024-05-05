@@ -996,7 +996,7 @@ generic_set_contains(DeeObject *self, DeeObject *other) {
 				Dee_Decref(wanted_key_value[1]);
 				return_false;
 			}
-			result = DeeObject_CompareEqObject(wanted_key_value[1], value);
+			result = DeeObject_CmpEq(wanted_key_value[1], value);
 			Dee_Decref(wanted_key_value[1]);
 			Dee_Decref(value);
 			return result;

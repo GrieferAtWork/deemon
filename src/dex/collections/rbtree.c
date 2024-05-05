@@ -1228,7 +1228,7 @@ rbtree_do_minmaxlocate_node_in_root(RBTree *self, DeeObject *minkey, DeeObject *
 		iter = min_node->rbtn_lhs;
 		if (!iter)
 			break;
-		UNLOCK_COMPARE_LOCK(DeeObject_CompareGr, minkey, rbtree_node_get_maxkey(iter));
+		UNLOCK_COMPARE_LOCK(DeeObject_CmpGrAsBool, minkey, rbtree_node_get_maxkey(iter));
 		if (!temp) {
 			min_node = iter;
 			continue;
@@ -1236,7 +1236,7 @@ rbtree_do_minmaxlocate_node_in_root(RBTree *self, DeeObject *minkey, DeeObject *
 		/* Check if we can find an in-range key in iter->RHS[->RHS...] */
 		iter = iter->rbtn_lhs;
 		while (iter) {
-			UNLOCK_COMPARE_LOCK(DeeObject_CompareGr, minkey, rbtree_node_get_maxkey(iter));
+			UNLOCK_COMPARE_LOCK(DeeObject_CmpGrAsBool, minkey, rbtree_node_get_maxkey(iter));
 			if (!temp) {
 				min_node = iter;
 				break;
@@ -1251,7 +1251,7 @@ rbtree_do_minmaxlocate_node_in_root(RBTree *self, DeeObject *minkey, DeeObject *
 		iter = max_node->rbtn_rhs;
 		if (!iter)
 			break;
-		UNLOCK_COMPARE_LOCK(DeeObject_CompareLo, maxkey, rbtree_node_get_minkey(iter));
+		UNLOCK_COMPARE_LOCK(DeeObject_CmpLoAsBool, maxkey, rbtree_node_get_minkey(iter));
 		if (!temp) {
 			max_node = iter;
 			continue;
@@ -1259,7 +1259,7 @@ rbtree_do_minmaxlocate_node_in_root(RBTree *self, DeeObject *minkey, DeeObject *
 		/* Check if we can find an in-range key in iter->LHS[->LHS...] */
 		iter = iter->rbtn_lhs;
 		while (iter) {
-			UNLOCK_COMPARE_LOCK(DeeObject_CompareLo, maxkey, rbtree_node_get_minkey(iter));
+			UNLOCK_COMPARE_LOCK(DeeObject_CmpLoAsBool, maxkey, rbtree_node_get_minkey(iter));
 			if (!temp) {
 				max_node = iter;
 				break;
@@ -1277,7 +1277,7 @@ rbtree_do_minmaxlocate_node_in_root(RBTree *self, DeeObject *minkey, DeeObject *
 		iter = rbtree_abi_prevnode(min_node);
 		if (!iter)
 			break;
-		UNLOCK_COMPARE_LOCK(DeeObject_CompareGr, minkey, rbtree_node_get_maxkey(iter));
+		UNLOCK_COMPARE_LOCK(DeeObject_CmpGrAsBool, minkey, rbtree_node_get_maxkey(iter));
 		if (temp)
 			break;
 		min_node = iter;
@@ -1287,7 +1287,7 @@ rbtree_do_minmaxlocate_node_in_root(RBTree *self, DeeObject *minkey, DeeObject *
 		iter = rbtree_abi_nextnode(max_node);
 		if (!iter)
 			break;
-		UNLOCK_COMPARE_LOCK(DeeObject_CompareLo, maxkey, rbtree_node_get_minkey(iter));
+		UNLOCK_COMPARE_LOCK(DeeObject_CmpLoAsBool, maxkey, rbtree_node_get_minkey(iter));
 		if (temp)
 			break;
 		max_node = iter;
@@ -1328,7 +1328,7 @@ again:
 		RBTree_LockEndRead(self);
 
 		/* Check if the entire range might be located in a sub-tree */
-		temp = DeeObject_CompareLo(maxkey, root_minkey);
+		temp = DeeObject_CmpLoAsBool(maxkey, root_minkey);
 		Dee_Decref_unlikely(root_minkey);
 		if (temp != 0) {
 			Dee_Decref_unlikely(root_maxkey);
@@ -1340,7 +1340,7 @@ again:
 			root = root->rbtn_lhs;
 			continue;
 		}
-		temp = DeeObject_CompareGr(minkey, root_maxkey);
+		temp = DeeObject_CmpGrAsBool(minkey, root_maxkey);
 		Dee_Decref_unlikely(root_maxkey);
 		if (temp != 0) {
 			if unlikely(temp < 0)
@@ -1396,7 +1396,7 @@ again:
 		RBTree_LockEndRead(self);
 
 		/* Check if `key' is located in the left sub-tree */
-		temp = DeeObject_CompareLo(key, node_minkey);
+		temp = DeeObject_CmpLoAsBool(key, node_minkey);
 		Dee_Decref_unlikely(node_minkey);
 		if (temp != 0) {
 			Dee_Decref_unlikely(node_maxkey);
@@ -1410,7 +1410,7 @@ again:
 		}
 
 		/* Check if `key' is located in the right sub-tree */
-		temp = DeeObject_CompareGr(key, node_maxkey);
+		temp = DeeObject_CmpGrAsBool(key, node_maxkey);
 		Dee_Decref_unlikely(node_maxkey);
 		if (temp != 0) {
 			if unlikely(temp < 0)
@@ -1592,7 +1592,7 @@ again_load_root:
 	RBTree_LockEndRead(self);
 
 	/* Check if `node' must go in the left sub-tree */
-	temp = DeeObject_CompareLo(rbtree_node_get_maxkey(node), minkey);
+	temp = DeeObject_CmpLoAsBool(rbtree_node_get_maxkey(node), minkey);
 	Dee_Decref_unlikely(minkey);
 	if (temp != 0) {
 		Dee_Decref_unlikely(maxkey);
@@ -1614,7 +1614,7 @@ again_load_root:
 		root->rbtn_lhs = node;
 	} else {
 		/* Check if `node' must go in the right sub-tree */
-		temp = DeeObject_CompareGr(rbtree_node_get_minkey(node), maxkey);
+		temp = DeeObject_CmpGrAsBool(rbtree_node_get_minkey(node), maxkey);
 		Dee_Decref_unlikely(maxkey);
 		if (temp != 0) {
 			if unlikely(temp < 0)
@@ -1916,7 +1916,7 @@ endread_and_again_insert:
 		RBTree_LockEndRead(self);
 
 		/* Check for full overlap on lower bound */
-		error = DeeObject_CompareLe(minkey, minnode_minkey);
+		error = DeeObject_CmpLeAsBool(minkey, minnode_minkey);
 		Dee_Decref_unlikely(minnode_minkey);
 		if unlikely(error < 0) {
 			Dee_Decref_unlikely(maxnode_maxkey);
@@ -1925,7 +1925,7 @@ endread_and_again_insert:
 		minkey_le_minnode_minkey = error != 0;
 
 		/* Check for full overlap on upper bound */
-		error = DeeObject_CompareLo(maxkey, maxnode_maxkey);
+		error = DeeObject_CmpLoAsBool(maxkey, maxnode_maxkey);
 		Dee_Decref_unlikely(maxnode_maxkey);
 		if unlikely(error < 0)
 			goto err_newnode;
@@ -2171,7 +2171,7 @@ again_minmaxlocate:
 		RBTree_LockEndRead(self);
 
 		/* Check for full overlap on lower bound */
-		error = DeeObject_CompareLe(minkey, minnode_minkey);
+		error = DeeObject_CmpLeAsBool(minkey, minnode_minkey);
 		Dee_Decref_unlikely(minnode_minkey);
 		if unlikely(error < 0) {
 			Dee_Decref_unlikely(maxnode_maxkey);
@@ -2180,7 +2180,7 @@ again_minmaxlocate:
 		minkey_le_minnode_minkey = error != 0;
 
 		/* Check for full overlap on upper bound */
-		error = DeeObject_CompareLo(maxkey, maxnode_maxkey);
+		error = DeeObject_CmpLoAsBool(maxkey, maxnode_maxkey);
 		Dee_Decref_unlikely(maxnode_maxkey);
 		if unlikely(error < 0)
 			goto err;
@@ -2754,7 +2754,7 @@ again_nextnode:
 			}
 
 			/* Compare keys */
-			temp = DeeObject_TryCompareEq(prev_maxkey_succ, next_minkey);
+			temp = DeeObject_TryCmpEqAsBool(prev_maxkey_succ, next_minkey);
 			Dee_Decref(prev_maxkey_succ);
 			Dee_Decref(next_minkey);
 			if (temp != 0) {

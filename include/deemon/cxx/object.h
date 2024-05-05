@@ -1804,32 +1804,32 @@ public:
 	bool operator==(CxxIteratorBase const &right) const {
 		return !right.it_iter
 		       ? it_next == ITER_DONE
-		       : throw_if_negative(DeeObject_CompareEq(it_iter, right.it_iter)) != 0;
+		       : throw_if_negative(DeeObject_CmpEqAsBool(it_iter, right.it_iter)) != 0;
 	}
 	bool operator!=(CxxIteratorBase const &right) const {
 		return !right.it_iter
 		       ? it_next != ITER_DONE
-		       : throw_if_negative(DeeObject_CompareNe(it_iter, right.it_iter)) != 0;
+		       : throw_if_negative(DeeObject_CmpNeAsBool(it_iter, right.it_iter)) != 0;
 	}
 	bool operator<(CxxIteratorBase const &right) const {
 		return !right.it_iter
 		       ? it_next != ITER_DONE
-		       : throw_if_negative(DeeObject_CompareLo(it_iter, right.it_iter)) != 0;
+		       : throw_if_negative(DeeObject_CmpLoAsBool(it_iter, right.it_iter)) != 0;
 	}
 	bool operator<=(CxxIteratorBase const &right) const {
 		return !right.it_iter
 		       ? true
-		       : throw_if_negative(DeeObject_CompareLe(it_iter, right.it_iter)) != 0;
+		       : throw_if_negative(DeeObject_CmpLeAsBool(it_iter, right.it_iter)) != 0;
 	}
 	bool operator>(CxxIteratorBase const &right) const {
 		return !right.it_iter
 		       ? false
-		       : throw_if_negative(DeeObject_CompareGr(it_iter, right.it_iter)) != 0;
+		       : throw_if_negative(DeeObject_CmpGrAsBool(it_iter, right.it_iter)) != 0;
 	}
 	bool operator>=(CxxIteratorBase const &right) const {
 		return !right.it_iter
 		       ? it_next == ITER_DONE
-		       : throw_if_negative(DeeObject_CompareGe(it_iter, right.it_iter)) != 0;
+		       : throw_if_negative(DeeObject_CmpGeAsBool(it_iter, right.it_iter)) != 0;
 	}
 	CxxIteratorBase &operator=(CxxIteratorBase &&right) DEE_CXX_NOTHROW {
 		Dee_XDecref(it_iter);
@@ -2981,22 +2981,22 @@ public:
 	}
 
 	WUNUSED Ref<Object> operator==(DeeObject *other) {
-		return inherit(DeeObject_CompareEqObject(this, other));
+		return inherit(DeeObject_CmpEq(this, other));
 	}
 	WUNUSED Ref<Object> operator!=(DeeObject *other) {
-		return inherit(DeeObject_CompareNeObject(this, other));
+		return inherit(DeeObject_CmpNe(this, other));
 	}
 	WUNUSED Ref<Object> operator<(DeeObject *other) {
-		return inherit(DeeObject_CompareLoObject(this, other));
+		return inherit(DeeObject_CmpLo(this, other));
 	}
 	WUNUSED Ref<Object> operator<=(DeeObject *other) {
-		return inherit(DeeObject_CompareLeObject(this, other));
+		return inherit(DeeObject_CmpLe(this, other));
 	}
 	WUNUSED Ref<Object> operator>(DeeObject *other) {
-		return inherit(DeeObject_CompareGrObject(this, other));
+		return inherit(DeeObject_CmpGr(this, other));
 	}
 	WUNUSED Ref<Object> operator>=(DeeObject *other) {
-		return inherit(DeeObject_CompareGeObject(this, other));
+		return inherit(DeeObject_CmpGe(this, other));
 	}
 
 	/* Integer conversion */

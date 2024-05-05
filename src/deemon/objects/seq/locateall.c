@@ -188,7 +188,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 locatoriter_compare_eq(LocatorIterator *self, LocatorIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type))
 		goto err;
-	return DeeObject_CompareForEquality(self->li_iter, other->li_iter);
+	return DeeObject_CompareEq(self->li_iter, other->li_iter);
 err:
 	return Dee_COMPARE_ERR;
 }

@@ -1401,7 +1401,7 @@ again:
 		list_elem = *iter;
 		Dee_Incref(list_elem);
 		DeeList_LockEndRead(me);
-		error = DeeObject_TryCompareEq(elem, list_elem);
+		error = DeeObject_TryCmpEqAsBool(elem, list_elem);
 		Dee_Decref_unlikely(list_elem);
 		if unlikely(error < 0)
 			goto err;
@@ -3379,7 +3379,7 @@ list_compare_eq_v(List *lhs, DeeObject *const *rhsv, size_t elemc) {
 		lhs_elem = DeeList_GET(lhs, i);
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
-		temp = DeeObject_TryCompareForEquality(lhs_elem, rhsv[i]);
+		temp = DeeObject_TryCompareEq(lhs_elem, rhsv[i]);
 		Dee_Decref(lhs_elem);
 		if (temp != 0)
 			return temp;

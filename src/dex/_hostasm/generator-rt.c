@@ -410,7 +410,7 @@ libhostasm_rt_DeeDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict sel
 			break;
 		if (it->di_hash == hash) {
 			/* Check for duplicate key. */
-			int temp = DeeObject_TryCompareEq(it->di_key, key);
+			int temp = DeeObject_TryCmpEqAsBool(it->di_key, key);
 			if unlikely(temp < 0)
 				goto err;
 			if (temp) {
@@ -458,7 +458,7 @@ libhostasm_rt_DeeRoDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict s
 			break;
 		if (it->rdi_hash == hash) {
 			/* Check for duplicate key. */
-			int temp = DeeObject_TryCompareEq(it->rdi_key, key);
+			int temp = DeeObject_TryCmpEqAsBool(it->rdi_key, key);
 			if unlikely(temp < 0)
 				goto err;
 			if (temp) {
@@ -504,7 +504,7 @@ libhostasm_rt_DeeHashSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict 
 			break;
 		if (it->hsi_hash == hash) {
 			/* Check for duplicate key. */
-			int temp = DeeObject_TryCompareEq(it->hsi_key, key);
+			int temp = DeeObject_TryCmpEqAsBool(it->hsi_key, key);
 			if unlikely(temp < 0)
 				goto err;
 			if (temp) {
@@ -546,7 +546,7 @@ libhostasm_rt_DeeRoSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict se
 			break;
 		if (it->rsi_hash == hash) {
 			/* Check for duplicate key. */
-			int temp = DeeObject_TryCompareEq(it->rsi_key, key);
+			int temp = DeeObject_TryCmpEqAsBool(it->rsi_key, key);
 			if unlikely(temp < 0)
 				goto err;
 			if (temp) {

@@ -318,7 +318,7 @@ suiter_eq(SetUnionIterator *self,
 		result = Dee_False;
 		Dee_Incref(result);
 	} else {
-		result = DeeObject_CompareEqObject(my_iter, ot_iter);
+		result = DeeObject_CmpEq(my_iter, ot_iter);
 	}
 	Dee_Decref(ot_iter);
 	Dee_Decref(my_iter);
@@ -346,7 +346,7 @@ suiter_ne(SetUnionIterator *self,
 		result = Dee_True;
 		Dee_Incref(result);
 	} else {
-		result = DeeObject_CompareNeObject(my_iter, ot_iter);
+		result = DeeObject_CmpNe(my_iter, ot_iter);
 	}
 	Dee_Decref(ot_iter);
 	Dee_Decref(my_iter);
@@ -374,7 +374,7 @@ suiter_lo(SetUnionIterator *self,
 		result = DeeBool_For(!my_2nd);
 		Dee_Incref(result);
 	} else {
-		result = DeeObject_CompareLoObject(my_iter, ot_iter);
+		result = DeeObject_CmpLo(my_iter, ot_iter);
 	}
 	Dee_Decref(ot_iter);
 	Dee_Decref(my_iter);
@@ -402,7 +402,7 @@ suiter_le(SetUnionIterator *self,
 		result = DeeBool_For(!my_2nd);
 		Dee_Incref(result);
 	} else {
-		result = DeeObject_CompareLeObject(my_iter, ot_iter);
+		result = DeeObject_CmpLe(my_iter, ot_iter);
 	}
 	Dee_Decref(ot_iter);
 	Dee_Decref(my_iter);
@@ -430,7 +430,7 @@ suiter_gr(SetUnionIterator *self,
 		result = DeeBool_For(my_2nd);
 		Dee_Incref(result);
 	} else {
-		result = DeeObject_CompareGrObject(my_iter, ot_iter);
+		result = DeeObject_CmpGr(my_iter, ot_iter);
 	}
 	Dee_Decref(ot_iter);
 	Dee_Decref(my_iter);
@@ -458,7 +458,7 @@ suiter_ge(SetUnionIterator *self,
 		result = DeeBool_For(my_2nd);
 		Dee_Incref(result);
 	} else {
-		result = DeeObject_CompareGeObject(my_iter, ot_iter);
+		result = DeeObject_CmpGe(my_iter, ot_iter);
 	}
 	Dee_Decref(ot_iter);
 	Dee_Decref(my_iter);
@@ -1155,12 +1155,12 @@ done:
 	err:                                                                  \
 		return NULL;                                                      \
 	}
-DEFINE_SIITER_COMPARE(siiter_eq, DeeObject_CompareEqObject)
-DEFINE_SIITER_COMPARE(siiter_ne, DeeObject_CompareNeObject)
-DEFINE_SIITER_COMPARE(siiter_lo, DeeObject_CompareLoObject)
-DEFINE_SIITER_COMPARE(siiter_le, DeeObject_CompareLeObject)
-DEFINE_SIITER_COMPARE(siiter_gr, DeeObject_CompareGrObject)
-DEFINE_SIITER_COMPARE(siiter_ge, DeeObject_CompareGeObject)
+DEFINE_SIITER_COMPARE(siiter_eq, DeeObject_CmpEq)
+DEFINE_SIITER_COMPARE(siiter_ne, DeeObject_CmpNe)
+DEFINE_SIITER_COMPARE(siiter_lo, DeeObject_CmpLo)
+DEFINE_SIITER_COMPARE(siiter_le, DeeObject_CmpLe)
+DEFINE_SIITER_COMPARE(siiter_gr, DeeObject_CmpGr)
+DEFINE_SIITER_COMPARE(siiter_ge, DeeObject_CmpGe)
 #undef DEFINE_SIITER_COMPARE
 
 PRIVATE struct type_cmp siiter_cmp = {

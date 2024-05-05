@@ -146,9 +146,9 @@ im_compare_eq(InstanceMethod *self, InstanceMethod *other) {
 	int result;
 	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
 		goto err;
-	result = DeeObject_CompareForEquality(self->im_func, other->im_func);
+	result = DeeObject_CompareEq(self->im_func, other->im_func);
 	if (result == 0)
-		result = DeeObject_CompareForEquality(self->im_this, other->im_this);
+		result = DeeObject_CompareEq(self->im_this, other->im_this);
 	return result;
 err:
 	return Dee_COMPARE_ERR;
@@ -159,9 +159,9 @@ im_trycompare_eq(InstanceMethod *self, InstanceMethod *other) {
 	int result;
 	if (!DeeInstanceMethod_Check(other))
 		return -1;
-	result = DeeObject_TryCompareForEquality(self->im_func, other->im_func);
+	result = DeeObject_TryCompareEq(self->im_func, other->im_func);
 	if (result == 0)
-		result = DeeObject_TryCompareForEquality(self->im_this, other->im_this);
+		result = DeeObject_TryCompareEq(self->im_this, other->im_this);
 	return result;
 }
 

@@ -188,12 +188,12 @@ INTDEF DeeTypeObject SeqSegmentsIterator_Type;
 	err:                                                                 \
 		return NULL;                                                     \
 	}
-DEFINE_SEGITER_COMPARE(segiter_eq, DeeObject_CompareEqObject)
-DEFINE_SEGITER_COMPARE(segiter_ne, DeeObject_CompareNeObject)
-DEFINE_SEGITER_COMPARE(segiter_lo, DeeObject_CompareLoObject)
-DEFINE_SEGITER_COMPARE(segiter_le, DeeObject_CompareLeObject)
-DEFINE_SEGITER_COMPARE(segiter_gr, DeeObject_CompareGrObject)
-DEFINE_SEGITER_COMPARE(segiter_ge, DeeObject_CompareGeObject)
+DEFINE_SEGITER_COMPARE(segiter_eq, DeeObject_CmpEq)
+DEFINE_SEGITER_COMPARE(segiter_ne, DeeObject_CmpNe)
+DEFINE_SEGITER_COMPARE(segiter_lo, DeeObject_CmpLo)
+DEFINE_SEGITER_COMPARE(segiter_le, DeeObject_CmpLe)
+DEFINE_SEGITER_COMPARE(segiter_gr, DeeObject_CmpGr)
+DEFINE_SEGITER_COMPARE(segiter_ge, DeeObject_CmpGe)
 #undef DEFINE_SEGITER_COMPARE
 
 PRIVATE struct type_cmp segiter_cmp = {

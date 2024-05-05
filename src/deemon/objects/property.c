@@ -163,17 +163,17 @@ property_eq(Property *self, Property *other) {
 
 	/* Compare individual callbacks. */
 	if (self->p_get) {
-		temp = DeeObject_TryCompareEq(self->p_get, other->p_get);
+		temp = DeeObject_TryCmpEqAsBool(self->p_get, other->p_get);
 		if (temp <= 0)
 			goto handle_temp;
 	}
 	if (self->p_del) {
-		temp = DeeObject_TryCompareEq(self->p_del, other->p_del);
+		temp = DeeObject_TryCmpEqAsBool(self->p_del, other->p_del);
 		if (temp <= 0)
 			goto handle_temp;
 	}
 	if (self->p_set) {
-		temp = DeeObject_TryCompareEq(self->p_set, other->p_set);
+		temp = DeeObject_TryCmpEqAsBool(self->p_set, other->p_set);
 		if (temp <= 0)
 			goto handle_temp;
 	}

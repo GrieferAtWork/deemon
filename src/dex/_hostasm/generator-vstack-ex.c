@@ -4965,12 +4965,12 @@ again:
 
 				if (it->ti_hash == hash) {
 					int temp;
-					/* Verify that `DeeObject_TryCompareEq(key, it->ti_key)' is a constant call. */
+					/* Verify that `DeeObject_TryCmpEqAsBool(key, it->ti_key)' is a constant call. */
 					if (!DeeMethodFlags_VerifyConstCallCondition(eq_flags, key, 1, &it->ti_key, NULL))
 						goto next_key;
 
 					/* Check if this is a duplicate key. */
-					temp = DeeObject_TryCompareEq(key, it->ti_key);
+					temp = DeeObject_TryCmpEqAsBool(key, it->ti_key);
 					if unlikely(temp < 0) {
 						if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
 							goto err;
@@ -5395,12 +5395,12 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_INPLACE_XOR]  = */ { (void const *)&DeeObject_InplaceXor, (void const *)&DeeObject_TInplaceXor, 2, VCALL_CC_INT, true },
 	/* [OPERATOR_INPLACE_POW]  = */ { (void const *)&DeeObject_InplacePow, (void const *)&DeeObject_TInplacePow, 2, VCALL_CC_INT, true },
 	/* [OPERATOR_HASH]         = */ { (void const *)&DeeObject_Hash, (void const *)&DeeObject_THash, 1, VCALL_CC_MORPH_UINTPTR, false },
-	/* [OPERATOR_EQ]           = */ { (void const *)&DeeObject_CompareEqObject, (void const *)&DeeObject_TCompareEqObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_NE]           = */ { (void const *)&DeeObject_CompareNeObject, (void const *)&DeeObject_TCompareNeObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_LO]           = */ { (void const *)&DeeObject_CompareLoObject, (void const *)&DeeObject_TCompareLoObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_LE]           = */ { (void const *)&DeeObject_CompareLeObject, (void const *)&DeeObject_TCompareLeObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_GR]           = */ { (void const *)&DeeObject_CompareGrObject, (void const *)&DeeObject_TCompareGrObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_GE]           = */ { (void const *)&DeeObject_CompareGeObject, (void const *)&DeeObject_TCompareGeObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_EQ]           = */ { (void const *)&DeeObject_CmpEq, (void const *)&DeeObject_TCmpEq, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_NE]           = */ { (void const *)&DeeObject_CmpNe, (void const *)&DeeObject_TCmpNe, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_LO]           = */ { (void const *)&DeeObject_CmpLo, (void const *)&DeeObject_TCmpLo, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_LE]           = */ { (void const *)&DeeObject_CmpLe, (void const *)&DeeObject_TCmpLe, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_GR]           = */ { (void const *)&DeeObject_CmpGr, (void const *)&DeeObject_TCmpGr, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_GE]           = */ { (void const *)&DeeObject_CmpGe, (void const *)&DeeObject_TCmpGe, 2, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_ITER]         = */ { (void const *)&DeeObject_Iter, (void const *)&DeeObject_TIter, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_SIZE]         = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_CONTAINS]     = */ { (void const *)&DeeObject_ContainsObject, (void const *)&DeeObject_TContainsObject, 2, VCALL_CC_OBJECT, false },

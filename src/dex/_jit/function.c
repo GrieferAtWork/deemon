@@ -933,7 +933,7 @@ compare_objtabs(JITObjectTable *__restrict a,
 				if (!b->ot_list[i].oe_value)
 					goto nope;
 				if (a->ot_list[i].oe_value != b->ot_list[i].oe_value) {
-					temp = DeeObject_TryCompareEq(a->ot_list[i].oe_value,
+					temp = DeeObject_TryCmpEqAsBool(a->ot_list[i].oe_value,
 					                           b->ot_list[i].oe_value);
 					if unlikely(temp <= 0)
 						goto err_temp;
@@ -993,7 +993,7 @@ jf_equal(JITFunction *__restrict a,
 	if (a->jf_globals != b->jf_globals) {
 		if (!a->jf_globals || !b->jf_globals)
 			goto nope;
-		temp = DeeObject_TryCompareEq(a->jf_globals,
+		temp = DeeObject_TryCmpEqAsBool(a->jf_globals,
 		                           b->jf_globals);
 		if (temp <= 0)
 			goto err_temp;
@@ -1001,7 +1001,7 @@ jf_equal(JITFunction *__restrict a,
 	if (a->jf_impbase != b->jf_impbase) {
 		if (!a->jf_impbase || !b->jf_impbase)
 			goto nope;
-		temp = DeeObject_TryCompareEq((DeeObject *)a->jf_impbase,
+		temp = DeeObject_TryCmpEqAsBool((DeeObject *)a->jf_impbase,
 		                           (DeeObject *)b->jf_impbase);
 		if (temp <= 0)
 			goto err_temp;
@@ -1009,7 +1009,7 @@ jf_equal(JITFunction *__restrict a,
 	if (a->jf_import != b->jf_import) {
 		if (!a->jf_import || !b->jf_import)
 			goto nope;
-		temp = DeeObject_TryCompareEq(a->jf_import,
+		temp = DeeObject_TryCmpEqAsBool(a->jf_import,
 		                           b->jf_import);
 		if (temp <= 0)
 			goto err_temp;

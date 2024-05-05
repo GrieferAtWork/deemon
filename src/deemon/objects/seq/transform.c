@@ -101,7 +101,7 @@ PRIVATE struct type_member tpconst transiter_members[] = {
 		if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type))           \
 			goto err;                                                                    \
 		if (self->ti_func != other->ti_func) {                                           \
-			int temp = DeeObject_TryCompareEq(self->ti_func, other->ti_func);               \
+			int temp = DeeObject_TryCmpEqAsBool(self->ti_func, other->ti_func);               \
 			if (temp <= 0) {                                                             \
 				if (temp == 0)                                                           \
 					err_unimplemented_operator(&SeqTransformationIterator_Type, opname); \
@@ -112,12 +112,12 @@ PRIVATE struct type_member tpconst transiter_members[] = {
 	err:                                                                                 \
 		return NULL;                                                                     \
 	}
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_eq, DeeObject_CompareEqObject, OPERATOR_EQ)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_ne, DeeObject_CompareNeObject, OPERATOR_NE)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_lo, DeeObject_CompareLoObject, OPERATOR_LO)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_le, DeeObject_CompareLeObject, OPERATOR_LE)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_gr, DeeObject_CompareGrObject, OPERATOR_GR)
-DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_ge, DeeObject_CompareGeObject, OPERATOR_GE)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_eq, DeeObject_CmpEq, OPERATOR_EQ)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_ne, DeeObject_CmpNe, OPERATOR_NE)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_lo, DeeObject_CmpLo, OPERATOR_LO)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_le, DeeObject_CmpLe, OPERATOR_LE)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_gr, DeeObject_CmpGr, OPERATOR_GR)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_ge, DeeObject_CmpGe, OPERATOR_GE)
 #undef DEFINE_TRANSFORMATIONITERATOR_COMPARE
 
 PRIVATE struct type_cmp transiter_cmp = {

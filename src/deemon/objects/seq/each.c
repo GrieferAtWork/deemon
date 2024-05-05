@@ -2490,7 +2490,7 @@ sewi_compare_eq(SeqEachIterator *self, SeqEachIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &SeqEachOperatorIterator_Type))
 		goto err;
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-	return DeeObject_CompareForEquality(self->ei_iter, other->ei_iter);
+	return DeeObject_CompareEq(self->ei_iter, other->ei_iter);
 err:
 	return Dee_COMPARE_ERR;
 }

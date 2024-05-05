@@ -1445,7 +1445,7 @@ tuple_contains(Tuple *self, DeeObject *item) {
 	for (i = 0; i < mylen; ++i) {
 		DeeObject *ob;
 		ob = DeeTuple_GET(self, i);
-		error = DeeObject_TryCompareEq(item, ob);
+		error = DeeObject_TryCmpEqAsBool(item, ob);
 		if unlikely(error < 0)
 			goto err;
 		if (error)

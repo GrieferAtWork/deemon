@@ -336,7 +336,7 @@ rvec_contains(RefVector *self, DeeObject *other) {
 		RefVector_XLockEndRead(self);
 		if (!item)
 			continue;
-		temp = DeeObject_TryCompareEq(other, item);
+		temp = DeeObject_TryCmpEqAsBool(other, item);
 		Dee_Decref(item);
 		if (temp != 0) {
 			if unlikely(temp < 0)
@@ -1280,7 +1280,7 @@ svec_contains(SharedVector *self, DeeObject *other) {
 		item = self->sv_vector[index];
 		Dee_Incref(item);
 		SharedVector_LockEndRead(self);
-		temp = DeeObject_TryCompareEq(other, item);
+		temp = DeeObject_TryCmpEqAsBool(other, item);
 		Dee_Decref(item);
 		if (temp != 0) {
 			if unlikely(temp < 0)

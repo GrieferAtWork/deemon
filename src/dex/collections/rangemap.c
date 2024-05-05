@@ -519,9 +519,9 @@ rangemap_getitem(DeeObject *self, DeeObject *key) {
 			goto err_iter;
 
 		/* Check if this is the key we're looking for. */
-		temp = DeeObject_CompareLo(key, item_data[0]);
+		temp = DeeObject_CmpLoAsBool(key, item_data[0]);
 		if (temp == 0)
-			temp = DeeObject_CompareGr(key, item_data[1]);
+			temp = DeeObject_CmpGrAsBool(key, item_data[1]);
 		Dee_Decref(item_data[0]);
 		Dee_Decref(item_data[1]);
 		if (temp <= 0) {
@@ -567,9 +567,9 @@ rangemap_getitem_def(DeeObject *self, DeeObject *key, DeeObject *defl) {
 			goto err_iter;
 
 		/* Check if this is the key we're looking for. */
-		temp = DeeObject_CompareLo(key, item_data[0]);
+		temp = DeeObject_CmpLoAsBool(key, item_data[0]);
 		if (temp == 0)
-			temp = DeeObject_CompareGr(key, item_data[1]);
+			temp = DeeObject_CmpGrAsBool(key, item_data[1]);
 		Dee_Decref(item_data[0]);
 		Dee_Decref(item_data[1]);
 		if (temp <= 0) {
@@ -2849,7 +2849,7 @@ proxy_mapitems_iterator_visit(RangeMapProxyKeysIterator *__restrict self, dvisit
 }
 
 #define DeeObject_CompareLo_S(a, b) \
-	((a) == (b) ? 0 : DeeObject_CompareLo(a, b))
+	((a) == (b) ? 0 : DeeObject_CmpLoAsBool(a, b))
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_keys_iterator_bool(RangeMapProxyKeysIterator *__restrict self) {

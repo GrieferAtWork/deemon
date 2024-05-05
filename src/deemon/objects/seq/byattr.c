@@ -255,7 +255,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 byattr_compare_eq(MapByAttr *self, MapByAttr *other) {
 	if unlikely(DeeObject_AssertType(other, &MapByAttr_Type))
 		goto err;
-	return DeeObject_CompareEq(self->mba_map, other->mba_map);
+	return DeeObject_CmpEqAsBool(self->mba_map, other->mba_map);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -273,7 +273,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 byattr_trycompare_eq(MapByAttr *self, MapByAttr *other) {
 	if unlikely(!DeeObject_InstanceOf(other, &MapByAttr_Type))
 		return -1;
-	return DeeObject_TryCompareForEquality(self->mba_map, other->mba_map);
+	return DeeObject_TryCompareEq(self->mba_map, other->mba_map);
 }
 
 PRIVATE struct type_cmp byattr_cmp = {

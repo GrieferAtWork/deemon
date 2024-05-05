@@ -2620,7 +2620,7 @@ asm_newconst(DeeObject *__restrict constvalue) {
 		for (i = 0; i < count; ++i) {
 			elem = vec[i];
 			if (Dee_TYPE(elem) == Dee_TYPE(constvalue)) {
-				int error = DeeObject_TryCompareForEquality(constvalue, elem);
+				int error = DeeObject_TryCompareEq(constvalue, elem);
 				if unlikely(error == Dee_COMPARE_ERR)
 					goto err;
 				if (error == 0)

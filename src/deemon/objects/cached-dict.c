@@ -143,21 +143,21 @@ cdictiterator_bool(CachedDictIterator *__restrict self) {
 }
 
 
-#define DEFINE_DICTITERATOR_COMPARE(name, Op)                                        \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                            \
-	name(CachedDictIterator *self, CachedDictIterator *other) {                      \
-		if (DeeObject_AssertType(other, &CachedDictIterator_Type))                   \
-			goto err;                                                                \
-		return_bool(DeeObject_Compare##Op##Object(self->cdi_iter, other->cdi_iter)); \
-err:                                                                                 \
-		return NULL;                                                                 \
+#define DEFINE_DICTITERATOR_COMPARE(name, DeeObject_CmpXX)         \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
+	name(CachedDictIterator *self, CachedDictIterator *other) {    \
+		if (DeeObject_AssertType(other, &CachedDictIterator_Type)) \
+			goto err;                                              \
+		return DeeObject_CmpXX(self->cdi_iter, other->cdi_iter);   \
+	err:                                                           \
+		return NULL;                                               \
 	}
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_eq, Eq)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_ne, Ne)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_lo, Lo)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_le, Le)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_gr, Gr)
-DEFINE_DICTITERATOR_COMPARE(cdictiterator_ge, Ge)
+DEFINE_DICTITERATOR_COMPARE(cdictiterator_eq, DeeObject_CmpEq)
+DEFINE_DICTITERATOR_COMPARE(cdictiterator_ne, DeeObject_CmpNe)
+DEFINE_DICTITERATOR_COMPARE(cdictiterator_lo, DeeObject_CmpLo)
+DEFINE_DICTITERATOR_COMPARE(cdictiterator_le, DeeObject_CmpLe)
+DEFINE_DICTITERATOR_COMPARE(cdictiterator_gr, DeeObject_CmpGr)
+DEFINE_DICTITERATOR_COMPARE(cdictiterator_ge, DeeObject_CmpGe)
 #undef DEFINE_DICTITERATOR_COMPARE
 
 
@@ -499,7 +499,7 @@ again:
 		Dee_Incref(item_key);
 		DeeCachedDict_LockEndRead(self);
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCompareEq(key, item_key);
+		error = DeeObject_TryCmpEqAsBool(key, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
 			goto err; /* Error in compare operator. */
@@ -712,7 +712,7 @@ restart:
 		DeeCachedDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCompareEq(key, item_key);
+		error = DeeObject_TryCmpEqAsBool(key, item_key);
 		if (error > 0)
 			return item_value; /* Found the item. */
 		if unlikely(error < 0)
@@ -808,7 +808,7 @@ restart:
 		DeeCachedDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCompareEq(key, item_key);
+		error = DeeObject_TryCmpEqAsBool(key, item_key);
 		if (error > 0)
 			return item_value; /* Found the item. */
 		if unlikely(error < 0)
@@ -902,7 +902,7 @@ restart:
 		DeeCachedDict_LockEndRead(self);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCompareEq(key, item_key);
+		error = DeeObject_TryCmpEqAsBool(key, item_key);
 		if (error > 0)
 			return 1; /* Found the item. */
 		if unlikely(error < 0)
@@ -1060,27 +1060,27 @@ cdict_hash(CachedDict *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_eq(CachedDict *__restrict self, DeeObject *__restrict other) {
-	return DeeObject_CompareEqObject(self->cd_map, other);
+	return DeeObject_CmpEq(self->cd_map, other);
 }
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_ne(CachedDict *__restrict self, DeeObject *__restrict other) {
-	return DeeObject_CompareNeObject(self->cd_map, other);
+	return DeeObject_CmpNe(self->cd_map, other);
 }
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_lo(CachedDict *__restrict self, DeeObject *__restrict other) {
-	return DeeObject_CompareLoObject(self->cd_map, other);
+	return DeeObject_CmpLo(self->cd_map, other);
 }
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_le(CachedDict *__restrict self, DeeObject *__restrict other) {
-	return DeeObject_CompareLeObject(self->cd_map, other);
+	return DeeObject_CmpLe(self->cd_map, other);
 }
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_gr(CachedDict *__restrict self, DeeObject *__restrict other) {
-	return DeeObject_CompareGrObject(self->cd_map, other);
+	return DeeObject_CmpGr(self->cd_map, other);
 }
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_ge(CachedDict *__restrict self, DeeObject *__restrict other) {
-	return DeeObject_CompareGeObject(self->cd_map, other);
+	return DeeObject_CmpGe(self->cd_map, other);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF CachedDictIterator *DCALL

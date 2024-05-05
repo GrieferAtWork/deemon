@@ -239,7 +239,7 @@ array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 		}
 		temp->l_ptr.ptr = iter.ptr;
 		iter.uint += siz;
-		error = DeeObject_TryCompareEq(other, (DeeObject *)temp);
+		error = DeeObject_TryCmpEqAsBool(other, (DeeObject *)temp);
 		if (error != 0) {
 			/* Error, or found. */
 			Dee_Decref(temp);

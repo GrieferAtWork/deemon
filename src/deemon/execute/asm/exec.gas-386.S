@@ -3872,12 +3872,12 @@ define_unary_inherited_op target_cast_varkwds, fSYM(DeeKw_WrapInherited,4)
 define_unary_op target_str, fSYM(DeeObject_Str,4)
 define_unary_op target_copy, fSYM(DeeObject_Copy,4)
 define_unary_op target_deepcopy, fSYM(DeeObject_DeepCopy,4)
-define_binary_op target_cmp_eq, fSYM(DeeObject_CompareEqObject,8)
-define_binary_op target_cmp_ne, fSYM(DeeObject_CompareNeObject,8)
-define_binary_op target_cmp_lo, fSYM(DeeObject_CompareLoObject,8)
-define_binary_op target_cmp_le, fSYM(DeeObject_CompareLeObject,8)
-define_binary_op target_cmp_gr, fSYM(DeeObject_CompareGrObject,8)
-define_binary_op target_cmp_ge, fSYM(DeeObject_CompareGeObject,8)
+define_binary_op target_cmp_eq, fSYM(DeeObject_CmpEq,8)
+define_binary_op target_cmp_ne, fSYM(DeeObject_CmpNe,8)
+define_binary_op target_cmp_lo, fSYM(DeeObject_CmpLo,8)
+define_binary_op target_cmp_le, fSYM(DeeObject_CmpLe,8)
+define_binary_op target_cmp_gr, fSYM(DeeObject_CmpGr,8)
+define_binary_op target_cmp_ge, fSYM(DeeObject_CmpGe,8)
 
 
 target_repr:

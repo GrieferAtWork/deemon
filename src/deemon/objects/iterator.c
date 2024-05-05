@@ -1212,7 +1212,7 @@ got_rewound_iter:
 	for (;;) {
 		if (DeeThread_CheckInterrupt())
 			goto err;
-		error = DeeObject_CompareLo(copy, self);
+		error = DeeObject_CmpLoAsBool(copy, self);
 		if (error <= 0) {
 			if unlikely(error < 0)
 				goto err_copy;
@@ -1747,7 +1747,7 @@ do_prev_with_rewind_iterator:
 			 * >> }
 			 * >> this.operator move := (c);
 			 * >> return true; */
-			error = DeeObject_TryCompareEq(new_self, self);
+			error = DeeObject_TryCmpEqAsBool(new_self, self);
 			if (error != 0) {
 				if unlikely(error < 0)
 					goto err_new_self;
@@ -1769,7 +1769,7 @@ do_prev_with_rewind_iterator:
 						goto err;
 					return 1;
 				}
-				error = DeeObject_CompareGe(new_copy, self);
+				error = DeeObject_CmpGeAsBool(new_copy, self);
 				if (error != 0) {
 					Dee_Decref(new_copy);
 					if unlikely(error < 0)
@@ -1842,7 +1842,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
-			error = DeeObject_TryCompareEq(temp, DeeInt_Zero);
+			error = DeeObject_TryCmpEqAsBool(temp, DeeInt_Zero);
 			Dee_Decref(temp);
 			if likely(error >= 0)
 				error = !error;
@@ -1876,7 +1876,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 				goto err;
 			}
 			Dee_Decref(temp2);
-			error = DeeObject_TryCompareEq(self, temp);
+			error = DeeObject_TryCmpEqAsBool(self, temp);
 			Dee_Decref(temp);
 			if likely(error >= 0)
 				error = !error;
@@ -1890,7 +1890,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 			Dee_Decref(temp);
 			if unlikely(!temp2)
 				goto err;
-			error = DeeObject_TryCompareEq(self, temp2);
+			error = DeeObject_TryCmpEqAsBool(self, temp2);
 			Dee_Decref(temp2);
 			if likely(error >= 0)
 				error = !error;

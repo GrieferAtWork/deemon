@@ -4482,28 +4482,28 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceXorUInt32)(DREF DeeObje
 
 
 /* Comparison operator invocation. */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareEqObject)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareNeObject)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareLoObject)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareLeObject)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareGrObject)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareGeObject)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpEq)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpNe)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpLo)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpLe)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpGr)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CmpGe)(DeeObject *self, DeeObject *some_object);
 
 /* Same as above, but automatically cast the returned object using `DeeObject_Bool()' */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareEq)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareNe)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareLo)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareLe)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGr)(DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpEqAsBool)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpNeAsBool)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpLoAsBool)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpLeAsBool)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGrAsBool)(DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CmpGeAsBool)(DeeObject *self, DeeObject *some_object);
 
 
-/* Deprecated wrapper around "DeeObject_TryCompareForEquality()"
+/* Deprecated wrapper around "DeeObject_TryCompareEq()"
  * @return: 1 : Compare returns "true"
  * @return: 0 : Compare returns "false"
  * @return: -1: Error */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_TryCompareEq)(DeeObject *self, DeeObject *some_object); /* DEPRECATED! */
+(DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object); /* DEPRECATED! */
 
 /* @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
@@ -4517,9 +4517,9 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
  * @return: == 1:  `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_CompareForEquality)(DeeObject *lhs, DeeObject *rhs);
+(DCALL DeeObject_CompareEq)(DeeObject *lhs, DeeObject *rhs);
 
-/* Same as `DeeObject_CompareForEquality()', but automatically handles errors
+/* Same as `DeeObject_CompareEq()', but automatically handles errors
  * that usually indicate that "lhs" and "rhs" cannot be compared by returning
  * either `-1' or `1' instead. The following errors get handled (so-long as
  * the effective `tp_trycompare_eq' callback doesn't end up throwing these):
@@ -4531,7 +4531,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
  * @return: == 1:  `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_TryCompareForEquality)(DeeObject *lhs, DeeObject *rhs);
+(DCALL DeeObject_TryCompareEq)(DeeObject *lhs, DeeObject *rhs);
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
  * @return: == -1: `lhs_keyed < key(rhs)'

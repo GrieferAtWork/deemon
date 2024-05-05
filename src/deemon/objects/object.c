@@ -1953,7 +1953,7 @@ object_eq(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_eq, &other))
 		goto err;
-	return DeeObject_CompareEqObject(self, other);
+	return DeeObject_CmpEq(self, other);
 err:
 	return NULL;
 }
@@ -1963,7 +1963,7 @@ object_ne(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_ne, &other))
 		goto err;
-	return DeeObject_CompareNeObject(self, other);
+	return DeeObject_CmpNe(self, other);
 err:
 	return NULL;
 }
@@ -1973,7 +1973,7 @@ object_lo(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_lo, &other))
 		goto err;
-	return DeeObject_CompareLoObject(self, other);
+	return DeeObject_CmpLo(self, other);
 err:
 	return NULL;
 }
@@ -1983,7 +1983,7 @@ object_le(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_le, &other))
 		goto err;
-	return DeeObject_CompareLeObject(self, other);
+	return DeeObject_CmpLe(self, other);
 err:
 	return NULL;
 }
@@ -1993,7 +1993,7 @@ object_gr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_gr, &other))
 		goto err;
-	return DeeObject_CompareGrObject(self, other);
+	return DeeObject_CmpGr(self, other);
 err:
 	return NULL;
 }
@@ -2003,7 +2003,7 @@ object_ge(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_ge, &other))
 		goto err;
-	return DeeObject_CompareGeObject(self, other);
+	return DeeObject_CmpGe(self, other);
 err:
 	return NULL;
 }
