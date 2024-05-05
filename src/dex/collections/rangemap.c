@@ -635,9 +635,8 @@ PRIVATE struct type_nsi tpconst rangemap_nsi = {
 
 
 PRIVATE struct type_cmp rangemap_cmp = {
-	/* .tp_hash = */ //TODO: &rangemap_hash,
-	/* .tp_eq   = */ //TODO: &rangemap_eq,
-	/* .tp_ne   = */ //TODO: &rangemap_ne,
+	/* .tp_hash       = */ NULL, /* TODO: &rangemap_hash, */
+	/* .tp_compare_eq = */ NULL, /* TODO: &rangemap_compare_eq, */
 };
 
 PRIVATE struct type_seq rangemap_seq = {

@@ -1891,12 +1891,6 @@ struct Dee_type_nii;
 struct Dee_type_cmp {
 	/* Compare operators. */
 	WUNUSED_T NONNULL_T((1))    Dee_hash_t      (DCALL *tp_hash)(DeeObject *__restrict self);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_eq)(DeeObject *self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ne)(DeeObject *self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_le)(DeeObject *self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_gr)(DeeObject *self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ge)(DeeObject *self, DeeObject *some_object);
 
 	/* Same as "tp_compare", but only needs to support equal/not-equal compare:
 	 * @return: Dee_COMPARE_ERR: An error occurred.
@@ -1912,6 +1906,14 @@ struct Dee_type_cmp {
 	 * @return: 0:  `lhs == rhs'
 	 * @return: 1:  `lhs > rhs' */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare)(DeeObject *self, DeeObject *some_object);
+
+	/* Individual compare opeartors. */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_eq)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ne)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_le)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_gr)(DeeObject *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ge)(DeeObject *self, DeeObject *some_object);
 
 	/* Optional iterator-extensions for providing optimized (but
 	 * less generic) variants for various iterator operations.

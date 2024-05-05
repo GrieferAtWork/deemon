@@ -888,14 +888,14 @@ PRIVATE struct type_nii tpconst seqiterator_nii = {
 
 PRIVATE struct type_cmp seqiterator_cmp = {
 	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_ge,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
 	/* .tp_nii        = */ &seqiterator_nii
 };
 
@@ -1338,27 +1338,27 @@ PRIVATE struct type_nii tpconst fastnsiiterator_nii = {
 
 PRIVATE struct type_cmp nsiiterator_cmp = {
 	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_ge,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
 	/* .tp_nii        = */ &nsiiterator_nii
 };
 
 PRIVATE struct type_cmp fastnsiiterator_cmp = {
 	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_ge,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
 	/* .tp_nii        = */ &fastnsiiterator_nii
 };
 
@@ -2214,13 +2214,15 @@ err:
 }
 
 PRIVATE struct type_cmp generic_seq_cmp = {
-	/* .tp_hash = */ &seq_hash,
-	/* .tp_eq   = */ &seq_eq,
-	/* .tp_ne   = */ &seq_ne,
-	/* .tp_lo   = */ &seq_lo,
-	/* .tp_le   = */ &seq_le,
-	/* .tp_gr   = */ &seq_gr,
-	/* .tp_ge   = */ &seq_ge
+	/* .tp_hash       = */ &seq_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_eq         = */ &seq_eq,
+	/* .tp_ne         = */ &seq_ne,
+	/* .tp_lo         = */ &seq_lo,
+	/* .tp_le         = */ &seq_le,
+	/* .tp_gr         = */ &seq_gr,
+	/* .tp_ge         = */ &seq_ge
 };
 
 #else /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
@@ -3175,14 +3177,14 @@ handle_empty:
 
 INTERN struct type_cmp generic_seq_cmp = {
 	/* .tp_hash       = */ &generic_seq_hash,
+	/* .tp_compare_eq = */ &generic_seq_compare_eq,
+	/* .tp_compare    = */ &generic_seq_compare,
 	/* .tp_eq         = */ &generic_seq_eq,
 	/* .tp_ne         = */ &generic_seq_ne,
 	/* .tp_lo         = */ &generic_seq_lo,
 	/* .tp_le         = */ &generic_seq_le,
 	/* .tp_gr         = */ &generic_seq_gr,
 	/* .tp_ge         = */ &generic_seq_ge,
-	/* .tp_compare_eq = */ &generic_seq_compare_eq,
-	/* .tp_compare    = */ &generic_seq_compare,
 };
 
 #endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */

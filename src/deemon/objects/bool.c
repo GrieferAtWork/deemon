@@ -342,13 +342,15 @@ err:
 }
 
 PRIVATE struct type_cmp bool_cmp = {
-	/* .tp_hash = */ &bool_hash,
-	/* .tp_eq   = */ &bool_eq,
-	/* .tp_ne   = */ &bool_ne,
-	/* .tp_lo   = */ &bool_lo,
-	/* .tp_le   = */ &bool_le,
-	/* .tp_gr   = */ &bool_gr,
-	/* .tp_ge   = */ &bool_ge
+	/* .tp_hash       = */ &bool_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_eq         = */ &bool_eq,
+	/* .tp_ne         = */ &bool_ne,
+	/* .tp_lo         = */ &bool_lo,
+	/* .tp_le         = */ &bool_le,
+	/* .tp_gr         = */ &bool_gr,
+	/* .tp_ge         = */ &bool_ge
 };
 
 PRIVATE struct type_member tpconst bool_members[] = {

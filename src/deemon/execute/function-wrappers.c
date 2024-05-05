@@ -289,14 +289,14 @@ PRIVATE struct type_nii tpconst funcstaticsiter_nii = {
 
 PRIVATE struct type_cmp funcstaticsiter_cmp = {
 	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_ge,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
 	/* .tp_nii        = */ &funcstaticsiter_nii,
 };
 
@@ -1000,14 +1000,14 @@ PRIVATE struct type_nii tpconst funcsymbolsbynameiter_nii = {
 
 PRIVATE struct type_cmp funcsymbolsbynameiter_cmp = {
 	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_ge,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
 	/* .tp_nii        = */ &funcsymbolsbynameiter_nii,
 };
 
@@ -2080,14 +2080,14 @@ PRIVATE struct type_nii tpconst yfuncsymbolsbynameiter_nii = {
 
 PRIVATE struct type_cmp yfuncsymbolsbynameiter_cmp = {
 	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_ge,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
 	/* .tp_nii        = */ &yfuncsymbolsbynameiter_nii,
 };
 
@@ -4355,14 +4355,14 @@ PRIVATE struct type_nii tpconst framesymbolsbynameiter_nii = {
 
 PRIVATE struct type_cmp framesymbolsbynameiter_cmp = {
 	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_ge,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
 	/* .tp_nii        = */ &framesymbolsbynameiter_nii,
 };
 

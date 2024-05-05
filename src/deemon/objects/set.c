@@ -240,13 +240,15 @@ PRIVATE struct type_member tpconst invset_members[] = {
 };
 
 PRIVATE struct type_cmp invset_cmp = {
-		/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&invset_hash,
-		/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_eq,
-		/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_ne,
-		/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_lo,
-		/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_le,
-		/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_gr,
-		/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_ge,
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&invset_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_eq,
+	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_ne,
+	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_lo,
+	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_le,
+	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_gr,
+	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_ge,
 };
 
 
@@ -1230,13 +1232,14 @@ handle_empty:
 
 INTERN struct type_cmp generic_set_cmp = {
 	/* .tp_hash       = */ &generic_set_hash,
+	/* .tp_compare_eq = */ &generic_set_compare_eq,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ &generic_set_eq,
 	/* .tp_ne         = */ &generic_set_ne,
 	/* .tp_lo         = */ &generic_set_lo,
 	/* .tp_le         = */ &generic_set_le,
 	/* .tp_gr         = */ &generic_set_gr,
 	/* .tp_ge         = */ &generic_set_ge,
-	/* .tp_compare_eq = */ &generic_set_compare_eq,
 };
 
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
@@ -1366,13 +1369,14 @@ err:
 
 PRIVATE struct type_cmp generic_set_cmp = {
 	/* .tp_hash       = */ &set_hash,
+	/* .tp_compare_eq = */ &generic_set_compare_eq,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ &generic_set_eq,
 	/* .tp_ne         = */ &generic_set_ne,
 	/* .tp_lo         = */ &generic_set_lo,
 	/* .tp_le         = */ &generic_set_le,
 	/* .tp_gr         = */ &generic_set_gr,
 	/* .tp_ge         = */ &generic_set_ge,
-	/* .tp_compare_eq = */ &generic_set_compare_eq,
 };
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 

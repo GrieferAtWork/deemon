@@ -233,12 +233,6 @@ err:
 #define di_stgi_cmp di_gi_cmp
 PRIVATE struct type_cmp di_gi_cmp = {
 	/* .tp_hash       = */ NULL,
-	/* .tp_eq         = */ NULL,
-	/* .tp_ne         = */ NULL,
-	/* .tp_lo         = */ NULL,
-	/* .tp_le         = */ NULL,
-	/* .tp_gr         = */ NULL,
-	/* .tp_ge         = */ NULL,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
 };
@@ -696,12 +690,6 @@ err_new_index:
 #define di_tg_cmp di_g_cmp
 PRIVATE struct type_cmp di_g_cmp = {
 	/* .tp_hash       = */ NULL,
-	/* .tp_eq         = */ NULL,
-	/* .tp_ne         = */ NULL,
-	/* .tp_lo         = */ NULL,
-	/* .tp_le         = */ NULL,
-	/* .tp_gr         = */ NULL,
-	/* .tp_ge         = */ NULL,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 };
@@ -1236,12 +1224,6 @@ di_nl_iter_next(DefaultIterator_WithNextAndLimit *self) {
 
 PRIVATE struct type_cmp di_nl_cmp = {
 	/* .tp_hash       = */ NULL,
-	/* .tp_eq         = */ NULL,
-	/* .tp_ne         = */ NULL,
-	/* .tp_lo         = */ NULL,
-	/* .tp_le         = */ NULL,
-	/* .tp_gr         = */ NULL,
-	/* .tp_ge         = */ NULL,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
 };

@@ -1185,13 +1185,15 @@ PRIVATE struct type_math struct_math = {
 };
 
 PRIVATE struct type_cmp struct_cmp = {
-	/* .tp_hash = */ &struct_hash,
-	/* .tp_eq   = */ &struct_eq,
-	/* .tp_ne   = */ &struct_ne,
-	/* .tp_lo   = */ &struct_lo,
-	/* .tp_le   = */ &struct_le,
-	/* .tp_gr   = */ &struct_gr,
-	/* .tp_ge   = */ &struct_ge
+	/* .tp_hash       = */ &struct_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_eq         = */ &struct_eq,
+	/* .tp_ne         = */ &struct_ne,
+	/* .tp_lo         = */ &struct_lo,
+	/* .tp_le         = */ &struct_le,
+	/* .tp_gr         = */ &struct_gr,
+	/* .tp_ge         = */ &struct_ge
 };
 
 PRIVATE struct type_seq struct_seq = {

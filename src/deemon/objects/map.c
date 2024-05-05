@@ -2056,13 +2056,14 @@ handle_empty:
 
 INTERN struct type_cmp generic_map_cmp = {
 	/* .tp_hash       = */ &generic_map_hash,
+	/* .tp_compare_eq = */ &generic_map_compare_eq,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ &generic_map_eq,
 	/* .tp_ne         = */ &generic_map_ne,
 	/* .tp_lo         = */ &generic_map_lo,
 	/* .tp_le         = */ &generic_map_le,
 	/* .tp_gr         = */ &generic_map_gr,
 	/* .tp_ge         = */ &generic_map_ge,
-	/* .tp_compare_eq = */ &generic_map_compare_eq,
 };
 
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
@@ -2371,13 +2372,15 @@ err:
 }
 
 PRIVATE struct type_cmp generic_map_cmp = {
-	/* .tp_hash = */ &generic_map_hash,
-	/* .tp_eq   = */ &generic_map_eq,
-	/* .tp_ne   = */ &generic_map_ne,
-	/* .tp_lo   = */ NULL, /* TODO: Sub-set */
-	/* .tp_le   = */ NULL, /* TODO: Sub-set, or same */
-	/* .tp_gr   = */ NULL, /* TODO: Super-set */
-	/* .tp_ge   = */ NULL, /* TODO: Super-set, or same */
+	/* .tp_hash       = */ &generic_map_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_eq         = */ &generic_map_eq,
+	/* .tp_ne         = */ &generic_map_ne,
+	/* .tp_lo         = */ NULL,
+	/* .tp_le         = */ NULL,
+	/* .tp_gr         = */ NULL,
+	/* .tp_ge         = */ NULL,
 };
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 

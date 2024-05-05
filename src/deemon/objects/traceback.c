@@ -416,14 +416,14 @@ DEFINE_TRACEITER_COMPARE(traceiter_ge, >=)
 
 PRIVATE struct type_cmp traceiter_cmp = {
 	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_ge,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
 	/* .tp_nii        = */ &traceiter_nii
 };
 

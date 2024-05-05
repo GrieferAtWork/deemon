@@ -543,14 +543,14 @@ super_compare(Super *self, DeeObject *some_object) {
 
 PRIVATE struct type_cmp super_cmp = {
 	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&super_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_compare,
 	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_eq,
 	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_ne,
 	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_lo,
 	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_le,
 	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_gr,
 	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_ge,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_compare_eq,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_compare,
 };
 
 

@@ -188,8 +188,10 @@ err:
 }
 
 PRIVATE struct type_cmp property_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&property_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&property_eq
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&property_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&property_eq,
 };
 
 PRIVATE struct type_member tpconst property_members[] = {

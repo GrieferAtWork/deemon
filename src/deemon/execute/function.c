@@ -1198,14 +1198,7 @@ err:
 
 PRIVATE struct type_cmp function_cmp = {
 	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&function_hash,
-	/* .tp_eq         = */ NULL,
-	/* .tp_ne         = */ NULL,
-	/* .tp_lo         = */ NULL,
-	/* .tp_le         = */ NULL,
-	/* .tp_gr         = */ NULL,
-	/* .tp_ge         = */ NULL,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&function_compare_eq,
-	/* .tp_compare    = */ NULL,
 };
 
 

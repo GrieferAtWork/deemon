@@ -269,13 +269,15 @@ DEFINE_MAPBYATTR_COMPARE(byattr_ge, Ge)
 #undef DEFINE_MAPBYATTR_COMPARE
 
 PRIVATE struct type_cmp byattr_cmp = {
-	/* .tp_hash = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&byattr_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&byattr_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_eq,
+	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_ne,
+	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_lo,
+	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_le,
+	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_gr,
+	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_ge,
 };
 
 
