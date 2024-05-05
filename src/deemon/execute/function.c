@@ -1137,82 +1137,23 @@ function_hash(Function *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-function_eq(Function *self, Function *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+function_compare_eq(Function *self, Function *other) {
 	DeeCodeObject *code = self->fo_code;
 	uint16_t i;
 	int result;
 	if (DeeObject_AssertTypeExact(other, &DeeFunction_Type))
 		goto err;
-	result = DeeObject_CompareEq((DeeObject *)code, (DeeObject *)other->fo_code);
-	if unlikely(result <= 0)
-		goto err_or_not_equal;
-	ASSERT(code->co_refc == other->fo_code->co_refc);
-	for (i = 0; i < code->co_refc; ++i) {
-		result = DeeObject_CompareEq(self->fo_refv[i],
-		                             other->fo_refv[i]);
-		if (result <= 0)
-			goto err_or_not_equal;
-	}
-	ASSERT(code->co_refstaticc == other->fo_code->co_refstaticc);
-	for (; i < code->co_refstaticc; ++i) {
-		DREF DeeObject *lhs, *rhs;
-		DeeFunction_RefLockRead(self);
-		lhs = self->fo_refv[i];
-		if (ITER_ISOK(lhs))
-			Dee_Incref(lhs);
-		DeeFunction_RefLockEndRead(self);
-		DeeFunction_RefLockRead(other);
-		rhs = other->fo_refv[i];
-		if (ITER_ISOK(rhs))
-			Dee_Incref(rhs);
-		DeeFunction_RefLockEndRead(other);
-		if (lhs == rhs) {
-			if (ITER_ISOK(lhs)) {
-				Dee_DecrefNokill(lhs);
-				Dee_Decref_unlikely(lhs);
-			}
-		} else if (!ITER_ISOK(lhs) || !ITER_ISOK(rhs)) {
-			if (ITER_ISOK(lhs))
-				Dee_Decref_unlikely(lhs);
-			if (ITER_ISOK(rhs))
-				Dee_Decref_unlikely(rhs);
-			goto not_equal;
-		} else {
-			result = DeeObject_CompareEq(self->fo_refv[i],
-			                             other->fo_refv[i]);
-			Dee_Decref_unlikely(lhs);
-			Dee_Decref_unlikely(rhs);
-			if (result <= 0)
-				goto err_or_not_equal;
-		}
-	}
-	return_true;
-err_or_not_equal:
-	if (!result) {
-not_equal:
-		return_false;
-	}
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-function_ne(Function *self, Function *other) {
-	DeeCodeObject *code = self->fo_code;
-	uint16_t i;
-	int result;
-	if (DeeObject_AssertTypeExact(other, &DeeFunction_Type))
-		goto err;
-	result = DeeObject_CompareNe((DeeObject *)code, (DeeObject *)other->fo_code);
+	result = DeeObject_CompareForEquality((DeeObject *)code,
+	                                      (DeeObject *)other->fo_code);
 	if unlikely(result != 0)
-		goto err_or_not_equal;
+		goto done;
 	ASSERT(code->co_refc == other->fo_code->co_refc);
 	for (i = 0; i < code->co_refc; ++i) {
-		result = DeeObject_CompareNe(self->fo_refv[i],
-		                             other->fo_refv[i]);
+		result = DeeObject_CompareForEquality(self->fo_refv[i],
+		                                      other->fo_refv[i]);
 		if (result != 0)
-			goto err_or_not_equal;
+			goto done;
 	}
 	ASSERT(code->co_refstaticc == other->fo_code->co_refstaticc);
 	for (; i < code->co_refstaticc; ++i) {
@@ -1239,28 +1180,32 @@ function_ne(Function *self, Function *other) {
 				Dee_Decref_unlikely(rhs);
 			goto not_equal;
 		} else {
-			result = DeeObject_CompareEq(self->fo_refv[i],
-			                             other->fo_refv[i]);
+			result = DeeObject_CompareForEquality(self->fo_refv[i],
+			                                      other->fo_refv[i]);
 			Dee_Decref_unlikely(lhs);
 			Dee_Decref_unlikely(rhs);
-			if (result <= 0)
-				goto err_or_not_equal;
+			if (result != 0)
+				goto done;
 		}
 	}
-	return_false;
-err_or_not_equal:
-	if (!result) {
+done:
+	return result;
 not_equal:
-		return_true;
-	}
+	return 1;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp function_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&function_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&function_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&function_ne
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&function_hash,
+	/* .tp_eq         = */ NULL,
+	/* .tp_ne         = */ NULL,
+	/* .tp_lo         = */ NULL,
+	/* .tp_le         = */ NULL,
+	/* .tp_gr         = */ NULL,
+	/* .tp_ge         = */ NULL,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&function_compare_eq,
+	/* .tp_compare    = */ NULL,
 };
 
 
@@ -1547,79 +1492,6 @@ PRIVATE struct type_member tpconst yf_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-/* Since YieldFunction objects are bound to a specific function, comparing
- * them won't compare the bound function, but rather that function's pointer! */
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-yf_hash(DeeYieldFunctionObject *__restrict self) {
-	dhash_t result;
-	result = DeeObject_HashGeneric(self->yf_func);
-	result = Dee_HashCombine(result, DeeObject_Hashv(self->yf_argv, self->yf_argc));
-	if (self->yf_kw)
-		result = Dee_HashCombine(result, DeeObject_Hash(self->yf_kw->fk_kw));
-	if (self->yf_this)
-		result = Dee_HashCombine(result, DeeObject_Hash(self->yf_this));
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-yf_eq_impl(DeeYieldFunctionObject *__restrict self,
-           DeeYieldFunctionObject *__restrict other) {
-	int error;
-	if (DeeObject_AssertTypeExact(other, &DeeYieldFunction_Type))
-		goto err;
-	if (self == other)
-		goto yes;
-	if (self->yf_func != other->yf_func)
-		goto nope;
-	if (self->yf_pargc != other->yf_pargc)
-		goto nope;
-	if (self->yf_argc != other->yf_argc)
-		goto nope;
-	error = DeeSeq_EqVV(self->yf_argv, other->yf_argv, self->yf_argc);
-	if unlikely(error <= 0)
-		goto do_return_error;
-	ASSERTF((self->yf_this != NULL) == (other->yf_this != NULL),
-	        "If the functions are identical, they must also have "
-	        "identical requirements for the presence of a this-argument!");
-	if (self->yf_this)
-		return DeeObject_CompareEq(self->yf_this, other->yf_this);
-yes:
-	return 1;
-do_return_error:
-	return error;
-nope:
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-yf_eq(DeeYieldFunctionObject *self, DeeYieldFunctionObject *other) {
-	int result = yf_eq_impl(self, other);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-yf_ne(DeeYieldFunctionObject *self, DeeYieldFunctionObject *other) {
-	int result = yf_eq_impl(self, other);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(!result);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_cmp yf_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&yf_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yf_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yf_ne
-};
-
-
 PRIVATE struct type_member tpconst yf_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(YFunction, yf_func), "->?Dfunction"),
 	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(YFunction, yf_this),
@@ -1865,7 +1737,7 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &yf_cmp,
+	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ &yf_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

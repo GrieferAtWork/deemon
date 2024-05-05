@@ -50,6 +50,9 @@ function assertCorrectSequence(call) {
 	assert (call as Sequence) == {(10,), (20,)};
 	assert (copy(call) as Sequence) == {(10,), (20,)};
 	assert (deepcopy(call) as Sequence) == {(10,), (20,)};
+	assert call == {(10,), (20,)};
+	assert copy(call) == {(10,), (20,)};
+	assert deepcopy(call) == {(10,), (20,)};
 
 	/* Assert that operating directly with the iterators also works (including
 	 * the case where we make copies of the iterators half-way through the call) */
