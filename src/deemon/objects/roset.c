@@ -152,12 +152,10 @@ rosetiterator_hash(RoSetIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rosetiterator_compare(RoSetIterator *self, RoSetIterator *other) {
-	struct roset_item *lhs_item, *rhs_item;
 	if (DeeObject_AssertType(other, &RoSetIterator_Type))
 		goto err;
-	lhs_item = READ_ITEM(self);
-	rhs_item = READ_ITEM(other);
-	Dee_return_compare(lhs_item, rhs_item);
+	Dee_return_compareT(struct roset_item *, READ_ITEM(self),
+	                    /*                */ READ_ITEM(other));
 err:
 	return Dee_COMPARE_ERR;
 }

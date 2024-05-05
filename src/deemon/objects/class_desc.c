@@ -201,12 +201,10 @@ coti_hash(ClassOperatorTableIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 coti_compare(ClassOperatorTableIterator *self, ClassOperatorTableIterator *other) {
-	struct class_operator *lhs_iter, *rhs_iter;
 	if (DeeObject_AssertTypeExact(other, &ClassOperatorTableIterator_Type))
 		goto err;
-	lhs_iter = COTI_GETITER(self);
-	rhs_iter = COTI_GETITER(other);
-	Dee_return_compare(lhs_iter, rhs_iter);
+	Dee_return_compareT(struct class_operator *, COTI_GETITER(self),
+	                    /*                    */ COTI_GETITER(other));
 err:
 	return Dee_COMPARE_ERR;
 }

@@ -4487,96 +4487,19 @@ bsiter_bool(BitsetIterator *__restrict self) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bsiter_eq(BitsetIterator *self, BitsetIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
-		goto err;
-	return_bool(self->bsi_bitset == other->bsi_bitset &&
-	            self->bsi_startbit == other->bsi_startbit &&
-	            self->bsi_endbit == other->bsi_endbit &&
-	            atomic_read(&self->bsi_bitno) == atomic_read(&other->bsi_bitno));
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+bsiter_hash(BitsetIterator *self) {
+	return atomic_read(&self->bsi_bitno);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bsiter_ne(BitsetIterator *self, BitsetIterator *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsiter_compare(BitsetIterator *self, BitsetIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
 		goto err;
-	return_bool(self->bsi_bitset != other->bsi_bitset ||
-	            self->bsi_startbit != other->bsi_startbit ||
-	            self->bsi_endbit != other->bsi_endbit ||
-	            atomic_read(&self->bsi_bitno) != atomic_read(&other->bsi_bitno));
+	Dee_return_compareT(size_t, atomic_read(&self->bsi_bitno),
+	                    /*   */ atomic_read(&other->bsi_bitno));
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bsiter_lo(BitsetIterator *self, BitsetIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
-		goto err;
-	return_bool((self->bsi_bitset == other->bsi_bitset &&
-	             self->bsi_startbit == other->bsi_startbit &&
-	             self->bsi_endbit == other->bsi_endbit)
-	            ? (atomic_read(&self->bsi_bitno) < atomic_read(&other->bsi_bitno))
-	            : (self->bsi_bitset < other->bsi_bitset ||
-	               (self->bsi_bitset == other->bsi_bitset &&
-	                (self->bsi_startbit < other->bsi_startbit ||
-	                 (self->bsi_startbit == other->bsi_startbit &&
-	                  self->bsi_endbit < other->bsi_endbit)))));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bsiter_le(BitsetIterator *self, BitsetIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
-		goto err;
-	return_bool((self->bsi_bitset == other->bsi_bitset &&
-	             self->bsi_startbit == other->bsi_startbit &&
-	             self->bsi_endbit == other->bsi_endbit)
-	            ? (atomic_read(&self->bsi_bitno) <= atomic_read(&other->bsi_bitno))
-	            : (self->bsi_bitset < other->bsi_bitset ||
-	               (self->bsi_bitset == other->bsi_bitset &&
-	                (self->bsi_startbit < other->bsi_startbit ||
-	                 (self->bsi_startbit == other->bsi_startbit &&
-	                  self->bsi_endbit <= other->bsi_endbit)))));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bsiter_gr(BitsetIterator *self, BitsetIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
-		goto err;
-	return_bool((self->bsi_bitset == other->bsi_bitset &&
-	             self->bsi_startbit == other->bsi_startbit &&
-	             self->bsi_endbit == other->bsi_endbit)
-	            ? (atomic_read(&self->bsi_bitno) > atomic_read(&other->bsi_bitno))
-	            : (self->bsi_bitset > other->bsi_bitset ||
-	               (self->bsi_bitset == other->bsi_bitset &&
-	                (self->bsi_startbit > other->bsi_startbit ||
-	                 (self->bsi_startbit == other->bsi_startbit &&
-	                  self->bsi_endbit > other->bsi_endbit)))));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bsiter_ge(BitsetIterator *self, BitsetIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
-		goto err;
-	return_bool((self->bsi_bitset == other->bsi_bitset &&
-	             self->bsi_startbit == other->bsi_startbit &&
-	             self->bsi_endbit == other->bsi_endbit)
-	            ? (atomic_read(&self->bsi_bitno) >= atomic_read(&other->bsi_bitno))
-	            : (self->bsi_bitset > other->bsi_bitset ||
-	               (self->bsi_bitset == other->bsi_bitset &&
-	                (self->bsi_startbit > other->bsi_startbit ||
-	                 (self->bsi_startbit == other->bsi_startbit &&
-	                  self->bsi_endbit >= other->bsi_endbit)))));
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -4664,16 +4587,16 @@ PRIVATE struct type_nii tpconst bsiter_nii = {
 };
 
 PRIVATE struct type_cmp bsiter_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&bsiter_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&bsiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &bsiter_nii
 };
 

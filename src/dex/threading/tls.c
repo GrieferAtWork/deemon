@@ -223,7 +223,7 @@ PRIVATE void DCALL tls_free(size_t index) {
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *t_factory; /* [0..1][const] A factory function used to construct TLS default value. */
-	size_t t_index;            /* [owned(tls_free)][const] The per-thread TLS index used by this controller. */
+	size_t          t_index;   /* [owned(tls_free)][const] The per-thread TLS index used by this controller. */
 } TLS;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -425,29 +425,6 @@ again:
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-tls_hash(TLS *__restrict self) {
-	/* Since TLS indices are unique, they're perfect for hasing. */
-	return (dhash_t)self->t_index;
-}
-
-#define DEFINE_TLS_COMPARE(name, op)                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
-	name(TLS *self, TLS *other) {                         \
-		if (DeeObject_AssertType(other, &DeeTLS_Type))    \
-			goto err;                                     \
-		return_bool_(self->t_index op other->t_index);    \
-	err:                                                  \
-		return NULL;                                      \
-	}
-DEFINE_TLS_COMPARE(tls_eq, ==)
-DEFINE_TLS_COMPARE(tls_ne, !=)
-DEFINE_TLS_COMPARE(tls_lo, <)
-DEFINE_TLS_COMPARE(tls_le, <=)
-DEFINE_TLS_COMPARE(tls_gr, >)
-DEFINE_TLS_COMPARE(tls_ge, >=)
-#undef DEFINE_TLS_COMPARE
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_bool(TLS *__restrict self) {
@@ -755,19 +732,6 @@ PRIVATE struct type_method tpconst tls_methods[] = {
 	TYPE_METHOD_END
 };
 
-PRIVATE struct type_cmp tls_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&tls_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tls_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tls_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tls_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tls_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tls_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tls_ge,
-};
-
 INTERN DeeTypeObject DeeTLS_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "TLS",
@@ -814,7 +778,7 @@ INTERN DeeTypeObject DeeTLS_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tls_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &tls_cmp,
+	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

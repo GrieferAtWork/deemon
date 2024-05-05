@@ -548,10 +548,10 @@ do_handle_filetype:
 			ft_seek  = DeeType_AsFileType(tp_self)->ft_seek;
 			if likely(ft_trunc != NULL && ft_seek != NULL) {
 				int result;
-				dpos_t trunc_pos;
+				Dee_pos_t trunc_pos;
 				/* Determine the current position and truncate the file there. */
 				trunc_pos = LOCAL_DeeFileType_invoke_ft_seek(tp_self, ft_seek, self, 0, SEEK_CUR);
-				if unlikely(trunc_pos == (dpos_t)-1) {
+				if unlikely(trunc_pos == (Dee_pos_t)-1) {
 					result = -1;
 				} else {
 					result = LOCAL_DeeFileType_invoke_ft_trunc(tp_self, ft_trunc, self, trunc_pos);

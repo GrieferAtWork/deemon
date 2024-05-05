@@ -479,17 +479,17 @@ err:
 
 /* >> operator seek(off: int, whence: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_seek, &instance_seek, NULL /*&filetype_inherit_seek*/) {
-	doff_t off;
-	dpos_t result;
+	Dee_off_t off;
+	Dee_pos_t result;
 	int whence = SEEK_SET;
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_seek);
-	if (DeeArg_Unpack(argc, argv, UNPdN(DEE_SIZEOF_DEE_POS_T) "|d:" OPNAME("seek"), &off, &whence))
+	if (DeeArg_Unpack(argc, argv, UNPdN(Dee_SIZEOF_OFF_T) "|d:" OPNAME("seek"), &off, &whence))
 		goto err;
 	result = DeeFileType_invoke_ft_seek(tp_self, tp_self->ft_seek,
 	                                    self, off, whence);
-	if unlikely(result == (dpos_t)-1)
+	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	return DeeInt_NewUInt64(result);
 err:
@@ -513,7 +513,7 @@ err:
 /* >> operator trunc(length: int);
  * >> operator trunc(): int; */
 DEFINE_OPERATOR_INVOKE(operator_trunc, &instance_trunc, NULL /*&filetype_inherit_trunc*/) {
-	dpos_t length;
+	Dee_pos_t length;
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_trunc);
@@ -562,7 +562,7 @@ DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread, &filetype_inherit_pread)
 	DeeObject *c = NULL;
 	DeeObject *d = NULL;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
-	dpos_t pos;
+	Dee_pos_t pos;
 	size_t start, end;
 	size_t result;
 	DeeBuffer buf;
@@ -635,7 +635,7 @@ DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite, &filetype_inherit_pwri
 	DeeObject *c = NULL;
 	DeeObject *d = NULL;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
-	dpos_t pos;
+	Dee_pos_t pos;
 	size_t start, end;
 	size_t result;
 	DeeBuffer buf;

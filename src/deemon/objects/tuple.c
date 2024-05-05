@@ -1182,22 +1182,20 @@ PRIVATE struct type_member tpconst tuple_iterator_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_TUPLEITERATOR_COMPARE(name, op)                        \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
-	name(TupleIterator *self, TupleIterator *other) {                 \
-		if (DeeObject_AssertTypeExact(other, &DeeTupleIterator_Type)) \
-			goto err;                                                 \
-		return_bool(READ_INDEX(self) op READ_INDEX(other));           \
-	err:                                                              \
-		return NULL;                                                  \
-	}
-DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_eq, ==)
-DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_ne, !=)
-DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_lo, <)
-DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_le, <=)
-DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_gr, >)
-DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_ge, >=)
-#undef DEFINE_TUPLEITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+tuple_iterator_hash(TupleIterator *self) {
+	return Dee_HashPointer(READ_INDEX(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+tuple_iterator_compare(TupleIterator *self, TupleIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeTupleIterator_Type))
+		goto err;
+	Dee_return_compareT(size_t, READ_INDEX(self),
+	                    /*   */ READ_INDEX(other));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
 tuple_iterator_nii_getseq(TupleIterator *__restrict self) {
@@ -1301,16 +1299,16 @@ PRIVATE struct type_nii tpconst tuple_iterator_nii = {
 };
 
 PRIVATE struct type_cmp tuple_iterator_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&tuple_iterator_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_iterator_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_iterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_iterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_iterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_iterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_iterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_iterator_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &tuple_iterator_nii
 };
 
@@ -2049,16 +2047,9 @@ PRIVATE struct type_math tuple_math = {
 };
 
 PRIVATE struct type_cmp tuple_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&tuple_hash,
-	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_compare_eq,
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_compare,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ NULL,
-	/* .tp_ne            = */ NULL,
-	/* .tp_lo            = */ NULL,
-	/* .tp_le            = */ NULL,
-	/* .tp_gr            = */ NULL,
-	/* .tp_ge            = */ NULL,
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&tuple_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_compare,
 };
 
 PRIVATE struct type_operator const tuple_operators[] = {

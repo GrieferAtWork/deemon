@@ -826,13 +826,11 @@ repeatitemiter_hash(RepeatItemIterator *self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatitemiter_compare(RepeatItemIterator *lhs,
                        RepeatItemIterator *rhs) {
-	size_t lhs_num, rhs_num;
 	if (DeeObject_AssertTypeExact(rhs, &SeqItemRepeatIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(lhs->rii_obj, rhs->rii_obj);
-	lhs_num = REPEATITEMPITER_READ_NUM(lhs);
-	rhs_num = REPEATITEMPITER_READ_NUM(rhs);
-	Dee_return_compare(lhs_num, rhs_num);
+	Dee_return_compareT(size_t, REPEATITEMPITER_READ_NUM(lhs),
+	                    /*   */ REPEATITEMPITER_READ_NUM(rhs));
 err:
 	return Dee_COMPARE_ERR;
 }

@@ -316,12 +316,10 @@ refa_hash(ReSequenceIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 refa_compare(ReSequenceIterator *self, ReSequenceIterator *other) {
-	size_t x, y;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	x = REITER_GETDATAPTR(self);
-	y = REITER_GETDATAPTR(other);
-	Dee_return_compare(x, y);
+	Dee_return_compareT(size_t, REITER_GETDATAPTR(self),
+	                    /*   */ REITER_GETDATAPTR(other));
 err:
 	return Dee_COMPARE_ERR;
 }

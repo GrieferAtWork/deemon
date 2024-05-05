@@ -54,7 +54,7 @@ ob_weakref_visit(WeakRef *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_ctor(WeakRef *__restrict self) {
-	Dee_weakref_null(&self->wr_ref);
+	Dee_weakref_initempty(&self->wr_ref);
 	self->wr_del = NULL;
 	return 0;
 }
@@ -131,7 +131,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_init_kw(WeakRef *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *obj;
@@ -212,43 +212,42 @@ ob_weakref_bool(WeakRef *__restrict self) {
 	return Dee_weakref_bound(&self->wr_ref);
 }
 
-#define LAZY_GETOBJ(x) atomic_read(&(x)->wr_ref.wr_obj)
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 ob_weakref_hash(WeakRef *__restrict self) {
-	return Dee_HashPointer(LAZY_GETOBJ(self));
+	return Dee_HashPointer(Dee_weakref_getaddr(&self->wr_ref));
 }
 
-#define DEFINE_WEAKREF_COMPARE(name, op)                            \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
-	name(WeakRef *self, WeakRef *other) {                           \
-		if (DeeNone_Check(other))                                   \
-			return_bool((void *)LAZY_GETOBJ(self) op(void *) NULL); \
-		if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type))     \
-			goto err;                                               \
-		return_bool(LAZY_GETOBJ(self) op LAZY_GETOBJ(other));       \
-	err:                                                            \
-		return NULL;                                                \
-	}
-DEFINE_WEAKREF_COMPARE(ob_weakref_eq, ==)
-DEFINE_WEAKREF_COMPARE(ob_weakref_ne, !=)
-DEFINE_WEAKREF_COMPARE(ob_weakref_lo, <)
-DEFINE_WEAKREF_COMPARE(ob_weakref_le, <=)
-DEFINE_WEAKREF_COMPARE(ob_weakref_gr, >)
-DEFINE_WEAKREF_COMPARE(ob_weakref_ge, >=)
-#undef DEFINE_WEAKREF_COMPARE
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ob_weakref_compare(WeakRef *self, WeakRef *other) {
+	if (DeeNone_Check(other))
+		return Dee_weakref_getaddr(&self->wr_ref) ? 1 : 0;
+	if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type))
+		goto err;
+	Dee_return_compareT(DeeObject *,
+	                    Dee_weakref_getaddr(&self->wr_ref),
+	                    Dee_weakref_getaddr(&other->wr_ref));
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ob_weakref_trycompare_eq(WeakRef *self, WeakRef *other) {
+	if (DeeNone_Check(other))
+		return Dee_weakref_getaddr(&self->wr_ref) ? 1 : 0;
+	if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type))
+		return 1;
+	return (Dee_weakref_getaddr(&self->wr_ref) ==
+	        Dee_weakref_getaddr(&other->wr_ref))
+	       ? 0
+	       : 1;
+}
 
 PRIVATE struct type_cmp ob_weakref_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&ob_weakref_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&ob_weakref_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ob_weakref_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ob_weakref_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ob_weakref_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ob_weakref_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ob_weakref_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ob_weakref_ge
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_trycompare_eq,
 };
 
 

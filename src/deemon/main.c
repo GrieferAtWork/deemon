@@ -2006,7 +2006,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	struct TPPFile *file = token.t_file;
 	bool is_file_relative_code;
 	int error;
-	dpos_t override_start_pos;
+	Dee_pos_t override_start_pos;
 	char *override_start_ptr;
 	char *override_end_ptr;
 	bool has_leading_linefeed;
@@ -2094,7 +2094,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 
 	/* Figure out the absolute in-source file position where overriding will start. */
 	override_start_pos = DeeFile_Tell(stream);
-	if unlikely(override_start_pos == (dpos_t)-1)
+	if unlikely(override_start_pos == (Dee_pos_t)-1)
 		goto err;
 	override_start_pos -= (size_t)(file->f_end - override_start_ptr);
 
@@ -2245,7 +2245,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 
 		/* Now comes the part that it's been all about:
 		 * This is where we override the original source file's contents! */
-		if unlikely(DeeFile_SetPos(stream, override_start_pos) == (dpos_t)-1)
+		if unlikely(DeeFile_SetPos(stream, override_start_pos) == (Dee_pos_t)-1)
 			goto err_script_result;
 
 		/* Write data to the stream. */

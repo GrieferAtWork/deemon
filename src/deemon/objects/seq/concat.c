@@ -236,16 +236,9 @@ err:
 }
 
 PRIVATE struct type_cmp catiterator_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&catiterator_compare,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ NULL,
-	/* .tp_ne            = */ NULL,
-	/* .tp_lo            = */ NULL,
-	/* .tp_le            = */ NULL,
-	/* .tp_gr            = */ NULL,
-	/* .tp_ge            = */ NULL
+	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&catiterator_compare,
 };
 
 

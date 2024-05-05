@@ -3757,13 +3757,11 @@ li_hash(ListIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 li_compare(ListIterator *self, ListIterator *other) {
-	size_t lhs_index, rhs_index;
 	if (DeeObject_AssertTypeExact(other, &DeeListIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(self->li_list, other->li_list);
-	lhs_index = LI_GETINDEX(self);
-	rhs_index = LI_GETINDEX(other);
-	Dee_return_compare(lhs_index, rhs_index);
+	Dee_return_compareT(size_t, LI_GETINDEX(self),
+	                    /*   */ LI_GETINDEX(other));
 err:
 	return Dee_COMPARE_ERR;
 }

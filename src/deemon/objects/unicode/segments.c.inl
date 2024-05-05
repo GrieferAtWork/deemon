@@ -154,12 +154,10 @@ ssegiter_hash(StringSegmentsIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssegiter_compare(StringSegmentsIterator *self, StringSegmentsIterator *other) {
-	uint8_t *lhs_ptr, *rhs_ptr;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	lhs_ptr = READ_PTR(self);
-	rhs_ptr = READ_PTR(other);
-	Dee_return_compare(lhs_ptr, rhs_ptr);
+	Dee_return_compareT(uint8_t *, READ_PTR(self),
+	                    /*      */ READ_PTR(other));
 err:
 	return Dee_COMPARE_ERR;
 }

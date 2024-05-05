@@ -637,17 +637,6 @@ string_fini(String *__restrict self) {
 	}
 }
 
-LOCAL ATTR_CONST int DCALL
-fix_memcmp_return(int value) {
-	if (value < -1) {
-		value = -1;
-	} else if (value > 1) {
-		value = 1;
-	}
-	return value;
-}
-
-
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 compare_string_bytes(String *__restrict lhs,
                      DeeBytesObject *__restrict rhs) {
@@ -664,7 +653,7 @@ compare_string_bytes(String *__restrict lhs,
 		/* Most simple case: compare ascii/single-byte strings. */
 		result = memcmp(lhs_str, DeeBytes_DATA(rhs), MIN(lhs_len, rhs_len));
 		if (result != 0)
-			return fix_memcmp_return(result);
+			return Dee_CompareFromDiff(result);
 	} else {
 		byte_t const *rhs_str;
 		struct string_utf *lhs_utf;
@@ -742,7 +731,7 @@ compare_strings(String *__restrict lhs,
 			/* Most simple case: compare ascii/single-byte strings. */
 			result = memcmp(lhs_str, rhs->s_str, MIN(lhs_len, rhs_len));
 			if (result != 0)
-				return fix_memcmp_return(result);
+				return Dee_CompareFromDiff(result);
 		} else {
 			struct string_utf *rhs_utf = rhs->s_data;
 			switch (rhs_utf->u_width) {
@@ -841,7 +830,7 @@ compare_strings(String *__restrict lhs,
 				common_len = MIN(lhs_len, rhs_len);
 				result     = memcmpw(lhs_str, rhs_str, common_len);
 				if (result != 0)
-					return fix_memcmp_return(result);
+					return Dee_CompareFromDiff(result);
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
@@ -889,7 +878,7 @@ compare_strings(String *__restrict lhs,
 				common_len = MIN(lhs_len, rhs_len);
 				result     = memcmpl(lhs_str, rhs_str, common_len);
 				if (result != 0)
-					return fix_memcmp_return(result);
+					return Dee_CompareFromDiff(result);
 			}	break;
 
 			default: __builtin_unreachable();
@@ -1218,22 +1207,20 @@ PRIVATE struct type_member tpconst stringiter_members[] = {
 
 INTDEF DeeTypeObject StringIterator_Type;
 
-#define DEFINE_STRINGITERATOR_COMPARE(name, op)                     \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                           \
-	name(StringIterator *self, StringIterator *other) {             \
-		if (DeeObject_AssertTypeExact(other, &StringIterator_Type)) \
-			goto err;                                               \
-		return_bool(READ_ITER_PTR(self) op READ_ITER_PTR(other));   \
-	err:                                                            \
-		return NULL;                                                \
-	}
-DEFINE_STRINGITERATOR_COMPARE(stringiter_eq, ==)
-DEFINE_STRINGITERATOR_COMPARE(stringiter_ne, !=)
-DEFINE_STRINGITERATOR_COMPARE(stringiter_lo, <)
-DEFINE_STRINGITERATOR_COMPARE(stringiter_le, <=)
-DEFINE_STRINGITERATOR_COMPARE(stringiter_gr, >)
-DEFINE_STRINGITERATOR_COMPARE(stringiter_ge, >=)
-#undef DEFINE_STRINGITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+stringiter_hash(StringIterator *self) {
+	return Dee_HashPointer(READ_ITER_PTR(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+stringiter_compare(StringIterator *self, StringIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &StringIterator_Type))
+		goto err;
+	Dee_return_compareT(void *, READ_ITER_PTR(self),
+	                    /*   */ READ_ITER_PTR(other));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 stringiter_nii_getseq(StringIterator *__restrict self) {
@@ -1343,16 +1330,16 @@ PRIVATE struct type_nii tpconst stringiter_nii = {
 
 
 PRIVATE struct type_cmp stringiter_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&stringiter_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&stringiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &stringiter_nii
 };
 

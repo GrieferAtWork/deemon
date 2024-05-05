@@ -561,17 +561,17 @@ private:
 	struct ::Dee_weakref w_ref; /* The underlying weak reference. */
 public:
 	WeakRefBase() DEE_CXX_NOTHROW {
-		Dee_weakref_null(&w_ref);
+		Dee_weakref_initempty(&w_ref);
 	}
 	WeakRefBase(std::nullptr_t) DEE_CXX_NOTHROW {
-		Dee_weakref_null(&w_ref);
+		Dee_weakref_initempty(&w_ref);
 	}
 	WeakRefBase(DeeObject *ptr) {
 		if (ptr) {
 			if (!Dee_weakref_init(&w_ref, ptr, NULL))
 				detail::err_cannot_weak_reference(ptr);
 		} else {
-			Dee_weakref_null(&w_ref);
+			Dee_weakref_initempty(&w_ref);
 		}
 	}
 	template<class S> WeakRefBase(ObjNonNull<S> ptr) {
@@ -583,7 +583,7 @@ public:
 			if (!Dee_weakref_init(&w_ref, ptr, NULL))
 				err_cannot_weak_reference(ptr);
 		} else {
-			Dee_weakref_null(&w_ref);
+			Dee_weakref_initempty(&w_ref);
 		}
 	}
 	WeakRefBase(WeakRefBase const &other) DEE_CXX_NOTHROW {

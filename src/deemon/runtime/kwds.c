@@ -195,34 +195,25 @@ kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 }
 
 
-#define DEFINE_KWDSITERATOR_COMPARE(name, op)                 \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
-	name(KwdsIterator *self, KwdsIterator *other) {           \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			goto err;                                         \
-		return_bool(READ_ITER(self) op READ_ITER(other));     \
-	err:                                                      \
-		return NULL;                                          \
-	}
-DEFINE_KWDSITERATOR_COMPARE(kwdsiter_eq, ==)
-DEFINE_KWDSITERATOR_COMPARE(kwdsiter_ne, !=)
-DEFINE_KWDSITERATOR_COMPARE(kwdsiter_lo, <)
-DEFINE_KWDSITERATOR_COMPARE(kwdsiter_le, <=)
-DEFINE_KWDSITERATOR_COMPARE(kwdsiter_gr, >)
-DEFINE_KWDSITERATOR_COMPARE(kwdsiter_ge, >=)
-#undef DEFINE_KWDSITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+kwdsiter_hash(KwdsIterator *self) {
+	return Dee_HashPointer(READ_ITER(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+kwdsiter_compare(KwdsIterator *self, KwdsIterator *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	Dee_return_compareT(struct kwds_entry *, READ_ITER(self),
+	                    /*                */ READ_ITER(other));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp kwdsiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&kwdsiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&kwdsiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&kwdsiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&kwdsiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&kwdsiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&kwdsiter_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&kwdsiter_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&kwdsiter_compare,
 };
 
 PRIVATE struct type_member tpconst kwdsiter_members[] = {

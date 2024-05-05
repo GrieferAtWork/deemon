@@ -112,12 +112,12 @@ again_locked:
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
-         size_t bufsize, dpos_t pos, dioflag_t UNUSED(flags)) {
+         size_t bufsize, Dee_pos_t pos, dioflag_t UNUSED(flags)) {
 	size_t result;
 	DeeMemoryFile_LockRead(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
 	result = (size_t)(self->mf_end - self->mf_begin);
-	if unlikely(pos >= (dpos_t)result) {
+	if unlikely(pos >= (Dee_pos_t)result) {
 		result = 0;
 	} else {
 		result = result - (size_t)pos;
@@ -130,9 +130,9 @@ mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL
-mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
-	dpos_t result;
+PRIVATE WUNUSED NONNULL((1)) Dee_pos_t DCALL
+mf_seek(MemoryFile *__restrict self, Dee_off_t off, int whence) {
+	Dee_pos_t result;
 	byte_t const *old_pointer, *new_pointer;
 	DeeMemoryFile_LockRead(self);
 again_locked:
@@ -146,13 +146,13 @@ again_locked:
 		if unlikely(self->mf_begin + (size_t)off < self->mf_begin)
 			goto err_overflow;
 		new_pointer = self->mf_begin + (size_t)off;
-		result      = (dpos_t)off;
+		result      = (Dee_pos_t)off;
 		break;
 
 	case SEEK_CUR:
 		result = (size_t)(old_pointer - self->mf_begin);
 		result += (dssize_t)off;
-		if unlikely((doff_t)result < 0)
+		if unlikely((Dee_off_t)result < 0)
 			goto err_invalid;
 		new_pointer = old_pointer + (dssize_t)off;
 		if unlikely(off > 0 && new_pointer < old_pointer)
@@ -162,7 +162,7 @@ again_locked:
 	case SEEK_END:
 		result = (size_t)(self->mf_end - self->mf_begin);
 		result += (dssize_t)off;
-		if unlikely((doff_t)result < 0)
+		if unlikely((Dee_off_t)result < 0)
 			goto err_invalid;
 		new_pointer = self->mf_begin + result;
 		if unlikely(new_pointer < self->mf_begin)
@@ -195,7 +195,7 @@ err_overflow:
 	DeeError_Throwf(&DeeError_IntegerOverflow,
 	                "Seek pointer is overflowing");
 err:
-	return (dpos_t)-1;
+	return (Dee_pos_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -293,11 +293,11 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 	},
 	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&mf_read,
 	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&mf_seek,
+	/* .ft_seek   = */ (Dee_pos_t (DCALL *)(DeeFileObject *__restrict, Dee_off_t, int))&mf_seek,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&mf_close,
-	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&mf_pread,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, dioflag_t))&mf_pread,
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&mf_getc,
 	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&mf_ungetc,
@@ -415,7 +415,7 @@ again_locked:
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 reader_pread(Reader *__restrict self, void *__restrict buffer,
-             size_t bufsize, dpos_t pos, dioflag_t UNUSED(flags)) {
+             size_t bufsize, Dee_pos_t pos, dioflag_t UNUSED(flags)) {
 	size_t result;
 	DeeFileReader_LockRead(self);
 	ASSERT(self->r_ptr >= self->r_begin);
@@ -424,7 +424,7 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 		return (size_t)err_file_closed();
 	}
 	result = (size_t)(self->r_end - self->r_begin);
-	if unlikely(pos >= (dpos_t)result) {
+	if unlikely(pos >= (Dee_pos_t)result) {
 		result = 0;
 	} else {
 		result = result - (size_t)pos;
@@ -438,10 +438,10 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_pos_t DCALL
 reader_seek(Reader *__restrict self,
-            doff_t off, int whence) {
-	dpos_t result;
+            Dee_off_t off, int whence) {
+	Dee_pos_t result;
 	byte_t const *old_pointer, *new_pointer;
 	DeeFileReader_LockRead(self);
 again_locked:
@@ -449,7 +449,7 @@ again_locked:
 	ASSERT(self->r_ptr >= self->r_begin);
 	if unlikely(!self->r_owner) {
 		DeeFileReader_LockEndRead(self);
-		return (dpos_t)err_file_closed();
+		return (Dee_pos_t)err_file_closed();
 	}
 	switch (whence) {
 
@@ -459,13 +459,13 @@ again_locked:
 		if unlikely(self->r_begin + (size_t)off < self->r_begin)
 			goto err_overflow;
 		new_pointer = self->r_begin + (size_t)off;
-		result      = (dpos_t)off;
+		result      = (Dee_pos_t)off;
 		break;
 
 	case SEEK_CUR:
 		result = (size_t)(old_pointer - self->r_begin);
 		result += (dssize_t)off;
-		if unlikely((doff_t)result < 0)
+		if unlikely((Dee_off_t)result < 0)
 			goto err_invalid;
 		new_pointer = old_pointer + (dssize_t)off;
 		if unlikely(off > 0 && new_pointer < old_pointer)
@@ -475,7 +475,7 @@ again_locked:
 	case SEEK_END:
 		result = (size_t)(self->r_end - self->r_begin);
 		result += (dssize_t)off;
-		if unlikely((doff_t)result < 0)
+		if unlikely((Dee_off_t)result < 0)
 			goto err_invalid;
 		new_pointer = self->r_begin + result;
 		if unlikely(new_pointer < self->r_begin)
@@ -508,7 +508,7 @@ err_overflow:
 	DeeError_Throwf(&DeeError_IntegerOverflow,
 	                "Seek pointer is overflowing");
 err:
-	return (dpos_t)-1;
+	return (Dee_pos_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -782,11 +782,11 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 	},
 	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&reader_read,
 	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&reader_seek,
+	/* .ft_seek   = */ (Dee_pos_t (DCALL *)(DeeFileObject *__restrict, Dee_off_t, int))&reader_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_sync,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_close,
-	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dpos_t, dioflag_t))&reader_pread,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, dioflag_t))&reader_pread,
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&reader_getc,
 	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&reader_ungetc,
@@ -1932,7 +1932,7 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	DeeObject *fd;
 	size_t minbytes = (size_t)0;
 	size_t maxbytes = (size_t)-1;
-	dpos_t offset   = (dpos_t)-1;
+	Dee_pos_t offset   = (Dee_pos_t)-1;
 	size_t nulbytes = 0;
 	bool readall    = false;
 	bool mustmmap   = false;
@@ -1940,7 +1940,7 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	unsigned int mapflags;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(fd), K(minbytes), K(maxbytes), K(offset), K(nulbytes), K(readall), K(mustmmap), K(mapshared), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ UNPuN(DEE_SIZEOF_DEE_POS_T) UNPdSIZ "bbb" ":mapfile",
+	                    "o|" UNPdSIZ UNPdSIZ UNPuN(Dee_SIZEOF_POS_T) UNPdSIZ "bbb" ":mapfile",
 	                    &fd, &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
 		goto err;
 	mapflags = 0;

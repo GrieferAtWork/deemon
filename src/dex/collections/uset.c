@@ -176,34 +176,25 @@ usetiterator_bool(USetIterator *__restrict self) {
 	        item < set->us_elem + (set->us_mask + 1));
 }
 
-#define DEFINE_USETITERATOR_COMPARE(name, op)                 \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
-	name(USetIterator *self, USetIterator *other) {           \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			goto err;                                         \
-		return_bool(READ_ITEM(self) op READ_ITEM(other));     \
-	err:                                                      \
-		return NULL;                                          \
-	}
-DEFINE_USETITERATOR_COMPARE(usetiterator_eq, ==)
-DEFINE_USETITERATOR_COMPARE(usetiterator_ne, !=)
-DEFINE_USETITERATOR_COMPARE(usetiterator_lo, <)
-DEFINE_USETITERATOR_COMPARE(usetiterator_le, <=)
-DEFINE_USETITERATOR_COMPARE(usetiterator_gr, >)
-DEFINE_USETITERATOR_COMPARE(usetiterator_ge, >=)
-#undef DEFINE_USETITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+usetiterator_hash(USetIterator *self) {
+	return Dee_HashPointer(READ_ITEM(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+usetiterator_compare(USetIterator *self, USetIterator *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	Dee_return_compareT(struct uset_item *, READ_ITEM(self),
+	                    /*               */ READ_ITEM(other));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 INTERN struct type_cmp usetiterator_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&usetiterator_ge
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&usetiterator_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&usetiterator_compare,
 };
 
 PRIVATE struct type_member tpconst usetiterator_members[] = {

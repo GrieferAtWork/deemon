@@ -452,7 +452,7 @@ DeeFile_WriteAll(DeeObject *self,
 PUBLIC WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
 DeeFile_PReadAll(DeeObject *self,
                  void *buffer,
-                 size_t bufsize, dpos_t pos) {
+                 size_t bufsize, Dee_pos_t pos) {
 	size_t result = 0, temp;
 	for (;;) {
 		temp = DeeFile_PRead(self, buffer, bufsize, pos);
@@ -473,7 +473,7 @@ DeeFile_PReadAll(DeeObject *self,
 PUBLIC WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
 DeeFile_PWriteAll(DeeObject *self,
                   void const *buffer,
-                  size_t bufsize, dpos_t pos) {
+                  size_t bufsize, Dee_pos_t pos) {
 	size_t result = 0, temp;
 	for (;;) {
 		temp = DeeFile_PWrite(self, buffer, bufsize, pos);
@@ -730,11 +730,11 @@ sysfile_read(DeeSystemFileObject *__restrict self,
 INTERN WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
 sysfile_pread(DeeSystemFileObject *__restrict self,
               void *buffer, size_t bufsize,
-              dpos_t pos, dioflag_t flags);
+              Dee_pos_t pos, dioflag_t flags);
 
 PRIVATE WUNUSED DREF /*Bytes*/ DeeObject *DCALL
 file_read_trymap(Dee_fd_t fd, size_t maxbytes,
-                 dpos_t pos, bool readall) {
+                 Dee_pos_t pos, bool readall) {
 	int error;
 	struct DeeMapFile map;
 	DREF DeeObject *result;
@@ -812,7 +812,7 @@ do_invoke_ft_read:
 		Dee_fd_t os_fd = DeeSystemFile_Fileno(self);
 		if unlikely(os_fd == Dee_fd_INVALID)
 			goto err;
-		result = file_read_trymap(os_fd, maxbytes, (dpos_t)-1, readall);
+		result = file_read_trymap(os_fd, maxbytes, (Dee_pos_t)-1, readall);
 		if (result != ITER_DONE)
 			return result;
 	}
@@ -856,7 +856,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadBytes(DeeObject *__restrict self,
-                   size_t maxbytes, dpos_t pos,
+                   size_t maxbytes, Dee_pos_t pos,
                    bool readall) {
 	size_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *buffer,
 	                         size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
@@ -880,7 +880,7 @@ do_handle_filetype:
 		goto do_handle_filetype;
 	}
 do_invoke_generic_ft_pread:
-	ft_pread = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dpos_t, dioflag_t flags))&DeeFile_PReadf;
+	ft_pread = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, dioflag_t flags))&DeeFile_PReadf;
 do_invoke_ft_pread:
 #ifdef HAVE_file_read_trymap
 	/* if `ft_pread' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
@@ -889,7 +889,7 @@ do_invoke_ft_pread:
 	 * which can then be wrapped by a regular `Bytes' object.
 	 * -> That way, we can provide the user with O(1) reads from large files! */
 	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
-	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dpos_t, dioflag_t flags))&sysfile_pread)) {
+	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, dioflag_t flags))&sysfile_pread)) {
 		DREF /*Bytes*/ DeeObject *result;
 		result = file_read_trymap(DeeSystemFile_GetHandle(self),
 		                          maxbytes, pos, readall);
@@ -1892,12 +1892,12 @@ PRIVATE struct type_member tpconst file_class_members[] = {
  *       end of the file and determining where that position is located at.
  * @return: * : The size of the given file `self' in bytes.
  * @return: -1: An error occurred. */
-PUBLIC WUNUSED NONNULL((1)) dpos_t DCALL
+PUBLIC WUNUSED NONNULL((1)) Dee_pos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_size, 0, NULL);
 	if likely(result) {
-		dpos_t resval;
+		Dee_pos_t resval;
 		int error;
 		error = DeeObject_AsUInt64(result, &resval);
 		Dee_Decref(result);
@@ -1905,7 +1905,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 			goto err;
 
 		/* Ensure that the file isn't too large. */
-		if unlikely(resval == (dpos_t)-1) {
+		if unlikely(resval == (Dee_pos_t)-1) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Failed %k is too large (%" PRFu64 " is bigger than 2^63 bytes)",
 			                self, resval);
@@ -1922,7 +1922,7 @@ DeeFile_GetSize(DeeObject *__restrict self) {
 		                           FILE_OPERATOR_SEEK);
 	}
 err:
-	return (dpos_t)-1;
+	return (Dee_pos_t)-1;
 }
 
 
@@ -1988,12 +1988,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pread(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-	dpos_t file_pos;
+	Dee_pos_t file_pos;
 	size_t maxbytes = (size_t)-1;
 	bool readall      = false;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(pos), K(maxbytes), K(readall), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
-	                    UNPuN(DEE_SIZEOF_DEE_POS_T) "|" UNPdSIZ "b:pread",
+	                    UNPuN(Dee_SIZEOF_POS_T) "|" UNPdSIZ "b:pread",
 	                    &file_pos, &maxbytes, &readall))
 		goto err;
 	return DeeFile_PReadBytes(self, maxbytes, file_pos, readall);
@@ -2007,11 +2007,11 @@ file_preadinto(DeeObject *self, size_t argc,
 	DeeBuffer buffer;
 	size_t result;
 	DeeObject *data;
-	dpos_t file_pos;
+	Dee_pos_t file_pos;
 	bool readall = false;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(data), K(pos), K(readall), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
-	                    "o" UNPuN(DEE_SIZEOF_DEE_POS_T) "|b:preadinto",
+	                    "o" UNPuN(Dee_SIZEOF_POS_T) "|b:preadinto",
 	                    &data, &file_pos, &readall))
 		goto err;
 	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FWRITABLE))
@@ -2031,12 +2031,12 @@ file_pwrite(DeeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	DeeObject *data;
-	dpos_t file_pos;
+	Dee_pos_t file_pos;
 	bool writeall = true;
 	size_t result;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(data), K(pos), K(writeall), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
-	                    "o" UNPuN(DEE_SIZEOF_DEE_POS_T) "|b:pwrite",
+	                    "o" UNPuN(Dee_SIZEOF_POS_T) "|b:pwrite",
 	                    &data, &file_pos, &writeall))
 		goto err;
 	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
@@ -2067,12 +2067,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_seek(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *whence_ob = NULL;
-	doff_t seek_off;
-	dpos_t result;
+	Dee_off_t seek_off;
+	Dee_pos_t result;
 	int whence = SEEK_SET;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(off), K(whence), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
-	                    UNPdN(DEE_SIZEOF_DEE_POS_T) "|o:seek",
+	                    UNPdN(Dee_SIZEOF_OFF_T) "|o:seek",
 	                    &seek_off, &whence_ob))
 		goto err;
 	if (whence_ob) {
@@ -2109,7 +2109,7 @@ file_seek(DeeObject *self, size_t argc,
 	}
 got_whence:
 	result = DeeFile_Seek(self, seek_off, whence);
-	if unlikely(result == (dpos_t)-1)
+	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	return DeeInt_NewUInt64(result);
 err:
@@ -2118,11 +2118,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_tell(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	dpos_t result;
+	Dee_pos_t result;
 	if (DeeArg_Unpack(argc, argv, ":tell"))
 		goto err;
 	result = DeeFile_Tell(self);
-	if unlikely(result == (dpos_t)-1)
+	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	return DeeInt_NewUInt64(result);
 err:
@@ -2133,7 +2133,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_rewind(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":rewind"))
 		goto err;
-	if (DeeFile_Rewind(self) == (dpos_t)-1)
+	if (DeeFile_Rewind(self) == (Dee_pos_t)-1)
 		goto err;
 	return_none;
 err:
@@ -2142,14 +2142,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_trunc(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	dpos_t trunc_pos;
+	Dee_pos_t trunc_pos;
 	if (argc == 0) {
 		/* Truncate at the current position. */
 		if (DeeFile_TruncHere(self, &trunc_pos))
 			goto err;
 	} else {
 		/* Truncate at the current position. */
-		if (DeeArg_Unpack(argc, argv, "|" UNPuN(DEE_SIZEOF_DEE_POS_T) ":trunc", &trunc_pos))
+		if (DeeArg_Unpack(argc, argv, "|" UNPuN(Dee_SIZEOF_POS_T) ":trunc", &trunc_pos))
 			goto err;
 		if (DeeFile_Trunc(self, trunc_pos))
 			goto err;
@@ -2279,14 +2279,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	dpos_t old_pos, result;
+	Dee_pos_t old_pos, result;
 	if (DeeArg_Unpack(argc, argv, ":size"))
 		goto err;
 	old_pos = DeeFile_Seek(self, 0, SEEK_CUR);
-	if unlikely(old_pos == (dpos_t)-1)
+	if unlikely(old_pos == (Dee_pos_t)-1)
 		goto err;
 	result = DeeFile_Seek(self, 0, SEEK_END);
-	if unlikely(result == (dpos_t)-1)
+	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	if (DeeFile_Seek(self, old_pos, SEEK_SET) == (Dee_pos_t)-1)
 		goto err;
@@ -2332,10 +2332,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readallat(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	dpos_t file_pos;
+	Dee_pos_t file_pos;
 	size_t maxbytes = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv,
-	                  UNPuN(DEE_SIZEOF_DEE_POS_T) "|" UNPdSIZ ":readallat",
+	                  UNPuN(Dee_SIZEOF_POS_T) "|" UNPdSIZ ":readallat",
 	                  &file_pos, &maxbytes))
 		goto err;
 	return DeeFile_PReadBytes(self, maxbytes, file_pos, true);
@@ -2351,7 +2351,7 @@ file_mmap(DeeObject *self, size_t argc,
 	DREF DeeMapFileObject *mapob;
 	size_t minbytes = (size_t)0;
 	size_t maxbytes = (size_t)-1;
-	dpos_t offset   = (dpos_t)-1;
+	Dee_pos_t offset   = (Dee_pos_t)-1;
 	size_t nulbytes = 0;
 	bool readall    = false;
 	bool mustmmap   = false;
@@ -2359,7 +2359,7 @@ file_mmap(DeeObject *self, size_t argc,
 	unsigned int mapflags;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(minbytes), K(maxbytes), K(offset), K(nulbytes), K(readall), K(mustmmap), K(mapshared), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
-	                    "|" UNPdSIZ UNPdSIZ UNPuN(DEE_SIZEOF_DEE_POS_T) UNPdSIZ "bbb:mapfile",
+	                    "|" UNPdSIZ UNPdSIZ UNPuN(Dee_SIZEOF_POS_T) UNPdSIZ "bbb:mapfile",
 	                    &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
 		goto err;
 	mapflags = 0;
@@ -2562,9 +2562,9 @@ file_next(DeeFileObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pos_get(DeeFileObject *__restrict self) {
-	dpos_t result;
+	Dee_pos_t result;
 	result = DeeFile_Tell((DeeObject *)self);
-	if unlikely(result == (dpos_t)-1)
+	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 	return DeeInt_NewUInt64(result);
 err:
@@ -2573,7 +2573,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_pos_del(DeeFileObject *__restrict self) {
-	if unlikely(DeeFile_Rewind((DeeObject *)self) == (dpos_t)-1)
+	if unlikely(DeeFile_Rewind((DeeObject *)self) == (Dee_pos_t)-1)
 		goto err;
 	return 0;
 err:
@@ -2582,10 +2582,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_pos_set(DeeFileObject *self, DeeObject *value) {
-	dpos_t newpos;
+	Dee_pos_t newpos;
 	if (DeeObject_AsUInt64(value, &newpos))
 		goto err;
-	if unlikely(DeeFile_SetPos((DeeObject *)self, newpos) == (dpos_t)-1)
+	if unlikely(DeeFile_SetPos((DeeObject *)self, newpos) == (Dee_pos_t)-1)
 		goto err;
 	return 0;
 err:

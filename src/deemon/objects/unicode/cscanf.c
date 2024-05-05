@@ -545,12 +545,10 @@ ssi_hash(StringScanIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssi_compare(StringScanIterator *self, StringScanIterator *other) {
-	char *lhs_ptr, *rhs_ptr;
 	if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type))
 		goto err;
-	lhs_ptr = GET_FORMAT_POINTER(self);
-	rhs_ptr = GET_FORMAT_POINTER(other);
-	Dee_return_compare(lhs_ptr, rhs_ptr);
+	Dee_return_compareT(char *, GET_FORMAT_POINTER(self),
+	                    /*   */ GET_FORMAT_POINTER(other));
 err:
 	return Dee_COMPARE_ERR;
 }

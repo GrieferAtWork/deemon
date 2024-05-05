@@ -244,7 +244,7 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 
 
 struct gc_dep {
-	drefcnt_t       gd_extern; /* [valid_if(gd_object)] Amount of external (unaccounted) references. */
+	Dee_refcnt_t    gd_extern; /* [valid_if(gd_object)] Amount of external (unaccounted) references. */
 	DREF DeeObject *gd_object; /* [0..1] The object in question. */
 };
 struct gc_deps {
@@ -275,12 +275,12 @@ struct gc_leafs {
 
 
 struct gc_dep_partner {
-	DeeObject *dp_obj;  /* [1..1] The object that is apart of the current, unconfirmed chain of dependencies. */
-	drefcnt_t  dp_num;  /* [!0] Amount of reference accounted for this chain entry. */
+	DeeObject   *dp_obj;  /* [1..1] The object that is apart of the current, unconfirmed chain of dependencies. */
+	Dee_refcnt_t dp_num;  /* [!0] Amount of reference accounted for this chain entry. */
 };
 
 struct gc_dep_partners {
-	drefcnt_t              dp_pnum; /* Number of partner dependencies. */
+	Dee_refcnt_t           dp_pnum; /* Number of partner dependencies. */
 	struct gc_dep_partner *dp_pvec; /* [0..dp_pnum][owned] Vector of partner dependencies. */
 };
 
@@ -342,7 +342,7 @@ LOCAL NONNULL((1)) void DCALL
 gc_dep_partners_insert_after_resize(struct gc_dep_partners *__restrict self,
                                     size_t nth_object,
                                     DeeObject *__restrict obj,
-                                    drefcnt_t num) {
+                                    Dee_refcnt_t num) {
 #ifdef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
 	size_t lo, hi;
 	ASSERT(nth_object < self->dp_pnum);
@@ -424,7 +424,7 @@ gc_dep_partners_insertall_after_resize(struct gc_dep_partners *__restrict self,
 struct gc_dep_chain {
 	struct gc_dep_chain   *dc_prev; /* [0..1] Another object dependency also apart of this chain. */
 	DeeObject             *dc_obj;  /* [1..1] The object that is apart of the current, unconfirmed chain of dependencies. */
-	drefcnt_t              dc_num;  /* [!0] Amount of reference accounted for this chain entry. */
+	Dee_refcnt_t           dc_num;  /* [!0] Amount of reference accounted for this chain entry. */
 	struct gc_dep_partners dc_part; /* Partner dependencies. */
 };
 
@@ -491,7 +491,7 @@ gc_deps_rehash(struct gc_deps *__restrict self) {
 LOCAL void DCALL
 gc_deps_insert(struct gc_deps *__restrict self,
                DeeObject *__restrict obj,
-               drefcnt_t num_tracked_references) {
+               Dee_refcnt_t num_tracked_references) {
 	dhash_t i, perturb;
 	ASSERT(num_tracked_references != 0);
 #if 0 /* Can't happen */

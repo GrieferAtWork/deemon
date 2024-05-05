@@ -766,7 +766,7 @@ memobj_xinfo_cdesc_equals(struct memobj_xinfo_cdesc const *a,
 	if (a->moxc_desc != b->moxc_desc)
 		goto nope;
 	if (memcmp(a->moxc_init, b->moxc_init,
-	           CEILDIV(a->moxc_desc->cd_cmemb_size, CHAR_BIT)))
+	           CEILDIV(a->moxc_desc->cd_cmemb_size, CHAR_BIT)) != 0)
 		goto nope;
 	return true;
 nope:

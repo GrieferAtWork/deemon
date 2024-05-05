@@ -12376,23 +12376,23 @@ DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorUInt32, DeeObject_InplaceXo
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
-#define DEFINE_OBJECT_COMPARE_OPERATOR(name, cmp, operator_name, invoke)          \
-	DEFINE_OPERATOR(DREF DeeObject *, name,                                       \
-	                (DeeObject *self, DeeObject *some_object)) {                  \
-		LOAD_TP_SELF;                                                             \
-		ASSERT_OBJECT(some_object);                                               \
-		if likely((tp_self->tp_cmp && tp_self->tp_cmp->tp_##cmp) ||               \
-		          (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_##cmp)) \
-			return invoke(tp_self, self, some_object);                            \
-		err_unimplemented_operator(tp_self, operator_name);                       \
-		return NULL;                                                              \
+#define DEFINE_OBJECT_COMPARE_OPERATOR(name, tp_xx, operator_name, invoke)     \
+	DEFINE_OPERATOR(DREF DeeObject *, name,                                    \
+	                (DeeObject *self, DeeObject *some_object)) {               \
+		LOAD_TP_SELF;                                                          \
+		ASSERT_OBJECT(some_object);                                            \
+		if likely((tp_self->tp_cmp && tp_self->tp_cmp->tp_xx) ||               \
+		          (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_xx)) \
+			return invoke(tp_self, self, some_object);                         \
+		err_unimplemented_operator(tp_self, operator_name);                    \
+		return NULL;                                                           \
 	}
-DEFINE_OBJECT_COMPARE_OPERATOR(CmpEq, eq, OPERATOR_EQ, DeeType_INVOKE_EQ)
-DEFINE_OBJECT_COMPARE_OPERATOR(CmpNe, ne, OPERATOR_NE, DeeType_INVOKE_NE)
-DEFINE_OBJECT_COMPARE_OPERATOR(CmpLo, lo, OPERATOR_LO, DeeType_INVOKE_LO)
-DEFINE_OBJECT_COMPARE_OPERATOR(CmpLe, le, OPERATOR_LE, DeeType_INVOKE_LE)
-DEFINE_OBJECT_COMPARE_OPERATOR(CmpGr, gr, OPERATOR_GR, DeeType_INVOKE_GR)
-DEFINE_OBJECT_COMPARE_OPERATOR(CmpGe, ge, OPERATOR_GE, DeeType_INVOKE_GE)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpEq, tp_eq, OPERATOR_EQ, DeeType_INVOKE_EQ)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpNe, tp_ne, OPERATOR_NE, DeeType_INVOKE_NE)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpLo, tp_lo, OPERATOR_LO, DeeType_INVOKE_LO)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpLe, tp_le, OPERATOR_LE, DeeType_INVOKE_LE)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpGr, tp_gr, OPERATOR_GR, DeeType_INVOKE_GR)
+DEFINE_OBJECT_COMPARE_OPERATOR(CmpGe, tp_ge, OPERATOR_GE, DeeType_INVOKE_GE)
 #undef DEFINE_OBJECT_COMPARE_OPERATOR
 
 

@@ -683,7 +683,7 @@ handle_compiler_warning(struct ast_loc *loc,
 				error->ce_loc = &error->ce_locs;
 		}
 	}
-	Dee_weakref_null(&error->ce_master);
+	Dee_weakref_initempty(&error->ce_master);
 
 	/* NOTE: Use different sub-classes depending
 	 *       on wgroups associated with `wnum' */

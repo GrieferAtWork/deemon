@@ -143,12 +143,10 @@ gcset_iterator_hash(GCSetIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 gcset_iterator_compare(GCSetIterator *self, GCSetIterator *other) {
-	size_t lhs_index, rhs_index;
 	if (DeeObject_AssertTypeExact(other, &DeeGCSetIterator_Type))
 		goto err;
-	lhs_index = atomic_read(&self->gsi_index);
-	rhs_index = atomic_read(&other->gsi_index);
-	Dee_return_compare(lhs_index, rhs_index);
+	Dee_return_compareT(size_t, atomic_read(&self->gsi_index),
+	                    /*   */ atomic_read(&other->gsi_index));
 err:
 	return Dee_COMPARE_ERR;
 }

@@ -935,6 +935,11 @@
 #define Dee_tpconst const
 #define INTERN_TPCONST
 
+#define dssize_t Dee_ssize_t
+#define dhash_t Dee_hash_t
+#define dfunptr_t Dee_funptr_t
+#define dformatprinter Dee_formatprinter_t
+
 #define DeePrivateSystem_IF_E1(errno,e1,...)
 #define DeePrivateSystem_IF_E2(errno,e1,e2,...)
 #define DeePrivateSystem_IF_E3(errno,e1,e2,e3,...)
@@ -1412,7 +1417,6 @@
 #define DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(x,...) DEFINE_INTERNAL_OPERATOR(DeeObject*,DefaultInplace##x##With##x,(DeeObject*self,DeeObject*other)){}
 #define DEFINE_FILE_OPERATOR(return,n,args) return DeeFile_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeFile_##n args
 #define DEFINE_MATH_INPLACE_INT_OPERATOR(n,a,b,c,...) int n(DeeObject**restrict p_self,c val){}
-#define DEFINE_JSON_ITERATOR_COMPARE(n,...) DeeObject*n(DeeJsonIteratorObject*self,DeeJsonIteratorObject*other){}
 #define DEF_STRING(n,a,b,c) DeeStringObject n={};
 #define RESTRICT_IF_NOTYPE
 #define ACTION(...)
@@ -1462,9 +1466,6 @@
 	int lexer_set_##n(DeeCompilerWrapperObject*self,DeeObject*value){}
 #define STACK_ALLOCATOR_DECL
 #define CONFIG_DEEMON_PATH(x)
-#define DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(n,...) DeeObject*n(DeeBlackListKwdsIterator*self,DeeBlackListKwdsIterator*other){}
-#define DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(n,...) DeeObject*n(DeeBlackListKwIterator*self,DeeBlackListKwIterator*other){}
-#define DEFINE_KWDSITERATOR_COMPARE(n,...) DeeObject*n(KwdsIterator*self,KwdsIterator*other){}
 #define SEQ_EACH_HEAD OBJECT_HEAD DeeObject*se_seq;
 #define DEFINE_SEQ_EACH_UNARY(n,...) SeqEachOperator*n(SeqEachBase*self){}
 #define DEFINE_SEQ_EACH_BINARY(n,...) SeqEachOperator*n(SeqEachBase*self,DeeObject*other){}
@@ -1504,8 +1505,6 @@
 #define DEFINE_RFIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_tscan_size,T*open_str,size_topen_size,T*clos_str,size_tclos_size){}
 #define DEFINE_CASERFIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_t scan_size,T*open_str,size_t open_size,T*clos_str,size_t clos_size,size_t*p_match_length){}
 #define SWITCH_BUILTIN_CODECS(n,...) {}
-#define DEFINE_REGRUPSITERATOR_COMPARE(n,...) DeeObject*n(ReGroupsIterator*self,ReGroupsIterator*other){}
-#define DEFINE_WEAKREF_COMPARE(n,...) DeeObject*n(WeakRef*self,WeakRef*other){}
 #define DEFINE_DEPRECATED_INPLACE_BINARY(n,...) DeeObject*object_##n(DeeObject*self,size_t argc,DeeObject*const*argv){}
 #define DEFINE_NUMERIC_ISCMP(n,...) DeeObject*numeric_##n(DeeObject*self,size_t argc,DeeObject*const*argv){}
 #define DEFINE_INT_COMPARE_FUNCTION(n,...) DeeObject*int_##n(DeeIntObject*self,size_t argc,DeeObject*const*argv){}
@@ -1544,26 +1543,20 @@
 	int instance_xxx(DeeObject**p_self,DeeObject*other){}
 #define DEFINE_BYTES_COMPARE(n,...) DeeObject*n(Bytes*self,DeeObject*other){}
 #define DEFINE_SEQITERATOR_COMPARE(n,...) DeeObject*n(SeqIterator*self,SeqIterator*other){}
-#define DEFINE_STRINGITERATOR_COMPARE(n,...) DeeObject*n(StringIterator*self,StringIterator*other){}
-#define DEFINE_TRACEITER_COMPARE(n,...) DeeObject*n(TraceIterator*self,TraceIterator*other){}
-#define DEFINE_TUPLEITERATOR_COMPARE(n,...) DeeObject*n(TupleIterator*self,TupleIterator*other){}
 #define DEFINE_TYPE_INHERIT_FUNCTION(n,...) bool n(DeeTypeObject*self){}
 #define DEFINE_TYPE_INHERIT_FUNCTION1(n,...) bool n(DeeTypeObject*self){}
 #define DEFINE_MATH_OPERATOR2(n,...) DEFINE_OPERATOR(DeeObject*,n,(DeeObject*self,DeeObject*some_object)){}
 #define DEFINE_MATH_INPLACE_OPERATOR2(n,...) DEFINE_OPERATOR(int,n,(DeeObject**p_self,DeeObject*some_object)){}
 #define DEFINE_OBJECT_COMPARE_OPERATOR(n,...) DEFINE_OPERATOR(DeeObject*,n,(DeeObject*self,DeeObject*some_object)){}
 #define DEFINE_COMPARE_ASBOOL_OPERATOR(n,...) int n(DeeObject*self,DeeObject*some_object){}
-#define DEFINE_TYPEOPREATORITEARTOR_COMPARE(n,...) DeeObject*n(TypeOperatorsIterator*self,TypeOperatorsIterator*other){}
 #define DEE_DEFINE_BYTEWRITER_PUTX(n,T,x) int n(struct Dee_bytewriter*self,T x){}
 #define DEE_DEFINE_ATOMIC_HELPERS(n,T) \
 	T _Dee_atomic_xch_no_threads_##n(T*p,T value){}\
 	T _Dee_atomic_fetchand_no_threads_##n(T*p,T value){}\
 	T _Dee_atomic_fetchor_no_threads_##n(T*p,T value){}\
 	T _Dee_atomic_fetchnand_no_threads_##n(T*p,T value){}
-#define DEFINE_USETITERATOR_COMPARE(n,...) DeeObject*n(USetIterator*self,USetIterator*other){}
 #define DEFINE_RBTREE_NODE_FIELD_GETTER(rbtreeiter_get_FOO,...) DeeObject*rbtreeiter_get_FOO(RBTreeIterator*self){}
 #define DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_FOO,...) DeeObject*rbtreeiter_get_FOO(RBTreeIterator*self){}
-#define DEFINE_FIXEDLISTITERATOR_COMPARE(n,...) DeeObject*n(FixedListIterator*self,FixedListIterator*other){}
 #define DEFINE_CTYPES_FLOAT_COMPARE(n,...) DeeObject*n(DeeSTypeObject*tp_self,T*self,DeeObject*some_object){}
 #define DEFINE_UNARY_STRUCT_OPERATOR(Treturn,struct_xxx,...) Treturn struct_xxx(DeeObject*self){}
 #define DEFINE_BINARY_STRUCT_OPERATOR(Treturn,struct_xxx,...) Treturn struct_xxx(DeeObject*self,DeeObject*other){}
@@ -1583,17 +1576,11 @@
 #define DEFINE_LIBMATH_CONVERSION_2_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
 #define DEFINE_LIBMATH_FLOAT_TRAIT(n)  DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
 #define DEFINE_LIBMATH_FLOAT_TRAIT2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
-#define DEFINE_SLABSTAT_COMPARE(n,...) DeeObject*n(SlabStatObject*self,SlabStatObject*other){}
-#define DEFINE_SLABSTATITERATOR_COMPARE(n,...) DeeObject*n(SlabStatIteratorObject*self,SlabStatIteratorObject*other){}
 #define DEFINE_SLABINFO_FIELD_READER(n) DeeObject*si_get_##n(SlabInfoObject*self){}
-#define DEFINE_SLABINFO_COMPARE(n,...) DeeObject*n(SlabInfoObject*self,SlabInfoObject*other){}
-#define DEFINE_TLS_COMPARE(n,...) DeeObject*n(TLS*self,TLS*other){}
 #define DEFINE_LIBTIME_AS(n, ...) \
 	DeeObject*time_getval_##n(DeeTimeObject*self){}\
 	int time_setval_##n(DeeTimeObject*self,DeeObject*value){}\
 	int time_delval_##n(DeeTimeObject*self){}
-#define DEFINE_TIME_COMPARE(n,...) DeeObject*n(DeeTimeObject*self,DeeTimeObject*other){}
-#define DEFINE_WIN32_HANDLE_COMPARE(n,...) DeeObject*n(DeeHandleObject*self,DeeHandleObject*other){}
 
 #define DEFINE_CCALL_OPTIMIZATION(name,...) int name(struct fungen*self,vstackaddr_t argc){}
 #define DEFINE_CCALL_OPERATOR(name,...) int name(struct fungen*self,vstackaddr_t argc){}

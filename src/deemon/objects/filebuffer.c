@@ -84,11 +84,11 @@ PRIVATE ATTR_COLD int DCALL err_buffer_closed(void);
 #define GETC_DID_UNLOCK      (-3) /* The buffer had to be unlocked (try again) (for `buffer_getc_or_unlock') */
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_or_unlock(Buffer *__restrict self, byte_t *__restrict buffer, size_t bufsize, dioflag_t flags);
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_or_unlock(Buffer *__restrict self, byte_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
-PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL buffer_seek_or_unlock(Buffer *__restrict self, doff_t off, int whence);
+PRIVATE WUNUSED NONNULL((1)) Dee_pos_t DCALL buffer_seek_or_unlock(Buffer *__restrict self, Dee_off_t off, int whence);
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_getc_or_unlock(Buffer *__restrict self, dioflag_t flags);
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_ungetc_nolock(Buffer *__restrict self, int ch);
-PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size);
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_trunc_nolock(Buffer *__restrict self, Dee_pos_t new_size);
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_sync_nolock(Buffer *__restrict self, uint16_t mode);
 #define BUFFER_SYNC_FNORMAL          0x0000
 #define BUFFER_SYNC_FERROR_IF_CLOSED 0x0001 /* Throw an error if the buffer was closed. */
@@ -467,7 +467,7 @@ buffer_read_or_unlock(Buffer *__restrict self,
 	size_t read_size, result = 0;
 	size_t bufavail;
 	uint16_t old_flags;
-	dpos_t next_data;
+	Dee_pos_t next_data;
 	byte_t *new_buffer;
 	DREF DeeObject *file;
 	bool did_read_data = false;
@@ -543,10 +543,10 @@ read_through:
 			Dee_Incref(file);
 			if (next_data != self->fb_fpos) {
 				/* Seek in the underlying file to get where we need to go. */
-				dpos_t new_pos;
+				Dee_pos_t new_pos;
 				new_pos = DeeFile_SetPos(file, next_data);
 				Dee_Decref(file);
-				if unlikely(new_pos == (dpos_t)-1)
+				if unlikely(new_pos == (Dee_pos_t)-1)
 					goto err;
 				self->fb_fpos = next_data;
 				goto again; /* Must start over because of recursive callbacks. */
@@ -609,10 +609,10 @@ read_through:
 	Dee_Incref(file);
 	if (next_data != self->fb_fpos) {
 		/* Seek in the underlying file to get where we need to go. */
-		dpos_t new_pos;
+		Dee_pos_t new_pos;
 		new_pos = DeeFile_SetPos(file, next_data);
 		Dee_Decref(file);
-		if unlikely(new_pos == (dpos_t)-1)
+		if unlikely(new_pos == (Dee_pos_t)-1)
 			goto err;
 		self->fb_fpos = next_data;
 		goto again; /* Must start over because of recursive callbacks. */
@@ -818,14 +818,14 @@ did_unlock:
 	return (size_t)BUFFER_IO_DID_UNLOCK;
 }
 
-PRIVATE dpos_t DCALL
+PRIVATE Dee_pos_t DCALL
 buffer_seek_or_unlock(Buffer *__restrict self,
-                      doff_t off, int whence) {
-	dpos_t result;
+                      Dee_off_t off, int whence) {
+	Dee_pos_t result;
 	DREF DeeObject *file;
 	if (whence == SEEK_SET || whence == SEEK_CUR) {
-		dpos_t old_abspos;
-		dpos_t new_abspos;
+		Dee_pos_t old_abspos;
+		Dee_pos_t new_abspos;
 		byte_t *new_pos;
 		if unlikely(!self->fb_file)
 			goto err_closed;
@@ -835,7 +835,7 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 		old_abspos = self->fb_fblk;
 		old_abspos += (self->fb_ptr - self->fb_base);
 		if (whence == SEEK_SET) {
-			new_abspos = (dpos_t)off;
+			new_abspos = (Dee_pos_t)off;
 		} else {
 			/* Special case: position-query */
 			if (off == 0)
@@ -905,7 +905,7 @@ full_seek:
 	/* Do a full seek using the underlying file. */
 	result = DeeFile_Seek(file, off, whence);
 	Dee_Decref(file);
-	if unlikely(result == (dpos_t)-1)
+	if unlikely(result == (Dee_pos_t)-1)
 		goto err;
 
 	/* Clear the buffer and set the new file pointer. */
@@ -919,14 +919,14 @@ full_seek:
 err_closed:
 	err_buffer_closed();
 err:
-	return (dpos_t)BUFFER_IO_ERROR;
+	return (Dee_pos_t)BUFFER_IO_ERROR;
 did_unlock:
-	return (dpos_t)BUFFER_IO_DID_UNLOCK;
+	return (Dee_pos_t)BUFFER_IO_DID_UNLOCK;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_sync_nolock(Buffer *__restrict self, uint16_t mode) {
-	dpos_t abs_chngpos;
+	Dee_pos_t abs_chngpos;
 	size_t changed_size;
 	size_t temp;
 	uint16_t old_flags;
@@ -946,12 +946,12 @@ again:
 	abs_chngpos = self->fb_fblk;
 	abs_chngpos += (self->fb_chng - self->fb_base);
 	if (abs_chngpos != self->fb_fpos) {
-		dpos_t new_pos;
+		Dee_pos_t new_pos;
 
 		/* Seek to the position where we need to change stuff. */
 		new_pos = DeeFile_SetPos(file, abs_chngpos);
 		Dee_Decref(file);
-		if unlikely(new_pos == (dpos_t)-1)
+		if unlikely(new_pos == (Dee_pos_t)-1)
 			goto err;
 		self->fb_fpos = new_pos;
 
@@ -1007,7 +1007,7 @@ buffer_getc_or_unlock(Buffer *__restrict self, dioflag_t flags) {
 	DREF DeeObject *file;
 	uint16_t old_flags;
 	int result;
-	dpos_t next_data;
+	Dee_pos_t next_data;
 again:
 	if (self->fb_cnt) {
 read_from_buffer:
@@ -1061,10 +1061,10 @@ read_through:
 			Dee_Incref(file);
 			if (next_data != self->fb_fpos) {
 				/* Seek in the underlying file to get where we need to go. */
-				dpos_t new_pos;
+				Dee_pos_t new_pos;
 				new_pos = DeeFile_SetPos(file, next_data);
 				Dee_Decref(file);
-				if unlikely(new_pos == (dpos_t)-1)
+				if unlikely(new_pos == (Dee_pos_t)-1)
 					goto err;
 				self->fb_fpos = next_data;
 				goto again; /* Must start over because of recursive callbacks. */
@@ -1110,10 +1110,10 @@ read_through:
 	Dee_Incref(file);
 	if (next_data != self->fb_fpos) {
 		/* Seek in the underlying file to get where we need to go. */
-		dpos_t new_pos;
+		Dee_pos_t new_pos;
 		new_pos = DeeFile_SetPos(file, next_data);
 		Dee_Decref(file);
-		if unlikely(new_pos == (dpos_t)-1)
+		if unlikely(new_pos == (Dee_pos_t)-1)
 			goto err;
 		self->fb_fpos = next_data;
 		goto again; /* Must start over because of recursive callbacks. */
@@ -1214,8 +1214,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size) {
-	dpos_t abs_pos, abs_end;
+buffer_trunc_nolock(Buffer *__restrict self, Dee_pos_t new_size) {
+	Dee_pos_t abs_pos, abs_end;
 	int result;
 	DREF DeeObject *file;
 	/* Synchronize the buffer. */
@@ -1324,7 +1324,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-buffer_trunc(Buffer *__restrict self, dpos_t new_size) {
+buffer_trunc(Buffer *__restrict self, Dee_pos_t new_size) {
 	int result;
 	if (DeeFileBuffer_LockWrite(self))
 		goto err;
@@ -1335,19 +1335,19 @@ err:
 	return -1;
 }
 
-PRIVATE dpos_t DCALL
+PRIVATE Dee_pos_t DCALL
 buffer_seek(Buffer *__restrict self,
-            doff_t off, int whence) {
-	dpos_t result;
+            Dee_off_t off, int whence) {
+	Dee_pos_t result;
 	do {
 		if (DeeFileBuffer_LockWrite(self))
 			goto err;
 		result = buffer_seek_or_unlock(self, off, whence);
-	} while unlikely(result == (dpos_t)BUFFER_IO_DID_UNLOCK);
+	} while unlikely(result == (Dee_pos_t)BUFFER_IO_DID_UNLOCK);
 	DeeFileBuffer_LockEndWrite(self);
 	return result;
 err:
-	return (dpos_t)-1;
+	return (Dee_pos_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1986,9 +1986,9 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 	},
 	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&buffer_read,
 	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&buffer_write,
-	/* .ft_seek   = */ (dpos_t (DCALL *)(DeeFileObject *__restrict, doff_t, int))&buffer_seek,
+	/* .ft_seek   = */ (Dee_pos_t (DCALL *)(DeeFileObject *__restrict, Dee_off_t, int))&buffer_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&buffer_sync,
-	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, dpos_t))&buffer_trunc,
+	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_pos_t))&buffer_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&buffer_close,
 	/* .ft_pread  = */ NULL,
 	/* .ft_pwrite = */ NULL,

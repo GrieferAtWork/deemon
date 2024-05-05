@@ -109,13 +109,11 @@ funcstaticsiter_nii_rewind(FunctionStaticsIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 funcstaticsiter_compare(FunctionStaticsIterator *self,
                         FunctionStaticsIterator *other) {
-	uint16_t lhs_sid, rhs_sid;
 	if (DeeObject_AssertTypeExact(other, &FunctionStaticsIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(self->fsi_func, other->fsi_func);
-	lhs_sid = atomic_read(&self->fsi_end);
-	rhs_sid = atomic_read(&other->fsi_end);
-	Dee_return_compare(lhs_sid, rhs_sid);
+	Dee_return_compareT(uint16_t, atomic_read(&self->fsi_end),
+	                    /*     */ atomic_read(&other->fsi_end));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -693,13 +691,11 @@ funcsymbolsbynameiter_nii_rewind(FunctionSymbolsByNameIterator *__restrict self)
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 funcsymbolsbynameiter_compare(FunctionSymbolsByNameIterator *self,
                               FunctionSymbolsByNameIterator *other) {
-	uint16_t lhs_rid, rhs_rid;
 	if (DeeObject_AssertTypeExact(other, &FunctionSymbolsByNameIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(self->fsbni_func, other->fsbni_func);
-	lhs_rid = atomic_read(&self->fsbni_rid);
-	rhs_rid = atomic_read(&other->fsbni_rid);
-	Dee_return_compare(lhs_rid, rhs_rid);
+	Dee_return_compareT(uint16_t, atomic_read(&self->fsbni_rid),
+	                    /*     */ atomic_read(&other->fsbni_rid));
 err:
 	return Dee_COMPARE_ERR;
 }

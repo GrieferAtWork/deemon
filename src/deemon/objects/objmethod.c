@@ -531,12 +531,10 @@ dockwdsiter_hash(DocKwdsIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dockwdsiter_compare(DocKwdsIterator *self, DocKwdsIterator *other) {
-	char const *lhs_iter, *rhs_iter;
 	if (DeeObject_AssertTypeExact(other, &DocKwdsIterator_Type))
 		goto err;
-	lhs_iter = DOCKWDSITER_RDITER(self);
-	rhs_iter = DOCKWDSITER_RDITER(other);
-	Dee_return_compare(lhs_iter, rhs_iter);
+	Dee_return_compareT(char const *, DOCKWDSITER_RDITER(self),
+	                    /*         */ DOCKWDSITER_RDITER(other));
 err:
 	return Dee_COMPARE_ERR;
 }

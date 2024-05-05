@@ -106,12 +106,10 @@ modexportsiter_visit(ModuleExportsIterator *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexportsiter_compare(ModuleExportsIterator *lhs,
                        ModuleExportsIterator *rhs) {
-	uint16_t lhs_index, rhs_index;
 	if (DeeObject_AssertTypeExact(rhs, Dee_TYPE(lhs)))
 		goto err;
-	lhs_index = atomic_read(&lhs->mei_index);
-	rhs_index = atomic_read(&rhs->mei_index);
-	Dee_return_compare(lhs_index, rhs_index);
+	Dee_return_compareT(uint16_t, atomic_read(&lhs->mei_index),
+	                    /*     */ atomic_read(&rhs->mei_index));
 err:
 	return Dee_COMPARE_ERR;
 }

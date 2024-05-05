@@ -173,34 +173,25 @@ blvi_nsi_nextvalue(DeeBlackListKwdsIterator *__restrict self) {
 }
 
 
-#define DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(name, op)                     \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                     \
-	name(DeeBlackListKwdsIterator *self, DeeBlackListKwdsIterator *other) {   \
-		if (DeeObject_AssertTypeExact(other, &DeeBlackListKwdsIterator_Type)) \
-			goto err;                                                         \
-		return_bool(BLVI_GETITER(self) op BLVI_GETITER(other));               \
-	err:                                                                      \
-		return NULL;                                                          \
-	}
-DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_eq, ==)
-DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_ne, !=)
-DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_lo, <)
-DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_le, <=)
-DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_gr, >)
-DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_ge, >=)
-#undef DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+blvi_hash(DeeBlackListKwdsIterator *self) {
+	return Dee_HashPointer(BLVI_GETITER(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blvi_compare(DeeBlackListKwdsIterator *self, DeeBlackListKwdsIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeBlackListKwdsIterator_Type))
+		goto err;
+	Dee_return_compareT(struct kwds_entry *, BLVI_GETITER(self),
+	                    /*                */ BLVI_GETITER(other));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp blvi_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blvi_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blvi_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blvi_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blvi_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blvi_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blvi_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&blvi_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&blvi_compare,
 };
 
 PRIVATE struct type_member tpconst blvi_members[] = {
@@ -1260,34 +1251,41 @@ err_r:
 }
 
 
-#define DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(name, func)                 \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
-	name(DeeBlackListKwIterator *self, DeeBlackListKwIterator *other) {     \
-		if (DeeObject_AssertTypeExact(other, &DeeBlackListKwIterator_Type)) \
-			goto err;                                                       \
-		return func(self->mi_iter, other->mi_iter);                         \
-	err:                                                                    \
-		return NULL;                                                        \
-	}
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_eq, DeeObject_CmpEq)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_ne, DeeObject_CmpNe)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_lo, DeeObject_CmpLo)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_le, DeeObject_CmpLe)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_gr, DeeObject_CmpGr)
-DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_ge, DeeObject_CmpGe)
-#undef DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+blmi_hash(DeeBlackListKwIterator *self) {
+	return DeeObject_Hash(self->mi_iter);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blmi_compare(DeeBlackListKwIterator *self, DeeBlackListKwIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeBlackListKwIterator_Type))
+		goto err;
+	return DeeObject_Compare(self->mi_iter, other->mi_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blmi_compare_eq(DeeBlackListKwIterator *self, DeeBlackListKwIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeBlackListKwIterator_Type))
+		goto err;
+	return DeeObject_CompareEq(self->mi_iter, other->mi_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blmi_trycompare_eq(DeeBlackListKwIterator *self, DeeBlackListKwIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeBlackListKwIterator_Type))
+		return 1;
+	return DeeObject_TryCompareEq(self->mi_iter, other->mi_iter);
+}
 
 PRIVATE struct type_cmp blmi_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blmi_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blmi_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blmi_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blmi_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blmi_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blmi_ge,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&blmi_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&blmi_compare_eq,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&blmi_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&blmi_trycompare_eq,
 };
 
 PRIVATE struct type_member tpconst blmi_members[] = {

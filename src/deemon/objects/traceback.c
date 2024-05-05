@@ -397,34 +397,33 @@ PRIVATE struct type_nii tpconst traceiter_nii = {
 	}
 };
 
-#define DEFINE_TRACEITER_COMPARE(name, op)                                \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
-	name(TraceIterator *self, TraceIterator *other) {                     \
-		if (DeeObject_AssertTypeExact(other, &DeeTracebackIterator_Type)) \
-			goto err;                                                     \
-		return_bool(READ_NEXT(other) op READ_NEXT(self));                 \
-	err:                                                                  \
-		return NULL;                                                      \
-	}
-DEFINE_TRACEITER_COMPARE(traceiter_eq, ==)
-DEFINE_TRACEITER_COMPARE(traceiter_ne, !=)
-DEFINE_TRACEITER_COMPARE(traceiter_lo, <)
-DEFINE_TRACEITER_COMPARE(traceiter_le, <=)
-DEFINE_TRACEITER_COMPARE(traceiter_gr, >)
-DEFINE_TRACEITER_COMPARE(traceiter_ge, >=)
-#undef DEFINE_TRACEITER_COMPARE
+
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+traceiter_hash(TraceIterator *self) {
+	return Dee_HashPointer(READ_NEXT(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+traceiter_compare(TraceIterator *self, TraceIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeTracebackIterator_Type))
+		goto err;
+	Dee_return_compareT(struct code_frame *, READ_NEXT(other), /* Yes: reverse because yielding also happens in reverse! */
+	                    /*                */ READ_NEXT(self));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp traceiter_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&traceiter_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&traceiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&traceiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &traceiter_nii
 };
 

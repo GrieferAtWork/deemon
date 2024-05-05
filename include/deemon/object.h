@@ -138,10 +138,22 @@ typedef __SSIZE_TYPE__         Dee_ssize_t;
 typedef __LONG64_TYPE__        Dee_off_t;
 typedef __ULONG64_TYPE__       Dee_pos_t;
 typedef uintptr_t              Dee_hash_t;
+typedef __hybrid_uint128_t     Dee_uint128_t;
+typedef __hybrid_int128_t      Dee_int128_t;
+
+#define Dee_SIZEOF_REFCNT_T __SIZEOF_POINTER__
+#define Dee_SIZEOF_POS_T    8
+#define Dee_SIZEOF_OFF_T    Dee_SIZEOF_POS_T
+#define Dee_SIZEOF_HASH_T   __SIZEOF_POINTER__
+
+/* Generic print receiver.
+ * @param: arg:     [?..?] Caller-provided cookie
+ * @param: data:    [0..datalen] Chunk base-pointer (usually in utf-8)
+ * @param: datalen: The number of *bytes* to consume, starting at "data"
+ * @return: >= 0:   Success; return value gets added to total propagated by caller.
+ * @return: < 0:    Error; abort printing and immediately propagate this value to caller. */
 typedef WUNUSED_T ATTR_INS_T(2, 3) Dee_ssize_t
 (DPRINTER_CC *Dee_formatprinter_t)(void *arg, char const *__restrict data, size_t datalen);
-
-#define DEE_SIZEOF_DEE_POS_T 8
 
 #ifdef __cplusplus
 typedef void (*Dee_funptr_t)(void);
@@ -150,10 +162,7 @@ typedef void (*Dee_funptr_t)();
 #endif /* !__cplusplus */
 
 #ifdef DEE_SOURCE
-typedef Dee_refcnt_t        drefcnt_t;
 typedef Dee_ssize_t         dssize_t;
-typedef Dee_off_t           doff_t;
-typedef Dee_pos_t           dpos_t;
 typedef Dee_hash_t          dhash_t;
 typedef Dee_funptr_t        dfunptr_t;
 typedef Dee_formatprinter_t dformatprinter;
@@ -230,8 +239,9 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define Dee_COMPARE_ERR (-2)
 
 /* Helper macros for implementing compare operators. */
-#define Dee_CompareNe(a, b) ((a) < (b) ? -1 : 1)
-#define Dee_Compare(a, b)   ((a) == (b) ? 0 : Dee_CompareNe(a, b))
+#define Dee_CompareNe(a, b)       ((a) < (b) ? -1 : 1)
+#define Dee_Compare(a, b)         ((a) == (b) ? 0 : Dee_CompareNe(a, b))
+#define Dee_CompareFromDiff(diff) ((diff) == 0 ? 0 : (diff) < 0 ? -1 : 1)
 
 #define Dee_return_compare_if_ne(a, b)  \
 	do {                                \
@@ -241,6 +251,19 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define Dee_return_compare(a, b)  \
 	do {                          \
 		return Dee_Compare(a, b); \
+	}	__WHILE0
+#define Dee_return_compare_if_neT(T, a, b)          \
+	do {                                            \
+		T _rcin_a = (a);                            \
+		T _rcin_b = (b);                            \
+		if (_rcin_a != _rcin_b)                     \
+			return Dee_CompareNe(_rcin_a, _rcin_b); \
+	}	__WHILE0
+#define Dee_return_compareT(T, a, b)      \
+	do {                                  \
+		T _rc_a = (a);                    \
+		T _rc_b = (b);                    \
+		return Dee_Compare(_rc_a, _rc_b); \
 	}	__WHILE0
 #define Dee_return_DeeObject_Compare_if_ne(a, b)                                    \
 	do {                                                                            \
@@ -265,8 +288,6 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 	}	__WHILE0
 
 
-typedef __hybrid_uint128_t Dee_uint128_t;
-typedef __hybrid_int128_t Dee_int128_t;
 
 
 #ifdef CONFIG_TRACE_REFCHANGES
@@ -580,7 +601,7 @@ DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_li
 
 
 /* Initialize the given weak reference to NULL. */
-#define Dee_weakref_null(self) \
+#define Dee_weakref_initempty(self) \
 	(void)((self)->wr_obj = NULL, (self)->wr_del = NULL)
 
 /* Weak reference functionality.
@@ -4159,6 +4180,11 @@ DFUNDEF WUNUSED NONNULL((1, 2, 5)) bool DCALL DeeObject_TGenericFindAttrInfoStri
 #define DeeObject_GenericFindAttrInfoStringLen(self, attr, attrlen, retinfo)                DeeObject_TGenericFindAttrInfoStringLen(Dee_TYPE(self), attr, attrlen, retinfo)
 #define DeeObject_GenericFindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo)      DeeObject_TGenericFindAttrInfoStringLenHash(Dee_TYPE(self), attr, attrlen, hash, retinfo)
 
+
+/* Generic operators that implement equals using `===' and hash using `Object.id()'
+ * Use this instead of re-inventing the wheel in order to allow for special optimization
+ * to be possible when your type appears in compare operations. */
+DDATDEF struct Dee_type_cmp DeeObject_GenericCmpByAddr;
 
 
 #ifdef CONFIG_BUILDING_DEEMON

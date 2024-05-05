@@ -139,13 +139,11 @@ bytesiter_hash(BytesIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytesiter_compare(BytesIterator *self, BytesIterator *other) {
-	byte_t *lhs_ptr, *rhs_ptr;
 	if (DeeObject_AssertTypeExact(other, &BytesIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(self->bi_bytes, other->bi_bytes);
-	lhs_ptr = BytesIterator_GetIter(self);
-	rhs_ptr = BytesIterator_GetIter(other);
-	Dee_return_compare(lhs_ptr, rhs_ptr);
+	Dee_return_compareT(byte_t *, BytesIterator_GetIter(self),
+	                    /*     */ BytesIterator_GetIter(other));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -977,25 +975,14 @@ bytes_compare_eq(Bytes *lhs, DeeObject *rhs) {
 	return bytes_compare_seq(lhs, rhs);
 }
 
-
-LOCAL ATTR_CONST int DCALL
-fix_memcmp_return(int value) {
-	if (value < -1) {
-		value = -1;
-	} else if (value > 1) {
-		value = 1;
-	}
-	return value;
-}
-
 #undef memxcmp
 #define memxcmp dee_memxcmp
-LOCAL int DCALL
+LOCAL WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
 dee_memxcmp(void const *a, size_t asiz,
             void const *b, size_t bsiz) {
 	int result = memcmp(a, b, MIN(asiz, bsiz));
 	if (result)
-		return fix_memcmp_return(result);
+		return Dee_CompareFromDiff(result);
 	if (asiz == bsiz)
 		return 0;
 	if (asiz < bsiz)

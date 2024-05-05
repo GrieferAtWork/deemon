@@ -1380,22 +1380,20 @@ fli_visit(FixedListIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->li_list);
 }
 
-#define DEFINE_FIXEDLISTITERATOR_COMPARE(name, op)                     \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL              \
-	name(FixedListIterator *self, FixedListIterator *other) {          \
-		if (DeeObject_AssertTypeExact(other, &FixedListIterator_Type)) \
-			goto err;                                                  \
-		return_bool(FLI_GETITER(self) op FLI_GETITER(other));          \
-	err:                                                               \
-		return NULL;                                                   \
-	}
-DEFINE_FIXEDLISTITERATOR_COMPARE(fli_eq, ==)
-DEFINE_FIXEDLISTITERATOR_COMPARE(fli_ne, !=)
-DEFINE_FIXEDLISTITERATOR_COMPARE(fli_lo, <)
-DEFINE_FIXEDLISTITERATOR_COMPARE(fli_le, <=)
-DEFINE_FIXEDLISTITERATOR_COMPARE(fli_gr, >)
-DEFINE_FIXEDLISTITERATOR_COMPARE(fli_ge, >=)
-#undef DEFINE_FIXEDLISTITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+fli_hash(FixedListIterator *self) {
+	return FLI_GETITER(self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+fli_compare(FixedListIterator *self, FixedListIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &FixedListIterator_Type))
+		goto err;
+	Dee_return_compareT(size_t, FLI_GETITER(self),
+	                    /*   */ FLI_GETITER(other));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
 fli_getseq(FixedListIterator *__restrict self) {
@@ -1496,16 +1494,16 @@ PRIVATE struct type_nii tpconst fli_nii = {
 };
 
 PRIVATE struct type_cmp fli_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&fli_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&fli_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fli_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fli_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fli_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fli_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fli_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fli_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &fli_nii,
 };
 

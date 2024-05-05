@@ -240,12 +240,10 @@ bfi_hash(BytesFindIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bfi_compare(BytesFindIterator *self, BytesFindIterator *other) {
-	byte_t *lhs_ptr, *rhs_ptr;
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	lhs_ptr = READ_PTR(self);
-	rhs_ptr = READ_PTR(other);
-	Dee_return_compare(lhs_ptr, rhs_ptr);
+	Dee_return_compareT(byte_t *, READ_PTR(self),
+	                    /*     */ READ_PTR(other));
 err:
 	return Dee_COMPARE_ERR;
 }

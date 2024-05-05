@@ -432,7 +432,7 @@ again:
 		memcpyc(result->s_str, name,
 		        name_length + 1, sizeof(char));
 		sysdb_lock_endwrite();
-		result->s_hash = (dhash_t)-1;
+		result->s_hash = (Dee_hash_t)-1;
 		result->s_data = NULL;
 		result->s_len  = name_length;
 		DeeObject_Init(result, &DeeString_Type);
@@ -792,7 +792,7 @@ restart:
 	sysdb_lock_endwrite();
 	DeeObject_Init(result, &DeeString_Type);
 	result->s_data = NULL;
-	result->s_hash = (dhash_t)-1;
+	result->s_hash = (Dee_hash_t)-1;
 	result->s_len  = name_length;
 	return (DREF DeeObject *)result;
 err:
@@ -1788,40 +1788,27 @@ PRIVATE struct type_getset tpconst sockaddr_getsets[] = {
 	TYPE_GETSET_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 sockaddr_hash(DeeSockAddrObject *__restrict self) {
 	return Dee_HashPtr(&self->sa_addr, SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sockaddr_eq(DeeSockAddrObject *self,
-            DeeSockAddrObject *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sockaddr_compare_eq(DeeSockAddrObject *self,
+                    DeeSockAddrObject *other) {
 	if (DeeObject_AssertType(other, &DeeSockAddr_Type))
 		goto err;
-	return_bool(bcmp(&self->sa_addr, &other->sa_addr,
-	                 SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) == 0);
+	return bcmp(&self->sa_addr, &other->sa_addr,
+	            SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0))
+	       ? 1
+	       : 0;
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sockaddr_ne(DeeSockAddrObject *self,
-            DeeSockAddrObject *other) {
-	if (DeeObject_AssertType(other, &DeeSockAddr_Type))
-		goto err;
-	return_bool(bcmp(&self->sa_addr, &other->sa_addr,
-	                 SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) != 0);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp sockaddr_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&sockaddr_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sockaddr_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sockaddr_ne
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&sockaddr_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&sockaddr_compare_eq,
 };
 
 INTERN DeeTypeObject DeeSockAddr_Type = {

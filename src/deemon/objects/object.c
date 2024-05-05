@@ -1010,7 +1010,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 
 			/* Special case: The destructor managed to revive the object. */
 			{
-				drefcnt_t refcnt;
+				Dee_refcnt_t refcnt;
 				do {
 					refcnt = atomic_read(&self->ob_refcnt);
 					if (refcnt == 0)
@@ -1296,7 +1296,7 @@ again:
 #ifndef CONFIG_TRACE_REFCHANGES
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
 					{
-						drefcnt_t oldref;
+						Dee_refcnt_t oldref;
 						oldref = atomic_fetchdec(&self->ob_refcnt);
 						ASSERTF(oldref != 0,
 						        "Upon revival, a destructor must let the caller inherit a "
@@ -1371,7 +1371,7 @@ again:
 #ifndef CONFIG_TRACE_REFCHANGES
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
 					{
-						drefcnt_t oldref;
+						Dee_refcnt_t oldref;
 						oldref = atomic_fetchdec(&self->ob_refcnt);
 						ASSERTF(oldref != 0,
 						        "Upon revival, a destructor must let the caller inherit a "
@@ -4634,14 +4634,16 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	TYPE_GETSET_END
 };
 
+
+
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-type_hash(DeeTypeObject *__restrict self) {
+generic_object_hash(DeeObject *__restrict self) {
 	return Dee_HashPointer(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-type_compare_eq(DeeTypeObject *self, DeeTypeObject *some_object) {
-	if (DeeObject_AssertType(some_object, &DeeType_Type))
+generic_object_compare_eq(DeeObject *self, DeeObject *some_object) {
+	if (DeeObject_AssertType(some_object, Dee_TYPE(self)))
 		goto err;
 	return self == some_object ? 0 : 1;
 err:
@@ -4649,13 +4651,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-type_trycompare_eq(DeeTypeObject *self, DeeTypeObject *some_object) {
+generic_object_trycompare_eq(DeeObject *self, DeeObject *some_object) {
 	return self == some_object ? 0 : 1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_eq(DeeTypeObject *self, DeeTypeObject *some_object) {
-	if (DeeObject_AssertType(some_object, &DeeType_Type))
+generic_object_eq(DeeObject *self, DeeObject *some_object) {
+	if (DeeObject_AssertType(some_object, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self == some_object);
 err:
@@ -4663,22 +4665,26 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_ne(DeeTypeObject *self, DeeTypeObject *some_object) {
-	if (DeeObject_AssertType(some_object, &DeeType_Type))
+generic_object_ne(DeeObject *self, DeeObject *some_object) {
+	if (DeeObject_AssertType(some_object, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self != some_object);
 err:
 	return NULL;
 }
 
-PRIVATE struct type_cmp type_cmp_data = {
-	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&type_hash,
-	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&type_compare_eq,
+/* Generic operators that implement equals using `===' and hash using `Object.id()'
+ * Use this instead of re-inventing the wheel in order to allow for special optimization
+ * to be possible when your type appears in compare operations. */
+PUBLIC struct Dee_type_cmp DeeObject_GenericCmpByAddr = {
+	/* .tp_hash          = */ &generic_object_hash,
+	/* .tp_compare_eq    = */ &generic_object_compare_eq,
 	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&type_trycompare_eq,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&type_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&type_ne,
+	/* .tp_trycompare_eq = */ &generic_object_trycompare_eq,
+	/* .tp_eq            = */ &generic_object_eq,
+	/* .tp_ne            = */ &generic_object_ne,
 };
+
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -4837,7 +4843,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,
 	/* .tp_gc            = */ &type_gc_data,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &type_cmp_data,
+	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ &type_attr_data,
@@ -4903,11 +4909,11 @@ print_refchange_len(struct Dee_refchange *__restrict item) {
 	return result;
 }
 
-PRIVATE NONNULL((1)) drefcnt_t DCALL
+PRIVATE NONNULL((1)) Dee_refcnt_t DCALL
 print_refchange(struct Dee_refchange *__restrict item,
-                drefcnt_t prev_total, size_t maxlen) {
+                Dee_refcnt_t prev_total, size_t maxlen) {
 	char mode[2] = { '+', 0 };
-	drefcnt_t count, next_total;
+	Dee_refcnt_t count, next_total;
 	size_t mylen;
 	next_total = prev_total;
 	if (item->rc_line < 0) {
@@ -4951,9 +4957,9 @@ print_refchanges_len(struct Dee_refchanges *__restrict item) {
 	return result;
 }
 
-PRIVATE NONNULL((1)) drefcnt_t DCALL
+PRIVATE NONNULL((1)) Dee_refcnt_t DCALL
 do_print_refchanges(struct Dee_refchanges *__restrict item,
-                    drefcnt_t prev_total, size_t maxlen) {
+                    Dee_refcnt_t prev_total, size_t maxlen) {
 	unsigned int i;
 	if (item->rc_prev)
 		prev_total = do_print_refchanges(item->rc_prev, prev_total, maxlen);
@@ -4965,10 +4971,10 @@ do_print_refchanges(struct Dee_refchanges *__restrict item,
 	return prev_total;
 }
 
-PRIVATE NONNULL((1)) drefcnt_t DCALL
+PRIVATE NONNULL((1)) Dee_refcnt_t DCALL
 print_refchanges(struct Dee_refchanges *__restrict item,
-                 drefcnt_t prev_total) {
-	drefcnt_t result;
+                 Dee_refcnt_t prev_total) {
+	Dee_refcnt_t result;
 	size_t maxlen;
 	maxlen = print_refchanges_len(item);
 	result = do_print_refchanges(item, prev_total, maxlen);
@@ -5117,7 +5123,7 @@ Dee_Incref_traced(DeeObject *__restrict ob,
 }
 
 PUBLIC NONNULL((1)) void DCALL
-Dee_Incref_n_traced(DeeObject *__restrict ob, drefcnt_t n,
+Dee_Incref_n_traced(DeeObject *__restrict ob, Dee_refcnt_t n,
                     char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if (atomic_fetchadd(&ob->ob_refcnt, n) == 0)
@@ -5132,7 +5138,7 @@ Dee_Incref_n_traced(DeeObject *__restrict ob, drefcnt_t n,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob,
                            char const *file, int line) {
-	drefcnt_t oldref;
+	Dee_refcnt_t oldref;
 	do {
 		if ((oldref = atomic_read(&ob->ob_refcnt)) == 0)
 			return false;
@@ -5144,7 +5150,7 @@ Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob,
 PUBLIC NONNULL((1)) void DCALL
 Dee_Decref_traced(DeeObject *__restrict ob,
                   char const *file, int line) {
-	drefcnt_t oldref;
+	Dee_refcnt_t oldref;
 	oldref = atomic_fetchdec(&ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if unlikely(oldref == 0)
@@ -5160,7 +5166,7 @@ Dee_Decref_traced(DeeObject *__restrict ob,
 PUBLIC NONNULL((1)) void DCALL
 Dee_Decref_n_traced(DeeObject *__restrict ob, Dee_refcnt_t n,
                     char const *file, int line) {
-	drefcnt_t oldref;
+	Dee_refcnt_t oldref;
 	oldref = atomic_fetchsub(&ob->ob_refcnt, n);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if unlikely(oldref < n)
@@ -5210,7 +5216,7 @@ Dee_DecrefIfOne_traced(DeeObject *__restrict ob,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob,
                           char const *file, int line) {
-	drefcnt_t oldref;
+	Dee_refcnt_t oldref;
 	do {
 		if ((oldref = atomic_read(&ob->ob_refcnt)) <= 1)
 			return false;
@@ -5222,7 +5228,7 @@ Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
                        char const *file, int line) {
-	drefcnt_t newref;
+	Dee_refcnt_t newref;
 	newref = atomic_fetchdec(&ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if unlikely(newref == 0)
@@ -5303,7 +5309,7 @@ PUBLIC NONNULL((1)) void
 }
 
 PUBLIC NONNULL((1)) void
-(DCALL Dee_Incref_n_traced)(DeeObject *__restrict ob, drefcnt_t n,
+(DCALL Dee_Incref_n_traced)(DeeObject *__restrict ob, Dee_refcnt_t n,
                             char const *file,
                             int line) {
 	(void)file;
@@ -5473,7 +5479,7 @@ PUBLIC NONNULL((1)) void
 }
 
 PUBLIC NONNULL((1)) void
-(DCALL Dee_Incref_n)(DeeObject *__restrict ob, drefcnt_t n) {
+(DCALL Dee_Incref_n)(DeeObject *__restrict ob, Dee_refcnt_t n) {
 	Dee_Incref_n_untraced(ob, n);
 }
 

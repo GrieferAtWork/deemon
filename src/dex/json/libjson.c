@@ -437,25 +437,20 @@ err_r_syntax:
 	return NULL;
 }
 
-#define DEFINE_JSON_ITERATOR_COMPARE(name, cmp)                       \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
-	name(DeeJsonIteratorObject *self, DeeJsonIteratorObject *other) { \
-		char const *lhs_pos, *rhs_pos;                                \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))         \
-			goto err;                                                 \
-		lhs_pos = atomic_read(&self->ji_parser.jp_pos);               \
-		rhs_pos = atomic_read(&other->ji_parser.jp_pos);              \
-		return_bool(lhs_pos cmp rhs_pos);                             \
-	err:                                                              \
-		return NULL;                                                  \
-	}
-DEFINE_JSON_ITERATOR_COMPARE(jiter_eq, ==)
-DEFINE_JSON_ITERATOR_COMPARE(jiter_ne, !=)
-DEFINE_JSON_ITERATOR_COMPARE(jiter_lo, <)
-DEFINE_JSON_ITERATOR_COMPARE(jiter_le, <=)
-DEFINE_JSON_ITERATOR_COMPARE(jiter_gr, >)
-DEFINE_JSON_ITERATOR_COMPARE(jiter_ge, >=)
-#undef DEFINE_JSON_ITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+jiter_hash(DeeJsonIteratorObject *self) {
+	return Dee_HashPointer(atomic_read(&self->ji_parser.jp_pos));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+jiter_compare(DeeJsonIteratorObject *self, DeeJsonIteratorObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	Dee_return_compareT(char const *, atomic_read(&self->ji_parser.jp_pos),
+	                    /*         */ atomic_read(&other->ji_parser.jp_pos));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE WUNUSED_T NONNULL_T((1)) int DCALL
 jseqiter_nii_rewind(DeeJsonIteratorObject *__restrict self) {
@@ -595,30 +590,30 @@ PRIVATE struct type_nii tpconst jmapiter_nii = {
 };
 
 PRIVATE struct type_cmp jseqiter_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&jiter_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&jiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &jseqiter_nii,
 };
 
 PRIVATE struct type_cmp jmapiter_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&jiter_hash,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&jiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &jmapiter_nii,
 };
 

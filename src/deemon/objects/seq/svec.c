@@ -121,13 +121,11 @@ rveciter_hash(RefVectorIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rveciter_compare(RefVectorIterator *self, RefVectorIterator *other) {
-	DeeObject **lhs_pos, **rhs_pos;
 	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(self->rvi_vector, other->rvi_vector);
-	lhs_pos = RVI_GETPOS(self);
-	rhs_pos = RVI_GETPOS(other);
-	Dee_return_compare(lhs_pos, rhs_pos);
+	Dee_return_compareT(DeeObject **, RVI_GETPOS(self),
+	                    /*         */ RVI_GETPOS(other));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -1067,13 +1065,11 @@ sveciter_hash(SharedVectorIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_compare(SharedVectorIterator *self, SharedVectorIterator *other) {
-	size_t lhs_index, rhs_index;
 	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(self->si_seq, other->si_seq);
-	lhs_index = READ_INDEX(self);
-	rhs_index = READ_INDEX(other);
-	Dee_return_compare(lhs_index, rhs_index);
+	Dee_return_compareT(size_t, READ_INDEX(self),
+	                    /*   */ READ_INDEX(other));
 err:
 	return Dee_COMPARE_ERR;
 }

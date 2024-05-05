@@ -2073,34 +2073,25 @@ toi_copy(TypeOperatorsIterator *__restrict self,
 	return 0;
 }
 
-#define DEFINE_TYPEOPREATORITEARTOR_COMPARE(name, op)                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(TypeOperatorsIterator *self, TypeOperatorsIterator *other) {      \
-		if (DeeObject_AssertTypeExact(other, &TypeOperatorsIterator_Type)) \
-			goto err;                                                      \
-		return_bool(TOI_GETOPID(self) op TOI_GETOPID(other));              \
-	err:                                                                   \
-		return NULL;                                                       \
-	}
-DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_eq, ==)
-DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_ne, !=)
-DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_lo, <)
-DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_le, <=)
-DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_gr, >)
-DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_ge, >=)
-#undef DEFINE_TYPEOPREATORITEARTOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+toi_hash(TypeOperatorsIterator *self) {
+	return (Dee_hash_t)TOI_GETOPID(self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+toi_compare(TypeOperatorsIterator *self, TypeOperatorsIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &TypeOperatorsIterator_Type))
+		goto err;
+	Dee_return_compareT(Dee_operator_t, TOI_GETOPID(self),
+	                    /*           */ TOI_GETOPID(other));
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp toi_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&toi_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&toi_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&toi_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&toi_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&toi_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&toi_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&toi_hash,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&toi_compare,
 };
 
 

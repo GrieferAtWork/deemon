@@ -313,16 +313,9 @@ err:
 }
 
 PRIVATE struct type_cmp comiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&comiter_compare,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ NULL,
-	/* .tp_ne            = */ NULL,
-	/* .tp_lo            = */ NULL,
-	/* .tp_le            = */ NULL,
-	/* .tp_gr            = */ NULL,
-	/* .tp_ge            = */ NULL,
+	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&comiter_compare,
 };
 
 INTERN DeeTypeObject SeqCombinationsIterator_Type = {

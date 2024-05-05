@@ -332,12 +332,10 @@ cell_hash(Cell *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cell_compare(Cell *self, Cell *other) {
-	uintptr_t lhs_id, rhs_id;
 	if (DeeObject_AssertType(other, &DeeCell_Type))
 		goto err;
-	lhs_id = DeeObject_Id(DeeCell_GetItemPointer(self));
-	rhs_id = DeeObject_Id(DeeCell_GetItemPointer(other));
-	Dee_return_compare(lhs_id, rhs_id);
+	Dee_return_compareT(uintptr_t, DeeObject_Id(DeeCell_GetItemPointer(self)),
+	                    /*      */ DeeObject_Id(DeeCell_GetItemPointer(other)));
 err:
 	return Dee_COMPARE_ERR;
 }
