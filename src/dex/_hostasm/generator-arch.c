@@ -266,6 +266,9 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_InplaceOrUInt32, 8);
 	CASE(DeeObject_InplaceXorUInt32, 8);
 	CASE(DeeObject_Hash, 4);
+	CASE(DeeObject_Compare, 8);
+	CASE(DeeObject_CompareForEquality, 8);
+	CASE(DeeObject_TryCompareForEquality, 8);
 	CASE(DeeObject_CompareEq, 8);
 	CASE(DeeObject_CompareNe, 8);
 	CASE(DeeObject_CompareLo, 8);

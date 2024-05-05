@@ -908,6 +908,7 @@ EXPORTS
 	_DeeObject_TSub@12=DeeObject_TSub@12
 	_DeeObject_TThisCall@20=DeeObject_TThisCall@20
 	_DeeObject_TThisCallKw@24=DeeObject_TThisCallKw@24
+	_DeeObject_TTryCompareForEquality@12=DeeObject_TTryCompareForEquality@12
 	_DeeObject_TTryGetItem@12=DeeObject_TTryGetItem@12
 	_DeeObject_TTryGetItemIndex@12=DeeObject_TTryGetItemIndex@12
 	_DeeObject_TTryGetItemStringHash@16=DeeObject_TTryGetItemStringHash@16
@@ -920,6 +921,8 @@ EXPORTS
 	_DeeObject_ThisCallKw@20=DeeObject_ThisCallKw@20
 	_DeeObject_ThisCallTuple@12=DeeObject_ThisCallTuple@12
 	_DeeObject_ThisCallTupleKw@16=DeeObject_ThisCallTupleKw@16
+	_DeeObject_TryCompareEq@8=DeeObject_TryCompareEq@8
+	_DeeObject_TryCompareForEquality@8=DeeObject_TryCompareForEquality@8
 	_DeeObject_TryGetItem@8=DeeObject_TryGetItem@8
 	_DeeObject_TryGetItemIndex@8=DeeObject_TryGetItemIndex@8
 	_DeeObject_TryGetItemStringHash@12=DeeObject_TryGetItemStringHash@12

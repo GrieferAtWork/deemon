@@ -141,50 +141,35 @@ im_hash(InstanceMethod *__restrict self) {
 	                       DeeObject_Hash(self->im_this));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-im_eq(InstanceMethod *self, InstanceMethod *other) {
-	int temp;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+im_compare_eq(InstanceMethod *self, InstanceMethod *other) {
+	int result;
 	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
 		goto err;
-	temp = DeeObject_CompareEq(self->im_func, other->im_func);
-	if (temp <= 0)
-		return unlikely(temp < 0)
-		       ? NULL
-		       : (Dee_Incref(Dee_False), Dee_False);
-	temp = DeeObject_CompareEq(self->im_this, other->im_this);
-	if unlikely(temp < 0)
-		goto err;
-	return_bool_(temp);
+	result = DeeObject_CompareForEquality(self->im_func, other->im_func);
+	if (result == 0)
+		result = DeeObject_CompareForEquality(self->im_this, other->im_this);
+	return result;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-im_ne(InstanceMethod *self, InstanceMethod *other) {
-	int temp;
-	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
-		goto err;
-	temp = DeeObject_CompareNe(self->im_func, other->im_func);
-	if (temp != 0) {
-		if unlikely(temp < 0)
-			goto err;
-		return_true;
-	}
-	temp = DeeObject_CompareNe(self->im_this, other->im_this);
-	if unlikely(temp < 0)
-		goto err;
-	return_bool_(temp);
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+im_trycompare_eq(InstanceMethod *self, InstanceMethod *other) {
+	int result;
+	if (!DeeInstanceMethod_Check(other))
+		return -1;
+	result = DeeObject_TryCompareForEquality(self->im_func, other->im_func);
+	if (result == 0)
+		result = DeeObject_TryCompareForEquality(self->im_this, other->im_this);
+	return result;
 }
 
 PRIVATE struct type_cmp im_cmp = {
 	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&im_hash,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&im_compare_eq,
 	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&im_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&im_ne,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&im_trycompare_eq,
 };
 
 

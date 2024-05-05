@@ -2754,7 +2754,7 @@ again_nextnode:
 			}
 
 			/* Compare keys */
-			temp = DeeObject_CompareEq(prev_maxkey_succ, next_minkey);
+			temp = DeeObject_TryCompareEq(prev_maxkey_succ, next_minkey);
 			Dee_Decref(prev_maxkey_succ);
 			Dee_Decref(next_minkey);
 			if (temp != 0) {

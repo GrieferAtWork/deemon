@@ -71,7 +71,7 @@ next_keyitem:
 				int temp;
 				if likely(item->hsi_hash != hash)
 					continue;
-				temp = DeeObject_CompareEq(item->hsi_key, key);
+				temp = DeeObject_TryCompareEq(item->hsi_key, key);
 				if likely(temp == 0)
 					continue;
 				if unlikely(temp < 0)
@@ -175,7 +175,7 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 					int temp;
 					if likely(item->hsi_hash != hash)
 						continue;
-					temp = DeeObject_CompareEq(item->hsi_key, key);
+					temp = DeeObject_TryCompareEq(item->hsi_key, key);
 					if likely(temp == 0)
 						continue;
 					if unlikely(temp < 0)
@@ -509,7 +509,7 @@ remove_duplicate_key:
 				}
 				if (Dee_TYPE(item->hsi_key) == Dee_TYPE(items[i])) {
 					int error;
-					error = DeeObject_CompareEq(item->hsi_key, items[i]);
+					error = DeeObject_TryCompareEq(item->hsi_key, items[i]);
 					if unlikely(error < 0)
 						goto err_items_v_new_map;
 					if (error)
@@ -740,7 +740,7 @@ again:
 		DeeHashSet_LockEndRead(me);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_CompareEq(search_item, item_key);
+		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
 			goto err; /* Error in compare operator. */
@@ -845,7 +845,7 @@ again:
 		DeeHashSet_LockEndRead(me);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_CompareEq(search_item, item_key);
+		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
 			goto err; /* Error in compare operator. */
@@ -929,7 +929,7 @@ restart:
 		DeeHashSet_LockEndRead(me);
 
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_CompareEq(search_item, item_key);
+		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
 			goto err; /* Error in compare operator. */
@@ -1247,7 +1247,7 @@ restart:
 		Dee_Incref(item_key);
 		DeeHashSet_LockEndRead(me);
 		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_CompareEq(search_item, item_key);
+		error = DeeObject_TryCompareEq(search_item, item_key);
 		Dee_Decref(item_key);
 		if (error > 0)
 			return 1; /* Found the item. */

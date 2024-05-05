@@ -4471,25 +4471,29 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceOrUInt32)(DREF DeeObjec
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceXorUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
 
 
-/* Comparison operator invocation.
- * NOTE: `DeeObject_CompareEq()' and `DeeObject_CompareNe()' will automatically attempt
- *       to catch the following errors, which are interpreted to indicate non-equality:
- *         - `Error.RuntimeError.NotImplemented' (`DeeError_NotImplemented'; Should indicate compare-not-implemented)
- *         - `Error.TypeError'                   (`DeeError_TypeError';      Should indicate unsupported type combination)
- *         - `Error.ValueError'                  (`DeeError_ValueError';     Should indicate unsupported instance combination)
- *       This error handling is only performed during invocation of the `operator ==' / `operator !='. */
+/* Comparison operator invocation. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareEqObject)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareNeObject)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareLoObject)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareLeObject)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareGrObject)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareGeObject)(DeeObject *self, DeeObject *some_object);
+
+/* Same as above, but automatically cast the returned object using `DeeObject_Bool()' */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareEq)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareNe)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareLo)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareLe)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGr)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self, DeeObject *some_object);
+
+
+/* Deprecated wrapper around "DeeObject_TryCompareForEquality()"
+ * @return: 1 : Compare returns "true"
+ * @return: 0 : Compare returns "false"
+ * @return: -1: Error */
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_TryCompareEq)(DeeObject *self, DeeObject *some_object); /* DEPRECATED! */
 
 /* @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
@@ -4505,7 +4509,14 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareForEquality)(DeeObject *lhs, DeeObject *rhs);
 
-/* @return: == -1: `lhs != rhs', or `NotImplemented', `TypeError' or `ValueError' was thrown an handled
+/* Same as `DeeObject_CompareForEquality()', but automatically handles errors
+ * that usually indicate that "lhs" and "rhs" cannot be compared by returning
+ * either `-1' or `1' instead. The following errors get handled (so-long as
+ * the effective `tp_trycompare_eq' callback doesn't end up throwing these):
+ * - `Error.RuntimeError.NotImplemented' (`DeeError_NotImplemented'; Should indicate compare-not-implemented)
+ * - `Error.TypeError'                   (`DeeError_TypeError';      Should indicate unsupported type combination)
+ * - `Error.ValueError'                  (`DeeError_ValueError';     Should indicate unsupported instance combination)
+ * @return: == -1: `lhs != rhs'
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */

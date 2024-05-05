@@ -2016,7 +2016,7 @@ DeeSeq_EqVV(DeeObject *const *lhsv,
 	size_t i;
 	for (i = 0; i < elemc; ++i) {
 		int diff;
-		diff = DeeObject_CompareEq(lhsv[i], rhsv[i]);
+		diff = DeeObject_TryCompareEq(lhsv[i], rhsv[i]);
 		if (diff <= 0)
 			return diff;
 	}
@@ -2033,7 +2033,7 @@ DeeSeq_EqVF(DeeObject *const *lhsv,
 		rhs_item = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_item)
 			return -2;
-		diff = DeeObject_CompareEq(lhsv[i], rhs_item);
+		diff = DeeObject_TryCompareEq(lhsv[i], rhs_item);
 		Dee_Decref(rhs_item);
 		if (diff <= 0)
 			return diff;
@@ -2054,7 +2054,7 @@ DeeSeq_EqVI(DeeObject *const *lhsv, size_t lhsc,
 				return 0; /* COUNT(LHS) > COUNT(RHS) */
 			return -1;
 		}
-		diff = DeeObject_CompareEq(lhsv[i], rhs_item);
+		diff = DeeObject_TryCompareEq(lhsv[i], rhs_item);
 		Dee_Decref(rhs_item);
 		if (diff <= 0)
 			return diff;
@@ -2103,7 +2103,7 @@ DeeSeq_EqFV(DeeObject *lhs,
 		lhs_item = DeeFastSeq_GetItem_deprecated(lhs, i);
 		if unlikely(!lhs_item)
 			return -1;
-		diff = DeeObject_CompareEq(lhs_item, rhsv[i]);
+		diff = DeeObject_TryCompareEq(lhs_item, rhsv[i]);
 		Dee_Decref(lhs_item);
 		if (diff <= 0)
 			return diff;
@@ -2126,7 +2126,7 @@ DeeSeq_EqFF(DeeObject *lhs, DeeObject *rhs, size_t elemc) {
 			Dee_Decref(lhs_item);
 			return -1;
 		}
-		diff = DeeObject_CompareEq(lhs_item, rhs_item);
+		diff = DeeObject_TryCompareEq(lhs_item, rhs_item);
 		Dee_Decref(rhs_item);
 		Dee_Decref(lhs_item);
 		if (diff <= 0)
@@ -2152,7 +2152,7 @@ DeeSeq_EqFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 				return 0; /* COUNT(LHS) > COUNT(RHS) */
 			return -1;
 		}
-		diff = DeeObject_CompareEq(lhs_item, rhs_item);
+		diff = DeeObject_TryCompareEq(lhs_item, rhs_item);
 		Dee_Decref(rhs_item);
 		Dee_Decref(lhs_item);
 		if (diff <= 0)
@@ -2205,7 +2205,7 @@ DeeSeq_EqIV(DeeObject *lhs,
 				return 0; /* COUNT(LHS) < COUNT(RHS) */
 			return -1;
 		}
-		diff = DeeObject_CompareEq(lhs_item, rhsv[i]);
+		diff = DeeObject_TryCompareEq(lhs_item, rhsv[i]);
 		Dee_Decref(lhs_item);
 		if (diff <= 0)
 			return diff;
@@ -2239,7 +2239,7 @@ DeeSeq_EqIF(DeeObject *lhs,
 			Dee_Decref(lhs_item);
 			return -1;
 		}
-		diff = DeeObject_CompareEq(lhs_item, rhs_item);
+		diff = DeeObject_TryCompareEq(lhs_item, rhs_item);
 		Dee_Decref(rhs_item);
 		Dee_Decref(lhs_item);
 		if (diff <= 0)
@@ -2281,7 +2281,7 @@ DeeSeq_EqII(DeeObject *lhs, DeeObject *rhs) {
 				return -1;
 			return 0; /* COUNT(LHS) > COUNT(RHS) */
 		}
-		diff = DeeObject_CompareEq(lhs_item, rhs_item);
+		diff = DeeObject_TryCompareEq(lhs_item, rhs_item);
 		Dee_Decref(rhs_item);
 		Dee_Decref(lhs_item);
 		if (diff <= 0)

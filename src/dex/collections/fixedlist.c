@@ -614,7 +614,7 @@ fl_contains(FixedList *self, DeeObject *value) {
 		elem = self->fl_elem[i];
 		Dee_Incref(elem);
 		FixedList_LockEndRead(self);
-		temp = DeeObject_CompareEq(value, elem);
+		temp = DeeObject_TryCompareEq(value, elem);
 		Dee_Decref(elem);
 		if (temp != 0) {
 			if unlikely(temp < 0)

@@ -3688,7 +3688,7 @@ impl_instance_builtin_eq(DeeTypeObject *tp_self,
 			Dee_instance_desc_lock_endread(instance);
 
 			/* Compare the two members. */
-			temp = DeeObject_CompareEq(lhs_val, rhs_val);
+			temp = DeeObject_TryCompareEq(lhs_val, rhs_val);
 			Dee_Decref(rhs_val);
 			Dee_Decref(lhs_val);
 			if (temp <= 0)
@@ -3737,7 +3737,7 @@ impl_instance_builtin_lo(DeeTypeObject *tp_self,
 				Dee_Decref(lhs_val);
 				return temp; /* Error, or lower */
 			}
-			temp = DeeObject_CompareEq(lhs_val, rhs_val);
+			temp = DeeObject_TryCompareEq(lhs_val, rhs_val);
 			Dee_Decref(rhs_val);
 			Dee_Decref(lhs_val);
 			if (temp <= 0)
@@ -3802,7 +3802,7 @@ non_last_member:
 				Dee_Decref(lhs_val);
 				return temp; /* Error, or lower */
 			}
-			temp = DeeObject_CompareEq(lhs_val, rhs_val);
+			temp = DeeObject_TryCompareEq(lhs_val, rhs_val);
 			Dee_Decref(rhs_val);
 			Dee_Decref(lhs_val);
 			if (temp <= 0)

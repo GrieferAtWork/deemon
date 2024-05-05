@@ -4291,7 +4291,6 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultTryCompareEqWithEq,
 		goto err;
 	}
 	result = DeeObject_BoolInherited(resultob);
-	Dee_Decref(resultob);
 	if unlikely(result < 0)
 		goto err;
 	return result ? 0 : 1;
@@ -4313,7 +4312,6 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultTryCompareEqWithNe,
 		goto err;
 	}
 	result = DeeObject_BoolInherited(resultob);
-	Dee_Decref(resultob);
 	if unlikely(result < 0)
 		goto err;
 	return result;
@@ -6309,7 +6307,7 @@ default_contains_with_foreach_cb(void *arg, DeeObject *elem);
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
-	int temp = DeeObject_CompareEq((DeeObject *)arg, elem);
+	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
 	if (temp > 0)
 		temp = -2;
 	return temp;
@@ -6788,7 +6786,7 @@ default_map_getitem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *v
 	int temp;
 	struct default_map_getitem_with_foreach_pair_data *data;
 	data = (struct default_map_getitem_with_foreach_pair_data *)arg;
-	temp = DeeObject_CompareEq(data->mgifpd_key, key);
+	temp = DeeObject_TryCompareEq(data->mgifpd_key, key);
 	if (temp > 0) {
 		Dee_Incref(value);
 		data->mgifpd_result = value;
@@ -7100,7 +7098,7 @@ size_t_equals_object(size_t lhs, DeeObject *rhs) {
 	lhs_value = DeeInt_NewSize(lhs);
 	if unlikely(!lhs_value)
 		goto err;
-	result = DeeObject_CompareEq(lhs_value, rhs);
+	result = DeeObject_TryCompareEq(lhs_value, rhs);
 	Dee_Decref(lhs_value);
 	return result;
 err:
@@ -8826,7 +8824,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_map_bounditem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	(void)value;
-	temp = DeeObject_CompareEq((DeeObject *)arg, key);
+	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
 	if (temp > 0)
 		temp = -2; /* Stop iteration */
 	return temp;
@@ -12377,55 +12375,35 @@ DEFINE_OBJECT_COMPARE_OPERATOR(CompareGeObject, ge, OPERATOR_GE, DeeType_INVOKE_
 
 
 #ifndef DEFINE_TYPED_OPERATORS
-#define DEFINE_COMPARE_OPERATOR(name, fwd, bck, error) \
-	PUBLIC WUNUSED NONNULL((1, 2)) int DCALL           \
-	name(DeeObject *self, DeeObject *some_object) {    \
-		DeeObject *val;                                \
-		val = name##Object(self, some_object);         \
-		if unlikely(!val)                              \
-			goto err;                                  \
-		return DeeObject_BoolInherited(val);           \
-	err:                                               \
-		return -1;                                     \
+#define DEFINE_COMPARE_OPERATOR(name)               \
+	PUBLIC WUNUSED NONNULL((1, 2)) int DCALL        \
+	name(DeeObject *self, DeeObject *some_object) { \
+		DREF DeeObject *result;                     \
+		result = name##Object(self, some_object);   \
+		if unlikely(!result)                        \
+			goto err;                               \
+		return DeeObject_BoolInherited(result);     \
+	err:                                            \
+		return -1;                                  \
 	}
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareLo, lo, ge, OPERATOR_LO)
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareLe, le, gr, OPERATOR_LE)
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareGr, gr, lo, OPERATOR_GR)
-DEFINE_COMPARE_OPERATOR(DeeObject_CompareGe, ge, le, OPERATOR_GE)
+DEFINE_COMPARE_OPERATOR(DeeObject_CompareEq)
+DEFINE_COMPARE_OPERATOR(DeeObject_CompareNe)
+DEFINE_COMPARE_OPERATOR(DeeObject_CompareLo)
+DEFINE_COMPARE_OPERATOR(DeeObject_CompareLe)
+DEFINE_COMPARE_OPERATOR(DeeObject_CompareGr)
+DEFINE_COMPARE_OPERATOR(DeeObject_CompareGe)
 #undef DEFINE_COMPARE_OPERATOR
 
-DEFINE_OPERATOR(int, CompareEq, (DeeObject *self, DeeObject *some_object)) {
-	LOAD_TP_SELF;
-	if likely((tp_self->tp_cmp && tp_self->tp_cmp->tp_eq) ||
-	          (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_eq)) {
-		DREF DeeObject *result = DeeType_INVOKE_EQ(tp_self, self, some_object);
-		if likely(result)
-			return DeeObject_BoolInherited(result);
-		if (!DeeError_Catch(&DeeError_NotImplemented) &&
-		    !DeeError_Catch(&DeeError_TypeError) &&
-		    !DeeError_Catch(&DeeError_ValueError))
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-DEFINE_OPERATOR(int, CompareNe, (DeeObject *self, DeeObject *some_object)) {
-	LOAD_TP_SELF;
-	if likely((tp_self->tp_cmp && tp_self->tp_cmp->tp_ne) ||
-	          (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_ne)) {
-		DREF DeeObject *result = DeeType_INVOKE_NE(tp_self, self, some_object);
-		if likely(result)
-			return DeeObject_BoolInherited(result);
-		if (!DeeError_Catch(&DeeError_NotImplemented) &&
-		    !DeeError_Catch(&DeeError_TypeError) &&
-		    !DeeError_Catch(&DeeError_ValueError))
-			goto err;
-	}
-	return 1;
-err:
-	return -1;
+/* Deprecated wrapper around "DeeObject_TryCompareForEquality()"
+ * @return: 1 : Compare returns "true"
+ * @return: 0 : Compare returns "false"
+ * @return: -1: Error */
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_TryCompareEq)(DeeObject *self, DeeObject *some_object) {
+	int result = DeeObject_TryCompareForEquality(self, some_object);
+	if unlikely(result == Dee_COMPARE_ERR)
+		return -1;
+	return result == 0 ? 1 : 0;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -12456,7 +12434,14 @@ DEFINE_OPERATOR(int, CompareForEquality, (DeeObject *self, DeeObject *rhs)) {
 	return Dee_COMPARE_ERR;
 }
 
-/* @return: == -1: `lhs != rhs', or `NotImplemented', `TypeError' or `ValueError' was thrown an handled
+/* Same as `DeeObject_CompareForEquality()', but automatically handles errors
+ * that usually indicate that "lhs" and "rhs" cannot be compared by returning
+ * either `-1' or `1' instead. The following errors get handled (so-long as
+ * the effective `tp_trycompare_eq' callback doesn't end up throwing these):
+ * - `Error.RuntimeError.NotImplemented' (`DeeError_NotImplemented'; Should indicate compare-not-implemented)
+ * - `Error.TypeError'                   (`DeeError_TypeError';      Should indicate unsupported type combination)
+ * - `Error.ValueError'                  (`DeeError_ValueError';     Should indicate unsupported instance combination)
+ * @return: == -1: `lhs != rhs'
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
@@ -17636,13 +17621,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
                                DeeObject *elem, /*nullable*/ DeeObject *key) {
 	int result;
 	if (!key)
-		return DeeObject_CompareEq(keyed_search_item, elem);
+		return DeeObject_TryCompareEq(keyed_search_item, elem);
 
 	/* TODO: Special optimizations for specific keys (e.g. `string.lower') */
 	elem = DeeObject_Call(key, 1, (DeeObject **)&elem);
 	if unlikely(!elem)
 		goto err;
-	result = DeeObject_CompareEq(keyed_search_item, elem);
+	result = DeeObject_TryCompareEq(keyed_search_item, elem);
 	Dee_Decref(elem);
 	return result;
 err:

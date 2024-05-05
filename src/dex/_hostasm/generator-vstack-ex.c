@@ -4965,12 +4965,12 @@ again:
 
 				if (it->ti_hash == hash) {
 					int temp;
-					/* Verify that `DeeObject_CompareEq(key, it->ti_key)' is a constant call. */
+					/* Verify that `DeeObject_TryCompareEq(key, it->ti_key)' is a constant call. */
 					if (!DeeMethodFlags_VerifyConstCallCondition(eq_flags, key, 1, &it->ti_key, NULL))
 						goto next_key;
 
 					/* Check if this is a duplicate key. */
-					temp = DeeObject_CompareEq(key, it->ti_key);
+					temp = DeeObject_TryCompareEq(key, it->ti_key);
 					if unlikely(temp < 0) {
 						if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
 							goto err;

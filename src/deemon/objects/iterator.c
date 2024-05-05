@@ -1747,7 +1747,7 @@ do_prev_with_rewind_iterator:
 			 * >> }
 			 * >> this.operator move := (c);
 			 * >> return true; */
-			error = DeeObject_CompareEq(new_self, self);
+			error = DeeObject_TryCompareEq(new_self, self);
 			if (error != 0) {
 				if unlikely(error < 0)
 					goto err_new_self;
@@ -1842,8 +1842,10 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
-			error = DeeObject_CompareNe(temp, DeeInt_Zero);
+			error = DeeObject_TryCompareEq(temp, DeeInt_Zero);
 			Dee_Decref(temp);
+			if likely(error >= 0)
+				error = !error;
 			return error;
 		}
 		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_prev);
@@ -1874,8 +1876,10 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 				goto err;
 			}
 			Dee_Decref(temp2);
-			error = DeeObject_CompareNe(self, temp);
+			error = DeeObject_TryCompareEq(self, temp);
 			Dee_Decref(temp);
+			if likely(error >= 0)
+				error = !error;
 			return error;
 		}
 		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
@@ -1886,8 +1890,10 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 			Dee_Decref(temp);
 			if unlikely(!temp2)
 				goto err;
-			error = DeeObject_CompareNe(self, temp2);
+			error = DeeObject_TryCompareEq(self, temp2);
 			Dee_Decref(temp2);
+			if likely(error >= 0)
+				error = !error;
 			return error;
 		}
 		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)

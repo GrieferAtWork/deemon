@@ -119,7 +119,7 @@ attr_eq(Attr *self, Attr *other) {
 	if (self->a_info.a_attrtype != other->a_info.a_attrtype)
 		goto nope;
 	if (self->a_info.a_decl != other->a_info.a_decl) {
-		result = DeeObject_CompareEq(self->a_info.a_decl,
+		result = DeeObject_TryCompareEq(self->a_info.a_decl,
 		                             other->a_info.a_decl);
 		if unlikely(result < 0)
 			goto err;

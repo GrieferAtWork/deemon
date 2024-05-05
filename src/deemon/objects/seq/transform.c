@@ -101,7 +101,7 @@ PRIVATE struct type_member tpconst transiter_members[] = {
 		if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type))           \
 			goto err;                                                                    \
 		if (self->ti_func != other->ti_func) {                                           \
-			int temp = DeeObject_CompareEq(self->ti_func, other->ti_func);               \
+			int temp = DeeObject_TryCompareEq(self->ti_func, other->ti_func);               \
 			if (temp <= 0) {                                                             \
 				if (temp == 0)                                                           \
 					err_unimplemented_operator(&SeqTransformationIterator_Type, opname); \

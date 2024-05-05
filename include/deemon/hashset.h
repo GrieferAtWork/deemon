@@ -116,7 +116,7 @@ DeeHashSet_NewItemsInherited(size_t num_items,
  * >>              break; // Not found
  * >>          if (item->hsi_hash != hash)
  * >>              continue; // Non-matching hash
- * >>          if (DeeObject_CompareEq(key, item->hsi_key))
+ * >>          if (DeeObject_TryCompareForEquality(key, item->hsi_key) == 0)
  * >>              return item->si_item;
  * >>     }
  * >>     return NULL;

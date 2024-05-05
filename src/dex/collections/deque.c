@@ -1002,7 +1002,7 @@ deq_contains(Deque *self, DeeObject *item) {
 			elem = DequeIterator_ITEM(&iter);
 			Dee_Incref(elem);
 			Deque_LockEndRead(self);
-			temp = DeeObject_CompareEq(item, elem);
+			temp = DeeObject_TryCompareEq(item, elem);
 			Dee_Decref(elem);
 			if (temp != 0) {
 				if unlikely(temp < 0)
