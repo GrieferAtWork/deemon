@@ -74,16 +74,6 @@
  *       throw an `Error.TypeError'
  *  >> Attempting to handle an exception thrown by a caller:
  *       throw an `Error.RuntimeError.IllegalInstruction'
- *
- * #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
- * Additional changes in behavior when `CODE_FASSEMBLY' is set:
- *  >> `ASM_PUSH_CONST' and `ASM_PUSH_CONST16' behave identical to
- *     `ASM_PUSH_STATIC' and `ASM_PUSH_STATIC16' in that they always
- *     acquire the static variable lock before accessing the static
- *     variable vector.
- *     Similarly, all other instructions that use constants also acquire
- *     this lock (i.e.: `ASM_GETITEM_C', `ASM_GETATTR_C', etc...)
- * #endif // !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  */
 
 /* Interpreter registers:
@@ -94,13 +84,8 @@
  *   - bool    REG_RESULT_ITERDONE; // When true, the function shall return to indicate iterator exhaustion. Only available in yielding function.
  *   - Integer REG_EXCEPTION_START; // Value of `thread->t_exceptsz' when the frame got created
  *   - Object  REG_LOCALS[];        // A variable number of object slots for local variables, limited by code requirements.
- * #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  *   - Object  REG_CONSTANTS[];     // A variable number of constant object slots, stored alongside code.
  *   - Object  REG_REFS[];          // A variable number of object slots for referenced variables, limited by code requirements. Also contained are static variables (which always appear near the end and can be UNBOUND)
- * #else // CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
- *   - Object  REG_CONSTANTS[];     // A variable number of constant object slots, stored alongside code. Also contained are static variables.
- *   - Object  REG_REFS[];          // A variable number of object slots for referenced variables, limited by code requirements.
- * #endif // !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  *   - Object  REG_ARGS[];          // A variable number of object slots for function arguments, limited by code requirements.
  *   - Object  REG_GLOBALS[];       // A variable number of object slots for global variables, limited by module requirements.
  *   - Object  REG_EXTERN[][];      // A variable number of object slots, accessible through a variable number of module slots.
@@ -235,7 +220,6 @@
  * >> END
  * >>
  * >> Object &STATIC(Integer sid) BEGIN
- * >> #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  * >>     IF reference_index >= code->co_refstaticc THEN
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
@@ -243,12 +227,6 @@
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
  * >>     RETURN REG_REFS[reference_index];
- * >> #else // CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
- * >>     IF sid >= LENGTH(REG_CONSTANTS) THEN
- * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
- * >>     FI
- * >>     RETURN REG_CONSTANTS[sid];
- * >> #endif // !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  * >> END
  * >>
  * >> Object CONSTANT(Integer cid) BEGIN
@@ -411,12 +389,8 @@
                                     * >> PUSH(bool(IS_BOUND(ARG(IMM8)))); */
 #define ASM_PUSH_BND_EXTERN   0x0c /* [3][-0,+1]   `push bound extern <imm8>:<imm8>'    - Check if the extern variable indexed by `<imm8>:<imm8>' is bound, pushing true/false indicative of that state.
                                     * >> PUSH(bool(IS_BOUND(EXTERN(IMM8, IMM8)))); */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define ASM_PUSH_BND_STATIC   0x0d /* [2][-0,+1]   `push bound static <imm8>'           - Check if the static variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
                                     * >> PUSH(bool(IS_BOUND(STATIC(IMM8)))); */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-/*      ASM_                  0x0d  *               --------                            - ------------------ */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM_PUSH_BND_GLOBAL   0x0e /* [2][-0,+1]   `push bound global <imm8>'           - Check if the global variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
                                     * >> PUSH(bool(IS_BOUND(GLOBAL(IMM8)))); */
 #define ASM_PUSH_BND_LOCAL    0x0f /* [2][-0,+1]   `push bound local <imm8>'            - Check if the local variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
@@ -505,12 +479,8 @@
                                     * >>     EXCEPT();
                                     * >> FI
                                     * >> PUSH(func(args...)); */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define ASM_DEL_STATIC        0x1d /* [2][-0,+0]   `del static <imm8>'                  - Unlink the static variable indexed by `<imm8>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with.
                                     * >> GLOBAL(IMM8) = UNBOUND; */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-/*      ASM_                  0x1d  *               --------                            - ------------------ */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM_DEL_GLOBAL        0x1e /* [2][-0,+0]   `del global <imm8>'                  - Unlink the global variable indexed by `<imm8>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with.
                                     * >> GLOBAL(IMM8) = UNBOUND; */
 #define ASM_DEL_LOCAL         0x1f /* [2][-0,+0]   `del local <imm8>'                   - Unlink the local variable indexed by `<imm8>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with.
@@ -1145,11 +1115,7 @@
 /*      ASM_                  0xf00a  *               --------                            - ------------------ */
 #define ASM16_PUSH_BND_ARG    0xf00b /* [4][-0,+1]   `push bound arg <imm16>'             - Check if the argument variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_EXTERN 0xf00c /* [6][-0,+1]   `push bound extern <imm16>:<imm16>'  - Check if the extern variable indexed by `<imm16>:<imm16>' is bound, pushing true/false indicative of that state. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define ASM16_PUSH_BND_STATIC 0xf00d /* [2][-0,+1]   `push bound static <imm16>'           - Check if the static variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-/*      ASM_                  0xf00d  *               --------                            - ------------------ */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM16_PUSH_BND_GLOBAL 0xf00e /* [4][-0,+1]   `push bound global <imm16>'          - Check if the global variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_LOCAL  0xf00f /* [4][-0,+1]   `push bound local <imm16>'           - Check if the local variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 /*      ASM_                  0xf010  *               --------                            - ------------------ */
@@ -1193,11 +1159,7 @@
                                       * [4][-1,+1]   `PREFIX: push op $<imm16>, pop...' */
 #define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement sequence-initializers. */
 #define ASM_CALL_MAP          0xf01c /* [3][-1-n*2,+1] `call top, {#<imm8>*2}'            - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement mapping-initializers. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define ASM16_DEL_STATIC      0xf01d /* [4][-0,+0]   `del static <imm16>'                  - Unlink the static variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-/*      ASM_                  0xf01d  *               --------                            - ------------------ */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM16_DEL_GLOBAL      0xf01e /* [4][-0,+0]   `del global <imm16>'                 - Unlink the global variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
 #define ASM16_DEL_LOCAL       0xf01f /* [4][-0,+0]   `del local <imm16>'                  - Unlink the local variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
 #define ASM_CALL_TUPLE_KWDS   0xf020 /* [2][-3,+1]   `call top, pop..., pop'              - The universal call-with-keywords instruction that also takes keywords from the stack. */

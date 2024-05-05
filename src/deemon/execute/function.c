@@ -292,7 +292,6 @@ DeeFunction_New(DeeObject *code_, size_t refc,
 	        "name          = %s\n",
 	        code->co_refc, refc,
 	        DeeCode_NAME(code));
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(code->co_refstaticc >= refc);
 	if likely(code->co_refstaticc == refc) {
 		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv) +
@@ -301,10 +300,6 @@ DeeFunction_New(DeeObject *code_, size_t refc,
 		result = (DREF Function *)DeeGCObject_Calloc(offsetof(Function, fo_refv) +
 		                                             (code->co_refstaticc * sizeof(DREF DeeObject *)));
 	}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
-	                                           (refc * sizeof(DREF DeeObject *)));
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(!result)
 		goto done;
 	result->fo_code = code;
@@ -315,14 +310,10 @@ DeeFunction_New(DeeObject *code_, size_t refc,
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	Dee_hostasm_function_init(&result->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	Dee_atomic_rwlock_init(&result->fo_reflock);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	Dee_Movrefv(result->fo_refv, refv, refc);
 	DeeObject_Init(result, &DeeFunction_Type);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	result = (DREF Function *)DeeGC_Track((DeeObject *)result);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 done:
 	return (DREF DeeObject *)result;
 }
@@ -340,7 +331,6 @@ DeeFunction_NewInherited(DeeObject *code_, size_t refc,
 	        "name          = %s\n",
 	        code->co_refc, refc,
 	        DeeCode_NAME(code));
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(code->co_refstaticc >= refc);
 	if likely(code->co_refstaticc == refc) {
 		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv) +
@@ -349,10 +339,6 @@ DeeFunction_NewInherited(DeeObject *code_, size_t refc,
 		result = (DREF Function *)DeeGCObject_Calloc(offsetof(Function, fo_refv) +
 		                                             (code->co_refstaticc * sizeof(DREF DeeObject *)));
 	}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
-	                                           (refc * sizeof(DREF DeeObject *)));
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(!result)
 		goto done;
 	result->fo_code = code;
@@ -363,14 +349,10 @@ DeeFunction_NewInherited(DeeObject *code_, size_t refc,
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	Dee_hostasm_function_init(&result->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	Dee_atomic_rwlock_init(&result->fo_reflock);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	memcpyc(result->fo_refv, refv, refc, sizeof(DREF DeeObject *));
 	DeeObject_Init(result, &DeeFunction_Type);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	result = (DREF Function *)DeeGC_Track((DeeObject *)result);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 done:
 	return (DREF DeeObject *)result;
 }
@@ -381,16 +363,12 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code_) {
 	DREF Function *result;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(code->co_refc == 0);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if likely(code->co_refstaticc == 0) {
 		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv));
 	} else {
 		result = (DREF Function *)DeeGCObject_Calloc(offsetof(Function, fo_refv) +
 		                                             (code->co_refstaticc * sizeof(DREF DeeObject *)));
 	}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv));
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(!result)
 		goto done;
 	result->fo_code = code;
@@ -401,13 +379,9 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code_) {
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	Dee_hostasm_function_init(&result->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	Dee_atomic_rwlock_init(&result->fo_reflock);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	DeeObject_Init(result, &DeeFunction_Type);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	result = (DREF Function *)DeeGC_Track((DeeObject *)result);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 done:
 	return (DREF DeeObject *)result;
 }
@@ -422,7 +396,6 @@ function_init(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
 		goto err;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(code->co_refc <= code->co_refstaticc);
 	if likely(code->co_refc == code->co_refstaticc) {
 		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv) +
@@ -431,10 +404,6 @@ function_init(size_t argc, DeeObject *const *argv) {
 		result = (DREF Function *)DeeGCObject_Calloc(offsetof(Function, fo_refv) +
 		                                             (code->co_refstaticc * sizeof(DREF DeeObject *)));
 	}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
-	                                           (code->co_refc * sizeof(DREF DeeObject *)));
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_Unpack(refs, code->co_refc, result->fo_refv))
@@ -447,13 +416,9 @@ function_init(size_t argc, DeeObject *const *argv) {
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	Dee_hostasm_function_init(&result->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	Dee_atomic_rwlock_init(&result->fo_reflock);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	DeeObject_Init(result, &DeeFunction_Type);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	result = (DREF Function *)DeeGC_Track((DeeObject *)result);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return result;
 err_r:
 	DeeObject_Free(result);
@@ -747,14 +712,12 @@ function_get_code_nexcept(DeeFunctionObject *__restrict self) {
 	return DeeInt_NewUInt16(self->fo_code->co_exceptc);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_nstatic(DeeFunctionObject *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
 	ASSERT(code->co_refstaticc >= code->co_refc);
 	return DeeInt_NewUInt16(code->co_refstaticc - code->co_refc);
 }
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 DOC_REF(code_optimize_doc);
@@ -826,7 +789,6 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	TYPE_GETTER_F("__refs__", &function_get_refs, METHOD_FCONSTCALL,
 	              "->?S?O\n"
 	              "Returns a sequence of all of the references used by @this ?."),
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	TYPE_GETTER_F("__statics__", &DeeFunction_GetStaticsWrapper, METHOD_FCONSTCALL,
 	              "->?S?O\n"
 	              "Returns a (writable) sequence of all of the static variables that appear in @this ?."),
@@ -847,7 +809,6 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Number of static variables during execution"),
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETTER_BOUND_F(STR___kwds__, &function_get_kwds, &function_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
@@ -1030,7 +991,6 @@ function_fini(Function *__restrict self) {
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	code = self->fo_code;
 	refv_iter = Dee_Decprefv(self->fo_refv, code->co_refc);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(code->co_refstaticc >= code->co_refc);
 	if unlikely(code->co_refstaticc > code->co_refc) {
 		uint16_t i, n = (uint16_t)(code->co_refstaticc - code->co_refc);
@@ -1040,9 +1000,6 @@ function_fini(Function *__restrict self) {
 				Dee_Decref(ob);
 		}
 	}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	(void)refv_iter;
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	Dee_Decref(code);
 }
 
@@ -1052,7 +1009,6 @@ function_visit(Function *__restrict self,
 	size_t i;
 	for (i = 0; i < self->fo_code->co_refc; ++i)
 		Dee_Visit(self->fo_refv[i]);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	DeeFunction_RefLockRead(self);
 	for (; i < self->fo_code->co_refstaticc; ++i) {
 		DeeObject *ob = self->fo_refv[i];
@@ -1060,7 +1016,6 @@ function_visit(Function *__restrict self,
 			Dee_Visit(ob);
 	}
 	DeeFunction_RefLockEndRead(self);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	Dee_Visit(self->fo_code);
 }
 
@@ -1111,7 +1066,6 @@ function_printrepr(Function *__restrict self,
 	return function_print(self, printer, arg);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE NONNULL((1)) void DCALL
 function_clear(DeeFunctionObject *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
@@ -1156,7 +1110,6 @@ restart:
 PRIVATE struct type_gc tpconst function_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&function_clear
 };
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 function_hash(Function *__restrict self) {
@@ -1164,7 +1117,6 @@ function_hash(Function *__restrict self) {
 	dhash_t result;
 	result = DeeObject_Hash((DeeObject *)code);
 	result = Dee_HashCombine(result, DeeObject_Hashv(self->fo_refv, code->co_refc));
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if unlikely(code->co_refstaticc > code->co_refc) {
 		uint16_t i;
 		for (i = code->co_refc; i < code->co_refstaticc; ++i) {
@@ -1182,7 +1134,6 @@ function_hash(Function *__restrict self) {
 			}
 		}
 	}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return result;
 }
 
@@ -1203,7 +1154,6 @@ function_eq(Function *self, Function *other) {
 		if (result <= 0)
 			goto err_or_not_equal;
 	}
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(code->co_refstaticc == other->fo_code->co_refstaticc);
 	for (; i < code->co_refstaticc; ++i) {
 		DREF DeeObject *lhs, *rhs;
@@ -1237,13 +1187,10 @@ function_eq(Function *self, Function *other) {
 				goto err_or_not_equal;
 		}
 	}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return_true;
 err_or_not_equal:
 	if (!result) {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 not_equal:
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		return_false;
 	}
 err:
@@ -1267,7 +1214,6 @@ function_ne(Function *self, Function *other) {
 		if (result != 0)
 			goto err_or_not_equal;
 	}
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(code->co_refstaticc == other->fo_code->co_refstaticc);
 	for (; i < code->co_refstaticc; ++i) {
 		DREF DeeObject *lhs, *rhs;
@@ -1301,13 +1247,10 @@ function_ne(Function *self, Function *other) {
 				goto err_or_not_equal;
 		}
 	}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return_false;
 err_or_not_equal:
 	if (!result) {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 not_equal:
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		return_true;
 	}
 err:
@@ -1325,11 +1268,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Function),
 	/* .tp_doc      = */ DOC("(code=!Ert:Code_empty,refs=!T0)"),
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT | TP_FVARIABLE | TP_FGC,
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT | TP_FVARIABLE,
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCallable_Type,
@@ -1356,11 +1295,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeFunction_Call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&function_visit,
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	/* .tp_gc            = */ &function_gc,
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	/* .tp_gc            = */ NULL,
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &function_cmp,
 	/* .tp_seq           = */ NULL,
@@ -1768,7 +1703,6 @@ yf_get_refs(YFunction *__restrict self) {
 	return function_get_refs(self->yf_func);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_statics(YFunction *__restrict self) {
 	return DeeFunction_GetStaticsWrapper(self->yf_func);
@@ -1783,7 +1717,6 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_staticsbyname(YFunction *__restrict self) {
 	return DeeFunction_GetStaticsByNameWrapper(self->yf_func);
 }
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_kwds(YFunction *__restrict self) {
@@ -1857,7 +1790,6 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?S?O\n"
 	              "Alias for :Function.__refs__ though ?#__func__"),
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	TYPE_GETTER_F("__statics__", &yf_get_statics,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?S?O\n"
@@ -1882,7 +1814,6 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	              /**/ "different calls to ?. (requires debug information to be present in the case "
 	              /**/ "of ?#__refsbyname__, ?#__staticsbyname__, and keyword argument support in the "
 	              /**/ "case of ?#__argsbyname__)"),
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETTER_BOUND_F(STR___kwds__, &yf_get_kwds, &yf_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
@@ -2557,7 +2488,6 @@ err:
 }
 #define yfi_bound_refs yfi_bound_yfunc
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_get_statics(YFIterator *__restrict self) {
 	DREF DeeObject *result;
@@ -2723,7 +2653,6 @@ yfi_get_frame_symbols(YFIterator *__restrict self) {
 err:
 	return NULL;
 }
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfi_get_kwds(YFIterator *__restrict self) {
@@ -3048,7 +2977,6 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"
 	                    "Returns a sequence of all of the references used by the function"),
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	TYPE_GETTER_BOUND_F("__statics__", &yfi_get_statics, &yfi_bound_statics,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"
@@ -3089,7 +3017,6 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	              METHOD_FCONSTCALL,
 	              "->?M?X2?Dstring?Dint?O\n"
 	              "Alias for ?A__symbols__?Ert:Frame through ?#__frame__"),
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETTER_BOUND_F("__args__", &yfi_get_args, &yfi_bound_args,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"

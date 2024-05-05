@@ -385,9 +385,6 @@ Dee_ddi_next_state(uint8_t *__restrict ip,
 #define DDI_EXDAT_MAXSIZE 7    /* Max size (in bytes) of a single DDI extension data block. */
 #define DDI_EXDAT_O_END   0x00 /* End of extended data. */
 #define DDI_EXDAT_O_RNAM  0x00 /* | DDI_EXDAT_OP*; [id, strtab_offset] */
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-#define DDI_EXDAT_O_SNAM  0x01 /* | DDI_EXDAT_OP*; [id, strtab_offset] */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 struct Dee_ddi_exdat {
 	uint32_t                         dx_size;  /* Amount of extended data bytes. */
@@ -454,10 +451,6 @@ DeeCode_FindDDI(DeeObject *__restrict self,
 /* Return the name for a specific assembly symbol which may be found in code. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
 DeeCode_GetASymbolName(DeeObject const *__restrict self, uint16_t aid); /* Argument */
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetSSymbolName(DeeObject const *__restrict self, uint16_t sid); /* Static */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
 DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid); /* Reference */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
@@ -644,20 +637,12 @@ struct Dee_hostasm_function {
 
 struct Dee_code_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	Dee_OBJECT_HEAD
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	Dee_OBJECT_HEAD /* GC Object. */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	uint16_t                 co_flags;       /* Code flags (Set of `CODE_F*') */
 	uint16_t                 co_localc;      /* [const] Amount of local variables used by code. */
 	uint16_t                 co_constc;      /* [const] Amount of constant variables. */
 	uint16_t                 co_refc;        /* [const] Amount of reference variables used by this code. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	uint16_t                 co_refstaticc;  /* [const][>= co_refc] Amount of references, plus # of extra static variables (that come after references) */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	uint16_t                 co_padding;     /* ... */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	uint16_t                 co_exceptc;     /* [const] Amount of exception handlers. */
 	uint16_t                 co_argc_min;    /* [const] Min amount of arguments required to execute this code. */
 	uint16_t                 co_argc_max;    /* [const][>= co_argc_min] Max amount of arguments accepted by this code (excluding a varargs argument). */
@@ -665,11 +650,6 @@ struct Dee_code_object {
 	                                          * Min amount of bytes of local storage required by assembly of this code object.
 	                                          * NOTE: `X' is the minimum stack depth required by this code object. */
 	Dee_code_size_t          co_codebytes;   /* [const] The total number of code bytes. */
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t      co_constlock;   /* Lock used by `ASM_STATIC', `ASM_PUSH_STATIC' and `ASM_POP_STATIC' instructions when accessing `co_constv'. */
-#endif /* !CONFIG_NO_THREADS */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	union {
 		DREF struct Dee_module_object
 		                    *co_module;      /* [1..1] The module in which this code object was defined.
@@ -692,11 +672,7 @@ struct Dee_code_object {
 	DREF DeeObject                     *const *co_defaultv; /* [0..1][const][0..(co_argc_max-co_argc_min)][owned][const] Vector of default argument values.
 	                                                         * NOTE: NULL entries refer to optional arguments, producing an error
 	                                                         *       when attempted to be loaded without a user override. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	DREF DeeObject                     *const *co_constv;  /* [1..1][0..co_constc][owned] Vector of constants. */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	DREF DeeObject                           **co_constv;  /* [1..1][lock(co_constv)][0..co_constc][owned] Vector of constants and static variables. */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	/* NOTE: Exception handlers are execute in order of last -> first, meaning that later handler overwrite prior ones. */
 	struct Dee_except_handler                 *co_exceptv;  /* [0..co_excptc][owned] Vector of exception handler descriptors. */
 	DREF DeeDDIObject                         *co_ddi;      /* [1..1][const] Debug line information. */
@@ -716,46 +692,11 @@ struct Dee_code_object {
 	                                                         *          instruction is always executed, no matter what. */
 };
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define DeeCode_Malloc(co_codebytes)          ((DREF DeeCodeObject *)DeeObject_TryMalloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_Realloc(ptr, co_codebytes)    ((DREF DeeCodeObject *)DeeObject_TryRealloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_TryMalloc(co_codebytes)       ((DREF DeeCodeObject *)DeeObject_Malloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_TryRealloc(ptr, co_codebytes) ((DREF DeeCodeObject *)DeeObject_Realloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
 #define DeeCode_Free(ptr)                     DeeObject_Free(ptr)
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#define DeeCode_Malloc(co_codebytes)          ((DREF DeeCodeObject *)DeeGCObject_TryMalloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
-#define DeeCode_Realloc(ptr, co_codebytes)    ((DREF DeeCodeObject *)DeeGCObject_TryRealloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
-#define DeeCode_TryMalloc(co_codebytes)       ((DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
-#define DeeCode_TryRealloc(ptr, co_codebytes) ((DREF DeeCodeObject *)DeeGCObject_Realloc(ptr, offsetof(DeeCodeObject, co_code) + (co_codebytes)))
-#define DeeCode_Free(ptr)                     DeeGCObject_Free(ptr)
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-#define DeeCode_ConstLockReading(self)    Dee_atomic_rwlock_reading(&(self)->co_constlock)
-#define DeeCode_ConstLockWriting(self)    Dee_atomic_rwlock_writing(&(self)->co_constlock)
-#define DeeCode_ConstLockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->co_constlock)
-#define DeeCode_ConstLockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->co_constlock)
-#define DeeCode_ConstLockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->co_constlock)
-#define DeeCode_ConstLockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->co_constlock)
-#define DeeCode_ConstLockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->co_constlock)
-#define DeeCode_ConstLockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->co_constlock)
-#define DeeCode_ConstLockRead(self)       Dee_atomic_rwlock_read(&(self)->co_constlock)
-#define DeeCode_ConstLockWrite(self)      Dee_atomic_rwlock_write(&(self)->co_constlock)
-#define DeeCode_ConstLockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->co_constlock)
-#define DeeCode_ConstLockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->co_constlock)
-#define DeeCode_ConstLockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->co_constlock)
-#define DeeCode_ConstLockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->co_constlock)
-#define DeeCode_ConstLockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->co_constlock)
-#define DeeCode_ConstLockEnd(self)        Dee_atomic_rwlock_end(&(self)->co_constlock)
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-
-#if !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION) && !defined(CONFIG_NO_THREADS)
-#define _DEE_CODE_CO_STATIC_LOCK_FIELD Dee_atomic_rwlock_t co_constlock;
-#define _DEE_CODE_CO_STATIC_LOCK_INIT  DEE_ATOMIC_RWLOCK_INIT,
-#else /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION && !CONFIG_NO_THREADS */
-#define _DEE_CODE_CO_STATIC_LOCK_FIELD /* nothing */
-#define _DEE_CODE_CO_STATIC_LOCK_INIT  /* nothing */
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION || CONFIG_NO_THREADS */
 
 #ifdef CONFIG_HAVE_CODE_METRICS
 #define _DEE_CODE_CO_METRICS_FIELD struct Dee_code_metrics co_metrics;
@@ -774,7 +715,6 @@ struct Dee_code_object {
 
 
 /* Define a statically allocated code object. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define Dee_DEFINE_CODE(name, co_flags_, co_localc_, co_constc_,   \
                         co_refc_, co_refstaticc_, co_exceptc_,     \
                         co_argc_min_, co_argc_max_, co_framesize_, \
@@ -793,7 +733,6 @@ struct Dee_code_object {
 		uint16_t                              co_argc_max;         \
 		uint32_t                              co_framesize;        \
 		Dee_code_size_t                       co_codebytes;        \
-		_DEE_CODE_CO_STATIC_LOCK_FIELD                             \
 		DREF struct Dee_module_object        *co_module;           \
 		DREF struct Dee_string_object *const *co_keywords;         \
 		DREF DeeObject                *const *co_defaultv;         \
@@ -815,7 +754,6 @@ struct Dee_code_object {
 		co_argc_max_,                                              \
 		co_framesize_,                                             \
 		co_codebytes_,                                             \
-		_DEE_CODE_CO_STATIC_LOCK_INIT                              \
 		co_module_,                                                \
 		co_keywords_,                                              \
 		co_defaultv_,                                              \
@@ -826,63 +764,6 @@ struct Dee_code_object {
 		_DEE_CODE_CO_HOSTASM_INIT                                  \
 		__VA_ARGS__                                                \
 	}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#define Dee_DEFINE_CODE(name, co_flags_, co_localc_, co_constc_,   \
-                        co_refc_, co_refstaticc_, co_exceptc_,     \
-                        co_argc_min_, co_argc_max_, co_framesize_, \
-                        co_codebytes_, co_module_, co_keywords_,   \
-                        co_defaultv_, co_staticv_, co_exceptv_,    \
-                        co_ddi_, ...)                              \
-	struct {                                                       \
-		struct gc_head_link _gc_head_data;                         \
-		struct {                                                   \
-			Dee_OBJECT_HEAD                                        \
-			uint16_t                              co_flags;        \
-			uint16_t                              co_localc;       \
-			uint16_t                              co_constc;       \
-			uint16_t                              co_refc;         \
-			uint16_t                              co_refstaticc;   \
-			uint16_t                              co_exceptc;      \
-			uint16_t                              co_argc_min;     \
-			uint16_t                              co_argc_max;     \
-			uint32_t                              co_framesize;    \
-			Dee_code_size_t                       co_codebytes;    \
-			_DEE_CODE_CO_STATIC_LOCK_FIELD                         \
-			DREF struct Dee_module_object        *co_module;       \
-			DREF struct Dee_string_object *const *co_keywords;     \
-			DREF DeeObject                *const *co_defaultv;     \
-			DREF DeeObject                      **co_constv;       \
-			struct Dee_except_handler            *co_exceptv;      \
-			DREF DeeDDIObject                    *co_ddi;          \
-			_DEE_CODE_CO_METRICS_FIELD                             \
-			_DEE_CODE_CO_HOSTASM_FIELD                             \
-			Dee_instruction_t co_code[co_codebytes_];              \
-		} ob;                                                      \
-	} name = {                                                     \
-		{ NULL, NULL },                                            \
-		{ Dee_OBJECT_HEAD_INIT(&DeeCode_Type),                     \
-		  co_flags_,                                               \
-		  co_localc_,                                              \
-		  co_constc_,                                              \
-		  co_refc_,                                                \
-		  co_refstaticc_,                                          \
-		  co_exceptc_,                                             \
-		  co_argc_min_,                                            \
-		  co_argc_max_,                                            \
-		  co_framesize_,                                           \
-		  co_codebytes_,                                           \
-		  _DEE_CODE_CO_STATIC_LOCK_INIT                            \
-		  co_module_,                                              \
-		  co_keywords_,                                            \
-		  co_defaultv_,                                            \
-		  co_staticv_,                                             \
-		  co_exceptv_,                                             \
-		  co_ddi_,                                                 \
-		  _DEE_CODE_CO_METRICS_INIT                                \
-		  _DEE_CODE_CO_HOSTASM_INIT                                \
-		  __VA_ARGS__ }                                            \
-	}
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 
@@ -894,22 +775,7 @@ struct Dee_code_object {
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef GUARD_DEEMON_EXECUTE_CODE_C
 /* A stub code-object that contains a single, `ret none' instruction. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 INTDEF DeeCodeObject DeeCode_Empty;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-struct DeeCode_Empty_struct {
-	/* Even though never tracked, the empty code
-	 * object still needs the GC header for visiting. */
-	struct Dee_gc_head_link c_head;
-	DeeCodeObject           c_code;
-};
-#ifdef __INTELLISENSE__
-INTDEF DeeCodeObject DeeCode_Empty;
-#else /* __INTELLISENSE__ */
-INTDEF struct DeeCode_Empty_struct DeeCode_Empty_head;
-#define DeeCode_Empty DeeCode_Empty_head.c_code
-#endif /* !__INTELLISENSE__ */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #endif /* !GUARD_DEEMON_EXECUTE_CODE_C */
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -1152,16 +1018,11 @@ DeeCode_HandleBreakpoint(struct Dee_code_frame *__restrict frame);
 
 struct Dee_function_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	Dee_OBJECT_HEAD /* GC Object. */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	Dee_OBJECT_HEAD
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	DREF DeeCodeObject                       *fo_code;    /* [1..1][const] Associated code object. */
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	struct Dee_hostasm_function               fo_hostasm; /* Host assembly functions.  */
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t                       fo_reflock; /* Lock used by `ASM_STATIC', `ASM_PUSH_STATIC' and `ASM_POP_STATIC' instructions when accessing `fo_refv'. */
 #endif /* !CONFIG_NO_THREADS */
@@ -1170,15 +1031,11 @@ struct Dee_function_object {
 	                                                       * [fo_code->co_refstaticc]
 	                                                       * Vector of referenced objects & static variables
 	                                                       * Values may be set to ITER_DONE by `ASM_CMPXCH_UB_LOCK'. */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fo_refv);   /* [1..1][const][fo_code->co_refstaticc] Vector of referenced objects. */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 };
 
 #define DeeFunction_CODE(x) ((DeeFunctionObject const *)Dee_REQUIRES_OBJECT(x))->fo_code
 #define DeeFunction_REFV(x) ((DeeFunctionObject const *)Dee_REQUIRES_OBJECT(x))->fo_refv
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define DeeFunction_RefLockReading(self)    Dee_atomic_rwlock_reading(&(self)->fo_reflock)
 #define DeeFunction_RefLockWriting(self)    Dee_atomic_rwlock_writing(&(self)->fo_reflock)
 #define DeeFunction_RefLockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->fo_reflock)
@@ -1195,7 +1052,6 @@ struct Dee_function_object {
 #define DeeFunction_RefLockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->fo_reflock)
 #define DeeFunction_RefLockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->fo_reflock)
 #define DeeFunction_RefLockEnd(self)        Dee_atomic_rwlock_end(&(self)->fo_reflock)
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
@@ -1205,15 +1061,14 @@ struct Dee_function_object {
 #define _DEE_FUNCTION_FO_HOSTASM_FIELD /* nothing */
 #define _DEE_FUNCTION_FO_HOSTASM_INIT  /* nothing */
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#if defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION) && !defined(CONFIG_NO_THREADS)
+#ifndef CONFIG_NO_THREADS
 #define _DEE_FUNCTION_FO_REFLOCK_FIELD Dee_atomic_rwlock_t fo_reflock;
 #define _DEE_FUNCTION_FO_REFLOCK_INIT  DEE_ATOMIC_RWLOCK_INIT,
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION && !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS */
 #define _DEE_FUNCTION_FO_REFLOCK_FIELD /* nothing */
 #define _DEE_FUNCTION_FO_REFLOCK_INIT  /* nothing */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION || CONFIG_NO_THREADS */
+#endif /* CONFIG_NO_THREADS */
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define Dee_DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
 	struct {                                               \
 		struct gc_head_link _gc_head_data;                 \
@@ -1248,38 +1103,6 @@ struct Dee_function_object {
 		  _DEE_FUNCTION_FO_HOSTASM_INIT            \
 		  _DEE_FUNCTION_FO_REFLOCK_INIT }          \
 	}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#define Dee_DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
-	struct {                                               \
-		struct {                                           \
-			Dee_OBJECT_HEAD                                \
-			DREF DeeCodeObject *fo_code;                   \
-			_DEE_FUNCTION_FO_HOSTASM_FIELD                 \
-			_DEE_FUNCTION_FO_REFLOCK_FIELD                 \
-			DREF DeeObject *fo_refv[fo_refc_];             \
-		} ob;                                              \
-	} name = {                                             \
-		{ Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),         \
-		  fo_code_,                                        \
-		  _DEE_FUNCTION_FO_HOSTASM_INIT                    \
-		  _DEE_FUNCTION_FO_REFLOCK_INIT                    \
-		  __VA_ARGS__ }                                    \
-	}
-#define Dee_DEFINE_FUNCTION_NOREFS(name, fo_code_) \
-	struct {                                       \
-		struct {                                   \
-			Dee_OBJECT_HEAD                        \
-			DREF DeeCodeObject *fo_code;           \
-			_DEE_FUNCTION_FO_HOSTASM_FIELD         \
-			_DEE_FUNCTION_FO_REFLOCK_FIELD         \
-		} ob;                                      \
-	} name = {                                     \
-		{ Dee_OBJECT_HEAD_INIT(&DeeFunction_Type), \
-		  fo_code_,                                \
-		  _DEE_FUNCTION_FO_HOSTASM_INIT            \
-		  _DEE_FUNCTION_FO_REFLOCK_INIT }          \
-	}
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	
 
 

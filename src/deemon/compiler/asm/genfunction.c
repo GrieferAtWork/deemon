@@ -82,13 +82,8 @@ asm_gpush_function(struct ast *__restrict function_ast) {
 		goto err;
 	if (asm_putddi(function_ast))
 		goto err;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(code->co_refstaticc >= code->co_refc);
-	if (!refc && code->co_refstaticc <= code->co_refc)
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	if (!refc)
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	{
+	if (!refc && code->co_refstaticc <= code->co_refc) {
 		/* Special case: The function doesn't reference any code.
 		 * -> In this case, we can construct the function object
 		 *    itself as a constant. */

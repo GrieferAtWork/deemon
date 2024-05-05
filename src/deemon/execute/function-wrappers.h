@@ -25,7 +25,6 @@
 #include <deemon/object.h>
 #include <deemon/traceback.h>
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 DECL_BEGIN
 
 /* Callbacks to create specialized function wrappers. */
@@ -48,6 +47,5 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetVariablesByNameWra
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetSymbolsByNameWrapper(DeeFrameObject *__restrict self);   /* ?M?X2?Dstring?Dint?O */
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 #endif /* !GUARD_DEEMON_EXECUTE_FUNCTION_WRAPPERS_H */

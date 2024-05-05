@@ -505,15 +505,9 @@ do_exec_code:
 			goto done_assembler_fini;
 
 		/* Copy over static variables. */
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-		DeeCode_ConstLockRead(current_code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		Dee_Movrefv(current_assembler.a_constv,
 		            current_code->co_constv,
 		            current_assembler.a_constc);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-		DeeCode_ConstLockEndRead(current_code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 		/* Copy over all the unwritten text. */
 		text = asm_alloc(preexisting_codesize);
@@ -774,18 +768,13 @@ recover_old_code_object:
 			current_code->co_constc    = old_co_constc;
 			current_code->co_constv    = current_assembler.a_constv;
 			current_code->co_refc      = 0;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			current_code->co_refstaticc = 0;
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			current_code->co_exceptc   = old_co_exceptc;
 			current_code->co_exceptv   = old_co_exceptv;
 			current_code->co_argc_min  = 0;
 			current_code->co_argc_max  = 0;
 			current_code->co_framesize = old_co_framesize;
 			current_code->co_codebytes = (code_size_t)(preexisting_codesize + 1);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-			Dee_atomic_rwlock_init(&current_code->co_constlock);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			Dee_Incref((DeeObject *)self);
 			current_code->co_module   = (DREF DeeModuleObject *)self;
 			current_code->co_defaultv = NULL;
@@ -1176,11 +1165,7 @@ imod_init(InteractiveModule *__restrict self,
 	Dee_Incref(argv);
 
 	/* Allocate the function object for the initial code frame. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	self->im_frame.cf_func = (DeeFunctionObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	self->im_frame.cf_func = (DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(!self->im_frame.cf_func)
 		goto err_stream;
 	DeeObject_Init(self->im_frame.cf_func, &DeeFunction_Type);
@@ -1378,17 +1363,12 @@ err_compiler_basefile:
 		init_code->co_localc    = 0;
 		init_code->co_constc    = 0;
 		init_code->co_refc      = 0;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		init_code->co_refstaticc = 0;
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		init_code->co_exceptc   = 0;
 		init_code->co_argc_min  = 0;
 		init_code->co_argc_max  = 0;
 		init_code->co_framesize = 0;
 		init_code->co_codebytes = sizeof(instruction_t);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-		Dee_atomic_rwlock_init(&init_code->co_constlock);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		init_code->co_module   = (DREF struct module_object *)self;
 		init_code->co_defaultv = NULL;
 		init_code->co_constv   = NULL;
@@ -1420,9 +1400,7 @@ err_compiler_basefile:
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 		Dee_hostasm_function_init(&self->im_frame.cf_func->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		Dee_atomic_rwlock_init(&self->im_frame.cf_func->fo_reflock);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	}
 
 	return 0;

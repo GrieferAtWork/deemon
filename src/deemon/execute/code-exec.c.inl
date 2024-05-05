@@ -232,7 +232,6 @@ do_get_stack:
 	case ASM_STATIC:
 		imm_val = *(uint8_t *)ip;
 do_get_static:
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_refstaticc) {
 			frame->cf_sp = sp;
@@ -252,22 +251,6 @@ do_get_static:
 			DeeFunction_RefLockEndRead(frame->cf_func);
 			err_unbound_static(code, frame->cf_ip, imm_val);
 		}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_constc) {
-			frame->cf_sp = sp;
-			err_srt_invalid_static(frame, imm_val);
-			return NULL;
-		}
-#else /* EXEC_SAFE */
-		ASSERT(imm_val < code->co_constc);
-#endif /* !EXEC_SAFE */
-		DeeCode_ConstLockRead(code);
-		result = code->co_constv[imm_val];
-		ASSERT_OBJECT(result);
-		Dee_Incref(result);
-		DeeCode_ConstLockEndRead(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		break;
 
 	case ASM_EXTERN:
@@ -439,7 +422,6 @@ do_set_stack:
 	case ASM_STATIC:
 		imm_val = *(uint8_t *)ip;
 do_set_static:
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_refstaticc ||
 		            imm_val < code->co_refc) {
@@ -461,24 +443,6 @@ do_set_static:
 			ASSERT_OBJECT(old_value);
 			Dee_Decref(old_value);
 		}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_constc) {
-			frame->cf_sp = sp;
-			err_srt_invalid_static(frame, imm_val);
-			Dee_Decref(value);
-			return -1;
-		}
-#else /* EXEC_SAFE */
-		ASSERT(imm_val < code->co_constc);
-#endif /* !EXEC_SAFE */
-		DeeCode_ConstLockWrite(code);
-		old_value                 = code->co_constv[imm_val];
-		code->co_constv[imm_val] = value;
-		ASSERT_OBJECT(old_value);
-		DeeCode_ConstLockEndWrite(code);
-		Dee_Decref(old_value);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		break;
 
 	case ASM_EXTERN:
@@ -649,7 +613,6 @@ do_get_stack:
 	case ASM_STATIC:
 		imm_val = *(uint8_t *)ip;
 do_get_static:
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_refstaticc ||
 		            imm_val < code->co_refc) {
@@ -671,21 +634,6 @@ do_get_static:
 			DeeFunction_RefLockEndWrite(frame->cf_func);
 			err_unbound_static(code, frame->cf_ip, imm_val);
 		}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_constc) {
-			frame->cf_sp = sp;
-			err_srt_invalid_static(frame, imm_val);
-			return NULL;
-		}
-#else /* EXEC_SAFE */
-		ASSERT(imm_val < code->co_constc);
-#endif /* !EXEC_SAFE */
-		DeeCode_ConstLockWrite(code);
-		result = code->co_constv[imm_val]; /* Inherit reference. */
-		code->co_constv[imm_val] = value;  /* Inherit reference. */
-		DeeCode_ConstLockEndWrite(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		ASSERT_OBJECT(result);
 		break;
 
@@ -866,7 +814,6 @@ do_get_stack:
 	case ASM_STATIC:
 		imm_val = *(uint8_t *)ip;
 do_get_static:
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_refstaticc ||
 		            imm_val < code->co_refc) {
@@ -890,27 +837,6 @@ do_get_static:
 		DeeFunction_RefLockEndWrite(frame->cf_func);
 		DeeFutex_WakeAll(&frame->cf_func->fo_refv[imm_val]);
 		Dee_XDecref(oldvalue);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_constc) {
-			frame->cf_sp = sp;
-			err_srt_invalid_static(frame, imm_val);
-			return NULL;
-		}
-		if unlikely(!newvalue)
-			goto ill_instr;
-#else /* EXEC_SAFE */
-		ASSERT(imm_val < code->co_constc);
-		ASSERT(newvalue);
-#endif /* !EXEC_SAFE */
-		DeeCode_ConstLockWrite(code);
-		if (code->co_constv[imm_val] != oldvalue) {
-			DeeCode_ConstLockEndWrite(code);
-			goto nope;
-		}
-		code->co_constv[imm_val] = newvalue;  /* Inherit reference (x2). */
-		DeeCode_ConstLockEndWrite(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		break;
 
 	case ASM_EXTERN:
@@ -1188,11 +1114,7 @@ inc_execsz_start:
 #define GLOBALimm             code->co_module->mo_globalv[imm_val]
 #define CONSTimm              code->co_constv[imm_val]
 #define CONSTimm2             code->co_constv[imm_val2]
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define STATICimm             frame->cf_func->fo_refv[imm_val]
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#define STATICimm             code->co_constv[imm_val]
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define EXTERN_LOCKREAD()     DeeModule_LockRead(code->co_module->mo_importv[imm_val])
 #define EXTERN_LOCKENDREAD()  DeeModule_LockEndRead(code->co_module->mo_importv[imm_val])
 #define EXTERN_LOCKWRITE()    DeeModule_LockWrite(code->co_module->mo_importv[imm_val])
@@ -1201,17 +1123,10 @@ inc_execsz_start:
 #define GLOBAL_LOCKENDREAD()  DeeModule_LockEndRead(code->co_module)
 #define GLOBAL_LOCKWRITE()    DeeModule_LockWrite(code->co_module)
 #define GLOBAL_LOCKENDWRITE() DeeModule_LockEndWrite(code->co_module)
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define STATIC_LOCKREAD()     DeeFunction_RefLockRead(frame->cf_func)
 #define STATIC_LOCKENDREAD()  DeeFunction_RefLockEndRead(frame->cf_func)
 #define STATIC_LOCKWRITE()    DeeFunction_RefLockWrite(frame->cf_func)
 #define STATIC_LOCKENDWRITE() DeeFunction_RefLockEndWrite(frame->cf_func)
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#define STATIC_LOCKREAD()     DeeCode_ConstLockRead(code)
-#define STATIC_LOCKENDREAD()  DeeCode_ConstLockEndRead(code)
-#define STATIC_LOCKWRITE()    DeeCode_ConstLockWrite(code)
-#define STATIC_LOCKENDWRITE() DeeCode_ConstLockEndWrite(code)
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define THIS                  (frame->cf_this)
 #define TOP                   sp[-1]
 #define FIRST                 sp[-1]
@@ -1237,22 +1152,12 @@ inc_execsz_start:
 #define ASSERT_TUPLE(ob)     do{ if unlikely(!DeeTuple_CheckExact(ob)) { EXCEPTION_CLEANUP goto err_requires_tuple;} }__WHILE0
 #define ASSERT_STRING(ob)    do{ if unlikely(!DeeString_CheckExact(ob)) { EXCEPTION_CLEANUP goto err_requires_string;} }__WHILE0
 #define ASSERT_THISCALL()    do{ if unlikely(!(code->co_flags & CODE_FTHISCALL)) { EXCEPTION_CLEANUP goto err_requires_thiscall_code; } }__WHILE0
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-#define CONST_LOCKREAD()     STATIC_LOCKREAD()
-#define CONST_LOCKENDREAD()  STATIC_LOCKENDREAD()
-#define CONST_LOCKWRITE()    STATIC_LOCKWRITE()
-#define CONST_LOCKENDWRITE() STATIC_LOCKENDWRITE()
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASSERT_ARGimm()      do{ if unlikely(imm_val >= code->co_argc_max) { EXCEPTION_CLEANUP goto err_invalid_argument_index; } }__WHILE0
 #define ASSERT_REFimm()      do{ if unlikely(imm_val >= code->co_refc) { EXCEPTION_CLEANUP goto err_invalid_ref; } }__WHILE0
 #define ASSERT_EXTERNimm()   do{ if unlikely(imm_val >= code->co_module->mo_importc || imm_val2 >= code->co_module->mo_importv[imm_val]->mo_globalc) { EXCEPTION_CLEANUP goto err_invalid_extern; } }__WHILE0
 #define ASSERT_GLOBALimm()   do{ if unlikely(imm_val >= code->co_module->mo_globalc) { EXCEPTION_CLEANUP goto err_invalid_global; } }__WHILE0
 #define ASSERT_LOCALimm()    do{ if unlikely(imm_val >= code->co_localc) { EXCEPTION_CLEANUP goto err_invalid_locale; } }__WHILE0
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define ASSERT_STATICimm()   do{ if unlikely(imm_val >= code->co_refstaticc || imm_val < code->co_refc) { EXCEPTION_CLEANUP goto err_invalid_static; } }__WHILE0
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#define ASSERT_STATICimm()   do{ if unlikely(imm_val >= code->co_constc) { EXCEPTION_CLEANUP goto err_invalid_static; } }__WHILE0
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASSERT_CONSTimm()    do{ if unlikely(imm_val >= code->co_constc) { EXCEPTION_CLEANUP goto err_invalid_const; } }__WHILE0
 #define ASSERT_CONSTimm2()   do{ if unlikely(imm_val2 >= code->co_constc) { EXCEPTION_CLEANUP imm_val2 = imm_val; goto err_invalid_const; } }__WHILE0
 #define ASSERT_YIELDING()    do{ if unlikely(!(code->co_flags & CODE_FYIELDING)) { EXCEPTION_CLEANUP goto err_requires_yield_code; } }__WHILE0
@@ -1271,22 +1176,12 @@ inc_execsz_start:
 #define ASSERT_TUPLE(ob)     ASSERT_OBJECT_TYPE_EXACT(ob, &DeeTuple_Type)
 #define ASSERT_STRING(ob)    ASSERT_OBJECT_TYPE_EXACT(ob, &DeeString_Type)
 #define ASSERT_THISCALL()    ASSERT(code->co_flags & CODE_FTHISCALL)
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-#define CONST_LOCKREAD()     (void)0
-#define CONST_LOCKENDREAD()  (void)0
-#define CONST_LOCKWRITE()    (void)0
-#define CONST_LOCKENDWRITE() (void)0
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASSERT_ARGimm()      ASSERT(imm_val < code->co_argc_max)
 #define ASSERT_REFimm()      ASSERT(imm_val < code->co_refc)
 #define ASSERT_EXTERNimm()   ASSERT(imm_val < code->co_module->mo_importc && imm_val2 < code->co_module->mo_importv[imm_val]->mo_globalc)
 #define ASSERT_GLOBALimm()   ASSERT(imm_val < code->co_module->mo_globalc)
 #define ASSERT_LOCALimm()    ASSERT(imm_val < code->co_localc)
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define ASSERT_STATICimm()   (ASSERT(imm_val < code->co_refstaticc), ASSERT(imm_val >= code->co_refc))
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#define ASSERT_STATICimm()   ASSERT(imm_val < code->co_constc)
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASSERT_CONSTimm()    ASSERT(imm_val < code->co_constc)
 #define ASSERT_CONSTimm2()   ASSERT(imm_val2 < code->co_constc)
 #define ASSERT_YIELDING()    ASSERT(code->co_flags & CODE_FYIELDING)
@@ -1504,7 +1399,6 @@ do_push_bnd_extern:
 			DISPATCH();
 		}
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		TARGET(ASM_PUSH_BND_STATIC, -0, +1) {
 			DeeObject *value;
 			imm_val = READ_imm8();
@@ -1516,7 +1410,6 @@ do_push_bnd_static:
 			PUSHREF(DeeBool_For(ITER_ISOK(value)));
 			DISPATCH();
 		}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 		TARGET(ASM_PUSH_BND_GLOBAL, -0, +1) {
 			imm_val = READ_imm8();
@@ -1657,19 +1550,7 @@ do_call_kw:
 			/* NOTE: Inherit references. */
 			new_sp = sp - imm_val2;
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *kwds;
-				CONST_LOCKREAD();
-				kwds = CONSTimm;
-				Dee_Incref(kwds);
-				CONST_LOCKENDREAD();
-				call_result = DeeObject_CallKw(new_sp[-1], imm_val2, new_sp, kwds);
-				Dee_Decref(kwds);
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			call_result = DeeObject_CallKw(new_sp[-1], imm_val2, new_sp, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if unlikely(!call_result)
 				HANDLE_EXCEPT();
 			while (imm_val2--)
@@ -1687,19 +1568,7 @@ do_call_tuple_kw:
 			/* NOTE: Inherit references. */
 			ASSERT_CONSTimm();
 			ASSERT_TUPLE(FIRST);
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *kwds;
-				CONST_LOCKREAD();
-				kwds = CONSTimm;
-				Dee_Incref(kwds);
-				CONST_LOCKENDREAD();
-				call_result = DeeObject_CallTupleKw(SECOND, FIRST, kwds);
-				Dee_Decref(kwds);
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			call_result = DeeObject_CallTupleKw(SECOND, FIRST, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if unlikely(!call_result)
 				HANDLE_EXCEPT();
 			POPREF();          /* Pop the argument tuple. */
@@ -1756,7 +1625,6 @@ do_operator_tuple:
 		}
 
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		TARGET(ASM_DEL_STATIC, -0, +0) {
 			DeeObject **p_object, *del_object;
 			imm_val = READ_imm8();
@@ -1772,7 +1640,6 @@ do_del_static:
 				Dee_Decref(del_object);
 			DISPATCH();
 		}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 		TARGET(ASM_DEL_GLOBAL, -0, +0) {
 			DeeObject **p_object, *del_object;
@@ -1934,16 +1801,11 @@ do_pop_static:
 			old_value = *p_old_value;
 			*p_old_value = POP();
 			STATIC_LOCKENDWRITE();
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			DeeFutex_WakeAll(p_old_value);
 			if (ITER_ISOK(old_value)) {
 				ASSERT_OBJECT(old_value);
 				Dee_Decref(old_value);
 			}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			ASSERT_OBJECT(old_value);
-			Dee_Decref(old_value);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			DISPATCH();
 		}
 
@@ -2078,13 +1940,7 @@ do_push_arg:
 			imm_val = READ_imm8();
 do_push_const:
 			ASSERT_CONSTimm();
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			PUSHREF(CONSTimm);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			CONST_LOCKREAD();
-			PUSHREF(CONSTimm);
-			CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			DISPATCH();
 		}
 
@@ -2095,12 +1951,10 @@ do_push_static:
 			ASSERT_STATICimm();
 			STATIC_LOCKREAD();
 			value = STATICimm;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			if unlikely(!ITER_ISOK(value)) {
 				STATIC_LOCKENDREAD();
 				goto err_unbound_static;
 			}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			Dee_Incref(value);
 			STATIC_LOCKENDREAD();
 			PUSH(value);
@@ -2529,23 +2383,10 @@ do_class_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *descriptor = CONSTimm;
-#else /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *descriptor;
-				CONST_LOCKREAD();
-				descriptor = CONSTimm;
-				Dee_Incref(descriptor);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
-					new_class = NULL;
-				} else {
-					new_class = DeeClass_New(TOP, descriptor, code->co_module);
-				}
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(descriptor);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type))
+					HANDLE_EXCEPT();
+				new_class = DeeClass_New(TOP, descriptor, code->co_module);
 			}
 #else /* EXEC_SAFE */
 			new_class = DeeClass_New(TOP, CONSTimm, code->co_module);
@@ -2573,23 +2414,12 @@ do_class_gc:
 				goto err_unbound_global;
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *descriptor = CONSTimm2;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *descriptor;
-				CONST_LOCKREAD();
-				descriptor = CONSTimm2;
-				Dee_Incref(descriptor);
-				CONST_LOCKENDREAD();
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
 				} else {
 					new_class = DeeClass_New(base, descriptor, code->co_module);
 				}
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(descriptor);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			new_class = DeeClass_New(base, CONSTimm, code->co_module);
@@ -2621,23 +2451,12 @@ do_class_gc:
 #define EXCEPTION_CLEANUP /* nothing */
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *descriptor = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *descriptor;
-				CONST_LOCKREAD();
-				descriptor = CONSTimm;
-				Dee_Incref(descriptor);
-				CONST_LOCKENDREAD();
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 				if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 					new_class = NULL;
 				} else {
 					new_class = DeeClass_New(base, descriptor, code->co_module);
 				}
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(descriptor);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			new_class = DeeClass_New(base, CONSTimm, code->co_module);
@@ -2721,32 +2540,14 @@ do_function_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *code_object = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *code_object;
-				CONST_LOCKREAD();
-				code_object = CONSTimm;
-				Dee_Incref(code_object);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if (DeeObject_AssertTypeExact(code_object, &DeeCode_Type)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(code_object);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if (DeeObject_AssertTypeExact(code_object, &DeeCode_Type))
 					HANDLE_EXCEPT();
-				}
-				if (((DeeCodeObject *)code_object)->co_refc != imm_val2) {
+				if unlikely(((DeeCodeObject *)code_object)->co_refc != imm_val2) {
 					err_invalid_refs_size(code_object, imm_val2);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(code_object);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					HANDLE_EXCEPT();
 				}
 				function = DeeFunction_NewInherited(code_object, imm_val2, sp - imm_val2);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(code_object);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			function = DeeFunction_NewInherited(CONSTimm, imm_val2, sp - imm_val2);
@@ -3087,19 +2888,7 @@ do_print_c:
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *print_object;
-				CONST_LOCKREAD();
-				print_object = CONSTimm;
-				Dee_Incref(print_object);
-				CONST_LOCKENDREAD();
-				error = DeeFile_PrintObject(stream, print_object);
-				Dee_Decref(print_object);
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			error = DeeFile_PrintObject(stream, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			Dee_Decref(stream);
 			if unlikely(error)
 				HANDLE_EXCEPT();
@@ -3115,19 +2904,7 @@ do_print_c_sp:
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *print_object;
-				CONST_LOCKREAD();
-				print_object = CONSTimm;
-				Dee_Incref(print_object);
-				CONST_LOCKENDREAD();
-				error = DeeFile_PrintObjectSp(stream, print_object);
-				Dee_Decref(print_object);
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			error = DeeFile_PrintObjectSp(stream, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			Dee_Decref(stream);
 			if unlikely(error)
 				HANDLE_EXCEPT();
@@ -3143,19 +2920,7 @@ do_print_c_nl:
 			stream = DeeFile_GetStd(DEE_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *print_object;
-				CONST_LOCKREAD();
-				print_object = CONSTimm;
-				Dee_Incref(print_object);
-				CONST_LOCKENDREAD();
-				error = DeeFile_PrintObjectNl(stream, print_object);
-				Dee_Decref(print_object);
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			error = DeeFile_PrintObjectNl(stream, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			Dee_Decref(stream);
 			if unlikely(error)
 				HANDLE_EXCEPT();
@@ -3166,23 +2931,8 @@ do_print_c_nl:
 			imm_val = READ_imm8();
 do_fprint_c:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *print_object;
-				int error;
-				CONST_LOCKREAD();
-				print_object = CONSTimm;
-				Dee_Incref(print_object);
-				CONST_LOCKENDREAD();
-				error = DeeFile_PrintObject(TOP, print_object);
-				Dee_Decref(print_object);
-				if unlikely(error)
-					HANDLE_EXCEPT();
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if unlikely(DeeFile_PrintObject(TOP, CONSTimm))
 				HANDLE_EXCEPT();
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			DISPATCH();
 		}
 
@@ -3190,23 +2940,8 @@ do_fprint_c:
 			imm_val = READ_imm8();
 do_fprint_c_sp:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *print_object;
-				int error;
-				CONST_LOCKREAD();
-				print_object = CONSTimm;
-				Dee_Incref(print_object);
-				CONST_LOCKENDREAD();
-				error = DeeFile_PrintObjectSp(TOP, print_object);
-				Dee_Decref(print_object);
-				if unlikely(error)
-					HANDLE_EXCEPT();
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if unlikely(DeeFile_PrintObjectSp(TOP, CONSTimm))
 				HANDLE_EXCEPT();
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			DISPATCH();
 		}
 
@@ -3214,23 +2949,8 @@ do_fprint_c_sp:
 			imm_val = READ_imm8();
 do_fprint_c_nl:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *print_object;
-				int error;
-				CONST_LOCKREAD();
-				print_object = CONSTimm;
-				Dee_Incref(print_object);
-				CONST_LOCKENDREAD();
-				error = DeeFile_PrintObjectNl(TOP, print_object);
-				Dee_Decref(print_object);
-				if unlikely(error)
-					HANDLE_EXCEPT();
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if unlikely(DeeFile_PrintObjectNl(TOP, CONSTimm))
 				HANDLE_EXCEPT();
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			DISPATCH();
 		}
 
@@ -3238,7 +2958,7 @@ do_fprint_c_nl:
 			DREF DeeObject *range_object;
 #if __SIZEOF_SIZE_T__ <= 2
 #error "sizeof(size_t) is too small and may cause an overflow for range object (WTF? a 16-bit machine?)"
-#endif
+#endif /* __SIZEOF_SIZE_T__ <= 2 */
 			range_object = DeeRange_NewInt(0, READ_imm16(), 1);
 			if unlikely(!range_object)
 				HANDLE_EXCEPT();
@@ -3343,19 +3063,7 @@ do_fprint_c_nl:
 do_contains_c:
 			ASSERT_USAGE(-1, +1);
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *constant_set;
-				CONST_LOCKREAD();
-				constant_set = CONSTimm;
-				Dee_Incref(constant_set);
-				CONST_LOCKENDREAD();
-				value = DeeObject_ContainsObject(constant_set, TOP);
-				Dee_Decref(constant_set);
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			value = DeeObject_ContainsObject(CONSTimm, TOP);
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if unlikely(!value)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -3390,19 +3098,7 @@ do_contains_c:
 do_getitem_c:
 			ASSERT_USAGE(-1, +1);
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *index_object;
-				CONST_LOCKREAD();
-				index_object = CONSTimm;
-				Dee_Incref(index_object);
-				CONST_LOCKENDREAD();
-				value = DeeObject_GetItem(TOP, index_object);
-				Dee_Decref(index_object);
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			value = DeeObject_GetItem(TOP, CONSTimm);
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if unlikely(!value)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -3431,23 +3127,8 @@ do_getitem_c:
 			imm_val = READ_imm8();
 do_setitem_c:
 			ASSERT_CONSTimm();
-#if defined(EXEC_SAFE) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
-			{
-				DREF DeeObject *index_object;
-				int error;
-				CONST_LOCKREAD();
-				index_object = CONSTimm;
-				Dee_Incref(index_object);
-				CONST_LOCKENDREAD();
-				error = DeeObject_SetItem(SECOND, index_object, FIRST);
-				Dee_Decref(index_object);
-				if unlikely(error)
-					HANDLE_EXCEPT();
-			}
-#else /* EXEC_SAFE && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if (DeeObject_SetItem(SECOND, CONSTimm, FIRST))
 				HANDLE_EXCEPT();
-#endif /* !EXEC_SAFE || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			POPREF();
 			POPREF();
 			DISPATCH();
@@ -3813,35 +3494,15 @@ do_setitem_c:
 			new_sp = sp - argc;
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *attr_name = CONSTimm;
 				DeeObject *kwds_map  = CONSTimm2;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *attr_name;
-				DREF DeeObject *kwds_map;
-				CONST_LOCKREAD();
-				attr_name = CONSTimm;
-				kwds_map  = CONSTimm2;
-				Dee_Incref(attr_name);
-				Dee_Incref(kwds_map);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(attr_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(attr_name);
-					Dee_Decref_unlikely(kwds_map);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(attr_name))
 					goto err_requires_string;
-				}
 				call_result = DeeObject_CallAttrKw(new_sp[-1],
 				                                   attr_name,
 				                                   argc,
 				                                   new_sp,
 				                                   kwds_map);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(attr_name);
-				Dee_Decref_unlikely(kwds_map);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -3870,31 +3531,11 @@ do_callattr_tuple_c_kw:
 			ASSERT_TUPLE(TOP);
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *attr_name = CONSTimm;
 				DeeObject *kwds_map  = CONSTimm2;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *attr_name;
-				DREF DeeObject *kwds_map;
-				CONST_LOCKREAD();
-				attr_name = CONSTimm;
-				kwds_map  = CONSTimm2;
-				Dee_Incref(attr_name);
-				Dee_Incref(kwds_map);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(attr_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(attr_name);
-					Dee_Decref_unlikely(kwds_map);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(attr_name))
 					goto err_requires_string;
-				}
 				call_result = DeeObject_CallAttrTupleKw(SECOND, attr_name, FIRST, kwds_map);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(attr_name);
-				Dee_Decref_unlikely(kwds_map);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -3918,25 +3559,10 @@ do_callattr_c:
 			new_sp = sp - imm_val2;
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				callback_result = DeeObject_CallAttr(new_sp[-1], imm_name, imm_val2, new_sp);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -3962,35 +3588,16 @@ do_callattr_c_seq:
 			new_sp = sp - imm_val2;
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				shared_vector = DeeSharedVector_NewShared(imm_val2, new_sp);
-				if unlikely(!shared_vector) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!shared_vector)
 					HANDLE_EXCEPT();
-				}
 				sp              = new_sp;
 				callback_result = DeeObject_CallAttr(new_sp[-1], imm_name, 1,
 				                                     (DeeObject **)&shared_vector);
 				DeeSharedVector_Decref(shared_vector);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4020,35 +3627,16 @@ do_callattr_c_map:
 			new_sp = sp - imm_val2 * 2;
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				prefix_ob = DeeSharedMap_NewShared(imm_val2, (DREF DeeSharedItem *)new_sp);
-				if unlikely(!prefix_ob) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!prefix_ob)
 					HANDLE_EXCEPT();
-				}
 				sp = new_sp;
 				callback_result = DeeObject_CallAttr(new_sp[-1], imm_name, 1,
 				                                     (DeeObject **)&prefix_ob);
 				DeeSharedMap_Decref(prefix_ob);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4078,25 +3666,10 @@ do_callattr_this_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				callback_result = DeeObject_CallAttr(THIS, imm_name, imm_val2, sp - imm_val2);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4118,25 +3691,10 @@ do_callattr_tuple_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				callback_result = DeeObject_CallAttrTuple(SECOND, imm_name, FIRST);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4159,25 +3717,10 @@ do_callattr_this_tuple_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				callback_result = DeeObject_CallAttrTuple(THIS, imm_name, TOP);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4402,25 +3945,10 @@ do_getattr_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				getattr_result = DeeObject_GetAttr(TOP, imm_name);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4440,25 +3968,10 @@ do_delattr_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				error = DeeObject_DelAttr(TOP, imm_name);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4477,25 +3990,10 @@ do_setattr_c:
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				error = DeeObject_SetAttr(SECOND, imm_name, FIRST);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4516,25 +4014,10 @@ do_getattr_this_c:
 			ASSERT_THISCALL();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				getattr_result = DeeObject_GetAttr(THIS, imm_name);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4554,25 +4037,10 @@ do_delattr_this_c:
 			ASSERT_THISCALL();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				error = DeeObject_DelAttr(THIS, imm_name);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4591,25 +4059,10 @@ do_setattr_this_c:
 			ASSERT_THISCALL();
 #ifdef EXEC_SAFE
 			{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				DeeObject *imm_name = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				DREF DeeObject *imm_name;
-				CONST_LOCKREAD();
-				imm_name = CONSTimm;
-				Dee_Incref(imm_name);
-				CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-				if unlikely(!DeeString_CheckExact(imm_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+				if unlikely(!DeeString_CheckExact(imm_name))
 					goto err_requires_string;
-				}
 				error = DeeObject_SetAttr(THIS, imm_name, TOP);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				Dee_Decref_unlikely(imm_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
 			ASSERT_STRING(CONSTimm);
@@ -4703,12 +4156,10 @@ do_setattr_this_c:
 					goto do_push_bnd_extern;
 				}
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				TARGET(ASM16_PUSH_BND_STATIC, -0, +1) {
 					imm_val = READ_imm16();
 					goto do_push_bnd_static;
 				}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 				TARGET(ASM16_PUSH_BND_GLOBAL, -0, +1) {
 					imm_val = READ_imm16();
@@ -4937,12 +4388,10 @@ do_setattr_this_c:
 					goto do_operator_tuple;
 				}
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				TARGET(ASM16_DEL_STATIC, -0, +0) {
 					imm_val = READ_imm16();
 					goto do_del_static;
 				}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 				TARGET(ASM16_DEL_GLOBAL, -0, +0) {
 					imm_val = READ_imm16();
@@ -5140,23 +4589,12 @@ do_setattr_this_c:
 #define EXCEPTION_CLEANUP /* nothing */
 #ifdef EXEC_SAFE
 					{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						DeeObject *descriptor = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						DREF DeeObject *descriptor;
-						CONST_LOCKREAD();
-						descriptor = CONSTimm;
-						Dee_Incref(descriptor);
-						CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 						if unlikely(DeeObject_AssertTypeExact(descriptor, &DeeClassDescriptor_Type)) {
 							new_class = NULL;
 						} else {
 							new_class = DeeClass_New(base, descriptor, code->co_module);
 						}
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-						Dee_Decref_unlikely(descriptor);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					}
 #else /* EXEC_SAFE */
 					new_class = DeeClass_New(base, CONSTimm, code->co_module);
@@ -5411,43 +4849,15 @@ do_cmpxch_ub_c:
 					new_sp = sp - argc;
 #ifdef EXEC_SAFE
 					{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						DeeObject *attr_name = CONSTimm;
 						DeeObject *kwds_map  = CONSTimm2;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						DREF DeeObject *attr_name;
-						DREF DeeObject *kwds_map;
-						CONST_LOCKREAD();
-						attr_name = CONSTimm;
-						kwds_map  = CONSTimm2;
-						Dee_Incref(attr_name);
-						Dee_Incref(kwds_map);
-						CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						if unlikely(!DeeString_CheckExact(attr_name)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-							Dee_Decref_unlikely(attr_name);
-							Dee_Decref_unlikely(kwds_map);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+						if unlikely(!DeeString_CheckExact(attr_name))
 							goto err_requires_string;
-						}
-						call_result = DeeObject_CallAttrKw(new_sp[-1],
-						                                   attr_name,
-						                                   argc,
-						                                   new_sp,
-						                                   kwds_map);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-						Dee_Decref_unlikely(attr_name);
-						Dee_Decref_unlikely(kwds_map);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+						call_result = DeeObject_CallAttrKw(new_sp[-1], attr_name, argc, new_sp, kwds_map);
 					}
 #else /* EXEC_SAFE */
 					ASSERT_STRING(CONSTimm);
-					call_result = DeeObject_CallAttrKw(new_sp[-1],
-					                                   CONSTimm,
-					                                   argc,
-					                                   new_sp,
-					                                   CONSTimm2);
+					call_result = DeeObject_CallAttrKw(new_sp[-1], CONSTimm, argc, new_sp, CONSTimm2);
 #endif /* !EXEC_SAFE */
 					if unlikely(!call_result)
 						HANDLE_EXCEPT();
@@ -6028,26 +5438,12 @@ do_supergetattr_rc:
 						HANDLE_EXCEPT();
 #ifdef EXEC_SAFE
 					{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						DeeObject *attr_name = CONSTimm2;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						DREF DeeObject *attr_name;
-						CONST_LOCKREAD();
-						attr_name = CONSTimm2;
-						Dee_Incref(attr_name);
-						CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						if (!DeeString_Check(attr_name)) {
+						if unlikely(!DeeString_Check(attr_name)) {
 							err_expected_string_for_attribute(attr_name);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-							Dee_Decref_unlikely(attr_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 							HANDLE_EXCEPT();
 						}
 						attr_value = DeeObject_TGetAttr((DeeTypeObject *)REFimm, THIS, attr_name);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-						Dee_Decref_unlikely(attr_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					}
 #else /* EXEC_SAFE */
 					attr_value = DeeObject_TGetAttr((DeeTypeObject *)REFimm, THIS, CONSTimm2);
@@ -6073,26 +5469,12 @@ do_supercallattr_rc:
 						HANDLE_EXCEPT();
 #ifdef EXEC_SAFE
 					{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						DeeObject *attr_name = CONSTimm2;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						DREF DeeObject *attr_name;
-						CONST_LOCKREAD();
-						attr_name = CONSTimm2;
-						Dee_Incref(attr_name);
-						CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						if (!DeeString_Check(attr_name)) {
+						if unlikely(!DeeString_Check(attr_name)) {
 							err_expected_string_for_attribute(attr_name);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-							Dee_Decref_unlikely(attr_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 							HANDLE_EXCEPT();
 						}
 						callback_result = DeeObject_TCallAttr((DeeTypeObject *)REFimm, THIS, attr_name, argc, sp - argc);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-						Dee_Decref_unlikely(attr_name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					}
 #else /* EXEC_SAFE */
 					callback_result = DeeObject_TCallAttr((DeeTypeObject *)REFimm, THIS, CONSTimm2, argc, sp - argc);
@@ -6630,32 +6012,14 @@ prefix_do_function_c:
 					ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 					{
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						DeeObject *code_object = CONSTimm;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						DREF DeeObject *code_object;
-						CONST_LOCKREAD();
-						code_object = CONSTimm;
-						Dee_Incref(code_object);
-						CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-						if (DeeObject_AssertTypeExact(code_object, &DeeCode_Type)) {
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-							Dee_Decref_unlikely(code_object);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+						if (DeeObject_AssertTypeExact(code_object, &DeeCode_Type))
 							HANDLE_EXCEPT();
-						}
-						if (((DeeCodeObject *)code_object)->co_refc != imm_val2) {
+						if unlikely(((DeeCodeObject *)code_object)->co_refc != imm_val2) {
 							err_invalid_refs_size(code_object, imm_val2);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-							Dee_Decref_unlikely(code_object);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 							HANDLE_EXCEPT();
 						}
 						function = DeeFunction_NewInherited(code_object, imm_val2, sp - imm_val2);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-						Dee_Decref_unlikely(code_object);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					}
 #else /* EXEC_SAFE */
 					function = DeeFunction_NewInherited(CONSTimm, imm_val2, sp - imm_val2);
@@ -6900,16 +6264,11 @@ do_prefix_pop_static:
 					old_value = *p_old_value;
 					*p_old_value = value; /* Inherit reference. */
 					STATIC_LOCKENDWRITE();
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 					DeeFutex_WakeAll(p_old_value);
 					if (ITER_ISOK(old_value)) {
 						ASSERT_OBJECT(old_value);
 						Dee_Decref(old_value);
 					}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-					ASSERT_OBJECT(old_value);
-					Dee_Decref(old_value);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					DISPATCH();
 				}
 
@@ -7094,15 +6453,8 @@ do_prefix_push_arg:
 					imm_val = READ_imm8();
 do_prefix_push_const:
 					ASSERT_CONSTimm();
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 					value = CONSTimm;
 					Dee_Incref(value);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-					CONST_LOCKREAD();
-					value = CONSTimm;
-					Dee_Incref(value);
-					CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					if (set_prefix_object(value))
 						HANDLE_EXCEPT();
 					DISPATCH();
@@ -7115,12 +6467,10 @@ do_prefix_push_static:
 					ASSERT_STATICimm();
 					STATIC_LOCKREAD();
 					value = CONSTimm;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 					if unlikely(!value) {
 						STATIC_LOCKENDREAD();
 						goto err_unbound_static;
 					}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					Dee_Incref(value);
 					STATIC_LOCKENDREAD();
 					if (set_prefix_object(value))
@@ -7462,7 +6812,6 @@ do_prefix_cmpxch_ub_c:
 							goto do_prefix_cmpxch_ub_c;
 						}
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						PREFIX_RAW_TARGET(ASM_CMPXCH_UB_LOCK) {
 							/* Only allowed for static variables:
 							 *    fd xx    f0 9c   // 8-bit static ID
@@ -7507,7 +6856,6 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							PUSHREF(value);
 							DISPATCH();
 						}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 						PREFIX_RAW_TARGET(ASM_CMPXCH_UB_POP) {
 #ifdef EXEC_FAST
@@ -8119,11 +7467,9 @@ err_unbound_global:
 err_unbound_local:
 	err_unbound_local(code, frame->cf_ip, imm_val);
 	HANDLE_EXCEPT();
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 err_unbound_static:
 	err_unbound_static(code, frame->cf_ip, imm_val);
 	HANDLE_EXCEPT();
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 }
 
 DECL_END
@@ -8179,10 +7525,6 @@ __pragma_GCC_diagnostic_pop
 #undef ASSERT_TUPLE
 #undef ASSERT_STRING
 #undef ASSERT_THISCALL
-#undef CONST_LOCKREAD
-#undef CONST_LOCKENDREAD
-#undef CONST_LOCKWRITE
-#undef CONST_LOCKENDWRITE
 #undef ASSERT_ARGimm
 #undef ASSERT_REFimm
 #undef ASSERT_EXTERNimm

@@ -1360,7 +1360,6 @@ set_none_result:
 			goto corrupt;
 		}
 		refc = code->co_refc;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		ASSERT(code->co_refstaticc >= refc);
 		if likely(code->co_refstaticc == refc) {
 			result = (DREF DeeObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv) +
@@ -1369,10 +1368,6 @@ set_none_result:
 			result = (DREF DeeObject *)DeeGCObject_Calloc(offsetof(DeeFunctionObject, fo_refv) +
 			                                              (code->co_refstaticc * sizeof(DREF DeeObject *)));
 		}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		result = (DREF DeeObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv) +
-		                                            (refc * sizeof(DREF DeeObject *)));
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		if unlikely(!result) {
 err_function_code:
 			Dee_Decref(code);
@@ -1399,10 +1394,8 @@ err_function_code:
 		Dee_hostasm_function_init(&((DREF DeeFunctionObject *)result)->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 		DeeObject_Init(result, &DeeFunction_Type);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		Dee_atomic_rwlock_init(&((DREF DeeFunctionObject *)result)->fo_reflock);
 		result = DeeGC_Track(result);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	}	break;
 
 	case DTYPE_TUPLE: {
@@ -2399,9 +2392,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		header.co_kwdoff     = UNALIGNED_GETLE16(reader), reader += 2;
 		header.co_textsiz    = UNALIGNED_GETLE16(reader), reader += 2;
 		header.co_textoff    = UNALIGNED_GETLE16(reader), reader += 2;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		header.co_staticc = 0;
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	} else {
 		if unlikely(reader + sizeof(Dec_Code) - 2 >= end)
 			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
@@ -2410,9 +2401,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
 		header.co_localc     = LETOH16(header.co_localc);
 		header.co_refc       = LETOH16(header.co_refc);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		header.co_staticc    = LETOH16(header.co_staticc);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		header.co_argc_min   = LETOH16(header.co_argc_min);
 		header.co_stackmax   = LETOH16(header.co_stackmax);
 		header.co_constoff   = LETOH32(header.co_constoff);
@@ -2689,17 +2678,12 @@ err_kwds_i:
 	        self->df_base + header.co_textoff,
 	        header.co_textsiz,
 	        sizeof(instruction_t));
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	Dee_atomic_rwlock_init(&result->co_constlock);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	/* Fill in remaining, basic fields of the resulting code object. */
-	result->co_flags  = header.co_flags;
-	result->co_localc = header.co_localc;
-	result->co_refc   = header.co_refc;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	result->co_flags      = header.co_flags;
+	result->co_localc     = header.co_localc;
+	result->co_refc       = header.co_refc;
 	result->co_refstaticc = header.co_refc + header.co_staticc;
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	/* Calculate the size of the required execution frame. */
 	result->co_framesize = ((uint32_t)header.co_localc +
@@ -2722,9 +2706,6 @@ err_kwds_i:
 
 	/* Finally, initialize the resulting code object and start tracking it. */
 	DeeObject_Init(result, &DeeCode_Type);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	result = (DREF DeeCodeObject *)DeeGC_Track((DeeObject *)result);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 done:
 	*p_reader = reader;
 	return result;

@@ -904,76 +904,6 @@ DeeCode_GetASymbolName(DeeObject const *__restrict self, uint16_t aid) {
 	return NULL;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
-DeeCode_GetSSymbolName(DeeObject const *__restrict self, uint16_t sid) {
-	/* Static symbol name */
-	DeeDDIObject const *ddi;
-	uint8_t const *reader;
-	uint32_t offset;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
-	ddi = ((DeeCodeObject const *)self)->co_ddi;
-	if (ddi->d_exdat) {
-		reader = ddi->d_exdat->dx_data;
-		for (;;) {
-			uint8_t op = *reader++;
-			switch (op) {
-
-			case DDI_EXDAT_O_END:
-				goto done_exdat;
-
-			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP8:
-				if (UNALIGNED_GETLE8(reader + 0) == sid) {
-					offset = UNALIGNED_GETLE8(reader + 1);
-					goto return_strtab_offset;
-				}
-				reader += 1 + 1;
-				break;
-
-			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP16:
-				if (UNALIGNED_GETLE16(reader + 0) == sid) {
-					offset = UNALIGNED_GETLE16(reader + 2);
-					goto return_strtab_offset;
-				}
-				reader += 2 + 2;
-				break;
-
-			case DDI_EXDAT_O_SNAM | DDI_EXDAT_OP32:
-				if (UNALIGNED_GETLE16(reader + 0) == sid) {
-					offset = UNALIGNED_GETLE32(reader + 2);
-					goto return_strtab_offset;
-				}
-				reader += 2 + 4;
-				break;
-
-			default:
-				switch (op & DDI_EXDAT_OPMASK) {
-
-				case DDI_EXDAT_OP8:
-					reader += 1 + 1;
-					break;
-
-				case DDI_EXDAT_OP16:
-					reader += 2 + 2;
-					break;
-
-				case DDI_EXDAT_OP32:
-					reader += 2 + 4;
-					break;
-
-				default: break;
-				}
-				break;
-			}
-		}
-	}
-done_exdat:
-	return NULL;
-return_strtab_offset:
-	return DeeString_STR(ddi->d_strtab) + offset;
-}
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char *DCALL
 DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid) {
 	/* Reference symbol name */
@@ -1058,11 +988,7 @@ DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 
 
 /* Define the special `DeeCode_Empty' object. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define DeeCode_Empty_head DeeCode_Empty
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#define DeeCode_Empty DeeCode_Empty_head.ob
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 INTERN DEFINE_CODE(DeeCode_Empty_head,
                    /* co_flags:      */ CODE_FCOPYABLE,
                    /* co_localc:     */ 0,
@@ -1267,13 +1193,7 @@ code_visit(DeeCodeObject *__restrict self,
 	Dee_XVisitv(self->co_defaultv, (uint16_t)(self->co_argc_max - self->co_argc_min));
 
 	/* Visit static variables. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	Dee_Visitv(self->co_constv, self->co_constc);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	DeeCode_ConstLockRead(self);
-	Dee_Visitv(self->co_constv, self->co_constc);
-	DeeCode_ConstLockEndRead(self);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	/* Visit exception information. */
 	for (i = 0; i < self->co_exceptc; ++i)
@@ -1282,45 +1202,6 @@ code_visit(DeeCodeObject *__restrict self,
 	/* Visit debug information. */
 	Dee_Visit(self->co_ddi);
 }
-
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-PRIVATE NONNULL((1)) void DCALL
-code_clear(DeeCodeObject *__restrict self) {
-	DREF DeeObject *buffer[16];
-	size_t i, bufi = 0;
-	/* Clear out static variables. */
-restart:
-	DeeCode_ConstLockWrite(self);
-	for (i = 0; i < self->co_constc; ++i) {
-		DREF DeeObject *ob = self->co_constv[i];
-		if (DeeNone_Check(ob) || DeeString_Check(ob) || DeeInt_Check(ob))
-			continue;
-		if (DeeCode_Check(ob)) {
-			/* Assembly may rely on certain constants being code objects!
-			 * XXX: Speaking of which, what if this code is being executed right now?
-			 *      After all: accessing constants normally doesn't require locks,
-			 *      but us meddling with _all_ of them (and not just statics) breaks
-			 *      some of the assumptions such code makes... */
-			self->co_constv[i] = (DeeObject *)&DeeCode_Empty;
-		} else {
-			self->co_constv[i] = Dee_None;
-		}
-		Dee_Incref(self->co_constv[i]);
-		if (!Dee_DecrefIfNotOne(ob)) {
-			buffer[bufi] = ob; /* Inherit reference */
-			++bufi;
-			if (bufi >= COMPILER_LENOF(buffer)) {
-				DeeCode_ConstLockEndWrite(self);
-				Dee_Decrefv(buffer, bufi);
-				bufi = 0;
-				goto restart;
-			}
-		}
-	}
-	DeeCode_ConstLockEndWrite(self);
-	Dee_Decrefv(buffer, bufi);
-}
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_kwds(DeeCodeObject *__restrict self) {
@@ -1356,13 +1237,11 @@ code_getconstants(DeeCodeObject *__restrict self) {
 	                                self->co_constv);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_nstatic(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_refstaticc >= self->co_refc);
 	return DeeInt_NewUInt16(self->co_refstaticc - self->co_refc);
 }
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1676,19 +1555,11 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	TYPE_GETTER_F("__constants__", &code_getconstants, METHOD_FCONSTCALL,
 	              "->?S?O\n"
 	              "Access to the constants of @this ?."),
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	TYPE_GETTER_F("__nstatic__", &code_get_nstatic, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Number of static variables during execution"),
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETSET_END
 };
-
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-PRIVATE struct type_gc tpconst code_gc = {
-	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&code_clear
-};
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 code_hash(DeeCodeObject *__restrict self) {
@@ -1710,22 +1581,8 @@ code_hash(DeeCodeObject *__restrict self) {
 				result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->co_defaultv[i]));
 		}
 	}
-	if (self->co_constv) {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	if (self->co_constv)
 		result = Dee_HashCombine(result, DeeObject_Hashv(self->co_constv, self->co_constc));
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		uint16_t i;
-		for (i = 0; i < self->co_constc; ++i) {
-			DREF DeeObject *ob;
-			DeeCode_ConstLockRead(self);
-			ob = self->co_constv[i];
-			Dee_Incref(ob);
-			DeeCode_ConstLockEndRead(self);
-			result = Dee_HashCombine(result, DeeObject_Hash(ob));
-			Dee_Decref(ob);
-		}
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	}
 	if (self->co_exceptv) {
 		uint16_t i;
 		for (i = 0; i < self->co_exceptc; ++i) {
@@ -1759,10 +1616,8 @@ code_eq_impl(DeeCodeObject *__restrict self,
 		goto nope;
 	if (self->co_refc != other->co_refc)
 		goto nope;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if (self->co_refstaticc != other->co_refstaticc)
 		goto nope;
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (self->co_exceptc != other->co_exceptc)
 		goto nope;
 	if (self->co_argc_min != other->co_argc_min)
@@ -1806,22 +1661,7 @@ code_eq_impl(DeeCodeObject *__restrict self,
 	if (self->co_constv) {
 		uint16_t i;
 		for (i = 0; i < self->co_constc; ++i) {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			temp = DeeObject_CompareEq(self->co_constv[i], other->co_constv[i]);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			DREF DeeObject *lhs, *rhs;
-			DeeCode_ConstLockRead(self);
-			lhs = self->co_constv[i];
-			Dee_Incref(lhs);
-			DeeCode_ConstLockEndRead(self);
-			DeeCode_ConstLockRead(other);
-			rhs = other->co_constv[i];
-			Dee_Incref(rhs);
-			DeeCode_ConstLockEndRead(other);
-			temp = DeeObject_CompareEq(lhs, rhs);
-			Dee_Decref(rhs);
-			Dee_Decref(lhs);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if (temp <= 0)
 				goto err_temp;
 		}
@@ -1899,9 +1739,6 @@ code_copy(DeeCodeObject *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	memcpy(result, self, offsetof(DeeCodeObject, co_code) + self->co_codebytes);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	Dee_atomic_rwlock_init(&result->co_constlock);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (result->co_keywords) {
 		if (!result->co_argc_max) {
 			result->co_keywords = NULL;
@@ -1931,13 +1768,7 @@ code_copy(DeeCodeObject *__restrict self) {
 		                                                    sizeof(DREF DeeObject *));
 		if unlikely(!result->co_constv)
 			goto err_r_default;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		Dee_Movrefv(result->co_constv, self->co_constv, result->co_constc);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		DeeCode_ConstLockRead(self);
-		Dee_Movrefv(result->co_constv, self->co_constv, result->co_constc);
-		DeeCode_ConstLockEndRead(self);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	}
 	if (!result->co_exceptc) {
 		result->co_exceptv = NULL;
@@ -1958,9 +1789,6 @@ code_copy(DeeCodeObject *__restrict self) {
 	Dee_XIncref(result->co_ddi);
 	Dee_XIncref(result->co_module);
 	DeeObject_Init(result, &DeeCode_Type);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	result = (DREF DeeCodeObject *)DeeGC_Track((DeeObject *)result);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 done:
 	return result;
 err_r_static:
@@ -2000,14 +1828,8 @@ code_deepcopy(DeeCodeObject *__restrict self) {
 	}
 	if (result->co_constv) {
 		for (i = 0; i < result->co_constc; ++i) {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			if (DeeObject_InplaceDeepCopy((DeeObject **)&result->co_constv[i]))
 				goto err_r;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			if (DeeObject_InplaceDeepCopyWithLock((DeeObject **)&result->co_constv[i],
-			                                      &result->co_constlock))
-				goto err_r;
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		}
 	}
 #if 0 /* Debug information wouldn't change... */
@@ -2454,18 +2276,13 @@ got_flag:
 	Dee_Incref(module);
 	result->co_localc = nlocal;
 	result->co_refc   = nref;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if (OVERFLOW_UADD(nref, nstatic, &result->co_refstaticc)) {
 		DeeError_Throwf(&DeeError_ValueError, "Too many references or static variables");
 		goto err_r_ddi;
 	}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	result->co_framesize  = (nlocal + nstack) * sizeof(DREF DeeObject *);
 	if (result->co_framesize > CODE_LARGEFRAME_THRESHOLD)
 		result->co_flags |= CODE_FHEAPFRAME;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	Dee_atomic_rwlock_init(&result->co_constlock);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #ifdef CONFIG_HAVE_CODE_METRICS
 	Dee_code_metrics_init(&result->co_metrics);
 #endif /* CONFIG_HAVE_CODE_METRICS */
@@ -2475,14 +2292,9 @@ got_flag:
 
 	/* Initialize the new code object, and start tracking it. */
 	DeeObject_Init(result, &DeeCode_Type);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	result = (DREF DeeCodeObject *)DeeGC_Track((DeeObject *)result);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return result;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 err_r_ddi:
 	Dee_Decref(result->co_ddi);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 err_r_except:
 	if (result->co_exceptv) {
 		while (result->co_exceptc--)
@@ -2564,21 +2376,10 @@ code_printrepr(DeeCodeObject *__restrict self,
 		uint16_t i;
 		DO(DeeFormat_PRINT(printer, arg, ", constants: { "));
 		for (i = 0; i < self->co_constc; ++i) {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			DeeObject *ob;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			DREF DeeObject *ob;
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if (i != 0)
 				DO(DeeFormat_PRINT(printer, arg, ", "));
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			ob = self->co_constv[i];
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			DeeCode_ConstLockRead(self);
-			ob = self->co_constv[i];
-			Dee_Incref(ob);
-			DeeCode_ConstLockEndRead(self);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			temp = DeeFormat_PrintObjectRepr(printer, arg, ob);
 			Dee_Decref_unlikely(ob);
 			if unlikely(temp < 0)
@@ -2642,10 +2443,8 @@ code_printrepr(DeeCodeObject *__restrict self,
 	}
 	if (self->co_refc > 0)
 		DO(DeeFormat_Printf(printer, arg, ", nref: %" PRFu16, self->co_refc));
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if (self->co_refstaticc > self->co_refc)
 		DO(DeeFormat_Printf(printer, arg, ", nstatic: %" PRFu16, self->co_refstaticc - self->co_refc));
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (self->co_argc_max > 0)
 		DO(DeeFormat_Printf(printer, arg, ", argc: %" PRFu16, self->co_argc_max));
 	if (self->co_keywords != NULL) {
@@ -2742,11 +2541,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         "#pddi{The debug information descriptor that should be used for providing assembly meta-information}"
 	                         "Construct a new code object from the given arguments\n"
 	                         "Note that the returned code object always has the assembly tag enabled"),
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT,
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT | TP_FGC,
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
@@ -2775,11 +2570,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&code_visit,
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	/* .tp_gc            = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	/* .tp_gc            = */ &code_gc,
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &code_cmp,
 	/* .tp_seq           = */ NULL,

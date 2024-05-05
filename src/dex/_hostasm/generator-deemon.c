@@ -1472,7 +1472,6 @@ do_jcc:
 			goto err;
 		}
 		calloc_used = false;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
 		                  ((size_t)code->co_refstaticc * sizeof(DREF DeeObject *));
 		ASSERT(code->co_refstaticc >= refc);
@@ -1482,11 +1481,6 @@ do_jcc:
 			DO(fg_vcall_DeeGCObject_Malloc(self, sizeof_function, true));  /* [refs...], ref:function */
 			calloc_used = true;
 		}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
-		                  ((size_t)refc * sizeof(DREF DeeObject *));
-		DO(fg_vcall_DeeObject_Malloc(self, sizeof_function, false));    /* [refs...], ref:function */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		ASSERT(fg_vtop_direct_isref(self));                             /* [refs...], ref:function */
 		DO(fg_voneref_noalias(self));                                   /* [refs...], ref:function */
 		DO(fg_vcall_DeeObject_Init_c(self, &DeeFunction_Type));         /* [refs...], ref:function */
@@ -1523,9 +1517,9 @@ do_jcc:
 			DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_tuple_kw)));
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#if !defined(CONFIG_NO_THREADS) && defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
+#ifndef CONFIG_NO_THREADS
 			DO(fg_vpush_ATOMIC_RWLOCK_INIT(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_reflock)));
-#endif /* !CONFIG_NO_THREADS && CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#endif /* !CONFIG_NO_THREADS */
 		}
 		while (refc) {
 			--refc;
@@ -1537,9 +1531,7 @@ do_jcc:
 		}
 		ASSERT(fg_vtop_direct_isref(self)); /* ref:function */
 		fg_vtop_direct_clearref(self);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		DO(fg_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR_NX, 1));
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		ASSERT(!fg_vtop_direct_isref(self));
 		fg_vtop_direct_setref(self); /* ref:function */
 	}	break;

@@ -48,7 +48,6 @@
 /**/
 #include "function-wrappers.h"
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strcmp
@@ -5113,6 +5112,5 @@ err:
 
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 #endif /* !GUARD_DEEMON_EXECUTE_FUNCTION_WRAPPERS_C */

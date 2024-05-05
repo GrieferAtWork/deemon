@@ -717,7 +717,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       code_name ? code_name : "");
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_static)(struct code_object *code, void *ip, uint16_t static_index) {
 	char const *code_name;
@@ -740,7 +739,6 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       code_name ? " in function " : "",
 	                       code_name ? code_name : "");
 }
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_arg)(struct code_object *code, void *ip, uint16_t arg_index) {

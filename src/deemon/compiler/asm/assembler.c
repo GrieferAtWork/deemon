@@ -72,17 +72,13 @@ INTDEF struct module_symbol empty_module_buckets[];
 STATIC_ASSERT((ASM16_CALL_KW & 0xff) == ASM_CALL_KW);
 STATIC_ASSERT((ASM16_CALL_TUPLE_KW & 0xff) == ASM_CALL_TUPLE_KW);
 STATIC_ASSERT((ASM16_PUSH_BND_EXTERN & 0xff) == ASM_PUSH_BND_EXTERN);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 STATIC_ASSERT((ASM16_PUSH_BND_STATIC & 0xff) == ASM_PUSH_BND_STATIC);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 STATIC_ASSERT((ASM16_PUSH_BND_GLOBAL & 0xff) == ASM_PUSH_BND_GLOBAL);
 STATIC_ASSERT((ASM16_PUSH_BND_LOCAL & 0xff) == ASM_PUSH_BND_LOCAL);
 STATIC_ASSERT((ASM32_JMP & 0xff) == ASM_JMP);
 STATIC_ASSERT((ASM16_OPERATOR & 0xff) == ASM_OPERATOR);
 STATIC_ASSERT((ASM16_OPERATOR_TUPLE & 0xff) == ASM_OPERATOR_TUPLE);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 STATIC_ASSERT((ASM16_DEL_STATIC & 0xff) == ASM_DEL_STATIC);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 STATIC_ASSERT((ASM16_DEL_GLOBAL & 0xff) == ASM_DEL_GLOBAL);
 STATIC_ASSERT((ASM16_DEL_LOCAL & 0xff) == ASM_DEL_LOCAL);
 STATIC_ASSERT((ASM16_LROT & 0xff) == ASM_LROT);
@@ -466,11 +462,7 @@ INTERN void DCALL assembler_fini(void) {
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	for (i = 0; i < SECTION_COUNT; ++i) {
 		if (current_assembler.a_sect[i].sec_code) {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			DeeObject_Free(current_assembler.a_sect[i].sec_code);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			DeeGCObject_Free(current_assembler.a_sect[i].sec_code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		} else {
 			Dee_Free(current_assembler.a_sect[i].sec_begin);
 		}
@@ -489,10 +481,6 @@ INTERN void DCALL assembler_fini(void) {
 	Dee_Free(current_assembler.a_constv);
 
 	/* Free up static variables. */
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	for (i = 0; i < current_assembler.a_staticc; ++i)
-		Dee_Decref(current_assembler.a_staticv[i].ss_init);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	Dee_Free(current_assembler.a_staticv);
 
 	/* Free up exception handlers. */
@@ -1152,52 +1140,16 @@ err:
 INTERN WUNUSED int DCALL asm_mergestatic(void) {
 	uint16_t static_offset, total_count;
 	struct asm_rel *iter, *end;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	uint16_t i;
-	DREF DeeObject **total_vector;
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	/* Simple case: Without any static variables, we've got nothing to do! */
 	if (!current_assembler.a_staticc)
 		return 0;
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	/* We merge ref and static variables by placing
 	 * the static ones after the referenced ones. */
 	static_offset = current_assembler.a_refc;
 	total_count   = static_offset + current_assembler.a_staticc;
 	if unlikely(static_offset > total_count)
 		goto err_too_many; /* Too many variables. */
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	/* We merge constant and static variables by
-	 * placing the static ones after the constant ones. */
-	static_offset = current_assembler.a_constc;
-	total_count   = static_offset + current_assembler.a_staticc;
-	if unlikely(static_offset > total_count)
-		goto err_too_many; /* Too many variables. */
-	total_vector = (DREF DeeObject **)Dee_Reallocc(current_assembler.a_constv,
-	                                               total_count, sizeof(DREF DeeObject *));
-	if unlikely(!total_vector)
-		goto err;
-	/* Copy static variable initializers. */
-	current_assembler.a_constv = total_vector;
-	current_assembler.a_constc = total_count;
-	current_assembler.a_consta = total_count;
-	if (current_assembler.a_flag & (ASM_FNODDI | ASM_FNODDIXDAT)) {
-		for (i = 0; i < current_assembler.a_staticc; ++i)
-			total_vector[static_offset + i] = current_assembler.a_staticv[i].ss_init;
-		/* Delete the static variable vector. */
-		Dee_Free(current_assembler.a_staticv);
-		current_assembler.a_staticv = NULL;
-		current_assembler.a_staticc = 0;
-		current_assembler.a_statica = 0;
-	} else {
-		for (i = 0; i < current_assembler.a_staticc; ++i) {
-			DeeObject *ob = current_assembler.a_staticv[i].ss_init;
-			total_vector[static_offset + i] = ob;
-			Dee_Incref(ob);
-		}
-	}
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	/* Fix relocations for static variables. */
 	end = (iter = sc_main.sec_relv) + sc_main.sec_relc;
@@ -1245,15 +1197,8 @@ INTERN WUNUSED int DCALL asm_mergestatic(void) {
 	}
 	return 0;
 err_too_many:
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	return DeeError_Throwf(&DeeError_CompilerError,
 	                       "Too many reference/static variables");
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	DeeError_Throwf(&DeeError_CompilerError,
-	                "Too many constant/static variables");
-err:
-	return -1;
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 }
 
 INTERN WUNUSED int DCALL asm_linkstack(void) {
@@ -1602,17 +1547,10 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	result->co_localc   = current_assembler.a_localc;
 	result->co_constc   = current_assembler.a_constc;
 	result->co_refc     = current_assembler.a_refc;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	result->co_refstaticc = current_assembler.a_refc + current_assembler.a_staticc;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	result->co_padding  = 0;
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	result->co_exceptc  = current_assembler.a_exceptc;
 	result->co_argc_min = current_basescope->bs_argc_min;
 	result->co_argc_max = current_basescope->bs_argc_max;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	Dee_atomic_rwlock_init(&result->co_constlock);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	result->co_framesize = (current_assembler.a_localc +
 	                        current_assembler.a_stackmax) *
 	                       sizeof(DeeObject *);
@@ -1650,11 +1588,6 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	current_assembler.a_exceptv    = NULL;
 	current_assembler.a_exceptc    = 0;
 	current_assembler.a_excepta    = 0;
-
-	/* Now that it's fully initialized, start tracking the generated code object! */
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	result = (DREF DeeCodeObject *)DeeGC_Track((DeeObject *)result);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	/* And we're done! */
 	return result;
@@ -2698,26 +2631,13 @@ err:
 	return -1;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 /* Create a new static variable ID and return it.
  * @param: sym: The symbol with which to associated the static variable, or NULL if anonymous.
  * NOTE: The caller must encode the returned index alongside a `R_DMN_STATIC16' relocation.
  *       This can easily be achieved using the `asm_putsid16()' function. */
-INTERN WUNUSED int32_t DCALL asm_newstatic(struct symbol *sym)
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-/* Similar to `asm_newconst', but don't re-use identical static variables.
- * @param: sym: The symbol with which to associated the static variable, or NULL if anonymous.
- * NOTE: The given `initializer' is required and the caller must encode
- *       the returned index alongside a `R_DMN_STATIC16' relocation.
- *       This can easily be achieved using the `asm_putsid16()' function. */
-INTERN WUNUSED NONNULL((1)) int32_t DCALL
-asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym)
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-{
+INTERN WUNUSED int32_t DCALL asm_newstatic(struct symbol *sym) {
 	int32_t result;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	ASSERT_OBJECT(initializer);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 	/* Allocate more buffer memory when nothing is left. */
 	ASSERT(current_assembler.a_staticc <=
 	       current_assembler.a_statica);
@@ -2753,10 +2673,6 @@ do_realloc:
 	}
 	result = current_assembler.a_staticc++;
 	current_assembler.a_staticv[result].ss_sym = sym;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	current_assembler.a_staticv[result].ss_init = initializer;
-	Dee_Incref(initializer);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return result;
 err:
 	return -1;
@@ -3032,14 +2948,9 @@ asm_ssymid(struct symbol *__restrict sym) {
 	ASSERT(sym->s_type == SYMBOL_TYPE_STATIC);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+
 	/* Allocate a new static variable index for the given symbol. */
 	new_index = asm_newstatic(sym);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	/* Allocate a new static variable index for the given symbol.
-	 * NOTE: By default, `Dee_None' is used for default-initialization of static variables. */
-	new_index = asm_newstatic(Dee_None, sym);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(new_index < 0)
 		goto end;
 	ASSERT(new_index <= UINT16_MAX);

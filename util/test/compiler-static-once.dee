@@ -19,8 +19,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#if 1 /* #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-
 global initCalls = 0;
 
 function foo() {
@@ -58,5 +56,3 @@ assert a() == 1;
 assert initCalls == 2;
 assert a() == 1;
 assert initCalls == 2;
-
-#endif

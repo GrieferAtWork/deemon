@@ -19,7 +19,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#if 1 /* #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 function foo() {
 	return () -> {
 		/* Test to make sure that the compiler doesn't try
@@ -47,5 +46,3 @@ b.__statics__[0] = "foo";
 
 assert a() == 24;
 assert b() == "foo";
-
-#endif

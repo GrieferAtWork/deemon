@@ -1717,7 +1717,6 @@ librt_get_FastNsiIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE DEFINE_CODE(DeeCode_EmptyYielding,
                     /* co_flags:      */ CODE_FCOPYABLE | CODE_FYIELDING,
                     /* co_localc:     */ 0,
@@ -1875,7 +1874,6 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_FrameSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_FrameSymbolsByName_impl_f());
 }
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 
@@ -2042,7 +2040,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReBytesSplitIterator, &librt_get_ReBytesSplitIt
 PRIVATE DEFINE_CMETHOD(librt_get_GenericIterator, &librt_get_GenericIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_NsiIterator, &librt_get_NsiIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FastNsiIterator, &librt_get_FastNsiIterator_f, METHOD_FCONSTCALL);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStatics, &librt_get_FunctionStatics_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStaticsIterator, &librt_get_FunctionStaticsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByName, &librt_get_FunctionSymbolsByName_f, METHOD_FCONSTCALL);
@@ -2054,7 +2051,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_FrameLocals, &librt_get_FrameLocals_f, METHOD_F
 PRIVATE DEFINE_CMETHOD(librt_get_FrameStack, &librt_get_FrameStack_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByName, &librt_get_FrameSymbolsByName_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByNameIterator, &librt_get_FrameSymbolsByNameIterator_f, METHOD_FCONSTCALL);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2566,7 +2562,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "EnumAttrIterator", (DeeObject *)&DeeEnumAttrIterator_Type, MODSYM_FREADONLY }, /* `enumattr.Iterator' */
 
 	/* Function wrapper types */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	{ "FunctionStatics", (DeeObject *)&librt_get_FunctionStatics, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* FunctionStatics_Type */
 	{ "FunctionStaticsIterator", (DeeObject *)&librt_get_FunctionStaticsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* FunctionStatics_Type */
 	{ "FunctionSymbolsByName", (DeeObject *)&librt_get_FunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* FunctionSymbolsByName_Type */
@@ -2578,7 +2573,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FrameStack", (DeeObject *)&librt_get_FrameStack, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* FrameStack_Type */
 	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* FrameSymbolsByName_Type */
 	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* FrameSymbolsByName_Type */
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 #ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	/* TODO: IterWithGetItemIndex            = DefaultIterator_WithGetItemIndex_Type */

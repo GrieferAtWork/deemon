@@ -1997,12 +1997,6 @@ do_stack_prefix:
 			goto do_global_prefix;
 		if (NAMEISKWD_S(5, STR_local))
 			goto do_local_prefix;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-		if (NAMEISKWD_S(5, STR_const)) {
-			invoc.ai_flags |= INVOKE_FPREFIX_RO;
-			goto do_static_prefix;
-		}
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		break;
 #undef NAMEISKWD_S
 #undef NAMEISKWD

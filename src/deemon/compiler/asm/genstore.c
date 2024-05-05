@@ -1556,7 +1556,6 @@ check_dst_sym_class:
 			return asm_set_cattr_symbol(dst_sym, src, ddi_ast, gflags);
 
 		case SYMBOL_TYPE_STATIC: {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			int32_t sid;
 			bool src_contains_return;
 
@@ -1842,82 +1841,6 @@ push_static_as_result:
 					goto err;
 			}
 			return 0;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			if (!(dst_sym->s_flag & SYMBOL_FALLOC)) {
-				int32_t sid;
-				/* Special case: Unallocated static variable
-				 * > The first assignment is used as the static initializer */
-				if (src->a_type == AST_CONSTEXPR &&
-				    asm_allowconst(src->a_constexpr)) {
-					/* The simple case: the initializer itself is a constant expression
-					 * -> In this case, we can simply encode the initializer as the raw
-					 *    static value and not have to generate any runtime code! */
-					sid = asm_newstatic(src->a_constexpr, dst_sym);
-					if unlikely(sid < 0)
-						goto err;
-					dst_sym->s_symid = (uint16_t)sid;
-					dst_sym->s_flag |= SYMBOL_FALLOC;
-					if (PUSH_RESULT) {
-						if (asm_putddi(ddi_ast))
-							goto err;
-						if (asm_gpush_static((uint16_t)sid))
-							goto err;
-					}
-					goto done;
-				}
-				/* The source-expression cannot be evaluated at compile-time.
-				 * Instead, we must generate runtime wrapper code:
-				 * >>     .static my_static       = @none
-				 * >>     .static is_initialized  = @false
-				 * >>     .static is_initializing = @false
-				 * >>.Lretry:
-				 * >>     push  true
-				 * >>     swap  @is_initializing, top // Guarantied to be atomic for static variables
-				 * >>.Lexcept_start: // Protect against exceptions, return & yield the initializer
-				 * >>     jt    pop, .Lwaitfor
-				 * >>
-				 * >>     // Do the actual init
-				 * >>     push  <...> // The initializer expression
-				 * >>#if USING_RESULT
-				 * >>     dup
-				 * >>#endif
-				 * >>     pop   @my_static
-				 * >>
-				 * >>     mov   @is_initialized, true // Indicate that initialization has been completed
-				 * >>.Lexcept_end:
-				 * >>     jmp   .Ldone2
-				 * >>.Lwaitfor:
-				 * >>     push  @is_initialized
-				 * >>     jt    .Ldone // Check if initialization has been completed
-				 * >>     push  extern @deemon:@thread
-				 * >>     callattr top, @"yield", #0 // Yield to get the thread performing the init to run
-				 * >>     pop
-				 * >>#if INIT_MAY_THROW_EXCEPTIONS
-				 * >>     jmp   .Lretry   // If the other thread failed, we'll re-attemt the init
-				 * >>#else
-				 * >>     jmp   .Lwaitfor // The other thread can't fail, so we just have to wait
-				 * >>#endif
-				 * >>.Ldone:
-				 * >>#if USING_RESULT
-				 * >>     push  @my_static
-				 * >>#endif
-				 * >>.Ldone2:
-				 * >>     ...
-				 * >>
-				 * >>.section .cold
-				 * >>.Lexcept_entry:
-				 * >>.except .Lexcept_start, .Lexcept_end, .Lexcept_entry, @finally:
-				 * >>     // Indicate initialization failure
-				 * >>     // NOTE: We use a finally-handler so we also indicate initialization
-				 * >>     //       failure when the init contains a yield or return statement
-				 * >>     //       that ended up never returning.
-				 * >>     mov   @is_initializing, false
-				 * >>     end   finally
-				 * >>     throw except // Shouldn't get here, but satisfies peephole and code integrity checks
-				 */
-				/* TODO */
-			}
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		}	break;
 
 		case SYMBOL_TYPE_GLOBAL:

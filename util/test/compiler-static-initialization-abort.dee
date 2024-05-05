@@ -19,7 +19,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#if 1 /* #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 global initCalls = 0;
 global nonInitCalls = 0;
 
@@ -88,5 +87,3 @@ assert abortStaticInitWithGoto() == "baz";
 assert abortStaticInitWithGoto.__statics__[0] == "baz";
 assert initCalls == 6;
 assert nonInitCalls == 6;
-
-#endif

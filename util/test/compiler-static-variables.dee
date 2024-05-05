@@ -19,7 +19,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-#if 1 /* #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 function foo() {
 	return a -> {
 		static local x = a;
@@ -37,15 +36,14 @@ function bar() {
  * As such, each call to `foo()' returns a function with a distinct
  * storage location for a static variable.
  *
- * With old static variable semantics (!CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION),
- * there would only a 1 storage location within the code object itself,
- * which would that `y1(43)' would still return the initial `42`.
+ * With old static variable semantics, there used to be only 1 storage
+ * location within the code object itself, which would that `y1(43)'
+ * would still return the initial `42`.
  *
  * This was not only unintuitive, but also impossible to support _jit,
  * which doesn't have a concept of Code vs. Function objects. As such,
- * CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION introduces these new, more
- * intuitive semantics for static variables (that also align with what
- * is done by _jit)
+ * these new, more intuitive semantics for static variables were added
+ * (that also align with what is done by _jit)
  */
 local x1 = foo();
 try {
@@ -86,4 +84,3 @@ assert #bar.__constants__ == 1;
 assert foo.__constants__[0] is Code;
 assert bar.__constants__[0] is Function;
 #endif /* __DEEMON_VARIANT__ == "gatw" */
-#endif

@@ -387,24 +387,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* ... */
 
 
-/* Experimental option that will eventually become the default (with backwards
- * compat getting removed as well):
- * - ASM_STATIC & friends live in "DeeFunctionObject::fo_refv" instead
- *   of "DeeCodeObject::co_constv".
- * - This effectively means that "static" variables defined in user-code have
- *   individual instantiations for every time the "function" declaration is
- *   reached, as opposed to only a single one within the bytecode that makes
- *   up the function's underlying code. */
-#if (!defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_STATIC_IN_FUNCTION))
-#if 1
-#define CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-#else
-#define CONFIG_NO_EXPERIMENTAL_STATIC_IN_FUNCTION
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_STATIC_IN_FUNCTION */
-
-
 /* Use the new sequence operator inheritance system (currently incomplete). */
 #if (!defined(CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS) && \
      !defined(CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS))

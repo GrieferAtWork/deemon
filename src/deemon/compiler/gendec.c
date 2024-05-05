@@ -1244,10 +1244,8 @@ allow_8bit_code(DeeCodeObject *__restrict self) {
 		goto nope;
 	if (self->co_refc > UINT8_MAX)
 		goto nope;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if (self->co_refstaticc > self->co_refc)
 		goto nope; /* Static variables can't be represented in 8-bit mode */
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (self->co_argc_min > UINT8_MAX)
 		goto nope;
 	if (((self->co_framesize / sizeof(DeeObject *)) - self->co_localc) > UINT8_MAX)
@@ -1415,11 +1413,7 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 			}
 			switch (op & ~DDI_EXDAT_OPMASK) {
 
-			case DDI_EXDAT_O_RNAM:
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-			case DDI_EXDAT_O_SNAM:
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			{
+			case DDI_EXDAT_O_RNAM: {
 				uint32_t string_offset;
 				uint16_t symbol_id;
 				char const *string;
@@ -1529,12 +1523,8 @@ INTERN WUNUSED NONNULL((1)) int
 	descr.co_flags      = self->co_flags & CODE_FMASK;
 	descr.co_localc     = self->co_localc;
 	descr.co_refc       = self->co_refc;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(self->co_refstaticc >= self->co_refc);
 	descr.co_staticc    = self->co_refstaticc - self->co_refc;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	descr.co_padding    = 0;
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	descr.co_argc_min   = self->co_argc_min;
 	descr.co_stackmax   = (uint16_t)(self->co_framesize / sizeof(DeeObject *)) - self->co_localc;
 	descr.co_constoff   = 0;
@@ -1815,9 +1805,7 @@ INTERN WUNUSED NONNULL((1)) int
 		descr.co_flags      = HTOLE16(descr.co_flags);      /* Dec_Code.co_flags */
 		descr.co_localc     = HTOLE16(descr.co_localc);     /* Dec_Code.co_localc */
 		descr.co_refc       = HTOLE16(descr.co_refc);       /* Dec_Code.co_refc */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		descr.co_staticc    = HTOLE16(descr.co_staticc);    /* Dec_Code.co_staticc */
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		descr.co_argc_min   = HTOLE16(descr.co_argc_min);   /* Dec_Code.co_argc_min */
 		descr.co_stackmax   = HTOLE16(descr.co_stackmax);   /* Dec_Code.co_stackmax */
 		descr.co_constoff   = HTOLE32(descr.co_constoff);   /* Dec_Code.co_constoff */

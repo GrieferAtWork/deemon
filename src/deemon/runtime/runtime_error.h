@@ -90,9 +90,7 @@ INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_unpack_iter_size(DeeObjec
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_unpack_iter_size_minmax(DeeObject *unpack_object, DeeObject *unpack_iterator, size_t need_size_min, size_t need_size_max);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unbound_global(struct module_object *__restrict module, uint16_t global_index);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_local(struct code_object *code, void *ip, uint16_t local_index);
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_static(struct code_object *code, void *ip, uint16_t static_index);
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_arg(struct code_object *code, void *ip, uint16_t arg_index);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_local(struct code_object *code, void *ip, uint16_t local_index);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_illegal_instruction(struct code_object *code, void *ip);
@@ -209,9 +207,7 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_invalid_unpack_iter_size_minmax(unpack_object, unpack_iterator, need_size_min, need_size_max) Dee_ASSUMED_VALUE(err_invalid_unpack_iter_size_minmax(unpack_object, unpack_iterator, need_size_min, need_size_max), -1)
 #define err_unbound_global(module, global_index)                                                          Dee_ASSUMED_VALUE(err_unbound_global(module, global_index), -1)
 #define err_unbound_local(code, ip, local_index)                                                          Dee_ASSUMED_VALUE(err_unbound_local(code, ip, local_index), -1)
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define err_unbound_static(code, ip, static_index)                                                        Dee_ASSUMED_VALUE(err_unbound_static(code, ip, static_index), -1)
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define err_unbound_arg(code, ip, arg_index)                                                              Dee_ASSUMED_VALUE(err_unbound_arg(code, ip, arg_index), -1)
 #define err_readonly_local(code, ip, local_index)                                                         Dee_ASSUMED_VALUE(err_readonly_local(code, ip, local_index), -1)
 #define err_illegal_instruction(code, ip)                                                                 Dee_ASSUMED_VALUE(err_illegal_instruction(code, ip), -1)

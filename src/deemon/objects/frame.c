@@ -942,7 +942,6 @@ err:
 	return -1;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_bound_frame(Frame *__restrict self) {
 	return atomic_read(&self->f_frame) != NULL ? 1 : 0;
@@ -1092,7 +1091,6 @@ frame_get_code_constants(DeeFrameObject *__restrict self) {
 err:
 	return NULL;
 }
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 PRIVATE struct type_getset tpconst frame_getsets[] = {
@@ -1152,7 +1150,6 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	                  "#tValueError{The Frame is readonly}"
 	                  "#tUnboundAttribute{No return value is assigned at the moment}"
 	                  "Read-write access to the currently set frame return value"),
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	TYPE_GETTER_BOUND("__statics__", &frame_get_function_statics, &frame_bound_function_statics,
 	                  "->?S?O\n"
 	                  DOC_ReferenceError
@@ -1224,7 +1221,6 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	                    "->?S?O\n"
 	                    DOC_ReferenceError
 	                    "Alias for :Function.__constants__ though ?#__func__"),
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETSET_END
 };
 

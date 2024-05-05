@@ -94,14 +94,7 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 				goto print_generic;
 			return DeeFormat_Printf(printer, arg, "const %u /* invalid cid */", (unsigned int)cid);
 		}
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-		DeeCode_ConstLockRead(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		constval = code->co_constv[cid];
-		Dee_Incref(constval);
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-		DeeCode_ConstLockEndRead(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		if (DeeInt_Check(constval)) {
 			dssize_t temp, result = 0;
 			unsigned int numsys;
@@ -120,15 +113,13 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 			if unlikely(temp < 0)
 				return temp;
 			result += temp;
-			Dee_Decref(constval);
 			return result;
 		}
 		/* TODO: Add the names of code/function/class objects as comments. */
 		if (!DeeCode_CheckExact(constval) &&
 		    !DeeFunction_CheckExact(constval) &&
 		    !DeeClassDescriptor_Check(constval))
-			return DeeFormat_Printf(printer, arg, PREFIX_CONSTANT "%R", constval);
-		Dee_Decref(constval);
+			return DeeFormat_Printf(printer, arg, PREFIX_CONSTANT "%r", constval);
 	}
 print_generic:
 	return DeeFormat_Printf(printer, arg, "const %u", (unsigned int)cid);
@@ -139,13 +130,8 @@ libdisasm_printstatic(dformatprinter printer, void *arg, uint16_t sid,
                       DeeCodeObject *code, unsigned int flags) {
 	if (code) {
 		char *name;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		if ((name = DeeCode_GetRSymbolName((DeeObject *)code, sid)) != NULL)
 			return DeeFormat_Printf(printer, arg, "static " PREFIX_VARNAME "%s", name);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		if ((name = DeeCode_GetSSymbolName((DeeObject *)code, sid)) != NULL)
-			return DeeFormat_Printf(printer, arg, "static " PREFIX_VARNAME "%s", name);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		if (sid >= code->co_constc) {
 			if (flags & PCODE_FNOBADCOMMENT)
 				goto print_generic;
@@ -371,19 +357,12 @@ print_generic:
 	return DeeFormat_Printf(printer, arg, "ref %u", (unsigned int)rid);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE WUNUSED NONNULL((1, 2)) DeeClassDescriptorObject *DCALL
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeClassDescriptorObject *DCALL
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
                                    char const *__restrict class_name) {
 	DREF DeeClassDescriptorObject *result;
 	uint16_t i;
 	bool has_child_code = false;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	DeeCode_ConstLockRead(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	for (i = 0; i < code->co_constc; ++i) {
 		result = (DeeClassDescriptorObject *)code->co_constv[i];
 		if (!DeeClassDescriptor_Check(result)) {
@@ -396,39 +375,20 @@ find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
 		if (strcmp(DeeString_STR(result->cd_name), class_name) != 0)
 			continue;
 		/* Found it! */
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-		Dee_Incref(result);
-		DeeCode_ConstLockEndRead(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		return result;
 	}
 	if (has_child_code) {
 		/* Also search child-code nodes. */
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		DeeCodeObject *child_code;
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		DREF DeeCodeObject *child_code;
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		for (i = 0; i < code->co_constc; ++i) {
-			child_code = (DREF DeeCodeObject *)code->co_constv[i];
+			child_code = (DeeCodeObject *)code->co_constv[i];
 			if (!DeeCode_Check(child_code))
 				continue;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-			Dee_Incref(child_code);
-			DeeCode_ConstLockEndRead(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			result = find_class_descriptor_in_constants(child_code, class_name);
-			Dee_Decref(child_code);
 			if (result)
 				return result;
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-			DeeCode_ConstLockRead(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		}
 	}
-#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	DeeCode_ConstLockEndRead(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return NULL;
 }
 
@@ -469,9 +429,7 @@ search_module_root_constants:
 							desc = find_class_descriptor_in_constants(root, class_name);
 							Dee_Decref(root);
 							if (desc) {
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 								Dee_Incref(desc);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 								class_type = (DREF DeeObject *)desc; /* Inherit reference. (will be dropped later) */
 								goto do_search_desc;
 							}
