@@ -1061,7 +1061,7 @@ PRIVATE struct type_seq set_seq = {
 INTERN WUNUSED NONNULL((1)) dhash_t DCALL
 generic_set_hash(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireHash(tp_self)) {
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SET && DeeType_RequireHash(tp_self)) {
 		if (tp_self->tp_cmp->tp_hash == &generic_set_hash)
 			goto handle_empty; /* Empty set. */
 		return (*tp_self->tp_cmp->tp_hash)(self);
@@ -1084,7 +1084,7 @@ empty_seq_compare(DeeObject *some_object);
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_set_compare_eq(DeeObject *self, DeeObject *some_object) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireCompareEq(tp_self)) {
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SET && DeeType_RequireCompareEq(tp_self)) {
 		if (tp_self->tp_cmp->tp_compare_eq == &generic_set_compare_eq)
 			goto handle_empty; /* Empty set. */
 		return (*tp_self->tp_cmp->tp_compare_eq)(self, some_object);
@@ -1103,7 +1103,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_set_eq(DeeObject *self, DeeObject *some_object) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireEq(tp_self)) {
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SET && DeeType_RequireEq(tp_self)) {
 		if (tp_self->tp_cmp->tp_eq == &generic_set_eq)
 			goto handle_empty; /* Empty set. */
 		return (*tp_self->tp_cmp->tp_eq)(self, some_object);
@@ -1124,7 +1124,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_set_ne(DeeObject *self, DeeObject *some_object) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireNe(tp_self)) {
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SET && DeeType_RequireNe(tp_self)) {
 		if (tp_self->tp_cmp->tp_ne == &generic_set_ne)
 			goto handle_empty; /* Empty set. */
 		return (*tp_self->tp_cmp->tp_ne)(self, some_object);
@@ -1145,7 +1145,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_set_lo(DeeObject *self, DeeObject *some_object) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireLo(tp_self)) {
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SET && DeeType_RequireLo(tp_self)) {
 		if (tp_self->tp_cmp->tp_lo == &generic_set_lo)
 			goto handle_empty; /* Empty set. */
 		return (*tp_self->tp_cmp->tp_lo)(self, some_object);
@@ -1168,7 +1168,7 @@ handle_empty:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_set_le(DeeObject *self, DeeObject *some_object) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireLe(tp_self)) {
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SET && DeeType_RequireLe(tp_self)) {
 		if (tp_self->tp_cmp->tp_le == &generic_set_le)
 			goto handle_empty; /* Empty set. */
 		return (*tp_self->tp_cmp->tp_le)(self, some_object);
@@ -1187,7 +1187,7 @@ handle_empty:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_set_gr(DeeObject *self, DeeObject *some_object) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireGr(tp_self)) {
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SET && DeeType_RequireGr(tp_self)) {
 		if (tp_self->tp_cmp->tp_gr == &generic_set_gr)
 			goto handle_empty; /* Empty set. */
 		return (*tp_self->tp_cmp->tp_gr)(self, some_object);
@@ -1207,7 +1207,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_set_ge(DeeObject *self, DeeObject *some_object) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireGe(tp_self)) {
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SET && DeeType_RequireGe(tp_self)) {
 		if (tp_self->tp_cmp->tp_ge == &generic_set_ge)
 			goto handle_empty; /* Empty set. */
 		return (*tp_self->tp_cmp->tp_ge)(self, some_object);
