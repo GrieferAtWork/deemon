@@ -302,6 +302,22 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unbound_key_str)(DeeObject *self, char const *key) {
+	ASSERT_OBJECT(self);
+	return DeeError_Throwf(&DeeError_UnboundItem,
+	                       "Key `%q' of instance of `%k': %k has not been bound",
+	                       key, Dee_TYPE(self), self);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unbound_key_str_len)(DeeObject *self, char const *key, size_t keylen) {
+	ASSERT_OBJECT(self);
+	return DeeError_Throwf(&DeeError_UnboundItem,
+	                       "Key `%$q' of instance of `%k': %k has not been bound",
+	                       keylen, key, Dee_TYPE(self), self);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_readonly_key)(DeeObject *self, DeeObject *key) {
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(key);

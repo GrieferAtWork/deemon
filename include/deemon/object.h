@@ -1998,7 +1998,7 @@ struct Dee_type_cmp {
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
 typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
-typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
+typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
 
 struct Dee_type_nsi;
 struct Dee_type_seq_cache;
@@ -2030,9 +2030,10 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
-	/* TODO: For enumerating available indices/keys, and their current values (which may be NULL if `this[index] !is bound') */
-	//TODO: WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
-	//TODO: WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint);
+	/* Alternate forms for `tp_foreach' (these are inherited by `DeeType_InheritIter()').
+	 * For enumerating available indices/keys, and their current values (which may be NULL if `this[index] !is bound') */
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint);
 
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
@@ -2189,6 +2190,22 @@ myob_foreach(MyObject *__restrict self, Dee_foreach_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 myob_foreach_pair(MyObject *__restrict self, Dee_foreach_pair_t proc, void *arg) {
+	(void)self;
+	(void)proc;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+myob_enumerate(MyObject *__restrict self, Dee_enumerate_t proc, void *arg) {
+	(void)self;
+	(void)proc;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+myob_enumerate_index(MyObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint) {
 	(void)self;
 	(void)proc;
 	(void)arg;
@@ -2448,6 +2465,8 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_nsi                        = */ &myob_nsi,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&myob_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&myob_foreach_pair,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&myob_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&myob_enumerate_index,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&myob_size,
@@ -4517,7 +4536,9 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_InplacePow)(DREF DeeObject 
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AddInt8)(DeeObject *__restrict self, int8_t val);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SubInt8)(DeeObject *__restrict self, int8_t val);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AddUInt32)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_AddUInt64)(DeeObject *__restrict self, uint64_t val);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SubUInt32)(DeeObject *__restrict self, uint32_t val);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SubUInt64)(DeeObject *__restrict self, uint64_t val);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_MulInt8)(DeeObject *__restrict self, int8_t val);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_DivInt8)(DeeObject *__restrict self, int8_t val);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_ModInt8)(DeeObject *__restrict self, int8_t val);
@@ -4538,6 +4559,13 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceShrUInt8)(DREF DeeObjec
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceAndUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceOrUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceXorUInt32)(DREF DeeObject **__restrict p_self, uint32_t val);
+#if __SIZEOF_SIZE_T__ > 4
+#define DeeObject_AddSize(self, val) DeeObject_AddUInt64(self, (uint64_t)(val))
+#define DeeObject_SubSize(self, val) DeeObject_SubUInt64(self, (uint64_t)(val))
+#else /* __SIZEOF_SIZE_T__ > 4 */
+#define DeeObject_AddSize(self, val) DeeObject_AddUInt32(self, (uint32_t)(val))
+#define DeeObject_SubSize(self, val) DeeObject_SubUInt32(self, (uint32_t)(val))
+#endif /* __SIZEOF_SIZE_T__ <= 4 */
 
 
 /* Comparison operator invocation. */
@@ -4768,6 +4796,26 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use t
 /* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Unpack()' */
 (DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
+
+
+/* Enumerate valid keys/indices of "self", as well as their current value.
+ * @return: * : Sum of return values of `*proc'
+ * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
+(DCALL DeeObject_Enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+
+/* Same as `DeeObject_Enumerate()', but only valid when "self" uses integers for indices
+ * or is a mapping where all keys are integers. In the former case, [starthint,endhint)
+ * can be given in order to allow the implementation to only enumerate indices that fall
+ * within that range (though an implementation is allowed to simply ignore these arguments)
+ * If you want to always enumerate all indices (like is also done by `DeeObject_Enumerate',
+ * then simply pass `starthint = 0, endhint = (size_t)-1')
+ * @return: * : Sum of return values of `*proc'
+ * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
+(DCALL DeeObject_EnumerateIndex)(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                                 void *arg, size_t starthint, size_t endhint);
+
 
 /* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */
 DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int

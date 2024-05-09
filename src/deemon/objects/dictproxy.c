@@ -256,7 +256,7 @@ dictiterator_visit(DictIterator *__restrict self, dvisit_t proc, void *arg) {
 
 INTDEF DeeTypeObject DictIterator_Type;
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 dictiterator_hash(DictIterator *self) {
 	return Dee_HashPointer(READ_ITEM(self));
 }
@@ -658,6 +658,8 @@ PRIVATE struct type_seq proxy_seq = {
 	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
@@ -805,6 +807,8 @@ PRIVATE struct type_seq dict_keys_seq = {
 	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_keys_foreach,
 	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
@@ -850,6 +854,8 @@ PRIVATE struct type_seq dict_items_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_items_foreach,
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
@@ -895,6 +901,8 @@ PRIVATE struct type_seq dict_values_seq = {
 	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_values_foreach,
 	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,

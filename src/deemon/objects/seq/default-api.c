@@ -1378,7 +1378,7 @@ err:
 }
 
 /* Returns ITER_DONE if item doesn't exist. */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_trygetfirst(DeeObject *self) {
 	DREF DeeObject *result;
 	Dee_tsc_getfirst_t getfirst;
@@ -1423,7 +1423,7 @@ err:
 }
 
 /* Returns ITER_DONE if item doesn't exist. */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_trygetlast(DeeObject *self) {
 	DREF DeeObject *result;
 	Dee_tsc_getlast_t getlast;
