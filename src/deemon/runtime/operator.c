@@ -629,7 +629,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
  * check if that class has been inherited from a direct base of `self'.
  *
  * If so, return that base-type. If not, return `NULL'. */
-PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_GetOpClassOrigin(DeeTypeObject *__restrict self, uint16_t oi_class) {
 	DeeTypeMRO mro;
 	void *cls = *(void **)((byte_t *)self + oi_class);
@@ -12432,7 +12432,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_TryCmpKeyEqAsBool)(DeeObject *keyed_search_item,
                                     DeeObject *elem, /*nullable*/ DeeObject *key) {
-	int result = DeeObject_TryCompareKeyEq(keyed_search_item, elem, key);
+	int result = key ? DeeObject_TryCompareKeyEq(keyed_search_item, elem, key)
+	                 : DeeObject_TryCompareEq(keyed_search_item, elem);
 	if unlikely(result == Dee_COMPARE_ERR)
 		return -1;
 	return result == 0 ? 1 : 0;
@@ -17524,17 +17525,15 @@ err:
 }
 
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
  * @return: == -1: `lhs_keyed < key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
  * @return: == 1:  `lhs_keyed > key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
-                             DeeObject *rhs, /*nullable*/ DeeObject *key) {
+                             DeeObject *rhs, DeeObject *key) {
 	int result;
-	if (!key)
-		return DeeObject_Compare(lhs_keyed, rhs);
 	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
 	if unlikely(!rhs)
 		goto err;
@@ -17545,17 +17544,15 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
  * @return: == -1: `lhs_keyed != key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
  * @return: == 1:  `lhs_keyed != key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
-                               DeeObject *rhs, /*nullable*/ DeeObject *key) {
+                               DeeObject *rhs, DeeObject *key) {
 	int result;
-	if (!key)
-		return DeeObject_CompareEq(lhs_keyed, rhs);
 	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
 	if unlikely(!rhs)
 		goto err;
@@ -17566,17 +17563,15 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
  * @return: == -1: `lhs_keyed != key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
  * @return: == 1:  `lhs_keyed != key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,
-                                  DeeObject *rhs, /*nullable*/ DeeObject *key) {
+                                  DeeObject *rhs, DeeObject *key) {
 	int result;
-	if (!key)
-		return DeeObject_TryCompareEq(lhs_keyed, rhs);
 	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
 	if unlikely(!rhs)
 		goto err;

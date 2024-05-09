@@ -594,8 +594,8 @@ DeeRange_NewInt(Dee_ssize_t begin, Dee_ssize_t end, Dee_ssize_t step);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Sum(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Any(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_All(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self, DeeObject *key);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self, DeeObject *key);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self);
 
 
 #ifdef CONFIG_BUILDING_DEEMON

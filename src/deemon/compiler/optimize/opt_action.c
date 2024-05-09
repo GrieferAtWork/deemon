@@ -481,7 +481,7 @@ action_set_expr_result:
 		if (ast_optimize(stack, self->a_action.a_act0, true))
 			goto err;
 		if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
-			expr_result = DeeSeq_Min(self->a_action.a_act0->a_constexpr, NULL);
+			expr_result = DeeSeq_Min(self->a_action.a_act0->a_constexpr);
 			goto action_set_expr_result;
 		}
 		break;
@@ -490,7 +490,7 @@ action_set_expr_result:
 		if (ast_optimize(stack, self->a_action.a_act0, true))
 			goto err;
 		if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
-			expr_result = DeeSeq_Max(self->a_action.a_act0->a_constexpr, NULL);
+			expr_result = DeeSeq_Max(self->a_action.a_act0->a_constexpr);
 			goto action_set_expr_result;
 		}
 		break;

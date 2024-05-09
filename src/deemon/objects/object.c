@@ -2819,6 +2819,15 @@ INTDEF NONNULL((1, 2)) void DCALL class_visit(DeeTypeObject *__restrict self, dv
 INTDEF NONNULL((1)) void DCALL class_clear(DeeTypeObject *__restrict self);
 INTDEF NONNULL((1)) void DCALL class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority);
 
+INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL /* from "../runtime/operator.c" */
+DeeType_GetOpClassOrigin(DeeTypeObject *__restrict self, uint16_t oi_class);
+#define DeeType_GetMathOrigin(self)   DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_math))
+#define DeeType_GetCmpOrigin(self)    DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_cmp))
+#define DeeType_GetSeqOrigin(self)    DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_seq))
+#define DeeType_GetWithOrigin(self)   DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_with))
+#define DeeType_GetBufferOrigin(self) DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_buffer))
+
+
 PRIVATE NONNULL((1)) void DCALL
 type_fini(DeeTypeObject *__restrict self) {
 	/* Clear weak references and check for revival. */
@@ -2831,6 +2840,10 @@ type_fini(DeeTypeObject *__restrict self) {
 	        self->tp_name);
 	if (DeeType_IsClass(self))
 		class_fini(self);
+
+	/* Free the sequence method cache (if it was allocated and belongs to this type) */
+	if (self->tp_seq && self->tp_seq->_tp_seqcache && (DeeType_GetSeqOrigin(self) == self))
+		Dee_Free(self->tp_seq->_tp_seqcache);
 
 	/* Finalize the type's member caches. */
 	Dee_membercache_fini(&self->tp_cache);

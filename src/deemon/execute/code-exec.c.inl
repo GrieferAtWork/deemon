@@ -4648,7 +4648,7 @@ do_setattr_this_c:
 
 				TARGET(ASM_REDUCE_MIN, -1, +1) {
 					DREF DeeObject *result;
-					result = DeeSeq_Min(TOP, NULL);
+					result = DeeSeq_Min(TOP);
 					if unlikely(!result)
 						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
@@ -4658,7 +4658,7 @@ do_setattr_this_c:
 
 				TARGET(ASM_REDUCE_MAX, -1, +1) {
 					DREF DeeObject *result;
-					result = DeeSeq_Max(TOP, NULL);
+					result = DeeSeq_Max(TOP);
 					if unlikely(!result)
 						HANDLE_EXCEPT();
 					Dee_Decref(TOP);

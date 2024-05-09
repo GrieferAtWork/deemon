@@ -93,7 +93,8 @@ LOCAL_bfind_with_xxx(
 #endif /* !DEFINE_LOCAL_bfind_with_nsi_getitem_fast */
 
 		/* Compare `keyed_search_item' and `seq_elem' */
-		diff = DeeObject_CompareKey(keyed_search_item, seq_elem, key);
+		diff = key ? DeeObject_CompareKey(keyed_search_item, seq_elem, key)
+		           : DeeObject_Compare(keyed_search_item, seq_elem);
 #ifndef DEFINE_DeeSeq_BLocate
 		Dee_Decref(seq_elem);
 #endif /* !DEFINE_DeeSeq_BLocate */

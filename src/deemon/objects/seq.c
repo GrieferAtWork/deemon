@@ -47,6 +47,7 @@
 #include "seq/bsearch.h"
 #include "seq/combinations.h"
 #include "seq/concat.h"
+#include "seq/default-api.h"
 #include "seq/default-iterators.h"
 #include "seq/default-sequences.h"
 #include "seq/each.h"
@@ -172,17 +173,6 @@ seq_size(DeeObject *__restrict self) {
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize((size_t)result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-seq_tpcontains(DeeObject *self, DeeObject *elem) {
-	int result;
-	result = DeeSeq_Contains(self, elem, NULL);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
 err:
 	return NULL;
 }
@@ -1975,7 +1965,7 @@ err:
 PRIVATE struct type_seq generic_seq_seq = {
 	/* .tp_iter     = */ &seq_iterself,
 	/* .tp_sizeob   = */ &seq_size,
-	/* .tp_contains = */ &seq_tpcontains,
+	/* .tp_contains = */ NULL,
 	/* .tp_getitem  = */ &seq_getitem,
 	/* .tp_delitem  = */ &seq_delitem,
 	/* .tp_setitem  = */ &seq_setitem,
@@ -3259,6 +3249,7 @@ PRIVATE struct type_math seq_math = {
 	/* .tp_pow         = */ NULL,
 	/* .tp_inc         = */ NULL,
 	/* .tp_dec         = */ NULL,
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	/* .tp_inplace_add = */ &DeeSeq_InplaceExtend,
 	/* .tp_inplace_sub = */ NULL,
 	/* .tp_inplace_mul = */ &DeeSeq_InplaceRepeat,
@@ -3270,6 +3261,7 @@ PRIVATE struct type_math seq_math = {
 	/* .tp_inplace_or  = */ NULL,
 	/* .tp_inplace_xor = */ NULL,
 	/* .tp_inplace_pow = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 };
 
 
@@ -3281,7 +3273,7 @@ print define_Dee_HashStr("Frozen");
 /*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-seq_frozen_get(DeeTypeObject *__restrict self) {
+seq_Frozen_get(DeeTypeObject *__restrict self) {
 	int error;
 	DREF DeeTypeObject *result;
 	struct attribute_info info;
@@ -3330,7 +3322,7 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 	            "->?DType\n"
 	            "Returns the Iterator class used by instances of @this Sequence type\n"
 	            "Should a sub-class implement its own Iterator, this attribute should be overwritten"),
-	TYPE_GETTER("Frozen", &seq_frozen_get,
+	TYPE_GETTER("Frozen", &seq_Frozen_get,
 	            "->?DType\n"
 	            "Returns the type of Sequence returned by the #i:frozen property"),
 	TYPE_GETSET_END
@@ -3399,7 +3391,7 @@ seq_reduce(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *combine, *init = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:reduce", &combine, &init))
 		goto err;
-	return DeeSeq_Reduce(self, combine, init);
+	return generic_seq_reduce(self, combine, init);
 err:
 	return NULL;
 }
@@ -3454,7 +3446,7 @@ seq_parity(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":parity"))
 		goto err;
-	result = DeeSeq_Parity(self);
+	result = generic_seq_parity(self);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -3466,12 +3458,12 @@ INTERN DEFINE_KWLIST(seq_sort_kwlist, { K(key), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_min(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *key = NULL;
+	DeeObject *key = Dee_None;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:min", &key))
 		goto err;
 	if (DeeNone_Check(key))
-		key = NULL;
-	return DeeSeq_Min(self, key);
+		return DeeSeq_Min(self);
+	return generic_seq_min_with_key(self, key);
 err:
 	return NULL;
 }
@@ -3479,12 +3471,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_max(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *key = NULL;
+	DeeObject *key = Dee_None;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:max", &key))
 		goto err;
 	if (DeeNone_Check(key))
-		key = NULL;
-	return DeeSeq_Max(self, key);
+		return DeeSeq_Max(self);
+	return generic_seq_max_with_key(self, key);
 err:
 	return NULL;
 }
@@ -3496,13 +3488,9 @@ seq_count(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|o:count", &elem, &key))
 		goto err;
 	if (DeeNone_Check(key)) {
-		result = DeeSeq_Count(self, elem, NULL);
+		result = generic_seq_count(self, elem);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_Count(self, elem, key);
-		Dee_Decref(elem);
+		result = generic_seq_count_with_key(self, elem, key);
 	}
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -3514,19 +3502,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_locate(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *elem, *key = Dee_None;
-	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, "o|o:locate", &elem, &key))
 		goto err;
-	if (DeeNone_Check(key)) {
-		result = DeeSeq_Locate(self, elem, NULL);
-	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_Locate(self, elem, key);
-		Dee_Decref(elem);
-	}
-	return result;
+	if (DeeNone_Check(key))
+		return generic_seq_locate(self, elem);
+	return generic_seq_locate_with_key(self, elem, key);
 err:
 	return NULL;
 }
@@ -3534,19 +3514,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_rlocate(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *elem, *key = Dee_None;
-	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, "o|o:rlocate", &elem, &key))
 		goto err;
-	if (DeeNone_Check(key)) {
-		result = DeeSeq_RLocate(self, elem, NULL);
-	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_RLocate(self, elem, key);
-		Dee_Decref(elem);
-	}
-	return result;
+	if (DeeNone_Check(key))
+		return generic_seq_rlocate(self, elem);
+	return generic_seq_rlocate_with_key(self, elem, key);
 err:
 	return NULL;
 }
@@ -3590,11 +3562,7 @@ seq_contains(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	/* Without a key function, invoke the regular contains-operator. */
 	if (DeeNone_Check(key))
 		return DeeObject_Contains(self, elem);
-	elem = DeeObject_Call(key, 1, &elem);
-	if unlikely(!elem)
-		goto err;
-	result = DeeSeq_Contains(self, elem, key);
-	Dee_Decref(elem);
+	result = generic_seq_contains_with_key(self, elem, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -3609,13 +3577,9 @@ seq_startswith(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|o:startswith", &elem, &key))
 		goto err;
 	if (DeeNone_Check(key)) {
-		result = DeeSeq_StartsWith(self, elem, NULL);
+		result = generic_seq_startswith(self, elem);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_StartsWith(self, elem, key);
-		Dee_Decref(elem);
+		result = generic_seq_startswith_with_key(self, elem, key);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -3631,13 +3595,9 @@ seq_endswith(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|o:endswith", &elem, &key))
 		goto err;
 	if (DeeNone_Check(key)) {
-		result = DeeSeq_EndsWith(self, elem, NULL);
+		result = generic_seq_endswith(self, elem);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_EndsWith(self, elem, key);
-		Dee_Decref(elem);
+		result = generic_seq_endswith_with_key(self, elem, key);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -6340,6 +6300,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 };
 
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_del_first(DeeObject *__restrict self) {
 	int result;
@@ -6385,6 +6346,7 @@ err_empty:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -6434,103 +6396,124 @@ err:
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#define generic_seq_getfirst     DeeSeq_Front
+#define generic_seq_boundfirst_P NULL
+#define generic_seq_delfirst     seq_del_first
+#define generic_seq_setfirst     seq_set_first
+#define generic_seq_getlast      DeeSeq_Back
+#define generic_seq_boundlast_P  NULL
+#define generic_seq_dellast      seq_del_last
+#define generic_seq_setlast      seq_set_last
+#else /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+#define generic_seq_boundfirst_P &generic_seq_boundfirst
+#define generic_seq_boundlast_P  &generic_seq_boundlast
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("length", &DeeObject_SizeOb, "->?Dint\nAlias for ${##this}"),
-	TYPE_GETSET(STR_first, &DeeSeq_Front, &seq_del_first, &seq_set_first,
-	            "->\n"
-	            "Access the first item of the Sequence\n"
-	            "Depending on the nearest implemented group of operators, "
-	            /**/ "one of the following implementations is chosen\n"
-	            "For ${operator []}:\n"
-	            "${"
-	            /**/ "property first: Object = {\n"
-	            /**/ "	get(): Object {\n"
-	            /**/ "		import Error from deemon;\n"
-	            /**/ "		try {\n"
-	            /**/ "			return this[0];\n"
-	            /**/ "		} catch (Error.ValueError.IndexError) {\n"
-	            /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "	del() {\n"
-	            /**/ "		try {\n"
-	            /**/ "			del this[0]; // If `operator delitem' doesn't exist, throw NotImplemented\n"
-	            /**/ "		} catch (Error.ValueError.IndexError) {\n"
-	            /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "	set(value: Object) {\n"
-	            /**/ "		try {\n"
-	            /**/ "			this[0] = value; /* If `operator setitem' doesn't exist, throw NotImplemented */\n"
-	            /**/ "		} catch (Error.ValueError.IndexError) {\n"
-	            /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "}"
-	            "}\n"
-	            "For ${operator iter}:\n"
-	            "${"
-	            /**/ "property first: Object = {\n"
-	            /**/ "	get(): Object {\n"
-	            /**/ "		import Error, Signal from deemon;\n"
-	            /**/ "		local it = this.operator iter();\n"
-	            /**/ "		try {\n"
-	            /**/ "			return it.operator next();\n"
-	            /**/ "		} catch (Signal.StopIteration) {\n"
-	            /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_GETSET(STR_last, &DeeSeq_Back, &seq_del_last, &seq_set_last,
-	            "->\n"
-	            "Access the last item of the Sequence\n"
-	            "Depending on the nearest implemented group of operators, "
-	            /**/ "one of the following implementations is chosen\n"
-	            "For ${operator []} and ${operator ##}:\n"
-	            "${"
-	            /**/ "property last: Object = {\n"
-	            /**/ "	get(): Object {\n"
-	            /**/ "		import Error from deemon;\n"
-	            /**/ "		local mylen = ##this;\n"
-	            /**/ "		if (!mylen)\n"
-	            /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
-	            /**/ "		return this[mylen - 1];\n"
-	            /**/ "	}\n"
-	            /**/ "	del() {\n"
-	            /**/ "		import Error from deemon;\n"
-	            /**/ "		local mylen = ##this;\n"
-	            /**/ "		if (!mylen)\n"
-	            /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
-	            /**/ "		del this[mylen - 1];\n"
-	            /**/ "	}\n"
-	            /**/ "	set(value: Object) {\n"
-	            /**/ "		import Error from deemon;\n"
-	            /**/ "		local mylen = ##this;\n"
-	            /**/ "		if (!mylen)\n"
-	            /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
-	            /**/ "		this[mylen - 1] = value;\n"
-	            /**/ "	}\n"
-	            /**/ "}}\n"
-	            /**/ "For ${operator iter}:\n"
-	            /**/ "${"
-	            /**/ "property last: Object = {\n"
-	            /**/ "	get(): Object {\n"
-	            /**/ "		import Error, Signal from deemon;\n"
-	            /**/ "		local it = this.operator iter();\n"
-	            /**/ "		local result;\n"
-	            /**/ "		try {\n"
-	            /**/ "			for (;;)\n"
-	            /**/ "				result = it.operator next();\n"
-	            /**/ "		} catch (Signal.StopIteration) {\n"
-	            /**/ "		}\n"
-	            /**/ "		if (result !is bound)\n"
-	            /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
-	            /**/ "		return result;\n"
-	            /**/ "	}\n"
-	            /**/ "}"
-	            "}"),
+	TYPE_GETSET_BOUND(STR_first,
+	                  &generic_seq_getfirst,
+	                  &generic_seq_delfirst,
+	                  &generic_seq_setfirst,
+	                  generic_seq_boundfirst_P,
+	                  "->\n"
+	                  "Access the first item of the Sequence\n"
+	                  "Depending on the nearest implemented group of operators, "
+	                  /**/ "one of the following implementations is chosen\n"
+	                  "For ${operator []}:\n"
+	                  "${"
+	                  /**/ "property first: Object = {\n"
+	                  /**/ "	get(): Object {\n"
+	                  /**/ "		import Error from deemon;\n"
+	                  /**/ "		try {\n"
+	                  /**/ "			return this[0];\n"
+	                  /**/ "		} catch (Error.ValueError.IndexError) {\n"
+	                  /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
+	                  /**/ "		}\n"
+	                  /**/ "	}\n"
+	                  /**/ "	del() {\n"
+	                  /**/ "		try {\n"
+	                  /**/ "			del this[0]; // If `operator delitem' doesn't exist, throw NotImplemented\n"
+	                  /**/ "		} catch (Error.ValueError.IndexError) {\n"
+	                  /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
+	                  /**/ "		}\n"
+	                  /**/ "	}\n"
+	                  /**/ "	set(value: Object) {\n"
+	                  /**/ "		try {\n"
+	                  /**/ "			this[0] = value; /* If `operator setitem' doesn't exist, throw NotImplemented */\n"
+	                  /**/ "		} catch (Error.ValueError.IndexError) {\n"
+	                  /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
+	                  /**/ "		}\n"
+	                  /**/ "	}\n"
+	                  /**/ "}"
+	                  "}\n"
+	                  "For ${operator iter}:\n"
+	                  "${"
+	                  /**/ "property first: Object = {\n"
+	                  /**/ "	get(): Object {\n"
+	                  /**/ "		import Error, Signal from deemon;\n"
+	                  /**/ "		local it = this.operator iter();\n"
+	                  /**/ "		try {\n"
+	                  /**/ "			return it.operator next();\n"
+	                  /**/ "		} catch (Signal.StopIteration) {\n"
+	                  /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
+	                  /**/ "		}\n"
+	                  /**/ "	}\n"
+	                  /**/ "}"
+	                  "}"),
+	TYPE_GETSET_BOUND(STR_last,
+	                  &generic_seq_getlast,
+	                  &generic_seq_dellast,
+	                  &generic_seq_setlast,
+	                  generic_seq_boundlast_P,
+	                  "->\n"
+	                  "Access the last item of the Sequence\n"
+	                  "Depending on the nearest implemented group of operators, "
+	                  /**/ "one of the following implementations is chosen\n"
+	                  "For ${operator []} and ${operator ##}:\n"
+	                  "${"
+	                  /**/ "property last: Object = {\n"
+	                  /**/ "	get(): Object {\n"
+	                  /**/ "		import Error from deemon;\n"
+	                  /**/ "		local mylen = ##this;\n"
+	                  /**/ "		if (!mylen)\n"
+	                  /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
+	                  /**/ "		return this[mylen - 1];\n"
+	                  /**/ "	}\n"
+	                  /**/ "	del() {\n"
+	                  /**/ "		import Error from deemon;\n"
+	                  /**/ "		local mylen = ##this;\n"
+	                  /**/ "		if (!mylen)\n"
+	                  /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
+	                  /**/ "		del this[mylen - 1];\n"
+	                  /**/ "	}\n"
+	                  /**/ "	set(value: Object) {\n"
+	                  /**/ "		import Error from deemon;\n"
+	                  /**/ "		local mylen = ##this;\n"
+	                  /**/ "		if (!mylen)\n"
+	                  /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
+	                  /**/ "		this[mylen - 1] = value;\n"
+	                  /**/ "	}\n"
+	                  /**/ "}}\n"
+	                  /**/ "For ${operator iter}:\n"
+	                  /**/ "${"
+	                  /**/ "property last: Object = {\n"
+	                  /**/ "	get(): Object {\n"
+	                  /**/ "		import Error, Signal from deemon;\n"
+	                  /**/ "		local it = this.operator iter();\n"
+	                  /**/ "		local result;\n"
+	                  /**/ "		try {\n"
+	                  /**/ "			for (;;)\n"
+	                  /**/ "				result = it.operator next();\n"
+	                  /**/ "		} catch (Signal.StopIteration) {\n"
+	                  /**/ "		}\n"
+	                  /**/ "		if (result !is bound)\n"
+	                  /**/ "			throw Error.ValueError(\"Empty Sequence...\");\n"
+	                  /**/ "		return result;\n"
+	                  /**/ "	}\n"
+	                  /**/ "}"
+	                  "}"),
 	TYPE_GETTER("ismutable", &seq_get_ismutable,
 	            "->?Dbool\n"
 	            "Try to determine if @this Sequence is mutable by looking at operators and "

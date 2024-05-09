@@ -2756,8 +2756,8 @@ DEFINE_SECONDARY(CmpOperand) {
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			merge = cmd == '<'
-			        ? DeeSeq_Min(lhs, NULL)
-			        : DeeSeq_Max(lhs, NULL);
+			        ? DeeSeq_Min(lhs)
+			        : DeeSeq_Max(lhs);
 			if unlikely(!merge)
 				goto err_invoke_norhs;
 			Dee_Decref(lhs);

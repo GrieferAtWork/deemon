@@ -2220,13 +2220,11 @@ do_jcc:
 
 	TARGET(ASM_REDUCE_MIN)
 		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
-		DO(fg_vpush_addr(self, NULL));
-		return fg_vcallapi(self, &DeeSeq_Min, VCALL_CC_OBJECT, 2);
+		return fg_vcallapi(self, &DeeSeq_Min, VCALL_CC_OBJECT, 1);
 
 	TARGET(ASM_REDUCE_MAX)
 		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
-		DO(fg_vpush_addr(self, NULL));
-		return fg_vcallapi(self, &DeeSeq_Max, VCALL_CC_OBJECT, 2);
+		return fg_vcallapi(self, &DeeSeq_Max, VCALL_CC_OBJECT, 1);
 
 	TARGET(ASM_REDUCE_SUM)
 		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));

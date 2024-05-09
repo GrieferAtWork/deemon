@@ -1997,8 +1997,11 @@ struct Dee_type_cmp {
 
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
 typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
+typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
 
 struct Dee_type_nsi;
+struct Dee_type_seq_cache;
 struct Dee_type_seq {
 	/* Sequence operators. */
 	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_iter)(DeeObject *__restrict self);
@@ -2026,6 +2029,10 @@ struct Dee_type_seq {
 	 * the type should still provide a proper `tp_iter' callback. */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
+
+	/* TODO: For enumerating available indices/keys, and their current values (which may be NULL if `this[index] !is bound') */
+	//TODO: WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+	//TODO: WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint);
 
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
@@ -2094,6 +2101,10 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *tp_setitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+
+	/* [0..1][owned][lock(WRITE_ONCE)]
+	 * Internal cache for how sequence functions are implemented for this type. */
+	struct Dee_type_seq_cache *_tp_seqcache;
 };
 
 #if 0
@@ -4591,32 +4602,32 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_TryCompareEq)(DeeObject *lhs, DeeObject *rhs);
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
  * @return: == -1: `lhs_keyed < key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
  * @return: == 1:  `lhs_keyed > key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
-                             DeeObject *rhs, /*nullable*/ DeeObject *key);
+                             DeeObject *rhs, DeeObject *key);
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
  * @return: == -1: `lhs_keyed != key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
  * @return: == 1:  `lhs_keyed != key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *lhs_keyed,
-                               DeeObject *rhs, /*nullable*/ DeeObject *key);
+                               DeeObject *rhs, DeeObject *key);
 
-/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
+/* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
  * @return: == -1: `lhs_keyed != key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
  * @return: == 1:  `lhs_keyed != key(rhs)'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL DeeObject_TryCompareKeyEq)(DeeObject *lhs_keyed,
-                                  DeeObject *rhs, /*nullable*/ DeeObject *key);
+                                  DeeObject *rhs, DeeObject *key);
 
 
 /* Sequence operator invocation. */

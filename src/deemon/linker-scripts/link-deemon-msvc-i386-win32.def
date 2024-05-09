@@ -981,8 +981,8 @@ EXPORTS
 	DeeSeq_AsHeapVectorWithAllocReuseOffset2@12=_DeeSeq_AsHeapVectorWithAllocReuseOffset2@12
 	DeeSeq_AsHeapVectorWithAllocReuseOffset@16=_DeeSeq_AsHeapVectorWithAllocReuseOffset@16
 	DeeSeq_ItemsToBytes@12=_DeeSeq_ItemsToBytes@12
-	DeeSeq_Max@8=_DeeSeq_Max@8
-	DeeSeq_Min@8=_DeeSeq_Min@8
+	DeeSeq_Max@4=_DeeSeq_Max@4
+	DeeSeq_Min@4=_DeeSeq_Min@4
 	DeeSeq_Sum@4=_DeeSeq_Sum@4
 	DeeSharedMap_Decref@4=_DeeSharedMap_Decref@4
 	DeeSharedMap_DecrefNoGiftItems@4=_DeeSharedMap_DecrefNoGiftItems@4

@@ -20,8 +20,10 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_MUTABLE_C
 #define GUARD_DEEMON_OBJECTS_SEQ_MUTABLE_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
@@ -185,7 +187,6 @@ call_generic_attribute(DeeTypeObject *tp_self, DeeObject *self,
 	return result;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
 call_generic_attribute_in_range(DeeTypeObject *tp_limit, DeeObject *self,
                                 DeeObject *name, char const *format,
@@ -509,7 +510,6 @@ err_start_index:
 err:
 	return -1;
 }
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeSeq_XchItem(DeeObject *self, size_t index, DeeObject *value) {
@@ -661,7 +661,6 @@ err_r:
 	goto err;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 	int result;
@@ -978,7 +977,6 @@ nsi_insert_iterator(struct type_nsi const *__restrict nsi,
 err:
 	return -1;
 }
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 nsi_insert_sequence_as_single(struct type_nsi const *__restrict nsi,
@@ -1027,7 +1025,6 @@ err:
 }
 
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 DeeSeq_SetRange(DeeObject *self, size_t start, size_t end,
                 DeeObject *values) {
@@ -1474,7 +1471,6 @@ err_valiter:
 err:
 	return -1;
 }
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 
@@ -4403,8 +4399,7 @@ DeeSeq_IsResizable(DeeObject *__restrict self) {
 	return 0;
 }
 
-
-
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_MUTABLE_C */

@@ -4676,24 +4676,20 @@ target_function_c:
 
 
 target_reduce_min:
-	pushl  $0
-	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeSeq_Min,8)
-	ADJUST_CFA_OFFSET(-8)
+	call   fSYM(DeeSeq_Min,4)
+	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz     .except
 	xchgl  TOP, %eax
 	decref %eax
 	jmp    .disp
 target_reduce_max:
-	pushl  $0
-	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeSeq_Max,8)
-	ADJUST_CFA_OFFSET(-8)
+	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz     .except
 	xchgl  TOP, %eax

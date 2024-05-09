@@ -25,6 +25,7 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 /* TODO: All of this stuff here breaks when used on types with multiple bases.
  *
  * Solution:
@@ -60,17 +61,13 @@ DECL_BEGIN
 #define has_noninherited_bool(tp)          has_noninherited_field(tp, tp_cast.tp_bool)
 
 /* Mutable-sequence API */
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelItem(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetItem(DeeObject *self, size_t index, DeeObject *value);
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeSeq_XchItem(DeeObject *self, size_t index, DeeObject *value);
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_SetRange(DeeObject *self, size_t start, size_t end, DeeObject *values);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetRangeN(DeeObject *self, size_t start, DeeObject *values);
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_Insert(DeeObject *self, size_t index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_InsertAll(DeeObject *self, size_t index, DeeObject *values);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Append(DeeObject *self, DeeObject *value);
@@ -107,37 +104,12 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetItem(DeeObject *__re
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_NonEmpty(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Front(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Back(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_Reduce(DeeObject *self, DeeObject *combine, DeeObject *init);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Parity(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_Count(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Locate(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RLocate(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Contains(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_StartsWith(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EndsWith(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_Find(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
 INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RFind(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
-/* Mutable-set operators. */
 
-/* @return:  1: New item inserted.
- * @return:  0: Pre-existing item was not inserted.
- * @return: -1: Error. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeSet_Insert(DeeObject *self, DeeObject *item);
-
-/* @return:  1: Pre-existing item was removed.
- * @return:  0: No pre-existing item found.
- * @return: -1: Error. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeSet_Remove(DeeObject *self, DeeObject *item);
-
-/* @return: * : Number of inserted/removed items (that didn't already exist / weren't apart of @self)
- * @return: (size_t)-1: Error. */
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSet_InsertAll(DeeObject *self, DeeObject *items);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSet_RemoveAll(DeeObject *self, DeeObject *items);
+/* TODO: All of the following also needs to go eventually... */
 
 
 /* Return the sequence associated with the iterator, or NULL on error.

@@ -269,13 +269,13 @@ err:
 	return -1;
 }
 
-/* seq, [key] -> result */
+/* seq -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_Sequence_min(struct fungen *__restrict self, vstackaddr_t argc) {
 	return impl_cca_Sequence_minmax(self, argc, (void const *)&DeeSeq_Min);
 }
 
-/* seq, [key] -> result */
+/* seq -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_Sequence_max(struct fungen *__restrict self, vstackaddr_t argc) {
 	return impl_cca_Sequence_minmax(self, argc, (void const *)&DeeSeq_Max);
@@ -286,9 +286,7 @@ PRIVATE struct ccall_optimization tpconst cca_Sequence[] = {
 	CCA_OPTIMIZATION("all", &cca_Sequence_all, 0),
 	CCA_OPTIMIZATION("any", &cca_Sequence_any, 0),
 	CCA_OPTIMIZATION("max", &cca_Sequence_max, 0),
-	CCA_OPTIMIZATION("max", &cca_Sequence_max, 1),
 	CCA_OPTIMIZATION("min", &cca_Sequence_min, 0),
-	CCA_OPTIMIZATION("min", &cca_Sequence_min, 1),
 	CCA_OPTIMIZATION("sum", &cca_Sequence_sum, 0),
 	/* TODO: When types are known, we can pretty much fully inline stuff like "Sequence.insert()",
 	 *       assuming that NSI operators have been defined. */
