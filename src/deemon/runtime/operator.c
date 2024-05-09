@@ -1585,7 +1585,7 @@ err:
 }
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultPrintWithStr, (DeeObject *RESTRICT_IF_NOTYPE self,
-                                                         dformatprinter printer, void *arg)) {
+                                                            dformatprinter printer, void *arg)) {
 	Dee_ssize_t result;
 	DREF DeeObject *str;
 	LOAD_TP_SELF;
@@ -1602,7 +1602,7 @@ err:
 }
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultPrintReprWithRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
-                                                              dformatprinter printer, void *arg)) {
+                                                                 dformatprinter printer, void *arg)) {
 	Dee_ssize_t result;
 	DREF DeeObject *str;
 	LOAD_TP_SELF;

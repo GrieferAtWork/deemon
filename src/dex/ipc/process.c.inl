@@ -1631,8 +1631,8 @@ ipc_exe2path(DeeStringObject *__restrict exe_strob) {
 
 	/* Try to lookup the given `exe_strob' within the exe2path cache. */
 	ipc_exe2path_start_listen();
-	result = (DREF DeeStringObject *)DeeDict_GetItemDef((DeeObject *)&ipc_exe2path_cache,
-	                                                    (DeeObject *)exe_strob, ITER_DONE);
+	result = (DREF DeeStringObject *)DeeDict_TryGetItem((DeeObject *)&ipc_exe2path_cache,
+	                                                    (DeeObject *)exe_strob);
 	if (result != (DREF DeeStringObject *)ITER_DONE)
 		return result;
 
@@ -2002,8 +2002,8 @@ ipc_nt_CreateProcessPath(DeeStringObject *exe_str, LPWSTR lpApplicationName,
 
 	/* Check if we already have the correct expansion of `exe_str' in-cache */
 	ipc_exe2path_start_listen();
-	cached_pathname = (DREF DeeStringObject *)DeeDict_GetItemDef((DeeObject *)&ipc_exe2path_cache,
-	                                                             (DeeObject *)exe_str, ITER_DONE);
+	cached_pathname = (DREF DeeStringObject *)DeeDict_TryGetItem((DeeObject *)&ipc_exe2path_cache,
+	                                                             (DeeObject *)exe_str);
 	if (cached_pathname != (DREF DeeStringObject *)ITER_DONE) {
 		/* Simply launch via the cached application path. */
 		if likely(cached_pathname != NULL) {

@@ -930,6 +930,9 @@ PRIVATE struct type_seq dict_values_seq = {
 
 INTDEF struct keyword seq_byhash_kwlist[];
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash, bool key_only);
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_keys_byhash(DictProxy *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {

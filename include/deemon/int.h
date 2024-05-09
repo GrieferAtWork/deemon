@@ -448,6 +448,19 @@ DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];
 
 
 
+/* Helpers for performing operations in a (theoretical) `DeeInt_NewSSize()' / `DeeInt_NewSize()' object. */
+#define DeeInt_SSize_Hash(lhs) ((Dee_hash_t)(size_t)(lhs))
+DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeInt_SSize_Compare(Dee_ssize_t lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeInt_SSize_CompareEq(Dee_ssize_t lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeInt_SSize_TryCompareEq(Dee_ssize_t lhs, DeeObject *rhs);
+#define DeeInt_Size_Hash(lhs) ((Dee_hash_t)(lhs))
+DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeInt_Size_Compare(size_t lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeInt_Size_CompareEq(size_t lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeInt_Size_TryCompareEq(size_t lhs, DeeObject *rhs);
+
+
+
+
 /* Integer object creation. */
 DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewInt8(int8_t val);
 DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewUInt8(uint8_t val);

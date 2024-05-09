@@ -989,6 +989,8 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 /* Signal values with which `ei_continue' can be invoked. */
 #define CNTSIG_CONTINUE  1 /* Continue execution. */
 #define CNTSIG_STOP      2 /* Tear down execution. */
+
+/* Signal values with which `ei_break' can be invoked. */
 #define BRKSIG_YIELD     1 /* Yield more items. */
 #define BRKSIG_ERROR     2 /* An error occurred. */
 #define BRKSIG_STOP      3 /* Stop yielding items. */

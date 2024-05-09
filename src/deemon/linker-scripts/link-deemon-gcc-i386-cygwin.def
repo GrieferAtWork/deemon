@@ -390,6 +390,12 @@ EXPORTS
 	_DeeInt_NewUInt8@4=DeeInt_NewUInt8@4
 	_DeeInt_NewUleb@4=DeeInt_NewUleb@4
 	_DeeInt_Print@20=DeeInt_Print@20
+	_DeeInt_SSize_Compare@8=DeeInt_SSize_Compare@8
+	_DeeInt_SSize_CompareEq@8=DeeInt_SSize_CompareEq@8
+	_DeeInt_SSize_TryCompareEq@8=DeeInt_SSize_TryCompareEq@8
+	_DeeInt_Size_Compare@8=DeeInt_Size_Compare@8
+	_DeeInt_Size_CompareEq@8=DeeInt_Size_CompareEq@8
+	_DeeInt_Size_TryCompareEq@8=DeeInt_Size_TryCompareEq@8
 	_DeeInt_TryAsInt128@8=DeeInt_TryAsInt128@8
 	_DeeInt_TryAsInt16@8=DeeInt_TryAsInt16@8
 	_DeeInt_TryAsInt32@8=DeeInt_TryAsInt32@8

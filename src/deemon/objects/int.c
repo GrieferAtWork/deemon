@@ -921,9 +921,9 @@ DeeInt_GetSleb(/*Int*/ DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
 	size = (size_t)me->ob_size;
 	src  = me->ob_digit;
-	if ((dssize_t)size < 0) {
+	if ((Dee_ssize_t)size < 0) {
 		/* Negative integer. */
-		size = (size_t) - (dssize_t)size;
+		size = (size_t) - (Dee_ssize_t)size;
 		/* Special handling for writing the first byte. */
 		end      = src + size;
 		temp     = *src++;
@@ -2224,20 +2224,20 @@ err:
 #define DECIMAL_THOUSANDS_GROUPINGS     3
 #define NON_DECIMAL_THOUSANDS_GROUPINGS 4
 
-PRIVATE WUNUSED NONNULL((1, 4)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeInt_PrintDecimal(DREF DeeIntObject *__restrict self, uint32_t flags,
                     size_t precision, dformatprinter printer, void *arg) {
 	/* !!!DISCLAIMER!!! This function was originally taken from python,
 	 *                  but has been heavily modified since. */
 	size_t size, bufsize, size_a, i, j, intlen;
-	dssize_t result, temp;
+	Dee_ssize_t result, temp;
 	digit *pout, *pin, rem, tenpow;
 	int negative;
 	char *buf, *iter;
 	size_a   = (size_t)self->ob_size;
-	negative = (dssize_t)size_a < 0;
+	negative = (Dee_ssize_t)size_a < 0;
 	if (negative)
-		size_a = (size_t) - (dssize_t)size_a;
+		size_a = (size_t) - (Dee_ssize_t)size_a;
 	if unlikely(size_a > SSIZE_MAX / DIGIT_BITS) {
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "int too large to format");
@@ -2407,7 +2407,7 @@ err_pout:
  * Radix must be one of `2', `4', `8', `10' or `16' and
  * if it isn't, a `NotImplemented' error is thrown.
  * This list of supported radices may be extended in the future. */
-PUBLIC WUNUSED NONNULL((1, 4)) dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
              size_t precision, dformatprinter printer, void *arg) {
 	ASSERT_OBJECT_TYPE(self, &DeeInt_Type);
@@ -2424,7 +2424,7 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 		uint8_t num_bits, dig_bits, dig_mask, dig;
 		char *buf, *iter;
 		size_t bufsize, num_digits, intlen;
-		dssize_t result;
+		Dee_ssize_t result;
 		DeeIntObject *me;
 		char const *digit_chars;
 		dig_bits = 1;
@@ -2448,7 +2448,7 @@ do_print:
 		me         = (DeeIntObject *)self;
 		num_digits = (size_t)me->ob_size;
 		digit_chars = DeeAscii_ItoaDigits(radix_and_flags & DEEINT_PRINT_FUPPER);
-		if ((dssize_t)num_digits <= 0) {
+		if ((Dee_ssize_t)num_digits <= 0) {
 			if (!num_digits) {
 				bufsize = 4;
 				buf     = (char *)Dee_Mallocac(bufsize, sizeof(char));
@@ -2459,7 +2459,7 @@ do_print:
 				intlen  = 1;
 				goto do_print_prefix;
 			}
-			num_digits = (size_t) - (dssize_t)num_digits;
+			num_digits = (size_t) - (Dee_ssize_t)num_digits;
 		}
 		bufsize = (num_digits * DIGIT_BITS) / dig_bits;
 		if (radix_and_flags & DEEINT_PRINT_FSEPS)
@@ -2509,7 +2509,7 @@ do_print_prefix:
 
 		/* Deal with custom precisions */
 		if (precision > intlen) {
-			dssize_t temp;
+			Dee_ssize_t temp;
 			char prefix[3];
 			size_t prefix_len = 0;
 			size_t num_leading_zeroes;
@@ -2678,12 +2678,12 @@ DeeInt_TryGet16Bit(/*Int*/ DeeObject *__restrict self,
 	DeeIntObject *me = (DeeIntObject *)self;
 	uint16_t prev, result;
 	bool negative;
-	dssize_t i;
+	Dee_ssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	switch (me->ob_size) {
 	case 0:
 		*value = 0;
-		return 0;
+		return INT_UNSIGNED;
 	case 1:
 		*value = me->ob_digit[0];
 		return INT_UNSIGNED;
@@ -2748,12 +2748,12 @@ DeeInt_TryGet32Bit(/*Int*/ DeeObject *__restrict self,
 	DeeIntObject *me = (DeeIntObject *)self;
 	uint32_t prev, result;
 	bool negative;
-	dssize_t i;
+	Dee_ssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	switch (me->ob_size) {
 	case 0:
 		*value = 0;
-		return 0;
+		return INT_UNSIGNED;
 	case 1:
 		*value = me->ob_digit[0];
 		return INT_UNSIGNED;
@@ -2794,12 +2794,12 @@ DeeInt_TryGet64Bit(/*Int*/ DeeObject *__restrict self,
 	DeeIntObject *me = (DeeIntObject *)self;
 	uint64_t prev, result;
 	bool negative;
-	dssize_t i;
+	Dee_ssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	switch (me->ob_size) {
 	case 0:
 		*value = 0;
-		return 0;
+		return INT_UNSIGNED;
 	case 1:
 		*value = me->ob_digit[0];
 		return INT_UNSIGNED;
@@ -2843,12 +2843,12 @@ DeeInt_TryGet128Bit(/*Int*/ DeeObject *__restrict self,
 		Dee_int128_t  s;
 	} result;
 	bool negative;
-	dssize_t i;
+	Dee_ssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeInt_Type);
 	switch (me->ob_size) {
 	case 0:
 		__hybrid_int128_setzero(*value);
-		return 0;
+		return INT_UNSIGNED;
 	case 1:
 		__hybrid_int128_vec64_significand(*value, 0) = me->ob_digit[0];
 		__hybrid_int128_vec64_significand(*value, 1) = 0;
@@ -3184,7 +3184,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	uint8_t *writer;
 	twodigits temp;
 	size_t i, count, remaining;
-	dssize_t incr;
+	Dee_ssize_t incr;
 	size_t num_bits;
 	uint8_t leading_byte;
 	digit last_digit;
@@ -3197,8 +3197,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		return 0;
 	}
 	leading_byte = 0;
-	if ((dssize_t)count < 0) {
-		count = (size_t)(-(dssize_t)count);
+	if ((Dee_ssize_t)count < 0) {
+		count = (size_t)(-(Dee_ssize_t)count);
 		leading_byte = 0xff;
 		if unlikely(!as_signed) {
 			err_integer_overflow((DeeObject *)me, 0, false);
@@ -3628,7 +3628,7 @@ done_decr:
 
 	/* Finally, fill in the integer size field. */
 	ASSERT(result->ob_digit[total_digits - 1] != 0);
-	result->ob_size = (dssize_t)total_digits;
+	result->ob_size = (Dee_ssize_t)total_digits;
 	if (is_negative)
 		result->ob_size = -result->ob_size;
 done:
@@ -3723,15 +3723,190 @@ PRIVATE struct type_math int_math = {
 
 
 
+#if __SIZEOF_SIZE_T__ == 4
+#define DeeInt_TryGetSizeBit(ob, p_value) DeeInt_TryGet32Bit(ob, (int32_t *)(p_value))
+#elif __SIZEOF_SIZE_T__ == 8
+#define DeeInt_TryGetSizeBit(ob, p_value) DeeInt_TryGet64Bit(ob, (int64_t *)(p_value))
+#elif __SIZEOF_SIZE_T__ == 2
+#define DeeInt_TryGetSizeBit(ob, p_value) DeeInt_TryGet16Bit(ob, (int16_t *)(p_value))
+#elif __SIZEOF_SIZE_T__ == 1
+#define DeeInt_TryGetSizeBit(ob, p_value) DeeInt_TryGet8Bit(ob, (int8_t *)(p_value))
+#elif __SIZEOF_SIZE_T__ == 16
+#define DeeInt_TryGetSizeBit(ob, p_value) DeeInt_TryGet128Bit(ob, (Dee_int128_t *)(p_value))
+#else /* __SIZEOF_SIZE_T__ == ... */
+#error "Unsupported __SIZEOF_SIZE_T__"
+#endif /*  __SIZEOF_SIZE_T__ != ...*/
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
+Dee_ssize_compare_int(Dee_ssize_t lhs, DeeIntObject const *rhs) {
+	Dee_ssize_t rhs_value;
+	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
+	if (error == INT_UNSIGNED && (size_t)rhs_value > (size_t)SSIZE_MAX)
+		return -1; /* "rhs_value" is true unsigned, meaning it's always larger than "lhs" */
+	if (lhs < rhs_value)
+		return -1;
+	if (lhs > rhs_value)
+		return 1;
+	return 0;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
+Dee_ssize_compare_int_eq(Dee_ssize_t lhs, DeeIntObject const *rhs) {
+	Dee_ssize_t rhs_value;
+	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
+	if (lhs != rhs_value)
+		return 1;
+	if unlikely(error == INT_UNSIGNED && (size_t)rhs_value > (size_t)SSIZE_MAX)
+		return 1; /* "rhs_value" isn't *actually* equal to "lhs" */
+	return 0;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
+Dee_size_compare_int(size_t lhs, DeeIntObject const *rhs) {
+	Dee_ssize_t rhs_value;
+	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
+	if (error == INT_SIGNED && rhs_value < 0)
+		return 1; /* "rhs_value" is signed+negative, meaning it's always less than any unsigned value */
+	if (lhs < (size_t)rhs_value)
+		return -1;
+	if (lhs > (size_t)rhs_value)
+		return 1;
+	return 0;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((2)) int DCALL /* Never returns `Dee_COMPARE_ERR' */
+Dee_size_compare_int_eq(size_t lhs, DeeIntObject const *rhs) {
+	Dee_ssize_t rhs_value;
+	int error = DeeInt_TryGetSizeBit((DeeObject *)rhs, &rhs_value);
+	if (lhs != (size_t)rhs_value)
+		return 1;
+	if unlikely(error == INT_SIGNED && rhs_value < 0)
+		return 1; /* "rhs_value" isn't *actually* equal to "lhs" */
+	return 0;
+}
+
+PUBLIC WUNUSED NONNULL((2)) int DCALL
+DeeInt_SSize_Compare(Dee_ssize_t lhs, DeeObject *rhs) {
+	DREF DeeIntObject *rhs_int;
+	int result;
+	if (DeeInt_Check(rhs))
+		return Dee_ssize_compare_int(lhs, (DeeIntObject *)rhs);
+	rhs_int = (DREF DeeIntObject *)DeeObject_Int(rhs);
+	if unlikely(!rhs_int)
+		goto err;
+	result = Dee_ssize_compare_int(lhs, rhs_int);
+	Dee_Decref(rhs_int);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PUBLIC WUNUSED NONNULL((2)) int DCALL
+DeeInt_SSize_CompareEq(Dee_ssize_t lhs, DeeObject *rhs) {
+	DREF DeeIntObject *rhs_int;
+	int result;
+	if (DeeInt_Check(rhs))
+		return Dee_ssize_compare_int_eq(lhs, (DeeIntObject *)rhs);
+	rhs_int = (DREF DeeIntObject *)DeeObject_Int(rhs);
+	if unlikely(!rhs_int)
+		goto err;
+	result = Dee_ssize_compare_int_eq(lhs, rhs_int);
+	Dee_Decref(rhs_int);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PUBLIC WUNUSED NONNULL((2)) int DCALL
+DeeInt_SSize_TryCompareEq(Dee_ssize_t lhs, DeeObject *rhs) {
+	int result;
+	DeeTypeObject *tp_other = Dee_TYPE(rhs);
+	if likely(tp_other == &DeeInt_Type) {
+		result = Dee_ssize_compare_int_eq(lhs, (DeeIntObject *)rhs);
+	} else if likely((tp_other->tp_math && tp_other->tp_math->tp_int) ||
+	                 DeeType_InheritInt(tp_other)) {
+		DREF DeeIntObject *rhs_int;
+		rhs_int = (DREF DeeIntObject *)(*tp_other->tp_math->tp_int)(rhs);
+		if unlikely(!rhs_int)
+			goto err;
+		result = Dee_ssize_compare_int_eq(lhs, rhs_int);
+		Dee_Decref(rhs_int);
+	} else {
+		return 1; /* Implicit `NotImplemented' caught */
+	}
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+
+PUBLIC WUNUSED NONNULL((2)) int DCALL
+DeeInt_Size_Compare(size_t lhs, DeeObject *rhs) {
+	DREF DeeIntObject *rhs_int;
+	int result;
+	if (DeeInt_Check(rhs))
+		return Dee_size_compare_int(lhs, (DeeIntObject *)rhs);
+	rhs_int = (DREF DeeIntObject *)DeeObject_Int(rhs);
+	if unlikely(!rhs_int)
+		goto err;
+	result = Dee_size_compare_int(lhs, rhs_int);
+	Dee_Decref(rhs_int);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PUBLIC WUNUSED NONNULL((2)) int DCALL
+DeeInt_Size_CompareEq(size_t lhs, DeeObject *rhs) {
+	DREF DeeIntObject *rhs_int;
+	int result;
+	if (DeeInt_Check(rhs))
+		return Dee_size_compare_int_eq(lhs, (DeeIntObject *)rhs);
+	rhs_int = (DREF DeeIntObject *)DeeObject_Int(rhs);
+	if unlikely(!rhs_int)
+		goto err;
+	result = Dee_size_compare_int_eq(lhs, rhs_int);
+	Dee_Decref(rhs_int);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PUBLIC WUNUSED NONNULL((2)) int DCALL
+DeeInt_Size_TryCompareEq(size_t lhs, DeeObject *rhs) {
+	int result;
+	DeeTypeObject *tp_other = Dee_TYPE(rhs);
+	if likely(tp_other == &DeeInt_Type) {
+		result = Dee_size_compare_int_eq(lhs, (DeeIntObject *)rhs);
+	} else if likely((tp_other->tp_math && tp_other->tp_math->tp_int) ||
+	                 DeeType_InheritInt(tp_other)) {
+		DREF DeeIntObject *rhs_int;
+		rhs_int = (DREF DeeIntObject *)(*tp_other->tp_math->tp_int)(rhs);
+		if unlikely(!rhs_int)
+			goto err;
+		result = Dee_size_compare_int_eq(lhs, rhs_int);
+		Dee_Decref(rhs_int);
+	} else {
+		return 1; /* Implicit `NotImplemented' caught */
+	}
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+
+
+
+
 
 /* Integer compare. */
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 int_compareint(DeeIntObject const *a, DeeIntObject const *b) {
-	dssize_t sign;
+	Dee_ssize_t sign;
 	if (a->ob_size != b->ob_size) {
 		sign = a->ob_size - b->ob_size;
 	} else {
-		dssize_t i = a->ob_size;
+		Dee_ssize_t i = a->ob_size;
 		if (i < 0)
 			i = -i;
 		while (--i >= 0 && a->ob_digit[i] == b->ob_digit[i])
@@ -3749,10 +3924,11 @@ int_compareint(DeeIntObject const *a, DeeIntObject const *b) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 int_hash(DeeIntObject *__restrict self) {
-	dhash_t x;
-	dssize_t i;
+	/* Hash is effectively `(Dee_hash_t)(REINTERPRET_UNSIGNED)SIGNED_TRUNC_TO_SIZEOF_POINTER(self)' */
+	Dee_hash_t x;
+	Dee_ssize_t i;
 	int sign;
 	i = self->ob_size;
 	switch (i) {
@@ -3784,7 +3960,7 @@ int_hash(DeeIntObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 int_compare(DeeIntObject *self, DeeObject *some_object) {
-	dssize_t compare_value;
+	Dee_ssize_t compare_value;
 	DREF DeeIntObject *rhs;
 	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
 	if unlikely(!rhs)
@@ -3802,13 +3978,42 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 int_compare_eq(DeeIntObject *self, DeeObject *some_object) {
-	dssize_t compare_value;
-	DREF DeeIntObject *rhs;
-	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
-	if unlikely(!rhs)
-		goto err;
-	compare_value = int_compareint(self, rhs);
-	Dee_Decref(rhs);
+	Dee_ssize_t compare_value;
+#ifndef __OPTIMIZE_SIZE__
+	if likely(DeeInt_Check(some_object)) {
+		compare_value = int_compareint(self, (DeeIntObject *)some_object);
+	} else
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
+		DREF DeeIntObject *rhs;
+		rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
+		if unlikely(!rhs)
+			goto err;
+		compare_value = int_compareint(self, rhs);
+		Dee_Decref(rhs);
+	}
+	return compare_value != 0 ? 1 : 0;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+int_trycompare_eq(DeeIntObject *self, DeeObject *some_object) {
+	Dee_ssize_t compare_value;
+	DeeTypeObject *tp_other = Dee_TYPE(some_object);
+	if likely(tp_other == &DeeInt_Type) {
+		compare_value = int_compareint(self, (DeeIntObject *)some_object);
+	} else if likely((tp_other->tp_math && tp_other->tp_math->tp_int) ||
+	                 DeeType_InheritInt(tp_other)) {
+		DREF DeeIntObject *rhs;
+		rhs = (DREF DeeIntObject *)(*tp_other->tp_math->tp_int)(some_object);
+		if unlikely(!rhs)
+			goto err;
+		compare_value = int_compareint(self, rhs);
+		Dee_Decref(rhs);
+	} else {
+		return 1; /* Implicit `NotImplemented' caught */
+	}
 	return compare_value != 0 ? 1 : 0;
 err:
 	return Dee_COMPARE_ERR;
@@ -3816,7 +4021,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 int_cmp_eq(DeeIntObject *self, DeeObject *some_object) {
-	dssize_t compare_value;
+	Dee_ssize_t compare_value;
 	DREF DeeIntObject *rhs;
 	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
 	if unlikely(!rhs)
@@ -3830,7 +4035,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 int_cmp_ne(DeeIntObject *self, DeeObject *some_object) {
-	dssize_t compare_value;
+	Dee_ssize_t compare_value;
 	DREF DeeIntObject *rhs;
 	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
 	if unlikely(!rhs)
@@ -3844,7 +4049,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 int_cmp_lo(DeeIntObject *self, DeeObject *some_object) {
-	dssize_t compare_value;
+	Dee_ssize_t compare_value;
 	DREF DeeIntObject *rhs;
 	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
 	if unlikely(!rhs)
@@ -3858,7 +4063,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 int_cmp_le(DeeIntObject *self, DeeObject *some_object) {
-	dssize_t compare_value;
+	Dee_ssize_t compare_value;
 	DREF DeeIntObject *rhs;
 	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
 	if unlikely(!rhs)
@@ -3872,7 +4077,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 int_cmp_gr(DeeIntObject *self, DeeObject *some_object) {
-	dssize_t compare_value;
+	Dee_ssize_t compare_value;
 	DREF DeeIntObject *rhs;
 	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
 	if unlikely(!rhs)
@@ -3886,7 +4091,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 int_cmp_ge(DeeIntObject *self, DeeObject *some_object) {
-	dssize_t compare_value;
+	Dee_ssize_t compare_value;
 	DREF DeeIntObject *rhs;
 	rhs = (DREF DeeIntObject *)DeeObject_Int(some_object);
 	if unlikely(!rhs)
@@ -3900,10 +4105,10 @@ err:
 
 
 PRIVATE struct type_cmp int_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&int_hash,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&int_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&int_compare_eq,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&int_compare,
-	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&int_trycompare_eq,
 	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_eq,
 	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_ne,
 	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_cmp_lo,
@@ -3942,7 +4147,7 @@ int_str(DeeIntObject *__restrict self) {
 	return int_tostr_impl(self, DEEINT_PRINT_DEC, 0);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 int_print(DeeIntObject *__restrict self, dformatprinter printer, void *arg) {
 	return DeeInt_Print((DeeObject *)self, DEEINT_PRINT_DEC, 0, printer, arg);
 }
@@ -4036,10 +4241,10 @@ int_reqbits(DeeIntObject const *__restrict self, bool is_signed) {
 	size_t digit_count;
 	digit last_digit;
 	digit_count = (size_t)self->ob_size;
-	if ((dssize_t)digit_count < 0) {
+	if ((Dee_ssize_t)digit_count < 0) {
 		if unlikely(!is_signed)
 			goto err_underflow;
-		digit_count = (size_t) - (dssize_t)digit_count;
+		digit_count = (size_t) - (Dee_ssize_t)digit_count;
 	}
 	while (digit_count && self->ob_digit[digit_count - 1] == 0)
 		--digit_count;
@@ -4233,8 +4438,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_sizeof(DeeIntObject *__restrict self) {
 	size_t int_size;
 	int_size = (size_t)self->ob_size;
-	if ((dssize_t)int_size < 0)
-		int_size = (size_t)(-(dssize_t)int_size);
+	if ((Dee_ssize_t)int_size < 0)
+		int_size = (size_t)(-(Dee_ssize_t)int_size);
 	return DeeInt_NewSize(offsetof(DeeIntObject, ob_digit) +
 	                      (int_size * sizeof(digit)));
 }
@@ -4246,8 +4451,8 @@ int_forcecopy(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__forcecopy__"))
 		goto err;
 	int_size = (size_t)self->ob_size;
-	if ((dssize_t)int_size < 0)
-		int_size = (size_t)(-(dssize_t)int_size);
+	if ((Dee_ssize_t)int_size < 0)
+		int_size = (size_t)(-(Dee_ssize_t)int_size);
 	result = (DREF DeeIntObject *)DeeInt_Alloc(int_size);
 	if unlikely(!result)
 		goto err;
@@ -4292,7 +4497,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_nextafter(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *y;
-	dssize_t diff;
+	Dee_ssize_t diff;
 	if (DeeArg_Unpack(argc, argv, "o:nextafter", &y))
 		goto err;
 	y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);
@@ -4319,7 +4524,7 @@ err:
 	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                    \
 	int_##name(DeeIntObject *self, size_t argc, DeeObject *const *argv) { \
 		DREF DeeIntObject *y;                                             \
-		dssize_t diff;                                                    \
+		Dee_ssize_t diff;                                                    \
 		if (DeeArg_Unpack(argc, argv, "o:" #name, &y))                    \
 			goto err;                                                     \
 		y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);           \
@@ -4898,8 +5103,8 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_str,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&int_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&int_print
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
