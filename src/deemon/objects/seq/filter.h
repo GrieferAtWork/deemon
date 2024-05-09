@@ -40,6 +40,8 @@ typedef struct {
 INTDEF DeeTypeObject SeqFilter_Type;
 INTDEF DeeTypeObject SeqFilterIterator_Type;
 
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Filter(DeeObject *self, DeeObject *pred_keep);
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_FILTER_H */

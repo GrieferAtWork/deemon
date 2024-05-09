@@ -20,6 +20,8 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_LOCATE_ALL_C
 #define GUARD_DEEMON_OBJECTS_SEQ_LOCATE_ALL_C 1
 
+#include "locateall.h"
+
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -37,25 +39,6 @@
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *l_seq;  /* [1..1][const] The sequence being transformed. */
-	DREF DeeObject *l_elem; /* [1..1][const] The element being searched. */
-	DREF DeeObject *l_pred; /* [0..1][const] The key function invoked to transform elements. */
-} Locator;
-
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *li_iter; /* [1..1][const] The iterator in which items are being located. */
-	DREF DeeObject *li_elem; /* [1..1][const] The element being searched. */
-	DREF DeeObject *li_pred; /* [0..1][const] The key function invoked to transform elements. */
-} LocatorIterator;
-
-INTDEF DeeTypeObject SeqLocator_Type;
-INTDEF DeeTypeObject SeqLocatorIterator_Type;
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 locatoriter_ctor(LocatorIterator *__restrict self) {

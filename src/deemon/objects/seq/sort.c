@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
+#include <deemon/list.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
@@ -360,6 +361,18 @@ err:
 	return -1;
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Sorted(DeeObject *self, DeeObject *key) {
+	DREF DeeObject *result;
+	/* TODO: Using lists for this is less than optimal... */
+	result = DeeList_FromSequence(self);
+	if unlikely(!result)
+		goto done;
+	if unlikely(DeeList_Sort(result, key))
+		Dee_Clear(result);
+done:
+	return result;
+}
 
 DECL_END
 

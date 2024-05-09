@@ -17,31 +17,27 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H
-#define GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H 1
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_SORT_H
+#define GUARD_DEEMON_OBJECTS_SEQ_SORT_H 1
 
 #include <deemon/api.h>
 #include <deemon/object.h>
 
 DECL_BEGIN
 
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *ti_iter; /* [1..1][const] The iterator who's elements are being transformed. */
-	DREF DeeObject *ti_func; /* [1..1][const] The function used for transforming. */
-} TransformationIterator;
+/* Vector-sorting functions. */
+INTDEF WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) int DCALL
+DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
+                 DREF DeeObject *const *__restrict src,
+                 size_t objc, DeeObject *key);
+INTDEF WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) int DCALL
+DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
+                     DREF DeeObject *const *__restrict src,
+                     size_t objc, DeeObject *key);
 
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *t_seq;   /* [1..1][const] The sequence being transformed. */
-	DREF DeeObject *t_fun;   /* [1..1][const] The function used for transforming. */
-} Transformation;
-
-INTDEF DeeTypeObject SeqTransformation_Type;
-INTDEF DeeTypeObject SeqTransformationIterator_Type;
-
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Transform(DeeObject *self, DeeObject *transformation);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Sorted(DeeObject *self, DeeObject *key);
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H */
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_SORT_H */

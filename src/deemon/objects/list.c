@@ -45,6 +45,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/sort.h"
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__

@@ -17,31 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H
-#define GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H 1
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_REVERSED_H
+#define GUARD_DEEMON_OBJECTS_SEQ_REVERSED_H 1
 
 #include <deemon/api.h>
 #include <deemon/object.h>
 
 DECL_BEGIN
 
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *ti_iter; /* [1..1][const] The iterator who's elements are being transformed. */
-	DREF DeeObject *ti_func; /* [1..1][const] The function used for transforming. */
-} TransformationIterator;
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *t_seq;   /* [1..1][const] The sequence being transformed. */
-	DREF DeeObject *t_fun;   /* [1..1][const] The function used for transforming. */
-} Transformation;
-
-INTDEF DeeTypeObject SeqTransformation_Type;
-INTDEF DeeTypeObject SeqTransformationIterator_Type;
-
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Transform(DeeObject *self, DeeObject *transformation);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Reversed(DeeObject *__restrict self);
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H */
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_REVERSED_H */

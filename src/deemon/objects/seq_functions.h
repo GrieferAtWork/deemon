@@ -59,6 +59,161 @@ DECL_BEGIN
 #define has_noninherited_size(tp, seq)     has_noninherited_seqfield(tp, seq, tp_sizeob)
 #define has_noninherited_bool(tp)          has_noninherited_field(tp, tp_cast.tp_bool)
 
+/* Mutable-sequence API */
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelItem(DeeObject *__restrict self, size_t index);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetItem(DeeObject *self, size_t index, DeeObject *value);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeSeq_XchItem(DeeObject *self, size_t index, DeeObject *value);
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_SetRange(DeeObject *self, size_t start, size_t end, DeeObject *values);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetRangeN(DeeObject *self, size_t start, DeeObject *values);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_Insert(DeeObject *self, size_t index, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_InsertAll(DeeObject *self, size_t index, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Append(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Extend(DeeObject *self, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_InplaceExtend(DREF DeeObject **__restrict p_self, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_InplaceRepeat(DREF DeeObject **__restrict p_self, DeeObject *count);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Erase(DeeObject *__restrict self, size_t index, size_t count);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PopItem(DeeObject *__restrict self, Dee_ssize_t index);
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_Remove(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_RRemove(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RemoveIf(DeeObject *self, size_t start, size_t end, DeeObject *should);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_Fill(DeeObject *self, size_t start, size_t end, DeeObject *value);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Reverse(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Sort(DeeObject *self, DeeObject *key);
+
+/* Determine if a given sequence is mutable or resizable.
+ * @return: 1:  The sequence is mutable or resizable.
+ * @return: 0:  The sequence isn't mutable or resizable.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_IsMutable(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_IsResizable(DeeObject *__restrict self);
+
+/* NOTE: Technically, all of these functions can be used on any type of object,
+ *       but all objects derived from `DeeSeq_Type' automatically implement
+ *       all of them as member functions.
+ *       With that in mind, any type implementing the `tp_seq' interface
+ *       with the intention of behaving as an Iterable, should probably
+ *       be derived from `DeeSeq_Type' as this allows usercode to query
+ *       for a general purpose sequence by writing `x is Sequence from deemon' */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Size(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetItem(DeeObject *__restrict self, size_t index);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_NonEmpty(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Front(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Back(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_Reduce(DeeObject *self, DeeObject *combine, DeeObject *init);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Parity(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_Count(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Locate(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RLocate(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Contains(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_StartsWith(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EndsWith(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_Find(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RFind(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+
+/* Mutable-set operators. */
+
+/* @return:  1: New item inserted.
+ * @return:  0: Pre-existing item was not inserted.
+ * @return: -1: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_Insert(DeeObject *self, DeeObject *item);
+
+/* @return:  1: Pre-existing item was removed.
+ * @return:  0: No pre-existing item found.
+ * @return: -1: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_Remove(DeeObject *self, DeeObject *item);
+
+/* @return: * : Number of inserted/removed items (that didn't already exist / weren't apart of @self)
+ * @return: (size_t)-1: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSet_InsertAll(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSet_RemoveAll(DeeObject *self, DeeObject *items);
+
+
+/* Return the sequence associated with the iterator, or NULL on error.
+ * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeIterator_GetSeq(DeeObject *__restrict self);
+
+/* Get the iterator's position
+ * @return: * :         The iterator's current position, where the a starting position is 0
+ * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
+ *                      from its sequence, as can happen in linked lists when the iterator's
+ *                      link entry gets removed)
+ * @return: (size_t)-1: Error */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL
+DeeIterator_GetIndex(DeeObject *__restrict self);
+
+/* Set the iterator's position
+ * If the given `new_index' is greater than the max allowed index,
+ * the iterator is set to an exhausted state (i.e. points at the
+ * end of the associated sequence)
+ * @return:  0: Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index);
+
+/* Rewind the iterator to its starting position
+ * @return:  0: Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Rewind(DeeObject *__restrict self);
+
+/* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
+ * @return:  0: Success (new relative position wasn't determined)
+ * @return:  1: Success (the iterator has reached its starting position)
+ * @return:  2: Success (the iterator hasn't reached its starting position)
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Revert(DeeObject *__restrict self, size_t step);
+
+/* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
+ * @return:  0: Success (new relative position wasn't determined)
+ * @return:  1: Success (the iterator has become exhausted)
+ * @return:  2: Success (the iterator hasn't become exhausted)
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Advance(DeeObject *__restrict self, size_t step);
+
+/* Decrement the iterator by 1.
+ * @return:  0: Success
+ * @return:  1: The iterator was already at its starting location
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Prev(DeeObject *__restrict self);
+
+/* Increment the iterator, but don't generate a value
+ * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entries,
+ *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
+ *       only ever be incremented by 1.
+ * @return:  0: Success
+ * @return:  1: The iterator had already been exhausted
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Next(DeeObject *__restrict self);
+
+/* Check if the iterator is at its starting location
+ * @return:  0: No, it isn't
+ * @return:  1: Yes, it is
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_HasPrev(DeeObject *__restrict self);
+
+/* Peek the next iterator value, but don't actually advance the iterator.
+ * @return: ITER_DONE: The iterator has already been exhausted. */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeIterator_Peek(DeeObject *__restrict self);
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_FUNCTIONS_H */

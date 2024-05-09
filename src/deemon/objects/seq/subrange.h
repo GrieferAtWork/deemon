@@ -35,7 +35,6 @@ typedef struct {
 } SubRangeIterator;
 #define READ_SIZE(x) atomic_read(&(x)->sr_size)
 
-
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *sr_seq;   /* [1..1][const] Underlying sequence. */
@@ -52,6 +51,9 @@ typedef struct {
 INTDEF DeeTypeObject SeqSubRangeIterator_Type;
 INTDEF DeeTypeObject SeqSubRange_Type;
 INTDEF DeeTypeObject SeqSubRangeN_Type;
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRange(DeeObject *__restrict self, size_t begin, size_t end);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRangeN(DeeObject *__restrict self, size_t begin);
 
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */

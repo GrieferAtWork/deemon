@@ -45,6 +45,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/hashfilter.h"
 
 DECL_BEGIN
 

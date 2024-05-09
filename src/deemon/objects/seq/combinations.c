@@ -36,6 +36,9 @@
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
+#include "combinations.h"
+/**/
+
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
@@ -47,27 +50,6 @@ DECL_BEGIN
 	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
 DeeSystem_DEFINE_memsetp(dee_memsetp)
 #endif /* !CONFIG_HAVE_memsetp */
-
-INTDEF DeeTypeObject SeqCombinations_Type;
-INTDEF DeeTypeObject SeqCombinationsIterator_Type;
-INTDEF DeeTypeObject SeqRepeatCombinations_Type;
-INTDEF DeeTypeObject SeqRepeatCombinationsIterator_Type;
-INTDEF DeeTypeObject SeqPermutations_Type;
-INTDEF DeeTypeObject SeqPermutationsIterator_Type;
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject  *c_seq;        /* [1..1][const] The underlying sequence that is being combined. */
-	DREF DeeObject **c_elem;       /* [1..1][0..c_seqlen][const][owned_if(!= DeeTuple_ELEM(c_seq))]
-	                                * The vector of elements found in `c_seq'
-	                                * NOTE: When `NULL', elements from `c_seq' are accessed through
-	                                *       the GETITEM interface, as those items are being used. */
-	size_t           c_seqlen;     /* [const][!0] The length of the sequence (in items) */
-	size_t           c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
-	struct type_seq *c_getitem;    /* [0..1][if(!c_elem, [1..1])][const] The seq-interface of the type
-	                                * to-be used to access the items of `c_seq' */
-	DeeTypeObject   *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)] The type used to invoke the getitem operator. */
-} Combinations;
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
@@ -95,35 +77,6 @@ err:
 	return NULL;
 }
 
-
-typedef struct {
-	OBJECT_HEAD
-	DREF Combinations  *ci_combi;   /* [1..1][const] The underlying combinations sequence proxy. */
-	size_t             *ci_indices; /* [1..ci_combi->c_comlen][lock(ci_lock)][owned]
-	                                 * Indices to-be used for the next set of combinations to-be
-	                                 * combined to generate the next item. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t ci_lock;    /* Lock for this combinations iterator. */
-#endif /* !CONFIG_NO_THREADS */
-	bool                ci_first;   /* [lock(ci_lock)] True prior to the first iteration. */
-} CombinationsIterator;
-
-#define CombinationsIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ci_lock)
-#define CombinationsIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->ci_lock)
-#define CombinationsIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->ci_lock)
-#define CombinationsIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->ci_lock)
-#define CombinationsIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->ci_lock)
-#define CombinationsIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->ci_lock)
-#define CombinationsIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->ci_lock)
-#define CombinationsIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->ci_lock)
-#define CombinationsIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->ci_lock)
-#define CombinationsIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->ci_lock)
-#define CombinationsIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->ci_lock)
-#define CombinationsIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->ci_lock)
-#define CombinationsIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->ci_lock)
-#define CombinationsIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->ci_lock)
-#define CombinationsIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->ci_lock)
-#define CombinationsIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->ci_lock)
 
 PRIVATE NONNULL((1)) void DCALL
 comiter_fini(CombinationsIterator *__restrict self) {

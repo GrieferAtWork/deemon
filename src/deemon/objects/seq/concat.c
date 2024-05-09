@@ -36,49 +36,15 @@
 
 #include <hybrid/overflow.h>
 
+#include "concat.h"
+/**/
+
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
 #include "svec.h"
 
 DECL_BEGIN
-
-typedef DeeTupleObject Tuple;
-typedef DeeTupleObject Cat;
-
-INTDEF DeeTypeObject SeqConcat_Type;
-INTDEF DeeTypeObject SeqConcatIterator_Type;
-#define SeqConcat_Check(ob) DeeObject_InstanceOfExact(ob, &SeqConcat_Type)
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject     *cti_curr; /* [1..1][lock(cti_lock)] The current iterator. */
-	DeeObject   *const *cti_pseq; /* [1..1][1..1][lock(cti_lock)][in(cti_cat)] The current sequence. */
-	DREF Cat           *cti_cat;  /* [1..1][const] The underly sequence cat. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t cti_lock; /* Lock for this iterator. */
-#endif /* !CONFIG_NO_THREADS */
-} CatIterator;
-
-#define CatIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->cti_lock)
-#define CatIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->cti_lock)
-#define CatIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->cti_lock)
-#define CatIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->cti_lock)
-#define CatIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->cti_lock)
-#define CatIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->cti_lock)
-#define CatIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->cti_lock)
-#define CatIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->cti_lock)
-#define CatIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->cti_lock)
-#define CatIterator_LockRead2(a, b)      Dee_atomic_rwlock_read_2(&(a)->cti_lock, &(b)->cti_lock)
-#define CatIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->cti_lock)
-#define CatIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->cti_lock)
-#define CatIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->cti_lock)
-#define CatIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->cti_lock)
-#define CatIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->cti_lock)
-#define CatIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->cti_lock)
-#define CatIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->cti_lock)
-
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_ctor(CatIterator *__restrict self) {
@@ -606,153 +572,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-cat_nsi_find(Cat *__restrict self,
-             size_t start, size_t end,
-             DeeObject *__restrict keyed_search_item,
-             DeeObject *key) {
-	size_t temp, i, offset = 0;
-	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
-		temp = DeeSeq_Find(DeeTuple_GET(self, i), start, end, keyed_search_item, key);
-		if unlikely(temp == (size_t)-2)
-			goto err;
-		if (temp != (size_t)-1) {
-			if (OVERFLOW_UADD(offset, temp, &offset))
-				goto index_overflow;
-			if unlikely(offset == (size_t)-1 ||
-			            offset == (size_t)-2)
-				goto index_overflow;
-			return offset;
-		}
-		temp = DeeObject_Size(DeeTuple_GET(self, i));
-		if unlikely(temp == (size_t)-1)
-			goto err;
-		if (temp >= end)
-			break;
-		start = 0;
-		end -= temp;
-		offset += temp;
-	}
-	return (size_t)-1;
-index_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
-err:
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-cat_nsi_rfind(Cat *__restrict self,
-              size_t start, size_t end,
-              DeeObject *__restrict keyed_search_item,
-              DeeObject *key) {
-	size_t seq_min      = 0, seq_max;
-	size_t start_offset = 0, temp;
-	size_t *seq_lengths, i;
-	size_t effective_length;
-	if unlikely(end <= start)
-		goto done;
-	seq_max = DeeTuple_SIZE(self);
-	if (start != 0) {
-		/* Find the first sequence which `start' is apart of. */
-		for (;;) {
-			if (seq_min >= seq_max)
-				goto done;
-			temp = DeeObject_Size(DeeTuple_GET(self, seq_min));
-			if unlikely(temp == (size_t)-1)
-				goto err;
-			if (temp > start)
-				break;
-			start -= temp;
-			end -= temp;
-			start_offset += temp;
-			++seq_min;
-		}
-		/* The first used sequence contains `temp' items! */
-		if (end <= temp) {
-			/* All items that should be searched for are located within a single sub-sequence! */
-			temp = DeeSeq_RFind(DeeTuple_GET(self, seq_min), start, end, keyed_search_item, key);
-			goto check_final_temp_from_first;
-		}
-		seq_lengths = (size_t *)Dee_Mallocac(seq_max - seq_min, sizeof(size_t));
-		if unlikely(!seq_lengths)
-			goto err;
-		seq_lengths[0]   = temp; /* Remember the length of the first sequence. */
-		i                = seq_min + 1;
-		effective_length = temp;
-	} else {
-		seq_lengths = (size_t *)Dee_Mallocac(seq_max, sizeof(size_t));
-		if unlikely(!seq_lengths)
-			goto err;
-		i                = seq_min;
-		effective_length = 0;
-	}
-	/* Figure out the lengths of all sequences we're supposed to search */
-	for (; i < seq_max; ++i) {
-		if (effective_length >= end) {
-			seq_max = i + 1;
-			break;
-		}
-		temp = DeeObject_Size(DeeTuple_GET(self, i));
-		if unlikely(temp == (size_t)-1)
-			goto err_seqlen;
-		effective_length += temp;
-		seq_lengths[i - seq_min] = effective_length;
-	}
-	ASSERT((seq_max - seq_min) >= 2);
-	/* Search the last sequence. */
-	if (effective_length >= end) {
-		temp = DeeSeq_RFind(DeeTuple_GET(self, seq_max - 1),
-		                    0, end - seq_lengths[(seq_max - seq_min) - 2],
-		                    keyed_search_item, key);
-	} else {
-		temp = DeeSeq_RFind(DeeTuple_GET(self, seq_max - 1), 0, (size_t)-1, keyed_search_item, key);
-	}
-check_temp_for_errors:
-	if unlikely(temp == (size_t)-2)
-		goto err;
-	if (temp != (size_t)-1) {
-		Dee_Freea(seq_lengths);
-		if (OVERFLOW_UADD(temp, start_offset, &temp))
-			goto index_overflow;
-		if ((seq_max - seq_min) >= 2) {
-			start_offset = seq_lengths[(seq_max - seq_min) - 2];
-			goto add_start_offset;
-		}
-		return temp;
-	}
-	/* Not apart of the last sequence. -> Search all full sequences before then. */
-	--seq_max;
-	if (seq_max > seq_min + 1) {
-		temp = DeeSeq_RFind(DeeTuple_GET(self, seq_max - 1),
-		                    0, (size_t)-1,
-		                    keyed_search_item, key);
-		goto check_temp_for_errors;
-	}
-	ASSERT(seq_min + 1 == seq_max);
-	Dee_Freea(seq_lengths);
-	/* Search the first sequence. */
-	temp = DeeSeq_RFind(DeeTuple_GET(self, seq_min),
-	                    start, (size_t)-1, keyed_search_item, key);
-check_final_temp_from_first:
-	if likely(temp != (size_t)-2) {
-		if (temp != (size_t)-1) {
-add_start_offset:
-			if (OVERFLOW_UADD(temp, start_offset, &temp))
-				goto index_overflow;
-		}
-	}
-	return temp;
-done:
-	return (size_t)-1;
-index_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
-	goto err;
-err_seqlen:
-	Dee_Freea(seq_lengths);
-err:
-	return (size_t)-2;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cat_foreach(Cat *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -785,8 +604,8 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&cat_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&cat_nsi_rfind,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
 			/* .nsi_xch          = */ (dfunptr_t)NULL,
 			/* .nsi_insert       = */ (dfunptr_t)NULL,
 			/* .nsi_insertall    = */ (dfunptr_t)NULL,

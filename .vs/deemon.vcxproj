@@ -243,7 +243,10 @@
 		<ClInclude Include="..\src\deemon\objects\int_logic.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\bsearch-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\bsearch.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\bsearch.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\combinations.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\concat.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-iterators.h" />
@@ -252,11 +255,15 @@
 		<ClInclude Include="..\src\deemon\objects\seq\each.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\filter.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\hashfilter.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\locateall.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\range.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\repeat.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\reversed.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\segments.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\set.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\smap.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\sort.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\subrange.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\svec.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\transform.h" />
@@ -431,6 +438,7 @@
 		<ClCompile Include="..\src\deemon\objects\seq\locateall.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\range.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\repeat.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\reversed.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\segments.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\set.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\simpleproxy.c" />

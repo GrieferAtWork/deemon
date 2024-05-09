@@ -38,6 +38,10 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/concat.h"
+#include "seq/repeat.h"
+#include "seq/reversed.h"
+#include "seq/sort.h"
 #include "seq/svec.h"
 #include "seq_functions.h"
 

@@ -40,6 +40,7 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
+#include "repeat.h"
 
 DECL_BEGIN
 

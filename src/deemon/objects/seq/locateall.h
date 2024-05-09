@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H
-#define GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H 1
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_LOCATE_ALL_H
+#define GUARD_DEEMON_OBJECTS_SEQ_LOCATE_ALL_H 1
 
 #include <deemon/api.h>
 #include <deemon/object.h>
@@ -27,21 +27,24 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *ti_iter; /* [1..1][const] The iterator who's elements are being transformed. */
-	DREF DeeObject *ti_func; /* [1..1][const] The function used for transforming. */
-} TransformationIterator;
+	DREF DeeObject *l_seq;  /* [1..1][const] The sequence being transformed. */
+	DREF DeeObject *l_elem; /* [1..1][const] The element being searched. */
+	DREF DeeObject *l_pred; /* [0..1][const] The key function invoked to transform elements. */
+} Locator;
+
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *t_seq;   /* [1..1][const] The sequence being transformed. */
-	DREF DeeObject *t_fun;   /* [1..1][const] The function used for transforming. */
-} Transformation;
+	DREF DeeObject *li_iter; /* [1..1][const] The iterator in which items are being located. */
+	DREF DeeObject *li_elem; /* [1..1][const] The element being searched. */
+	DREF DeeObject *li_pred; /* [0..1][const] The key function invoked to transform elements. */
+} LocatorIterator;
 
-INTDEF DeeTypeObject SeqTransformation_Type;
-INTDEF DeeTypeObject SeqTransformationIterator_Type;
+INTDEF DeeTypeObject SeqLocator_Type;
+INTDEF DeeTypeObject SeqLocatorIterator_Type;
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Transform(DeeObject *self, DeeObject *transformation);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_LocateAll(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_SEQ_TRANSFORM_H */
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_LOCATE_ALL_H */

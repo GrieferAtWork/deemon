@@ -43,6 +43,9 @@ INTDEF DeeTypeObject SeqHashFilterIterator_Type;
 INTDEF DeeTypeObject MapHashFilter_Type;
 INTDEF DeeTypeObject MapHashFilterIterator_Type;
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_HashFilter(DeeObject *self, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_HashFilter(DeeObject *self, Dee_hash_t hash);
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_HASHFILTER_H */

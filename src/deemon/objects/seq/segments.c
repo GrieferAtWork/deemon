@@ -32,23 +32,13 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
+#include "segments.h"
+/**/
+
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *s_seq;   /* [1..1][const] The underlying sequence that is being segmented. */
-	size_t          s_len;   /* [const][!0] The (max) length of a single segment. */
-} Segments;
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *si_iter; /* [1..1][const] An iterator for the sequence being segmented. */
-	size_t          si_len;  /* [const][!0] The (max) length of a single segment. */
-} SegmentsIterator;
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 segiter_init(SegmentsIterator *__restrict self,

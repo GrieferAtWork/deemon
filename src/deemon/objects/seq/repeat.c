@@ -40,6 +40,7 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
+#include "../seq_functions.h"
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
@@ -509,13 +510,13 @@ err:
 	return NULL;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 repeat_nsi_find(Repeat *__restrict self, size_t start, size_t end,
                 DeeObject *__restrict keyed_search_item, DeeObject *key) {
 	return DeeSeq_Find(self->rp_seq, start, end, keyed_search_item, key);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 repeat_nsi_rfind(Repeat *__restrict self, size_t start, size_t end,
                  DeeObject *__restrict keyed_search_item, DeeObject *key) {
 	size_t result;

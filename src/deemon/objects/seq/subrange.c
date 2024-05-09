@@ -41,6 +41,7 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../seq_functions.h"
 
 DECL_BEGIN
 

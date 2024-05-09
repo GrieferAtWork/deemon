@@ -44,11 +44,23 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/bsearch.h"
+#include "seq/combinations.h"
+#include "seq/concat.h"
 #include "seq/default-iterators.h"
 #include "seq/default-sequences.h"
 #include "seq/each.h"
+#include "seq/filter.h"
+#include "seq/hashfilter.h"
+#include "seq/locateall.h"
+#include "seq/repeat.h"
+#include "seq/reversed.h"
+#include "seq/segments.h"
 #include "seq/simpleproxy.h"
+#include "seq/sort.h"
+#include "seq/subrange.h"
 #include "seq/svec.h"
+#include "seq/transform.h"
 #include "seq_functions.h"
 
 #undef SSIZE_MAX

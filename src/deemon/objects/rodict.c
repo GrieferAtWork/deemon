@@ -31,13 +31,14 @@
 #include <deemon/rodict.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/thread.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
+#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/hashfilter.h"
 
 DECL_BEGIN
 
