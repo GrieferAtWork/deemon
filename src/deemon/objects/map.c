@@ -1374,6 +1374,8 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 #define DeeType_RequireForeach(tp_self)                 (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self))
 #define DeeType_RequireForeachPair(tp_self)             (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
 #define DeeType_RequireForeachAndForeachPair(tp_self)   (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireEnumerate(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_enumerate) || (DeeType_InheritIter(tp_self) && (tp_self)->tp_seq->tp_enumerate))
+#define DeeType_RequireEnumerateIndex(tp_self)          (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_enumerate_index) || (DeeType_InheritIter(tp_self) && (tp_self)->tp_seq->tp_enumerate_index))
 #define DeeType_RequireGetItem(tp_self)                 (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireGetItemIndex(tp_self)            (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem_index) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireGetItemStringHash(tp_self)       (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem_string_hash) || DeeType_InheritGetItem(tp_self))
@@ -1705,6 +1707,43 @@ handle_empty:
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+generic_map_enumerate(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_MAP && DeeType_RequireEnumerate(tp_self)) {
+		if (tp_self->tp_seq->tp_enumerate == &generic_map_enumerate)
+			goto handle_empty;
+		return (*tp_self->tp_seq->tp_enumerate)(self, proc, arg);
+	}
+	if (DeeType_RequireForeachPair(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultEnumerateWithForeachPairDefault(self, proc, arg);
+	}
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
+handle_empty:
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+generic_map_enumerate_index(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                            void *arg, size_t start, size_t end) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_MAP && DeeType_RequireEnumerateIndex(tp_self)) {
+		if (tp_self->tp_seq->tp_enumerate_index == &generic_map_enumerate_index)
+			goto handle_empty;
+		return (*tp_self->tp_seq->tp_enumerate_index)(self, proc, arg, start, end);
+	}
+	if (DeeType_RequireForeachPair(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultEnumerateIndexWithForeachPairDefault(self, proc, arg, start, end);
+	}
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
+handle_empty:
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 generic_map_bounditem(DeeObject *self, DeeObject *key) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -1852,51 +1891,51 @@ handle_empty:
 
 
 
-PRIVATE struct type_seq map_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&generic_map_iter,
-	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&generic_map_sizeob,
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&generic_map_contains,
-	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&generic_map_getitem,
+PRIVATE struct type_seq generic_map_seq = {
+	/* .tp_iter                       = */ &generic_map_iter,
+	/* .tp_sizeob                     = */ &generic_map_sizeob,
+	/* .tp_contains                   = */ &generic_map_contains,
+	/* .tp_getitem                    = */ &generic_map_getitem,
 	/* .tp_delitem                    = */ NULL,
 	/* .tp_setitem                    = */ NULL,
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_nsi                        = */ NULL,
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&generic_map_foreach,
-	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&generic_map_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&generic_map_bounditem,
-	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&generic_map_hasitem,
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&generic_map_size,
-	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&generic_map_size_fast,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&generic_map_getitem_index,
+	/* .tp_foreach                    = */ &generic_map_foreach,
+	/* .tp_foreach_pair               = */ &generic_map_foreach_pair,
+	/* .tp_enumerate                  = */ &generic_map_enumerate,
+	/* .tp_enumerate_index            = */ &generic_map_enumerate_index,
+	/* .tp_bounditem                  = */ &generic_map_bounditem,
+	/* .tp_hasitem                    = */ &generic_map_hasitem,
+	/* .tp_size                       = */ &generic_map_size,
+	/* .tp_size_fast                  = */ &generic_map_size_fast,
+	/* .tp_getitem_index              = */ &generic_map_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ NULL,
 	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&generic_map_bounditem_index,
-	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&generic_map_hasitem_index,
+	/* .tp_bounditem_index            = */ &generic_map_bounditem_index,
+	/* .tp_hasitem_index              = */ &generic_map_hasitem_index,
 	/* .tp_getrange_index             = */ NULL,
 	/* .tp_delrange_index             = */ NULL,
 	/* .tp_setrange_index             = */ NULL,
 	/* .tp_getrange_index_n           = */ NULL,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&generic_map_trygetitem,
-	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&generic_map_trygetitem_index,
-	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_getitem_string_hash,
+	/* .tp_trygetitem                 = */ &generic_map_trygetitem,
+	/* .tp_trygetitem_index           = */ &generic_map_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ &generic_map_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ &generic_map_getitem_string_hash,
 	/* .tp_delitem_string_hash        = */ NULL,
 	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_bounditem_string_hash,
-	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_hasitem_string_hash,
-	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_getitem_string_len_hash,
+	/* .tp_bounditem_string_hash      = */ &generic_map_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ &generic_map_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash = */ &generic_map_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ &generic_map_getitem_string_len_hash,
 	/* .tp_delitem_string_len_hash    = */ NULL,
 	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_bounditem_string_len_hash,
-	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_hasitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ &generic_map_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ &generic_map_hasitem_string_len_hash,
 };
 
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
@@ -2301,7 +2340,7 @@ PRIVATE struct type_nsi tpconst map_nsi = {
 	}
 };
 
-PRIVATE struct type_seq map_seq = {
+PRIVATE struct type_seq generic_map_seq = {
 	/* .tp_iter     = */ &map_iterself,
 	/* .tp_sizeob   = */ &map_size,
 	/* .tp_contains = */ &map_contains,
@@ -2941,7 +2980,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &map_math,
 	/* .tp_cmp           = */ &generic_map_cmp,
-	/* .tp_seq           = */ &map_seq,
+	/* .tp_seq           = */ &generic_map_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,

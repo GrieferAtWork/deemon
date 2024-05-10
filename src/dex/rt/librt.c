@@ -115,6 +115,7 @@ print define_Dee_HashStr("classes");
 print define_Dee_HashStr("combinations");
 print define_Dee_HashStr("each");
 print define_Dee_HashStr("filter");
+print define_Dee_HashStr("ubfilter");
 print define_Dee_HashStr("findall");
 print define_Dee_HashStr("future");
 print define_Dee_HashStr("ids");
@@ -166,6 +167,7 @@ print define_Dee_HashStr("types");
 #define Dee_HashStr__combinations _Dee_HashSelectC(0x184d9b51, 0x3e5802b7656c4900)
 #define Dee_HashStr__each _Dee_HashSelectC(0x9de8b13d, 0x374e052f37a5e158)
 #define Dee_HashStr__filter _Dee_HashSelectC(0x3110088a, 0x32e04884df75b1c1)
+#define Dee_HashStr__ubfilter _Dee_HashSelectC(0x9f55cd0c, 0xa457507f0faa4d80)
 #define Dee_HashStr__findall _Dee_HashSelectC(0xa7064666, 0x73bffde4f31b16e5)
 #define Dee_HashStr__future _Dee_HashSelectC(0x5ca3159c, 0x8ab2926ab5959525)
 #define Dee_HashStr__ids _Dee_HashSelectC(0x3173a48f, 0x7cd9fae6cf17bb9f)
@@ -839,6 +841,12 @@ librt_get_SeqFilter_impl_f(void) {
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_SeqFilterAsUnbound_impl_f(void) {
+	DeeObject *argv[] = { Dee_None };
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptySeq, STR_AND_HASH(ubfilter), 1, argv));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqHashFilter_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_Zero };
 	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptySeq, STR_AND_HASH(byhash), 1, argv));
@@ -847,6 +855,11 @@ librt_get_SeqHashFilter_impl_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqFilter_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqFilterAsUnbound_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_SeqFilterAsUnbound_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1889,6 +1902,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqSegmentsIterator, &librt_get_SeqSegmentsIter
 PRIVATE DEFINE_CMETHOD(librt_get_SeqConcat, &librt_get_SeqConcat_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqConcatIterator, &librt_get_SeqConcatIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqFilter, &librt_get_SeqFilter_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqFilterAsUnbound, &librt_get_SeqFilterAsUnbound_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqFilterIterator, &librt_get_SeqFilterIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqHashFilter, &librt_get_SeqHashFilter_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqHashFilterIterator, &librt_get_SeqHashFilterIterator_f, METHOD_FCONSTCALL);
@@ -2183,6 +2197,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqConcat", (DeeObject *)&librt_get_SeqConcat, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqConcat_Type */
 	{ "SeqConcatIterator", (DeeObject *)&librt_get_SeqConcatIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqConcatIterator_Type */
 	{ "SeqFilter", (DeeObject *)&librt_get_SeqFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqFilter_Type */
+	{ "SeqFilterAsUnbound", (DeeObject *)&librt_get_SeqFilterAsUnbound, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqFilterAsUnbound_Type */
 	{ "SeqFilterIterator", (DeeObject *)&librt_get_SeqFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqFilterIterator_Type */
 	{ "SeqHashFilter", (DeeObject *)&librt_get_SeqHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqHashFilter_Type */
 	{ "SeqHashFilterIterator", (DeeObject *)&librt_get_SeqHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqHashFilterIterator_Type */

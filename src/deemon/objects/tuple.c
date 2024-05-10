@@ -1595,6 +1595,24 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+tuple_enumerate_index(Tuple *self, Dee_enumerate_index_t proc,
+                      void *arg, size_t start, size_t end) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	if (end > self->t_size)
+		end = self->t_size;
+	for (i = start; i < end; ++i) {
+		temp = (*proc)(arg, i, self->t_elem[i]);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	return result;
+err:
+	return temp;
+}
+
 PRIVATE struct type_nsi tpconst tuple_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -1642,7 +1660,7 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&tuple_enumerate_index,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&tuple_size,

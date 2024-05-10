@@ -38,9 +38,11 @@ typedef struct {
 } Filter;
 
 INTDEF DeeTypeObject SeqFilter_Type;
+INTDEF DeeTypeObject SeqFilterAsUnbound_Type;
 INTDEF DeeTypeObject SeqFilterIterator_Type;
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Filter(DeeObject *self, DeeObject *pred_keep);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_FilterAsUnbound(DeeObject *self, DeeObject *pred_keep);
 
 DECL_END
 

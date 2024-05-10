@@ -1756,12 +1756,78 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seo_foreach(SeqEachOperator *self, Dee_foreach_t proc, void *arg) {
+seo_foreach(SeqEachOperator *__restrict self, Dee_foreach_t proc, void *arg) {
 	struct seo_foreach_data data;
 	data.seofd_me   = self;
 	data.seofd_proc = proc;
 	data.seofd_arg  = arg;
 	return DeeObject_Foreach(self->se_seq, &seo_foreach_cb, &data);
+}
+
+struct seo_enumerate_data {
+	SeqEachOperator *seoed_me;   /* [1..1] The related seq-each operator */
+	Dee_enumerate_t  seoed_proc; /* [1..1] User-defined callback */
+	void            *seoed_arg;  /* [?..?] User-defined cookie */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seo_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+	Dee_ssize_t result;
+	struct seo_enumerate_data *data;
+	data = (struct seo_enumerate_data *)arg;
+	if unlikely(!value)
+		return (*data->seoed_proc)(data->seoed_arg, index, value);
+	value = seo_transform(data->seoed_me, value);
+	if unlikely(!value)
+		goto err;
+	result = (*data->seoed_proc)(data->seoed_arg, index, value);
+	Dee_Decref(value);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seo_enumerate(SeqEachOperator *__restrict self, Dee_enumerate_t proc, void *arg) {
+	struct seo_enumerate_data data;
+	data.seoed_me   = self;
+	data.seoed_proc = proc;
+	data.seoed_arg  = arg;
+	return DeeObject_Enumerate(self->se_seq, &seo_enumerate_cb, &data);
+}
+
+struct seo_enumerate_index_data {
+	SeqEachOperator      *seoeid_me;   /* [1..1] The related seq-each operator */
+	Dee_enumerate_index_t seoeid_proc; /* [1..1] User-defined callback */
+	void                 *seoeid_arg;  /* [?..?] User-defined cookie */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+seo_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	Dee_ssize_t result;
+	struct seo_enumerate_index_data *data;
+	data = (struct seo_enumerate_index_data *)arg;
+	if unlikely(!value)
+		return (*data->seoeid_proc)(data->seoeid_arg, index, value);
+	value = seo_transform(data->seoeid_me, value);
+	if unlikely(!value)
+		goto err;
+	result = (*data->seoeid_proc)(data->seoeid_arg, index, value);
+	Dee_Decref(value);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seo_enumerate_index(SeqEachOperator *__restrict self, Dee_enumerate_index_t proc,
+                    void *arg, size_t start, size_t end) {
+	struct seo_enumerate_index_data data;
+	data.seoeid_me   = self;
+	data.seoeid_proc = proc;
+	data.seoeid_arg  = arg;
+	return DeeObject_EnumerateIndex(self->se_seq, &seo_enumerate_index_cb,
+	                                &data, start, end);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2314,8 +2380,8 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_nsi                        = */ &seo_nsi,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&seo_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&seo_enumerate_index,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sew_size,

@@ -510,34 +510,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-repeat_nsi_find(Repeat *__restrict self, size_t start, size_t end,
-                DeeObject *__restrict keyed_search_item, DeeObject *key) {
-	return DeeSeq_Find(self->rp_seq, start, end, keyed_search_item, key);
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-repeat_nsi_rfind(Repeat *__restrict self, size_t start, size_t end,
-                 DeeObject *__restrict keyed_search_item, DeeObject *key) {
-	size_t result;
-	result = DeeSeq_RFind(self->rp_seq, start, end, keyed_search_item, key);
-	if (result != (size_t)-1 && result != (size_t)-2) {
-		size_t inner_size = DeeObject_Size(self->rp_seq);
-		size_t addend;
-		if unlikely(inner_size == (size_t)-1)
-			return (size_t)-2;
-		if (self->rp_num > 1 && inner_size != 0) {
-			if (OVERFLOW_UMUL(self->rp_num - 1, inner_size, &addend)) {
-				err_integer_overflow_i(sizeof(size_t) * 8, true);
-				return (size_t)-2;
-			}
-			if unlikely(result == (size_t)-2)
-				err_integer_overflow_i(sizeof(size_t) * 8, true);
-		}
-	}
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 repeat_foreach(Repeat *__restrict self, Dee_foreach_t proc, void *arg) {
 	DeeTypeObject *tp_seq;
@@ -601,8 +573,8 @@ PRIVATE struct type_nsi tpconst repeat_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&repeat_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&repeat_nsi_rfind,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
 			/* .nsi_xch          = */ (dfunptr_t)NULL,
 			/* .nsi_insert       = */ (dfunptr_t)NULL,
 			/* .nsi_insertall    = */ (dfunptr_t)NULL,

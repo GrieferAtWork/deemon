@@ -477,7 +477,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_FOREACH(tp_self, self, proc, arg)                             (*(tp_self)->tp_seq->tp_foreach)(self, proc, arg)
 #define DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg)                        (*(tp_self)->tp_seq->tp_foreach_pair)(self, proc, arg)
 #define DeeType_INVOKE_ENUMERATE(tp_self, self, proc, arg)                           (*(tp_self)->tp_seq->tp_enumerate)(self, proc, arg)
-#define DeeType_INVOKE_ENUMERATE_INDEX(tp_self, self, proc, arg, starthint, endhint) (*(tp_self)->tp_seq->tp_enumerate_index)(self, proc, arg, starthint, endhint)
+#define DeeType_INVOKE_ENUMERATE_INDEX(tp_self, self, proc, arg, start, end) (*(tp_self)->tp_seq->tp_enumerate_index)(self, proc, arg, start, end)
 #define DeeType_INVOKE_BOUNDITEM(tp_self, self, index)                               (*(tp_self)->tp_seq->tp_bounditem)(self, index)
 #define DeeType_INVOKE_HASITEM(tp_self, self, index)                                 (*(tp_self)->tp_seq->tp_hasitem)(self, index)
 #define DeeType_INVOKE_SIZE(tp_self, self)                                           (*(tp_self)->tp_seq->tp_size)(self)
@@ -6672,8 +6672,10 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateWithCounterAndForeachD
 
 /* tp_enumerate_index */
 struct default_enumerate_index_with_enumerate_data {
-	Dee_enumerate_index_t deiwe_proc; /* [1..1] Underlying callback. */
-	void                 *deiwe_arg;  /* [?..?] Cookie for `deiwe_proc' */
+	Dee_enumerate_index_t deiwe_proc;  /* [1..1] Underlying callback. */
+	void                 *deiwe_arg;   /* [?..?] Cookie for `deiwe_proc' */
+	size_t                deiwe_start; /* Enumeration start index */
+	size_t                deiwe_end;   /* Enumeration end index */
 };
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -6685,38 +6687,38 @@ default_enumerate_index_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *
 	size_t index;
 	struct default_enumerate_index_with_enumerate_data *data;
 	data = (struct default_enumerate_index_with_enumerate_data *)arg;
-	if (DeeObject_AsSize(key, &index))
+	if (DeeObject_AsSize(key, &index)) /* TODO: Handle overflow */
 		goto err;
-	return (*data->deiwe_proc)(data->deiwe_arg, index, value);
+	if (index >= data->deiwe_start && index < data->deiwe_end)
+		return (*data->deiwe_proc)(data->deiwe_arg, index, value);
+	return 0;
 err:
 	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithEnumerate,
-                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	struct default_enumerate_index_with_enumerate_data data;
 	LOAD_TP_SELF;
-	(void)starthint;
-	(void)endhint;
-	data.deiwe_proc = proc;
-	data.deiwe_arg  = arg;
+	data.deiwe_proc  = proc;
+	data.deiwe_arg   = arg;
+	data.deiwe_start = start;
+	data.deiwe_end   = end;
 	return DeeType_INVOKE_ENUMERATE_NODEFAULT(tp_self, self, &default_enumerate_index_with_enumerate_cb, &data);
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithSizeAndGetItemIndexFast,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	Dee_ssize_t temp, result = 0;
 	size_t i, size;
 	LOAD_TP_SELF;
 	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (endhint > size)
-		endhint = size;
-	if (starthint > endhint)
-		starthint = endhint;
-	for (i = starthint; i < endhint; ++i) {
+	if (end > size)
+		end = size;
+	for (i = start; i < end; ++i) {
 		DREF DeeObject *index_value;
 		index_value = (*tp_self->tp_seq->tp_getitem_index_fast)(self, i);
 		temp = (*proc)(arg, i, index_value);
@@ -6733,18 +6735,16 @@ err:
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithSizeAndTryGetItemIndex,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	Dee_ssize_t temp, result = 0;
 	size_t i, size;
 	LOAD_TP_SELF;
 	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (endhint > size)
-		endhint = size;
-	if (starthint > endhint)
-		starthint = endhint;
-	for (i = starthint; i < endhint; ++i) {
+	if (end > size)
+		end = size;
+	for (i = start; i < end; ++i) {
 		DREF DeeObject *index_value;
 		index_value = DeeType_INVOKE_TRYGETITEMINDEX_NODEFAULT(tp_self, self, i);
 		if unlikely(!index_value)
@@ -6767,18 +6767,16 @@ err:
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithSizeAndGetItemIndex,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	Dee_ssize_t temp, result = 0;
 	size_t i, size;
 	LOAD_TP_SELF;
 	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (endhint > size)
-		endhint = size;
-	if (starthint > endhint)
-		starthint = endhint;
-	for (i = starthint; i < endhint; ++i) {
+	if (end > size)
+		end = size;
+	for (i = start; i < end; ++i) {
 		DREF DeeObject *index_value;
 		index_value = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, i);
 		if unlikely(!index_value) {
@@ -6800,7 +6798,7 @@ err:
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithSizeObAndGetItem,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *indexob, *index_value, *sizeob;
 	LOAD_TP_SELF;
@@ -6810,18 +6808,18 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithSizeObAndGetI
 	indexob = DeeObject_NewDefault(Dee_TYPE(sizeob));
 	if unlikely(!indexob)
 		goto err_sizeob;
-	if (starthint != 0) {
+	if (start != 0) {
 		DREF DeeObject *new_indexob;
-		new_indexob = DeeObject_AddSize(indexob, starthint);
+		new_indexob = DeeObject_AddSize(indexob, start);
 		Dee_Decref(indexob);
 		if unlikely(!new_indexob)
 			goto err_sizeob;
 		indexob = new_indexob;
 	}
-	if (endhint != (size_t)-1) {
+	if (end != (size_t)-1) {
 		int size_is_greater_than_endhint;
 		DREF DeeObject *endhintob;
-		endhintob = DeeInt_NewSize(endhint);
+		endhintob = DeeInt_NewSize(end);
 		if unlikely(!endhintob)
 			goto err_sizeob_indexob;
 		size_is_greater_than_endhint = DeeObject_CmpGrAsBool(sizeob, endhintob);
@@ -6872,10 +6870,15 @@ err:
 }
 
 
+#define default_enumerate_index_with_counter_and_foreach_cb_MAGIC_EARLY_STOP \
+	(__SSIZE_MIN__ + 99) /* Shhht. We don't talk about this one... */
+
 struct default_enumerate_index_with_counter_and_foreach_data {
-	Dee_enumerate_index_t deiwcaf_proc;    /* [1..1] Wrapped callback */
-	void                 *deiwcaf_arg;     /* [?..?] Cookie for `deiwcaf_proc' */
-	size_t                deiwcaf_counter; /* Index of the next element that will be enumerate_indexd */
+	Dee_enumerate_index_t deiwcaf_proc;  /* [1..1] Wrapped callback */
+	void                 *deiwcaf_arg;   /* [?..?] Cookie for `deiwcaf_proc' */
+	size_t                deiwcaf_index; /* Index of the next element that will be enumerate_indexd */
+	size_t                deiwcaf_start; /* Enumeration start index */
+	size_t                deiwcaf_end;   /* Enumeration end index */
 };
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -6884,26 +6887,36 @@ default_enumerate_index_with_counter_and_foreach_cb(void *arg, DeeObject *elem);
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_enumerate_index_with_counter_and_foreach_cb(void *arg, DeeObject *elem) {
+	size_t index;
 	struct default_enumerate_index_with_counter_and_foreach_data *data;
 	data = (struct default_enumerate_index_with_counter_and_foreach_data *)arg;
-	return (*data->deiwcaf_proc)(data->deiwcaf_arg, data->deiwcaf_counter++, elem);
+	if (data->deiwcaf_index >= data->deiwcaf_end)
+		return default_enumerate_index_with_counter_and_foreach_cb_MAGIC_EARLY_STOP;
+	index = data->deiwcaf_index++;
+	if (index < data->deiwcaf_start)
+		return 0; /* Skipped... */
+	return (*data->deiwcaf_proc)(data->deiwcaf_arg, index, elem);
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithCounterAndForeach,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	struct default_enumerate_index_with_counter_and_foreach_data data;
+	Dee_ssize_t result;
 	LOAD_TP_SELF;
-	data.deiwcaf_proc    = proc;
-	data.deiwcaf_arg     = arg;
-	data.deiwcaf_counter = 0;
-	(void)starthint;
-	(void)endhint;
-	return DeeType_INVOKE_FOREACH_NODEFAULT(tp_self, self, &default_enumerate_index_with_counter_and_foreach_cb, &data);
+	data.deiwcaf_proc  = proc;
+	data.deiwcaf_arg   = arg;
+	data.deiwcaf_index = 0;
+	data.deiwcaf_start = start;
+	data.deiwcaf_end   = end;
+	result = DeeType_INVOKE_FOREACH_NODEFAULT(tp_self, self, &default_enumerate_index_with_counter_and_foreach_cb, &data);
+	if unlikely(result == default_enumerate_index_with_counter_and_foreach_cb_MAGIC_EARLY_STOP)
+		result = 0;
+	return result;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithCounterAndIter,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	size_t counter = 0;
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *iter, *elem;
@@ -6911,15 +6924,15 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithCounterAndIte
 	iter = DeeType_INVOKE_ITER_NODEFAULT(tp_self, self);
 	if unlikely(!iter)
 		goto err;
-	if (starthint != 0) {
-		counter = DeeObject_IterAdvance(iter, starthint);
+	if (start != 0) {
+		counter = DeeObject_IterAdvance(iter, start);
 		if unlikely(counter == (size_t)-1)
 			goto err_iter;
-		if unlikely(counter < starthint)
+		if unlikely(counter < start)
 			goto done;
 	}
 	for (;; ++counter) {
-		if (counter >= endhint)
+		if (counter >= end)
 			goto done;
 		elem = DeeObject_IterNext(iter);
 		if (!ITER_ISOK(elem))
@@ -6948,18 +6961,16 @@ err:
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithSizeDefaultAndGetItemIndexDefault,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	Dee_ssize_t temp, result = 0;
 	size_t i, size;
 	LOAD_TP_SELF;
 	size = DeeType_INVOKE_SIZE(tp_self, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	if (endhint > size)
-		endhint = size;
-	if (starthint > endhint)
-		starthint = endhint;
-	for (i = starthint; i < endhint; ++i) {
+	if (end > size)
+		end = size;
+	for (i = start; i < end; ++i) {
 		DREF DeeObject *index_value;
 		index_value = DeeType_INVOKE_GETITEMINDEX(tp_self, self, i);
 		if unlikely(!index_value) {
@@ -6981,25 +6992,40 @@ err:
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithCounterAndForeachDefault,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	struct default_enumerate_index_with_counter_and_foreach_data data;
+	Dee_ssize_t result;
 	LOAD_TP_SELF;
-	data.deiwcaf_proc    = proc;
-	data.deiwcaf_arg     = arg;
-	data.deiwcaf_counter = 0;
-	(void)starthint;
-	(void)endhint;
-	return DeeType_INVOKE_FOREACH(tp_self, self, &default_enumerate_index_with_counter_and_foreach_cb, &data);
+	data.deiwcaf_proc  = proc;
+	data.deiwcaf_arg   = arg;
+	data.deiwcaf_index = 0;
+	data.deiwcaf_start = start;
+	data.deiwcaf_end   = end;
+	result = DeeType_INVOKE_FOREACH(tp_self, self, &default_enumerate_index_with_counter_and_foreach_cb, &data);
+	if unlikely(result == default_enumerate_index_with_counter_and_foreach_cb_MAGIC_EARLY_STOP)
+		result = 0;
+	return result;
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithForeachPairDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
+	struct default_enumerate_index_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.deiwe_proc  = proc;
+	data.deiwe_arg   = arg;
+	data.deiwe_start = start;
+	data.deiwe_end   = end;
+	return DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_enumerate_index_with_enumerate_cb, &data);
 }
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithEnumerateDefault,
-                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	struct default_enumerate_index_with_enumerate_data data;
 	LOAD_TP_SELF;
-	(void)starthint;
-	(void)endhint;
-	data.deiwe_proc = proc;
-	data.deiwe_arg  = arg;
+	data.deiwe_proc  = proc;
+	data.deiwe_arg   = arg;
+	data.deiwe_start = start;
+	data.deiwe_end   = end;
 	return DeeType_INVOKE_ENUMERATE(tp_self, self, &default_enumerate_index_with_enumerate_cb, &data);
 }
 
@@ -12741,6 +12767,293 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeDefaultAndSetItem
 	(void)value;
 	return DeeError_NOTIMPLEMENTED();
 }
+
+#ifndef DEFINE_TYPED_OPERATORS
+/* Extra map functions that are needed for implementing generic map operator. */
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithForeachPair,
+                             (DeeObject *self, DeeObject *elem)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)elem;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, DeeObject *key)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mgied_key = key;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_with_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.mgied_result;
+	if unlikely(status == -3) {
+		err_unbound_key(self, key);
+		goto err;
+	}
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key(self, key);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, size_t key)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_index_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mgiied_key = key;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_index_with_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.mgiied_result;
+	if unlikely(status == -3) {
+		err_unbound_index(self, key);
+		goto err;
+	}
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_int(self, key);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemStringHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_hash_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mgished_key  = key;
+	data.mgished_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_string_hash_with_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.mgished_result;
+	if unlikely(status == -3) {
+		err_unbound_key_str(self, key);
+		goto err;
+	}
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_str(self, key);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemStringLenHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_len_hash_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mgislhed_key    = key;
+	data.mgislhed_keylen = keylen;
+	data.mgislhed_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_string_len_hash_with_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.mgislhed_result;
+	if unlikely(status == -3) {
+		err_unbound_key_str_len(self, key, keylen);
+		goto err;
+	}
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_str_len(self, key, keylen);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultTryGetItemWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, DeeObject *key)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mgied_key = key;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_with_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.mgied_result;
+	if (status == -3 || status == 0)
+		return ITER_DONE;
+	ASSERT(status == -1);
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultTryGetItemIndexWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, size_t key)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_index_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mgiied_key = key;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_index_with_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.mgiied_result;
+	if (status == -3 || status == 0)
+		return ITER_DONE;
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultTryGetItemStringHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_hash_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mgished_key  = key;
+	data.mgished_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_string_hash_with_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.mgished_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultTryGetItemStringLenHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_len_hash_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mgislhed_key    = key;
+	data.mgislhed_keylen = keylen;
+	data.mgislhed_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_string_len_hash_with_enumerate_cb, &data);
+	if likely(status == -2)
+		return data.mgislhed_result;
+	if (status == -3 || status == 0)
+		return ITER_DONE;
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithForeachPair,
+                             (DeeObject *self, DeeObject *key)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_with_enumerate_cb, key);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == -3) {
+		status = 0;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemIndexWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, size_t key)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_index_with_enumerate_cb, (void *)(uintptr_t)key);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == -3) {
+		status = 0;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_hash_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mbished_key  = key;
+	data.mbished_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_hash_with_enumerate_cb, &data);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == -3) {
+		status = 0;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringLenHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_len_hash_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mbislhed_key    = key;
+	data.mbislhed_keylen = keylen;
+	data.mbislhed_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_len_hash_with_enumerate_cb, &data);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == -3) {
+		status = 0;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemWithForeachPair,
+                             (DeeObject *self, DeeObject *key)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_with_enumerate_cb, key);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3 || status == -2)
+		status = 1;
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemIndexWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, size_t key)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_index_with_enumerate_cb, (void *)(uintptr_t)key);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3 || status == -2)
+		status = 1;
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemStringHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_hash_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mbished_key  = key;
+	data.mbished_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_hash_with_enumerate_cb, &data);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3 || status == -2)
+		status = 1;
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemStringLenHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_len_hash_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.mbislhed_key    = key;
+	data.mbislhed_keylen = keylen;
+	data.mbislhed_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_len_hash_with_enumerate_cb, &data);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3 || status == -2)
+		status = 1;
+	return (int)status;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
 
 
 
@@ -18499,20 +18812,20 @@ DEFINE_OPERATOR(Dee_ssize_t, Enumerate,
 }
 
 /* Same as `DeeObject_Enumerate()', but only valid when "self" uses integers for indices
- * or is a mapping where all keys are integers. In the former case, [starthint,endhint)
+ * or is a mapping where all keys are integers. In the former case, [start,end)
  * can be given in order to allow the implementation to only enumerate indices that fall
  * within that range (though an implementation is allowed to simply ignore these arguments)
  * If you want to always enumerate all indices (like is also done by `DeeObject_Enumerate',
- * then simply pass `starthint = 0, endhint = (size_t)-1')
+ * then simply pass `start = 0, end = (size_t)-1')
  * @return: * : Sum of return values of `*proc'
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
 DEFINE_OPERATOR(Dee_ssize_t, EnumerateIndex,
                 (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc,
-                 void *arg, size_t starthint, size_t endhint)) {
+                 void *arg, size_t start, size_t end)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_enumerate_index) ||
 	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_enumerate_index))
-		return (*tp_self->tp_seq->tp_enumerate_index)(self, proc, arg, starthint, endhint);
+		return (*tp_self->tp_seq->tp_enumerate_index)(self, proc, arg, start, end);
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Cannot enumerate non-sequence type `%r'",
 	                       tp_self);

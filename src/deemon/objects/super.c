@@ -621,8 +621,9 @@ super_enumerate(Super *__restrict me, Dee_enumerate_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-super_enumerate_index(Super *__restrict me, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint) {
-	return DeeObject_TEnumerateIndex(me->s_type, me->s_self, proc, arg, starthint, endhint);
+super_enumerate_index(Super *__restrict me, Dee_enumerate_index_t proc,
+                      void *arg, size_t start, size_t end) {
+	return DeeObject_TEnumerateIndex(me->s_type, me->s_self, proc, arg, start, end);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

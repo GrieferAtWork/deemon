@@ -1926,8 +1926,8 @@ PRIVATE struct type_nsi tpconst seq_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)&seq_nsi_delrange_n,
 			/* .nsi_setrange     = */ (dfunptr_t)&seq_nsi_setrange,
 			/* .nsi_setrange_n   = */ (dfunptr_t)&seq_nsi_setrange_n,
-			/* .nsi_find         = */ (dfunptr_t)&DeeSeq_Find,
-			/* .nsi_rfind        = */ (dfunptr_t)&DeeSeq_RFind,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
 			/* .nsi_xch          = */ (dfunptr_t)&DeeSeq_XchItem,
 			/* .nsi_insert       = */ (dfunptr_t)&DeeSeq_Insert,
 			/* .nsi_insertall    = */ (dfunptr_t)&DeeSeq_InsertAll,
@@ -2334,6 +2334,8 @@ err:
 #define DeeType_RequireContains(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_contains) || DeeType_InheritContains(tp_self))
 #define DeeType_RequireForeach(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self))
 #define DeeType_RequireForeachPair(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireEnumerate(tp_self)             (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_enumerate) || (DeeType_InheritIter(tp_self) && (tp_self)->tp_seq->tp_enumerate))
+#define DeeType_RequireEnumerateIndex(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_enumerate_index) || (DeeType_InheritIter(tp_self) && (tp_self)->tp_seq->tp_enumerate_index))
 #define DeeType_RequireForeachAndForeachPair(tp_self) (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
 #define DeeType_RequireGetItem(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireGetItemIndex(tp_self)          (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem_index) || DeeType_InheritGetItem(tp_self))
@@ -2411,6 +2413,42 @@ handle_empty:
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+generic_seq_enumerate(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireEnumerate(tp_self)) {
+		if (tp_self->tp_seq->tp_enumerate == &generic_seq_enumerate)
+			goto handle_empty; /* Empty sequence. */
+		return (*tp_self->tp_seq->tp_enumerate)(self, proc, arg);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
+			goto handle_empty; /* Empty sequence. */
+		return DeeSeq_DefaultEnumerateWithCounterAndForeach(self, proc, arg);
+	}
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
+handle_empty:
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+generic_seq_enumerate_index(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                            void *arg, size_t start, size_t end) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireEnumerateIndex(tp_self)) {
+		if (tp_self->tp_seq->tp_enumerate_index == &generic_seq_enumerate_index)
+			goto handle_empty; /* Empty sequence. */
+		return (*tp_self->tp_seq->tp_enumerate_index)(self, proc, arg, start, end);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
+			goto handle_empty; /* Empty sequence. */
+		return DeeSeq_DefaultEnumerateIndexWithCounterAndForeach(self, proc, arg, start, end);
+	}
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
+handle_empty:
+	return 0;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_sizeob(DeeObject *__restrict self) {
@@ -2930,8 +2968,8 @@ PRIVATE struct type_seq generic_seq_seq = {
 	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ &generic_seq_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate                  = */ &generic_seq_enumerate,
+	/* .tp_enumerate_index            = */ &generic_seq_enumerate_index,
 	/* .tp_bounditem                  = */ &generic_seq_bounditem,
 	/* .tp_hasitem                    = */ &generic_seq_hasitem,
 	/* .tp_size                       = */ &generic_seq_size,
@@ -3404,6 +3442,16 @@ seq_filter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:filter", &pred_keep))
 		goto err;
 	return DeeSeq_Filter(self, pred_keep);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_ubfilter(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *pred_keep;
+	if (DeeArg_Unpack(argc, argv, "o:ubfilter", &pred_keep))
+		goto err;
+	return DeeSeq_FilterAsUnbound(self, pred_keep);
 err:
 	return NULL;
 }
@@ -3918,21 +3966,15 @@ seq_find(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result, start, end;
 	if (get_sequence_find_args_kw("find", argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
-	if (!key) {
-		result = DeeSeq_Find(self, start, end, elem, NULL);
+	if (key) {
+		result = generic_seq_find_with_key(self, elem, start, end, key);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_Find(self, start, end, elem, key);
-		Dee_Decref(elem);
+		result = generic_seq_find(self, elem, start, end);
 	}
-	if ((dssize_t)result < 0) {
-		if unlikely(result == (size_t)-2)
-			goto err;
-		if unlikely(result == (size_t)-1)
-			return_reference_(DeeInt_MinusOne);
-	}
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		return_reference_(DeeInt_MinusOne);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -3944,21 +3986,15 @@ seq_rfind(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result, start, end;
 	if (get_sequence_find_args_kw("rfind", argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
-	if (!key) {
-		result = DeeSeq_RFind(self, start, end, elem, NULL);
+	if (key) {
+		result = generic_seq_rfind_with_key(self, elem, start, end, key);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_RFind(self, start, end, elem, key);
-		Dee_Decref(elem);
+		result = generic_seq_rfind(self, elem, start, end);
 	}
-	if ((dssize_t)result < 0) {
-		if unlikely(result == (size_t)-2)
-			goto err;
-		if unlikely(result == (size_t)-1)
-			return_reference_(DeeInt_MinusOne);
-	}
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		return_reference_(DeeInt_MinusOne);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -3970,21 +4006,15 @@ seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result, start, end;
 	if (get_sequence_find_args_kw(STR_index, argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
-	if (!key) {
-		result = DeeSeq_Find(self, start, end, elem, NULL);
+	if (key) {
+		result = generic_seq_find_with_key(self, elem, start, end, key);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_Find(self, start, end, elem, key);
-		Dee_Decref(elem);
+		result = generic_seq_find(self, elem, start, end);
 	}
-	if unlikely((dssize_t)result < 0) {
-		if unlikely(result == (size_t)-2)
-			goto err;
-		if unlikely(result == (size_t)-1)
-			goto err_not_found;
-	}
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_not_found;
 	return DeeInt_NewSize(result);
 err_not_found:
 	err_item_not_found(self, elem);
@@ -3998,21 +4028,15 @@ seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	size_t result, start, end;
 	if (get_sequence_find_args_kw("rindex", argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
-	if (!key) {
-		result = DeeSeq_RFind(self, start, end, elem, NULL);
+	if (key) {
+		result = generic_seq_rfind_with_key(self, elem, start, end, key);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_RFind(self, start, end, elem, key);
-		Dee_Decref(elem);
+		result = generic_seq_rfind(self, elem, start, end);
 	}
-	if unlikely((dssize_t)result < 0) {
-		if unlikely(result == (size_t)-2)
-			goto err;
-		if unlikely(result == (size_t)-1)
-			goto err_not_found;
-	}
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_not_found;
 	return DeeInt_NewSize(result);
 err_not_found:
 	err_item_not_found(self, elem);
@@ -4687,6 +4711,16 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "		if (keep(x))\n"
 	            /**/ "			yield x;\n"
 	            /**/ "}"
+	            "}"),
+	TYPE_METHOD("ubfilter", &seq_ubfilter,
+	            "(keep:?DCallable)->?DSequence\n"
+	            "#pkeep{A key function which is called for each element of @this Sequence"
+	            /**/ "Returns a sub-Sequence of all elements for which ${keep(elem)} evaluates to ?t}"
+	            "Same as ?#filter, but the returned sequence has the same size as @this, and filtered "
+	            /**/ "elements are simply treated as though they were unbound:\n"
+	            "${"
+	            /**/ "assert { 10, 20 }.ubfilter(x -> x > 10)[0] !is bound;"
+	            /**/ "assert { 10, 20 }.ubfilter(x -> x > 10)[1] is bound;"
 	            "}"),
 	TYPE_METHOD("sum", &seq_sum,
 	            "->\nReturns the sum of all elements, or ?N if the Sequence is empty\n"

@@ -304,18 +304,18 @@ INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-funcstatics_nsi_getsize(FunctionStatics *__restrict self) {
+funcstatics_size(FunctionStatics *__restrict self) {
 	DeeCodeObject *code = self->fs_func->fo_code;
 	return code->co_refstaticc - code->co_refc;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcstatics_nsi_getitem(FunctionStatics *__restrict self, size_t index) {
+funcstatics_getitem_index(FunctionStatics *__restrict self, size_t index) {
 	DeeFunctionObject *func = self->fs_func;
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *result;
 	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc) {
-		err_index_out_of_bounds((DeeObject *)self, index, funcstatics_nsi_getsize(self));
+		err_index_out_of_bounds((DeeObject *)self, index, funcstatics_size(self));
 		return NULL;
 	}
 	DeeFunction_RefLockRead(func);
@@ -332,12 +332,12 @@ funcstatics_nsi_getitem(FunctionStatics *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-funcstatics_nsi_delitem(FunctionStatics *__restrict self, size_t index) {
+funcstatics_delitem_index(FunctionStatics *__restrict self, size_t index) {
 	DeeFunctionObject *func = self->fs_func;
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *oldval;
 	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc)
-		return err_index_out_of_bounds((DeeObject *)self, index, funcstatics_nsi_getsize(self));
+		return err_index_out_of_bounds((DeeObject *)self, index, funcstatics_size(self));
 	DeeFunction_RefLockWrite(func);
 	oldval = func->fo_refv[index]; /* Inherit reference */
 	func->fo_refv[index] = NULL;
@@ -349,12 +349,12 @@ funcstatics_nsi_delitem(FunctionStatics *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-funcstatics_nsi_setitem(FunctionStatics *self, size_t index, DeeObject *value) {
+funcstatics_setitem_index(FunctionStatics *self, size_t index, DeeObject *value) {
 	DeeFunctionObject *func = self->fs_func;
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *oldval;
 	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc)
-		return err_index_out_of_bounds((DeeObject *)self, index, funcstatics_nsi_getsize(self));
+		return err_index_out_of_bounds((DeeObject *)self, index, funcstatics_size(self));
 	Dee_Incref(value);
 	DeeFunction_RefLockWrite(func);
 	oldval = func->fo_refv[index]; /* Inherit reference */
@@ -367,7 +367,7 @@ funcstatics_nsi_setitem(FunctionStatics *self, size_t index, DeeObject *value) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcstatics_nsi_getitem_fast(FunctionStatics *__restrict self, size_t index) {
+funcstatics_getitem_index_fast(FunctionStatics *__restrict self, size_t index) {
 	DeeFunctionObject *func = self->fs_func;
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *result;
@@ -391,7 +391,7 @@ funcstatics_nsi_xchitem(FunctionStatics *self, size_t index, DeeObject *value) {
 	DeeCodeObject *code = func->fo_code;
 	DREF DeeObject *oldval;
 	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc) {
-		err_index_out_of_bounds((DeeObject *)self, index, funcstatics_nsi_getsize(self));
+		err_index_out_of_bounds((DeeObject *)self, index, funcstatics_size(self));
 		return NULL;
 	}
 	Dee_Incref(value);
@@ -469,23 +469,22 @@ funcstatics_visit(FunctionStatics *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-funcstatics_foreach(FunctionStatics *self, Dee_foreach_t proc, void *arg) {
+funcstatics_enumerate_index(FunctionStatics *self, Dee_enumerate_index_t proc,
+                            void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	DeeFunctionObject *func = self->fs_func;
 	DeeCodeObject *code = func->fo_code;
-	size_t i;
-	for (i = code->co_refc; i < code->co_refstaticc; ++i) {
+	size_t i, count = code->co_refstaticc - code->co_refc;
+	if (end > count)
+		end = count;
+	for (i = start; i < end; ++i) {
 		DREF DeeObject *value;
 		DeeFunction_RefLockRead(func);
 		value = func->fo_refv[i];
-		if unlikely(!value) {
-			DeeFunction_RefLockEndRead(func);
-			continue;
-		}
-		Dee_Incref(value);
+		Dee_XIncref(value);
 		DeeFunction_RefLockEndRead(func);
-		temp = (*proc)(arg, value);
-		Dee_Decref_unlikely(value);
+		temp = (*proc)(arg, i, value);
+		Dee_XDecref_unlikely(value);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
@@ -501,12 +500,12 @@ PRIVATE struct type_nsi tpconst funcstatics_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&funcstatics_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&funcstatics_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&funcstatics_nsi_getitem,
-			/* .nsi_delitem      = */ (dfunptr_t)&funcstatics_nsi_delitem,
-			/* .nsi_setitem      = */ (dfunptr_t)&funcstatics_nsi_setitem,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&funcstatics_nsi_getitem_fast,
+			/* .nsi_getsize      = */ (dfunptr_t)&funcstatics_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&funcstatics_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&funcstatics_getitem_index,
+			/* .nsi_delitem      = */ (dfunptr_t)&funcstatics_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&funcstatics_setitem_index,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&funcstatics_getitem_index_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
@@ -540,18 +539,18 @@ PRIVATE struct type_seq funcstatics_seq = {
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
 	/* .tp_nsi                = */ &funcstatics_nsi,
-	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&funcstatics_foreach,
+	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ NULL,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&funcstatics_enumerate_index,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&funcstatics_nsi_getsize,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&funcstatics_nsi_getsize,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcstatics_nsi_getitem,
-	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcstatics_nsi_getitem_fast,
-	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&funcstatics_nsi_delitem,
-	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&funcstatics_nsi_setitem,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&funcstatics_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&funcstatics_size,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcstatics_getitem_index,
+	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcstatics_getitem_index_fast,
+	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&funcstatics_delitem_index,
+	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&funcstatics_setitem_index,
 	/* .tp_bounditem_index    = */ NULL,
 	/* .tp_hasitem_index      = */ NULL,
 	/* .tp_getrange_index     = */ NULL,
@@ -1417,7 +1416,7 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_nsi                = */ &funcsymbolsbyname_nsi,
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_enumerate          = */ NULL,
+	/* .tp_enumerate          = */ NULL, /* TODO */
 	/* .tp_enumerate_index    = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
@@ -2403,7 +2402,7 @@ PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
 	/* .tp_nsi                = */ &yfuncsymbolsbyname_nsi,
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_enumerate          = */ NULL,
+	/* .tp_enumerate          = */ NULL, /* TODO */
 	/* .tp_enumerate_index    = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
@@ -2542,12 +2541,12 @@ typedef struct {
 } FrameArgs;
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-frameargs_nsi_getsize(FrameArgs *__restrict self) {
+frameargs_size(FrameArgs *__restrict self) {
 	return self->fa_code->co_argc_max;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-frameargs_nsi_getitem(FrameArgs *__restrict self, size_t index) {
+frameargs_getitem_index(FrameArgs *__restrict self, size_t index) {
 	struct code_frame const *frame;
 	DREF DeeObject *result;
 	DeeCodeObject *code = self->fa_code;
@@ -2644,9 +2643,9 @@ PRIVATE struct type_nsi tpconst frameargs_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&frameargs_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&frameargs_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&frameargs_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&frameargs_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&frameargs_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&frameargs_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
@@ -2687,12 +2686,12 @@ PRIVATE struct type_seq frameargs_seq = {
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ NULL,
+	/* .tp_enumerate_index    = */ NULL, /* TODO */
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&frameargs_nsi_getsize,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&frameargs_nsi_getsize,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&frameargs_nsi_getitem,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&frameargs_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&frameargs_size,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&frameargs_getitem_index,
 	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,
 	/* .tp_setitem_index      = */ NULL,
@@ -2799,12 +2798,12 @@ typedef struct {
 } FrameLocals;
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-framelocals_nsi_getsize(FrameLocals *__restrict self) {
+framelocals_size(FrameLocals *__restrict self) {
 	return self->fl_localc;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framelocals_nsi_getitem(FrameLocals *__restrict self, size_t index) {
+framelocals_getitem_index(FrameLocals *__restrict self, size_t index) {
 	struct code_frame const *frame;
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_localc) {
@@ -2828,7 +2827,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-framelocals_nsi_delitem(FrameLocals *__restrict self, size_t index) {
+framelocals_delitem_index(FrameLocals *__restrict self, size_t index) {
 	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
@@ -2848,7 +2847,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-framelocals_nsi_setitem(FrameLocals *self, size_t index, DeeObject *value) {
+framelocals_setitem_index(FrameLocals *self, size_t index, DeeObject *value) {
 	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
@@ -2953,11 +2952,11 @@ PRIVATE struct type_nsi tpconst framelocals_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&framelocals_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&framelocals_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&framelocals_nsi_getitem,
-			/* .nsi_delitem      = */ (dfunptr_t)&framelocals_nsi_delitem,
-			/* .nsi_setitem      = */ (dfunptr_t)&framelocals_nsi_setitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&framelocals_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&framelocals_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&framelocals_getitem_index,
+			/* .nsi_delitem      = */ (dfunptr_t)&framelocals_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&framelocals_setitem_index,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
@@ -2996,15 +2995,15 @@ PRIVATE struct type_seq framelocals_seq = {
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ NULL,
+	/* .tp_enumerate_index    = */ NULL, /* TODO */
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framelocals_nsi_getsize,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&framelocals_nsi_getsize,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&framelocals_nsi_getitem,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framelocals_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&framelocals_size,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&framelocals_getitem_index,
 	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&framelocals_nsi_delitem,
-	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&framelocals_nsi_setitem,
+	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&framelocals_delitem_index,
+	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&framelocals_setitem_index,
 	/* .tp_bounditem_index    = */ NULL,
 	/* .tp_hasitem_index      = */ NULL,
 	/* .tp_getrange_index     = */ NULL,
@@ -3106,7 +3105,7 @@ typedef struct {
 } FrameStack;
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-framestack_nsi_getsize(FrameStack *__restrict self) {
+framestack_size(FrameStack *__restrict self) {
 	uint16_t result;
 	struct code_frame const *frame;
 	frame = DeeFrame_LockRead((DeeObject *)self->fs_frame);
@@ -3120,7 +3119,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framestack_nsi_getitem(FrameStack *__restrict self, size_t index) {
+framestack_getitem_index(FrameStack *__restrict self, size_t index) {
 	uint16_t stackc;
 	struct code_frame const *frame;
 	DREF DeeObject *result;
@@ -3166,7 +3165,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-framestack_nsi_setitem(FrameStack *self, size_t index, DeeObject *value) {
+framestack_setitem_index(FrameStack *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	oldvalue = framestack_nsi_xchitem(self, index, value);
 	if unlikely(!oldvalue)
@@ -3337,11 +3336,11 @@ PRIVATE struct type_nsi tpconst framestack_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&framestack_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&framestack_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&framestack_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&framestack_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&framestack_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&framestack_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)&framestack_nsi_setitem,
+			/* .nsi_setitem      = */ (dfunptr_t)&framestack_setitem_index,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
@@ -3377,18 +3376,18 @@ PRIVATE struct type_seq framestack_seq = {
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
 	/* .tp_nsi                = */ &framestack_nsi,
-	/* .tp_foreach            = */ NULL,
+	/* .tp_foreach            = */ NULL, /* TODO */
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
 	/* .tp_enumerate_index    = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framestack_nsi_getsize,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framestack_size,
 	/* .tp_size_fast          = */ NULL,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&framestack_nsi_getitem,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&framestack_getitem_index,
 	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,
-	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&framestack_nsi_setitem,
+	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&framestack_setitem_index,
 	/* .tp_bounditem_index    = */ NULL,
 	/* .tp_hasitem_index      = */ NULL,
 	/* .tp_getrange_index     = */ NULL,
@@ -4352,7 +4351,7 @@ err_no_such_key:
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-framesymbolsbyname_nsi_getsize(FrameSymbolsByName *__restrict self) {
+framesymbolsbyname_size(FrameSymbolsByName *__restrict self) {
 	size_t result;
 	result = self->frsbn_nargs;
 	result += self->frsbn_rid_end - self->frsbn_rid_start;
@@ -4699,7 +4698,7 @@ PRIVATE struct type_nsi tpconst framesymbolsbyname_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&framesymbolsbyname_nsi_getsize,
+			/* .nsi_getsize    = */ (dfunptr_t)&framesymbolsbyname_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&framesymbolsbyname_nsi_nextkey,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&framesymbolsbyname_nsi_nextvalue,
 			/* .nsi_getdefault = */ (dfunptr_t)&framesymbolsbyname_nsi_getdefault,
@@ -4723,12 +4722,12 @@ PRIVATE struct type_seq framesymbolsbyname_seq = {
 	/* .tp_nsi                = */ &framesymbolsbyname_nsi,
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_enumerate          = */ NULL,
+	/* .tp_enumerate          = */ NULL, /* TODO */
 	/* .tp_enumerate_index    = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_nsi_getsize,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_nsi_getsize,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
 	/* .tp_getitem_index      = */ NULL,
 	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,

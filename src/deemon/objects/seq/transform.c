@@ -366,6 +366,71 @@ trans_foreach(Transformation *self, Dee_foreach_t proc, void *arg) {
 	return DeeObject_Foreach(self->t_seq, &trans_foreach_cb, &data);
 }
 
+struct trans_enumerate_data {
+	DeeObject      *ted_fun;  /* [1..1] Function to call in order to apply transformation */
+	Dee_enumerate_t ted_proc; /* [1..1] Inner callback. */
+	void           *ted_arg;  /* [?..?] Cookie for `ted_proc'. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+trans_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	Dee_ssize_t result;
+	struct trans_enumerate_data *data;
+	data = (struct trans_enumerate_data *)arg;
+	if (!value)
+		return (*data->ted_proc)(data->ted_arg, index, NULL);
+	value = DeeObject_Call(data->ted_fun, 1, &value);
+	if unlikely(!value)
+		goto err;
+	result = (*data->ted_proc)(data->ted_arg, index, value);
+	Dee_Decref(value);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+trans_enumerate(Transformation *self, Dee_enumerate_t proc, void *arg) {
+	struct trans_enumerate_data data;
+	data.ted_fun  = self->t_fun;
+	data.ted_proc = proc;
+	data.ted_arg  = arg;
+	return DeeObject_Enumerate(self->t_seq, &trans_enumerate_cb, &data);
+}
+
+struct trans_enumerate_index_data {
+	DeeObject            *teid_fun;  /* [1..1] Function to call in order to apply transformation */
+	Dee_enumerate_index_t teid_proc; /* [1..1] Inner callback. */
+	void                 *teid_arg;  /* [?..?] Cookie for `teid_proc'. */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+trans_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	Dee_ssize_t result;
+	struct trans_enumerate_index_data *data;
+	data = (struct trans_enumerate_index_data *)arg;
+	if (!value)
+		return (*data->teid_proc)(data->teid_arg, index, NULL);
+	value = DeeObject_Call(data->teid_fun, 1, &value);
+	if unlikely(!value)
+		goto err;
+	result = (*data->teid_proc)(data->teid_arg, index, value);
+	Dee_Decref(value);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+trans_enumerate_index(Transformation *self, Dee_enumerate_index_t proc,
+                      void *arg, size_t start, size_t end) {
+	struct trans_enumerate_index_data data;
+	data.teid_fun  = self->t_fun;
+	data.teid_proc = proc;
+	data.teid_arg  = arg;
+	return DeeObject_EnumerateIndex(self->t_seq, &trans_enumerate_index_cb, &data, start, end);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 trans_bounditem(Transformation *self, DeeObject *index) {
 	return DeeObject_BoundItem(self->t_seq, index);
@@ -556,8 +621,8 @@ PRIVATE struct type_seq trans_seq = {
 	/* .tp_nsi                        = */ &trans_nsi,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&trans_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&trans_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&trans_enumerate_index,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&trans_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&trans_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&trans_size,

@@ -2025,15 +2025,15 @@ struct Dee_type_seq {
 
 	/* Alternate forms for `tp_iter' (these are inherited by `DeeType_InheritIter()').
 	 * Instead of defining `tp_iter', you can just define one of these and have the runtime
-	 * use these for enumerating the object. Note however that this is less efficient, and that
-	 * the type should still provide a proper `tp_iter' callback. */
+	 * use these for enumerating the object. Note however that this is less efficient, and
+	 * that the type should still provide a proper `tp_iter' callback. */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
 	/* Alternate forms for `tp_foreach' (these are inherited by `DeeType_InheritIter()').
 	 * For enumerating available indices/keys, and their current values (which may be NULL if `this[index] !is bound') */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint);
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
@@ -2205,7 +2205,7 @@ myob_enumerate(MyObject *__restrict self, Dee_enumerate_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-myob_enumerate_index(MyObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t starthint, size_t endhint) {
+myob_enumerate_index(MyObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	(void)self;
 	(void)proc;
 	(void)arg;
@@ -4805,16 +4805,15 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeObject_Enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
 
 /* Same as `DeeObject_Enumerate()', but only valid when "self" uses integers for indices
- * or is a mapping where all keys are integers. In the former case, [starthint,endhint)
- * can be given in order to allow the implementation to only enumerate indices that fall
- * within that range (though an implementation is allowed to simply ignore these arguments)
- * If you want to always enumerate all indices (like is also done by `DeeObject_Enumerate',
- * then simply pass `starthint = 0, endhint = (size_t)-1')
+ * or is a mapping where all keys are integers. In the former case, [start,end) can be
+ * given in order to only enumerate indices that fall within that range (any index that
+ * doesn't fall within this range isn't enumerated). If you want to always enumerate all
+ * indices (like is also done by `DeeObject_Enumerate', then simply pass `0, (size_t)-1')
  * @return: * : Sum of return values of `*proc'
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeObject_EnumerateIndex)(DeeObject *__restrict self, Dee_enumerate_index_t proc,
-                                 void *arg, size_t starthint, size_t endhint);
+                                 void *arg, size_t start, size_t end);
 
 
 /* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */

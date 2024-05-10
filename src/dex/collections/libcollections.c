@@ -147,7 +147,51 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "BitsetView", (DeeObject *)&BitsetView_Type, MODSYM_FREADONLY },
 	{ "bits", (DeeObject *)&BitsetView_Type, MODSYM_FREADONLY,
 	  DOC("Alias for ?GBitsetView, that should be used as a "
-	      "function to access the bits of some buffer-like object") },
+	      /**/ "function to access the bits of buffer-like objects") },
+	/* TODO: FixedSet  (set that can only contain a limited set of keys and is internally just a Bitset):
+	 * >> class FixedSet: Set {
+	 * >>      private final member _keys: {Object: int};
+	 * >>      private final member _present: Bitset;
+	 * >>      this(keys: {Object...}) {
+	 * >>          _keys = Dict.Frozen(for (local i, key: ) (key, i));
+	 * >>          _present = Bitset(#_keys);
+	 * >>      }
+	 * >>      operator contains(ob) {
+	 * >>          local index = _keys.get(ob);
+	 * >>          if (index is none)
+	 * >>              return false;
+	 * >>          return _present[index];
+	 * >>      }
+	 * >> };
+	 */
+	/* TODO: FixedDict  (dict that can only contain a limited set of keys)
+	 * >> class FixedDict: Mapping {
+	 * >>      private final member _keys: {Object: int};
+	 * >>      private final member _present: FixedList;
+	 * >>      this(keys: {Object...}) {
+	 * >>          _keys = Dict.Frozen(for (local i, key: ) (key, i));
+	 * >>          _present = FixedList(#_keys);
+	 * >>      }
+	 * >>      operator [] (key) {
+	 * >>          local index = _keys.get(ob);
+	 * >>          if (index is none)
+	 * >>              throw KeyError(...);
+	 * >>          return _present[index]; // Can throw UnboundItem
+	 * >>      }
+	 * >>      operator del[] (key) {
+	 * >>          local index = _keys.get(ob);
+	 * >>          if (index is none)
+	 * >>              throw KeyError(...);
+	 * >>          del _present[index];
+	 * >>      }
+	 * >>      operator []= (key, value) {
+	 * >>          local index = _keys.get(ob);
+	 * >>          if (index is none)
+	 * >>              throw KeyError(...);
+	 * >>          _present[index] = value;
+	 * >>      }
+	 * >> };
+	 */
 
 	/* TODO: STailQ (singly linked list; internally: STAILQ) */
 	/* TODO: TailQ (double linked list; internally: TAILQ) */

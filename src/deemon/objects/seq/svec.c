@@ -750,6 +750,30 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rvec_enumerate_index(RefVector *self, Dee_enumerate_index_t proc,
+                     void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	if (end > self->rv_length)
+		end = self->rv_length;
+	for (i = start; i < end; ++i) {
+		DREF DeeObject *elem;
+		RefVector_XLockRead(self);
+		elem = self->rv_vector[i];
+		Dee_XIncref(elem);
+		RefVector_XLockEndRead(self);
+		temp = (*proc)(arg, i, elem);
+		Dee_XDecref_unlikely(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
 PRIVATE struct type_nsi tpconst rvec_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
@@ -798,7 +822,7 @@ PRIVATE struct type_seq rvec_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rvec_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&rvec_enumerate_index,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rvec_size,
@@ -1305,6 +1329,32 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+svec_enumerate_index(SharedVector *self, Dee_enumerate_index_t proc,
+                     void *arg, size_t start, size_t end) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	for (i = start; i < end; ++i) {
+		DREF DeeObject *list_elem;
+		SharedVector_LockRead(self);
+		if (i >= self->sv_length) {
+			SharedVector_LockEndRead(self);
+			break;
+		}
+		list_elem = self->sv_vector[i];
+		Dee_Incref(list_elem);
+		SharedVector_LockEndRead(self);
+		temp = (*proc)(arg, i, list_elem);
+		Dee_Decref_unlikely(list_elem);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	return result;
+err:
+	return temp;
+}
+
 
 PRIVATE struct type_nsi tpconst svec_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -1353,7 +1403,7 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&svec_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&svec_enumerate_index,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,

@@ -36,6 +36,8 @@ DECL_BEGIN
  * these operators.
  */
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_foreach_reverse_t)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_enumerate_index_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_enumerate_index_reverse_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_getfirst_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_boundfirst_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_delfirst_t)(DeeObject *__restrict self);
@@ -54,7 +56,9 @@ typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *Dee_tsc_rfind_t)(DeeObject *s
 typedef WUNUSED_T NONNULL_T((1, 4, 5)) size_t (DCALL *Dee_tsc_rfind_with_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_elem, DeeObject *key);
 
 struct Dee_type_seq_cache {
-	Dee_tsc_foreach_reverse_t tsc_foreach_reverse;
+	Dee_tsc_foreach_reverse_t         tsc_foreach_reverse;
+	Dee_tsc_enumerate_index_t         tsc_enumerate_index; /* Same as normal enumerate-index, but treated like `(self as Sequence).<enumerate_index>' */
+	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
 
 	/* Returns the first element of the sequence.
 	 * Calls `err_empty_sequence()' when it is empty. */
@@ -79,6 +83,8 @@ struct Dee_type_seq_cache {
 
 /* Type sequence operator definition functions. */
 INTDEF WUNUSED NONNULL((1)) Dee_tsc_foreach_reverse_t DCALL DeeType_SeqCache_TryRequireForeachReverse(DeeTypeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_reverse_t DCALL DeeType_SeqCache_TryRequireEnumerateIndexReverse(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_t DCALL DeeType_SeqCache_RequireEnumerateIndex(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_getfirst_t DCALL DeeType_SeqCache_RequireGetFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundfirst_t DCALL DeeType_SeqCache_RequireBoundFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_delfirst_t DCALL DeeType_SeqCache_RequireDelFirst(DeeTypeObject *__restrict self);
@@ -87,6 +93,10 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_getlast_t DCALL DeeType_SeqC
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundlast_t DCALL DeeType_SeqCache_RequireBoundLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_dellast_t DCALL DeeType_SeqCache_RequireDelLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_setlast_t DCALL DeeType_SeqCache_RequireSetLast(DeeTypeObject *__restrict self);
+
+/* Same as `DeeObject_EnumerateIndex()', but also works for treats `self' as `self as Sequence' */
+#define DeeSeq_EnumerateIndex(self, proc, arg, start, end) \
+	(*DeeType_SeqCache_RequireEnumerateIndex(Dee_TYPE(self)))(self, proc, arg, start, end)
 
 /* Helpers to quickly invoke default sequence functions. */
 #define DeeSeq_GetFirst(self)    (*DeeType_SeqCache_RequireGetFirst(Dee_TYPE(self)))(self)
@@ -103,6 +113,11 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWit
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndex(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWithSizeObAndGetItem(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndex(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithGetAttr(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithGetItem(DeeObject *__restrict self);
@@ -167,6 +182,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_startswith(DeeObject *self,
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_seq_startswith_with_key(DeeObject *self, DeeObject *elem, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_endswith(DeeObject *self, DeeObject *elem);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_seq_endswith_with_key(DeeObject *self, DeeObject *elem, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL generic_seq_find(DeeObject *self, DeeObject *elem, size_t start, size_t end);                              /* @return: -1: Not found; @return Dee_COMPARE_ERR: Error */
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL generic_seq_find_with_key(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key);  /* @return: -1: Not found; @return Dee_COMPARE_ERR: Error */
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL generic_seq_rfind(DeeObject *self, DeeObject *elem, size_t start, size_t end);                             /* @return: -1: Not found; @return Dee_COMPARE_ERR: Error */
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL generic_seq_rfind_with_key(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key); /* @return: -1: Not found; @return Dee_COMPARE_ERR: Error */
 
 
 DECL_END

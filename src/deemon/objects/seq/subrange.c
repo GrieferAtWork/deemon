@@ -379,36 +379,6 @@ subrange_nsi_getitem(SubRange *__restrict self, size_t index) {
 	                              self->sr_start + index);
 }
 
-PRIVATE size_t DCALL
-subrange_nsi_find(SubRange *__restrict self, size_t start, size_t end,
-                  DeeObject *__restrict keyed_search_item,
-                  DeeObject *key) {
-	if (start >= self->sr_size)
-		return (size_t)-1;
-	if (end > self->sr_size)
-		end = self->sr_size;
-	return DeeSeq_Find(self->sr_seq,
-	                   start + self->sr_start,
-	                   end + self->sr_start,
-	                   keyed_search_item,
-	                   key);
-}
-
-PRIVATE size_t DCALL
-subrange_nsi_rfind(SubRange *__restrict self, size_t start, size_t end,
-                   DeeObject *__restrict keyed_search_item, DeeObject *key) {
-	if (start >= self->sr_size)
-		return (size_t)-1;
-	if (end > self->sr_size)
-		end = self->sr_size;
-	return DeeSeq_RFind(self->sr_seq,
-	                    start + self->sr_start,
-	                    end + self->sr_start,
-	                    keyed_search_item,
-	                    key);
-}
-
-
 PRIVATE struct type_nsi tpconst subrange_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -426,8 +396,8 @@ PRIVATE struct type_nsi tpconst subrange_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&subrange_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&subrange_nsi_rfind,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
 			/* .nsi_xch          = */ (dfunptr_t)NULL,
 			/* .nsi_insert       = */ (dfunptr_t)NULL,
 			/* .nsi_insertall    = */ (dfunptr_t)NULL,
@@ -710,26 +680,6 @@ subrangen_nsi_getitem(SubRangeN *__restrict self, size_t index) {
 	                              self->sr_start + index);
 }
 
-PRIVATE size_t DCALL
-subrangen_nsi_find(SubRangeN *__restrict self, size_t start, size_t end,
-                   DeeObject *__restrict keyed_search_item, DeeObject *key) {
-	return DeeSeq_Find(self->sr_seq,
-	                   start + self->sr_start,
-	                   end + self->sr_start,
-	                   keyed_search_item,
-	                   key);
-}
-
-PRIVATE size_t DCALL
-subrangen_nsi_rfind(SubRangeN *__restrict self, size_t start, size_t end,
-                    DeeObject *__restrict keyed_search_item, DeeObject *key) {
-	return DeeSeq_RFind(self->sr_seq,
-	                    start + self->sr_start,
-	                    end + self->sr_start,
-	                    keyed_search_item,
-	                    key);
-}
-
 PRIVATE struct type_nsi tpconst subrangen_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -747,8 +697,8 @@ PRIVATE struct type_nsi tpconst subrangen_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&subrangen_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&subrangen_nsi_rfind,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
 			/* .nsi_xch          = */ (dfunptr_t)NULL,
 			/* .nsi_insert       = */ (dfunptr_t)NULL,
 			/* .nsi_insertall    = */ (dfunptr_t)NULL,

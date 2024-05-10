@@ -41,11 +41,14 @@
 
 DECL_BEGIN
 
-#define DeeType_RequireSize(tp_self)      (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_size && (tp_self)->tp_seq->tp_sizeob) || DeeType_InheritSize(tp_self))
-#define DeeType_RequireGetItem(tp_self)   (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem && (tp_self)->tp_seq->tp_getitem_index) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireBoundItem(tp_self) (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_bounditem && (tp_self)->tp_seq->tp_bounditem_index) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireDelItem(tp_self)   (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_delitem && (tp_self)->tp_seq->tp_delitem_index) || DeeType_InheritDelItem(tp_self))
-#define DeeType_RequireSetItem(tp_self)   (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_setitem && (tp_self)->tp_seq->tp_setitem_index) || DeeType_InheritSetItem(tp_self))
+#define DeeType_RequireSize(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_size && (tp_self)->tp_seq->tp_sizeob) || DeeType_InheritSize(tp_self))
+#define DeeType_RequireIter(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_iter) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireForeach(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireEnumerateIndex(tp_self) (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_enumerate_index) || (DeeType_InheritIter(tp_self) && (tp_self)->tp_seq->tp_enumerate_index))
+#define DeeType_RequireGetItem(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem && (tp_self)->tp_seq->tp_getitem_index) || DeeType_InheritGetItem(tp_self))
+#define DeeType_RequireBoundItem(tp_self)      (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_bounditem && (tp_self)->tp_seq->tp_bounditem_index) || DeeType_InheritGetItem(tp_self))
+#define DeeType_RequireDelItem(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_delitem && (tp_self)->tp_seq->tp_delitem_index) || DeeType_InheritDelItem(tp_self))
+#define DeeType_RequireSetItem(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_setitem && (tp_self)->tp_seq->tp_setitem_index) || DeeType_InheritSetItem(tp_self))
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_type_seq_has_custom_tp_size(struct type_seq const *__restrict self) {
@@ -113,7 +116,7 @@ DeeType_SeqCache_TryRequireForeachReverse(DeeTypeObject *__restrict self) {
 				result = &DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndexFast;
 			} else if (has_size && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)) {
 				result = &DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndex;
-			} else if (has_size && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_trygetitem_index)) {
+			} else if (has_size && !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index)) {
 				result = &DeeSeq_DefaultForeachReverseWithSizeAndTryGetItemIndex;
 			} else if (!DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob) &&
 			           !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem)) {
@@ -129,6 +132,78 @@ DeeType_SeqCache_TryRequireForeachReverse(DeeTypeObject *__restrict self) {
 		return result;
 	}
 	return NULL; /* Not possible... */
+}
+
+INTERN WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_reverse_t DCALL
+DeeType_SeqCache_TryRequireEnumerateIndexReverse(DeeTypeObject *__restrict self) {
+	struct Dee_type_seq *seq = self->tp_seq;
+	if likely(seq) {
+		struct Dee_type_seq_cache *sc;
+		sc = self->tp_seq->_tp_seqcache;
+		if likely(sc && sc->tsc_enumerate_index_reverse)
+			return sc->tsc_enumerate_index_reverse;
+	}
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
+		Dee_tsc_enumerate_index_reverse_t result = NULL;
+		if (DeeType_RequireSize(self) && DeeType_RequireGetItem(self)) {
+			bool has_size = !DeeType_IsDefaultSize(self->tp_seq->tp_size);
+			if (has_size && self->tp_seq->tp_getitem_index_fast) {
+				result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndexFast;
+			} else if (has_size && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)) {
+				result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndex;
+			} else if (has_size && !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index)) {
+				result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex;
+			} else if (!DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob) &&
+			           !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem)) {
+				result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem;
+			}
+		}
+		if (result) {
+			struct Dee_type_seq_cache *sc;
+			sc = DeeType_TryRequireSeqCache(self);
+			if likely(sc)
+				atomic_write(&sc->tsc_enumerate_index_reverse, result);
+		}
+		return result;
+	}
+	return NULL; /* Not possible... */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeSeq_DefaultEnumerateIndexWithError(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                                      void *arg, size_t start, size_t end) {
+	(void)self;
+	(void)proc;
+	(void)arg;
+	(void)start;
+	(void)end;
+	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
+}
+
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_t DCALL
+DeeType_SeqCache_RequireEnumerateIndex(DeeTypeObject *__restrict self) {
+	Dee_tsc_enumerate_index_t result;
+	struct Dee_type_seq_cache *sc;
+	if likely(self->tp_seq) {
+		sc = self->tp_seq->_tp_seqcache;
+		if likely(sc && sc->tsc_enumerate_index)
+			return sc->tsc_enumerate_index;
+	}
+	if (DeeType_RequireEnumerateIndex(self)) {
+		result = self->tp_seq->tp_enumerate_index;
+	} else if (DeeType_RequireForeach(self) && !DeeType_IsDefaultForeach(self->tp_seq->tp_foreach)) {
+		result = &DeeSeq_DefaultEnumerateIndexWithCounterAndForeach;
+	} else if (DeeType_RequireIter(self) && !DeeType_IsDefaultIter(self->tp_seq->tp_iter)) {
+		result = &DeeSeq_DefaultEnumerateIndexWithCounterAndIter;
+	} else if (self->tp_seq && self->tp_seq->tp_foreach) {
+		result = &DeeSeq_DefaultEnumerateIndexWithCounterAndForeachDefault;
+	} else {
+		result = &DeeSeq_DefaultEnumerateIndexWithError;
+	}
+	sc = DeeType_TryRequireSeqCache(self);
+	if likely(sc)
+		atomic_write(&sc->tsc_enumerate_index, result);
+	return result;
 }
 
 
@@ -273,6 +348,188 @@ err_sizeob:
 err:
 	return -1;
 }
+
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                                                               void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t size = (*seq->tp_size)(self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size > end)
+		size = end;
+	while (size > start) {
+		DREF DeeObject *elem;
+		--size;
+		elem = (*seq->tp_getitem_index_fast)(self, size);
+		temp = (*proc)(arg, size, elem);
+		Dee_XDecref(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndex(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                                                           void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t size = (*seq->tp_size)(self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size > end)
+		size = end;
+	while (size > start) {
+		DREF DeeObject *elem;
+		--size;
+		elem = (*seq->tp_getitem_index)(self, size);
+		if unlikely(!elem) {
+			if (!DeeError_Catch(&DeeError_IndexError) &&
+			    !DeeError_Catch(&DeeError_UnboundItem))
+				goto err;
+		}
+		temp = (*proc)(arg, size, elem);
+		Dee_XDecref(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                                                              void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t size = (*seq->tp_size)(self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size > end)
+		size = end;
+	while (size > start) {
+		DREF DeeObject *elem;
+		--size;
+		elem = (*seq->tp_trygetitem_index)(self, size);
+		if unlikely(!elem)
+			goto err;
+		if likely(elem != ITER_DONE) {
+			temp = (*proc)(arg, size, elem);
+			Dee_Decref(elem);
+		} else {
+			temp = (*proc)(arg, size, NULL);
+		}
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                                                        void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	DREF DeeObject *startob = NULL;
+	DREF DeeObject *sizeob = (*seq->tp_sizeob)(self);
+	if unlikely(!sizeob)
+		goto err;
+	if (end != (size_t)-1) {
+		int error;
+		DREF DeeObject *wanted_end;
+		wanted_end = DeeInt_NewSize(end);
+		if unlikely(!wanted_end)
+			goto err_sizeob;
+		/* if (sizeob > wanted_end)
+		 *     sizeob = wanted_end; */
+		error = DeeObject_CmpGrAsBool(sizeob, wanted_end);
+		if unlikely(error == 0) {
+			Dee_Decref(wanted_end);
+		} else {
+			Dee_Decref(sizeob);
+			sizeob = wanted_end;
+			if unlikely(error < 0)
+				goto err_sizeob;
+		}
+	}
+	if (start != 0) {
+		startob = DeeInt_NewSize(start);
+		if unlikely(!startob)
+			goto err_sizeob;
+	}
+	for (;;) {
+		size_t index_value;
+		DREF DeeObject *elem;
+		int size_is_greater_start;
+		if (startob) {
+			size_is_greater_start = DeeObject_CmpGrAsBool(sizeob, startob);
+		} else {
+			size_is_greater_start = DeeObject_Bool(sizeob);
+		}
+		if unlikely(size_is_greater_start < 0)
+			goto err_sizeob_startob;
+		if (!size_is_greater_start)
+			break;
+		if (DeeObject_Dec(&sizeob))
+			goto err_sizeob_startob;
+		elem = (*seq->tp_getitem)(self, sizeob);
+		if unlikely(!elem) {
+			if (!DeeError_Catch(&DeeError_IndexError) &&
+			    !DeeError_Catch(&DeeError_UnboundItem))
+				goto err_sizeob_startob;
+		}
+		if unlikely(DeeObject_AsSize(sizeob, &index_value))
+			goto err_sizeob_startob;
+		temp = 0;
+		if likely(index_value >= start && index_value < end)
+			temp = (*proc)(arg, index_value, elem);
+		Dee_XDecref(elem);
+		if unlikely(temp < 0)
+			goto err_temp_sizeob_startob;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err_sizeob_startob;
+	}
+	Dee_XDecref(startob);
+	Dee_Decref(sizeob);
+	return result;
+err_temp_sizeob_startob:
+	Dee_XDecref(startob);
+/*err_temp_sizeob:*/
+	Dee_Decref(sizeob);
+/*err_temp:*/
+	return temp;
+err_sizeob_startob:
+	Dee_XDecref(startob);
+err_sizeob:
+	Dee_Decref(sizeob);
+err:
+	return -1;
+}
+
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1578,6 +1835,215 @@ err_elem:
 	Dee_Decref(elem);
 err:
 	return -1;
+}
+
+
+union generic_seq_find_data {
+	DeeObject *gsfd_elem;  /* [in][1..1] Element to search for */
+	size_t     gsfd_index; /* [out] Located index */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+generic_seq_find_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	int cmp;
+	union generic_seq_find_data *data;
+	data = (union generic_seq_find_data *)arg;
+	if (!value)
+		return 0;
+	cmp = DeeObject_TryCompareEq(data->gsfd_elem, value);
+	if (cmp == 0) {
+		/* Found the index! */
+		data->gsfd_index = index;
+		return -2;
+	}
+	if unlikely(cmp == Dee_COMPARE_ERR)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+generic_seq_find(DeeObject *self, DeeObject *elem, size_t start, size_t end) {
+	Dee_ssize_t status;
+	union generic_seq_find_data data;
+	data.gsfd_elem = elem;
+	status = DeeSeq_EnumerateIndex(self, &generic_seq_find_cb, &data, start, end);
+	if likely(status == -2) {
+		if unlikely(data.gsfd_index == (size_t)Dee_COMPARE_ERR)
+			err_integer_overflow_i(sizeof(size_t) * 8, true);
+		return data.gsfd_index;
+	}
+	if unlikely(status == -1)
+		goto err;
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+struct generic_seq_find_with_key_data {
+	union generic_seq_find_data gsfwk_base; /* Base find data */
+	DeeObject                  *gsfwk_key;  /* Find element key */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+generic_seq_find_with_key_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	int cmp;
+	struct generic_seq_find_with_key_data *data;
+	data = (struct generic_seq_find_with_key_data *)arg;
+	if (!value)
+		return 0;
+	cmp = DeeObject_TryCompareKeyEq(data->gsfwk_base.gsfd_elem, value, data->gsfwk_key);
+	if (cmp == 0) {
+		/* Found the index! */
+		data->gsfwk_base.gsfd_index = index;
+		return -2;
+	}
+	if unlikely(cmp == Dee_COMPARE_ERR)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+generic_seq_find_with_key(DeeObject *self, DeeObject *elem,
+                          size_t start, size_t end, DeeObject *key) {
+	Dee_ssize_t status;
+	struct generic_seq_find_with_key_data data;
+	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &elem);
+	if unlikely(!data.gsfwk_base.gsfd_elem)
+		goto err;
+	data.gsfwk_key = key;
+	status = DeeSeq_EnumerateIndex(self, &generic_seq_find_with_key_cb, &data, start, end);
+	Dee_Decref(data.gsfwk_base.gsfd_elem);
+	if likely(status == -2) {
+		if unlikely(data.gsfwk_base.gsfd_index == (size_t)Dee_COMPARE_ERR)
+			err_integer_overflow_i(sizeof(size_t) * 8, true);
+		return data.gsfwk_base.gsfd_index;
+	}
+	if unlikely(status == -1)
+		goto err;
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+
+struct generic_seq_rfind_data {
+	DeeObject *gsrfd_elem;   /* [1..1] The element to search for */
+	size_t     gsrfd_result; /* The last-matched index. */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+generic_seq_rfind_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	int cmp;
+	struct generic_seq_rfind_data *data;
+	data = (struct generic_seq_rfind_data *)arg;
+	if (!value)
+		return 0;
+	cmp = DeeObject_TryCompareEq(data->gsrfd_elem, value);
+	if (cmp == 0)
+		data->gsrfd_result = index;
+	if unlikely(cmp == Dee_COMPARE_ERR)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+generic_seq_rfind(DeeObject *self, DeeObject *elem, size_t start, size_t end) {
+	Dee_ssize_t status;
+	union generic_seq_find_data data;
+	Dee_tsc_enumerate_index_reverse_t renum;
+	data.gsfd_elem = elem;
+	if ((renum = DeeType_SeqCache_TryRequireEnumerateIndexReverse(Dee_TYPE(self))) != NULL) {
+		status = (*renum)(self, &generic_seq_find_cb, &data, start, end);
+		if likely(status == -2) {
+			if unlikely(data.gsfd_index == (size_t)Dee_COMPARE_ERR)
+				err_integer_overflow_i(sizeof(size_t) * 8, true);
+			return data.gsfd_index;
+		}
+	} else {
+		struct generic_seq_rfind_data rdata;
+		rdata.gsrfd_elem   = elem;
+		rdata.gsrfd_result = (size_t)-1;
+		status = DeeSeq_EnumerateIndex(self, &generic_seq_rfind_cb, &rdata, start, end);
+		ASSERT(status == 0 || status == -1);
+		if unlikely(status == -1)
+			goto err;
+		if unlikely(rdata.gsrfd_result == (size_t)Dee_COMPARE_ERR)
+			err_integer_overflow_i(sizeof(size_t) * 8, true);
+		return rdata.gsrfd_result;
+	}
+	if unlikely(status == -1)
+		goto err;
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+struct generic_seq_rfind_with_key_data {
+	DeeObject *gsrfwkd_kelem;   /* [1..1] The element to search for */
+	size_t     gsrfwkd_result; /* The last-matched index. */
+	DeeObject *gsrfwkd_key;    /* [1..1] Search key. */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+generic_seq_rfind_with_key_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	int cmp;
+	struct generic_seq_rfind_with_key_data *data;
+	data = (struct generic_seq_rfind_with_key_data *)arg;
+	if (!value)
+		return 0;
+	cmp = DeeObject_TryCompareEq(data->gsrfwkd_kelem, value);
+	if (cmp == 0)
+		data->gsrfwkd_result = index;
+	if unlikely(cmp == Dee_COMPARE_ERR)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+generic_seq_rfind_with_key(DeeObject *self, DeeObject *elem,
+                           size_t start, size_t end, DeeObject *key) {
+	Dee_ssize_t status;
+	struct generic_seq_find_with_key_data data;
+	Dee_tsc_enumerate_index_reverse_t renum;
+	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &elem);
+	if unlikely(!data.gsfwk_base.gsfd_elem)
+		goto err;
+	if ((renum = DeeType_SeqCache_TryRequireEnumerateIndexReverse(Dee_TYPE(self))) != NULL) {
+		data.gsfwk_key = key;
+		status = (*renum)(self, &generic_seq_find_with_key_cb, &data, start, end);
+		Dee_Decref(data.gsfwk_base.gsfd_elem);
+		if likely(status == -2) {
+			if unlikely(data.gsfwk_base.gsfd_index == (size_t)Dee_COMPARE_ERR)
+				err_integer_overflow_i(sizeof(size_t) * 8, true);
+			return data.gsfwk_base.gsfd_index;
+		}
+	} else {
+		struct generic_seq_rfind_with_key_data rdata;
+		rdata.gsrfwkd_kelem  = data.gsfwk_base.gsfd_elem;
+		rdata.gsrfwkd_result = (size_t)-1;
+		status = DeeSeq_EnumerateIndex(self, &generic_seq_rfind_with_key_cb, &rdata, start, end);
+		Dee_Decref(rdata.gsrfwkd_kelem);
+		ASSERT(status == 0 || status == -1);
+		if unlikely(status == -1)
+			goto err;
+		if unlikely(rdata.gsrfwkd_result == (size_t)Dee_COMPARE_ERR)
+			err_integer_overflow_i(sizeof(size_t) * 8, true);
+		return rdata.gsrfwkd_result;
+	}
+	if unlikely(status == -1)
+		goto err;
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 

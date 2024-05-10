@@ -50,7 +50,7 @@ DECL_BEGIN
 
 
 
-
+/* TODO: Once `CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS' is done, re-write this documentation! */
 /* NOTE: There are no `DeeSeq_Check()' macros because they wouldn't make sense.
  *       Being derived from `DeeSeq_Type' is _NOT_ mandatory when writing a
  *       sequence class. The only thing that it does do is allow usercode
@@ -241,6 +241,13 @@ DDATDEF DeeObject           DeeIterator_EmptyInstance;
 #define Dee_EmptyIterator (&DeeIterator_EmptyInstance)
 #define Dee_return_empty_iterator Dee_return_reference_(Dee_EmptyIterator)
 
+
+
+/*******************************************************************************************/
+/*                                                                                         */
+/* !!! BEGIN: DEPRECATED; PENDING REMOVAL AFTER CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+/*                                                                                         */
+/*******************************************************************************************/
 
 /* ==== NATIVE ITERATOR INTERFACE EXTENSIONS FOR TYPES ==== */
 struct Dee_type_nii {
@@ -525,6 +532,14 @@ struct Dee_type_nsi {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
+
+
+/*****************************************************************************************/
+/*                                                                                       */
+/* !!! END: DEPRECATED; PENDING REMOVAL AFTER CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+/*                                                                                       */
+/*****************************************************************************************/
+
 
 
 struct Dee_seq_range {

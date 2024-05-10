@@ -388,6 +388,72 @@ F(foreach)(STRUCT_TYPE *self, Dee_foreach_t proc, void *arg) {
 	return DeeObject_Foreach(self->se_seq, &F(foreach_cb), &data);
 }
 
+struct F(enumerate_data) {
+	STRUCT_TYPE     *seXed_me;   /* [1..1] The related seq-each operator */
+	Dee_enumerate_t  seXed_proc; /* [1..1] User-defined callback */
+	void            *seXed_arg;  /* [?..?] User-defined cookie */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+F(enumerate_cb)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+	Dee_ssize_t result;
+	struct F(enumerate_data) *data;
+	data = (struct F(enumerate_data) *)arg;
+	if unlikely(!value)
+		return (*data->seXed_proc)(data->seXed_arg, index, value);
+	value = F(transform)(data->seXed_me, value);
+	if unlikely(!value)
+		goto err;
+	result = (*data->seXed_proc)(data->seXed_arg, index, value);
+	Dee_Decref(value);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+F(enumerate)(STRUCT_TYPE *__restrict self, Dee_enumerate_t proc, void *arg) {
+	struct F(enumerate_data) data;
+	data.seXed_me   = self;
+	data.seXed_proc = proc;
+	data.seXed_arg  = arg;
+	return DeeObject_Enumerate(self->se_seq, &F(enumerate_cb), &data);
+}
+
+struct F(enumerate_index_data) {
+	STRUCT_TYPE          *seXeid_me;   /* [1..1] The related seq-each operator */
+	Dee_enumerate_index_t seXeid_proc; /* [1..1] User-defined callback */
+	void                 *seXeid_arg;  /* [?..?] User-defined cookie */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+F(enumerate_index_cb)(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	Dee_ssize_t result;
+	struct F(enumerate_index_data) *data;
+	data = (struct F(enumerate_index_data) *)arg;
+	if unlikely(!value)
+		return (*data->seXeid_proc)(data->seXeid_arg, index, value);
+	value = F(transform)(data->seXeid_me, value);
+	if unlikely(!value)
+		goto err;
+	result = (*data->seXeid_proc)(data->seXeid_arg, index, value);
+	Dee_Decref(value);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+F(enumerate_index)(STRUCT_TYPE *__restrict self, Dee_enumerate_index_t proc,
+                   void *arg, size_t start, size_t end) {
+	struct F(enumerate_index_data) data;
+	data.seXeid_me   = self;
+	data.seXeid_proc = proc;
+	data.seXeid_arg  = arg;
+	return DeeObject_EnumerateIndex(self->se_seq, &F(enumerate_index_cb),
+	                                &data, start, end);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 F(assign)(STRUCT_TYPE *self, DeeObject *value) {
 	return (int)F(foreach)(self, &se_foreach_assign_cb, value);
@@ -711,8 +777,8 @@ PRIVATE struct type_seq F(seq) = {
 	/* .tp_nsi                        = */ &F(nsi),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&F(foreach),
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&F(enumerate),
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&F(enumerate_index),
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sew_size,

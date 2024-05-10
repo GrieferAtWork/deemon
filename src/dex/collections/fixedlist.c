@@ -1063,28 +1063,24 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-fl_foreach(FixedList *self, Dee_foreach_t proc, void *arg) {
-	Dee_ssize_t temp, result = 0;
+fl_enumerate_index(FixedList *self, Dee_enumerate_index_t proc,
+                   void *arg, size_t start, size_t end) {
 	size_t i;
-	for (i = 0; i < self->fl_size; ++i) {
+	Dee_ssize_t temp, result = 0;
+	if (end > self->fl_size)
+		end = self->fl_size;
+	for (i = start; i < end; ++i) {
 		DREF DeeObject *elem;
 		FixedList_LockRead(self);
-		while ((elem = self->fl_elem[i]) == NULL) {
-			++i;
-			if (i >= self->fl_size) {
-				FixedList_LockEndRead(self);
-				goto done;
-			}
-		}
-		Dee_Incref(elem);
+		elem = self->fl_elem[i];
+		Dee_XIncref(elem);
 		FixedList_LockEndRead(self);
-		temp = (*proc)(arg, elem);
-		Dee_Decref_unlikely(elem);
+		temp = (*proc)(arg, i, elem);
+		Dee_XDecref_unlikely(elem);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
 	}
-done:
 	return result;
 err_temp:
 	return temp;
@@ -1135,10 +1131,10 @@ PRIVATE struct type_seq fl_seq = {
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_nsi                        = */ &fl_nsi,
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&fl_foreach,
+	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&fl_enumerate_index,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&fl_size,
