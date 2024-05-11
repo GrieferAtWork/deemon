@@ -41,6 +41,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/concat.h"
+#include "seq/default-api.h"
 #include "seq/repeat.h"
 #include "seq/reversed.h"
 #include "seq/sort.h"
@@ -572,7 +573,7 @@ DeeSeq_XchItem(DeeObject *self, size_t index, DeeObject *value) {
 						if unlikely(error)
 							goto err_r;
 return_result_first:
-						real_result = DeeSeq_Front(result);
+						real_result = generic_seq_getfirst(result);
 						Dee_Decref(result);
 						if unlikely(!real_result) {
 							/* Translate the empty-sequence error into an index-out-of-bounds */

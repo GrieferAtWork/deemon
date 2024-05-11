@@ -39,6 +39,7 @@
 #include <hybrid/minmax.h>
 
 #include "../runtime/runtime_error.h"
+#include "seq/default-api.h"
 
 DECL_BEGIN
 
@@ -166,7 +167,7 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
 				if unlikely(!result)
 					goto err;
 return_result_first:
-				real_result = DeeSeq_Front(result);
+				real_result = generic_seq_getfirst(result);
 				Dee_Decref(result);
 				if unlikely(!real_result) {
 					/* Translate the empty-sequence error into an index-out-of-bounds */
@@ -271,158 +272,6 @@ DeeSeq_NonEmpty(DeeObject *__restrict self) {
 	                            OPERATOR_ITER);
 err:
 	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Front(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self;
-	DREF DeeObject *result;
-	DeeTypeMRO mro;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
-	DeeTypeMRO_Init(&mro, tp_self);
-	while (tp_self != &DeeSeq_Type) {
-		struct type_seq *seq;
-		if ((seq = tp_self->tp_seq) != NULL) {
-			struct type_nsi const *nsi;
-			DREF DeeObject *temp;
-			if ((nsi = seq->tp_nsi) != NULL &&
-			    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
-			    nsi->nsi_seqlike.nsi_getitem &&
-			    is_noninherited_nsi(tp_self, seq, nsi)) {
-				result = (*nsi->nsi_seqlike.nsi_getitem)(self, 0);
-				if unlikely(!result) {
-					if (DeeError_Catch(&DeeError_IndexError))
-						goto err_empty;
-				}
-				return result;
-			}
-			if (has_noninherited_getitem(tp_self, seq)) {
-				result = (*seq->tp_getitem)(self, DeeInt_Zero);
-				if unlikely(!result) {
-					if (DeeError_Catch(&DeeError_IndexError))
-						goto err_empty;
-				}
-				return result;
-			}
-			if (seq->tp_iter) {
-				temp = (*seq->tp_iter)(self);
-				if unlikely(!temp)
-					goto err;
-				result = DeeObject_IterNext(temp);
-				Dee_Decref(temp);
-				if (result == ITER_DONE)
-					goto err_empty;
-				return result;
-			}
-		}
-		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
-			break;
-	}
-	err_unimplemented_operator2(Dee_TYPE(self),
-	                            OPERATOR_GETITEM,
-	                            OPERATOR_ITER);
-err:
-	return NULL;
-err_empty:
-	err_empty_sequence(self);
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Back(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self;
-	size_t seq_length;
-	DREF DeeObject *result, *temp;
-	DeeTypeMRO mro;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
-	DeeTypeMRO_Init(&mro, tp_self);
-	while (tp_self != &DeeSeq_Type) {
-		struct type_seq *seq;
-		if ((seq = tp_self->tp_seq) != NULL) {
-			struct type_nsi const *nsi;
-			if ((nsi = seq->tp_nsi) != NULL &&
-			    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
-			    is_noninherited_nsi(tp_self, seq, nsi)) {
-				if (nsi->nsi_seqlike.nsi_getitem) {
-					seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
-					if unlikely(seq_length == (size_t)-1)
-						goto err;
-					if unlikely(!seq_length)
-						goto err_empty;
-					if (nsi->nsi_seqlike.nsi_getitem_fast)
-						return (*nsi->nsi_seqlike.nsi_getitem_fast)(self, seq_length - 1);
-					return (*nsi->nsi_seqlike.nsi_getitem)(self, seq_length - 1);
-				}
-				if (has_noninherited_getitem(tp_self, seq)) {
-					seq_length = (*nsi->nsi_seqlike.nsi_getsize)(self);
-					if unlikely(seq_length == (size_t)-1)
-						goto err;
-					if unlikely(!seq_length)
-						goto err_empty;
-					temp = DeeInt_NewSize(seq_length - 1);
-					if unlikely(!temp)
-						goto err;
-					result = (*seq->tp_getitem)(self, temp);
-					Dee_Decref(temp);
-					return result;
-				}
-			}
-			if (has_noninherited_getitem(tp_self, seq) &&
-			    has_noninherited_size(tp_self, seq)) {
-				int size_is_nonzero;
-				temp = (*seq->tp_sizeob)(self);
-				if unlikely(!temp)
-					goto err;
-				size_is_nonzero = DeeObject_Bool(temp);
-				if unlikely(size_is_nonzero <= 0) {
-					if unlikely(size_is_nonzero < 0)
-						goto err_temp;
-					Dee_Decref(temp);
-					goto err_empty;
-				}
-				if (DeeObject_Dec(&temp))
-					goto err_temp;
-				result = (*seq->tp_getitem)(self, temp);
-				Dee_Decref(temp);
-				return result;
-			}
-			if (seq->tp_iter) {
-				DREF DeeObject *next;
-				temp = (*seq->tp_iter)(self);
-				if unlikely(!temp)
-					goto err;
-				result = NULL;
-				while (ITER_ISOK(next = DeeObject_IterNext(temp))) {
-					Dee_XDecref(result);
-					result = next;
-					if (DeeThread_CheckInterrupt()) {
-						Dee_Decref(result);
-						goto err;
-					}
-				}
-				Dee_Decref(temp);
-				if unlikely(!next) {
-					Dee_XClear(result);
-				} else if unlikely(!result) {
-					goto err_empty;
-				}
-				return result;
-			}
-		}
-		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
-			break;
-	}
-	err_no_generic_sequence(self);
-err:
-	return NULL;
-err_empty:
-	err_empty_sequence(self);
-	return NULL;
-err_temp:
-	Dee_Decref(temp);
-	goto err;
 }
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 

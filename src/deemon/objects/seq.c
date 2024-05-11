@@ -6358,54 +6358,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 };
 
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-seq_del_first(DeeObject *__restrict self) {
-	int result;
-	result = DeeObject_DelItemIndex(self, 0);
-	if (result < 0 && DeeError_Catch(&DeeError_IndexError))
-		err_empty_sequence(self);
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-seq_set_first(DeeObject *__restrict self, DeeObject *__restrict value) {
-	int result;
-	result = DeeObject_SetItemIndex(self, 0, value);
-	if (result < 0 && DeeError_Catch(&DeeError_IndexError))
-		err_empty_sequence(self);
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-seq_del_last(DeeObject *__restrict self) {
-	size_t mylen = DeeObject_Size(self);
-	if unlikely(mylen == (size_t)-1)
-		goto err;
-	if unlikely(!mylen)
-		goto err_empty;
-	return DeeObject_DelItemIndex(self, mylen - 1);
-err_empty:
-	err_empty_sequence(self);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-seq_set_last(DeeObject *__restrict self, DeeObject *__restrict value) {
-	size_t mylen = DeeObject_Size(self);
-	if unlikely(mylen == (size_t)-1)
-		goto err;
-	if unlikely(!mylen)
-		goto err_empty;
-	return DeeObject_SetItemIndex(self, mylen - 1, value);
-err_empty:
-	err_empty_sequence(self);
-err:
-	return -1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_get_ismutable(DeeObject *__restrict self) {
@@ -6454,27 +6406,13 @@ err:
 
 
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-#define generic_seq_getfirst     DeeSeq_Front
-#define generic_seq_boundfirst_P NULL
-#define generic_seq_delfirst     seq_del_first
-#define generic_seq_setfirst     seq_set_first
-#define generic_seq_getlast      DeeSeq_Back
-#define generic_seq_boundlast_P  NULL
-#define generic_seq_dellast      seq_del_last
-#define generic_seq_setlast      seq_set_last
-#else /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-#define generic_seq_boundfirst_P &generic_seq_boundfirst
-#define generic_seq_boundlast_P  &generic_seq_boundlast
-#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
 PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("length", &DeeObject_SizeOb, "->?Dint\nAlias for ${##this}"),
 	TYPE_GETSET_BOUND(STR_first,
 	                  &generic_seq_getfirst,
 	                  &generic_seq_delfirst,
 	                  &generic_seq_setfirst,
-	                  generic_seq_boundfirst_P,
+	                  &generic_seq_boundfirst,
 	                  "->\n"
 	                  "Access the first item of the Sequence\n"
 	                  "Depending on the nearest implemented group of operators, "
@@ -6524,7 +6462,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	                  &generic_seq_getlast,
 	                  &generic_seq_dellast,
 	                  &generic_seq_setlast,
-	                  generic_seq_boundlast_P,
+	                  &generic_seq_boundlast,
 	                  "->\n"
 	                  "Access the last item of the Sequence\n"
 	                  "Depending on the nearest implemented group of operators, "
