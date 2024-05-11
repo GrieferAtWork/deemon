@@ -3246,24 +3246,6 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_seq_bool(DeeObject *self) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireBool(tp_self)) {
-		if (tp_self->tp_cast.tp_bool == &generic_seq_bool)
-			goto handle_empty; /* Empty sequence. */
-		return (*tp_self->tp_cast.tp_bool)(self);
-	}
-	if (DeeType_RequireForeach(tp_self)) {
-		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
-			goto handle_empty; /* Empty sequence. */
-		return DeeSeq_DefaultBoolWithForeachDefault(self);
-	}
-	return err_unimplemented_operator(tp_self, OPERATOR_BOOL);
-handle_empty:
-	return 0;
-}
-
 INTERN struct type_cmp generic_seq_cmp = {
 	/* .tp_hash          = */ &generic_seq_hash,
 	/* .tp_compare_eq    = */ &generic_seq_compare_eq,
@@ -3279,6 +3261,10 @@ INTERN struct type_cmp generic_seq_cmp = {
 
 #endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_seq_bool(DeeObject *self) {
+	return DeeSeq_NonEmpty(self);
+}
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_mul(DeeObject *self, DeeObject *countob) {
@@ -7414,11 +7400,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 		/* .tp_bool      = */ &generic_seq_bool,
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-		/* .tp_bool      = */ &DeeSeq_NonEmpty,
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 		/* .tp_print     = */ NULL,
 		/* .tp_printrepr = */ &seq_printrepr
 	},

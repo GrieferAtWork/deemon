@@ -39,8 +39,13 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#include "../seq_functions.h"
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
 DECL_BEGIN
 
+#define DeeType_RequireBool(tp_self)           (((tp_self)->tp_cast.tp_bool) || DeeType_InheritBool(tp_self))
 #define DeeType_RequireSize(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_size && (tp_self)->tp_seq->tp_sizeob) || DeeType_InheritSize(tp_self))
 #define DeeType_RequireIter(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_iter) || DeeType_InheritIter(tp_self))
 #define DeeType_RequireForeach(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self))
@@ -54,6 +59,16 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_type_seq_has_custom_tp_size(struct type_seq const *__restrict self) {
 	return (self->tp_size != NULL) &&
 	       !DeeType_IsDefaultSize(self->tp_size);
+}
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+Dee_type_seq_has_custom_tp_sizeob(struct type_seq const *__restrict self) {
+	return (self->tp_sizeob != NULL) &&
+	       !DeeType_IsDefaultSizeOb(self->tp_sizeob);
+}
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+Dee_type_seq_has_custom_tp_foreach(struct type_seq const *__restrict self) {
+	return (self->tp_foreach != NULL) &&
+	       !DeeType_IsDefaultForeach(self->tp_foreach);
 }
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_type_seq_has_custom_tp_getitem_index(struct type_seq const *__restrict self) {
@@ -203,6 +218,47 @@ DeeType_SeqCache_RequireEnumerateIndex(DeeTypeObject *__restrict self) {
 	sc = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
 		atomic_write(&sc->tsc_enumerate_index, result);
+	return result;
+}
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_bool(DeeObject *self);
+
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_nonempty_t DCALL
+DeeType_SeqCache_RequireNonEmpty(DeeTypeObject *__restrict self) {
+	Dee_tsc_nonempty_t result;
+	struct Dee_type_seq_cache *sc;
+	if likely(self->tp_seq) {
+		sc = self->tp_seq->_tp_seqcache;
+		if likely(sc && sc->tsc_nonempty)
+			return sc->tsc_nonempty;
+	}
+	result = &DeeSeq_DefaultNonEmptyWithError;
+	if (DeeType_GetSeqClass(self) != Dee_SEQCLASS_NONE) {
+		if (DeeType_RequireBool(self) && self->tp_cast.tp_bool != &generic_seq_bool) {
+			result = self->tp_cast.tp_bool;
+		} else if (Dee_type_seq_has_custom_tp_size(self->tp_seq)) {
+			result = &DeeSeq_DefaultBoolWithSize;
+		} else if (Dee_type_seq_has_custom_tp_sizeob(self->tp_seq)) {
+			result = &DeeSeq_DefaultBoolWithSizeOb;
+		} else if (Dee_type_seq_has_custom_tp_foreach(self->tp_seq)) {
+			result = &DeeSeq_DefaultBoolWithForeach;
+		} else if (self->tp_cmp && self->tp_cmp->tp_compare_eq &&
+		           !DeeType_IsDefaultCompareEq(self->tp_cmp->tp_compare_eq) &&
+		           !DeeType_IsDefaultCompare(self->tp_cmp->tp_compare_eq)) {
+			result = &DeeSeq_DefaultBoolWithCompareEq;
+		} else if (self->tp_cmp && self->tp_cmp->tp_eq && !DeeType_IsDefaultEq(self->tp_cmp->tp_eq)) {
+			result = &DeeSeq_DefaultBoolWithEq;
+		} else if (self->tp_cmp && self->tp_cmp->tp_ne && !DeeType_IsDefaultNe(self->tp_cmp->tp_ne)) {
+			result = &DeeSeq_DefaultBoolWithNe;
+		} else if (self->tp_seq->tp_foreach || DeeType_InheritIter(self)) {
+			result = &DeeSeq_DefaultBoolWithForeachDefault;
+		}
+	} else if (DeeType_RequireForeach(self)) {
+		result = &DeeSeq_DefaultBoolWithForeach;
+	}
+	sc = DeeType_TryRequireSeqCache(self);
+	if likely(sc)
+		atomic_write(&sc->tsc_nonempty, result);
 	return result;
 }
 
@@ -907,6 +963,11 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultSetLastWithError(DeeObject *self, DeeObject *value) {
 	(void)value;
 	return err_cant_access_attribute(Dee_TYPE(self), &str_last, ATTR_ACCESS_SET);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultNonEmptyWithError(DeeObject *__restrict self) {
+	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 }
 
 

@@ -22,6 +22,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/error.h>
 #include <deemon/object.h>
 
 #ifndef CHAR_BIT
@@ -31,8 +32,13 @@
 
 DECL_BEGIN
 
-INTDEF ATTR_COLD int DCALL
-err_no_generic_sequence(DeeObject *__restrict self);
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
+err_no_generic_sequence(DeeObject *__restrict self) {
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Neither `%k.__getitem__' and `%k.__size__', nor `%k.__iter__' are implemented",
+	                       Dee_TYPE(self), Dee_TYPE(self), Dee_TYPE(self));
+}
+
 
 DECL_END
 
