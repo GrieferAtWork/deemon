@@ -3974,11 +3974,8 @@ seq_find(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result, start, end;
 	if (get_sequence_find_args_kw("find", argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
-	if (key) {
-		result = generic_seq_find_with_key(self, elem, start, end, key);
-	} else {
-		result = generic_seq_find(self, elem, start, end);
-	}
+	result = key ? DeeSeq_FindWithKey(self, elem, start, end, key)
+	             : DeeSeq_Find(self, elem, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -3994,11 +3991,8 @@ seq_rfind(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result, start, end;
 	if (get_sequence_find_args_kw("rfind", argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
-	if (key) {
-		result = generic_seq_rfind_with_key(self, elem, start, end, key);
-	} else {
-		result = generic_seq_rfind(self, elem, start, end);
-	}
+	result = key ? DeeSeq_RFindWithKey(self, elem, start, end, key)
+	             : DeeSeq_RFind(self, elem, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -4014,11 +4008,8 @@ seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t result, start, end;
 	if (get_sequence_find_args_kw(STR_index, argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
-	if (key) {
-		result = generic_seq_find_with_key(self, elem, start, end, key);
-	} else {
-		result = generic_seq_find(self, elem, start, end);
-	}
+	result = key ? DeeSeq_FindWithKey(self, elem, start, end, key)
+	             : DeeSeq_Find(self, elem, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -4036,11 +4027,8 @@ seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	size_t result, start, end;
 	if (get_sequence_find_args_kw("rindex", argc, argv, kw, &elem, &key, &start, &end))
 		goto err;
-	if (key) {
-		result = generic_seq_rfind_with_key(self, elem, start, end, key);
-	} else {
-		result = generic_seq_rfind(self, elem, start, end);
-	}
+	result = key ? DeeSeq_RFindWithKey(self, elem, start, end, key)
+	             : DeeSeq_RFind(self, elem, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)

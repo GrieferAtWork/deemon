@@ -51,10 +51,10 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_setlast_t)(DeeObject *se
 /* @return: * :         Index of `elem' in `self'
  * @return: (size_t)-1: `elem' could not be located in `self'
  * @return: (size_t)Dee_COMPARE_ERR: Error */
-typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *Dee_tsc_find_t)(DeeObject *self, size_t start, size_t end, DeeObject *elem);
-typedef WUNUSED_T NONNULL_T((1, 4, 5)) size_t (DCALL *Dee_tsc_find_with_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_elem, DeeObject *key);
-typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *Dee_tsc_rfind_t)(DeeObject *self, size_t start, size_t end, DeeObject *elem);
-typedef WUNUSED_T NONNULL_T((1, 4, 5)) size_t (DCALL *Dee_tsc_rfind_with_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_elem, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *Dee_tsc_find_t)(DeeObject *self, DeeObject *elem, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *Dee_tsc_find_with_key_t)(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *Dee_tsc_rfind_t)(DeeObject *self, DeeObject *elem, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *Dee_tsc_rfind_with_key_t)(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key);
 
 struct Dee_type_seq_cache {
 	Dee_tsc_foreach_reverse_t         tsc_foreach_reverse;
@@ -97,12 +97,14 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundlast_t DCALL DeeType_Se
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_dellast_t DCALL DeeType_SeqCache_RequireDelLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_setlast_t DCALL DeeType_SeqCache_RequireSetLast(DeeTypeObject *__restrict self);
 
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_find_t DCALL DeeType_SeqCache_RequireFind(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_find_with_key_t DCALL DeeType_SeqCache_RequireFindWithKey(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rfind_t DCALL DeeType_SeqCache_RequireRFind(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rfind_with_key_t DCALL DeeType_SeqCache_RequireRFindWithKey(DeeTypeObject *__restrict self);
+
 /* Same as `DeeObject_EnumerateIndex()', but also works for treats `self' as `self as Sequence' */
 #define DeeSeq_EnumerateIndex(self, proc, arg, start, end) \
 	(*DeeType_SeqCache_RequireEnumerateIndex(Dee_TYPE(self)))(self, proc, arg, start, end)
-
-#define DeeSeq_NonEmpty(self) \
-	(*DeeType_SeqCache_RequireNonEmpty(Dee_TYPE(self)))(self)
 
 /* Helpers to quickly invoke default sequence functions. */
 #define DeeSeq_GetFirst(self)    (*DeeType_SeqCache_RequireGetFirst(Dee_TYPE(self)))(self)
@@ -113,6 +115,18 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_setlast_t DCALL DeeType_SeqC
 #define DeeSeq_BoundLast(self)   (*DeeType_SeqCache_RequireBoundLast(Dee_TYPE(self)))(self)
 #define DeeSeq_DelLast(self)     (*DeeType_SeqCache_RequireDelLast(Dee_TYPE(self)))(self)
 #define DeeSeq_SetLast(self, v)  (*DeeType_SeqCache_RequireSetLast(Dee_TYPE(self)))(self, v)
+
+#define DeeSeq_NonEmpty(self) \
+	(*DeeType_SeqCache_RequireNonEmpty(Dee_TYPE(self)))(self)
+#define DeeSeq_Find(self, elem, start, end) \
+	(*DeeType_SeqCache_RequireFind(Dee_TYPE(self)))(self, elem, start, end)
+#define DeeSeq_RFind(self, elem, start, end) \
+	(*DeeType_SeqCache_RequireRFind(Dee_TYPE(self)))(self, elem, start, end)
+#define DeeSeq_FindWithKey(self, elem, start, end, key) \
+	(*DeeType_SeqCache_RequireFindWithKey(Dee_TYPE(self)))(self, elem, start, end, key)
+#define DeeSeq_RFindWithKey(self, elem, start, end, key) \
+	(*DeeType_SeqCache_RequireRFindWithKey(Dee_TYPE(self)))(self, elem, start, end, key)
+
 
 /* Possible implementations for sequence cache functions. */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
@@ -162,6 +176,13 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithError(DeeObjec
 
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultNonEmptyWithError(DeeObject *__restrict self);
 
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultFindWithTSCEnumerateIndex(DeeObject *self, DeeObject *elem, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultFindWithKeyWithTSCEnumerateIndex(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse(DeeObject *self, DeeObject *elem, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRFindWithTSCEnumerateIndex(DeeObject *self, DeeObject *elem, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndex(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key);
+
 
 /* Generic sequence function hooks (used as function pointers of `type_method' / `type_getset' of Sequence/Set/Mapping) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_getfirst(DeeObject *__restrict self);
@@ -190,10 +211,6 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_startswith(DeeObject *self,
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_seq_startswith_with_key(DeeObject *self, DeeObject *elem, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_endswith(DeeObject *self, DeeObject *elem);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_seq_endswith_with_key(DeeObject *self, DeeObject *elem, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL generic_seq_find(DeeObject *self, DeeObject *elem, size_t start, size_t end);                              /* @return: -1: Not found; @return Dee_COMPARE_ERR: Error */
-INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL generic_seq_find_with_key(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key);  /* @return: -1: Not found; @return Dee_COMPARE_ERR: Error */
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL generic_seq_rfind(DeeObject *self, DeeObject *elem, size_t start, size_t end);                             /* @return: -1: Not found; @return Dee_COMPARE_ERR: Error */
-INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL generic_seq_rfind_with_key(DeeObject *self, DeeObject *elem, size_t start, size_t end, DeeObject *key); /* @return: -1: Not found; @return Dee_COMPARE_ERR: Error */
 
 
 DECL_END
