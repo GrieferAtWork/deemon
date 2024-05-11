@@ -3040,6 +3040,28 @@ empty_seq_compare(DeeObject *some_object) {
 	return result;
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+empty_seq_trycompare_eq(DeeObject *some_object) {
+	int result;
+	DeeTypeObject *tp_some_object = Dee_TYPE(some_object);
+	if (DeeType_GetSeqClass(tp_some_object) == Dee_SEQCLASS_SEQ &&
+	    DeeType_RequireBool(tp_some_object)) {
+		result = (*tp_some_object->tp_cast.tp_bool)(some_object);
+	} else {
+		result = DeeSeq_DefaultBoolWithForeachDefault(some_object);
+	}
+	if unlikely(result < 0) {
+		if (DeeError_Catch(&DeeError_NotImplemented) ||
+		    DeeError_Catch(&DeeError_TypeError) ||
+		    DeeError_Catch(&DeeError_ValueError))
+			return -1;
+		result = Dee_COMPARE_ERR;
+	} else if (result) {
+		result = -1;
+	}
+	return result;
+}
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_seq_compare_eq(DeeObject *self, DeeObject *some_object) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -3093,7 +3115,7 @@ generic_seq_trycompare_eq(DeeObject *self, DeeObject *some_object) {
 	}
 	return -1;
 handle_empty:
-	return empty_seq_compare(some_object);
+	return empty_seq_trycompare_eq(some_object);
 }
 
 

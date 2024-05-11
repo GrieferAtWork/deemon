@@ -1083,9 +1083,10 @@ handle_empty:
 }
 
 
-INTDEF WUNUSED NONNULL((1)) int DCALL
-empty_seq_compare(DeeObject *some_object);
-#define empty_set_compare empty_seq_compare
+INTDEF WUNUSED NONNULL((1)) int DCALL empty_seq_compare(DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1)) int DCALL empty_seq_trycompare_eq(DeeObject *some_object);
+#define empty_set_compare       empty_seq_compare
+#define empty_set_trycompare_eq empty_seq_trycompare_eq
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_set_compare_eq(DeeObject *self, DeeObject *some_object) {
@@ -1121,7 +1122,7 @@ generic_set_trycompare_eq(DeeObject *self, DeeObject *some_object) {
 	}
 	return -1;
 handle_empty:
-	return empty_set_compare(some_object);
+	return empty_set_trycompare_eq(some_object);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

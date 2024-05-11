@@ -2149,6 +2149,7 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeDef
 
 /* Extra map functions that are needed for implementing generic map operator. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultContainsWithForeachPair(DeeObject *self, DeeObject *elem);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeMap_DefaultEnumerateIndexWithForeachPair(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultGetItemWithForeachPair(DeeObject *__restrict self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultGetItemIndexWithForeachPair(DeeObject *__restrict self, size_t key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultGetItemStringHashWithForeachPair(DeeObject *__restrict self, char const *key, Dee_hash_t hash);

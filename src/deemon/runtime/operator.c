@@ -7007,17 +7007,6 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithCounterAndFor
 	return result;
 }
 
-DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithForeachPairDefault,
-                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
-	struct default_enumerate_index_with_enumerate_data data;
-	LOAD_TP_SELF;
-	data.deiwe_proc  = proc;
-	data.deiwe_arg   = arg;
-	data.deiwe_start = start;
-	data.deiwe_end   = end;
-	return DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_enumerate_index_with_enumerate_cb, &data);
-}
-
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithEnumerateDefault,
                          (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) {
 	struct default_enumerate_index_with_enumerate_data data;
@@ -12779,6 +12768,18 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithForeachPair,
 	(void)elem;
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_index_t proc,
+                              void *arg, size_t start, size_t end)) {
+	struct default_enumerate_index_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.deiwe_proc  = proc;
+	data.deiwe_arg   = arg;
+	data.deiwe_start = start;
+	data.deiwe_end   = end;
+	return DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_enumerate_index_with_enumerate_cb, &data);
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemWithForeachPair,
