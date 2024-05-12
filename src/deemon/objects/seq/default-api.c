@@ -221,7 +221,7 @@ DeeType_SeqCache_RequireEnumerateIndex(DeeTypeObject *__restrict self) {
 	return result;
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_bool(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_seq_bool(DeeObject *self);
 
 INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_nonempty_t DCALL
 DeeType_SeqCache_RequireNonEmpty(DeeTypeObject *__restrict self) {

@@ -189,7 +189,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
-	dssize_t i_begin, i_end;
+	Dee_ssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(start, &i_begin))
 		goto err;
 	if (DeeNone_Check(end)) {
@@ -202,7 +202,7 @@ seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 				if unlikely(i_begin < 0) {
 					if unlikely(seq_len == 0)
 						goto empty_range;
-					i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+					i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 				}
 			}
 		}
@@ -219,7 +219,7 @@ seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			if unlikely(i_begin < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+				i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 			}
 		}
 		if (i_end < 0) {
@@ -227,7 +227,7 @@ seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			if unlikely(i_end < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+				i_end = (Dee_ssize_t)do_fix_negative_range_index(i_end, seq_len);
 			}
 		}
 	}
@@ -241,7 +241,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_nsi_getrange(DeeObject *__restrict self, dssize_t i_begin, dssize_t i_end) {
+seq_nsi_getrange(DeeObject *__restrict self, Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 	if unlikely(i_begin < 0 || i_end < 0) {
 		size_t seq_len;
 		seq_len = DeeObject_Size(self);
@@ -252,7 +252,7 @@ seq_nsi_getrange(DeeObject *__restrict self, dssize_t i_begin, dssize_t i_end) {
 			if unlikely(i_begin < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+				i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 			}
 		}
 		if (i_end < 0) {
@@ -260,7 +260,7 @@ seq_nsi_getrange(DeeObject *__restrict self, dssize_t i_begin, dssize_t i_end) {
 			if unlikely(i_end < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+				i_end = (Dee_ssize_t)do_fix_negative_range_index(i_end, seq_len);
 			}
 		}
 	}
@@ -274,7 +274,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_nsi_getrange_n(DeeObject *__restrict self, dssize_t i_begin) {
+seq_nsi_getrange_n(DeeObject *__restrict self, Dee_ssize_t i_begin) {
 	if unlikely(i_begin < 0) {
 		size_t seq_len;
 		seq_len = DeeObject_Size(self);
@@ -285,7 +285,7 @@ seq_nsi_getrange_n(DeeObject *__restrict self, dssize_t i_begin) {
 			if unlikely(i_begin < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+				i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 			}
 		}
 	}
@@ -369,10 +369,10 @@ seqiterator_visit(SeqIterator *__restrict self, dvisit_t proc, void *arg) {
 	SeqIterator_LockEndRead(self);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 seqiterator_printrepr(SeqIterator *__restrict self,
                       dformatprinter printer, void *arg) {
-	dssize_t result;
+	Dee_ssize_t result;
 	DREF DeeObject *index_ob;
 	SeqIterator_LockRead(self);
 	index_ob = self->si_index;
@@ -929,7 +929,7 @@ INTERN DeeTypeObject DeeGenericIterator_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&seqiterator_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&seqiterator_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seqiterator_visit,
@@ -993,7 +993,7 @@ nsiiterator_visit(NsiIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ni_seq);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 nsiiterator_printrepr(NsiIterator *__restrict self,
                       dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg,
@@ -1001,7 +1001,7 @@ nsiiterator_printrepr(NsiIterator *__restrict self,
 	                        self->ni_seq, atomic_read(&self->ni_index), self->ni_size);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 fastnsiiterator_printrepr(NsiIterator *__restrict self,
                           dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg,
@@ -1394,7 +1394,7 @@ INTERN DeeTypeObject DeeNsiIterator_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&nsiiterator_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&nsiiterator_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&nsiiterator_visit,
@@ -1441,7 +1441,7 @@ INTERN DeeTypeObject DeeFastNsiIterator_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&fastnsiiterator_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&fastnsiiterator_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1716,7 +1716,7 @@ not_a_seq:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-seq_nsi_delrange(DeeObject *self, dssize_t i_begin, dssize_t i_end) {
+seq_nsi_delrange(DeeObject *self, Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 	if unlikely(i_begin < 0 || i_end < 0) {
 		size_t seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
@@ -1726,7 +1726,7 @@ seq_nsi_delrange(DeeObject *self, dssize_t i_begin, dssize_t i_end) {
 			if unlikely(i_begin < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+				i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 			}
 		}
 		if (i_end < 0) {
@@ -1734,7 +1734,7 @@ seq_nsi_delrange(DeeObject *self, dssize_t i_begin, dssize_t i_end) {
 			if unlikely(i_end < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+				i_end = (Dee_ssize_t)do_fix_negative_range_index(i_end, seq_len);
 			}
 		}
 	}
@@ -1748,7 +1748,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-seq_nsi_setrange(DeeObject *self, dssize_t i_begin, dssize_t i_end,
+seq_nsi_setrange(DeeObject *self, Dee_ssize_t i_begin, Dee_ssize_t i_end,
                  DeeObject *values) {
 	if unlikely(i_begin < 0 || i_end < 0) {
 		size_t seq_len = DeeObject_Size(self);
@@ -1759,7 +1759,7 @@ seq_nsi_setrange(DeeObject *self, dssize_t i_begin, dssize_t i_end,
 			if unlikely(i_begin < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+				i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 			}
 		}
 		if (i_end < 0) {
@@ -1767,7 +1767,7 @@ seq_nsi_setrange(DeeObject *self, dssize_t i_begin, dssize_t i_end,
 			if unlikely(i_end < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+				i_end = (Dee_ssize_t)do_fix_negative_range_index(i_end, seq_len);
 			}
 		}
 	}
@@ -1785,7 +1785,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-seq_nsi_delrange_n(DeeObject *self, dssize_t i_begin) {
+seq_nsi_delrange_n(DeeObject *self, Dee_ssize_t i_begin) {
 	if unlikely(i_begin < 0) {
 		size_t seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
@@ -1794,7 +1794,7 @@ seq_nsi_delrange_n(DeeObject *self, dssize_t i_begin) {
 		if unlikely(i_begin < 0) {
 			if unlikely(seq_len == 0)
 				goto empty_range;
-			i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 		}
 	}
 	return DeeSeq_DelRangeN(self, (size_t)i_begin);
@@ -1805,7 +1805,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-seq_nsi_setrange_n(DeeObject *self, dssize_t i_begin,
+seq_nsi_setrange_n(DeeObject *self, Dee_ssize_t i_begin,
                    DeeObject *values) {
 	if unlikely(i_begin < 0) {
 		size_t seq_len = DeeObject_Size(self);
@@ -1815,7 +1815,7 @@ seq_nsi_setrange_n(DeeObject *self, dssize_t i_begin,
 		if unlikely(i_begin < 0) {
 			if unlikely(seq_len == 0)
 				goto empty_range;
-			i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 		}
 	}
 do_setrange:
@@ -1829,7 +1829,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 seq_delrange(DeeObject *self, DeeObject *start, DeeObject *end) {
-	dssize_t i_begin, i_end;
+	Dee_ssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(start, &i_begin))
 		goto err;
 	if (DeeNone_Check(end)) {
@@ -1841,7 +1841,7 @@ seq_delrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			if unlikely(i_begin < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+				i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 			}
 		}
 		return DeeSeq_DelRangeN(self, (size_t)i_begin);
@@ -1857,7 +1857,7 @@ seq_delrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			if unlikely(i_begin < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+				i_begin = (Dee_ssize_t)do_fix_negative_range_index(i_begin, seq_len);
 			}
 		}
 		if (i_end < 0) {
@@ -1865,7 +1865,7 @@ seq_delrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			if unlikely(i_end < 0) {
 				if unlikely(seq_len == 0)
 					goto empty_range;
-				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+				i_end = (Dee_ssize_t)do_fix_negative_range_index(i_end, seq_len);
 			}
 		}
 	}
@@ -1881,7 +1881,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 seq_setrange(DeeObject *self, DeeObject *start,
              DeeObject *end, DeeObject *values) {
-	dssize_t start_index, end_index;
+	Dee_ssize_t start_index, end_index;
 	if (DeeObject_AsSSize(start, &start_index))
 		goto err;
 	if (DeeNone_Check(end))
@@ -2007,7 +2007,7 @@ sequence_should_use_getitem(DeeTypeObject *__restrict self) {
 	return false;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
 #define DO(err, expr)                    \
 	do {                                 \
@@ -2015,7 +2015,7 @@ seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
 			goto err;                    \
 		result += temp;                  \
 	}	__WHILE0
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	bool is_first;
 	DREF DeeObject *iterator, *elem;
 	if (sequence_should_use_getitem(Dee_TYPE(self))) {
@@ -2128,9 +2128,9 @@ DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 seq_hash(DeeObject *__restrict self) {
-	dhash_t result;
+	Dee_hash_t result;
 	DREF DeeObject *iter, *elem;
 	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
@@ -3261,7 +3261,7 @@ INTERN struct type_cmp generic_seq_cmp = {
 
 #endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 generic_seq_bool(DeeObject *self) {
 	return DeeSeq_NonEmpty(self);
 }
@@ -3664,66 +3664,70 @@ err:
 	return NULL;
 }
 
+struct sequence_find_data {
+	DeeObject *sfd_elem;  /* [1..1] The element to find */
+	size_t     sfd_start; /* Search start index */
+	size_t     sfd_end;   /* Search end index */
+	DeeObject *sfd_key;   /* [0..1] Search key */
+};
+
 #ifdef __OPTIMIZE_SIZE__
-#define get_sequence_find_args(name, argc, argv, p_elem, p_key, p_start, p_end) \
-	get_sequence_find_args_kw(name, argc, argv, NULL, p_elem, p_key, p_start, p_end)
+#define get_sequence_find_args(name, argc, argv, result) \
+	get_sequence_find_args_kw(name, argc, argv, NULL, result)
 #else /* __OPTIMIZE_SIZE__ */
-PRIVATE WUNUSED NONNULL((1, 4, 5, 6, 7)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 get_sequence_find_args(char const *__restrict name,
                        size_t argc, DeeObject *const *argv,
-                       DeeObject **__restrict p_elem,
-                       DeeObject **__restrict p_key,
-                       size_t *__restrict p_start,
-                       size_t *__restrict p_end) {
+                       struct sequence_find_data *__restrict result) {
 	switch (argc) {
 
 	case 1:
-		*p_elem  = argv[0];
-		*p_key   = NULL;
-		*p_start = 0;
-		*p_end   = (size_t)-1;
+		result->sfd_elem  = argv[0];
+		result->sfd_key   = NULL;
+		result->sfd_start = 0;
+		result->sfd_end   = (size_t)-1;
 		break;
 
 	case 2:
 		if (DeeInt_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+			if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfd_start))
 				goto err;
-			*p_key = NULL;
+			result->sfd_key = NULL;
 		} else {
-			*p_key   = argv[1];
-			*p_start = 0;
-			if (DeeNone_Check(*p_key))
-				*p_key = NULL;
+			result->sfd_key   = argv[1];
+			result->sfd_start = 0;
+			if (DeeNone_Check(result->sfd_key))
+				result->sfd_key = NULL;
 		}
-		*p_elem = argv[0];
-		*p_end  = (size_t)-1;
+		result->sfd_elem = argv[0];
+		result->sfd_end  = (size_t)-1;
 		break;
 
 	case 3:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+		if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfd_start))
 			goto err;
 		if (DeeInt_Check(argv[2])) {
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
+			if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&result->sfd_end))
 				goto err;
-			*p_key = NULL;
+			result->sfd_key = NULL;
 		} else {
-			*p_key = argv[2];
-			*p_end = (size_t)-1;
-			if (DeeNone_Check(*p_key))
-				*p_key = NULL;
+			result->sfd_key = argv[2];
+			result->sfd_end = (size_t)-1;
+			if (DeeNone_Check(result->sfd_key))
+				result->sfd_key = NULL;
 		}
-		*p_elem = argv[0];
+		result->sfd_elem = argv[0];
 		break;
 
 	case 4:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+		if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfd_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
+		if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&result->sfd_end))
 			goto err;
-		*p_elem = argv[0];
-		*p_key  = argv[3];
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		result->sfd_elem = argv[0];
+		result->sfd_key  = argv[3];
+		if (DeeNone_Check(result->sfd_key))
+			result->sfd_key = NULL;
 		break;
 
 	default:
@@ -3753,92 +3757,85 @@ print define_Dee_HashStr("defl");
 /* (elem,key:?DCallable=!N)
  * (elem,start:?Dint,key:?DCallable=!N)
  * (elem,start:?Dint,end:?Dint,key:?DCallable=!N) */
-PRIVATE WUNUSED NONNULL((1, 5, 6, 7, 8)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 5)) int DCALL
 get_sequence_find_args_kw(char const *__restrict name,
                           size_t argc, DeeObject *const *argv, DeeObject *kw,
-                          DeeObject **__restrict p_elem,
-                          DeeObject **__restrict p_key,
-                          size_t *__restrict p_start,
-                          size_t *__restrict p_end) {
+                          struct sequence_find_data *__restrict result) {
 	DREF DeeObject *temp;
 	DeeKwArgs kwargs;
 #ifndef __OPTIMIZE_SIZE__
-	if (!kw) {
-		/* Fastpass */
-		return get_sequence_find_args(name, argc, argv,
-		                              p_elem, p_key,
-		                              p_start, p_end);
-	}
+	if (!kw) /* Fastpass */
+		return get_sequence_find_args(name, argc, argv, result);
 #endif /* !__OPTIMIZE_SIZE__ */
 	if (DeeKwArgs_Init(&kwargs, &argc, argv, kw))
 		goto err;
 	switch (argc) {
 
 	case 0:
-		if unlikely((*p_elem = DeeKwArgs_GetItemNRStringHash(&kwargs, "elem", Dee_HashStr__elem)) == NULL)
+		if unlikely((result->sfd_elem = DeeKwArgs_GetItemNRStringHash(&kwargs, "elem", Dee_HashStr__elem)) == NULL)
 			goto err;
 check_kw_start_end_key:
 		if unlikely((temp = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "start", Dee_HashStr__start, DeeInt_Zero)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)p_start))
+		if (DeeObject_AsSSize(temp, (Dee_ssize_t *)&result->sfd_start))
 			goto err;
 check_kw_end_key:
 		if unlikely((temp = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
+		if (DeeObject_AsSSize(temp, (Dee_ssize_t *)&result->sfd_end))
 			goto err;
 /*check_kw_key:*/
-		if unlikely((*p_key = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "key", Dee_HashStr__key, Dee_None)) == NULL)
+		if unlikely((result->sfd_key = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "key", Dee_HashStr__key, Dee_None)) == NULL)
 			goto err;
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		if (DeeNone_Check(result->sfd_key))
+			result->sfd_key = NULL;
 		break;
 
 	case 1:
-		*p_elem = argv[0];
+		result->sfd_elem = argv[0];
 		goto check_kw_start_end_key;
 
 	case 2:
-		*p_elem = argv[0];
+		result->sfd_elem = argv[0];
 		if (DeeInt_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+			if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfd_start))
 				goto err;
 			goto check_kw_end_key;
 		}
-		*p_key   = argv[1];
-		*p_start = 0;
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		result->sfd_key   = argv[1];
+		result->sfd_start = 0;
+		if (DeeNone_Check(result->sfd_key))
+			result->sfd_key = NULL;
 check_kw_end:
 		if unlikely((temp = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
+		if (DeeObject_AsSSize(temp, (Dee_ssize_t *)&result->sfd_end))
 			goto err;
 		break;
 
 	case 3:
-		*p_elem = argv[0];
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+		result->sfd_elem = argv[0];
+		if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfd_start))
 			goto err;
 		if (DeeInt_Check(argv[2])) {
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
+			if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&result->sfd_end))
 				goto err;
 			goto check_kw_end_key;
 		}
-		*p_key = argv[2];
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		result->sfd_key = argv[2];
+		if (DeeNone_Check(result->sfd_key))
+			result->sfd_key = NULL;
 		goto check_kw_end;
 
 	case 4:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+		if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfd_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
+		if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&result->sfd_end))
 			goto err;
-		*p_elem = argv[0];
-		*p_key  = argv[3];
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		result->sfd_elem = argv[0];
+		result->sfd_key  = argv[3];
+		if (DeeNone_Check(result->sfd_key))
+			result->sfd_key = NULL;
 		break;
 
 	default:
@@ -3850,18 +3847,18 @@ err:
 	return -1;
 }
 
+struct sequence_find_data_defl {
+	struct sequence_find_data sfdd_data; /* Base data */
+	DeeObject                *sfdd_defl; /* [0..1] Default value. */
+};
 
 /* (elem,key:?DCallable=!N,defl?)
  * (elem,start:?Dint,key:?DCallable=!N,defl?)
  * (elem,start:?Dint,end:?Dint,key:?DCallable=!N,defl?) */
-PRIVATE WUNUSED NONNULL((1, 5, 6, 7, 8, 9)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 5)) int DCALL
 get_sequence_find_defl_args_kw(char const *__restrict name,
                                size_t argc, DeeObject *const *argv, DeeObject *kw,
-                               DeeObject **__restrict p_elem,
-                               DeeObject **__restrict p_key,
-                               size_t *__restrict p_start,
-                               size_t *__restrict p_end,
-                               DeeObject **__restrict p_defl) {
+                               struct sequence_find_data_defl *__restrict result) {
 	DREF DeeObject *temp;
 	DeeKwArgs kwargs;
 	if (DeeKwArgs_Init(&kwargs, &argc, argv, kw))
@@ -3869,93 +3866,93 @@ get_sequence_find_defl_args_kw(char const *__restrict name,
 	switch (argc) {
 
 	case 0:
-		if unlikely((*p_elem = DeeKwArgs_GetItemNRStringHash(&kwargs, "elem", Dee_HashStr__elem)) == NULL)
+		if unlikely((result->sfdd_data.sfd_elem = DeeKwArgs_GetItemNRStringHash(&kwargs, "elem", Dee_HashStr__elem)) == NULL)
 			goto err;
 check_kw_start_end_key_defl:
 		if unlikely((temp = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "start", Dee_HashStr__start, DeeInt_Zero)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)p_start))
+		if (DeeObject_AsSSize(temp, (Dee_ssize_t *)&result->sfdd_data.sfd_start))
 			goto err;
 check_kw_end_key_defl:
 		if unlikely((temp = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
+		if (DeeObject_AsSSize(temp, (Dee_ssize_t *)&result->sfdd_data.sfd_end))
 			goto err;
 /*check_kw_key_defl:*/
-		if unlikely((*p_key = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "key", Dee_HashStr__key, Dee_None)) == NULL)
+		if unlikely((result->sfdd_data.sfd_key = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "key", Dee_HashStr__key, Dee_None)) == NULL)
 			goto err;
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		if (DeeNone_Check(result->sfdd_data.sfd_key))
+			result->sfdd_data.sfd_key = NULL;
 check_kw_defl:
-		if unlikely((*p_defl = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "defl", Dee_HashStr__defl, ITER_DONE)) == NULL)
+		if unlikely((result->sfdd_defl = DeeKwArgs_TryGetItemNRStringHash(&kwargs, "defl", Dee_HashStr__defl)) == NULL)
 			goto err;
-		if (*p_defl == ITER_DONE)
-			*p_defl = NULL;
+		if (result->sfdd_defl == ITER_DONE)
+			result->sfdd_defl = NULL;
 		break;
 
 	case 1:
-		*p_elem = argv[0];
+		result->sfdd_data.sfd_elem = argv[0];
 		goto check_kw_start_end_key_defl;
 
 	case 2:
-		*p_elem = argv[0];
+		result->sfdd_data.sfd_elem = argv[0];
 		if (DeeInt_Check(argv[1])) {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+			if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfdd_data.sfd_start))
 				goto err;
 			goto check_kw_end_key_defl;
 		}
-		*p_key   = argv[1];
-		*p_start = 0;
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		result->sfdd_data.sfd_key   = argv[1];
+		result->sfdd_data.sfd_start = 0;
+		if (DeeNone_Check(result->sfdd_data.sfd_key))
+			result->sfdd_data.sfd_key = NULL;
 check_kw_end_defl:
 		if unlikely((temp = DeeKwArgs_GetItemNRStringHashDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
 			goto err;
-		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
+		if (DeeObject_AsSSize(temp, (Dee_ssize_t *)&result->sfdd_data.sfd_end))
 			goto err;
 		goto check_kw_defl;
 
 	case 3:
-		*p_elem = argv[0];
+		result->sfdd_data.sfd_elem = argv[0];
 		if (!DeeInt_Check(argv[1])) {
 			/* (elem,key:?DCallable=!N,defl?) */
-			*p_key  = argv[1];
-			*p_defl = argv[2];
+			result->sfdd_data.sfd_key  = argv[1];
+			result->sfdd_defl = argv[2];
 			break;
 		}
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+		if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfdd_data.sfd_start))
 			goto err;
 		if (DeeInt_Check(argv[2])) {
-			if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
+			if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&result->sfdd_data.sfd_end))
 				goto err;
 			goto check_kw_end_key_defl;
 		}
-		*p_key = argv[2];
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		result->sfdd_data.sfd_key = argv[2];
+		if (DeeNone_Check(result->sfdd_data.sfd_key))
+			result->sfdd_data.sfd_key = NULL;
 		goto check_kw_end_defl;
 
 	case 4:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+		if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfdd_data.sfd_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
+		if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&result->sfdd_data.sfd_end))
 			goto err;
-		*p_elem = argv[0];
-		*p_key  = argv[3];
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
+		result->sfdd_data.sfd_elem = argv[0];
+		result->sfdd_data.sfd_key  = argv[3];
+		if (DeeNone_Check(result->sfdd_data.sfd_key))
+			result->sfdd_data.sfd_key = NULL;
 		goto check_kw_defl;
 
 	case 5:
-		if (DeeObject_AsSSize(argv[1], (dssize_t *)p_start))
+		if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&result->sfdd_data.sfd_start))
 			goto err;
-		if (DeeObject_AsSSize(argv[2], (dssize_t *)p_end))
+		if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&result->sfdd_data.sfd_end))
 			goto err;
-		*p_elem = argv[0];
-		*p_key  = argv[3];
-		if (DeeNone_Check(*p_key))
-			*p_key = NULL;
-		*p_defl = argv[4];
+		result->sfdd_data.sfd_elem = argv[0];
+		result->sfdd_data.sfd_key  = argv[3];
+		if (DeeNone_Check(result->sfdd_data.sfd_key))
+			result->sfdd_data.sfd_key = NULL;
+		result->sfdd_defl = argv[4];
 		break;
 
 	default:
@@ -3970,12 +3967,12 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_find(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result, start, end;
-	if (get_sequence_find_args_kw("find", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("find", argc, argv, kw, &data))
 		goto err;
-	result = key ? DeeSeq_FindWithKey(self, elem, start, end, key)
-	             : DeeSeq_Find(self, elem, start, end);
+	result = data.sfd_key ? DeeSeq_FindWithKey(self, data.sfd_elem, data.sfd_start, data.sfd_end, data.sfd_key)
+	                      : DeeSeq_Find(self, data.sfd_elem, data.sfd_start, data.sfd_end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -3987,12 +3984,12 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_rfind(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result, start, end;
-	if (get_sequence_find_args_kw("rfind", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("rfind", argc, argv, kw, &data))
 		goto err;
-	result = key ? DeeSeq_RFindWithKey(self, elem, start, end, key)
-	             : DeeSeq_RFind(self, elem, start, end);
+	result = data.sfd_key ? DeeSeq_RFindWithKey(self, data.sfd_elem, data.sfd_start, data.sfd_end, data.sfd_key)
+	                      : DeeSeq_RFind(self, data.sfd_elem, data.sfd_start, data.sfd_end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -4004,38 +4001,38 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result, start, end;
-	if (get_sequence_find_args_kw(STR_index, argc, argv, kw, &elem, &key, &start, &end))
+	size_t result;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw(STR_index, argc, argv, kw, &data))
 		goto err;
-	result = key ? DeeSeq_FindWithKey(self, elem, start, end, key)
-	             : DeeSeq_Find(self, elem, start, end);
+	result = data.sfd_key ? DeeSeq_FindWithKey(self, data.sfd_elem, data.sfd_start, data.sfd_end, data.sfd_key)
+	                      : DeeSeq_Find(self, data.sfd_elem, data.sfd_start, data.sfd_end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
 		goto err_not_found;
 	return DeeInt_NewSize(result);
 err_not_found:
-	err_item_not_found(self, elem);
+	err_item_not_found(self, data.sfd_elem);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result, start, end;
-	if (get_sequence_find_args_kw("rindex", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("rindex", argc, argv, kw, &data))
 		goto err;
-	result = key ? DeeSeq_RFindWithKey(self, elem, start, end, key)
-	             : DeeSeq_RFind(self, elem, start, end);
+	result = data.sfd_key ? DeeSeq_RFindWithKey(self, data.sfd_elem, data.sfd_start, data.sfd_end, data.sfd_key)
+	                      : DeeSeq_RFind(self, data.sfd_elem, data.sfd_start, data.sfd_end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
 		goto err_not_found;
 	return DeeInt_NewSize(result);
 err_not_found:
-	err_item_not_found(self, elem);
+	err_item_not_found(self, data.sfd_elem);
 err:
 	return NULL;
 }
@@ -4196,7 +4193,7 @@ INTERN DEFINE_KWLIST(seq_pop_kwlist, { K(index), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_pop(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
-	dssize_t index = -1;
+	Dee_ssize_t index = -1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "|" UNPdSIZ ":pop", &index))
 		goto err;
 	return DeeSeq_PopItem(self, index);
@@ -4274,13 +4271,11 @@ seq_pushback(DeeObject *self, size_t argc, DeeObject *const *argv) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_remove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
 	int result;
-	size_t start, end;
-	if (get_sequence_find_args_kw(STR_remove, argc, argv,
-	                              kw, &elem, &key, &start, &end))
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw(STR_remove, argc, argv, kw, &data))
 		goto err;
-	result = DeeSeq_Remove(self, start, end, elem, key);
+	result = DeeSeq_Remove(self, data.sfd_start, data.sfd_end, data.sfd_elem, data.sfd_key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -4290,13 +4285,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_rremove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
 	int result;
-	size_t start, end;
-	if (get_sequence_find_args_kw(STR_rremove, argc, argv,
-	                              kw, &elem, &key, &start, &end))
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw(STR_rremove, argc, argv, kw, &data))
 		goto err;
-	result = DeeSeq_RRemove(self, start, end, elem, key);
+	result = DeeSeq_RRemove(self, data.sfd_start, data.sfd_end, data.sfd_elem, data.sfd_key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -4306,13 +4299,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_removeall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
 	size_t result;
-	size_t start, end;
-	if (get_sequence_find_args_kw(STR_removeall, argc, argv,
-	                              kw, &elem, &key, &start, &end))
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw(STR_removeall, argc, argv, kw, &data))
 		goto err;
-	result = DeeSeq_RemoveAll(self, start, end, elem, key);
+	result = DeeSeq_RemoveAll(self, data.sfd_start, data.sfd_end, data.sfd_elem, data.sfd_key);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -4471,20 +4462,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bfind(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result, start, end;
-	if (get_sequence_find_args_kw("bfind", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("bfind", argc, argv, kw, &data))
 		goto err;
-	if (!key) {
-		result = DeeSeq_BFind(self, start, end, elem, NULL);
+	if (!data.sfd_key) {
+		result = DeeSeq_BFind(self, data.sfd_start, data.sfd_end, data.sfd_elem, NULL);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
+		data.sfd_elem = DeeObject_Call(data.sfd_key, 1, &data.sfd_elem);
+		if unlikely(!data.sfd_elem)
 			goto err;
-		result = DeeSeq_BFind(self, start, end, elem, key);
-		Dee_Decref(elem);
+		result = DeeSeq_BFind(self, data.sfd_start, data.sfd_end, data.sfd_elem, data.sfd_key);
+		Dee_Decref(data.sfd_elem);
 	}
-	if ((dssize_t)result < 0) {
+	if ((Dee_ssize_t)result < 0) {
 		if unlikely(result == (size_t)-2)
 			goto err;
 		if unlikely(result == (size_t)-1)
@@ -4497,20 +4488,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bcontains(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result, start, end;
-	if (get_sequence_find_args_kw("bcontains", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("bcontains", argc, argv, kw, &data))
 		goto err;
-	if (!key) {
-		result = DeeSeq_BFind(self, start, end, elem, NULL);
+	if (!data.sfd_key) {
+		result = DeeSeq_BFind(self, data.sfd_start, data.sfd_end, data.sfd_elem, NULL);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
+		data.sfd_elem = DeeObject_Call(data.sfd_key, 1, &data.sfd_elem);
+		if unlikely(!data.sfd_elem)
 			goto err;
-		result = DeeSeq_BFind(self, start, end, elem, key);
-		Dee_Decref(elem);
+		result = DeeSeq_BFind(self, data.sfd_start, data.sfd_end, data.sfd_elem, data.sfd_key);
+		Dee_Decref(data.sfd_elem);
 	}
-	if ((dssize_t)result < 0) {
+	if ((Dee_ssize_t)result < 0) {
 		if unlikely(result == (size_t)-2)
 			goto err;
 		if unlikely(result == (size_t)-1)
@@ -4523,20 +4514,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result, start, end;
-	if (get_sequence_find_args_kw("bindex", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("bindex", argc, argv, kw, &data))
 		goto err;
-	if (!key) {
-		result = DeeSeq_BFind(self, start, end, elem, NULL);
+	if (!data.sfd_key) {
+		result = DeeSeq_BFind(self, data.sfd_start, data.sfd_end, data.sfd_elem, NULL);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
+		data.sfd_elem = DeeObject_Call(data.sfd_key, 1, &data.sfd_elem);
+		if unlikely(!data.sfd_elem)
 			goto err;
-		result = DeeSeq_BFind(self, start, end, elem, key);
-		Dee_Decref(elem);
+		result = DeeSeq_BFind(self, data.sfd_start, data.sfd_end, data.sfd_elem, data.sfd_key);
+		Dee_Decref(data.sfd_elem);
 	}
-	if unlikely((dssize_t)result < 0) {
+	if unlikely((Dee_ssize_t)result < 0) {
 		if unlikely(result == (size_t)-2)
 			goto err;
 		if unlikely(result == (size_t)-1)
@@ -4544,25 +4535,25 @@ seq_bindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	}
 	return DeeInt_NewSize(result);
 err_not_found:
-	err_item_not_found(self, elem);
+	err_item_not_found(self, data.sfd_elem);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bposition(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result, start, end;
-	if (get_sequence_find_args_kw("bposition", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("bposition", argc, argv, kw, &data))
 		goto err;
-	if (!key) {
-		result = DeeSeq_BFindPosition(self, start, end, elem, NULL);
+	if (!data.sfd_key) {
+		result = DeeSeq_BFindPosition(self, data.sfd_start, data.sfd_end, data.sfd_elem, NULL);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
+		data.sfd_elem = DeeObject_Call(data.sfd_key, 1, &data.sfd_elem);
+		if unlikely(!data.sfd_elem)
 			goto err;
-		result = DeeSeq_BFindPosition(self, start, end, elem, key);
-		Dee_Decref(elem);
+		result = DeeSeq_BFindPosition(self, data.sfd_start, data.sfd_end, data.sfd_elem, data.sfd_key);
+		Dee_Decref(data.sfd_elem);
 	}
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -4573,25 +4564,23 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_brange(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result_start, result_end;
-	size_t start, end;
 	int error;
-	if (get_sequence_find_args_kw("brange", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result_start, result_end;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("brange", argc, argv, kw, &data))
 		goto err;
-	if (!key) {
-		error = DeeSeq_BFindRange(self, start, end, elem, NULL, &result_start, &result_end);
+	if (!data.sfd_key) {
+		error = DeeSeq_BFindRange(self, data.sfd_start, data.sfd_end, data.sfd_elem, NULL, &result_start, &result_end);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
+		data.sfd_elem = DeeObject_Call(data.sfd_key, 1, &data.sfd_elem);
+		if unlikely(!data.sfd_elem)
 			goto err;
-		error = DeeSeq_BFindRange(self, start, end, elem, key, &result_start, &result_end);
-		Dee_Decref(elem);
+		error = DeeSeq_BFindRange(self, data.sfd_start, data.sfd_end, data.sfd_elem, data.sfd_key, &result_start, &result_end);
+		Dee_Decref(data.sfd_elem);
 	}
 	if unlikely(error)
 		goto err;
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
+	return DeeTuple_Newf(PCKuSIZ PCKuSIZ,
 	                     result_start,
 	                     result_end);
 err:
@@ -4601,19 +4590,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_blocate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	DeeObject *elem, *key, *defl;
-	size_t start, end;
-	if (get_sequence_find_defl_args_kw("blocate", argc, argv, kw,
-	                                   &elem, &key, &start, &end, &defl))
+	struct sequence_find_data_defl data;
+	if (get_sequence_find_defl_args_kw("blocate", argc, argv, kw, &data))
 		goto err;
-	if (key == NULL) {
-		result = DeeSeq_BLocate(self, start, end, elem, NULL, defl);
+	if (data.sfdd_data.sfd_key == NULL) {
+		result = DeeSeq_BLocate(self, data.sfdd_data.sfd_start, data.sfdd_data.sfd_end,
+		                        data.sfdd_data.sfd_elem, NULL, data.sfdd_defl);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
+		data.sfdd_data.sfd_elem = DeeObject_Call(data.sfdd_data.sfd_key, 1, &data.sfdd_data.sfd_elem);
+		if unlikely(!data.sfdd_data.sfd_elem)
 			goto err;
-		result = DeeSeq_BLocate(self, start, end, elem, key, defl);
-		Dee_Decref(elem);
+		result = DeeSeq_BLocate(self, data.sfdd_data.sfd_start, data.sfdd_data.sfd_end,
+		                        data.sfdd_data.sfd_elem, data.sfdd_data.sfd_key, data.sfdd_defl);
+		Dee_Decref(data.sfdd_data.sfd_elem);
 	}
 	return result;
 err:
@@ -4622,20 +4611,21 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_blocateall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *elem, *key;
-	size_t result_start, result_end;
-	size_t start, end;
 	int error;
-	if (get_sequence_find_args_kw("blocateall", argc, argv, kw, &elem, &key, &start, &end))
+	size_t result_start, result_end;
+	struct sequence_find_data data;
+	if (get_sequence_find_args_kw("blocateall", argc, argv, kw, &data))
 		goto err;
-	if (!key) {
-		error = DeeSeq_BFindRange(self, start, end, elem, NULL, &result_start, &result_end);
+	if (!data.sfd_key) {
+		error = DeeSeq_BFindRange(self, data.sfd_start, data.sfd_end, data.sfd_elem,
+		                          NULL, &result_start, &result_end);
 	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
+		data.sfd_elem = DeeObject_Call(data.sfd_key, 1, &data.sfd_elem);
+		if unlikely(!data.sfd_elem)
 			goto err;
-		error = DeeSeq_BFindRange(self, start, end, elem, key, &result_start, &result_end);
-		Dee_Decref(elem);
+		error = DeeSeq_BFindRange(self, data.sfd_start, data.sfd_end, data.sfd_elem,
+		                          data.sfd_key, &result_start, &result_end);
+		Dee_Decref(data.sfd_elem);
 	}
 	if unlikely(error)
 		goto err;

@@ -16495,7 +16495,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_compare_eq(DeeObject *lhs, 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
 
 
-PRIVATE NONNULL((1)) DeeType_tp_bool_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_bool_t DCALL
 DeeType_Optimize_tp_bool(DeeTypeObject *__restrict dst,
                          DeeType_tp_bool_t tp_bool) {
 	if (tp_bool == &generic_seq_bool ||
@@ -16531,7 +16531,7 @@ DeeType_Optimize_tp_bool(DeeTypeObject *__restrict dst,
 	return tp_bool;
 }
 
-PRIVATE NONNULL((1)) struct type_cmp *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct type_cmp *DCALL
 DeeType_Optimize_tp_cmp(DeeTypeObject *__restrict dst,
                         struct type_cmp *tp_cmp) {
 	if (tp_cmp == &generic_seq_cmp ||
@@ -16571,7 +16571,7 @@ DeeType_Optimize_tp_cmp(DeeTypeObject *__restrict dst,
 	return tp_cmp;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_hash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_hash_t DCALL
 DeeType_Optimize_tp_hash(DeeTypeObject *__restrict dst,
                          DeeType_tp_hash_t tp_hash) {
 	if (tp_hash == &generic_seq_hash ||
@@ -16614,7 +16614,7 @@ DeeType_Optimize_tp_hash(DeeTypeObject *__restrict dst,
 	return tp_hash;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_eq_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_eq_t DCALL
 DeeType_Optimize_tp_eq(DeeTypeObject *__restrict dst,
                        DeeType_tp_eq_t tp_eq) {
 	if (tp_eq == &generic_seq_eq || tp_eq == &generic_set_eq || tp_eq == &generic_map_eq) {
@@ -16624,7 +16624,7 @@ DeeType_Optimize_tp_eq(DeeTypeObject *__restrict dst,
 	return tp_eq;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_ne_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_ne_t DCALL
 DeeType_Optimize_tp_ne(DeeTypeObject *__restrict dst,
                        DeeType_tp_ne_t tp_ne) {
 	if (tp_ne == &generic_seq_ne || tp_ne == &generic_set_ne || tp_ne == &generic_map_ne) {
@@ -16634,7 +16634,7 @@ DeeType_Optimize_tp_ne(DeeTypeObject *__restrict dst,
 	return tp_ne;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_lo_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_lo_t DCALL
 DeeType_Optimize_tp_lo(DeeTypeObject *__restrict dst,
                        DeeType_tp_lo_t tp_lo) {
 	if (tp_lo == &generic_seq_lo) {
@@ -16654,7 +16654,7 @@ DeeType_Optimize_tp_lo(DeeTypeObject *__restrict dst,
 	return tp_lo;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_le_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_le_t DCALL
 DeeType_Optimize_tp_le(DeeTypeObject *__restrict dst,
                        DeeType_tp_le_t tp_le) {
 	if (tp_le == &generic_seq_le) {
@@ -16674,7 +16674,7 @@ DeeType_Optimize_tp_le(DeeTypeObject *__restrict dst,
 	return tp_le;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_gr_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_gr_t DCALL
 DeeType_Optimize_tp_gr(DeeTypeObject *__restrict dst,
                        DeeType_tp_gr_t tp_gr) {
 	if (tp_gr == &generic_seq_gr) {
@@ -16694,7 +16694,7 @@ DeeType_Optimize_tp_gr(DeeTypeObject *__restrict dst,
 	return tp_gr;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_ge_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_ge_t DCALL
 DeeType_Optimize_tp_ge(DeeTypeObject *__restrict dst,
                        DeeType_tp_ge_t tp_ge) {
 	if (tp_ge == &generic_seq_ge) {
@@ -16714,7 +16714,7 @@ DeeType_Optimize_tp_ge(DeeTypeObject *__restrict dst,
 	return tp_ge;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_compare_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_compare_t DCALL
 DeeType_Optimize_tp_compare(DeeTypeObject *__restrict dst,
                             DeeType_tp_compare_t tp_compare) {
 	if (tp_compare == &generic_seq_compare ||
@@ -16744,7 +16744,7 @@ DeeType_Optimize_tp_compare(DeeTypeObject *__restrict dst,
 	return tp_compare;
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_compare_eq_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_compare_eq_t DCALL
 DeeType_Optimize_tp_compare_eq(DeeTypeObject *__restrict dst,
                                DeeType_tp_compare_eq_t tp_compare_eq) {
 	if (tp_compare_eq == &generic_seq_compare_eq ||
@@ -16784,7 +16784,7 @@ DeeType_Optimize_tp_compare_eq(DeeTypeObject *__restrict dst,
 	return DeeType_Optimize_tp_compare(dst, tp_compare_eq);
 }
 
-PRIVATE NONNULL((1)) DeeType_tp_trycompare_eq_t DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeType_tp_trycompare_eq_t DCALL
 DeeType_Optimize_tp_trycompare_eq(DeeTypeObject *__restrict dst,
                                   DeeType_tp_trycompare_eq_t tp_trycompare_eq) {
 	if (tp_trycompare_eq == &generic_seq_trycompare_eq ||
