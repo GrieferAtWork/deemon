@@ -1157,7 +1157,7 @@ kwds_findstr(DeeKwdsObject *__restrict self,
 
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 (DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject *const *argv,
-                         DeeObject *kw, struct keyword *__restrict kwlist,
+                         DeeObject *kw, struct Dee_keyword *__restrict kwlist,
                          char const *__restrict format, va_list args) {
 	char const *fmt_start;
 	size_t kw_argc;
@@ -1383,7 +1383,7 @@ err:
 
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 (DeeArg_UnpackKw)(size_t argc, DeeObject *const *argv,
-                  DeeObject *kw, struct keyword *__restrict kwlist,
+                  DeeObject *kw, struct Dee_keyword *__restrict kwlist,
                   char const *__restrict format, ...) {
 	int result;
 	va_list args;

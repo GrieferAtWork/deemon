@@ -40,6 +40,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include "kwlist.h"
 #include "runtime_error.h"
 #include "strings.h"
 
@@ -127,8 +128,7 @@ f_builtin_compare(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *result;
 	DeeObject *lhs, *rhs;
 	int diff;
-	PRIVATE struct keyword kwlist[] = { K(lhs), K(rhs), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:compare", &lhs, &rhs))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__lhs_rhs, "oo:compare", &lhs, &rhs))
 		goto err;
 	diff = DeeObject_Compare(lhs, rhs);
 	if unlikely(diff == -2)
@@ -144,8 +144,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_import(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeObject *module_name, *base = NULL;
-	PRIVATE struct keyword kwlist[] = { K(base), K(name), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:__import__", &base, &module_name))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__base_name,
+	                    "oo:__import__", &base, &module_name))
 		goto err;
 	if (DeeObject_AssertType(base, &DeeModule_Type))
 		goto err;
@@ -171,8 +171,8 @@ builtin_exec_fallback(size_t argc,
 	DeeObject *expr, *globals = NULL;
 	char const *usertext;
 	size_t usersize;
-	PRIVATE struct keyword kwlist[] = { K(expr), K(globals), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|o:exec", &expr, &globals))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_globals,
+	                    "o|o:exec", &expr, &globals))
 		goto err;
 	if (DeeString_Check(expr)) {
 		usertext = DeeString_AsUtf8(expr);

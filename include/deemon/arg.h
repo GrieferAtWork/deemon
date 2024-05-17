@@ -29,7 +29,6 @@ DECL_BEGIN
 
 
 #ifdef DEE_SOURCE
-#define dee_keyword   keyword
 #define K             Dee_KEYWORD
 #define KS            Dee_KEYWORD_STR
 #define KEX           Dee_KEYWORD_EX
@@ -72,7 +71,7 @@ DeeArg_VUnpack(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
 #endif /* !__INTELLISENSE__ */
 
 
-struct dee_keyword {
+struct Dee_keyword {
 	char const *k_name; /* [1..1][SENTINAL(NULL)] Keyword name. */
 	Dee_hash_t  k_hash; /* [== Dee_HashStr(ke_name)]
 	                     * Hash of this keyword (or (Dee_hash_t)-1 when not yet calculated).
@@ -83,7 +82,7 @@ struct dee_keyword {
 #define Dee_KEYWORD_STR(s)           { s, (Dee_hash_t)-1 }
 #define Dee_KEYWORD_EX(s, h32, h64)  { s, _Dee_HashSelectC(h32, h64) }
 #define Dee_KEYWORD_END              { NULL }
-#define Dee_DEFINE_KWLIST(name, ...) struct dee_keyword name[] = __VA_ARGS__
+#define Dee_DEFINE_KWLIST(name, ...) struct Dee_keyword name[] = __VA_ARGS__
 
 /* Same as the regular unpack functions above, however these are enabled to
  * support keyword lists in the event that the calling function has been
@@ -101,11 +100,11 @@ struct dee_keyword {
  *    given than what was actually used. */
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 DeeArg_UnpackKw(size_t argc, DeeObject *const *argv,
-                DeeObject *kw, struct dee_keyword *__restrict kwlist,
+                DeeObject *kw, struct Dee_keyword *__restrict kwlist,
                 char const *__restrict format, ...);
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int DCALL
 DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
-                 DeeObject *kw, struct dee_keyword *__restrict kwlist,
+                 DeeObject *kw, struct Dee_keyword *__restrict kwlist,
                  char const *__restrict format, va_list args);
 
 /* Same as the non-*Struct functions, but rather than taking 1 pointer per argument,
@@ -126,7 +125,7 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
  * >>     goto err;
  */
 /* TODO: int DeeArg_UnpackStruct(size_t argc, DeeObject *const *argv, char const *__restrict format, void *out); */
-/* TODO: int DeeArg_UnpackStructKw(size_t argc, DeeObject *const *argv, DeeObject *kw, struct dee_keyword *__restrict kwlist, char const *__restrict format, void *out); */
+/* TODO: int DeeArg_UnpackStructKw(size_t argc, DeeObject *const *argv, DeeObject *kw, struct Dee_keyword *__restrict kwlist, char const *__restrict format, void *out); */
 
 
 #ifndef __INTELLISENSE__

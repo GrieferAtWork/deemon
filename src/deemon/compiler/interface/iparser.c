@@ -34,6 +34,9 @@
 #include <deemon/object.h>
 #include <deemon/thread.h>
 
+/**/
+#include "../../runtime/kwlist.h"
+
 DECL_BEGIN
 
 
@@ -42,9 +45,6 @@ get_scope_lookupmode(DeeObject *__restrict value,
                      unsigned int *__restrict p_result);
 
 
-PRIVATE struct keyword suffix_kwlist[] = { K(head), KEND };
-
-PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 #define DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(name, func, IF_SUFFIX, is_suffix) \
 	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                         \
 	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                 \
@@ -54,7 +54,7 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 		DREF struct ast *result_ast;                                           \
 		if (COMPILER_BEGIN(self->cw_compiler))                                 \
 			goto done;                                                         \
-		if (DeeArg_UnpackKw(argc, argv, kw, suffix_kwlist, "o:" #name, &head)) \
+		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__head, "o:" #name, &head))  \
 			goto done_compiler_end;                                            \
 		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type))             \
 			goto done_compiler_end;                                            \
@@ -87,36 +87,36 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 	done:                                                                      \
 		return result;                                                         \
 	}
-#define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(name, func)                                  \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                                        \
-	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                                \
-	              DeeObject *const *argv, DeeObject *kw) {                                    \
-		DREF DeeObject *result = NULL;                                                        \
-		DREF struct ast *result_ast;                                                          \
-		unsigned int lookup_mode;                                                             \
-		DeeObject *lookup_mode_ob = Dee_EmptyString;                                          \
-		uint16_t old_exceptsz;                                                                \
-		if (COMPILER_BEGIN(self->cw_compiler))                                                \
-			goto done;                                                                        \
-		if (DeeArg_UnpackKw(argc, argv, kw, lookupmode_kwlist, "|o:" #name, &lookup_mode_ob)) \
-			goto done_compiler_end;                                                           \
-		if unlikely(get_scope_lookupmode(lookup_mode_ob, &lookup_mode))                       \
-			goto done_compiler_end;                                                           \
-		result_ast   = func(lookup_mode);                                                     \
-		old_exceptsz = DeeThread_Self()->t_exceptsz;                                          \
-		if unlikely(!result_ast) {                                                            \
-			if (old_exceptsz == DeeThread_Self()->t_exceptsz) {                               \
-				result = Dee_None;                                                            \
-				Dee_Incref(result);                                                           \
-			}                                                                                 \
-			goto done_compiler_end;                                                           \
-		}                                                                                     \
-		result = DeeCompiler_GetAst(result_ast);                                              \
-		ast_decref_unlikely(result_ast);                                                      \
-	done_compiler_end:                                                                        \
-		COMPILER_END();                                                                       \
-	done:                                                                                     \
-		return result;                                                                        \
+#define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(name, func)                                   \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                                         \
+	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                                 \
+	              DeeObject *const *argv, DeeObject *kw) {                                     \
+		DREF DeeObject *result = NULL;                                                         \
+		DREF struct ast *result_ast;                                                           \
+		unsigned int lookup_mode;                                                              \
+		DeeObject *lookup_mode_ob = Dee_EmptyString;                                           \
+		uint16_t old_exceptsz;                                                                 \
+		if (COMPILER_BEGIN(self->cw_compiler))                                                 \
+			goto done;                                                                         \
+		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__lookupmode, "|o:" #name, &lookup_mode_ob)) \
+			goto done_compiler_end;                                                            \
+		if unlikely(get_scope_lookupmode(lookup_mode_ob, &lookup_mode))                        \
+			goto done_compiler_end;                                                            \
+		result_ast   = func(lookup_mode);                                                      \
+		old_exceptsz = DeeThread_Self()->t_exceptsz;                                           \
+		if unlikely(!result_ast) {                                                             \
+			if (old_exceptsz == DeeThread_Self()->t_exceptsz) {                                \
+				result = Dee_None;                                                             \
+				Dee_Incref(result);                                                            \
+			}                                                                                  \
+			goto done_compiler_end;                                                            \
+		}                                                                                      \
+		result = DeeCompiler_GetAst(result_ast);                                               \
+		ast_decref_unlikely(result_ast);                                                       \
+	done_compiler_end:                                                                         \
+		COMPILER_END();                                                                        \
+	done:                                                                                      \
+		return result;                                                                         \
 	}
 DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(parse_unaryhead, ast_parse_unaryhead)
 DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(parse_unary, ast_parse_unary)
@@ -165,10 +165,9 @@ parser_parse_stmt(DeeCompilerWrapperObject *self, size_t argc,
 	bool nonblocking       = false;
 	DREF struct ast *result_ast;
 	uint16_t old_exceptsz;
-	PRIVATE struct keyword kwlist[] = { K(nonblocking), KEND };
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|b:parse_stmt", &nonblocking))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__nonblocking, "|b:parse_stmt", &nonblocking))
 		goto done_compiler_end;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
 	result_ast   = ast_parse_statement(nonblocking);
@@ -195,10 +194,9 @@ parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	tok_t end_token = TOK_EOF;
 	uint16_t old_exceptsz;
-	PRIVATE struct keyword kwlist[] = { K(end), KEND };
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|o:parse_allstmt", &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__end, "|o:parse_allstmt", &end))
 		goto done_compiler_end;
 	if (end != Dee_EmptyString) {
 		end_token = get_token_from_obj(end, true);

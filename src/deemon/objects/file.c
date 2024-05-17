@@ -48,6 +48,7 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "file-type-operators.h"
@@ -1316,8 +1317,9 @@ file_class_open(DeeObject *UNUSED(self),
 	uint8_t flags;
 	int oflags, mode = 0644;
 	DeeObject *oflags_ob = NULL;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(path), K(oflags), K(mode), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|od:open", &path, &oflags_ob, &mode))
+	if (DeeArg_UnpackKw(argc, argv, kw,
+	                    kwlist__path_oflags_mode,
+	                    "o|od:open", &path, &oflags_ob, &mode))
 		goto err;
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
@@ -1931,8 +1933,8 @@ file_read(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	size_t maxbytes = (size_t)-1;
 	bool readall    = false;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(maxbytes), K(readall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPdSIZ "b:read", &maxbytes, &readall))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__maxbytes_readall,
+	                    "|" UNPdSIZ "b:read", &maxbytes, &readall))
 		goto err;
 	return DeeFile_ReadBytes(self, maxbytes, readall);
 err:
@@ -1946,8 +1948,8 @@ file_readinto(DeeObject *self, size_t argc,
 	size_t result;
 	DeeObject *dst;
 	bool readall = false;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(dst), K(readall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|b:readinto", &dst, &readall))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__dst_readall,
+	                    "o|b:readinto", &dst, &readall))
 		goto err;
 	if (DeeObject_GetBuf(dst, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
@@ -1969,8 +1971,8 @@ file_write(DeeObject *self, size_t argc,
 	DeeObject *data;
 	bool writeall = true;
 	size_t result;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(data), K(writeall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|b:write", &data, &writeall))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__data_writeall,
+	                    "o|b:write", &data, &writeall))
 		goto err;
 	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
@@ -1991,8 +1993,7 @@ file_pread(DeeObject *self, size_t argc,
 	Dee_pos_t file_pos;
 	size_t maxbytes = (size_t)-1;
 	bool readall      = false;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(pos), K(maxbytes), K(readall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__pos_maxbytes_readall,
 	                    UNPuN(Dee_SIZEOF_POS_T) "|" UNPdSIZ "b:pread",
 	                    &file_pos, &maxbytes, &readall))
 		goto err;
@@ -2006,19 +2007,18 @@ file_preadinto(DeeObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	size_t result;
-	DeeObject *data;
+	DeeObject *dst;
 	Dee_pos_t file_pos;
 	bool readall = false;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(data), K(pos), K(readall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__dst_pos_readall,
 	                    "o" UNPuN(Dee_SIZEOF_POS_T) "|b:preadinto",
-	                    &data, &file_pos, &readall))
+	                    &dst, &file_pos, &readall))
 		goto err;
-	if (DeeObject_GetBuf(data, &buffer, Dee_BUFFER_FWRITABLE))
+	if (DeeObject_GetBuf(dst, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
 	result = readall ? DeeFile_PReadAll(self, buffer.bb_base, buffer.bb_size, file_pos)
 	                 : DeeFile_PRead(self, buffer.bb_base, buffer.bb_size, file_pos);
-	DeeObject_PutBuf(data, &buffer, Dee_BUFFER_FWRITABLE);
+	DeeObject_PutBuf(dst, &buffer, Dee_BUFFER_FWRITABLE);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -2034,8 +2034,7 @@ file_pwrite(DeeObject *self, size_t argc,
 	Dee_pos_t file_pos;
 	bool writeall = true;
 	size_t result;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(data), K(pos), K(writeall), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__data_pos_writeall,
 	                    "o" UNPuN(Dee_SIZEOF_POS_T) "|b:pwrite",
 	                    &data, &file_pos, &writeall))
 		goto err;
@@ -2070,8 +2069,7 @@ file_seek(DeeObject *self, size_t argc,
 	Dee_off_t seek_off;
 	Dee_pos_t result;
 	int whence = SEEK_SET;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(off), K(whence), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__off_whence,
 	                    UNPdN(Dee_SIZEOF_OFF_T) "|o:seek",
 	                    &seek_off, &whence_ob))
 		goto err;
@@ -2357,8 +2355,7 @@ file_mmap(DeeObject *self, size_t argc,
 	bool mustmmap   = false;
 	bool mapshared  = false;
 	unsigned int mapflags;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(minbytes), K(maxbytes), K(offset), K(nulbytes), K(readall), K(mustmmap), K(mapshared), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared,
 	                    "|" UNPdSIZ UNPdSIZ UNPuN(Dee_SIZEOF_POS_T) UNPdSIZ "bbb:mapfile",
 	                    &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
 		goto err;

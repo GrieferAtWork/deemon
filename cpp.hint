@@ -1045,8 +1045,9 @@
 
 #define DEFINE_KWDS(n,...)                         DeeKwdsObject n={}
 #define Dee_DEFINE_KWDS(n,...)                     DeeKwdsObject n={}
-#define DEFINE_KWLIST                              struct keyword n[]=__VA_ARGS__
-#define Dee_DEFINE_KWLIST(n,...)                   struct keyword n[]=__VA_ARGS__
+#define DEFINE_KWLIST(n,...)                       struct Dee_keyword n[]=__VA_ARGS__
+#define Dee_DEFINE_KWLIST(n,...)                   struct Dee_keyword n[]=__VA_ARGS__
+#define DECLARE_KWLIST(n,...)                      struct Dee_keyword n[]=__VA_ARGS__
 #define DEFINE_BYTES(n,...)                        DeeBytesObject n={}
 #define Dee_DEFINE_BYTES(n,...)                    DeeBytesObject n={}
 #define DEFINE_BYTES_EX(n,...)                     DeeBytesObject n={}
@@ -1394,7 +1395,7 @@
 #define weakrefable_object             Dee_weakrefable_object
 #define yield_function_iterator_object Dee_yield_function_iterator_object
 #define yield_function_object          Dee_yield_function_object
-#define keyword                        dee_keyword
+#define keyword                        Dee_keyword
 #define kwds_entry                     dee_kwds_entry
 #define kwds_mapping_object            dee_kwds_mapping_object
 #define kwds_object                    dee_kwds_object

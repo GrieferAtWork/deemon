@@ -46,6 +46,7 @@
 
 #include <stddef.h>
 
+#include "kwlist.h"
 #include "runtime_error.h"
 #include "strings.h"
 
@@ -545,10 +546,6 @@ Dee_membercache_addinstanceattrib(struct Dee_membercache *self,
 	 *(p_table) != NULL)
 #define Dee_membercache_releasetable(self, table) \
 	Dee_membercache_table_decref(table)
-
-/* Keyword argument list for a single argument `thisarg' */
-INTDEF struct keyword getter_kwlist[];
-
 
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
 /* TODO: For binary compat:

@@ -294,6 +294,7 @@
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-type-instance.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-type.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\builtin.h" />
+		<ClInclude Include="..\src\deemon\runtime\kwlist.h" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h" />
@@ -481,6 +482,7 @@
 		<ClCompile Include="..\src\deemon\runtime\gc.c" />
 		<ClCompile Include="..\src\deemon\runtime\kwds-wrappers.c" />
 		<ClCompile Include="..\src\deemon\runtime\kwds.c" />
+		<ClCompile Include="..\src\deemon\runtime\kwlist.c" />
 		<ClCompile Include="..\src\deemon\runtime\lock.c" />
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />

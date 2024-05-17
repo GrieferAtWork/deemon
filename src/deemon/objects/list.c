@@ -43,6 +43,7 @@
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/sort.h"
@@ -580,18 +581,18 @@ DeeList_Pop(DeeObject *__restrict self, dssize_t index) {
  * @return: (size_t)-1: Error. */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeList_Erase(DeeObject *__restrict self,
-              size_t index, size_t count) {
+              size_t start, size_t count) {
 	size_t max_count;
 	List *me = (List *)self;
 	DREF DeeObject **delobv;
 	ASSERT_OBJECT_TYPE(me, &DeeList_Type);
 again:
 	DeeList_LockWrite(me);
-	if unlikely(index >= me->l_list.ol_elemc) {
+	if unlikely(start >= me->l_list.ol_elemc) {
 		DeeList_LockEndWrite(me);
 		return 0;
 	}
-	max_count = me->l_list.ol_elemc - index;
+	max_count = me->l_list.ol_elemc - start;
 	if (count > max_count)
 		count = max_count;
 	delobv = (DREF DeeObject **)Dee_TryMallocac(count, sizeof(DREF DeeObject *));
@@ -603,12 +604,12 @@ again:
 	}
 
 	/* Adjust to shift following elements downwards. */
-	memcpyc(delobv, me->l_list.ol_elemv + index,
+	memcpyc(delobv, me->l_list.ol_elemv + start,
 	        count, sizeof(DREF DeeObject *));
 	me->l_list.ol_elemc -= count;
-	memmovedownc(me->l_list.ol_elemv + index,
-	             me->l_list.ol_elemv + index + count,
-	             me->l_list.ol_elemc - index,
+	memmovedownc(me->l_list.ol_elemv + start,
+	             me->l_list.ol_elemv + start + count,
+	             me->l_list.ol_elemc - start,
 	             sizeof(DREF DeeObject *));
 	DeeList_LockEndWrite(me);
 	Dee_Decrefv(delobv, count);
@@ -756,15 +757,16 @@ again:
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 4)) size_t DCALL
-DeeList_RemoveIf(DeeObject *self, size_t start,
-                 size_t end, DeeObject *should) {
+DeeList_RemoveIf(DeeObject *self, DeeObject *should,
+                 size_t start, size_t end, size_t max) {
 	List *me = (List *)self;
 	DeeObject **vector;
-	size_t i, length, result;
+	size_t i, length, result = 0;
 	ASSERT_OBJECT_TYPE(me, &DeeList_Type);
+	if unlikely(!max)
+		goto done;
 	DeeList_LockRead(me);
 again:
-	result = 0;
 	vector = me->l_list.ol_elemv;
 	length = me->l_list.ol_elemc;
 	for (i = start; i < length && i < end; ++i) {
@@ -803,11 +805,13 @@ again:
 			             me->l_list.ol_elemv + i + 1,
 			             length - i,
 			             sizeof(DREF DeeObject *));
-			++result;
 			DeeList_LockEndWrite(me);
+			++result;
 
 			/* Drop the reference previously held by the list. */
 			Dee_Decref(this_elem);
+			if unlikely(result >= max)
+				goto done;
 		}
 
 		/* Continue onwards. */
@@ -819,6 +823,7 @@ again:
 			goto again;
 	}
 	DeeList_LockEndRead(me);
+done:
 	ASSERT(result != (size_t)-1);
 	return result;
 err:
@@ -2446,14 +2451,6 @@ PRIVATE struct type_seq list_seq = {
 };
 
 
-INTDEF struct keyword seq_insert_kwlist[];
-INTDEF struct keyword seq_insertall_kwlist[];
-INTDEF struct keyword seq_erase_kwlist[];
-INTDEF struct keyword seq_xch_kwlist[];
-INTDEF struct keyword seq_removeif_kwlist[];
-INTDEF struct keyword seq_pop_kwlist[];
-INTDEF struct keyword seq_resize_kwlist[];
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_append(List *me, size_t argc, DeeObject *const *argv) {
 	/* Optimize for the case of a single object to-be appended. */
@@ -2486,7 +2483,7 @@ list_insert(List *me, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
 	                    UNPuSIZ "o:insert", &index, &item))
 		goto err;
 	if (DeeList_Insert((DeeObject *)me, index, item))
@@ -2501,7 +2498,7 @@ list_insertall(List *me, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *items;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_items,
 	                    UNPuSIZ "o:insertall", &index, &items))
 		goto err;
 	if (DeeList_InsertSequence((DeeObject *)me, index, items))
@@ -2515,12 +2512,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_removeif(List *me, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *should;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist,
-	                    "o|" UNPuSIZ UNPuSIZ ":removeif",
+	size_t result, start = 0, end = (size_t)-1, max = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__should_start_end_max,
+	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ ":removeif",
 	                    &should, &start, &end))
 		goto err;
-	result = DeeList_RemoveIf((DeeObject *)me, start, end, should);
+	result = DeeList_RemoveIf((DeeObject *)me, should, start, end, max);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -2545,12 +2542,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_erase(List *me, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-	size_t index, count = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist,
+	size_t start, count = 1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_count,
 	                    UNPuSIZ "|" UNPuSIZ ":erase",
-	                    &index, &count))
+	                    &start, &count))
 		goto err;
-	count = DeeList_Erase((DeeObject *)me, index, count);
+	count = DeeList_Erase((DeeObject *)me, start, count);
 	if unlikely(count == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(count);
@@ -2563,8 +2560,8 @@ list_xchitem(List *me, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_xch_kwlist,
-	                    UNPuSIZ "o:xch", &index, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	                    UNPuSIZ "o:xchitem", &index, &value))
 		goto err;
 	return list_nsi_xch(me, index, value);
 err:
@@ -2575,7 +2572,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_pop(List *me, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
 	dssize_t index = -1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
 	                    "|" UNPdSIZ ":pop", &index))
 		goto err;
 	return DeeList_Pop((DeeObject *)me, index);
@@ -3007,12 +3004,11 @@ err:
 }
 
 
-INTDEF struct keyword seq_sort_kwlist[];
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_sort(List *me, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:sort", &key))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sort", &key))
 		goto err;
 	if (DeeNone_Check(key))
 		key = NULL;
@@ -3027,7 +3023,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_sorted(List *me, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:sorted", &key))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sorted", &key))
 		goto err;
 	if (DeeNone_Check(key))
 		key = NULL;
@@ -3040,13 +3036,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_resize(List *me, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	size_t newsize;
+	size_t size;
 	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist,
-	                    UNPuSIZ "|o:resize",
-	                    &newsize, &filler))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__size_filler,
+	                    UNPuSIZ "|o:resize", &size, &filler))
 		goto err;
-	if unlikely(DeeList_Resize((DeeObject *)me, newsize, filler))
+	if unlikely(DeeList_Resize((DeeObject *)me, size, filler))
 		goto err;
 	return_none;
 err:

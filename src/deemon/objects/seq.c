@@ -42,6 +42,7 @@
 
 #include <hybrid/overflow.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/bsearch.h"
@@ -1929,15 +1930,15 @@ PRIVATE struct type_nsi tpconst seq_nsi = {
 			/* .nsi_find         = */ (dfunptr_t)NULL,
 			/* .nsi_rfind        = */ (dfunptr_t)NULL,
 			/* .nsi_xch          = */ (dfunptr_t)&DeeSeq_XchItem,
-			/* .nsi_insert       = */ (dfunptr_t)&DeeSeq_Insert,
-			/* .nsi_insertall    = */ (dfunptr_t)&DeeSeq_InsertAll,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
 			/* .nsi_insertvec    = */ (dfunptr_t)&seq_nsi_insert_vec,
-			/* .nsi_pop          = */ (dfunptr_t)&DeeSeq_PopItem,
-			/* .nsi_erase        = */ (dfunptr_t)&DeeSeq_Erase,
-			/* .nsi_remove       = */ (dfunptr_t)&DeeSeq_Remove,
-			/* .nsi_rremove      = */ (dfunptr_t)&DeeSeq_RRemove,
-			/* .nsi_removeall    = */ (dfunptr_t)&DeeSeq_RemoveAll,
-			/* .nsi_removeif     = */ (dfunptr_t)&DeeSeq_RemoveIf
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -3512,12 +3513,11 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWLIST(seq_sort_kwlist, { K(key), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_min(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:min", &key))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:min", &key))
 		goto err;
 	if (DeeNone_Check(key))
 		return DeeSeq_Min(self);
@@ -3530,7 +3530,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_max(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:max", &key))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:max", &key))
 		goto err;
 	if (DeeNone_Check(key))
 		return DeeSeq_Max(self);
@@ -4050,7 +4050,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_sorted(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:sorted", &key))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sorted", &key))
 		goto err;
 	if (DeeNone_Check(key))
 		key = NULL;
@@ -4131,13 +4131,12 @@ err:
 
 
 /* Mutable-Sequence functions */
-INTERN DEFINE_KWLIST(seq_insert_kwlist, { K(index), K(item), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_insert(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, UNPuSIZ "o:insert", &index, &item))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item, UNPuSIZ "o:insert", &index, &item))
 		goto err;
 	if (DeeSeq_Insert(self, index, item))
 		goto err;
@@ -4146,13 +4145,13 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWLIST(seq_insertall_kwlist, { K(index), K(items), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_insertall(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *items;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist, UNPuSIZ "o:insertall", &index, &items))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_items,
+	                    UNPuSIZ "o:insertall", &index, &items))
 		goto err;
 	if (DeeSeq_InsertAll(self, index, items))
 		goto err;
@@ -4161,14 +4160,14 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWLIST(seq_erase_kwlist, { K(index), K(count), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_erase(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	size_t index, count = 1, result;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, UNPuSIZ "|" UNPuSIZ ":erase", &index, &count))
+	size_t start, count = 1, result;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_count,
+	                    UNPuSIZ "|" UNPuSIZ ":erase", &start, &count))
 		goto err;
-	result = DeeSeq_Erase(self, index, count);
+	result = DeeSeq_Erase(self, start, count);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -4176,25 +4175,24 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWLIST(seq_xch_kwlist, { K(index), K(value), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_xchitem(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_xch_kwlist, UNPuSIZ "o:xch", &index, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	                    UNPuSIZ "o:xch", &index, &value))
 		goto err;
 	return DeeSeq_XchItem(self, index, value);
 err:
 	return NULL;
 }
 
-INTERN DEFINE_KWLIST(seq_pop_kwlist, { K(index), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_pop(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t index = -1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "|" UNPdSIZ ":pop", &index))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index, "|" UNPdSIZ ":pop", &index))
 		goto err;
 	return DeeSeq_PopItem(self, index);
 err:
@@ -4311,15 +4309,16 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWLIST(seq_removeif_kwlist, { K(should), K(start), K(end), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_removeif(DeeObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *should;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":removeif", &should, &start, &end))
+	size_t result, start = 0, end = (size_t)-1, max = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__should_start_end_max,
+	                    "o|" UNPdSIZ UNPdSIZ UNPdSIZ ":removeif",
+	                    &should, &start, &end, &max))
 		goto err;
+	(void)max; /* Only supported in new API */
 	result = DeeSeq_RemoveIf(self, start, end, should);
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -4344,8 +4343,7 @@ seq_fill(DeeObject *self, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1, result;
 	DeeObject *filler = Dee_None;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(start), K(end), K(filler), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_filler,
 	                    "|" UNPdSIZ UNPdSIZ "o:fill",
 	                    &start, &end, &filler))
 		goto err;
@@ -4357,28 +4355,27 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWLIST(seq_resize_kwlist, { K(newsize), K(filler), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_resize(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	size_t newsize, oldsize;
+	size_t size, oldsize;
 	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist,
-	                    UNPuSIZ "|o:resize", &newsize, &filler))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__size_filler,
+	                    UNPuSIZ "|o:resize", &size, &filler))
 		goto err;
-	if (!newsize) {
+	if (!size) {
 		result = DeeObject_CallAttr(self, (DeeObject *)&str_clear, 0, NULL);
 	} else {
 		oldsize = DeeObject_Size(self);
 		if unlikely(oldsize == (size_t)-1)
 			goto err;
-		if (newsize < oldsize) {
+		if (size < oldsize) {
 			result = DeeObject_CallAttrf(self, (DeeObject *)&str_erase,
-			                             PCKuSIZ "o", newsize, DeeInt_MinusOne);
-		} else if (newsize > oldsize) {
+			                             PCKuSIZ "o", size, DeeInt_MinusOne);
+		} else if (size > oldsize) {
 			DREF DeeObject *seq_extension;
-			seq_extension = DeeSeq_RepeatItem(filler, newsize - oldsize);
+			seq_extension = DeeSeq_RepeatItem(filler, size - oldsize);
 			if unlikely(!seq_extension)
 				goto err;
 			result = DeeObject_CallAttr(self, (DeeObject *)&str_extend, 1, &seq_extension);
@@ -4415,7 +4412,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_sort(DeeObject *self, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:sort", &key))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sort", &key))
 		goto err;
 	if (DeeNone_Check(key))
 		key = NULL;
@@ -4446,12 +4443,11 @@ DOC_DEF(seq_byhash_doc,
         /**/ "${return myDict[ConstructNewCopyOfKey(values...)]} "
         /**/ "can be written more efficiently as "
         /**/ "${for (local e: myDict.byhash(hashOfKeyFromValues(values...))) if (e.equals(values...)) return e;}");
-INTERN DEFINE_KWLIST(seq_byhash_kwlist, { K(template), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_byhash(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
 		goto err;
 	return DeeSeq_HashFilter(self, DeeObject_Hash(template_));
 err:
@@ -4638,14 +4634,13 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWLIST(seq_binsert_kwlist, { K(elem), K(key), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_binsert(DeeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *index, *result;
 	DeeObject *args[2]; /* elem, key */
 	args[1] = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_binsert_kwlist, "o|o:binsert", &args[0], &args[1]))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_key, "o|o:binsert", &args[0], &args[1]))
 		goto err;
 	index = DeeObject_CallAttrString(self, "bposition", 2, args);
 	if unlikely(!index)

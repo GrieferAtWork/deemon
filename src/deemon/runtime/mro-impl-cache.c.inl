@@ -617,7 +617,7 @@ DECL_BEGIN
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
 	DeeClass_CallInstanceAttributeTupleKw(class_type, attr, args, LOCAL_kw)
 #define LOCAL_unpack_one_for_getter(p_thisarg) \
-	DeeArg_UnpackKw(LOCAL_argc, LOCAL_argv, LOCAL_kw, getter_kwlist, "o:get", p_thisarg)
+	DeeArg_UnpackKw(LOCAL_argc, LOCAL_argv, LOCAL_kw, kwlist__thisarg, "o:get", p_thisarg)
 #elif defined(LOCAL_HAS_args)
 #define LOCAL_invoke_object_thisarg(ob, thisarg) DeeObject_ThisCallTuple(ob, thisarg, args)
 #define LOCAL_invoke_object(ob)                  DeeObject_CallTuple(ob, args)
@@ -635,7 +635,7 @@ DECL_BEGIN
 #define LOCAL_invoke_instance_attribute(class_type, attr) \
 	DeeClass_CallInstanceAttributeKw(class_type, attr, LOCAL_argc, LOCAL_argv, LOCAL_kw)
 #define LOCAL_unpack_one_for_getter(p_thisarg) \
-	DeeArg_UnpackKw(LOCAL_argc, LOCAL_argv, LOCAL_kw, getter_kwlist, "o:get", p_thisarg)
+	DeeArg_UnpackKw(LOCAL_argc, LOCAL_argv, LOCAL_kw, kwlist__thisarg, "o:get", p_thisarg)
 #elif defined(LOCAL_argc)
 #define LOCAL_invoke_object_thisarg(ob, thisarg) DeeObject_ThisCall(ob, thisarg, LOCAL_argc, LOCAL_argv)
 #define LOCAL_invoke_object(ob)                  DeeObject_Call(ob, LOCAL_argc, LOCAL_argv)

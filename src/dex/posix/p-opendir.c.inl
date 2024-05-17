@@ -1963,7 +1963,7 @@ diriter_visit(DeeDirIteratorObject *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE struct keyword opendir_kwlist[] = { K(path), K(skipdots), K(inheritfd), KEND };
+PRIVATE DEFINE_KWLIST(opendir_kwlist, { K(path), K(skipdots), K(inheritfd), KEND });
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diriter_init_kw(DeeDirIteratorObject *__restrict self,

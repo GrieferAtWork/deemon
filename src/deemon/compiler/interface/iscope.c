@@ -36,6 +36,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 
+#include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
@@ -363,10 +364,10 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 	DeeObject *name, *loc = NULL;
 	bool requirenew = true;
 	char *name_utf8;
-	PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|bo:newlocal", &name, &requirenew, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_requirenew_loc,
+	                    "o|bo:newlocal", &name, &requirenew, &loc))
 		goto done_compiler_end;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto done_compiler_end;

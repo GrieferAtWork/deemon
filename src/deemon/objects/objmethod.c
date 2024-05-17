@@ -39,6 +39,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -1352,10 +1353,6 @@ PRIVATE struct type_cmp clsproperty_cmp = {
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&clsproperty_compare_eq,
 };
 
-INTERN struct keyword getter_kwlist[] = { K(thisarg), KEND };
-
-PRIVATE struct keyword setter_kwlist[] = { K(thisarg), K(value), KEND };
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get(DeeClsPropertyObject *__restrict self,
                 size_t argc, DeeObject *const *argv) {
@@ -1383,7 +1380,7 @@ clsproperty_get_kw(DeeClsPropertyObject *__restrict self,
 		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
 		goto err;
 	}
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
@@ -1402,7 +1399,7 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
 		err_cant_access_attribute_string(&DeeClsProperty_Type, "delete", ATTR_ACCESS_GET);
 		goto err;
 	}
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:delete", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
@@ -1423,7 +1420,7 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_set, ATTR_ACCESS_GET);
 		goto err;
 	}
-	if (DeeArg_UnpackKw(argc, argv, kw, setter_kwlist, "oo:set", &thisarg, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg_value, "oo:set", &thisarg, &value))
 		goto err;
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
@@ -1700,7 +1697,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_get_kw(DeeClsMemberObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
@@ -1714,7 +1711,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_delete(DeeClsMemberObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:delete", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
@@ -1730,7 +1727,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_set(DeeClsMemberObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg, *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "oo:set", &thisarg, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "oo:set", &thisarg, &value))
 		goto err;
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))

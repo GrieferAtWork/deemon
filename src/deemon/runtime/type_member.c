@@ -39,6 +39,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 
 /* Type member access. */
@@ -470,8 +471,6 @@ type_getset_set(struct type_getset const *desc,
 	                                        desc->gs_name, ATTR_ACCESS_SET);
 }
 
-PRIVATE struct keyword getter_kwlist[] = { K(thisarg), KEND };
-
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obprop_call(DeeTypeObject *cls_type,
                  struct type_getset const *desc,
@@ -498,7 +497,7 @@ type_obprop_call_kw(DeeTypeObject *cls_type,
 	DeeObject *thisarg;
 	if unlikely(!desc->gs_get)
 		goto err_unbound;
-	if unlikely(DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
+	if unlikely(DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
 		goto err;
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
 		goto err;
@@ -555,7 +554,7 @@ type_obmemb_call_kw(DeeTypeObject *cls_type,
                     size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__thisarg, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))

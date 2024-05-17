@@ -32,6 +32,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/weakref.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -135,9 +136,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_init_kw(WeakRef *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *obj;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(obj), K(callback), KEND });
 	self->wr_del = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|o:WeakRef", &obj, &self->wr_del))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__obj_callback,
+	                    "o|o:WeakRef", &obj, &self->wr_del))
 		goto err;
 	if (self->wr_del) {
 		Dee_Incref(self->wr_del);

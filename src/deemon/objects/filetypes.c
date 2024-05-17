@@ -41,6 +41,7 @@
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "gc_inspect.h"
@@ -667,9 +668,8 @@ reader_ctor(Reader *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_init_kw(Reader *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE DEFINE_KWLIST(kwlist, { K(data), K(start), K(end), K(pos), KEND });
 	size_t start = 0, end = (size_t)-1, pos = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__data_start_end_pos,
 	                    "o|" UNPdSIZ UNPdSIZ UNPdSIZ ":_FileReader",
 	                    &self->r_owner, &start, &end, &pos))
 		goto err;
@@ -1938,8 +1938,7 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	bool mustmmap   = false;
 	bool mapshared  = false;
 	unsigned int mapflags;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(fd), K(minbytes), K(maxbytes), K(offset), K(nulbytes), K(readall), K(mustmmap), K(mapshared), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__fd_minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared,
 	                    "o|" UNPdSIZ UNPdSIZ UNPuN(Dee_SIZEOF_POS_T) UNPdSIZ "bbb" ":mapfile",
 	                    &fd, &minbytes, &maxbytes, &offset, &nulbytes, &readall, &mustmmap, &mapshared))
 		goto err;

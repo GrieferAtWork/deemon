@@ -303,7 +303,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultSortedWithCallSortedDataFunction
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultSortedWithCallSortedDataMethod
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultSortedWithCallSortedDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithProxyCopyDefault
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithEnumerateDefaultAndCopy
 #elif defined(DEFINE_DeeType_SeqCache_RequireSortedWithKey)
 #define LOCAL_CANONICAL_NAME                           sorted
 #define LOCAL_generic_seq_foo                          generic_seq_sorted
@@ -313,7 +313,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultSortedWithKeyWithCallSortedDataMethod
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultSortedWithKeyWithCallSortedDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithKeyWithProxyCopyDefault
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithKeyWithEnumerateDefaultAndCopy
 #else /* DEFINE_DeeType_SeqCache_Require... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeType_SeqCache_Require... */
@@ -633,10 +633,10 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *__restrict sel
 		return &DeeSeq_DefaultSortWithKeyWithSizeAndGetItemIndexAndSetItemIndex;
 #elif defined(DEFINE_DeeType_SeqCache_RequireSorted)
 	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
-		return &DeeSeq_DefaultSortedWithProxyCopyDefault; /* non-Default would also be OK */
+		return &DeeSeq_DefaultSortedWithEnumerateDefaultAndCopy; /* non-Default would also be OK */
 #elif defined(DEFINE_DeeType_SeqCache_RequireSortedWithKey)
 	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
-		return &DeeSeq_DefaultSortedWithKeyWithProxyCopyDefault; /* non-Default would also be OK */
+		return &DeeSeq_DefaultSortedWithKeyWithEnumerateDefaultAndCopy; /* non-Default would also be OK */
 #endif /* ... */
 	return NULL;
 }

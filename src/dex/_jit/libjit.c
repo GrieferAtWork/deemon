@@ -41,7 +41,7 @@ DECL_BEGIN
  * starts with a leading underscore, indicative of this fact. */
 
 
-PRIVATE struct keyword exec_kwlist[] = { K(expr), K(globals), K(import), K(base), KEND };
+PRIVATE DEFINE_KWLIST(exec_kwlist, { K(expr), K(globals), K(import), K(base), KEND });
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {

@@ -36,6 +36,7 @@
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -238,7 +239,6 @@ err:
 }
 
 PRIVATE char const error_init_fmt[] = "|oo:Error";
-PRIVATE struct keyword error_init_kwlist[] = { K(message), K(inner), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_init(DeeErrorObject *__restrict self,
@@ -277,7 +277,8 @@ error_init_kw(DeeErrorObject *__restrict self, size_t argc,
 	ASSERT(instance_size >= sizeof(DeeErrorObject));
 	self->e_message = NULL;
 	self->e_inner   = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, error_init_kwlist, error_init_fmt, &self->e_message, &self->e_inner))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__message_inner, error_init_fmt,
+	                    &self->e_message, &self->e_inner))
 		goto err;
 	if (self->e_message &&
 	    DeeObject_AssertTypeExact(self->e_message, &DeeString_Type))
@@ -733,10 +734,11 @@ systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
 #ifdef CONFIG_HOST_WINDOWS
 	DeeObject *obj_nterr_np = NULL;
 	DWORD dwLastError = GetLastError();
-	PRIVATE DEFINE_KWLIST(kwlist, { K(message), K(inner), K(errno), K(nterr_np), KEND });
 	self->e_inner   = NULL;
 	self->e_message = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|oooo:SystemError",
+	if (DeeArg_UnpackKw(argc, argv, kw,
+	                    kwlist__message_inner_errno_nterr_np,
+	                    "|oooo:SystemError",
 	                    &self->e_message, &self->e_inner,
 	                    &obj_errno, &obj_nterr_np))
 		goto err;
@@ -758,11 +760,12 @@ systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
 		self->se_errno     = DeeNTSystem_TranslateErrno(dwLastError);
 	}
 #else /* CONFIG_HOST_WINDOWS */
-	PRIVATE DEFINE_KWLIST(kwlist, { K(message), K(inner), K(errno), KEND });
 	int last_errno = DeeSystem_GetErrno();
 	self->e_inner   = NULL;
 	self->e_message = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|ooo:SystemError",
+	if (DeeArg_UnpackKw(argc, argv, kw,
+	                    kwlist__message_inner_errno,
+	                    "|ooo:SystemError",
 	                    &self->e_message, &self->e_inner,
 	                    &obj_errno))
 		goto err;

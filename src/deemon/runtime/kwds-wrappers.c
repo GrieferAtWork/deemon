@@ -39,6 +39,7 @@
 
 #include <hybrid/typecore.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -862,8 +863,8 @@ blv_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeTupleObject *kwargs;
 	DeeKwdsObject *kwds;
 	size_t positional;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(code), K(positional), K(kwargs), K(kwds), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o" UNPuSIZ "oo:_BlackListKwds",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__code_positional_kwargs_kwds,
+	                    "o" UNPuSIZ "oo:_BlackListKwds",
 	                    &code, &positional, &kwargs, &kwds))
 		goto err;
 	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
@@ -1843,8 +1844,8 @@ blkw_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeCodeObject *code;
 	DeeObject *kwds;
 	size_t positional;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(code), K(positional), K(kwds), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o" UNPuSIZ "o:_BlackListKw",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__code_positional_kwds,
+	                    "o" UNPuSIZ "o:_BlackListKw",
 	                    &code, &positional, &kwds))
 		goto err;
 	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))

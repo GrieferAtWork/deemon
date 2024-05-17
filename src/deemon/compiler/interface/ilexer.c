@@ -41,6 +41,7 @@
 #include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
 
+#include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
@@ -2228,7 +2229,6 @@ DOC_DEF(lexer_getkwd_doc,
         "(name:?Dstring,create=!t)->?X2?#Keyword?N\n"
         "Lookup the keyword associated with @name and return it, or ?N "
         "when @create is ?f and the keyword hasn't been accessed yet");
-PRIVATE struct keyword getkwd_kwlist[] = { K(name), K(create), KEND };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
@@ -2238,7 +2238,7 @@ lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
 	DeeObject *name;
 	bool create = true;
 	struct TPPKeyword *kwd;
-	if (DeeArg_UnpackKw(argc, argv, kw, getkwd_kwlist, "o|b:getkwd", &name, &create))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_create, "o|b:getkwd", &name, &create))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -2279,7 +2279,7 @@ lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
 	DeeObject *name;
 	bool create = true;
 	struct TPPKeyword *kwd;
-	if (DeeArg_UnpackKw(argc, argv, kw, getkwd_kwlist, "o|b:getxkwd", &name, &create))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_create, "o|b:getxkwd", &name, &create))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -2367,8 +2367,8 @@ lexer_define(DeeCompilerWrapperObject *self, size_t argc,
 	char *utf8_name, *utf8_value;
 	bool builtin = false;
 	uint16_t old_exceptsz;
-	PRIVATE struct keyword kwlist[] = { K(name), K(value), K(builtin), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|b:define", &name, &value, &builtin))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_value_builtin,
+	                    "oo|b:define", &name, &value, &builtin))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -2394,8 +2394,6 @@ err:
 	return NULL;
 }
 
-PRIVATE struct keyword assertion_kwlist[] = { K(predicate), K(answer), KEND };
-
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
@@ -2403,7 +2401,7 @@ lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
 	int error;
 	char *utf8_name, *utf8_value;
 	uint16_t old_exceptsz;
-	if (DeeArg_UnpackKw(argc, argv, kw, assertion_kwlist, "oo:addassert", &name, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__predicate_answer, "oo:addassert", &name, &value))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -2435,7 +2433,7 @@ lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
 	int error;
 	char *utf8_name, *utf8_value = NULL;
 	uint16_t old_exceptsz;
-	if (DeeArg_UnpackKw(argc, argv, kw, assertion_kwlist, "o|o:delassert", &name, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__predicate_answer, "o|o:delassert", &name, &value))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -4884,8 +4882,8 @@ file_nextchunk(DeeCompilerItemObject *self, size_t argc,
 	DREF DeeObject *result = NULL;
 	int error;
 	struct TPPFile *file;
-	PRIVATE struct keyword kwlist[] = { K(extend), K(binary), K(nonblocking), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|bbb", &extend, &binary, &nonblocking))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__extend_binary_nonblocking,
+	                    "|bbb", &extend, &binary, &nonblocking))
 		goto done;
 	if (extend)
 		flags |= TPPFILE_NEXTCHUNK_FLAG_EXTEND;

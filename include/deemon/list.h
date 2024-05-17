@@ -129,7 +129,7 @@ DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t arg
  * @return: (size_t)-1: Error. */
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
 DeeList_Erase(DeeObject *__restrict self,
-              size_t index, size_t count);
+              size_t start, size_t count);
 
 /* @return: * :   The popped element.
  * @return: NULL: The given index was out-of-bounds and an IndexError was thrown. */
@@ -152,9 +152,9 @@ DeeList_Reverse(DeeObject *__restrict self);
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 4)) size_t DCALL
-DeeList_RemoveIf(DeeObject *self, size_t start,
-                 size_t end, DeeObject *should);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeList_RemoveIf(DeeObject *self, DeeObject *should,
+                 size_t start, size_t end, size_t max);
 
 /* Resize `self' to have a length of `newsize'.
  * If the size increases, use `filler' for new items.

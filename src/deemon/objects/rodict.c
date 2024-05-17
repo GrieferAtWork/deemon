@@ -36,6 +36,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/hashfilter.h"
@@ -1058,13 +1059,11 @@ rodict_sizeof(RoDict *self) {
 	                       sizeof(struct rodict_item)));
 }
 
-INTDEF struct keyword seq_byhash_kwlist[];
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_byhash(RoDict *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
 		goto err;
 	return DeeRoDict_ByHash(self, DeeObject_Hash(template_));
 err:

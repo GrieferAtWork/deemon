@@ -1152,7 +1152,7 @@ do_with_paren:
 		if (!kwds && DeeTuple_SIZE(args) == 1) {
 			module_name = DeeTuple_GET(args, 0);
 		} else if (kwds) {
-			PRIVATE struct keyword kwlist[] = { K(name), KEND };
+			PRIVATE DEFINE_KWLIST(kwlist, { K(name), KEND });
 			DREF DeeObject *temp;
 			temp = DeeKw_WrapInherited(kwds);
 			if unlikely(!temp)

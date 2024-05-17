@@ -58,7 +58,7 @@ socket_ctor(Socket *__restrict self,
             DeeObject *kw) {
 	int af, type, proto;
 	DeeObject *arg_af, *arg_type = Dee_None, *arg_proto = Dee_None;
-	PRIVATE struct keyword kwlist[] = { K(af), K(type), K(proto), KEND };
+	PRIVATE DEFINE_KWLIST(kwlist, { K(af), K(type), K(proto), KEND });
 	/* Parse and translate arguments. */
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:socket", &arg_af, &arg_type, &arg_proto))
 		goto err;

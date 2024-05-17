@@ -260,17 +260,9 @@ __pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 
 #ifdef LOCAL_HAVE_max_count
 #ifdef LOCAL_IS_SSTRIP
-#ifndef LSSTRIP_RSSTRIP_KWLIST_DEFINED
-#define LSSTRIP_RSSTRIP_KWLIST_DEFINED
-PRIVATE struct keyword lsstrip_rsstrip_kwlist[] = { K(needle), K(max), KEND };
-#endif /* !lsstrip_rsstrip_kwlist_DEFINED */
-#define LOCAL_kwlist lsstrip_rsstrip_kwlist
+#define LOCAL_kwlist kwlist__needle_max
 #else /* LOCAL_IS_SSTRIP */
-#ifndef LSTRIP_RSTRIP_KWLIST_DEFINED
-#define LSTRIP_RSTRIP_KWLIST_DEFINED
-PRIVATE struct keyword lstrip_rstrip_kwlist[] = { K(mask), K(max), KEND };
-#endif /* !lstrip_rstrip_kwlist_DEFINED */
-#define LOCAL_kwlist lstrip_rstrip_kwlist
+#define LOCAL_kwlist kwlist__mask_max
 #endif /* !LOCAL_IS_SSTRIP */
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL

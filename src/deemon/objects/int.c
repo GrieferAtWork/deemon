@@ -55,6 +55,7 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "int-8bit.h"
@@ -4155,16 +4156,15 @@ int_print(DeeIntObject *__restrict self, dformatprinter printer, void *arg) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr(DeeIntObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE struct keyword kwlist[] = { K(radix), K(precision), K(mode), KEND };
 	size_t precision = 0;
 	uint32_t flags_and_radix = 10 << DEEINT_PRINT_RSHIFT;
 	char const *flags_str = NULL;
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 UNPuSIZ "s:tostr",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__radix_precision_mode, "|" UNPu16 UNPuSIZ "s:tostr",
 	                    &((uint16_t *)&flags_and_radix)[0], &precision, &flags_str))
 		goto err;
 #else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPu16 UNPuSIZ "s:tostr",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__radix_precision_mode, "|" UNPu16 UNPuSIZ "s:tostr",
 	                    &((uint16_t *)&flags_and_radix)[1], &precision, &flags_str))
 		goto err;
 #endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
@@ -4195,12 +4195,10 @@ err:
 	return NULL;
 }
 
-INTERN struct keyword precision_kwlist[] = { K(precision), KEND };
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_hex(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t precision = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision,
 	                    "|" UNPuSIZ ":hex", &precision))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(16, DEEINT_PRINT_FNUMSYS), precision);
@@ -4211,7 +4209,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_bin(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t precision = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision,
 	                    "|" UNPuSIZ ":bin", &precision))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(2, DEEINT_PRINT_FNUMSYS), precision);
@@ -4222,7 +4220,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_oct(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t precision = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision,
 	                    "|" UNPuSIZ ":oct", &precision))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(8, DEEINT_PRINT_FNUMSYS), precision);
@@ -4301,13 +4299,14 @@ err_underflow:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tobytes(DeeIntObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE struct keyword kwlist[] = { K(length), K(byteorder), K(signed), KEND };
 	size_t length = (size_t)-1;
 	DeeObject *byteorder = Dee_None;
 	bool is_signed       = false;
 	bool encode_little;
 	DREF DeeObject *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|" UNPuSIZ "ob:tobytes",
+	if (DeeArg_UnpackKw(argc, argv, kw,
+	                    kwlist__length_byteorder_signed,
+	                    "|" UNPuSIZ "ob:tobytes",
 	                    &length, &byteorder, &is_signed))
 		goto err;
 	if (length == (size_t)-1) {
@@ -4360,11 +4359,10 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_bitcount(DeeIntObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE struct keyword kwlist[] = { K(signed), KEND };
 	bool is_signed = false;
 	size_t result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|b:bitcount",
-	                    &is_signed))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__signed,
+	                    "|b:bitcount", &is_signed))
 		goto err;
 	result = int_reqbits(self, is_signed);
 	if unlikely(result == (size_t)-1)
@@ -4378,14 +4376,15 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_frombytes(DeeObject *UNUSED(self), size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE struct keyword kwlist[] = { K(bytes), K(byteorder), K(signed), KEND };
 	DeeObject *bytes;
 	DeeObject *byteorder = Dee_None;
 	bool is_signed       = false;
 	bool encode_little;
 	DeeBuffer buf;
 	DREF DeeObject *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|ob:frombytes",
+	if (DeeArg_UnpackKw(argc, argv, kw,
+	                    kwlist__bytes_byteorder_signed,
+	                    "o|ob:frombytes",
 	                    &bytes, &byteorder, &is_signed))
 		goto err;
 	if (DeeNone_Check(byteorder)) {

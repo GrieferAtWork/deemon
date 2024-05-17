@@ -475,12 +475,14 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultSortedWithCallAttrSorted(DeeObject *self, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_sorted_data, &str_sorted, PCKuSIZ PCKuSIZ, start, end);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_sorted_data, &str_sorted,
+	                                 PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_sorted_data, &str_sorted, PCKuSIZ PCKuSIZ "o", start, end, key);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_sorted_data, &str_sorted,
+	                                 PCKuSIZ PCKuSIZ "o", start, end, key);
 }
 
 #undef LOCAL_DeeObject_CallAttr

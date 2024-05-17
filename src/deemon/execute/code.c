@@ -48,6 +48,7 @@
 
 #include <stdint.h>
 
+#include "../runtime/kwlist.h"
 #include "../objects/seq/svec.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -707,8 +708,6 @@ err_code_optimization_disabled(void) {
 	return DeeError_Throwf(&DeeError_UnsupportedAPI, "Code optimization is not available/possible");
 }
 
-PRIVATE DEFINE_KWLIST(code_optimize_kwlist, { K(tuple), K(kwds), K(async), KEND });
-
 INTERN NONNULL((1)) DREF DeeObject *DCALL
 function_optimize(DeeFunctionObject *__restrict self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
@@ -716,7 +715,7 @@ function_optimize(DeeFunctionObject *__restrict self, size_t argc,
 	bool for_kwds = false;
 	bool allow_async = false;
 	(void)self;
-	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bbb:optimize",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bbb:optimize",
 	                    &for_tuple, &for_kwds, &allow_async))
 		goto err;
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
@@ -754,7 +753,7 @@ code_optimize(DeeCodeObject *__restrict self, size_t argc,
 	bool for_kwds = false;
 	bool allow_async = false;
 	(void)self;
-	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bbb:optimize",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bbb:optimize",
 	                    &for_tuple, &for_kwds, &allow_async))
 		goto err;
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
@@ -791,7 +790,7 @@ function_optimized(DeeFunctionObject *__restrict self, size_t argc,
 	bool for_tuple = false;
 	bool for_kwds = false;
 	(void)self;
-	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bb:optimized", &for_tuple, &for_kwds))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bb:optimized", &for_tuple, &for_kwds))
 		goto err;
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	if (!for_tuple) {
@@ -817,7 +816,7 @@ code_optimized(DeeCodeObject *__restrict self, size_t argc,
 	bool for_tuple = false;
 	bool for_kwds = false;
 	(void)self;
-	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bb:optimized", &for_tuple, &for_kwds))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__tuple_kwds_async, "|bb:optimized", &for_tuple, &for_kwds))
 		goto err;
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	if (!for_tuple) {
@@ -1961,21 +1960,8 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	 *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType=!N,
 	 *  nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
 	 *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
-	PRIVATE DEFINE_KWLIST(kwlist, { K(text),
-	                                K(module),
-	                                K(constants),
-	                                K(except),
-	                                K(nlocal),
-	                                K(nstack),
-	                                K(nref),
-	                                K(nstatic),
-	                                K(argc),
-	                                K(keywords),
-	                                K(defaults),
-	                                K(flags),
-	                                K(ddi),
-	                                KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	if (DeeArg_UnpackKw(argc, argv, kw,
+	                    kwlist__text_module_constants_except_nlocal_nstack_nref_nstatic_argc_keywords_defaults_flags_ddi,
 	                    "|"
 	                    "o"    /* text */
 	                    "o"    /* module */

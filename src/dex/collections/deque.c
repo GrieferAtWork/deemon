@@ -1277,14 +1277,14 @@ err:
 	return NULL;
 }
 
-INTERN struct keyword seq_insert_kwlist[] = { K(index), K(item), KEND };
 
+PRIVATE DEFINE_KWLIST(kwlist_index_item, { K(index), K(item), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_insert(Deque *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, UNPdSIZ "o:insert", &index, &item))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_index_item, UNPdSIZ "o:insert", &index, &item))
 		goto err;
 	if (Deque_Insert(self, index, item))
 		goto err;
@@ -1293,14 +1293,14 @@ err:
 	return NULL;
 }
 
-INTERN struct keyword seq_erase_kwlist[] = { K(index), K(count), KEND };
+PRIVATE DEFINE_KWLIST(kwlist__start_count, { K(start), K(count), KEND });
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_erase(Deque *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	size_t index, result;
 	size_t num_items = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, UNPdSIZ "|" UNPuSIZ ":erase", &index, &num_items))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_count, UNPdSIZ "|" UNPuSIZ ":erase", &index, &num_items))
 		goto err;
 	result = Deque_Erase(self, index, num_items);
 	if unlikely(result == (size_t)-1)
@@ -1310,13 +1310,13 @@ err:
 	return NULL;
 }
 
-INTERN struct keyword seq_pop_kwlist[] = { K(index), KEND };
+PRIVATE DEFINE_KWLIST(kwlist__index, { K(index), KEND });
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_pop(Deque *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, UNPdSIZ ":pop", &index))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index, UNPdSIZ ":pop", &index))
 		goto err;
 	return Deque_Pop(self, index);
 err:

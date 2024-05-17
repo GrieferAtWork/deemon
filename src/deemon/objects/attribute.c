@@ -64,6 +64,7 @@ __pragma_GCC_diagnostic_ignored(Wmaybe_uninitialized)
 
 #include <hybrid/spcall.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -384,8 +385,6 @@ err:
 	return -1;
 }
 
-PRIVATE DEFINE_KWLIST(attrinit_kwlist, { K(ob), K(name), K(flagmask), K(flagval), K(decl), KEND });
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 attribute_init(DeeAttributeObject *__restrict self,
                size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -396,7 +395,7 @@ attribute_init(DeeAttributeObject *__restrict self,
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, attrinit_kwlist, "oo|ooo:Attribute",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__ob_name_flagmask_flagval_decl, "oo|ooo:Attribute",
 	                    &search_self, &search_name, &flagmask,
 	                    &flagval, &rules.alr_decl))
 		goto err;
@@ -463,7 +462,7 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, attrinit_kwlist, "oo|ooo:exists",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__ob_name_flagmask_flagval_decl, "oo|ooo:exists",
 	                    &search_self, &search_name, &flagmask,
 	                    &flagval, &rules.alr_decl))
 		goto err;
@@ -527,7 +526,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
-	if (DeeArg_UnpackKw(argc, argv, kw, attrinit_kwlist, "oo|ooo:lookup",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__ob_name_flagmask_flagval_decl, "oo|ooo:lookup",
 	                    &search_self, &search_name, &flagmask,
 	                    &flagval, &rules.alr_decl))
 		goto err;

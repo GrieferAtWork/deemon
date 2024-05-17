@@ -57,6 +57,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/default-api.h"
@@ -2895,12 +2896,11 @@ type_pclear(DeeTypeObject *__restrict self,
 		class_pclear(self, gc_priority);
 }
 
-PRIVATE struct keyword kwlist_other[] = { K(other), KEND };
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_baseof(DeeTypeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *other;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:baseof", &other))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:baseof", &other))
 		goto err;
 	if (!DeeType_Check((DeeObject *)other))
 		return_false;
@@ -2913,7 +2913,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_derivedfrom(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *other;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:derivedfrom", &other))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:derivedfrom", &other))
 		goto err;
 	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Extends(self, other)]);
 err:
@@ -2924,7 +2924,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_implements(DeeTypeObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *other;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:implements", &other))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:implements", &other))
 		goto err;
 	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Implements(self, other)]);
 err:
@@ -3522,15 +3522,11 @@ PRIVATE char const meth_setinstanceattr[]   = "oo:setinstanceattr";
 #define STR_delinstanceattr   (meth_delinstanceattr + 2)
 #define STR_setinstanceattr   (meth_setinstanceattr + 3)
 
-PRIVATE struct keyword getattr_kwdlist[]   = { K(name), KEND };
-PRIVATE struct keyword setattr_kwdlist[]   = { K(name), K(value), KEND };
-PRIVATE struct keyword boundattr_kwdlist[] = { K(name), K(allow_missing), KEND };
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_getinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, meth_getinstanceattr, &name))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr, meth_getinstanceattr, &name))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -3558,7 +3554,7 @@ type_hasinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	int result;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr,
 	                    meth_hasinstanceattr, &name))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -3577,7 +3573,7 @@ type_boundinstanceattr(DeeTypeObject *self, size_t argc,
 	DeeObject *name;
 	bool allow_missing = true;
 	int result;
-	if (DeeArg_UnpackKw(argc, argv, kw, boundattr_kwdlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr_allow_missing,
 	                    meth_boundinstanceattr, &name, &allow_missing))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -3600,7 +3596,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_delinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr,
 	                    meth_delinstanceattr, &name))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -3616,7 +3612,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_setinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, setattr_kwdlist, meth_setattr, &name, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr_value, meth_setattr, &name, &value))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -3661,7 +3657,7 @@ type_hasattribute(DeeTypeObject *self, size_t argc,
 	DeeObject *name;
 	char const *name_str;
 	dhash_t name_hash;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasattribute", &name))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr, "o:hasattribute", &name))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -3707,7 +3703,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasprivateattribute(DeeTypeObject *self, size_t argc,
                          DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr,
 	                    "o:hasprivateattribute", &name))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -3726,7 +3722,7 @@ type_hasoperator(DeeTypeObject *self, size_t argc,
 	DeeObject *name;
 	Dee_operator_t opid;
 	size_t op_argc = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_argc,
 	                    "o|" UNPuSIZ ":hasoperator",
 	                    &name, &op_argc))
 		goto err;
@@ -3756,7 +3752,7 @@ type_hasprivateoperator(DeeTypeObject *self, size_t argc,
 	DeeObject *name;
 	Dee_operator_t opid;
 	size_t op_argc = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_argc,
 	                    "o|" UNPuSIZ ":hasprivateoperator",
 	                    &name, &op_argc))
 		goto err;

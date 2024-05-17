@@ -45,6 +45,7 @@
 #include "repeat.h"
 
 /**/
+#include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
@@ -1063,7 +1064,8 @@ DeeSeq_DefaultSortWithError(DeeObject *self, size_t start, size_t end) {
 /* sort() (with key)                                                    */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
-DeeSeq_DefaultSortWithKeyWithTSCSortedAndSetRangeIndex(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+DeeSeq_DefaultSortWithKeyWithTSCSortedAndSetRangeIndex(DeeObject *self, size_t start,
+                                                       size_t end, DeeObject *key) {
 	int result;
 	DREF DeeObject *sorted;
 	sorted = (*DeeType_SeqCache_RequireSortedWithKey(Dee_TYPE(self)))(self, start, end, key);
@@ -1077,7 +1079,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
-DeeSeq_DefaultSortWithKeyWithSizeAndGetItemIndexAndSetItemIndex(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+DeeSeq_DefaultSortWithKeyWithSizeAndGetItemIndexAndSetItemIndex(DeeObject *self, size_t start,
+                                                                size_t end, DeeObject *key) {
 	/* TODO */
 	(void)self;
 	(void)start;
@@ -1096,7 +1099,7 @@ DeeSeq_DefaultSortWithKeyWithError(DeeObject *self, size_t start, size_t end, De
 /* sorted()                                                             */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_DefaultSortedWithProxyCopyDefault(DeeObject *self, size_t start, size_t end) {
+DeeSeq_DefaultSortedWithEnumerateDefaultAndCopy(DeeObject *self, size_t start, size_t end) {
 	/* TODO */
 	(void)self;
 	(void)start;
@@ -1110,7 +1113,7 @@ DeeSeq_DefaultSortedWithProxyCopyDefault(DeeObject *self, size_t start, size_t e
 /* sorted() (with key)                                                  */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-DeeSeq_DefaultSortedWithKeyWithProxyCopyDefault(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+DeeSeq_DefaultSortedWithKeyWithEnumerateDefaultAndCopy(DeeObject *self, size_t start, size_t end, DeeObject *key) {
 	/* TODO */
 	(void)self;
 	(void)start;
@@ -1127,24 +1130,11 @@ DeeSeq_DefaultSortedWithKeyWithProxyCopyDefault(DeeObject *self, size_t start, s
 /* Deemon user-code wrappers                                            */
 /************************************************************************/
 
-PRIVATE DEFINE_KWLIST(kwlist_start_count, { K(start), K(count), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_index_item, { K(index), K(item), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_index_items, { K(index), K(items), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_index_value, { K(index), K(value), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_index, { K(index), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_item_start_end_key, { K(item), K(start), K(end), K(key), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_item_start_end_max_key, { K(item), K(start), K(end), K(max), K(key), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_should_start_end_max, { K(should), K(start), K(end), K(max), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_size_filler, { K(size), K(filler), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_start_end_filler, { K(start), K(end), K(filler), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_start_end, { K(start), K(end), KEND });
-PRIVATE DEFINE_KWLIST(kwlist_start_end_key, { K(start), K(end), K(key), KEND });
-
 /* Generic sequence mutable function pointers. */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_erase(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t start, count = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_count,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_count,
 	                    UNPuSIZ "|" UNPuSIZ ":erase",
 	                    &start, &count))
 		goto err;
@@ -1159,7 +1149,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_insert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_index_item,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
 	                    UNPuSIZ "o:insert",
 	                    &index, &item))
 		goto err;
@@ -1174,7 +1164,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_insertall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *items;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_index_items,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_items,
 	                    UNPuSIZ "o:insertall",
 	                    &index, &items))
 		goto err;
@@ -1225,9 +1215,8 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_xchitem(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_index_value,
-	                    UNPuSIZ "o:xchitem",
-	                    &index, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	                    UNPuSIZ "o:xchitem", &index, &value))
 		goto err;
 	if unlikely(new_DeeSeq_XchItemIndex(self, index, value))
 		goto err;
@@ -1250,7 +1239,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_pop(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	Dee_ssize_t index;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_index,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
 	                    UNPdSIZ ":pop", &index))
 		goto err;
 	return new_DeeSeq_Pop(self, index);
@@ -1263,7 +1252,7 @@ generic_seq_remove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObje
 	int result;
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_item_start_end_key,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
 	                    "o|" UNPuSIZ UNPuSIZ "o:remove",
 	                    &item, &start, &end, &key))
 		goto err;
@@ -1282,7 +1271,7 @@ generic_seq_rremove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObj
 	int result;
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_item_start_end_key,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
 	                    "o|" UNPuSIZ UNPuSIZ "o:rremove",
 	                    &item, &start, &end, &key))
 		goto err;
@@ -1301,7 +1290,7 @@ generic_seq_removeall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeO
 	size_t result;
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_item_start_end_max_key,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_max_key,
 	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
 	                    &item, &start, &end, &max, &key))
 		goto err;
@@ -1320,7 +1309,7 @@ generic_seq_removeif(DeeObject *self, size_t argc, DeeObject *const *argv, DeeOb
 	size_t result;
 	DeeObject *should;
 	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_should_start_end_max,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__should_start_end_max,
 	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
 	                    &should, &start, &end, &max))
 		goto err;
@@ -1336,7 +1325,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_resize(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t size;
 	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_size_filler,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__size_filler,
 	                    UNPuSIZ "|o:resize", &size, &filler))
 		goto err;
 	if unlikely(new_DeeSeq_Resize(self, size, filler))
@@ -1350,7 +1339,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_fill(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end_filler,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_filler,
 	                    "|" UNPuSIZ UNPuSIZ "o:fill",
 	                    &start, &end, &filler))
 		goto err;
@@ -1364,7 +1353,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_reverse(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
 	                    "|" UNPuSIZ UNPuSIZ ":reverse",
 	                    &start, &end))
 		goto err;
@@ -1378,7 +1367,7 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_reversed(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
 	                    "|" UNPuSIZ UNPuSIZ ":reversed",
 	                    &start, &end))
 		goto err;
@@ -1391,7 +1380,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_sort(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	DeeObject *key = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end_key,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
 	                    "|" UNPuSIZ UNPuSIZ "o:sort",
 	                    &start, &end, &key))
 		goto err;
@@ -1408,7 +1397,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_sorted(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	DeeObject *key = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end_key,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
 	                    "|" UNPuSIZ UNPuSIZ "o:sorted",
 	                    &start, &end, &key))
 		goto err;

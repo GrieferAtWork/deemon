@@ -35,6 +35,7 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -100,11 +101,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_init_kw(Property *__restrict self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE DEFINE_KWLIST(kwlist, { K(getter), K(delete), K(setter), KEND });
 	self->p_get = NULL;
 	self->p_del = NULL;
 	self->p_set = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|ooo:Property",
+	if (DeeArg_UnpackKw(argc, argv, kw,
+	                    kwlist__getter_delete_setter,
+	                    "|ooo:Property",
 	                    &self->p_get, &self->p_del, &self->p_set))
 		goto err;
 	if (DeeNone_Check(self->p_get))

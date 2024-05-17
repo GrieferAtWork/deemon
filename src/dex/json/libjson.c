@@ -3420,7 +3420,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct keyword parse_kwlist[] = { K(data), K(into), KEND };
+PRIVATE DEFINE_KWLIST(parse_kwlist, { K(data), K(into), KEND });
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libjson_parse(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -3508,7 +3508,7 @@ err:
 	return NULL;
 }
 
-PRIVATE struct keyword write_kwlist[] = { K(data), K(into), K(pretty), K(recursion), KEND };
+PRIVATE DEFINE_KWLIST(write_kwlist, { K(data), K(into), K(pretty), K(recursion), KEND });
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libjson_write(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int error;

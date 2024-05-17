@@ -140,7 +140,6 @@ DECL_BEGIN
 #define Dee_string_object string_object
 #define dee_kwds_object   kwds_object
 #define dee_kwargs        kwds_args
-#define dee_keyword       keyword
 #define DEFINE_KWDS       Dee_DEFINE_KWDS
 #define Dee_code_object   code_object
 #endif /* DEE_SOURCE */
@@ -178,7 +177,7 @@ struct dee_kwds_object {
 	 * >> PRIVATE WUNUSED DREF DeeObject *DCALL
 	 * >> foo(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	 * >>     DeeObject *x, *y, *func = Dee_None;
-	 * >>     PRIVATE struct dee_keyword kwlist[] = { K(x), K(y), K(func), KEND };
+	 * >>     PRIVATE DEFINE_KWLIST(kwlist, { K(x), K(y), K(func), KEND });
 	 * >>     if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|o:foo", &x, &y, &func))
 	 * >>         goto err;
 	 * >>     return DeeObject_CallPack(func, 2, x, y);

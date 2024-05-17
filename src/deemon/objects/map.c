@@ -40,6 +40,7 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/byattr.h"
@@ -48,13 +49,11 @@
 
 DECL_BEGIN
 
-INTDEF struct keyword seq_byhash_kwlist[];
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_byhash(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
 		goto err;
 	return DeeMap_HashFilter(self, DeeObject_Hash(template_));
 err:
@@ -1046,7 +1045,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxyitems_byhash(MapProxy *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
 		goto err;
 	/* Invoke byhash() on the underlying mapping. */
 	return DeeObject_CallAttrStringf(self->mp_map, "byhash", PCKuSIZ,

@@ -43,6 +43,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 
+#include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
@@ -59,10 +60,9 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw) {
-	PRIVATE struct keyword kwlist[] = { K(module), KEND };
 	DeeObject *module = Dee_None;
 	/* TODO: All those other arguments, like compiler options, etc. */
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|o", &module))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__module, "|o", &module))
 		goto err;
 	if (DeeNone_Check(module)) {
 		module = DeeModule_New(Dee_EmptyString);
@@ -314,10 +314,9 @@ ast_makeconstexpr(DeeCompilerObject *self, size_t argc,
 	DeeScopeObject *ast_scope;
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	PRIVATE struct keyword kwlist[] = { K(value), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:makeconstexpr", &value, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__value_scope_loc, "o|oo:makeconstexpr", &value, &scope, &loc))
 		goto done_compiler_end;
 	ast_scope = get_scope(scope);
 	if unlikely(!ast_scope)
@@ -336,8 +335,6 @@ done:
 	return result;
 }
 
-PRIVATE struct keyword makesym_kwlist[] = { K(sym), K(scope), K(loc), KEND };
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makesym(DeeCompilerObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
@@ -349,7 +346,7 @@ ast_makesym(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, makesym_kwlist, "o|oo:makesym", &sym, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makesym", &sym, &scope, &loc))
 		goto done_compiler_end;
 	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
 		goto done_compiler_end;
@@ -393,7 +390,7 @@ ast_makeunbind(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, makesym_kwlist, "o|oo:makeunbind", &sym, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makeunbind", &sym, &scope, &loc))
 		goto done_compiler_end;
 	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
 		goto done_compiler_end;
@@ -436,7 +433,7 @@ ast_makebound(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, makesym_kwlist, "o|oo:makebound", &sym, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__sym_scope_loc, "o|oo:makebound", &sym, &scope, &loc))
 		goto done_compiler_end;
 	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
 		goto done_compiler_end;
@@ -510,10 +507,10 @@ ast_makemultiple(DeeCompilerObject *self, size_t argc,
 	DeeTypeObject *typing = (DeeTypeObject *)Dee_None;
 	DREF DeeCompilerAstObject **branch_v;
 	size_t i, branch_c;
-	PRIVATE struct keyword kwlist[] = { K(branches), K(typing), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|ooo:makemultiple", &branches, &typing, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__branches_typing_scope_loc,
+	                    "o|ooo:makemultiple", &branches, &typing, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -565,8 +562,6 @@ done:
 	return result;
 }
 
-PRIVATE struct keyword makeexpr_kwlist[] = { K(expr), K(scope), K(loc), KEND };
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makereturn(DeeCompilerObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
@@ -578,7 +573,7 @@ ast_makereturn(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, makeexpr_kwlist, "|ooo:makereturn", &expr, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_scope_loc, "|ooo:makereturn", &expr, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -622,7 +617,7 @@ ast_makeyield(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, makeexpr_kwlist, "o|oo:makeyield", &expr, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_scope_loc, "o|oo:makeyield", &expr, &scope, &loc))
 		goto done_compiler_end;
 	if (DeeObject_AssertTypeExact(expr, &DeeCompilerSymbol_Type))
 		goto done_compiler_end;
@@ -661,7 +656,7 @@ ast_makethrow(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, makeexpr_kwlist, "|ooo:makethrow", &expr, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_scope_loc, "|ooo:makethrow", &expr, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -881,10 +876,10 @@ ast_maketry(DeeCompilerObject *self, size_t argc,
 	DeeScopeObject *ast_scope;
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	PRIVATE struct keyword kwlist[] = { K(guard), K(handlers), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|oo:maketry", &guard, &handlers, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__guard_handlers_scope_loc,
+	                    "oo|oo:maketry", &guard, &handlers, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -993,8 +988,8 @@ ast_makeloop(DeeCompilerObject *self, size_t argc,
 	if (COMPILER_BEGIN(self))
 		goto done;
 	if (flags & AST_FLOOP_FOREACH) {
-		PRIVATE struct keyword kwlist[] = { K(elem), K(iter), K(loop), K(scope), K(loc), KEND };
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|ooooo:makeloop", &cond, &next, &loop, &scope, &loc))
+		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__elem_iter_loop_scope_loc,
+		                    "|ooooo:makeloop", &cond, &next, &loop, &scope, &loc))
 			goto done_compiler_end;
 		if unlikely((ast_scope = get_scope(scope)) == NULL)
 			goto done_compiler_end;
@@ -1011,8 +1006,8 @@ check_next:
 			goto done_compiler_end;
 		}
 	} else {
-		PRIVATE struct keyword kwlist[] = { K(cond), K(next), K(loop), K(scope), K(loc), KEND };
-		if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|ooooo:makeloop", &cond, &next, &loop, &scope, &loc))
+		if (DeeArg_UnpackKw(argc, argv, kw, kwlist__cond_next_loop_scope_loc,
+		                    "|ooooo:makeloop", &cond, &next, &loop, &scope, &loc))
 			goto done_compiler_end;
 		if unlikely((ast_scope = get_scope(scope)) == NULL)
 			goto done_compiler_end;
@@ -1081,10 +1076,10 @@ ast_makeloopctl(DeeCompilerObject *self, size_t argc,
 	DeeScopeObject *ast_scope;
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	PRIVATE struct keyword kwlist[] = { K(isbreak), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "b|oo:makeloopctl", &isbreak, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__isbreak_scope_loc,
+	                    "b|oo:makeloopctl", &isbreak, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -1152,10 +1147,10 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
 	DeeScopeObject *ast_scope;
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	PRIVATE struct keyword kwlist[] = { K(cond), K(tt), K(ff), K(flags), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|ooooo:makeconditional",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__cond_next_loop_scope_loc,
+	                    "o|ooooo:makeconditional",
 	                    &cond, &tt, &ff, &flags_str, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
@@ -1243,10 +1238,10 @@ ast_makebool(DeeCompilerObject *self, size_t argc,
 	DeeScopeObject *ast_scope;
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	PRIVATE struct keyword kwlist[] = { K(expr), K(negate), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|boo:makebool", &expr, &negate, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_negate_scope_loc,
+	                    "o|boo:makebool", &expr, &negate, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -1286,7 +1281,7 @@ ast_makeexpand(DeeCompilerObject *self, size_t argc,
 	DREF struct ast *result_ast;
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, makeexpr_kwlist, "o|oo:makeexpand", &expr, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__expr_scope_loc, "o|oo:makeexpand", &expr, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -1348,10 +1343,10 @@ ast_makefunction(DeeCompilerObject *self, size_t argc,
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
 	DeeBaseScopeObject *code_scope;
-	PRIVATE struct keyword kwlist[] = { K(code), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:makeexpand", &code, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__code_scope_loc,
+	                    "o|oo:makeexpand", &code, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -1457,10 +1452,10 @@ ast_makeoperatorfunc(DeeCompilerObject *self, size_t argc,
 	DeeScopeObject *ast_scope;
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	PRIVATE struct keyword kwlist[] = { K(name), K(binding), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|ooo:makeoperatorfunc", &name, &binding, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_binding_scope_loc,
+	                    "o|ooo:makeoperatorfunc", &name, &binding, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -1551,10 +1546,10 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 	DeeScopeObject *ast_scope;
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
-	PRIVATE struct keyword kwlist[] = { K(name), K(a), K(b), K(c), K(d), K(flags), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|oooooo:makeoperator", &name, &a, &b, &c, &d, &flags_str, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_a_b_c_d_flags_scope_loc,
+	                    "oo|oooooo:makeoperator", &name, &a, &b, &c, &d, &flags_str, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;
@@ -1880,10 +1875,10 @@ ast_makeaction(DeeCompilerObject *self, size_t argc,
 	DeeObject *loc = NULL;
 	DREF struct ast *result_ast;
 	uint8_t opc;
-	PRIVATE struct keyword kwlist[] = { K(name), K(a), K(b), K(c), K(mustrun), K(scope), K(loc), KEND };
 	if (COMPILER_BEGIN(self))
 		goto done;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oooboo:makeaction", &name, &a, &b, &c, &mustrun, &scope, &loc))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__name_a_b_c_mustrun_scope_loc,
+	                    "o|oooboo:makeaction", &name, &a, &b, &c, &mustrun, &scope, &loc))
 		goto done_compiler_end;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done_compiler_end;

@@ -35,6 +35,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -936,8 +937,6 @@ PRIVATE struct type_seq dict_values_seq = {
 };
 
 
-INTDEF struct keyword seq_byhash_kwlist[];
-
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash, bool key_only);
 
@@ -945,7 +944,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_keys_byhash(DictProxy *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
 		goto err;
 	return DeeDict_ByHash((DeeObject *)self->dp_dict,
 	                      DeeObject_Hash(template_),
@@ -958,7 +957,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_items_byhash(DictProxy *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
 		goto err;
 	return DeeDict_ByHash((DeeObject *)self->dp_dict,
 	                      DeeObject_Hash(template_),

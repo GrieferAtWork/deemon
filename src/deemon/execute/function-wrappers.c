@@ -42,6 +42,7 @@
 #include <hybrid/unaligned.h>
 
 /**/
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -2333,11 +2334,11 @@ yfuncsymbolsbyname_init_kw(YieldFunctionSymbolsByName *__restrict self,
                            size_t argc, DeeObject *const *argv,
                            DeeObject *kw) {
 	DeeCodeObject *code;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(yfunc), K(argc), K(ridstart), K(ridend), KEND });
 	self->yfsbn_nargs     = (uint16_t)-1;
 	self->yfsbn_rid_start = 0;
 	self->yfsbn_rid_end   = (uint16_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|" UNPu16 UNPu16 UNPu16,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__yfunc_argc_ridstart_ridend,
+	                    "o|" UNPu16 UNPu16 UNPu16,
 	                    &self->yfsbn_yfunc, &self->yfsbn_nargs,
 	                    &self->yfsbn_rid_start, &self->yfsbn_rid_end))
 		goto err;
@@ -4643,13 +4644,14 @@ framesymbolsbyname_init_kw(FrameSymbolsByName *__restrict self,
                            DeeObject *kw) {
 	struct code_frame const *frame;
 	DeeCodeObject *code;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(frame), K(argc), K(ridstart), K(ridend), K(localc), K(stackc), KEND });
 	self->frsbn_nargs     = (uint16_t)-1;
 	self->frsbn_rid_start = 0;
 	self->frsbn_rid_end   = (uint16_t)-1;
 	self->frsbn_localc    = (uint16_t)-1;
 	self->frsbn_stackc    = (uint16_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|" UNPu16 UNPu16 UNPu16 UNPu16 UNPu16,
+	if (DeeArg_UnpackKw(argc, argv, kw,
+	                    kwlist__frame_argc_ridstart_ridend_localc_stackc,
+	                    "o|" UNPu16 UNPu16 UNPu16 UNPu16 UNPu16,
 	                    &self->frsbn_frame, &self->frsbn_nargs,
 	                    &self->frsbn_rid_start, &self->frsbn_rid_end,
 	                    &self->frsbn_localc, &self->frsbn_stackc))

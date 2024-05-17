@@ -43,6 +43,7 @@
 
 #include <hybrid/sched/yield.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/hashfilter.h"
@@ -2885,13 +2886,11 @@ dict_sizeof(Dict *self) {
 	                       sizeof(struct dict_item)));
 }
 
-INTDEF struct keyword seq_byhash_kwlist[];
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_byhash(Dict *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
 		goto err;
 	return DeeDict_ByHash((DeeObject *)self,
 	                      DeeObject_Hash(template_),

@@ -2681,7 +2681,7 @@ PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime_maketime(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeTimeObject *result;
 	Dee_int128_t hour, minute, second, nanosecond;
-	PRIVATE struct keyword kwlist[] = { K(hour), K(minute), K(second), K(nanosecond), KEND };
+	PRIVATE DEFINE_KWLIST(kwlist, { K(hour), K(minute), K(second), K(nanosecond), KEND });
 	__hybrid_int128_setzero(hour);
 	__hybrid_int128_setzero(minute);
 	__hybrid_int128_setzero(second);
@@ -2709,7 +2709,7 @@ PRIVATE WUNUSED DREF DeeTimeObject *DCALL
 f_libtime_makedate(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeTimeObject *result;
 	Dee_int128_t year, month, day;
-	PRIVATE struct keyword kwlist[] = { K(year), K(month), K(day), KEND };
+	PRIVATE DEFINE_KWLIST(kwlist, { K(year), K(month), K(day), KEND });
 	__hybrid_int128_setzero(year);
 	__hybrid_int128_setone(month);
 	__hybrid_int128_setone(day);

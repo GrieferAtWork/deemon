@@ -35,6 +35,7 @@
 #include <deemon/super.h>
 #include <deemon/util/atomic.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -105,8 +106,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_init_kw(InstanceMethod *__restrict self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE DEFINE_KWLIST(kwlist, { K(func), K(thisarg), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:InstanceMethod",
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__func_thisarg,
+	                    "oo:InstanceMethod",
 	                    &self->im_func, &self->im_this))
 		goto err;
 	Dee_Incref(self->im_this);

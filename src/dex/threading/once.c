@@ -195,7 +195,7 @@ once_init(DeeOnceObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 once_init_kw(DeeOnceObject *__restrict self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE struct keyword kwlist[] = { K(callback), KEND };
+	PRIVATE DEFINE_KWLIST(kwlist, { K(callback), KEND });
 	int error;
 	Dee_once_init(&self->o_once);
 	self->o_value = NULL;
@@ -314,7 +314,7 @@ already_run:
 		/* No callback has been given. In this case, we must process the
 		 * caller-given arguments for 2 arguments `(callback,args)' */
 		DeeObject *cb, *cb_args = Dee_EmptyTuple, *cb_kwds = NULL;
-		PRIVATE struct keyword kwlist[] = { K(callback), K(args), K(kwds), KEND };
+		PRIVATE DEFINE_KWLIST(kwlist, { K(callback), K(args), K(kwds), KEND });
 		if unlikely(DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:Once.operator()", &cb, &cb_args, &cb_kwds))
 			goto err_abort;
 		if unlikely(DeeObject_AssertTypeExact(cb_args, &DeeTuple_Type))
@@ -350,7 +350,7 @@ once_finish(DeeOnceObject *self, size_t argc,
 	int status;
 	DeeObject *result;
 	bool override_ = false;
-	PRIVATE struct keyword kwlist[] = { K(result), K(override), KEND };
+	PRIVATE DEFINE_KWLIST(kwlist, { K(result), K(override), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|b:finish", &result, &override_))
 		goto err;
 	status = Dee_once_begin(&self->o_once);

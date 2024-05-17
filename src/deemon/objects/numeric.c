@@ -37,6 +37,7 @@
 
 #include <math.h> /* FIXME: This needs a feature check! */
 
+#include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
 DECL_BEGIN
@@ -1498,7 +1499,6 @@ err:
 }
 
 
-INTDEF struct keyword precision_kwlist[];
 PRIVATE DEFINE_INT15(int_2, 2);
 PRIVATE DEFINE_INT15(int_8, 8);
 PRIVATE DEFINE_INT15(int_16, 16);
@@ -1514,7 +1514,7 @@ numeric_hex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	args[0] = (DeeObject *)&int_16;
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
-	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist, "|o:hex", &args[1]))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision, "|o:hex", &args[1]))
 		goto err;
 	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
 err:
@@ -1527,7 +1527,7 @@ numeric_bin(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	args[0] = (DeeObject *)&int_2;
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
-	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist, "|o:bin", &args[1]))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision, "|o:bin", &args[1]))
 		goto err;
 	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
 err:
@@ -1540,7 +1540,7 @@ numeric_oct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	args[0] = (DeeObject *)&int_8;
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&str_pound;
-	if (DeeArg_UnpackKw(argc, argv, kw, precision_kwlist, "|o:oct", &args[1]))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__precision, "|o:oct", &args[1]))
 		goto err;
 	return DeeObject_CallAttr(self, (DeeObject *)&str_tostr, 3, args);
 err:

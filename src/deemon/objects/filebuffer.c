@@ -38,6 +38,7 @@
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -1718,8 +1719,8 @@ buffer_setbuf(Buffer *self, size_t argc,
 		char chrs[4];
 		uint32_t id;
 	} buf;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(mode), K(size), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "s|d:setbuf", &mode_str, &size))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__mode_size,
+	                    "s|d:setbuf", &mode_str, &size))
 		goto err;
 	mode_iter = mode_str, mode = 0;
 	/* Interpret the given mode string. */
