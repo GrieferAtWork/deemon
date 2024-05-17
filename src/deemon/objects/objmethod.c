@@ -46,7 +46,7 @@ DECL_BEGIN
 
 /* Construct a new `_ObjMethod' object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObjMethod_New(dobjmethod_t func, DeeObject *__restrict self) {
+DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self) {
 	DREF DeeObjMethodObject *result;
 	ASSERT_OBJECT(self);
 	result = DeeObject_MALLOC(DeeObjMethodObject);
@@ -61,7 +61,7 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject *__restrict self) {
+DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self) {
 	DREF DeeKwObjMethodObject *result;
 	ASSERT_OBJECT(self);
 	result = DeeObject_MALLOC(DeeKwObjMethodObject);
@@ -77,7 +77,7 @@ done:
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
-typeobject_find_objmethod(DeeTypeObject *__restrict self, dobjmethod_t meth,
+typeobject_find_objmethod(DeeTypeObject *__restrict self, Dee_objmethod_t meth,
                           struct objmethod_origin *__restrict result) {
 	DeeTypeMRO mro;
 	DeeTypeMRO_Init(&mro, self);
@@ -102,7 +102,7 @@ typeobject_find_objmethod(DeeTypeObject *__restrict self, dobjmethod_t meth,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
                        struct objmethod_origin *__restrict result) {
-	dobjmethod_t func;
+	Dee_objmethod_t func;
 	DeeTypeObject *tp_self;
 	DeeTypeMRO mro;
 	ASSERT_OBJECT(self);
@@ -135,7 +135,7 @@ DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
                        struct objmethod_origin *__restrict result) {
-	dobjmethod_t func;
+	Dee_objmethod_t func;
 	struct type_method const *iter;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeClsMethod_Check(self) || DeeKwClsMethod_Check(self));
@@ -904,7 +904,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 /* Construct a new `_ClassMethod' object. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*ClsMethod*/ DeeObject *DCALL
 DeeClsMethod_New(DeeTypeObject *__restrict type,
-                 dobjmethod_t func) {
+                 Dee_objmethod_t func) {
 	DeeClsMethodObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	result = DeeObject_MALLOC(DeeClsMethodObject);
@@ -920,7 +920,7 @@ done:
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*KwClsMethod*/ DeeObject *DCALL
 DeeKwClsMethod_New(DeeTypeObject *__restrict type,
-                   dkwobjmethod_t func) {
+                   Dee_kwobjmethod_t func) {
 	DeeKwClsMethodObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	result = DeeObject_MALLOC(DeeKwClsMethodObject);
@@ -1890,7 +1890,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 cmethod_getmodsym(DeeModuleObject *__restrict mod,
-                  dcmethod_t func_ptr) {
+                  Dee_cmethod_t func_ptr) {
 	uint16_t addr;
 	struct module_symbol *result;
 	DeeModule_LockRead(mod);
@@ -1917,7 +1917,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
 type_member_search_cmethod(DeeTypeObject *type,
                            struct type_member const *chain,
                            DeeTypeObject **__restrict ptarget_type,
-                           dcmethod_t func_ptr) {
+                           Dee_cmethod_t func_ptr) {
 	for (; chain->m_name; ++chain) {
 		if (!TYPE_MEMBER_ISCONST(chain))
 			continue;
@@ -1936,7 +1936,7 @@ gotit:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
-type_seach_cmethod(DeeTypeObject *self, dcmethod_t func_ptr,
+type_seach_cmethod(DeeTypeObject *self, Dee_cmethod_t func_ptr,
                    DeeTypeObject **__restrict ptarget_type) {
 	struct type_member const *result;
 	DeeTypeMRO mro;
@@ -1957,7 +1957,7 @@ gotit:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member const *DCALL
 cmethod_gettypefield(DeeModuleObject *mod,
                      DREF DeeTypeObject **__restrict ptype,
-                     dcmethod_t func_ptr) {
+                     Dee_cmethod_t func_ptr) {
 	uint16_t addr;
 	struct type_member const *result;
 	DeeModule_LockRead(mod);
@@ -2436,68 +2436,160 @@ fatal_invalid_except(DeeObject *__restrict return_value,
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeCMethod_CallFunc_d(dcmethod_t fun, size_t argc, DeeObject *const *argv) {
+DeeCMethod_CallFunc_d(Dee_cmethod_t funptr, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeThreadObject *caller;
 	uint16_t old_depth;
 	caller    = DeeThread_Self();
 	old_depth = caller->t_exceptsz;
-	result    = (*fun)(argc, argv);
+	result    = (*funptr)(argc, argv);
 	if unlikely(result ? old_depth != caller->t_exceptsz
 	                   : old_depth + 1 != caller->t_exceptsz)
-		fatal_invalid_except(result, old_depth + !result, (void *)fun);
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObjMethod_CallFunc_d(dobjmethod_t fun, DeeObject *self,
-                        size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result;
-	DeeThreadObject *caller;
-	uint16_t old_depth;
-	caller    = DeeThread_Self();
-	old_depth = caller->t_exceptsz;
-	result    = (*fun)(self, argc, argv);
-	if unlikely(result ? old_depth != caller->t_exceptsz
-	                   : old_depth + 1 != caller->t_exceptsz)
-		fatal_invalid_except(result, old_depth + !result, (void *)fun);
+		fatal_invalid_except(result, old_depth + !result, (void *)funptr);
 	return result;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t argc,
+DeeKwCMethod_CallFunc_d(Dee_kwcmethod_t funptr, size_t argc,
                         DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeThreadObject *caller;
 	uint16_t old_depth;
 	caller    = DeeThread_Self();
 	old_depth = caller->t_exceptsz;
-	result    = (*fun)(argc, argv, kw);
+	result    = (*funptr)(argc, argv, kw);
 	if unlikely(result ? old_depth != caller->t_exceptsz
 	                   : old_depth + 1 != caller->t_exceptsz)
-		fatal_invalid_except(result, old_depth + !result, (void *)fun);
+		fatal_invalid_except(result, old_depth + !result, (void *)funptr);
 	return result;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *self,
+DeeObjMethod_CallFunc_d(Dee_objmethod_t funptr, DeeObject *thisarg,
+                        size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+	DeeThreadObject *caller;
+	uint16_t old_depth;
+	caller    = DeeThread_Self();
+	old_depth = caller->t_exceptsz;
+	result    = (*funptr)(thisarg, argc, argv);
+	if unlikely(result ? old_depth != caller->t_exceptsz
+	                   : old_depth + 1 != caller->t_exceptsz)
+		fatal_invalid_except(result, old_depth + !result, (void *)funptr);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeKwObjMethod_CallFunc_d(Dee_kwobjmethod_t funptr, DeeObject *thisarg,
                           size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeThreadObject *caller;
 	uint16_t old_depth;
 	caller    = DeeThread_Self();
 	old_depth = caller->t_exceptsz;
-	result    = (*fun)(self, argc, argv, kw);
+	result    = (*funptr)(thisarg, argc, argv, kw);
 	if unlikely(result ? old_depth != caller->t_exceptsz
 	                   : old_depth + 1 != caller->t_exceptsz)
-		fatal_invalid_except(result, old_depth + !result, (void *)fun);
+		fatal_invalid_except(result, old_depth + !result, (void *)funptr);
 	return result;
 }
 #endif /* !NDEBUG */
 
 
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeKwObjMethod_VCallFuncf(Dee_kwobjmethod_t funptr, DeeObject *__restrict thisarg,
+
+
+/* Helpers for calling native deemon function with format arguments. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeCMethod_CallFuncf(Dee_cmethod_t funptr, char const *format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeCMethod_VCallFuncf(funptr, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+DeeObjMethod_CallFuncf(Dee_objmethod_t funptr, DeeObject *thisarg, char const *format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeObjMethod_VCallFuncf(funptr, thisarg, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeKwCMethod_CallFuncf(Dee_kwcmethod_t funptr, char const *format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeKwCMethod_VCallFuncf(funptr, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+DeeKwObjMethod_CallFuncf(Dee_kwobjmethod_t funptr, DeeObject *thisarg, char const *format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeKwObjMethod_VCallFuncf(funptr, thisarg, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCMethod_VCallFuncf(Dee_cmethod_t funptr, char const *format, va_list args) {
+	/* XXX: Optimizations? */
+	DREF DeeObject *result, *args_tuple;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeCMethod_CallFunc(funptr,
+	                             DeeTuple_SIZE(args_tuple),
+	                             DeeTuple_ELEM(args_tuple));
+	Dee_Decref(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeKwCMethod_VCallFuncf(Dee_kwcmethod_t funptr, char const *format, va_list args) {
+	/* XXX: Optimizations? */
+	DREF DeeObject *result, *args_tuple;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeKwCMethod_CallFunc(funptr,
+	                               DeeTuple_SIZE(args_tuple),
+	                               DeeTuple_ELEM(args_tuple),
+	                               NULL);
+	Dee_Decref(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObjMethod_VCallFuncf(Dee_objmethod_t funptr, DeeObject *thisarg, char const *format, va_list args) {
+	/* XXX: Optimizations? */
+	DREF DeeObject *result, *args_tuple;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeObjMethod_CallFunc(funptr, thisarg,
+	                               DeeTuple_SIZE(args_tuple),
+	                               DeeTuple_ELEM(args_tuple));
+	Dee_Decref(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeKwObjMethod_VCallFuncf(Dee_kwobjmethod_t funptr, DeeObject *thisarg,
                           char const *__restrict format, va_list args) {
 	/* XXX: Optimizations? */
 	DREF DeeObject *result, *args_tuple;
@@ -2508,23 +2600,6 @@ DeeKwObjMethod_VCallFuncf(Dee_kwobjmethod_t funptr, DeeObject *__restrict thisar
 	                                 DeeTuple_SIZE(args_tuple),
 	                                 DeeTuple_ELEM(args_tuple),
 	                                 NULL);
-	Dee_Decref(args_tuple);
-	return result;
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeObjMethod_VCallFuncf(Dee_objmethod_t funptr, DeeObject *__restrict thisarg,
-                        char const *__restrict format, va_list args) {
-	/* XXX: Optimizations? */
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
-		goto err;
-	result = DeeObjMethod_CallFunc(funptr, thisarg,
-	                               DeeTuple_SIZE(args_tuple),
-	                               DeeTuple_ELEM(args_tuple));
 	Dee_Decref(args_tuple);
 	return result;
 err:

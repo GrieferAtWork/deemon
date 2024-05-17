@@ -966,66 +966,12 @@ DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
 	return *(void const **)((uintptr_t)self + info->oi_offset);
 }
 
+
 /* Same as `DeeType_HasOperator()', however don't return `true' if the
  * operator has been inherited implicitly from a base-type of `self'. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) {
-	void const *my_ptr;
-	struct opinfo const *info;
-	DeeTypeObject *base;
-	DeeTypeMRO mro;
-	/* Special case: must look at what's implemented by the class! */
-	if (DeeType_IsClass(self))
-		return DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name) != NULL;
-	switch (name) {
-
-	case OPERATOR_CONSTRUCTOR:
-		/* Special case: the constructor operator (which cannot be inherited). */
-		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
-		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
-		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
-
-	case OPERATOR_STR:
-		/* Special case: `operator str' can be implemented in 2 ways */
-		if (self->tp_cast.tp_str == NULL && self->tp_cast.tp_print == NULL)
-			return false;
-		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-			if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
-			    self->tp_cast.tp_print == base->tp_cast.tp_print)
-				return false;
-		}
-		return true;
-
-	case OPERATOR_REPR:
-		/* Special case: `operator repr' can be implemented in 2 ways */
-		if (self->tp_cast.tp_repr == NULL && self->tp_cast.tp_printrepr == NULL)
-			return false;
-		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-			if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
-			    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr)
-				return false;
-		}
-		return true;
-
-	default:
-		break;
-	}
-	info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
-	if (info == NULL)
-		return false; /* No such operator */
-	my_ptr = DeeType_GetOpPointer(self, info);
-	if (my_ptr == NULL) {
-		/* Not a standard operator. Check if it may be defined by the type itself */
-		return DeeType_GetPrivateCustomOperatorById(self, name) != NULL;
-	}
-	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-		if (my_ptr == DeeType_GetOpPointer(base, info))
-			return false; /* Base has same impl -> operator was inherited */
-	}
-	return true; /* Operator is distinct from all bases. */
+DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
+	return DeeType_GetOperatorOrigin(self, name) == self;
 }
 
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
@@ -1064,6 +1010,93 @@ DeeType_HasPrivateNII(DeeTypeObject const *__restrict self) {
 	return true;
 }
 
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeType_FindOperatorGroupOrigin(DeeTypeObject const *__restrict self,
+                                ptrdiff_t const *offsetof_funptrv, size_t offsetof_funptrc) {
+	DeeTypeObject *base;
+	DeeTypeMRO mro;
+again:
+	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		size_t i;
+		for (i = 0; i < offsetof_funptrc; ++i) {
+			ptrdiff_t offset = offsetof_funptrv[i];
+			Dee_funptr_t self_funptr = *(Dee_funptr_t const *)((byte_t const *)self + offset);
+			Dee_funptr_t base_funptr = *(Dee_funptr_t const *)((byte_t const *)base + offset);
+			if (self_funptr != base_funptr)
+				goto different_from_base;
+		}
+		self = base; /* This is where the operator seems to originate from. */
+		goto again;
+different_from_base:;
+	}
+	return (DeeTypeObject *)self;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeType_FindOperatorSubGroupOrigin(DeeTypeObject const *__restrict self, ptrdiff_t offsetof_group,
+                                   ptrdiff_t const *offsetof_funptrv, size_t offsetof_funptrc) {
+	DeeTypeObject *base;
+	DeeTypeMRO mro;
+	byte_t const *self_group;
+again:
+	self_group = *(byte_t const **)((byte_t const *)self + offsetof_group);
+	ASSERT(self_group);
+	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		byte_t const *base_group;
+		base_group = *(byte_t const **)((byte_t const *)base + offsetof_group);
+		if (base_group) {
+			size_t i;
+			for (i = 0; i < offsetof_funptrc; ++i) {
+				ptrdiff_t offset = offsetof_funptrv[i];
+				Dee_funptr_t self_funptr = *(Dee_funptr_t const *)((byte_t const *)self_group + offset);
+				Dee_funptr_t base_funptr = *(Dee_funptr_t const *)((byte_t const *)base_group + offset);
+				if (self_funptr != base_funptr)
+					goto different_from_base;
+			}
+			self = base; /* This is where the operator seems to originate from. */
+			goto again;
+		}
+different_from_base:;
+	}
+	return (DeeTypeObject *)self;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2, 3)) bool DCALL
+is_a_closer_than_b(DeeTypeObject const *from,
+                   DeeTypeObject const *a,
+                   DeeTypeObject const *b) {
+	DeeTypeObject *iter;
+	DeeTypeMRO mro;
+	iter = DeeTypeMRO_Init(&mro, (DeeTypeObject *)from);
+	while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL) {
+		if (iter == a)
+			return true;
+		if (iter == b)
+			break;
+	}
+	return false;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeType_GetFirstOperatorOrigin(DeeTypeObject const *__restrict self,
+                               Dee_operator_t const *namev, size_t namec) {
+	size_t i;
+	DeeTypeObject *result;
+	ASSERT(namec >= 1);
+	result = DeeType_GetOperatorOrigin(self, namev[0]);
+	for (i = 1; i < namec && result != self; ++i) {
+		DeeTypeObject *closer;
+		closer = DeeType_GetOperatorOrigin(self, namev[i]);
+		if (closer == self)
+			return closer;
+		if (is_a_closer_than_b(self, closer, result))
+			result = closer;
+	}
+	return result;
+}
+
 /* Return the type from `self' inherited its operator `name'.
  * If `name' wasn't inherited, or isn't defined, simply re-return `self'.
  * Returns `NULL' when the operator isn't being implemented. */
@@ -1079,21 +1112,622 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	if (!DeeType_HasOperator(self, name))
 		return NULL;
 
-	/* Special case: the constructor operator (which cannot be inherited). */
-	if unlikely(name == OPERATOR_CONSTRUCTOR)
+	/* Special cases for magic operator groups. */
+
+	/* TODO: This big ol' switch needs to be virtual via function pointers in opinfo descriptors. */
+	switch (name) {
+	case OPERATOR_CONSTRUCTOR:
+	case OPERATOR_COPY:
+	case OPERATOR_DEEPCOPY:
+	case OPERATOR_DESTRUCTOR:
 		return (DeeTypeObject *)self;
 
-	/* Special case: must look at what's implemented by the class! */
-	if (DeeType_IsClass(self)) {
-		if (DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name))
-			return (DeeTypeObject *)self;
-		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-			if (DeeType_HasPrivateOperator(base, name))
-				return base;
+	case OPERATOR_STR: {
+		PRIVATE ptrdiff_t const str_group[] = {
+			offsetof(DeeTypeObject, tp_cast.tp_str),
+			offsetof(DeeTypeObject, tp_cast.tp_print),
+		};
+		return DeeType_FindOperatorGroupOrigin(self, str_group, COMPILER_LENOF(str_group));
+	}	break;
+
+	case OPERATOR_REPR: {
+		PRIVATE ptrdiff_t const repr_group[] = {
+			offsetof(DeeTypeObject, tp_cast.tp_repr),
+			offsetof(DeeTypeObject, tp_cast.tp_printrepr),
+		};
+		return DeeType_FindOperatorGroupOrigin(self, repr_group, COMPILER_LENOF(repr_group));
+	}	break;
+
+	case OPERATOR_CALL: {
+		PRIVATE ptrdiff_t const call_group[] = {
+			offsetof(DeeTypeObject, tp_call),
+			offsetof(DeeTypeObject, tp_call_kw),
+		};
+		return DeeType_FindOperatorGroupOrigin(self, call_group, COMPILER_LENOF(call_group));
+	}	break;
+
+	case OPERATOR_INT:
+	case OPERATOR_FLOAT: {
+		PRIVATE ptrdiff_t const int_group[] = {
+			offsetof(struct type_math, tp_int),
+			offsetof(struct type_math, tp_int32),
+			offsetof(struct type_math, tp_int64),
+			offsetof(struct type_math, tp_double),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          int_group, COMPILER_LENOF(int_group));
+	}	break;
+
+	case OPERATOR_ADD:
+	case OPERATOR_SUB:
+	case OPERATOR_INC:
+	case OPERATOR_DEC:
+	case OPERATOR_INPLACE_ADD:
+	case OPERATOR_INPLACE_SUB: {
+		PRIVATE ptrdiff_t const sum_group[] = {
+			offsetof(struct type_math, tp_add),
+			offsetof(struct type_math, tp_sub),
+			offsetof(struct type_math, tp_inc),
+			offsetof(struct type_math, tp_dec),
+			offsetof(struct type_math, tp_inplace_add),
+			offsetof(struct type_math, tp_inplace_sub),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          sum_group, COMPILER_LENOF(sum_group));
+	}	break;
+
+	case OPERATOR_MUL:
+	case OPERATOR_INPLACE_MUL: {
+		PRIVATE ptrdiff_t const mul_group[] = {
+			offsetof(struct type_math, tp_mul),
+			offsetof(struct type_math, tp_inplace_mul),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          mul_group, COMPILER_LENOF(mul_group));
+	}	break;
+
+	case OPERATOR_DIV:
+	case OPERATOR_INPLACE_DIV: {
+		PRIVATE ptrdiff_t const div_group[] = {
+			offsetof(struct type_math, tp_div),
+			offsetof(struct type_math, tp_inplace_div),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          div_group, COMPILER_LENOF(div_group));
+	}	break;
+
+	case OPERATOR_MOD:
+	case OPERATOR_INPLACE_MOD: {
+		PRIVATE ptrdiff_t const mod_group[] = {
+			offsetof(struct type_math, tp_mod),
+			offsetof(struct type_math, tp_inplace_mod),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          mod_group, COMPILER_LENOF(mod_group));
+	}	break;
+
+	case OPERATOR_SHL:
+	case OPERATOR_INPLACE_SHL: {
+		PRIVATE ptrdiff_t const shl_group[] = {
+			offsetof(struct type_math, tp_shl),
+			offsetof(struct type_math, tp_inplace_shl),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          shl_group, COMPILER_LENOF(shl_group));
+	}	break;
+
+	case OPERATOR_SHR:
+	case OPERATOR_INPLACE_SHR: {
+		PRIVATE ptrdiff_t const shr_group[] = {
+			offsetof(struct type_math, tp_shr),
+			offsetof(struct type_math, tp_inplace_shr),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          shr_group, COMPILER_LENOF(shr_group));
+	}	break;
+
+	case OPERATOR_AND:
+	case OPERATOR_INPLACE_AND: {
+		PRIVATE ptrdiff_t const and_group[] = {
+			offsetof(struct type_math, tp_and),
+			offsetof(struct type_math, tp_inplace_and),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          and_group, COMPILER_LENOF(and_group));
+	}	break;
+
+	case OPERATOR_OR:
+	case OPERATOR_INPLACE_OR: {
+		PRIVATE ptrdiff_t const or_group[] = {
+			offsetof(struct type_math, tp_or),
+			offsetof(struct type_math, tp_inplace_or),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          or_group, COMPILER_LENOF(or_group));
+	}	break;
+
+	case OPERATOR_XOR:
+	case OPERATOR_INPLACE_XOR: {
+		PRIVATE ptrdiff_t const xor_group[] = {
+			offsetof(struct type_math, tp_xor),
+			offsetof(struct type_math, tp_inplace_xor),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          xor_group, COMPILER_LENOF(xor_group));
+	}	break;
+
+	case OPERATOR_POW:
+	case OPERATOR_INPLACE_POW: {
+		PRIVATE ptrdiff_t const pow_group[] = {
+			offsetof(struct type_math, tp_pow),
+			offsetof(struct type_math, tp_inplace_pow),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_math),
+		                                          pow_group, COMPILER_LENOF(pow_group));
+	}	break;
+
+	case OPERATOR_BOOL: {
+		int (DCALL *tp_bool)(DeeObject *) = self->tp_cast.tp_bool;
+		if (tp_bool == &DeeSeq_DefaultBoolWithSize || tp_bool == &DeeSeq_DefaultBoolWithSizeOb)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_SIZE);
+		if (tp_bool == &DeeSeq_DefaultBoolWithForeach || tp_bool == &DeeSeq_DefaultBoolWithForeachDefault) {
+find_origin_of_iter:
+			return DeeType_GetOperatorOrigin(self, OPERATOR_ITER);
 		}
-		/* Shouldn't get here... */
-		return NULL;
+		if (tp_bool == &DeeSeq_DefaultBoolWithCompareEq || tp_bool == &DeeSeq_DefaultBoolWithEq)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_EQ);
+		if (tp_bool == &DeeSeq_DefaultBoolWithNe)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_NE);
+	}	break;
+
+	case OPERATOR_HASH: {
+		Dee_hash_t (DCALL *tp_hash)(DeeObject *) = self->tp_cmp->tp_hash;
+		if (tp_hash == &DeeSeq_DefaultHashWithSizeAndGetItemIndexFast)
+			goto find_origin_of_iter;
+		if (tp_hash == &DeeSeq_DefaultHashWithForeach)
+			goto find_origin_of_iter;
+		if (tp_hash == &DeeSeq_DefaultHashWithSizeAndTryGetItemIndex)
+			goto find_origin_of_iter;
+		if (tp_hash == &DeeSeq_DefaultHashWithSizeAndGetItemIndex)
+			goto find_origin_of_iter;
+		if (tp_hash == &DeeSeq_DefaultHashWithSizeObAndGetItem)
+			goto find_origin_of_iter;
+		if (tp_hash == &DeeSeq_DefaultHashWithForeachDefault)
+			goto find_origin_of_iter;
+		if (tp_hash == &DeeSet_DefaultHashWithForeachDefault)
+			goto find_origin_of_iter;
+		if (tp_hash == &DeeMap_DefaultHashWithForeachPairDefault)
+			goto find_origin_of_iter;
+	}	break;
+
+#define FIND_ORIGIN_WITH_INFO(oi_class, oi_offset)                           \
+	do {                                                                     \
+		PRIVATE struct opinfo const custom_info =                            \
+		OPINFO_INIT(0, oi_class, oi_offset, OPCC_SPECIAL, "", "", "", NULL); \
+		info = &custom_info;                                                 \
+		goto find_origin_with_info;                                          \
+	}	__WHILE0
+
+	case OPERATOR_EQ: {
+		DREF DeeObject *(DCALL *tp_eq)(DeeObject *, DeeObject *);
+		tp_eq = self->tp_cmp->tp_eq;
+		if (tp_eq == &DeeObject_DefaultEqWithCompareEq) {
+find_origin_of_compare_eq:
+			FIND_ORIGIN_WITH_INFO(offsetof(Type, tp_cmp), offsetof(struct type_cmp, tp_compare_eq));
+		}
+		if (tp_eq == &DeeObject_DefaultEqWithNe)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_NE);
+		if (tp_eq == &DeeObject_DefaultEqWithLoAndGr) {
+			PRIVATE Dee_operator_t ops[] = { OPERATOR_LO, OPERATOR_GR };
+find_origin_of_lo_and_gr:
+			return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+		}
+		if (tp_eq == &DeeObject_DefaultEqWithLeAndGe) {
+			PRIVATE Dee_operator_t ops[] = { OPERATOR_LE, OPERATOR_GE };
+find_origin_of_le_and_ge:
+			return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+		}
+		if (tp_eq == &DeeObject_DefaultEqWithCompareEqDefault) {
+			int (DCALL *tp_compare_eq)(DeeObject *, DeeObject *);
+find_origin_of_compare_eq_default:
+			tp_compare_eq = self->tp_cmp->tp_compare_eq;
+			if (tp_compare_eq == DeeObject_DefaultCompareEqWithNe)
+				return DeeType_GetOperatorOrigin(self, OPERATOR_NE);
+			if (tp_compare_eq == DeeObject_DefaultCompareEqWithLoAndGr)
+				goto find_origin_of_lo_and_gr;
+			if (tp_compare_eq == DeeObject_DefaultCompareEqWithLeAndGe)
+				goto find_origin_of_le_and_ge;
+			if (tp_compare_eq == DeeSeq_DefaultCompareEqWithForeachDefault)
+				goto find_origin_of_iter;
+			if (tp_compare_eq == DeeSeq_DefaultCompareEqWithSizeAndGetItemIndexFast)
+				goto find_origin_of_iter;
+			if (tp_compare_eq == DeeSeq_DefaultCompareEqWithSizeAndTryGetItemIndex)
+				goto find_origin_of_iter;
+			if (tp_compare_eq == DeeSeq_DefaultCompareEqWithSizeAndGetItemIndex)
+				goto find_origin_of_iter;
+			if (tp_compare_eq == DeeSeq_DefaultCompareEqWithSizeObAndGetItem)
+				goto find_origin_of_iter;
+			if (tp_compare_eq == DeeSet_DefaultCompareEqWithForeachDefault)
+				goto find_origin_of_iter;
+			if (tp_compare_eq == DeeMap_DefaultCompareEqWithForeachPairDefault)
+				goto find_origin_of_iter;
+			goto find_origin_of_compare_eq;
+		}
+	}	break;
+
+	case OPERATOR_NE: {
+		DREF DeeObject *(DCALL *tp_ne)(DeeObject *, DeeObject *);
+		tp_ne = self->tp_cmp->tp_ne;
+		if (tp_ne == &DeeObject_DefaultNeWithCompareEq)
+			goto find_origin_of_compare_eq;
+		if (tp_ne == &DeeObject_DefaultNeWithEq)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_EQ);
+		if (tp_ne == &DeeObject_DefaultNeWithLoAndGr)
+			goto find_origin_of_lo_and_gr;
+		if (tp_ne == &DeeObject_DefaultNeWithLeAndGe)
+			goto find_origin_of_le_and_ge;
+		if (tp_ne == &DeeObject_DefaultNeWithCompareEqDefault)
+			goto find_origin_of_compare_eq_default;
+	}	break;
+
+	case OPERATOR_LO: {
+		DREF DeeObject *(DCALL *tp_lo)(DeeObject *, DeeObject *);
+		tp_lo = self->tp_cmp->tp_lo;
+		if (tp_lo == &DeeObject_DefaultLoWithCompare) {
+find_origin_of_compare:
+			FIND_ORIGIN_WITH_INFO(offsetof(Type, tp_cmp), offsetof(struct type_cmp, tp_compare));
+		}
+		if (tp_lo == &DeeObject_DefaultLoWithGe)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_GE);
+		if (tp_lo == &DeeObject_DefaultLoWithCompareDefault) {
+			int (DCALL *tp_compare)(DeeObject *, DeeObject *);
+find_origin_of_compare_default:
+			tp_compare = self->tp_cmp->tp_compare;
+			if (tp_compare == &DeeObject_DefaultCompareWithEqAndLo) {
+				PRIVATE Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_LO };
+				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+			}
+			if (tp_compare == &DeeObject_DefaultCompareWithEqAndLe) {
+				PRIVATE Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_LE };
+				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+			}
+			if (tp_compare == &DeeObject_DefaultCompareWithEqAndGr) {
+				PRIVATE Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_GR };
+				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+			}
+			if (tp_compare == &DeeObject_DefaultCompareWithEqAndGe) {
+				PRIVATE Dee_operator_t ops[] = { OPERATOR_EQ, OPERATOR_GE };
+				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+			}
+			if (tp_compare == &DeeObject_DefaultCompareWithNeAndLo) {
+				PRIVATE Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_LO };
+				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+			}
+			if (tp_compare == &DeeObject_DefaultCompareWithNeAndLe) {
+				PRIVATE Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_LE };
+				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+			}
+			if (tp_compare == &DeeObject_DefaultCompareWithNeAndGr) {
+				PRIVATE Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_GR };
+				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+			}
+			if (tp_compare == &DeeObject_DefaultCompareWithNeAndGe) {
+				PRIVATE Dee_operator_t ops[] = { OPERATOR_NE, OPERATOR_GE };
+				return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+			}
+			if (tp_compare == &DeeObject_DefaultCompareWithLoAndGr)
+				goto find_origin_of_lo_and_gr;
+			if (tp_compare == &DeeObject_DefaultCompareWithLeAndGe)
+				goto find_origin_of_le_and_ge;
+			if (tp_compare == &DeeSeq_DefaultCompareWithSizeAndGetItemIndexFast)
+				goto find_origin_of_iter;
+			if (tp_compare == &DeeSeq_DefaultCompareWithSizeAndTryGetItemIndex)
+				goto find_origin_of_iter;
+			if (tp_compare == &DeeSeq_DefaultCompareWithSizeAndGetItemIndex)
+				goto find_origin_of_iter;
+			if (tp_compare == &DeeSeq_DefaultCompareWithSizeObAndGetItem)
+				goto find_origin_of_iter;
+			if (tp_compare == &DeeSeq_DefaultCompareWithForeachDefault)
+				goto find_origin_of_iter;
+			goto find_origin_of_compare;
+		}
+		if (tp_lo == &DeeSet_DefaultLoWithForeachDefault)
+			goto find_origin_of_iter;
+		if (tp_lo == &DeeMap_DefaultLoWithForeachPairDefault)
+			goto find_origin_of_iter;
+	}	break;
+
+	case OPERATOR_LE: {
+		DREF DeeObject *(DCALL *tp_le)(DeeObject *, DeeObject *);
+		tp_le = self->tp_cmp->tp_le;
+		if (tp_le == &DeeObject_DefaultLeWithCompare)
+			goto find_origin_of_compare;
+		if (tp_le == &DeeObject_DefaultLeWithGr)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_GR);
+		if (tp_le == &DeeObject_DefaultLeWithCompareDefault)
+			goto find_origin_of_compare_default;
+		if (tp_le == &DeeSet_DefaultLeWithForeachDefault)
+			goto find_origin_of_iter;
+		if (tp_le == &DeeMap_DefaultLeWithForeachPairDefault)
+			goto find_origin_of_iter;
+	}	break;
+
+	case OPERATOR_GR: {
+		DREF DeeObject *(DCALL *tp_gr)(DeeObject *, DeeObject *);
+		tp_gr = self->tp_cmp->tp_gr;
+		if (tp_gr == &DeeObject_DefaultGrWithCompare)
+			goto find_origin_of_compare;
+		if (tp_gr == &DeeObject_DefaultGrWithLe)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_LE);
+		if (tp_gr == &DeeObject_DefaultGrWithCompareDefault)
+			goto find_origin_of_compare_default;
+		if (tp_gr == &DeeSet_DefaultGrWithForeachDefault)
+			goto find_origin_of_iter;
+		if (tp_gr == &DeeMap_DefaultGrWithForeachPairDefault)
+			goto find_origin_of_iter;
+	}	break;
+
+	case OPERATOR_GE: {
+		DREF DeeObject *(DCALL *tp_ge)(DeeObject *, DeeObject *);
+		tp_ge = self->tp_cmp->tp_ge;
+		if (tp_ge == &DeeObject_DefaultGeWithCompare)
+			goto find_origin_of_compare;
+		if (tp_ge == &DeeObject_DefaultGeWithLo)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_LO);
+		if (tp_ge == &DeeObject_DefaultGeWithCompareDefault)
+			goto find_origin_of_compare_default;
+		if (tp_ge == &DeeSet_DefaultGeWithForeachDefault)
+			goto find_origin_of_iter;
+		if (tp_ge == &DeeMap_DefaultGeWithForeachPairDefault)
+			goto find_origin_of_iter;
+	}	break;
+
+	case OPERATOR_ITER: {
+		PRIVATE ptrdiff_t const iter_group[] = {
+			offsetof(struct type_seq, tp_iter),
+			offsetof(struct type_seq, tp_foreach),
+			offsetof(struct type_seq, tp_foreach_pair),
+			offsetof(struct type_seq, tp_enumerate),
+			offsetof(struct type_seq, tp_enumerate_index),
+		};
+		DREF DeeObject *(DCALL *tp_iter)(DeeObject *);
+		tp_iter = self->tp_seq->tp_iter;
+		if (tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast) {
+			FIND_ORIGIN_WITH_INFO(offsetof(Type, tp_seq), offsetof(struct type_seq, tp_getitem_index_fast));
+			goto find_origin_of_compare;
+		}
+		if (tp_iter == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex ||
+		    tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndex ||
+		    tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem) {
+			PRIVATE Dee_operator_t ops[] = { OPERATOR_SIZE, OPERATOR_GETITEM };
+			return DeeType_GetFirstOperatorOrigin(self, ops, COMPILER_LENOF(ops));
+		}
+		if (tp_iter == &DeeSeq_DefaultIterWithGetItemIndex ||
+		    tp_iter == &DeeSeq_DefaultIterWithGetItem)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_GETITEM);
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
+		                                          iter_group, COMPILER_LENOF(iter_group));
+	}	break;
+
+	case OPERATOR_SIZE: {
+		PRIVATE ptrdiff_t const size_group[] = {
+			offsetof(struct type_seq, tp_size),
+			offsetof(struct type_seq, tp_sizeob),
+		};
+		size_t (DCALL *tp_size)(DeeObject *);
+		tp_size = self->tp_seq->tp_size;
+		if (tp_size == &DeeSeq_DefaultSizeWithEnumerateIndex)
+			goto find_origin_of_iter;
+		if (tp_size == &DeeSeq_DefaultSizeWithEnumerate)
+			goto find_origin_of_iter;
+		if (tp_size == &DeeSeq_DefaultSizeWithForeachPair)
+			goto find_origin_of_iter;
+		if (tp_size == &DeeSeq_DefaultSizeWithForeach)
+			goto find_origin_of_iter;
+		if (tp_size == &DeeSeq_DefaultSizeWithIter)
+			goto find_origin_of_iter;
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
+		                                          size_group, COMPILER_LENOF(size_group));
+	}	break;
+
+	case OPERATOR_CONTAINS: {
+		DREF DeeObject *(DCALL *tp_contains)(DeeObject *, DeeObject *);
+		tp_contains = self->tp_seq->tp_contains;
+		if (tp_contains == &DeeSeq_DefaultContainsWithForeachDefault)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithHasItem)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithBoundItem)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithTryGetItem)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithGetItem)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithHasItemStringHash)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithHasItemStringLenHash)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithHasItemIndex)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithBoundItemStringHash)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithBoundItemStringLenHash)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithBoundItemIndex)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithTryGetItemStringHash)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithTryGetItemStringLenHash)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithTryGetItemIndex)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithGetItemStringHash)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithGetItemStringLenHash)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithGetItemIndex)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithEnumerate)
+			goto find_origin_of_iter;
+		if (tp_contains == &DeeMap_DefaultContainsWithEnumerateDefault)
+			goto find_origin_of_iter;
+	}	break;
+
+	case OPERATOR_GETITEM: {
+		PRIVATE ptrdiff_t const getitem_group[] = {
+			offsetof(struct type_seq, tp_getitem),
+			offsetof(struct type_seq, tp_getitem_index),
+			offsetof(struct type_seq, tp_getitem_index_fast),
+			offsetof(struct type_seq, tp_getitem_string_hash),
+			offsetof(struct type_seq, tp_getitem_string_len_hash),
+			offsetof(struct type_seq, tp_trygetitem),
+			offsetof(struct type_seq, tp_trygetitem_index),
+			offsetof(struct type_seq, tp_trygetitem_string_hash),
+			offsetof(struct type_seq, tp_trygetitem_string_len_hash),
+		};
+		DREF DeeObject *(DCALL *tp_getitem)(DeeObject *, DeeObject *);
+		tp_getitem = self->tp_seq->tp_getitem;
+		if (tp_getitem == &DeeSeq_DefaultGetItemWithTryGetItemAndSizeOb)
+			goto find_origin_of_iter;
+		if (tp_getitem == &DeeSeq_DefaultGetItemWithTryGetItemAndSize)
+			goto find_origin_of_iter;
+		if (tp_getitem == &DeeSeq_DefaultGetItemWithSizeAndTryGetItemIndexOb)
+			goto find_origin_of_iter;
+		if (tp_getitem == &DeeSeq_DefaultGetItemWithSizeAndTryGetItemIndex)
+			goto find_origin_of_iter;
+		if (tp_getitem == &DeeMap_DefaultGetItemWithEnumerate)
+			goto find_origin_of_iter;
+		if (tp_getitem == &DeeMap_DefaultGetItemWithEnumerateDefault)
+			goto find_origin_of_iter;
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
+		                                          getitem_group, COMPILER_LENOF(getitem_group));
+	}	break;
+
+	case OPERATOR_DELITEM: {
+		PRIVATE ptrdiff_t const delitem_group[] = {
+			offsetof(struct type_seq, tp_delitem),
+			offsetof(struct type_seq, tp_delitem_index),
+			offsetof(struct type_seq, tp_delitem_string_hash),
+			offsetof(struct type_seq, tp_delitem_string_len_hash),
+		};
+		int (DCALL *tp_delitem_index)(DeeObject *, size_t);
+		tp_delitem_index = self->tp_seq->tp_delitem_index;
+		if (tp_delitem_index == &DeeSeq_DefaultDelItemIndexWithDelRangeIndexDefault)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_DELRANGE);
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
+		                                          delitem_group, COMPILER_LENOF(delitem_group));
+	}	break;
+
+	case OPERATOR_SETITEM: {
+		PRIVATE ptrdiff_t const setitem_group[] = {
+			offsetof(struct type_seq, tp_setitem),
+			offsetof(struct type_seq, tp_setitem_index),
+			offsetof(struct type_seq, tp_setitem_string_hash),
+			offsetof(struct type_seq, tp_setitem_string_len_hash),
+		};
+		int (DCALL *tp_setitem_index)(DeeObject *, size_t, DeeObject *);
+		tp_setitem_index = self->tp_seq->tp_setitem_index;
+		if (tp_setitem_index == &DeeSeq_DefaultSetItemIndexWithSetRangeIndexDefault)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_SETRANGE);
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
+		                                          setitem_group, COMPILER_LENOF(setitem_group));
+	}	break;
+
+	case OPERATOR_GETRANGE: {
+		PRIVATE ptrdiff_t const getrange_group[] = {
+			offsetof(struct type_seq, tp_getrange),
+			offsetof(struct type_seq, tp_getrange_index),
+			offsetof(struct type_seq, tp_getrange_index_n),
+		};
+		DeeObject *(DCALL *tp_getrange_index)(DeeObject *, Dee_ssize_t, Dee_ssize_t);
+		tp_getrange_index = self->tp_seq->tp_getrange_index;
+		if (tp_getrange_index == &DeeSeq_DefaultGetRangeIndexWithSizeAndGetItemIndexFast)
+			goto find_origin_of_iter;
+		if (tp_getrange_index == &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItemIndex)
+			goto find_origin_of_iter;
+		if (tp_getrange_index == &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItem)
+			goto find_origin_of_iter;
+		if (tp_getrange_index == &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndIter)
+			goto find_origin_of_iter;
+		if (tp_getrange_index == &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndIterDefault)
+			goto find_origin_of_iter;
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
+		                                          getrange_group, COMPILER_LENOF(getrange_group));
+	}	break;
+
+	case OPERATOR_DELRANGE: {
+		PRIVATE ptrdiff_t const delrange_group[] = {
+			offsetof(struct type_seq, tp_delrange),
+			offsetof(struct type_seq, tp_delrange_index),
+			offsetof(struct type_seq, tp_delrange_index_n),
+		};
+		int (DCALL *tp_delrange_index)(DeeObject *, Dee_ssize_t, Dee_ssize_t);
+		tp_delrange_index = self->tp_seq->tp_delrange_index;
+		if (tp_delrange_index == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNone ||
+		    tp_delrange_index == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_SETRANGE);
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
+		                                          delrange_group, COMPILER_LENOF(delrange_group));
+	}	break;
+
+	case OPERATOR_SETRANGE: {
+		PRIVATE ptrdiff_t const setrange_group[] = {
+			offsetof(struct type_seq, tp_setrange),
+			offsetof(struct type_seq, tp_setrange_index),
+			offsetof(struct type_seq, tp_setrange_index_n),
+		};
+		int (DCALL *tp_setrange_index)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *);
+		tp_setrange_index = self->tp_seq->tp_setrange_index;
+		if (tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex ||
+		    tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault ||
+		    tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeAndSetItemIndex ||
+		    tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault)
+			return DeeType_GetOperatorOrigin(self, OPERATOR_SETITEM);
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
+		                                          setrange_group, COMPILER_LENOF(setrange_group));
+	}	break;
+
+	case OPERATOR_GETATTR: {
+		PRIVATE ptrdiff_t const getattr_group[] = {
+			offsetof(struct type_attr, tp_getattr),
+			offsetof(struct type_attr, tp_getattr_string_hash),
+			offsetof(struct type_attr, tp_getattr_string_len_hash),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_attr),
+		                                          getattr_group, COMPILER_LENOF(getattr_group));
+	}	break;
+
+	case OPERATOR_DELATTR: {
+		PRIVATE ptrdiff_t const delattr_group[] = {
+			offsetof(struct type_attr, tp_delattr),
+			offsetof(struct type_attr, tp_delattr_string_hash),
+			offsetof(struct type_attr, tp_delattr_string_len_hash),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_attr),
+		                                          delattr_group, COMPILER_LENOF(delattr_group));
+	}	break;
+
+	case OPERATOR_SETATTR: {
+		PRIVATE ptrdiff_t const setattr_group[] = {
+			offsetof(struct type_attr, tp_setattr),
+			offsetof(struct type_attr, tp_setattr_string_hash),
+			offsetof(struct type_attr, tp_setattr_string_len_hash),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_attr),
+		                                          setattr_group, COMPILER_LENOF(setattr_group));
+	}	break;
+
+	case OPERATOR_ENTER:
+	case OPERATOR_LEAVE: {
+		PRIVATE ptrdiff_t const with_group[] = {
+			offsetof(struct type_with, tp_enter),
+			offsetof(struct type_with, tp_leave),
+		};
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_attr),
+		                                          with_group, COMPILER_LENOF(with_group));
+	}	break;
+
+	default: break;
 	}
 
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
@@ -1109,6 +1743,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 		}
 		return NULL; /* No such operator */
 	}
+find_origin_with_info:
 	my_ptr = DeeType_GetOpPointer(self, info);
 	if (my_ptr == NULL)
 		return NULL; /* Operator not implemented (Shouldn't get here...) */

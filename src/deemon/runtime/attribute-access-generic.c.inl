@@ -40,34 +40,38 @@
 //#define DEFINE_DeeObject_TGenericSetAttrStringHash
 //#define DEFINE_DeeObject_TGenericSetAttrStringLenHash
 //#define DEFINE_DeeObject_TGenericFindAttrInfoStringHash
-#define DEFINE_DeeObject_TGenericFindAttrInfoStringLenHash
+//#define DEFINE_DeeObject_TGenericFindAttrInfoStringLenHash
+//#define DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringHash
+#define DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_TGenericFindAttr
 //#define DEFINE_DeeObject_TGenericEnumAttr
 #endif /* __INTELLISENSE__ */
 
-#if (defined(DEFINE_DeeObject_TGenericGetAttrStringHash) +            \
-     defined(DEFINE_DeeObject_TGenericGetAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_TGenericBoundAttrStringHash) +          \
-     defined(DEFINE_DeeObject_TGenericBoundAttrStringLenHash) +       \
-     defined(DEFINE_DeeObject_TGenericCallAttrStringHash) +           \
-     defined(DEFINE_DeeObject_TGenericCallAttrStringLenHash) +        \
-     defined(DEFINE_DeeObject_TGenericCallAttrStringHashKw) +         \
-     defined(DEFINE_DeeObject_TGenericCallAttrStringLenHashKw) +      \
-     defined(DEFINE_DeeObject_TGenericCallAttrStringHashTuple) +      \
-     defined(DEFINE_DeeObject_TGenericCallAttrStringLenHashTuple) +   \
-     defined(DEFINE_DeeObject_TGenericCallAttrStringHashTupleKw) +    \
-     defined(DEFINE_DeeObject_TGenericCallAttrStringLenHashTupleKw) + \
-     defined(DEFINE_DeeObject_VTGenericCallAttrStringHashf) +         \
-     defined(DEFINE_DeeObject_VTGenericCallAttrStringLenHashf) +      \
-     defined(DEFINE_DeeObject_TGenericHasAttrStringHash) +            \
-     defined(DEFINE_DeeObject_TGenericHasAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_TGenericDelAttrStringHash) +            \
-     defined(DEFINE_DeeObject_TGenericDelAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_TGenericSetAttrStringHash) +            \
-     defined(DEFINE_DeeObject_TGenericSetAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_TGenericFindAttrInfoStringHash) +       \
-     defined(DEFINE_DeeObject_TGenericFindAttrInfoStringLenHash) +    \
-     defined(DEFINE_DeeObject_TGenericFindAttr) +                     \
+#if (defined(DEFINE_DeeObject_TGenericGetAttrStringHash) +                \
+     defined(DEFINE_DeeObject_TGenericGetAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_TGenericBoundAttrStringHash) +              \
+     defined(DEFINE_DeeObject_TGenericBoundAttrStringLenHash) +           \
+     defined(DEFINE_DeeObject_TGenericCallAttrStringHash) +               \
+     defined(DEFINE_DeeObject_TGenericCallAttrStringLenHash) +            \
+     defined(DEFINE_DeeObject_TGenericCallAttrStringHashKw) +             \
+     defined(DEFINE_DeeObject_TGenericCallAttrStringLenHashKw) +          \
+     defined(DEFINE_DeeObject_TGenericCallAttrStringHashTuple) +          \
+     defined(DEFINE_DeeObject_TGenericCallAttrStringLenHashTuple) +       \
+     defined(DEFINE_DeeObject_TGenericCallAttrStringHashTupleKw) +        \
+     defined(DEFINE_DeeObject_TGenericCallAttrStringLenHashTupleKw) +     \
+     defined(DEFINE_DeeObject_VTGenericCallAttrStringHashf) +             \
+     defined(DEFINE_DeeObject_VTGenericCallAttrStringLenHashf) +          \
+     defined(DEFINE_DeeObject_TGenericHasAttrStringHash) +                \
+     defined(DEFINE_DeeObject_TGenericHasAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_TGenericDelAttrStringHash) +                \
+     defined(DEFINE_DeeObject_TGenericDelAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_TGenericSetAttrStringHash) +                \
+     defined(DEFINE_DeeObject_TGenericSetAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_TGenericFindAttrInfoStringHash) +           \
+     defined(DEFINE_DeeObject_TGenericFindAttrInfoStringLenHash) +        \
+     defined(DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringHash) +    \
+     defined(DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash) + \
+     defined(DEFINE_DeeObject_TGenericFindAttr) +                         \
      defined(DEFINE_DeeObject_TGenericEnumAttr)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
@@ -237,6 +241,21 @@
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_FindMemberAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)
 #define LOCAL_IS_FINDINFO
 #define LOCAL_HAS_len
+#elif defined(DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringHash)
+#define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericFindPrivateAttrInfoStringHash
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttrInfoStringHash(tp_invoker, tp_self, attr, hash, retinfo)
+#define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_FindGetSetAttrInfoStringHash(tp_invoker, tp_self, attr, hash, retinfo)
+#define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_FindMemberAttrInfoStringHash(tp_invoker, tp_self, attr, hash, retinfo)
+#define LOCAL_IS_FINDINFO
+#define LOCAL_IS_PRIVATE
+#elif defined(DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash)
+#define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericFindPrivateAttrInfoStringLenHash
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)
+#define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_FindGetSetAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)
+#define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_FindMemberAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)
+#define LOCAL_IS_FINDINFO
+#define LOCAL_IS_PRIVATE
+#define LOCAL_HAS_len
 #elif defined(DEFINE_DeeObject_TGenericFindAttr)
 #define LOCAL_DeeObject_TGenericAccessAttr                        DeeObject_TGenericFindAttr
 #define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_FindCachedAttr(tp_self, self, retinfo, rules)
@@ -382,14 +401,21 @@ PUBLIC WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	if (result == LOCAL_ATTR_NOT_FOUND_RESULT)
 #endif /* LOCAL_DeeType_AccessCachedAttr */
 	{
+#ifndef LOCAL_IS_PRIVATE
 		DeeTypeMRO mro;
+#endif /* !LOCAL_IS_PRIVATE */
 		DeeTypeObject *iter = tp_self;
+#ifndef LOCAL_IS_PRIVATE
 		DeeTypeMRO_Init(&mro, iter);
+#endif /* !LOCAL_IS_PRIVATE */
 		do {
 #ifdef LOCAL_IS_FIND
 continue_at_iter:
 			if (rules->alr_decl != NULL &&
 			    rules->alr_decl != (DeeObject *)iter) {
+#ifdef LOCAL_IS_PRIVATE
+				break;
+#else /* LOCAL_IS_PRIVATE */
 				iter = DeeTypeMRO_Next(&mro, iter);
 				if (!iter)
 					break;
@@ -399,6 +425,7 @@ continue_at_iter:
 				 * have been visible. */
 				tp_self = iter;
 				goto continue_at_iter;
+#endif /* !LOCAL_IS_PRIVATE */
 			}
 #endif /* LOCAL_IS_FIND */
 
@@ -427,7 +454,13 @@ continue_at_iter:
 			}
 
 #undef LOCAL_process_result
-		} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
+		}
+#ifdef LOCAL_IS_PRIVATE
+		__WHILE0;
+		result = LOCAL_ATTR_NOT_FOUND_RESULT;
+#else /* LOCAL_IS_PRIVATE */
+		while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
+#endif /* !LOCAL_IS_PRIVATE */
 	}
 #ifndef LOCAL_IS_ENUM
 done:
@@ -481,6 +514,7 @@ invoke_result:
 #undef LOCAL_IS_DEL
 #undef LOCAL_IS_SET
 #undef LOCAL_IS_FINDINFO
+#undef LOCAL_IS_PRIVATE
 #undef LOCAL_IS_FIND
 #undef LOCAL_IS_ENUM
 #undef LOCAL_HAS_len
@@ -512,5 +546,7 @@ DECL_END
 #undef DEFINE_DeeObject_TGenericSetAttrStringLenHash
 #undef DEFINE_DeeObject_TGenericFindAttrInfoStringHash
 #undef DEFINE_DeeObject_TGenericFindAttrInfoStringLenHash
+#undef DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringHash
+#undef DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash
 #undef DEFINE_DeeObject_TGenericFindAttr
 #undef DEFINE_DeeObject_TGenericEnumAttr

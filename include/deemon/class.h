@@ -255,7 +255,7 @@ typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
 #define Dee_CLASS_ATTRIBUTE_FPRIVATE  0x0001 /* The attribute is only accessible from this-call functions with an instance of the class as this-argument. */
 #define Dee_CLASS_ATTRIBUTE_FVISIBILITY (Dee_CLASS_ATTRIBUTE_FPRIVATE) /* Mask of flags affecting symbol visibility. */
 #define Dee_CLASS_ATTRIBUTE_FFINAL    0x0002 /* The attribute is accessed directly, and cannot be overwritten by sub-classes. */
-#define Dee_CLASS_ATTRIBUTE_FREADONLY 0x0004 /* The attribute can only ever be when not already bound (and it cannot be unbound). */
+#define Dee_CLASS_ATTRIBUTE_FREADONLY 0x0004 /* The attribute can only ever be set when not already bound (and it cannot be unbound). */
 /*      Dee_CLASS_ATTRIBUTE_F         0x0008  * ... */
 #define Dee_CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `InstanceMethod(MEMBER_TABLE[ca_addr], foo)' (calling `foo.bar()' will similarly perform a this-call). */
 #define Dee_CLASS_ATTRIBUTE_FGETSET   0x0020 /* Access to the attribute is done via get/set, with the callbacks being `CLASS_GETSET_*' offsets from `ca_addr'.
@@ -2086,7 +2086,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultHasItemStringLenHashWithE
 /* tp_getrange */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN(DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_DefaultGetRangeWithGetRangeIndexDefaultAndGetRangeIndexNDefault(DeeObject *self, DeeObject *start, DeeObject *end); /* May call other DEFAULT operators */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultGetRangeWithSizeDefaultAndGetItemIndex(DeeObject *self, DeeObject *start, DeeObject *end);                   /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultGetRangeWithSizeDefaultAndGetItemIndex(DeeObject *self, DeeObject *start, DeeObject *end);                      /* May call other DEFAULT operators */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultGetRangeWithSizeDefaultAndTryGetItemIndex(DeeObject *self, DeeObject *start, DeeObject *end);                   /* May call other DEFAULT operators */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultGetRangeWithSizeObAndGetItem(DeeObject *self, DeeObject *start, DeeObject *end);
 

@@ -91,7 +91,7 @@ Dee_type_seq_has_custom_tp_setitem_index(struct type_seq const *__restrict self)
 	       !DeeType_IsDefaultSetItemIndex(self->tp_setitem_index);
 }
 
-PRIVATE WUNUSED NONNULL((1)) struct Dee_type_seq_cache *DCALL
+INTERN WUNUSED NONNULL((1)) struct Dee_type_seq_cache *DCALL
 DeeType_TryRequireSeqCache(DeeTypeObject *__restrict self) {
 	struct Dee_type_seq_cache *sc;
 	ASSERT(self->tp_seq);
@@ -112,6 +112,56 @@ DeeType_TryRequireSeqCache(DeeTypeObject *__restrict self) {
 }
 
 
+#define Dee_tsc_uslot_fini_function(self) Dee_Decref((self)->d_function)
+
+INTERN NONNULL((1)) void DCALL
+Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
+	/* Drop function references where they are present. */
+	if (self->tsc_erase == &DeeSeq_DefaultEraseWithCallEraseDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_erase_data);
+	if (self->tsc_insert == &DeeSeq_DefaultInsertWithCallInsertDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_insert_data);
+	if (self->tsc_insertall == &DeeSeq_DefaultInsertAllWithCallInsertAllDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_insertall_data);
+	if (self->tsc_pushfront == &DeeSeq_DefaultPushFrontWithCallPushFrontDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_pushfront_data);
+	if (self->tsc_append == &DeeSeq_DefaultAppendWithCallAppendDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_append_data);
+	if (self->tsc_extend == &DeeSeq_DefaultExtendWithCallExtendDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_extend_data);
+	if (self->tsc_xchitem_index == &DeeSeq_DefaultXchItemIndexWithCallXchItemIndexDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_xchitem_index_data);
+	if (self->tsc_clear == &DeeSeq_DefaultClearWithCallClearDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_clear_data);
+	if (self->tsc_pop == &DeeSeq_DefaultPopWithCallPopDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_pop_data);
+	if (self->tsc_remove == &DeeSeq_DefaultRemoveWithCallRemoveDataFunction ||
+	    self->tsc_remove_with_key == &DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_remove_data);
+	if (self->tsc_rremove == &DeeSeq_DefaultRRemoveWithCallRRemoveDataFunction ||
+	    self->tsc_rremove_with_key == &DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_rremove_data);
+	if (self->tsc_removeall == &DeeSeq_DefaultRemoveAllWithCallRemoveAllDataFunction ||
+	    self->tsc_removeall_with_key == &DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_removeall_data);
+	if (self->tsc_removeif == &DeeSeq_DefaultRemoveIfWithCallRemoveIfDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_removeif_data);
+	if (self->tsc_resize == &DeeSeq_DefaultResizeWithCallResizeDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_resize_data);
+	if (self->tsc_fill == &DeeSeq_DefaultFillWithCallFillDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_fill_data);
+	if (self->tsc_reverse == &DeeSeq_DefaultReverseWithCallReverseDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_reverse_data);
+	if (self->tsc_reversed == &DeeSeq_DefaultReversedWithCallReversedDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_reversed_data);
+	if (self->tsc_sort == &DeeSeq_DefaultSortWithCallSortDataFunction ||
+	    self->tsc_sort_with_key == &DeeSeq_DefaultSortWithKeyWithCallSortDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sort_data);
+	if (self->tsc_sorted == &DeeSeq_DefaultSortedWithCallSortedDataFunction ||
+	    self->tsc_sorted_with_key == &DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	Dee_Free(self);
+}
 
 
 INTERN WUNUSED NONNULL((1)) Dee_tsc_foreach_reverse_t DCALL
@@ -147,6 +197,13 @@ DeeType_SeqCache_TryRequireForeachReverse(DeeTypeObject *__restrict self) {
 		return result;
 	}
 	return NULL; /* Not possible... */
+}
+
+INTERN WUNUSED NONNULL((1)) bool DCALL
+DeeType_SeqCache_HasPrivateForeachReverse(DeeTypeObject *__restrict self) {
+	return DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ &&
+	       DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) &&
+	       DeeType_HasOperator(self, OPERATOR_SIZE);
 }
 
 INTERN WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_reverse_t DCALL
@@ -340,6 +397,7 @@ DeeType_SeqCache_RequireRFindWithKey(DeeTypeObject *__restrict self) {
 
 
 
+
 /* Possible implementations for sequence cache functions. */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict self,
@@ -350,12 +408,12 @@ DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict se
 	if unlikely(size == (size_t)-1)
 		goto err;
 	while (size) {
-		DREF DeeObject *elem;
+		DREF DeeObject *item;
 		--size;
-		elem = (*seq->tp_getitem_index_fast)(self, size);
-		if likely(elem) {
-			temp = (*proc)(arg, elem);
-			Dee_Decref(elem);
+		item = (*seq->tp_getitem_index_fast)(self, size);
+		if likely(item) {
+			temp = (*proc)(arg, item);
+			Dee_Decref(item);
 			if unlikely(temp < 0)
 				goto err_temp;
 			result += temp;
@@ -379,12 +437,12 @@ DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndex(DeeObject *__restrict self,
 	if unlikely(size == (size_t)-1)
 		goto err;
 	while (size) {
-		DREF DeeObject *elem;
+		DREF DeeObject *item;
 		--size;
-		elem = (*seq->tp_getitem_index)(self, size);
-		if likely(elem) {
-			temp = (*proc)(arg, elem);
-			Dee_Decref(elem);
+		item = (*seq->tp_getitem_index)(self, size);
+		if likely(item) {
+			temp = (*proc)(arg, item);
+			Dee_Decref(item);
 			if unlikely(temp < 0)
 				goto err_temp;
 			result += temp;
@@ -412,14 +470,14 @@ DeeSeq_DefaultForeachReverseWithSizeAndTryGetItemIndex(DeeObject *__restrict sel
 	if unlikely(size == (size_t)-1)
 		goto err;
 	while (size) {
-		DREF DeeObject *elem;
+		DREF DeeObject *item;
 		--size;
-		elem = (*seq->tp_trygetitem_index)(self, size);
-		if unlikely(!elem)
+		item = (*seq->tp_trygetitem_index)(self, size);
+		if unlikely(!item)
 			goto err;
-		if likely(elem != ITER_DONE) {
-			temp = (*proc)(arg, elem);
-			Dee_Decref(elem);
+		if likely(item != ITER_DONE) {
+			temp = (*proc)(arg, item);
+			Dee_Decref(item);
 			if unlikely(temp < 0)
 				goto err_temp;
 			result += temp;
@@ -443,7 +501,7 @@ DeeSeq_DefaultForeachReverseWithSizeObAndGetItem(DeeObject *__restrict self,
 	if unlikely(!sizeob)
 		goto err;
 	for (;;) {
-		DREF DeeObject *elem;
+		DREF DeeObject *item;
 		int size_is_nonzero = DeeObject_Bool(sizeob);
 		if unlikely(size_is_nonzero < 0)
 			goto err_sizeob;
@@ -451,10 +509,10 @@ DeeSeq_DefaultForeachReverseWithSizeObAndGetItem(DeeObject *__restrict self,
 			break;
 		if (DeeObject_Dec(&sizeob))
 			goto err_sizeob;
-		elem = (*seq->tp_getitem)(self, sizeob);
-		if likely(elem) {
-			temp = (*proc)(arg, elem);
-			Dee_Decref(elem);
+		item = (*seq->tp_getitem)(self, sizeob);
+		if likely(item) {
+			temp = (*proc)(arg, item);
+			Dee_Decref(item);
 			if unlikely(temp < 0)
 				goto err_temp_sizeob;
 			result += temp;
@@ -490,11 +548,11 @@ DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndexFast(DeeObject *__rest
 	if (size > end)
 		size = end;
 	while (size > start) {
-		DREF DeeObject *elem;
+		DREF DeeObject *item;
 		--size;
-		elem = (*seq->tp_getitem_index_fast)(self, size);
-		temp = (*proc)(arg, size, elem);
-		Dee_XDecref(elem);
+		item = (*seq->tp_getitem_index_fast)(self, size);
+		temp = (*proc)(arg, size, item);
+		Dee_XDecref(item);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
@@ -519,16 +577,16 @@ DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndex(DeeObject *__restrict
 	if (size > end)
 		size = end;
 	while (size > start) {
-		DREF DeeObject *elem;
+		DREF DeeObject *item;
 		--size;
-		elem = (*seq->tp_getitem_index)(self, size);
-		if unlikely(!elem) {
+		item = (*seq->tp_getitem_index)(self, size);
+		if unlikely(!item) {
 			if (!DeeError_Catch(&DeeError_IndexError) &&
 			    !DeeError_Catch(&DeeError_UnboundItem))
 				goto err;
 		}
-		temp = (*proc)(arg, size, elem);
-		Dee_XDecref(elem);
+		temp = (*proc)(arg, size, item);
+		Dee_XDecref(item);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
@@ -553,14 +611,14 @@ DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex(DeeObject *__restr
 	if (size > end)
 		size = end;
 	while (size > start) {
-		DREF DeeObject *elem;
+		DREF DeeObject *item;
 		--size;
-		elem = (*seq->tp_trygetitem_index)(self, size);
-		if unlikely(!elem)
+		item = (*seq->tp_trygetitem_index)(self, size);
+		if unlikely(!item)
 			goto err;
-		if likely(elem != ITER_DONE) {
-			temp = (*proc)(arg, size, elem);
-			Dee_Decref(elem);
+		if likely(item != ITER_DONE) {
+			temp = (*proc)(arg, size, item);
+			Dee_Decref(item);
 		} else {
 			temp = (*proc)(arg, size, NULL);
 		}
@@ -611,7 +669,7 @@ DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem(DeeObject *__restrict se
 	}
 	for (;;) {
 		size_t index_value;
-		DREF DeeObject *elem;
+		DREF DeeObject *item;
 		int size_is_greater_start;
 		if (startob) {
 			size_is_greater_start = DeeObject_CmpGrAsBool(sizeob, startob);
@@ -624,8 +682,8 @@ DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem(DeeObject *__restrict se
 			break;
 		if (DeeObject_Dec(&sizeob))
 			goto err_sizeob_startob;
-		elem = (*seq->tp_getitem)(self, sizeob);
-		if unlikely(!elem) {
+		item = (*seq->tp_getitem)(self, sizeob);
+		if unlikely(!item) {
 			if (!DeeError_Catch(&DeeError_IndexError) &&
 			    !DeeError_Catch(&DeeError_UnboundItem))
 				goto err_sizeob_startob;
@@ -634,8 +692,8 @@ DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem(DeeObject *__restrict se
 			goto err_sizeob_startob;
 		temp = 0;
 		if likely(index_value >= start && index_value < end)
-			temp = (*proc)(arg, index_value, elem);
-		Dee_XDecref(elem);
+			temp = (*proc)(arg, index_value, item);
+		Dee_XDecref(item);
 		if unlikely(temp < 0)
 			goto err_temp_sizeob_startob;
 		result += temp;
@@ -677,9 +735,9 @@ DeeSeq_DefaultGetFirstWithGetItemIndex(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seq_default_getfirst_with_foreach_cb(void *arg, DeeObject *elem) {
-	Dee_Incref(elem);
-	*(DREF DeeObject **)arg = elem;
+seq_default_getfirst_with_foreach_cb(void *arg, DeeObject *item) {
+	Dee_Incref(item);
+	*(DREF DeeObject **)arg = item;
 	return -2;
 }
 
@@ -711,9 +769,9 @@ DeeSeq_DefaultBoundFirstWithBoundItemIndex(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seq_default_boundfirst_with_foreach_cb(void *arg, DeeObject *elem) {
+seq_default_boundfirst_with_foreach_cb(void *arg, DeeObject *item) {
 	(void)arg;
-	(void)elem;
+	(void)item;
 	return -2;
 }
 
@@ -843,10 +901,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seq_default_last_with_foreach_cb(void *arg, DeeObject *elem) {
-	Dee_Incref(elem);
+seq_default_last_with_foreach_cb(void *arg, DeeObject *item) {
+	Dee_Incref(item);
 	Dee_Decref_unlikely(*(DREF DeeObject **)arg);
-	*(DREF DeeObject **)arg = elem;
+	*(DREF DeeObject **)arg = item;
 	return 1;
 }
 
@@ -1069,10 +1127,10 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultFindWithTSCEnumerateIndex(DeeObject *self, DeeObject *elem, size_t start, size_t end) {
+DeeSeq_DefaultFindWithTSCEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
 	union generic_seq_find_data data;
-	data.gsfd_elem = elem;
+	data.gsfd_elem = item;
 	status = DeeSeq_EnumerateIndex(self, &generic_seq_find_cb, &data, start, end);
 	if likely(status == -2) {
 		if unlikely(data.gsfd_index == (size_t)Dee_COMPARE_ERR)
@@ -1112,11 +1170,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-DeeSeq_DefaultFindWithKeyWithTSCEnumerateIndex(DeeObject *self, DeeObject *elem,
+DeeSeq_DefaultFindWithKeyWithTSCEnumerateIndex(DeeObject *self, DeeObject *item,
                                                size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct generic_seq_find_with_key_data data;
-	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &elem);
+	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gsfwk_base.gsfd_elem)
 		goto err;
 	data.gsfwk_key = key;
@@ -1157,11 +1215,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse(DeeObject *self, DeeObject *elem, size_t start, size_t end) {
+DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
 	union generic_seq_find_data data;
 	Dee_tsc_enumerate_index_reverse_t renum;
-	data.gsfd_elem = elem;
+	data.gsfd_elem = item;
 	renum = DeeType_SeqCache_TryRequireEnumerateIndexReverse(Dee_TYPE(self));
 	ASSERT(renum);
 	status = (*renum)(self, &generic_seq_find_cb, &data, start, end);
@@ -1178,10 +1236,10 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultRFindWithTSCEnumerateIndex(DeeObject *self, DeeObject *elem, size_t start, size_t end) {
+DeeSeq_DefaultRFindWithTSCEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
 	struct generic_seq_rfind_data data;
-	data.gsrfd_elem   = elem;
+	data.gsrfd_elem   = item;
 	data.gsrfd_result = (size_t)-1;
 	status = DeeSeq_EnumerateIndex(self, &generic_seq_rfind_cb, &data, start, end);
 	ASSERT(status == 0 || status == -1);
@@ -1218,12 +1276,12 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse(DeeObject *self, DeeObject *elem,
+DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse(DeeObject *self, DeeObject *item,
                                                        size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct generic_seq_find_with_key_data data;
 	Dee_tsc_enumerate_index_reverse_t renum;
-	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &elem);
+	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gsfwk_base.gsfd_elem)
 		goto err;
 	data.gsfwk_key = key;
@@ -1244,11 +1302,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndex(DeeObject *self, DeeObject *elem,
+DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndex(DeeObject *self, DeeObject *item,
                                                 size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct generic_seq_rfind_with_key_data data;
-	data.gsrfwkd_kelem = DeeObject_Call(key, 1, &elem);
+	data.gsrfwkd_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gsrfwkd_kelem)
 		goto err;
 	data.gsrfwkd_result = (size_t)-1;
@@ -1337,13 +1395,13 @@ struct generic_seq_sum_data {
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-generic_seq_sum_cb(void *arg, DeeObject *elem) {
+generic_seq_sum_cb(void *arg, DeeObject *item) {
 	struct generic_seq_sum_data *data;
 	data = (struct generic_seq_sum_data *)arg;
 	switch (data->gss_mode) {
 
 	case GENERIC_SEQ_SUM_MODE_FIRST: {
-		DeeTypeObject *tp_elem = Dee_TYPE(elem);
+		DeeTypeObject *tp_elem = Dee_TYPE(item);
 		if (tp_elem == &DeeString_Type) {
 			data->gss_mode = GENERIC_SEQ_SUM_MODE_STRING;
 			unicode_printer_init(&data->gss_value.v_string);
@@ -1354,14 +1412,14 @@ generic_seq_sum_cb(void *arg, DeeObject *elem) {
 			goto do_print_bytes;
 		} else {
 			data->gss_mode = GENERIC_SEQ_SUM_MODE_OBJECT;
-			data->gss_value.v_object = elem;
-			Dee_Incref(elem);
+			data->gss_value.v_object = item;
+			Dee_Incref(item);
 		}
 	}	break;
 
 	case GENERIC_SEQ_SUM_MODE_OBJECT: {
 		DREF DeeObject *result;
-		result = DeeObject_Add(data->gss_value.v_object, elem);
+		result = DeeObject_Add(data->gss_value.v_object, item);
 		if unlikely(!result)
 			goto err;
 		Dee_Decref(data->gss_value.v_object);
@@ -1370,11 +1428,11 @@ generic_seq_sum_cb(void *arg, DeeObject *elem) {
 
 	case GENERIC_SEQ_SUM_MODE_STRING:
 do_print_string:
-		return unicode_printer_printobject(&data->gss_value.v_string, elem);
+		return unicode_printer_printobject(&data->gss_value.v_string, item);
 
 	case GENERIC_SEQ_SUM_MODE_BYTES:
 do_print_bytes:
-		return bytes_printer_printobject(&data->gss_value.v_bytes, elem);
+		return bytes_printer_printobject(&data->gss_value.v_bytes, item);
 
 	default: __builtin_unreachable();
 	}
@@ -1425,10 +1483,10 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_any_cb(void *arg, DeeObject *elem) {
+generic_seq_any_cb(void *arg, DeeObject *item) {
 	int temp;
 	(void)arg;
-	temp = DeeObject_Bool(elem);
+	temp = DeeObject_Bool(item);
 	if (temp > 0)
 		temp = -2;
 	return temp;
@@ -1447,10 +1505,10 @@ DeeSeq_Any(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_all_cb(void *arg, DeeObject *elem) {
+generic_seq_all_cb(void *arg, DeeObject *item) {
 	int temp;
 	(void)arg;
-	temp = DeeObject_Bool(elem);
+	temp = DeeObject_Bool(item);
 	if (temp == 0)
 		temp = -2;
 	return temp;
@@ -1471,39 +1529,39 @@ DeeSeq_All(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-generic_seq_min_cb(void *arg, DeeObject *elem) {
+generic_seq_min_cb(void *arg, DeeObject *item) {
 	int temp;
 	DeeObject *current = *(DeeObject **)arg;
 	if (!current) {
-		*(DeeObject **)arg = elem;
-		Dee_Incref(elem);
+		*(DeeObject **)arg = item;
+		Dee_Incref(item);
 		return 0;
 	}
-	temp = DeeObject_CmpLoAsBool(current, elem);
+	temp = DeeObject_CmpLoAsBool(current, item);
 	if (temp == 0) {
 		ASSERT(*(DeeObject **)arg == current);
 		Dee_Decref(current);
-		Dee_Incref(elem);
-		*(DeeObject **)arg = elem;
+		Dee_Incref(item);
+		*(DeeObject **)arg = item;
 	}
 	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-generic_seq_max_cb(void *arg, DeeObject *elem) {
+generic_seq_max_cb(void *arg, DeeObject *item) {
 	int temp;
 	DeeObject *current = *(DeeObject **)arg;
 	if (!current) {
-		*(DeeObject **)arg = elem;
-		Dee_Incref(elem);
+		*(DeeObject **)arg = item;
+		Dee_Incref(item);
 		return 0;
 	}
-	temp = DeeObject_CmpLoAsBool(current, elem);
+	temp = DeeObject_CmpLoAsBool(current, item);
 	if (temp > 0) {
 		ASSERT(*(DeeObject **)arg == current);
 		Dee_Decref(current);
-		Dee_Incref(elem);
-		*(DeeObject **)arg = elem;
+		Dee_Incref(item);
+		*(DeeObject **)arg = item;
 	}
 	return temp;
 }
@@ -1541,22 +1599,22 @@ err_r:
 
 
 struct generic_seq_reduce_data {
-	DeeObject      *gsr_combine; /* [1..1] Combinatory predicate (invoke as `gsr_combine(gsr_init, elem)') */
+	DeeObject      *gsr_combine; /* [1..1] Combinatory predicate (invoke as `gsr_combine(gsr_init, item)') */
 	DREF DeeObject *gsr_result;  /* [0..1] Current reduction result, or NULL if no init given and at first item. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-generic_seq_reduce_cb(void *arg, DeeObject *elem) {
+generic_seq_reduce_cb(void *arg, DeeObject *item) {
 	struct generic_seq_reduce_data *data;
 	data = (struct generic_seq_reduce_data *)arg;
 	if (!data->gsr_result) {
-		data->gsr_result = elem;
-		Dee_Incref(elem);
+		data->gsr_result = item;
+		Dee_Incref(item);
 	} else {
 		DeeObject *args[2];
 		DREF DeeObject *reduced;
 		args[0] = data->gsr_result;
-		args[1] = elem;
+		args[1] = item;
 		reduced = DeeObject_Call(data->gsr_combine, 2, args);
 		if unlikely(!reduced)
 			goto err;
@@ -1586,9 +1644,9 @@ err_data_result:
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_parity_cb(void *arg, DeeObject *elem) {
+generic_seq_parity_cb(void *arg, DeeObject *item) {
 	(void)arg;
-	return (Dee_ssize_t)DeeObject_Bool(elem);
+	return (Dee_ssize_t)DeeObject_Bool(item);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1607,14 +1665,14 @@ struct generic_seq_minmax_with_key_data {
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-generic_seq_min_with_key_cb(void *arg, DeeObject *elem) {
+generic_seq_min_with_key_cb(void *arg, DeeObject *item) {
 	int temp;
 	DREF DeeObject *kelem;
 	struct generic_seq_minmax_with_key_data *data;
 	data = (struct generic_seq_minmax_with_key_data *)arg;
 	if (!data->gsmmwk_result) {
-		Dee_Incref(elem);
-		data->gsmmwk_result = elem; /* Inherit reference */
+		Dee_Incref(item);
+		data->gsmmwk_result = item; /* Inherit reference */
 		return 0;
 	}
 	if unlikely(!data->gsmmwk_kresult) {
@@ -1624,7 +1682,7 @@ generic_seq_min_with_key_cb(void *arg, DeeObject *elem) {
 			goto err;
 		data->gsmmwk_kresult = keyed; /* Inherit reference */
 	}
-	kelem = DeeObject_Call(data->gsmmwk_key, 1, &elem);
+	kelem = DeeObject_Call(data->gsmmwk_key, 1, &item);
 	if unlikely(!kelem)
 		goto err;
 	temp = DeeObject_CmpLoAsBool(data->gsmmwk_kresult, kelem);
@@ -1636,8 +1694,8 @@ generic_seq_min_with_key_cb(void *arg, DeeObject *elem) {
 		goto err_kelem;
 	Dee_Decref(data->gsmmwk_result);
 	Dee_Decref(data->gsmmwk_kresult);
-	Dee_Incref(elem);
-	data->gsmmwk_result  = elem;  /* Inherit reference */
+	Dee_Incref(item);
+	data->gsmmwk_result  = item;  /* Inherit reference */
 	data->gsmmwk_kresult = kelem; /* Inherit reference */
 	return 0;
 err_kelem:
@@ -1647,14 +1705,14 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-generic_seq_max_with_key_cb(void *arg, DeeObject *elem) {
+generic_seq_max_with_key_cb(void *arg, DeeObject *item) {
 	int temp;
 	DREF DeeObject *kelem;
 	struct generic_seq_minmax_with_key_data *data;
 	data = (struct generic_seq_minmax_with_key_data *)arg;
 	if (!data->gsmmwk_result) {
-		Dee_Incref(elem);
-		data->gsmmwk_result = elem; /* Inherit reference */
+		Dee_Incref(item);
+		data->gsmmwk_result = item; /* Inherit reference */
 		return 0;
 	}
 	if unlikely(!data->gsmmwk_kresult) {
@@ -1664,7 +1722,7 @@ generic_seq_max_with_key_cb(void *arg, DeeObject *elem) {
 			goto err;
 		data->gsmmwk_kresult = keyed; /* Inherit reference */
 	}
-	kelem = DeeObject_Call(data->gsmmwk_key, 1, &elem);
+	kelem = DeeObject_Call(data->gsmmwk_key, 1, &item);
 	if unlikely(!kelem)
 		goto err;
 	temp = DeeObject_CmpLoAsBool(data->gsmmwk_kresult, kelem);
@@ -1676,8 +1734,8 @@ generic_seq_max_with_key_cb(void *arg, DeeObject *elem) {
 		goto err_kelem;
 	Dee_Decref(data->gsmmwk_result);
 	Dee_Decref(data->gsmmwk_kresult);
-	Dee_Incref(elem);
-	data->gsmmwk_result  = elem;  /* Inherit reference */
+	Dee_Incref(item);
+	data->gsmmwk_result  = item;  /* Inherit reference */
 	data->gsmmwk_kresult = kelem; /* Inherit reference */
 	return 0;
 err_kelem:
@@ -1751,8 +1809,8 @@ generic_seq_count_cb(void *arg, DeeObject *key) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-generic_seq_count(DeeObject *self, DeeObject *elem) {
-	return (size_t)DeeObject_Foreach(self, &generic_seq_count_cb, elem);
+generic_seq_count(DeeObject *self, DeeObject *item) {
+	return (size_t)DeeObject_Foreach(self, &generic_seq_count_cb, item);
 }
 
 struct generic_seq_count_with_key_data {
@@ -1761,33 +1819,33 @@ struct generic_seq_count_with_key_data {
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_count_with_key_cb(void *arg, DeeObject *elem) {
+generic_seq_count_with_key_cb(void *arg, DeeObject *item) {
 	int temp;
 	struct generic_seq_count_with_key_data *data;
 	data = (struct generic_seq_count_with_key_data *)arg;
-	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, elem, data->gscwk_key);
+	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		return -1;
 	return temp == 0 ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_contains_with_key_cb(void *arg, DeeObject *elem) {
+generic_seq_contains_with_key_cb(void *arg, DeeObject *item) {
 	int temp;
 	struct generic_seq_count_with_key_data *data;
 	data = (struct generic_seq_count_with_key_data *)arg;
-	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, elem, data->gscwk_key);
+	temp = DeeObject_TryCompareKeyEq(data->gscwk_kelem, item, data->gscwk_key);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		return -1;
 	return temp == 0 ? -2 : 0;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) size_t DCALL
-generic_seq_count_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
+generic_seq_count_with_key(DeeObject *self, DeeObject *item, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct generic_seq_count_with_key_data data;
 	data.gscwk_key   = key;
-	data.gscwk_kelem = DeeObject_Call(key, 1, &elem);
+	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
 	foreach_status = DeeObject_Foreach(self, &generic_seq_count_with_key_cb, &data);
@@ -1798,11 +1856,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-generic_seq_contains_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
+generic_seq_contains_with_key(DeeObject *self, DeeObject *item, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct generic_seq_count_with_key_data data;
 	data.gscwk_key   = key;
-	data.gscwk_kelem = DeeObject_Call(key, 1, &elem);
+	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
 	foreach_status = DeeObject_Foreach(self, &generic_seq_contains_with_key_cb, &data);
@@ -1819,27 +1877,27 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_locate_cb(void *arg, DeeObject *elem) {
+generic_seq_locate_cb(void *arg, DeeObject *item) {
 	DeeObject *elem_to_locate = *(DeeObject **)arg;
-	int temp = DeeObject_TryCompareEq(elem_to_locate, elem);
+	int temp = DeeObject_TryCompareEq(elem_to_locate, item);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		return -1;
 	if (temp == 0) {
-		Dee_Incref(elem);
-		*(DeeObject **)arg = elem;
+		Dee_Incref(item);
+		*(DeeObject **)arg = item;
 		return -2;
 	}
 	return 0;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-generic_seq_locate(DeeObject *self, DeeObject *elem) {
+generic_seq_locate(DeeObject *self, DeeObject *item) {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeObject_Foreach(self, &generic_seq_locate_cb, &elem);
+	foreach_status = DeeObject_Foreach(self, &generic_seq_locate_cb, &item);
 	if likely(foreach_status == -2)
-		return elem;
+		return item;
 	if (foreach_status == 0)
-		err_item_not_found(self, elem);
+		err_item_not_found(self, item);
 	return NULL;
 }
 
@@ -1850,16 +1908,16 @@ struct generic_seq_locate_with_key_data {
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_locate_with_key_cb(void *arg, DeeObject *elem) {
+generic_seq_locate_with_key_cb(void *arg, DeeObject *item) {
 	int temp;
 	struct generic_seq_locate_with_key_data *data;
 	data = (struct generic_seq_locate_with_key_data *)arg;
-	temp = DeeObject_TryCompareKeyEq(data->gslwk_kelem, elem, data->gslwk_key);
+	temp = DeeObject_TryCompareKeyEq(data->gslwk_kelem, item, data->gslwk_key);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		goto err;
 	if (temp == 0) {
-		Dee_Incref(elem);
-		data->gslwk_key = elem;
+		Dee_Incref(item);
+		data->gslwk_key = item;
 		return -2;
 	}
 	return 0;
@@ -1868,10 +1926,10 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-generic_seq_locate_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
+generic_seq_locate_with_key(DeeObject *self, DeeObject *item, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct generic_seq_locate_with_key_data data;
-	data.gslwk_kelem = DeeObject_Call(key, 1, &elem);
+	data.gslwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gslwk_kelem)
 		goto err;
 	data.gslwk_key = key;
@@ -1880,7 +1938,7 @@ generic_seq_locate_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
 	if likely(foreach_status == -2)
 		return data.gslwk_key;
 	if (foreach_status == 0)
-		err_item_not_found(self, elem);
+		err_item_not_found(self, item);
 err:
 	return NULL;
 }
@@ -1892,17 +1950,17 @@ struct generic_seq_rlocate_with_foreach_data {
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_rlocate_with_foreach_cb(void *arg, DeeObject *elem) {
+generic_seq_rlocate_with_foreach_cb(void *arg, DeeObject *item) {
 	int temp;
 	struct generic_seq_rlocate_with_foreach_data *data;
 	data = (struct generic_seq_rlocate_with_foreach_data *)arg;
-	temp = DeeObject_TryCompareEq(data->gsrlwf_elem, elem);
+	temp = DeeObject_TryCompareEq(data->gsrlwf_elem, item);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		goto err;
 	if (temp == 0) {
-		Dee_Incref(elem);
+		Dee_Incref(item);
 		Dee_XDecref(data->gsrlwf_result);
-		data->gsrlwf_result = elem;
+		data->gsrlwf_result = item;
 	}
 	return 0;
 err:
@@ -1910,24 +1968,24 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-generic_seq_rlocate(DeeObject *self, DeeObject *elem) {
+generic_seq_rlocate(DeeObject *self, DeeObject *item) {
 	Dee_ssize_t foreach_status;
 	Dee_tsc_foreach_reverse_t op;
 	if ((op = DeeType_SeqCache_TryRequireForeachReverse(Dee_TYPE(self))) != NULL) {
-		foreach_status = (*op)(self, &generic_seq_locate_cb, &elem);
+		foreach_status = (*op)(self, &generic_seq_locate_cb, &item);
 		if likely(foreach_status == -2)
-			return elem;
+			return item;
 		if (foreach_status == 0)
-			err_item_not_found(self, elem);
+			err_item_not_found(self, item);
 	} else {
 		struct generic_seq_rlocate_with_foreach_data data;
-		data.gsrlwf_elem   = elem;
+		data.gsrlwf_elem   = item;
 		data.gsrlwf_result = NULL;
 		foreach_status = DeeObject_Foreach(self, &generic_seq_rlocate_with_foreach_cb, &data);
 		if likely(foreach_status == 0) {
 			if (data.gsrlwf_result)
 				return data.gsrlwf_result;
-			err_item_not_found(self, elem);
+			err_item_not_found(self, item);
 		}
 	}
 	return NULL;
@@ -1940,17 +1998,17 @@ struct generic_seq_rlocate_with_key_and_foreach_data {
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-generic_seq_rlocate_with_key_and_foreach_cb(void *arg, DeeObject *elem) {
+generic_seq_rlocate_with_key_and_foreach_cb(void *arg, DeeObject *item) {
 	int temp;
 	struct generic_seq_rlocate_with_key_and_foreach_data *data;
 	data = (struct generic_seq_rlocate_with_key_and_foreach_data *)arg;
-	temp = DeeObject_TryCompareKeyEq(data->gsrlwkf_kelem, elem, data->gsrlwkf_key);
+	temp = DeeObject_TryCompareKeyEq(data->gsrlwkf_kelem, item, data->gsrlwkf_key);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		goto err;
 	if (temp == 0) {
-		Dee_Incref(elem);
+		Dee_Incref(item);
 		Dee_XDecref(data->gsrlwkf_result);
-		data->gsrlwkf_result = elem;
+		data->gsrlwkf_result = item;
 	}
 	return 0;
 err:
@@ -1958,11 +2016,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-generic_seq_rlocate_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
+generic_seq_rlocate_with_key(DeeObject *self, DeeObject *item, DeeObject *key) {
 	Dee_tsc_foreach_reverse_t op;
 	Dee_ssize_t foreach_status;
 	struct generic_seq_locate_with_key_data data;
-	data.gslwk_kelem = DeeObject_Call(key, 1, &elem);
+	data.gslwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gslwk_kelem)
 		goto err;
 	data.gslwk_key = key;
@@ -1972,7 +2030,7 @@ generic_seq_rlocate_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
 		if likely(foreach_status == -2)
 			return data.gslwk_key;
 		if (foreach_status == 0)
-			err_item_not_found(self, elem);
+			err_item_not_found(self, item);
 	} else {
 		struct generic_seq_rlocate_with_key_and_foreach_data rdata;
 		rdata.gsrlwkf_kelem  = data.gslwk_kelem;
@@ -1983,7 +2041,7 @@ generic_seq_rlocate_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
 		if likely(foreach_status == 0) {
 			if (rdata.gsrlwkf_result)
 				return rdata.gsrlwkf_result;
-			err_item_not_found(self, elem);
+			err_item_not_found(self, item);
 		}
 	}
 err:
@@ -2114,14 +2172,14 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_seq_startswith(DeeObject *self, DeeObject *elem) {
+generic_seq_startswith(DeeObject *self, DeeObject *item) {
 	int result;
 	DREF DeeObject *first = generic_seq_trygetfirst(self);
 	if unlikely(!first)
 		goto err;
 	if (first == ITER_DONE)
 		return 0;
-	result = DeeObject_TryCompareEq(elem, first);
+	result = DeeObject_TryCompareEq(item, first);
 	Dee_Decref(first);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
@@ -2131,37 +2189,37 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-generic_seq_startswith_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
+generic_seq_startswith_with_key(DeeObject *self, DeeObject *item, DeeObject *key) {
 	int result;
 	DREF DeeObject *first = generic_seq_trygetfirst(self);
 	if unlikely(!first)
 		goto err;
 	if (first == ITER_DONE)
 		return 0;
-	elem = DeeObject_Call(key, 1, &elem);
-	if unlikely(!elem)
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
 		goto err_elem;
-	result = DeeObject_TryCompareKeyEq(elem, first, key);
-	Dee_Decref(elem);
+	result = DeeObject_TryCompareKeyEq(item, first, key);
+	Dee_Decref(item);
 	Dee_Decref(first);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return result == 0 ? 1 : 0;
 err_elem:
-	Dee_Decref(elem);
+	Dee_Decref(item);
 err:
 	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_seq_endswith(DeeObject *self, DeeObject *elem) {
+generic_seq_endswith(DeeObject *self, DeeObject *item) {
 	int result;
 	DREF DeeObject *last = generic_seq_trygetlast(self);
 	if unlikely(!last)
 		goto err;
 	if (last == ITER_DONE)
 		return 0;
-	result = DeeObject_TryCompareEq(elem, last);
+	result = DeeObject_TryCompareEq(item, last);
 	Dee_Decref(last);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
@@ -2171,24 +2229,24 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-generic_seq_endswith_with_key(DeeObject *self, DeeObject *elem, DeeObject *key) {
+generic_seq_endswith_with_key(DeeObject *self, DeeObject *item, DeeObject *key) {
 	int result;
 	DREF DeeObject *last = generic_seq_trygetlast(self);
 	if unlikely(!last)
 		goto err;
 	if (last == ITER_DONE)
 		return 0;
-	elem = DeeObject_Call(key, 1, &elem);
-	if unlikely(!elem)
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
 		goto err_elem;
-	result = DeeObject_TryCompareKeyEq(elem, last, key);
-	Dee_Decref(elem);
+	result = DeeObject_TryCompareKeyEq(item, last, key);
+	Dee_Decref(item);
 	Dee_Decref(last);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return result == 0 ? 1 : 0;
 err_elem:
-	Dee_Decref(elem);
+	Dee_Decref(item);
 err:
 	return -1;
 }

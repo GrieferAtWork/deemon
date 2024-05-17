@@ -531,7 +531,7 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	              "(value)->?Dbool\n"
 	              "Set (override) @this Cell's value, returning ?t if a previous value "
 	              /**/ "has been overwritten, or ?f if no value had been set before"),
-	TYPE_METHOD_F(STR_xch, &cell_xch, METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("xch", &cell_xch, METHOD_FNOREFESCAPE,
 	              "(value)->\n"
 	              "#tValueError{@this Cell is empty}"
 	              "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"

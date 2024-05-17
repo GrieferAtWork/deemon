@@ -46,6 +46,7 @@ DECL_BEGIN
 struct Dee_class_attribute;
 struct Dee_module_symbol;
 
+/* Possible values for `struct Dee_attrinfo::ai_type' */
 #define Dee_ATTRINFO_CUSTOM          0 /* Custom attribute operators are present. */
 #define Dee_ATTRINFO_MODSYM          1 /* Access a module symbol */
 #define Dee_ATTRINFO_METHOD          2 /* Wrapper for producing `DeeObjMethod_Type' / `DeeKwObjMethod_Type' */
@@ -95,17 +96,32 @@ DFUNDEF WUNUSED NONNULL((1, 3, 6)) bool DCALL
 DeeObject_TFindAttrInfoStringLenHash(DeeTypeObject *tp_self, DeeObject *self,
                                      char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
                                      struct Dee_attrinfo *__restrict retinfo);
-#define DeeObject_TFindAttrInfo(tp_self, self, attr, retinfo)                   DeeObject_TFindAttrInfoStringLenHash(tp_self, self, DeeString_STR(attr), DeeString_SIZE(attr), DeeString_Hash(attr), retinfo)
-#define DeeObject_TFindAttrInfoHash(tp_self, self, attr, hash, retinfo)         DeeObject_TFindAttrInfoStringLenHash(tp_self, self, DeeString_STR(attr), DeeString_SIZE(attr), hash, retinfo)
-#define DeeObject_TFindAttrInfoString(tp_self, self, attr, retinfo)             DeeObject_TFindAttrInfoStringLenHash(tp_self, self, attr, strlen(attr), Dee_HashStr(attr), retinfo)
-#define DeeObject_TFindAttrInfoStringHash(tp_self, self, attr, hash, retinfo)   DeeObject_TFindAttrInfoStringLenHash(tp_self, self, attr, strlen(attr), hash, retinfo)
-#define DeeObject_TFindAttrInfoStringLen(tp_self, self, attr, attrlen, retinfo) DeeObject_TFindAttrInfoStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), retinfo)
-#define DeeObject_FindAttrInfo(self, attr, retinfo)                             DeeObject_TFindAttrInfo(Dee_TYPE(self), self, attr, retinfo)
-#define DeeObject_FindAttrInfoHash(self, attr, hash, retinfo)                   DeeObject_TFindAttrInfoHash(Dee_TYPE(self), self, attr, hash, retinfo)
-#define DeeObject_FindAttrInfoString(self, attr, retinfo)                       DeeObject_TFindAttrInfoString(Dee_TYPE(self), self, attr, retinfo)
-#define DeeObject_FindAttrInfoStringHash(self, attr, hash, retinfo)             DeeObject_TFindAttrInfoStringHash(Dee_TYPE(self), self, attr, hash, retinfo)
-#define DeeObject_FindAttrInfoStringLen(self, attr, attrlen, retinfo)           DeeObject_TFindAttrInfoStringLen(Dee_TYPE(self), self, attr, attrlen, retinfo)
-#define DeeObject_FindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo) DeeObject_TFindAttrInfoStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash, retinfo)
+DFUNDEF WUNUSED NONNULL((1, 3, 6)) bool DCALL /* Same, but don't search MRO (only search "tp_self") */
+DeeObject_TFindPrivateAttrInfoStringLenHash(DeeTypeObject *tp_self, DeeObject *self,
+                                            char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
+                                            struct Dee_attrinfo *__restrict retinfo);
+#define DeeObject_TFindAttrInfo(tp_self, self, attr, retinfo)                          DeeObject_TFindAttrInfoStringLenHash(tp_self, self, DeeString_STR(attr), DeeString_SIZE(attr), DeeString_Hash(attr), retinfo)
+#define DeeObject_TFindAttrInfoHash(tp_self, self, attr, hash, retinfo)                DeeObject_TFindAttrInfoStringLenHash(tp_self, self, DeeString_STR(attr), DeeString_SIZE(attr), hash, retinfo)
+#define DeeObject_TFindAttrInfoString(tp_self, self, attr, retinfo)                    DeeObject_TFindAttrInfoStringLenHash(tp_self, self, attr, strlen(attr), Dee_HashStr(attr), retinfo)
+#define DeeObject_TFindAttrInfoStringHash(tp_self, self, attr, hash, retinfo)          DeeObject_TFindAttrInfoStringLenHash(tp_self, self, attr, strlen(attr), hash, retinfo)
+#define DeeObject_TFindAttrInfoStringLen(tp_self, self, attr, attrlen, retinfo)        DeeObject_TFindAttrInfoStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), retinfo)
+#define DeeObject_FindAttrInfo(self, attr, retinfo)                                    DeeObject_TFindAttrInfo(Dee_TYPE(self), self, attr, retinfo)
+#define DeeObject_FindAttrInfoHash(self, attr, hash, retinfo)                          DeeObject_TFindAttrInfoHash(Dee_TYPE(self), self, attr, hash, retinfo)
+#define DeeObject_FindAttrInfoString(self, attr, retinfo)                              DeeObject_TFindAttrInfoString(Dee_TYPE(self), self, attr, retinfo)
+#define DeeObject_FindAttrInfoStringHash(self, attr, hash, retinfo)                    DeeObject_TFindAttrInfoStringHash(Dee_TYPE(self), self, attr, hash, retinfo)
+#define DeeObject_FindAttrInfoStringLen(self, attr, attrlen, retinfo)                  DeeObject_TFindAttrInfoStringLen(Dee_TYPE(self), self, attr, attrlen, retinfo)
+#define DeeObject_FindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo)        DeeObject_TFindAttrInfoStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash, retinfo)
+#define DeeObject_TFindPrivateAttrInfo(tp_self, self, attr, retinfo)                   DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, self, DeeString_STR(attr), DeeString_SIZE(attr), DeeString_Hash(attr), retinfo)
+#define DeeObject_TFindPrivateAttrInfoHash(tp_self, self, attr, hash, retinfo)         DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, self, DeeString_STR(attr), DeeString_SIZE(attr), hash, retinfo)
+#define DeeObject_TFindPrivateAttrInfoString(tp_self, self, attr, retinfo)             DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, self, attr, strlen(attr), Dee_HashStr(attr), retinfo)
+#define DeeObject_TFindPrivateAttrInfoStringHash(tp_self, self, attr, hash, retinfo)   DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, self, attr, strlen(attr), hash, retinfo)
+#define DeeObject_TFindPrivateAttrInfoStringLen(tp_self, self, attr, attrlen, retinfo) DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen), retinfo)
+#define DeeObject_FindPrivateAttrInfo(self, attr, retinfo)                             DeeObject_TFindPrivateAttrInfo(Dee_TYPE(self), self, attr, retinfo)
+#define DeeObject_FindPrivateAttrInfoHash(self, attr, hash, retinfo)                   DeeObject_TFindPrivateAttrInfoHash(Dee_TYPE(self), self, attr, hash, retinfo)
+#define DeeObject_FindPrivateAttrInfoString(self, attr, retinfo)                       DeeObject_TFindPrivateAttrInfoString(Dee_TYPE(self), self, attr, retinfo)
+#define DeeObject_FindPrivateAttrInfoStringHash(self, attr, hash, retinfo)             DeeObject_TFindPrivateAttrInfoStringHash(Dee_TYPE(self), self, attr, hash, retinfo)
+#define DeeObject_FindPrivateAttrInfoStringLen(self, attr, attrlen, retinfo)           DeeObject_TFindPrivateAttrInfoStringLen(Dee_TYPE(self), self, attr, attrlen, retinfo)
+#define DeeObject_FindPrivateAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo) DeeObject_TFindPrivateAttrInfoStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash, retinfo)
 
 
 
@@ -196,31 +212,31 @@ INTDEF NONNULL((1)) void DCALL Dee_membercache_fini(struct Dee_membercache *__re
 /* Try to insert a new caching point into the given Dee_membercache `self'.
  * @param: self: The cache to insert into.
  * @param: decl: The type providing the declaration. */
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addmethod(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addgetset(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addmember(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addattrib(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute *attrib);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancemethod(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancegetset(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancemember(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstanceattrib(struct Dee_membercache *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute *attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addmethod(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addgetset(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addmember(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addattrib(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute *attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancemethod(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancegetset(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancemember(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstanceattrib(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute *attrib);
 
 #ifdef __INTELLISENSE__
 /* Cache an instance member (e.g. `tp_methods') in `tp_cache'. */
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
 /* Cache a class member (e.g. `tp_class_methods') in `tp_class_cache'. */
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
 /* Cache an instance member (e.g. `tp_methods') in `tp_class_cache'. */
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceMethod(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceGetSet(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceMember(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *self, DeeTypeObject *decl, dhash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
 #else /* __INTELLISENSE__ */
 #define DeeType_CacheMethod(self, decl, hash, method)         Dee_membercache_addmethod(&(self)->tp_cache, decl, hash, method)
 #define DeeType_CacheGetSet(self, decl, hash, getset)         Dee_membercache_addgetset(&(self)->tp_cache, decl, hash, getset)
@@ -246,12 +262,12 @@ INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *
  * @return: * :        The attribute value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedClassAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedInstanceAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedInstanceAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedClassAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedInstanceAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedInstanceAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_GetCachedAttr(tp_self, self, attr)                     DeeType_GetCachedAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_GetCachedAttrHash(tp_self, self, attr, hash)           DeeType_GetCachedAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
 #define DeeType_GetCachedAttrString(tp_self, self, attr)               DeeType_GetCachedAttrStringHash(tp_self, self, attr, Dee_HashStr(attr))
@@ -269,12 +285,12 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedInstanceA
  * @return: 0 : Attribute isn't bound.
  * @return: -1: An error occurred.
  * @return: -2: The attribute doesn't exist. */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedClassAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedInstanceAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedInstanceAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedClassAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedInstanceAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedInstanceAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_BoundCachedAttr(tp_self, self, attr)                     DeeType_BoundCachedAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_BoundCachedAttrHash(tp_self, self, attr, hash)           DeeType_BoundCachedAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
 #define DeeType_BoundCachedAttrString(tp_self, self, attr)               DeeType_BoundCachedAttrStringHash(tp_self, self, attr, Dee_HashStr(attr))
@@ -290,13 +306,13 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedInstanceAttrStringL
 
 /* @return: true : The attribute exists.
  * @return: false: The attribute doesn't exist. */
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedClassAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedClassAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 #define DeeType_HasCachedInstanceAttrStringHash(tp_self, attr, hash)             DeeType_HasCachedAttrStringHash(tp_self, attr, hash)
 #define DeeType_HasCachedInstanceAttrStringLenHash(tp_self, attr, attrlen, hash) DeeType_HasCachedAttrStringLenHash(tp_self, attr, attrlen, hash)
@@ -317,12 +333,12 @@ INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasCachedInstanceAttrStringLe
 /* @return:  1: The attribute could not be found in the cache.
  * @return:  0: Successfully invoked the delete-operator on the attribute.
  * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedClassAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedInstanceAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedInstanceAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedClassAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedInstanceAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedInstanceAttrStringLenHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_DelCachedAttr(tp_self, self, attr)                     DeeType_DelCachedAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_DelCachedAttrHash(tp_self, self, attr, hash)           DeeType_DelCachedAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
 #define DeeType_DelCachedAttrString(tp_self, self, attr)               DeeType_DelCachedAttrStringHash(tp_self, self, attr, Dee_HashStr(attr))
@@ -339,12 +355,12 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelCachedInstanceAttrStringLen
 /* @return:  1: The attribute could not be found in the cache.
  * @return:  0: Successfully invoked the set-operator on the attribute.
  * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeType_SetCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetCachedClassAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetCachedClassAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetCachedInstanceAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetCachedInstanceAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeType_SetCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetCachedClassAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetCachedClassAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetCachedInstanceAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetCachedInstanceAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 #define DeeType_SetCachedAttr(tp_self, self, attr, value)                     DeeType_SetCachedAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), value)
 #define DeeType_SetCachedAttrHash(tp_self, self, attr, hash, value)           DeeType_SetCachedAttrStringHash(tp_self, self, DeeString_STR(attr), hash, value)
 #define DeeType_SetCachedAttrString(tp_self, self, attr, value)               DeeType_SetCachedAttrStringHash(tp_self, self, attr, Dee_HashStr(attr), value)
@@ -361,12 +377,12 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetCachedInstanceAttrString
 /* @return:  1: The attribute could not be found in the cache.
  * @return:  0: Successfully invoked the set-operator on the attribute.
  * @return: -1: An error occurred. )(An error is also thrown for non-basic attributes) */
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeType_SetBasicCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetBasicCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetBasicCachedClassAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetBasicCachedClassAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
-//INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetBasicCachedInstanceAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-//INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetBasicCachedInstanceAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeType_SetBasicCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetBasicCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetBasicCachedClassAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetBasicCachedClassAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+//INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetBasicCachedInstanceAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+//INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetBasicCachedInstanceAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 #define DeeType_SetBasicCachedAttr(tp_self, self, attr, value)                     DeeType_SetBasicCachedAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), value)
 #define DeeType_SetBasicCachedAttrHash(tp_self, self, attr, hash, value)           DeeType_SetBasicCachedAttrStringHash(tp_self, self, DeeString_STR(attr), hash, value)
 #define DeeType_SetBasicCachedAttrString(tp_self, self, attr, value)               DeeType_SetBasicCachedAttrStringHash(tp_self, self, attr, Dee_HashStr(attr), value)
@@ -383,20 +399,20 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetBasicCachedClassAttrStri
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 #define DeeType_CallCachedInstanceAttrStringHash(tp_self, attr, hash, argc, argv) DeeType_CallCachedInstanceAttrStringHashKw(tp_self, attr, hash, argc, argv, NULL)
 #define DeeType_CallCachedInstanceAttrStringLenHash(tp_self, attr, attrlen, hash, argc, argv) DeeType_CallCachedInstanceAttrStringLenHashKw(tp_self, attr, attrlen, hash, argc, argv, NULL)
-//INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-//INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringHashKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringLenHashKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringHashKw)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringLenHashKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringHashKw)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringLenHashKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+//INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringHash)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+//INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringLenHash)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringHashKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringLenHashKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringHashKw)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringLenHashKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringHashKw)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringLenHashKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeType_CallCachedAttr(tp_self, self, attr, argc, argv)                           DeeType_CallCachedAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
 #define DeeType_CallCachedAttrHash(tp_self, self, attr, hash, argc, argv)                 DeeType_CallCachedAttrStringHash(tp_self, self, DeeString_STR(attr), hash, argc, argv)
 #define DeeType_CallCachedAttrString(tp_self, self, attr, argc, argv)                     DeeType_CallCachedAttrStringHash(tp_self, self, attr, Dee_HashStr(attr), argc, argv)
@@ -427,18 +443,18 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstance
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringHashTuple)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringHashTuple)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args);
-//INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringHashTuple)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringHashTupleKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *args, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringHashTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args, DeeObject *kw);
-//INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringHashTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args, DeeObject *kw);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringLenHashTuple)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args);
-//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringLenHashTuple)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args);
-//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringLenHashTuple)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringLenHashTupleKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
-//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringLenHashTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
-//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringLenHashTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringHashTuple)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringHashTuple)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args);
+//INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringHashTuple)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringHashTupleKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringHashTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+//INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringHashTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringLenHashTuple)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args);
+//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringLenHashTuple)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args);
+//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringLenHashTuple)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_CallCachedAttrStringLenHashTupleKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrStringLenHashTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrStringLenHashTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
 
 #define DeeType_CallCachedAttrTuple(tp_self, self, attr, args)                           DeeType_CallCachedAttrStringHashTuple(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), args)
 #define DeeType_CallCachedAttrHashTuple(tp_self, self, attr, hash, args)                 DeeType_CallCachedAttrStringHashTuple(tp_self, self, DeeString_STR(attr), hash, args)
@@ -469,12 +485,12 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedClass
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallCachedAttrStringHashf)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_VCallCachedClassAttrStringHashf)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_VCallCachedInstanceAttrStringHashf)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallCachedAttrStringLenHashf)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_VCallCachedClassAttrStringLenHashf)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_VCallCachedInstanceAttrStringLenHashf)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallCachedAttrStringHashf)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_VCallCachedClassAttrStringHashf)(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_VCallCachedInstanceAttrStringHashf)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallCachedAttrStringLenHashf)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_VCallCachedClassAttrStringLenHashf)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_VCallCachedInstanceAttrStringLenHashf)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, va_list args);
 #define DeeType_VCallCachedAttrf(tp_self, self, attr, format, args)                           DeeType_VCallCachedAttrStringHashf(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), format, args)
 #define DeeType_VCallCachedAttrHashf(tp_self, self, attr, hash, format, args)                 DeeType_VCallCachedAttrStringHashf(tp_self, self, DeeString_STR(attr), hash, format, args)
 #define DeeType_VCallCachedAttrStringf(tp_self, self, attr, format, args)                     DeeType_VCallCachedAttrStringHashf(tp_self, self, attr, Dee_HashStr(attr), format, args)
@@ -519,39 +535,39 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindCachedClassAttrInfoStr
  * @return: NULL: The attribute could not be found. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttribute)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringLen)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttribute)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringLen)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttribute)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLen)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttribute)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringLen)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryIInstanceAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryClassAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, /*String*/ DeeObject *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_QueryInstanceAttributeStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t namelen, Dee_hash_t hash);
 #define DeeType_QueryIInstanceAttributeHash(tp_invoker, tp_self, attr, hash)                   DeeType_QueryInstanceAttributeHash(tp_invoker, tp_self, attr, hash)
 #define DeeType_QueryIInstanceAttributeStringHash(tp_invoker, tp_self, attr, hash)             DeeType_QueryInstanceAttributeStringHash(tp_invoker, tp_self, attr, hash)
 #define DeeType_QueryIInstanceAttributeStringLenHash(tp_invoker, tp_self, attr, namelen, hash) DeeType_QueryInstanceAttributeStringLenHash(tp_invoker, tp_self, attr, namelen, hash)
@@ -574,31 +590,31 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *(DCALL DeeType_Que
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_METHOD */
 type_method_getattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_method const *chain, DeeObject *self,
-                                char const *__restrict attr, dhash_t hash);
+                                char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_METHOD */
 type_method_getattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_method const *chain, DeeObject *self,
-                                    char const *__restrict attr, size_t attrlen, dhash_t hash);
+                                    char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_GetMethodAttrStringHash(tp_invoker, tp_self, self, attr, hash)             type_method_getattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, self, attr, hash)
 #define DeeType_GetMethodAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_method_getattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, self, attr, attrlen, hash)
 #define DeeType_GetClassMethodAttrStringHash(tp_invoker, tp_self, attr, hash)              type_method_getattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, (DeeObject *)(tp_invoker), attr, hash)
 #define DeeType_GetClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)  type_method_getattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, (DeeObject *)(tp_invoker), attr, attrlen, hash)
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #endif /* !__INTELLISENSE__ */
 #define DeeType_GetMethodAttr(tp_invoker, tp_self, self, attr)              DeeType_GetMethodAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Has(attr))
 #define DeeType_GetMethodAttrHash(tp_invoker, tp_self, self, attr, hash)    DeeType_GetMethodAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
@@ -618,65 +634,65 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMet
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *args, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringLenHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringLenHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *args, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrStringLenHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringLenHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrStringLenHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHashTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHashTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *args, DeeObject *kw);
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) DREF DeeObject *(DCALL DeeType_VCallMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) DREF DeeObject *(DCALL DeeType_VCallMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallClassMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallClassMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) DREF DeeObject *(DCALL DeeType_VCallMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) DREF DeeObject *(DCALL DeeType_VCallMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallClassMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallClassMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringLenHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, va_list args);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD */
 type_method_callattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                  struct type_method const *chain, DeeObject *self,
-                                 char const *__restrict attr, dhash_t hash,
+                                 char const *__restrict attr, Dee_hash_t hash,
                                  size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD */
 type_method_callattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                      struct type_method const *chain, DeeObject *self,
-                                     char const *__restrict attr, size_t attrlen, dhash_t hash,
+                                     char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
                                      size_t argc, DeeObject *const *argv);
 #define DeeType_CallMethodAttrStringHash(tp_invoker, tp_self, self, attr, hash, argc, argv)             type_method_callattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, self, attr, hash, argc, argv)
 #define DeeType_CallClassMethodAttrStringHash(tp_invoker, tp_self, attr, hash, argc, argv)              type_method_callattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, (DeeObject *)(tp_invoker), attr, hash, argc, argv)
 #define DeeType_CallMethodAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash, argc, argv) type_method_callattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, self, attr, attrlen, hash, argc, argv)
 #define DeeType_CallClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, argc, argv)  type_method_callattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, (DeeObject *)(tp_invoker), attr, attrlen, hash, argc, argv)
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 #define DeeType_CallIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash, argc, argv) \
 	DeeType_CallIInstanceMethodAttrStringHashKw(tp_invoker, tp_self, attr, hash, argc, argv, NULL)
 #define DeeType_CallIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, argc, argv) \
@@ -685,21 +701,21 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMet
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD_KW */
 type_method_callattr_string_hash_kw(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_method const *chain, DeeObject *self,
-                                    char const *__restrict attr, dhash_t hash,
+                                    char const *__restrict attr, Dee_hash_t hash,
                                     size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* CALL_METHOD_KW */
 type_method_callattr_string_len_hash_kw(struct Dee_membercache *cache, DeeTypeObject *decl,
                                         struct type_method const *chain, DeeObject *self,
-                                        char const *__restrict attr, size_t attrlen, dhash_t hash,
+                                        char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
                                         size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeType_CallMethodAttrStringHashKw(tp_invoker, tp_self, self, attr, hash, argc, argv, kw)             type_method_callattr_string_hash_kw(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, self, attr, hash, argc, argv, kw)
 #define DeeType_CallClassMethodAttrStringHashKw(tp_invoker, tp_self, attr, hash, argc, argv, kw)              type_method_callattr_string_hash_kw(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, (DeeObject *)(tp_invoker), attr, hash, argc, argv, kw)
 #define DeeType_CallMethodAttrStringLenHashKw(tp_invoker, tp_self, self, attr, attrlen, hash, argc, argv, kw) type_method_callattr_string_len_hash_kw(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, self, attr, attrlen, hash, argc, argv, kw)
 #define DeeType_CallClassMethodAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, kw)  type_method_callattr_string_len_hash_kw(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, (DeeObject *)(tp_invoker), attr, attrlen, hash, argc, argv, kw)
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 /* CALL_METHOD_TUPLE */
@@ -724,14 +740,14 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMe
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 7)) DREF DeeObject *DCALL /* CALL_METHOD */
 type_method_vcallattr_string_hashf(struct Dee_membercache *cache, DeeTypeObject *decl,
                                    struct type_method const *chain, DeeObject *self,
-                                   char const *__restrict attr, dhash_t hash,
+                                   char const *__restrict attr, Dee_hash_t hash,
                                    char const *__restrict format, va_list args);
 #define DeeType_VCallMethodAttrStringHashf(tp_invoker, tp_self, self, attr, hash, format, args) \
 	type_method_vcallattr_string_hashf(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, self, attr, hash, format, args)
 #define DeeType_VCallClassMethodAttrStringHashf(tp_invoker, tp_self, attr, hash, format, args) \
 	type_method_vcallattr_string_hashf(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, (DeeObject *)(tp_invoker), attr, hash, format, args)
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-//INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+//INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallIInstanceMethodAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
 #endif /* !__INTELLISENSE__ */
 #define DeeType_CallMethodAttr(tp_invoker, tp_self, self, attr, argc, argv)                            DeeType_CallMethodAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
 #define DeeType_CallMethodAttrHash(tp_invoker, tp_self, self, attr, hash, argc, argv)                  DeeType_CallMethodAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash, argc, argv)
@@ -822,31 +838,31 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanc
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_GETSET */
 type_getset_getattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_getset const *chain, DeeObject *self,
-                                char const *__restrict attr, dhash_t hash);
+                                char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_GETSET */
 type_getset_getattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_getset const *chain, DeeObject *self,
-                                    char const *__restrict attr, size_t attrlen, dhash_t hash);
+                                    char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_GetGetSetAttrStringHash(tp_invoker, tp_self, self, attr, hash)             type_getset_getattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr, hash)
 #define DeeType_GetClassGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)              type_getset_getattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, hash)
 #define DeeType_GetGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_getset_getattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr, attrlen, hash)
 #define DeeType_GetClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)  type_getset_getattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, attrlen, hash)
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #endif /* !__INTELLISENSE__ */
 #define DeeType_GetGetSetAttr(tp_invoker, tp_self, self, attr)                      DeeType_GetGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_GetGetSetAttrHash(tp_invoker, tp_self, self, attr, hash)            DeeType_GetGetSetAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
@@ -871,25 +887,25 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceGet
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceGetSetAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceGetSetAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
 #else /* __INTELLISENSE__ */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 #define DeeType_CallIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash, argc, argv)             DeeType_CallIInstanceGetSetAttrStringHashKw(tp_invoker, tp_self, attr, hash, argc, argv, NULL)
 #define DeeType_CallIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, argc, argv) DeeType_CallIInstanceGetSetAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, NULL)
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceGetSetAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceGetSetAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceGetSetAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
 #endif /* !__INTELLISENSE__ */
 #define DeeType_CallInstanceGetSetAttr(tp_invoker, tp_self, attr, argc, argv)                          DeeType_CallInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
 #define DeeType_CallInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash, argc, argv)                DeeType_CallInstanceGetSetAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv)
@@ -918,19 +934,19 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanc
  * @return: -1: An error occurred.
  * @return: -2: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_GETSET */
 type_getset_boundattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                   struct type_getset const *chain, DeeObject *self,
-                                  char const *__restrict attr, dhash_t hash);
+                                  char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_GETSET */
 type_getset_boundattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                       struct type_getset const *chain, DeeObject *self,
-                                      char const *__restrict attr, size_t attrlen, dhash_t hash);
+                                      char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_BoundGetSetAttrStringHash(tp_invoker, tp_self, self, attr, hash)             type_getset_boundattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr, hash)
 #define DeeType_BoundGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_getset_boundattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr, attrlen, hash)
 #define DeeType_BoundClassGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)              type_getset_boundattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, hash)
@@ -951,19 +967,19 @@ type_getset_boundattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObje
  * @return: -1: An error occurred.
  * @return:  1: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_GETSET */
 type_getset_delattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_getset const *chain, DeeObject *self,
-                                char const *__restrict attr, dhash_t hash);
+                                char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_GETSET */
 type_getset_delattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_getset const *chain, DeeObject *self,
-                                    char const *__restrict attr, size_t attrlen, dhash_t hash);
+                                    char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_DelGetSetAttrStringHash(tp_invoker, tp_self, self, attr, hash)             type_getset_delattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr, hash)
 #define DeeType_DelGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_getset_delattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr, attrlen, hash)
 #define DeeType_DelClassGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)              type_getset_delattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, hash)
@@ -984,20 +1000,20 @@ type_getset_delattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
  * @return: -1: An error occurred.
  * @return:  1: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) int (DCALL DeeType_SetGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) int (DCALL DeeType_SetGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeType_SetClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) int (DCALL DeeType_SetGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) int (DCALL DeeType_SetGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeType_SetClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 7)) int DCALL /* SET_GETSET */
 type_getset_setattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_getset const *chain, DeeObject *self,
-                                char const *__restrict attr, dhash_t hash, DeeObject *value);
+                                char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 8)) int DCALL /* SET_GETSET */
 type_getset_setattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_getset const *chain, DeeObject *self,
                                     char const *__restrict attr, size_t attrlen,
-                                    dhash_t hash, DeeObject *value);
+                                    Dee_hash_t hash, DeeObject *value);
 #define DeeType_SetGetSetAttrStringHash(tp_invoker, tp_self, self, attr, hash, value)             type_getset_setattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr, hash, value)
 #define DeeType_SetGetSetAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash, value) type_getset_setattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, self, attr, attrlen, hash, value)
 #define DeeType_SetClassGetSetAttrStringHash(tp_invoker, tp_self, attr, hash, value)              type_getset_setattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, (DeeObject *)(tp_invoker), attr, hash, value)
@@ -1018,31 +1034,31 @@ type_getset_setattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_GetMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_MEMBER */
 type_member_getattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_member const *chain, DeeObject *self,
-                                char const *__restrict attr, dhash_t hash);
+                                char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL /* GET_MEMBER */
 type_member_getattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_member const *chain, DeeObject *self,
-                                    char const *__restrict attr, size_t attrlen, dhash_t hash);
+                                    char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_GetMemberAttrStringHash(tp_invoker, tp_self, self, attr, hash)             type_member_getattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, hash)
 #define DeeType_GetClassMemberAttrStringHash(tp_invoker, tp_self, attr, hash)              type_member_getattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr, hash)
 #define DeeType_GetMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_member_getattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, attrlen, hash)
 #define DeeType_GetClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)  type_member_getattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr, attrlen, hash)
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #endif /* !__INTELLISENSE__ */
 #define DeeType_GetMemberAttr(tp_invoker, tp_self, self, attr)                      DeeType_GetMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeType_GetMemberAttrHash(tp_invoker, tp_self, self, attr, hash)            DeeType_GetMemberAttrStringHash(tp_invoker, tp_self, self, DeeString_STR(attr), hash)
@@ -1067,25 +1083,25 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_GetIInstanceMem
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMemberAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMemberAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
 #else /* __INTELLISENSE__ */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeType_CallIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash, argc, argv)             DeeType_CallIInstanceMemberAttrStringHashKw(tp_invoker, tp_self, attr, hash, argc, argv, NULL)
 #define DeeType_CallIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, argc, argv) DeeType_CallIInstanceMemberAttrStringLenHashKw(tp_invoker, tp_self, attr, attrlen, hash, argc, argv, NULL)
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMemberAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMemberAttrStringLenHashKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMemberAttrStringHashf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
 #endif /* !__INTELLISENSE__ */
 #define DeeType_CallInstanceMemberAttr(tp_invoker, tp_self, attr, argc, argv)                          DeeType_CallInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), DeeString_Hash(attr), argc, argv)
 #define DeeType_CallInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash, argc, argv)                DeeType_CallInstanceMemberAttrStringHash(tp_invoker, tp_self, DeeString_STR(attr), hash, argc, argv)
@@ -1114,19 +1130,19 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanc
  * @return: -1: An error occurred.
  * @return: -2: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_MEMBER */
 type_member_boundattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                   struct type_member const *chain, DeeObject *self,
-                                  char const *__restrict attr, dhash_t hash);
+                                  char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* BOUND_MEMBER */
 type_member_boundattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                       struct type_member const *chain, DeeObject *self,
-                                      char const *__restrict attr, size_t attrlen, dhash_t hash);
+                                      char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_BoundMemberAttrStringHash(tp_invoker, tp_self, self, attr, hash)             type_member_boundattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, hash)
 #define DeeType_BoundClassMemberAttrStringHash(tp_invoker, tp_self, attr, hash)              type_member_boundattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr, hash)
 #define DeeType_BoundMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_member_boundattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, attrlen, hash)
@@ -1147,19 +1163,19 @@ type_member_boundattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObje
  * @return: -1: An error occurred.
  * @return:  1: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_DelMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_DelClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_MEMBER */
 type_member_delattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_member const *chain, DeeObject *self,
-                                char const *__restrict attr, dhash_t hash);
+                                char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_MEMBER */
 type_member_delattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_member const *chain, DeeObject *self,
-                                    char const *__restrict attr, size_t attrlen, dhash_t hash);
+                                    char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_DelMemberAttrStringHash(tp_invoker, tp_self, self, attr, hash)             type_member_delattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, hash)
 #define DeeType_DelClassMemberAttrStringHash(tp_invoker, tp_self, attr, hash)              type_member_delattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr, hash)
 #define DeeType_DelMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash) type_member_delattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, attrlen, hash)
@@ -1180,20 +1196,20 @@ type_member_delattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
  * @return: -1: An error occurred.
  * @return:  1: The attribute could not be found in `chain'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) int (DCALL DeeType_SetMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) int (DCALL DeeType_SetMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeType_SetClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) int (DCALL DeeType_SetMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 7)) int (DCALL DeeType_SetMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeType_SetClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeType_SetClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 7)) int DCALL /* SET_MEMBER */
 type_member_setattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_member const *chain, DeeObject *self,
-                                char const *__restrict attr, dhash_t hash, DeeObject *value);
+                                char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 8)) int DCALL /* SET_MEMBER */
 type_member_setattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_member const *chain, DeeObject *self,
                                     char const *__restrict attr, size_t attrlen,
-                                    dhash_t hash, DeeObject *value);
+                                    Dee_hash_t hash, DeeObject *value);
 #define DeeType_SetMemberAttrStringHash(tp_invoker, tp_self, self, attr, hash, value)             type_member_setattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, hash, value)
 #define DeeType_SetClassMemberAttrStringHash(tp_invoker, tp_self, attr, hash, value)              type_member_setattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, (DeeObject *)(tp_invoker), attr, hash, value)
 #define DeeType_SetMemberAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash, value) type_member_setattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, self, attr, attrlen, hash, value)
@@ -1211,80 +1227,80 @@ type_member_setattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject
 
 /* Check for the existence of specific attributes. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasClassMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasIInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #else /* __INTELLISENSE__ */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* METHOD */
 type_method_hasattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_method const *chain,
-                                char const *__restrict attr, dhash_t hash);
+                                char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* METHOD */
 type_method_hasattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_method const *chain,
                                     char const *__restrict attr,
-                                    size_t attrlen, dhash_t hash);
+                                    size_t attrlen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* GETSET */
 type_getset_hasattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_getset const *chain,
-                                char const *__restrict attr, dhash_t hash);
+                                char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* GETSET */
 type_getset_hasattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_getset const *chain,
                                     char const *__restrict attr,
-                                    size_t attrlen, dhash_t hash);
+                                    size_t attrlen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* MEMBER */
 type_member_hasattr_string_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                 struct type_member const *chain,
-                                char const *__restrict attr, dhash_t hash);
+                                char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) bool DCALL /* MEMBER */
 type_member_hasattr_string_len_hash(struct Dee_membercache *cache, DeeTypeObject *decl,
                                     struct type_member const *chain,
                                     char const *__restrict attr,
-                                    size_t attrlen, dhash_t hash);
+                                    size_t attrlen, Dee_hash_t hash);
 #define DeeType_HasMethodAttrStringHash(tp_invoker, tp_self, attr, hash)                      type_method_hasattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, attr, hash)
 #define DeeType_HasMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)          type_method_hasattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, attr, attrlen, hash)
 #define DeeType_HasClassMethodAttrStringHash(tp_invoker, tp_self, attr, hash)                 type_method_hasattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, attr, hash)
 #define DeeType_HasClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)     type_method_hasattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_methods, attr, attrlen, hash)
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMethodAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_HasIInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash)             type_method_hasattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, attr, hash)
 #define DeeType_HasIInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, hash)          type_method_hasattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_methods, attr, attrlen, hash)
 #define DeeType_HasGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)                      type_getset_hasattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, attr, hash)
 #define DeeType_HasClassGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)                 type_getset_hasattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, attr, hash)
 #define DeeType_HasGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)          type_getset_hasattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, attr, attrlen, hash)
 #define DeeType_HasClassGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)     type_getset_hasattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_getsets, attr, attrlen, hash)
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_HasIInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)             type_getset_hasattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, attr, hash)
 #define DeeType_HasIInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, hash)          type_getset_hasattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_getsets, attr, attrlen, hash)
 #define DeeType_HasMemberAttrStringHash(tp_invoker, tp_self, attr, hash)                      type_member_hasattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, attr, hash)
 #define DeeType_HasClassMemberAttrStringHash(tp_invoker, tp_self, attr, hash)                 type_member_hasattr_string_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, attr, hash)
 #define DeeType_HasMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)          type_member_hasattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, attr, attrlen, hash)
 #define DeeType_HasClassMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) type_member_hasattr_string_len_hash(&(tp_invoker)->tp_class_cache, tp_self, (tp_self)->tp_class_members, attr, attrlen, hash)
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) bool (DCALL DeeType_HasInstanceMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeType_HasIInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash)             type_member_hasattr_string_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, attr, hash)
 #define DeeType_HasIInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) type_member_hasattr_string_len_hash(&(tp_invoker)->tp_cache, tp_self, (tp_self)->tp_members, attr, attrlen, hash)
 #endif /* !__INTELLISENSE__ */
@@ -1547,21 +1563,14 @@ DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTy
 
 
 /* Enumerate attributes. */
-INTDEF WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL type_method_enum(DeeTypeObject *__restrict tp_self, struct type_method const *chain, uint16_t flags, denum_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL type_getset_enum(DeeTypeObject *__restrict tp_self, struct type_getset const *chain, uint16_t flags, denum_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL type_member_enum(DeeTypeObject *__restrict tp_self, struct type_member const *chain, uint16_t flags, denum_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL type_obmeth_enum(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL type_obprop_enum(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL type_obmemb_enum(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL type_method_enum(DeeTypeObject *__restrict tp_self, struct type_method const *chain, uint16_t flags, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL type_getset_enum(DeeTypeObject *__restrict tp_self, struct type_getset const *chain, uint16_t flags, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL type_member_enum(DeeTypeObject *__restrict tp_self, struct type_member const *chain, uint16_t flags, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL type_obmeth_enum(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL type_obprop_enum(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL type_obmemb_enum(DeeTypeObject *__restrict tp_self, denum_t proc, void *arg);
 
 /* Helper functions for accessing type attributes. */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeKwObjMethod_VCallFuncf(Dee_kwobjmethod_t funptr, DeeObject *__restrict thisarg,
-                          char const *__restrict format, va_list args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeObjMethod_VCallFuncf(Dee_objmethod_t funptr, DeeObject *__restrict thisarg,
-                        char const *__restrict format, va_list args);
-
 #define type_method_get(desc, self)                                                                  \
 	(((desc)->m_flag & TYPE_METHOD_FKWDS) ? DeeKwObjMethod_New((dkwobjmethod_t)(desc)->m_func, self) \
 	                                      : DeeObjMethod_New((desc)->m_func, self))
@@ -1605,24 +1614,24 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_getset_set(struct type_getset c
 #define type_member_set(desc, self, value) Dee_type_member_set(desc, self, value)
 
 /* Static (class) attribute access for type objects. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallAttrStringHashKw)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallAttrStringLenHashKw)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_VCallAttrStringHashf)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, char const *__restrict format, va_list args);
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallAttrStringHashKw)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallAttrStringLenHashKw)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_VCallAttrStringHashf)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeType_SetAttrStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindAttrInfoStringLenHash)(DeeTypeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct attrinfo *__restrict retinfo);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_FindAttr)(DeeTypeObject *self, struct attribute_info *__restrict retinfo, struct attribute_lookup_rules const *__restrict rules);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t (DCALL DeeType_EnumAttr)(DeeTypeObject *self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeType_EnumAttr)(DeeTypeObject *self, denum_t proc, void *arg);
 #define DeeType_CallAttrStringHashTuple(self, attr, hash, args)                   DeeType_CallAttrStringHash(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeType_CallAttrStringLenHashTuple(self, attr, attrlen, hash, args)       DeeType_CallAttrStringLenHash(self, attr, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeType_CallAttrStringHashTupleKw(self, attr, hash, args, kw)             DeeType_CallAttrStringHashKw(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
@@ -1631,12 +1640,12 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t (DCALL DeeType_EnumAttr)(DeeTypeObject *
 
 
 /* Instance-only (wrapper) attribute access to the attributes of instance of types. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallInstanceAttrStringHashKw)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallInstanceAttrStringHashKw)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeType_HasInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_DelInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 #define DeeType_CallInstanceAttrStringHashTupleKw(self, attr, hash, args, kw) \
 	DeeType_CallInstanceAttrStringHashKw(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 

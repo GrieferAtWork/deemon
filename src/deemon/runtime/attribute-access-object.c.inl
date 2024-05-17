@@ -80,74 +80,78 @@
 //#define DEFINE_DeeObject_SetAttrStringLenHash
 //#define DEFINE_DeeObject_TSetAttrStringLenHash
 //#define DEFINE_DeeObject_TFindAttrInfoStringHash
-#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
+//#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
+//#define DEFINE_DeeObject_TFindPrivateAttrInfoStringHash
+#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_FindAttr
 //#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
-#if (defined(DEFINE_DeeObject_GetAttr) +                       \
-     defined(DEFINE_DeeObject_TGetAttr) +                      \
-     defined(DEFINE_DeeObject_GetAttrStringHash) +             \
-     defined(DEFINE_DeeObject_TGetAttrStringHash) +            \
-     defined(DEFINE_DeeObject_GetAttrStringLenHash) +          \
-     defined(DEFINE_DeeObject_TGetAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_BoundAttr) +                     \
-     defined(DEFINE_DeeObject_TBoundAttr) +                    \
-     defined(DEFINE_DeeObject_BoundAttrStringHash) +           \
-     defined(DEFINE_DeeObject_TBoundAttrStringHash) +          \
-     defined(DEFINE_DeeObject_BoundAttrStringLenHash) +        \
-     defined(DEFINE_DeeObject_TBoundAttrStringLenHash) +       \
-     defined(DEFINE_DeeObject_CallAttr) +                      \
-     defined(DEFINE_DeeObject_TCallAttr) +                     \
-     defined(DEFINE_DeeObject_CallAttrStringHash) +            \
-     defined(DEFINE_DeeObject_TCallAttrStringHash) +           \
-     defined(DEFINE_DeeObject_CallAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_TCallAttrStringLenHash) +        \
-     defined(DEFINE_DeeObject_CallAttrKw) +                    \
-     defined(DEFINE_DeeObject_TCallAttrKw) +                   \
-     defined(DEFINE_DeeObject_CallAttrStringHashKw) +          \
-     defined(DEFINE_DeeObject_TCallAttrStringHashKw) +         \
-     defined(DEFINE_DeeObject_CallAttrStringLenHashKw) +       \
-     defined(DEFINE_DeeObject_TCallAttrStringLenHashKw) +      \
-     defined(DEFINE_DeeObject_CallAttrTuple) +                 \
-     defined(DEFINE_DeeObject_TCallAttrTuple) +                \
-     defined(DEFINE_DeeObject_CallAttrStringHashTuple) +       \
-     defined(DEFINE_DeeObject_TCallAttrStringHashTuple) +      \
-     defined(DEFINE_DeeObject_CallAttrStringLenHashTuple) +    \
-     defined(DEFINE_DeeObject_TCallAttrStringLenHashTuple) +   \
-     defined(DEFINE_DeeObject_CallAttrTupleKw) +               \
-     defined(DEFINE_DeeObject_TCallAttrTupleKw) +              \
-     defined(DEFINE_DeeObject_CallAttrStringHashTupleKw) +     \
-     defined(DEFINE_DeeObject_TCallAttrStringHashTupleKw) +    \
-     defined(DEFINE_DeeObject_CallAttrStringLenHashTupleKw) +  \
-     defined(DEFINE_DeeObject_TCallAttrStringLenHashTupleKw) + \
-     defined(DEFINE_DeeObject_VCallAttrf) +                    \
-     defined(DEFINE_DeeObject_TVCallAttrf) +                   \
-     defined(DEFINE_DeeObject_VCallAttrStringHashf) +          \
-     defined(DEFINE_DeeObject_TVCallAttrStringHashf) +         \
-     defined(DEFINE_DeeObject_VCallAttrStringLenHashf) +       \
-     defined(DEFINE_DeeObject_TVCallAttrStringLenHashf) +      \
-     defined(DEFINE_DeeObject_HasAttr) +                       \
-     defined(DEFINE_DeeObject_THasAttr) +                      \
-     defined(DEFINE_DeeObject_HasAttrStringHash) +             \
-     defined(DEFINE_DeeObject_THasAttrStringHash) +            \
-     defined(DEFINE_DeeObject_HasAttrStringLenHash) +          \
-     defined(DEFINE_DeeObject_THasAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_DelAttr) +                       \
-     defined(DEFINE_DeeObject_TDelAttr) +                      \
-     defined(DEFINE_DeeObject_DelAttrStringHash) +             \
-     defined(DEFINE_DeeObject_TDelAttrStringHash) +            \
-     defined(DEFINE_DeeObject_DelAttrStringLenHash) +          \
-     defined(DEFINE_DeeObject_TDelAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_SetAttr) +                       \
-     defined(DEFINE_DeeObject_TSetAttr) +                      \
-     defined(DEFINE_DeeObject_SetAttrStringHash) +             \
-     defined(DEFINE_DeeObject_TSetAttrStringHash) +            \
-     defined(DEFINE_DeeObject_SetAttrStringLenHash) +          \
-     defined(DEFINE_DeeObject_TSetAttrStringLenHash) +         \
-     defined(DEFINE_DeeObject_TFindAttrInfoStringHash) +       \
-     defined(DEFINE_DeeObject_TFindAttrInfoStringLenHash) +    \
-     defined(DEFINE_DeeObject_FindAttr) +                      \
+#if (defined(DEFINE_DeeObject_GetAttr) +                           \
+     defined(DEFINE_DeeObject_TGetAttr) +                          \
+     defined(DEFINE_DeeObject_GetAttrStringHash) +                 \
+     defined(DEFINE_DeeObject_TGetAttrStringHash) +                \
+     defined(DEFINE_DeeObject_GetAttrStringLenHash) +              \
+     defined(DEFINE_DeeObject_TGetAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_BoundAttr) +                         \
+     defined(DEFINE_DeeObject_TBoundAttr) +                        \
+     defined(DEFINE_DeeObject_BoundAttrStringHash) +               \
+     defined(DEFINE_DeeObject_TBoundAttrStringHash) +              \
+     defined(DEFINE_DeeObject_BoundAttrStringLenHash) +            \
+     defined(DEFINE_DeeObject_TBoundAttrStringLenHash) +           \
+     defined(DEFINE_DeeObject_CallAttr) +                          \
+     defined(DEFINE_DeeObject_TCallAttr) +                         \
+     defined(DEFINE_DeeObject_CallAttrStringHash) +                \
+     defined(DEFINE_DeeObject_TCallAttrStringHash) +               \
+     defined(DEFINE_DeeObject_CallAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_TCallAttrStringLenHash) +            \
+     defined(DEFINE_DeeObject_CallAttrKw) +                        \
+     defined(DEFINE_DeeObject_TCallAttrKw) +                       \
+     defined(DEFINE_DeeObject_CallAttrStringHashKw) +              \
+     defined(DEFINE_DeeObject_TCallAttrStringHashKw) +             \
+     defined(DEFINE_DeeObject_CallAttrStringLenHashKw) +           \
+     defined(DEFINE_DeeObject_TCallAttrStringLenHashKw) +          \
+     defined(DEFINE_DeeObject_CallAttrTuple) +                     \
+     defined(DEFINE_DeeObject_TCallAttrTuple) +                    \
+     defined(DEFINE_DeeObject_CallAttrStringHashTuple) +           \
+     defined(DEFINE_DeeObject_TCallAttrStringHashTuple) +          \
+     defined(DEFINE_DeeObject_CallAttrStringLenHashTuple) +        \
+     defined(DEFINE_DeeObject_TCallAttrStringLenHashTuple) +       \
+     defined(DEFINE_DeeObject_CallAttrTupleKw) +                   \
+     defined(DEFINE_DeeObject_TCallAttrTupleKw) +                  \
+     defined(DEFINE_DeeObject_CallAttrStringHashTupleKw) +         \
+     defined(DEFINE_DeeObject_TCallAttrStringHashTupleKw) +        \
+     defined(DEFINE_DeeObject_CallAttrStringLenHashTupleKw) +      \
+     defined(DEFINE_DeeObject_TCallAttrStringLenHashTupleKw) +     \
+     defined(DEFINE_DeeObject_VCallAttrf) +                        \
+     defined(DEFINE_DeeObject_TVCallAttrf) +                       \
+     defined(DEFINE_DeeObject_VCallAttrStringHashf) +              \
+     defined(DEFINE_DeeObject_TVCallAttrStringHashf) +             \
+     defined(DEFINE_DeeObject_VCallAttrStringLenHashf) +           \
+     defined(DEFINE_DeeObject_TVCallAttrStringLenHashf) +          \
+     defined(DEFINE_DeeObject_HasAttr) +                           \
+     defined(DEFINE_DeeObject_THasAttr) +                          \
+     defined(DEFINE_DeeObject_HasAttrStringHash) +                 \
+     defined(DEFINE_DeeObject_THasAttrStringHash) +                \
+     defined(DEFINE_DeeObject_HasAttrStringLenHash) +              \
+     defined(DEFINE_DeeObject_THasAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_DelAttr) +                           \
+     defined(DEFINE_DeeObject_TDelAttr) +                          \
+     defined(DEFINE_DeeObject_DelAttrStringHash) +                 \
+     defined(DEFINE_DeeObject_TDelAttrStringHash) +                \
+     defined(DEFINE_DeeObject_DelAttrStringLenHash) +              \
+     defined(DEFINE_DeeObject_TDelAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_SetAttr) +                           \
+     defined(DEFINE_DeeObject_TSetAttr) +                          \
+     defined(DEFINE_DeeObject_SetAttrStringHash) +                 \
+     defined(DEFINE_DeeObject_TSetAttrStringHash) +                \
+     defined(DEFINE_DeeObject_SetAttrStringLenHash) +              \
+     defined(DEFINE_DeeObject_TSetAttrStringLenHash) +             \
+     defined(DEFINE_DeeObject_TFindAttrInfoStringHash) +           \
+     defined(DEFINE_DeeObject_TFindAttrInfoStringLenHash) +        \
+     defined(DEFINE_DeeObject_TFindPrivateAttrInfoStringHash) +    \
+     defined(DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash) + \
+     defined(DEFINE_DeeObject_FindAttr) +                          \
      defined(DEFINE_DeeObject_EnumAttr)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
@@ -433,6 +437,19 @@
 #define LOCAL_HAS_tp_self
 #define LOCAL_HAS_string
 #define LOCAL_HAS_len
+#elif defined(DEFINE_DeeObject_TFindPrivateAttrInfoStringHash)
+#define LOCAL_DeeObject_AccessAttr DeeObject_TFindPrivateAttrInfoStringHash
+#define LOCAL_IS_PRIVATE
+#define LOCAL_IS_FINDINFO
+#define LOCAL_HAS_tp_self
+#define LOCAL_HAS_string
+#elif defined(DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash)
+#define LOCAL_DeeObject_AccessAttr DeeObject_TFindPrivateAttrInfoStringLenHash
+#define LOCAL_IS_PRIVATE
+#define LOCAL_IS_FINDINFO
+#define LOCAL_HAS_tp_self
+#define LOCAL_HAS_string
+#define LOCAL_HAS_len
 #elif defined(DEFINE_DeeObject_FindAttr)
 #define LOCAL_DeeObject_AccessAttr DeeObject_FindAttr
 #define LOCAL_IS_FIND
@@ -475,7 +492,7 @@ DECL_BEGIN
 #define LOCAL_ATTR_NOT_FOUND_RESULT false
 #define LOCAL_ERROR_RESULT          DONT_USE_THIS_MACRO
 #elif defined(LOCAL_IS_ENUM)
-#define LOCAL_return_t              dssize_t
+#define LOCAL_return_t              Dee_ssize_t
 #define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
 #define LOCAL_ERROR_RESULT          DONT_USE_THIS_MACRO
 #else /* ... */
@@ -710,7 +727,7 @@ DECL_BEGIN
 /* Access code for how an attribute is being accessed */
 #if defined(LOCAL_IS_ENUM) || defined(LOCAL_IS_FIND)
 #define LOCAL_tp_accessattr                                                         tp_enumattr
-#define LOCAL_DECLARE_tp_accessattr(tp_accessattr)                                  dssize_t (DCALL *tp_accessattr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg)
+#define LOCAL_DECLARE_tp_accessattr(tp_accessattr)                                  Dee_ssize_t (DCALL *tp_accessattr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg)
 #define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) (*(tp_accessattr))(tp_iter, self, proc, arg)
 #elif defined(LOCAL_IS_SET)
 #define LOCAL_tp_accessattr                                                         tp_setattr
@@ -726,38 +743,6 @@ DECL_BEGIN
 #define LOCAL_DeeType_invoke_attr_tp_accessattr(tp_iter, tp_accessattr, self, attr) DeeType_invoke_attr_tp_getattr(tp_iter, tp_accessattr, self, attr)
 #define LOCAL_type_accessattr                                                       type_getattr
 #endif /* !... */
-
-
-/* Accessors for `Sequence.each'. */
-#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-#if defined(LOCAL_IS_CALL) && !defined(LOCAL_HAS_string)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttr(self, attr, argc, argv)
-#elif defined(LOCAL_IS_CALL) && defined(LOCAL_HAS_len)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrStringLenHash(self, attr, attrlen, hash, argc, argv)
-#elif defined(LOCAL_IS_CALL) && defined(LOCAL_HAS_len)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrStringHash(self, attr, hash, argc, argv)
-#elif defined(LOCAL_IS_CALL_KW) && !defined(LOCAL_HAS_string)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrKw(self, attr, argc, argv, kw)
-#elif defined(LOCAL_IS_CALL_KW) && defined(LOCAL_HAS_len)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrStringLenHashKw(self, attr, attrlen, hash, argc, argv, kw)
-#elif defined(LOCAL_IS_CALL_KW) && defined(LOCAL_HAS_len)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrStringHashKw(self, attr, hash, argc, argv, kw)
-#elif defined(LOCAL_IS_CALL_TUPLE) && !defined(LOCAL_HAS_string)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrTuple(self, attr, args)
-#elif defined(LOCAL_IS_CALL_TUPLE) && defined(LOCAL_HAS_len)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrStringLenHashTuple(self, attr, attrlen, hash, args)
-#elif defined(LOCAL_IS_CALL_TUPLE) && defined(LOCAL_HAS_len)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrStringHashTuple(self, attr, hash, args)
-#elif defined(LOCAL_IS_CALL_TUPLE_KW) && !defined(LOCAL_HAS_string)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrTupleKw(self, attr, args, kw)
-#elif defined(LOCAL_IS_CALL_TUPLE_KW) && defined(LOCAL_HAS_len)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrStringLenHashTupleKw(self, attr, attrlen, hash, args, kw)
-#elif defined(LOCAL_IS_CALL_TUPLE_KW) && defined(LOCAL_HAS_len)
-#define LOCAL_DeeSeqEach_AccessAttr(self) DeeSeqEach_CallAttrStringHashTupleKw(self, attr, hash, args, kw)
-#endif /* ... */
-#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-
-
 
 /* What visibility should the function have? */
 #if 1
@@ -811,7 +796,7 @@ struct attribute_lookup_data {
 	                                                   * Set to true after `alr_decl' had been encountered. */
 };
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 6)) Dee_ssize_t DCALL
 attribute_lookup_enum(DeeObject *__restrict declarator,
                       char const *__restrict attr_name, char const *attr_doc,
                       uint16_t perm, DeeTypeObject *attr_type,
@@ -928,7 +913,9 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	if (result != LOCAL_ATTR_NOT_FOUND_RESULT) \
 		goto done
 #endif /* !LOCAL_IS_ENUM */
+#ifndef LOCAL_IS_PRIVATE
 	DeeTypeMRO mro;
+#endif /* !LOCAL_IS_PRIVATE */
 	DeeTypeObject *tp_iter;
 #ifndef LOCAL_HAS_tp_self
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -975,17 +962,26 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #endif /* LOCAL_HAS_local_hash */
 
 	/* Try to access the attribute from cache. */
+#ifndef LOCAL_IS_PRIVATE
 #ifdef LOCAL_DeeType_AccessCachedAttr
 	result = LOCAL_DeeType_AccessCachedAttr(tp_iter, self);
 	LOCAL_process_result(result, done);
 #endif /* LOCAL_DeeType_AccessCachedAttr */
+#endif /* !LOCAL_IS_PRIVATE */
 
 	/* Slow path: must check for the attribute everywhere. */
+#ifndef LOCAL_IS_PRIVATE
 	DeeTypeMRO_Init(&mro, tp_iter);
-	for (;;) {
+	for (;;)
+#endif /* !LOCAL_IS_PRIVATE */
+	{
 #ifdef LOCAL_IS_FIND
 continue_at_iter:
 		if (rules->alr_decl && rules->alr_decl != (DeeObject *)tp_iter) {
+#ifdef LOCAL_IS_PRIVATE
+#define WANT_break_search
+			goto break_search;
+#else /* LOCAL_IS_PRIVATE */
 			tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 			if (!tp_iter)
 				break;
@@ -995,6 +991,7 @@ continue_at_iter:
 			 * have been visible. */
 			tp_self = tp_iter;
 			goto continue_at_iter;
+#endif /* !LOCAL_IS_PRIVATE */
 		}
 #endif /* LOCAL_IS_FIND */
 
@@ -1046,12 +1043,19 @@ continue_at_iter:
 		}
 
 		/* Move on to the next base class. */
+#ifdef LOCAL_IS_PRIVATE
+		result = LOCAL_ATTR_NOT_FOUND_RESULT;
+		goto break_search;
+#define WANT_break_search
+#else /* LOCAL_IS_PRIVATE */
 		tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 		if (!tp_iter)
 			break;
 
 		/* Check for user-defined attribute operators. */
-		if (tp_iter->tp_attr != NULL) {
+		if (tp_iter->tp_attr != NULL)
+#endif /* !LOCAL_IS_PRIVATE */
+		{
 #ifdef LOCAL_IS_TEST_FUNCTION
 			DREF DeeObject *found_object;
 #define LOCAL_result_OR_found_object found_object
@@ -1296,7 +1300,7 @@ do_tp_iter_attr:
 			LOCAL_process_result(result, done);
 #elif defined(LOCAL_IS_FIND)
 			{
-				dssize_t enum_error;
+				Dee_ssize_t enum_error;
 				struct attribute_lookup_data data;
 				data.ald_info    = retinfo;
 				data.ald_rules   = rules;
@@ -1360,6 +1364,10 @@ do_tp_iter_attr:
 #undef LOCAL_result_OR_found_object
 		}
 	}
+#ifdef WANT_break_search
+#undef WANT_break_search
+break_search:
+#endif /* WANT_break_search */
 
 #if !defined(LOCAL_IS_TEST_FUNCTION) && !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_FINDINFO)
 	LOCAL_err_unknown_attribute(tp_self, LOCAL_ATTR_ACCESS_OP);
@@ -1405,8 +1413,6 @@ err:
 #undef LOCAL_IS_TEST_FUNCTION
 }
 
-#undef LOCAL_DeeSeqEach_AccessAttr
-
 #undef LOCAL_tp_accessattr
 #undef LOCAL_DECLARE_tp_accessattr
 #undef LOCAL_DeeType_invoke_attr_tp_accessattr
@@ -1433,6 +1439,7 @@ err:
 #undef LOCAL_IS_DEL
 #undef LOCAL_IS_SET
 #undef LOCAL_IS_FIND
+#undef LOCAL_IS_PRIVATE
 #undef LOCAL_IS_FINDINFO
 #undef LOCAL_IS_ENUM
 #undef LOCAL_HAS_string
@@ -1508,5 +1515,7 @@ DECL_END
 #undef DEFINE_DeeObject_TSetAttrStringLenHash
 #undef DEFINE_DeeObject_TFindAttrInfoStringHash
 #undef DEFINE_DeeObject_TFindAttrInfoStringLenHash
+#undef DEFINE_DeeObject_TFindPrivateAttrInfoStringHash
+#undef DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
 #undef DEFINE_DeeObject_FindAttr
 #undef DEFINE_DeeObject_EnumAttr

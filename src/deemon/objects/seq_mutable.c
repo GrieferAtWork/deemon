@@ -4314,7 +4314,7 @@ PRIVATE DeeStringObject *tpconst mutable_sequence_attributes[] = {
 	&str_rremove,
 	&str_removeall,
 	&str_removeif,
-	&str_xch,
+	&str_xchitem,
 	&str_clear,
 #define resizable_sequence_attributes \
 	(mutable_sequence_attributes + 6)

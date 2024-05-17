@@ -247,6 +247,8 @@
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\combinations.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\concat.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-mutable-attrproxy-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-mutable-require-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl" />
@@ -430,6 +432,7 @@
 		<ClCompile Include="..\src\deemon\objects\seq\byattr.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\combinations.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\concat.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\default-api-mutable.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-api.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-compare.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-iterators.c" />

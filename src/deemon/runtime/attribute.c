@@ -94,6 +94,10 @@ DECL_END
 //#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericFindAttrInfoStringLenHash
 #include "attribute-access-generic.c.inl"
+//#define DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringHash
+//#include "attribute-access-generic.c.inl"
+#define DEFINE_DeeObject_TGenericFindPrivateAttrInfoStringLenHash
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericFindAttr
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericEnumAttr
@@ -157,6 +161,8 @@ DECL_END
 //#define DEFINE_DeeObject_TFindAttrInfoStringHash
 //#include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_TFindAttrInfoStringLenHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
 #include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_FindAttr
 #include "attribute-access-object.c.inl"

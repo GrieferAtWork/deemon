@@ -4178,7 +4178,7 @@ err:
 
 INTERN DEFINE_KWLIST(seq_xch_kwlist, { K(index), K(value), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_xch(DeeObject *self, size_t argc,
+seq_xchitem(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
@@ -5530,7 +5530,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_xch, &seq_xch,
+	TYPE_KWMETHOD("xch", &seq_xchitem,
+	              "(index:?Dint,value)->\n"
+	              "Deprecated alias for ?#xchitem (will be removed soon)"),
+	TYPE_KWMETHOD(STR_xchitem, &seq_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"

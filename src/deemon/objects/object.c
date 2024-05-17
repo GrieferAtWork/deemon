@@ -59,6 +59,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/default-api.h"
 #include "seq/typemro.h"
 /**/
 
@@ -2838,12 +2839,14 @@ type_fini(DeeTypeObject *__restrict self) {
 	ASSERTF(self->tp_flags & TP_FHEAP,
 	        "Non heap-allocated type %s is being destroyed (This shouldn't happen)",
 	        self->tp_name);
-	if (DeeType_IsClass(self))
-		class_fini(self);
 
 	/* Free the sequence method cache (if it was allocated and belongs to this type) */
 	if (self->tp_seq && self->tp_seq->_tp_seqcache && (DeeType_GetSeqOrigin(self) == self))
-		Dee_Free(self->tp_seq->_tp_seqcache);
+		Dee_type_seq_cache_destroy(self->tp_seq->_tp_seqcache);
+
+	/* Finalize class data if the type is actually a user-defined class. */
+	if (DeeType_IsClass(self))
+		class_fini(self);
 
 	/* Finalize the type's member caches. */
 	Dee_membercache_fini(&self->tp_cache);

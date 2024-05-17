@@ -2559,7 +2559,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_xch(List *me, size_t argc,
+list_xchitem(List *me, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
@@ -3119,7 +3119,7 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	                "Pops an item at the given @{index}. When @index is lower "
 	                "than $0, add ${##this} prior to evaluation, meaning that "
 	                "negative numbers pop items relative to the end of the List"),
-	TYPE_KWMETHOD_F(STR_xch, &list_xch, METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F(STR_xchitem, &list_xchitem, METHOD_FNOREFESCAPE,
 	                "(index:?Dint,value)->\n"
 	                "#tIndexError{The given @index is out of bounds}"
 	                "Exchange the @index'th item of @this List with @value, returning the item's old value"),
