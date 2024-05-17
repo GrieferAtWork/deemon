@@ -23,7 +23,7 @@ jobs:
       uses: ammaraskar/msvc-problem-matcher@master
 
     - name: Make
-      run: msbuild /m /p:Configuration=Debug-MSVC /p:Platform=Win32 .vs\deemon.sln
+      run: msbuild /m /p:Configuration=Debug-MSVC /p:Platform=Win32 .vs\deemon-v143.sln
 
     - name: Test
       run: ${{ github.workspace }}\deemon.exe util\test.dee

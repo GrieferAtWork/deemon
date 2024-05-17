@@ -3,86 +3,86 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.1321
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deemon", "deemon.vcxproj", "{86D226C5-EF62-4562-AC06-E6A753DFA7CF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deemon", "deemon-v141.vcxproj", "{86D226C5-EF62-4562-AC06-E6A753DFA7CF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dex", "dex", "{2360741E-FB49-40D4-B684-000000001A50}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_hostasm", "dex\_hostasm.vcxproj", "{85DE4E2D-552A-48E3-A320-00000A7043B5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_hostasm", "dex\_hostasm-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000A7043B5}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_jit", "dex\_jit.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000A7BC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_jit", "dex\_jit-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000A7BC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "collections", "dex\collections.vcxproj", "{85DE4E2D-552A-48E3-A320-001BD8220AC3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "collections", "dex\collections-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-001BD8220AC3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ctypes", "dex\ctypes.vcxproj", "{85DE4E2D-552A-48E3-A320-000000362D5B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ctypes", "dex\ctypes-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-000000362D5B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "disassembler", "dex\disassembler.vcxproj", "{85DE4E2D-552A-48E3-A320-00D1B6988C5A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "disassembler", "dex\disassembler-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00D1B6988C5A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "files", "dex\files.vcxproj", "{85DE4E2D-552A-48E3-A320-00000006AA5B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "files", "dex\files-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000006AA5B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hashlib", "dex\hashlib.vcxproj", "{85DE4E2D-552A-48E3-A320-00000197782A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hashlib", "dex\hashlib-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000197782A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ipc", "dex\ipc.vcxproj", "{85DE4E2D-552A-48E3-A320-0000000019A3}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ipc", "dex\ipc-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-0000000019A3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json", "dex\json.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000CBD6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "json", "dex\json-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000CBD6}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "dex\math.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000C188}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "math", "dex\math-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000C188}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "net", "dex\net.vcxproj", "{85DE4E2D-552A-48E3-A320-0000000018DC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "net", "dex\net-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-0000000018DC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "posix", "dex\posix.vcxproj", "{85DE4E2D-552A-48E3-A320-00000007C1F0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "posix", "dex\posix-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000007C1F0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rt", "dex\rt.vcxproj", "{85DE4E2D-552A-48E3-A320-0000000003E4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rt", "dex\rt-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-0000000003E4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "threading", "dex\threading.vcxproj", "{85DE4E2D-552A-48E3-A320-000078FC4157}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "threading", "dex\threading-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-000078FC4157}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "time", "dex\time.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000F14D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "time", "dex\time-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000F14D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32", "dex\win32.vcxproj", "{85DE4E2D-552A-48E3-A320-00000007B82A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win32", "dex\win32-v141.vcxproj", "{85DE4E2D-552A-48E3-A320-00000007B82A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
 	EndProjectSection

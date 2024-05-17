@@ -37,6 +37,7 @@ function isDirOrSymlinkToDir(ent: dirent): bool {
 /* Make sure that .gitignore is being parsed correctly. */
 assert isFileGitIgnored("deemon.exe");
 
+global final SUPPORTED_PLATFORM_TOOLSETS = ["v141", "v143"];
 global final DEEMON_GUID = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942";
 global final DEEMON_CORE_GUID = "86D226C5-EF62-4562-AC06-E6A753DFA7CF";
 global final ROOT_FOLDER_GUID = "2150E333-8FDC-42A3-9474-1A3956D46DE8";
@@ -203,97 +204,6 @@ function loadFsDir(path: string): FsDirNode {
 	result.files.sort();
 	return result;
 }
-
-
-createVsFile("deemon.sln", fp -> {
-	fp << '\r\n'
-		'Microsoft Visual Studio Solution File, Format Version 12.00\r\n'
-		'# Visual Studio 15\r\n'
-		'VisualStudioVersion = 15.0.28307.1321\r\n'
-		'MinimumVisualStudioVersion = 10.0.40219.1\r\n'
-		'Project("{' << DEEMON_GUID << '}") = "deemon", "deemon.vcxproj", "{' << DEEMON_CORE_GUID << '}"\r\n'
-		'EndProject\r\n'
-		'Project("{' << ROOT_FOLDER_GUID << '}") = "dex", "dex", "{' << DEX_FOLDER_GUID << '}"\r\n'
-		'EndProject\r\n';
-	for (local dexName: DEX_NAMES) {
-		local dexGuid = dexProjectGuid(dexName);
-		fp << 'Project("{' << DEEMON_GUID << '}") = "' << dexName << '", "dex\\' << dexName << '.vcxproj", "{' << dexGuid << '}"\r\n'
-			'	ProjectSection(ProjectDependencies) = postProject\r\n'
-			'		{' << DEEMON_CORE_GUID << '} = {' << DEEMON_CORE_GUID << '}\r\n'
-			'	EndProjectSection\r\n'
-			'EndProject\r\n';
-	}
-
-	local globalFolders: {FsDirNode...} = Tuple({
-		loadFsDir("lib"),
-		loadFsDir("util"),
-	});
-
-	for (local globalFolder: globalFolders) {
-		for (local dir: globalFolder.allDirs) {
-			local name = dir.name;
-			local guid = folderGuid(dir.fullPath);
-			fp << 'Project("{' << ROOT_FOLDER_GUID << '}") = "' << name << '", "' << name << '", "{' << guid << '}"\r\n'
-				'	ProjectSection(SolutionItems) = preProject\r\n';
-			for (local file: dir.files) {
-				local relPath = fs.joinpath("..", dir.fullPath, file).replace(r'/', r'\');
-				fp << '		' << relPath << ' = ' << relPath << '\r\n';
-			}
-			fp <<
-				'	EndProjectSection\r\n'
-				'EndProject\r\n';
-		}
-	}
-
-	fp <<
-'Global\r\n'
-'	GlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n';
-	for (local configuration: CONFIGURATIONS) {
-		for (local architecture: ARCHITECTURES) {
-			fp << '		' << configuration.name << '|' << architecture.name << ' = ' << configuration.name << '|' << architecture.name << '\r\n';
-		}
-	}
-
-	fp <<
-'	EndGlobalSection\r\n'
-'	GlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n';
-	local guids = { DEEMON_CORE_GUID, (for (local dexName: DEX_NAMES) dexProjectGuid(dexName))... };
-	for (local guid: guids) {
-		for (local configuration: CONFIGURATIONS) {
-			for (local architecture: ARCHITECTURES) {
-				fp <<
-					'		{' << guid << '}.' << configuration.name << '|' << architecture.name << '.ActiveCfg = ' << configuration.name << '|' << architecture.name << '\r\n'
-					'		{' << guid << '}.' << configuration.name << '|' << architecture.name << '.Build.0 = ' << configuration.name << '|' << architecture.name << '\r\n';
-			}
-		}
-	}
-
-	fp <<
-'	EndGlobalSection\r\n'
-'	GlobalSection(SolutionProperties) = preSolution\r\n'
-'		HideSolutionNode = FALSE\r\n'
-'	EndGlobalSection\r\n'
-'	GlobalSection(NestedProjects) = preSolution\r\n';
-	for (local dexName: DEX_NAMES) {
-		local dexGuid = dexProjectGuid(dexName);
-		fp << '		{' << dexGuid << '} = {' << DEX_FOLDER_GUID << '}\r\n';
-	}
-
-	for (local globalFolder: globalFolders) {
-		for (local dir, subDir: globalFolder.allDirsAndSubDirs) {
-			local dirGuid    = folderGuid(dir.fullPath);
-			local subDirGuid = folderGuid(subDir.fullPath);
-			fp << '		{' << subDirGuid << '} = {' << dirGuid << '}\r\n';
-		}
-	}
-
-	fp <<
-'	EndGlobalSection\r\n'
-'	GlobalSection(ExtensibilityGlobals) = postSolution\r\n'
-'		SolutionGuid = {A751EA8C-34FD-41A5-B12E-5C7D76FEF65A}\r\n'
-'	EndGlobalSection\r\n'
-'EndGlobal\r\n';
-});
 
 
 global final FILE_KIND_MSC = 0;
@@ -487,77 +397,6 @@ function printVcxprojItemDefinitionGroups(fp: File, forDex: bool,
 	}
 }
 
-createVsFile("deemon.vcxproj", fp -> {
-	fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
-		'<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n'
-		'	<ItemGroup Label="ProjectConfigurations">\r\n';
-	for (local configuration: CONFIGURATIONS) {
-		for (local architecture: ARCHITECTURES) {
-			fp <<
-				'		<ProjectConfiguration Include="' << configuration.name << '|' << architecture.name << '">\r\n'
-				'			<Configuration>' << configuration.name << '</Configuration>\r\n'
-				'			<Platform>' << architecture.name << '</Platform>\r\n'
-				'		</ProjectConfiguration>\r\n';
-		}
-	}
-	fp << '	</ItemGroup>\r\n';
-
-	local hasAssemblySourceFilesInArchitectures = printVcxprojSourceFileGroups(fp, r"..\", deemonCoreSourceFiles);
-
-	fp << '	<PropertyGroup Label="Globals">\r\n'
-		'		<ProjectGuid>{' << DEEMON_CORE_GUID << '}</ProjectGuid>\r\n'
-		'		<RootNamespace>deemon</RootNamespace>\r\n'
-		'		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>\r\n'
-		'	</PropertyGroup>\r\n'
-		'	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\r\n';
-
-	for (local configuration: CONFIGURATIONS) {
-		for (local architecture: ARCHITECTURES) {
-			fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="Configuration">\r\n'
-				'		<ConfigurationType>Application</ConfigurationType>\r\n'
-				'		<UseDebugLibraries>false</UseDebugLibraries>\r\n'
-				'		<PlatformToolset>v141</PlatformToolset>\r\n'
-				'		<WholeProgramOptimization>true</WholeProgramOptimization>\r\n'
-				'		<CharacterSet>MultiByte</CharacterSet>\r\n'
-				'	</PropertyGroup>\r\n';
-		}
-	}
-
-	fp << '	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />\r\n'
-		'	<ImportGroup Label="ExtensionSettings">\r\n'
-		'	</ImportGroup>\r\n';
-
-	for (local configuration: CONFIGURATIONS) {
-		for (local architecture: ARCHITECTURES) {
-			fp << '	<ImportGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="PropertySheets">\r\n'
-				'		<Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists(\'$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\')" Label="LocalAppDataPlatform" />\r\n'
-				'	</ImportGroup>\r\n';
-		}
-	}
-
-	fp << '	<PropertyGroup Label="UserMacros" />\r\n';
-
-	for (local configuration: CONFIGURATIONS) {
-		for (local architecture: ARCHITECTURES) {
-			fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">\r\n'
-				'		<IncludePath>$(SolutionDir)..\\include;$(SolutionDir)..\\include\\deemon\\kos-headers;$(IncludePath)</IncludePath>\r\n'
-				'		<OutDir>$(SolutionDir)..\\</OutDir>\r\n'
-				'		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>\r\n'
-				'		<IntDir>$(SolutionDir)..\\build\\.vs\\$(ProjectName)\\$(Platform)-$(Configuration)\\a\\b\\c\\</IntDir>\r\n'
-				'		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>\r\n'
-				'		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>\r\n'
-				'		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>\r\n'
-				'	</PropertyGroup>\r\n';
-		}
-	}
-	printVcxprojItemDefinitionGroups(fp, forDex: false,
-		hasAssemblySourceFilesInArchitectures: hasAssemblySourceFilesInArchitectures);
-	fp << '	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />\r\n'
-		'	<ImportGroup Label="ExtensionTargets">\r\n'
-		'	</ImportGroup>\r\n'
-		'</Project>';
-});
-
 
 function printVcxprojFilterSourceFileGroups(componentName: string, outputFilename: string, sourceFiles: {SourceFile...}) {
 	local basicFolderNames = HashSet();
@@ -665,9 +504,178 @@ function printVcxprojFilterSourceFileGroups(componentName: string, outputFilenam
 }
 
 
-printVcxprojFilterSourceFileGroups("deemon", "deemon.vcxproj.filters", deemonCoreSourceFiles);
+global final globalFolders: {FsDirNode...} = Tuple({
+	loadFsDir("lib"),
+	loadFsDir("util"),
+});
 
-createVsFile("deemon.vcxproj.user", fp -> {
+
+for (local PlatformToolset: SUPPORTED_PLATFORM_TOOLSETS)
+createVsFile(f"deemon-{PlatformToolset}.sln", fp -> {
+	fp << '\r\n'
+		'Microsoft Visual Studio Solution File, Format Version 12.00\r\n'
+		'# Visual Studio 15\r\n'
+		'VisualStudioVersion = 15.0.28307.1321\r\n'
+		'MinimumVisualStudioVersion = 10.0.40219.1\r\n'
+		'Project("{' << DEEMON_GUID << '}") = "deemon", "deemon-' << PlatformToolset << '.vcxproj", "{' << DEEMON_CORE_GUID << '}"\r\n'
+		'EndProject\r\n'
+		'Project("{' << ROOT_FOLDER_GUID << '}") = "dex", "dex", "{' << DEX_FOLDER_GUID << '}"\r\n'
+		'EndProject\r\n';
+	for (local dexName: DEX_NAMES) {
+		local dexGuid = dexProjectGuid(dexName);
+		fp << 'Project("{' << DEEMON_GUID << '}") = "' << dexName << '", "dex\\'
+			<< dexName << '-' << PlatformToolset << '.vcxproj", "{' << dexGuid << '}"\r\n'
+			'	ProjectSection(ProjectDependencies) = postProject\r\n'
+			'		{' << DEEMON_CORE_GUID << '} = {' << DEEMON_CORE_GUID << '}\r\n'
+			'	EndProjectSection\r\n'
+			'EndProject\r\n';
+	}
+
+	for (local globalFolder: globalFolders) {
+		for (local dir: globalFolder.allDirs) {
+			local name = dir.name;
+			local guid = folderGuid(dir.fullPath);
+			fp << 'Project("{' << ROOT_FOLDER_GUID << '}") = "' << name << '", "' << name << '", "{' << guid << '}"\r\n'
+				'	ProjectSection(SolutionItems) = preProject\r\n';
+			for (local file: dir.files) {
+				local relPath = fs.joinpath("..", dir.fullPath, file).replace(r'/', r'\');
+				fp << '		' << relPath << ' = ' << relPath << '\r\n';
+			}
+			fp <<
+				'	EndProjectSection\r\n'
+				'EndProject\r\n';
+		}
+	}
+
+	fp <<
+'Global\r\n'
+'	GlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n';
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '		' << configuration.name << '|' << architecture.name << ' = ' << configuration.name << '|' << architecture.name << '\r\n';
+		}
+	}
+
+	fp <<
+'	EndGlobalSection\r\n'
+'	GlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n';
+	local guids = { DEEMON_CORE_GUID, (for (local dexName: DEX_NAMES) dexProjectGuid(dexName))... };
+	for (local guid: guids) {
+		for (local configuration: CONFIGURATIONS) {
+			for (local architecture: ARCHITECTURES) {
+				fp <<
+					'		{' << guid << '}.' << configuration.name << '|' << architecture.name << '.ActiveCfg = ' << configuration.name << '|' << architecture.name << '\r\n'
+					'		{' << guid << '}.' << configuration.name << '|' << architecture.name << '.Build.0 = ' << configuration.name << '|' << architecture.name << '\r\n';
+			}
+		}
+	}
+
+	fp <<
+'	EndGlobalSection\r\n'
+'	GlobalSection(SolutionProperties) = preSolution\r\n'
+'		HideSolutionNode = FALSE\r\n'
+'	EndGlobalSection\r\n'
+'	GlobalSection(NestedProjects) = preSolution\r\n';
+	for (local dexName: DEX_NAMES) {
+		local dexGuid = dexProjectGuid(dexName);
+		fp << '		{' << dexGuid << '} = {' << DEX_FOLDER_GUID << '}\r\n';
+	}
+
+	for (local globalFolder: globalFolders) {
+		for (local dir, subDir: globalFolder.allDirsAndSubDirs) {
+			local dirGuid    = folderGuid(dir.fullPath);
+			local subDirGuid = folderGuid(subDir.fullPath);
+			fp << '		{' << subDirGuid << '} = {' << dirGuid << '}\r\n';
+		}
+	}
+
+	fp <<
+'	EndGlobalSection\r\n'
+'	GlobalSection(ExtensibilityGlobals) = postSolution\r\n'
+'		SolutionGuid = {A751EA8C-34FD-41A5-B12E-5C7D76FEF65A}\r\n'
+'	EndGlobalSection\r\n'
+'EndGlobal\r\n';
+});
+
+
+for (local PlatformToolset: SUPPORTED_PLATFORM_TOOLSETS)
+createVsFile(f"deemon-{PlatformToolset}.vcxproj", fp -> {
+	fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
+		'<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n'
+		'	<ItemGroup Label="ProjectConfigurations">\r\n';
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp <<
+				'		<ProjectConfiguration Include="' << configuration.name << '|' << architecture.name << '">\r\n'
+				'			<Configuration>' << configuration.name << '</Configuration>\r\n'
+				'			<Platform>' << architecture.name << '</Platform>\r\n'
+				'		</ProjectConfiguration>\r\n';
+		}
+	}
+	fp << '	</ItemGroup>\r\n';
+
+	local hasAssemblySourceFilesInArchitectures = printVcxprojSourceFileGroups(fp, r"..\", deemonCoreSourceFiles);
+
+	fp << '	<PropertyGroup Label="Globals">\r\n'
+		'		<ProjectGuid>{' << DEEMON_CORE_GUID << '}</ProjectGuid>\r\n'
+		'		<RootNamespace>deemon</RootNamespace>\r\n'
+		'		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>\r\n'
+		'	</PropertyGroup>\r\n'
+		'	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\r\n';
+
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="Configuration">\r\n'
+				'		<ConfigurationType>Application</ConfigurationType>\r\n'
+				'		<UseDebugLibraries>false</UseDebugLibraries>\r\n'
+				'		<PlatformToolset>' << PlatformToolset << '</PlatformToolset>\r\n'
+				'		<WholeProgramOptimization>true</WholeProgramOptimization>\r\n'
+				'		<CharacterSet>MultiByte</CharacterSet>\r\n'
+				'	</PropertyGroup>\r\n';
+		}
+	}
+
+	fp << '	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />\r\n'
+		'	<ImportGroup Label="ExtensionSettings">\r\n'
+		'	</ImportGroup>\r\n';
+
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '	<ImportGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="PropertySheets">\r\n'
+				'		<Import Project="$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props" Condition="exists(\'$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\')" Label="LocalAppDataPlatform" />\r\n'
+				'	</ImportGroup>\r\n';
+		}
+	}
+
+	fp << '	<PropertyGroup Label="UserMacros" />\r\n';
+
+	for (local configuration: CONFIGURATIONS) {
+		for (local architecture: ARCHITECTURES) {
+			fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'">\r\n'
+				'		<IncludePath>$(SolutionDir)..\\include;$(SolutionDir)..\\include\\deemon\\kos-headers;$(IncludePath)</IncludePath>\r\n'
+				'		<OutDir>$(SolutionDir)..\\</OutDir>\r\n'
+				'		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>\r\n'
+				'		<IntDir>$(SolutionDir)..\\build\\.vs\\$(ProjectName)\\$(Platform)-$(Configuration)\\a\\b\\c\\</IntDir>\r\n'
+				'		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>\r\n'
+				'		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>\r\n'
+				'		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>\r\n'
+				'	</PropertyGroup>\r\n';
+		}
+	}
+	printVcxprojItemDefinitionGroups(fp, forDex: false,
+		hasAssemblySourceFilesInArchitectures: hasAssemblySourceFilesInArchitectures);
+	fp << '	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />\r\n'
+		'	<ImportGroup Label="ExtensionTargets">\r\n'
+		'	</ImportGroup>\r\n'
+		'</Project>';
+});
+
+
+for (local PlatformToolset: SUPPORTED_PLATFORM_TOOLSETS)
+printVcxprojFilterSourceFileGroups("deemon", f"deemon-{PlatformToolset}.vcxproj.filters", deemonCoreSourceFiles);
+
+for (local PlatformToolset: SUPPORTED_PLATFORM_TOOLSETS)
+createVsFile(f"deemon-{PlatformToolset}.vcxproj.user", fp -> {
 	fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
 		'<Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n';
 	for (local configuration: CONFIGURATIONS) {
@@ -693,7 +701,8 @@ for (local dexName: DEX_NAMES) {
 	}
 	dexSourceFiles.sort(key: SourceFile.path);
 
-	createVsFile(f"dex/{dexName}.vcxproj", fp -> {
+	for (local PlatformToolset: SUPPORTED_PLATFORM_TOOLSETS)
+	createVsFile(f"dex/{dexName}-{PlatformToolset}.vcxproj", fp -> {
 		fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
 			'<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n'
 			'	<ItemGroup Label="ProjectConfigurations">\r\n';
@@ -723,7 +732,7 @@ for (local dexName: DEX_NAMES) {
 				fp << '	<PropertyGroup Condition="\'$(Configuration)|$(Platform)\'==\'' << configuration.name << '|' << architecture.name << '\'" Label="Configuration">\r\n'
 					'		<ConfigurationType>DynamicLibrary</ConfigurationType>\r\n'
 					'		<UseDebugLibraries>false</UseDebugLibraries>\r\n'
-					'		<PlatformToolset>v141</PlatformToolset>\r\n'
+					'		<PlatformToolset>' << PlatformToolset << '</PlatformToolset>\r\n'
 					'		<WholeProgramOptimization>true</WholeProgramOptimization>\r\n'
 					'		<CharacterSet>MultiByte</CharacterSet>\r\n'
 					'	</PropertyGroup>\r\n';
@@ -774,13 +783,15 @@ for (local dexName: DEX_NAMES) {
 			'</Project>';
 	});
 
-	printVcxprojFilterSourceFileGroups(dexName, f"dex/{dexName}.vcxproj.filters", dexSourceFiles);
-	createVsFile(f"dex/{dexName}.vcxproj.user", fp -> {
+	for (local PlatformToolset: SUPPORTED_PLATFORM_TOOLSETS)
+	printVcxprojFilterSourceFileGroups(dexName, f"dex/{dexName}-{PlatformToolset}.vcxproj.filters", dexSourceFiles);
+
+	for (local PlatformToolset: SUPPORTED_PLATFORM_TOOLSETS)
+	createVsFile(f"dex/{dexName}-{PlatformToolset}.vcxproj.user", fp -> {
 		fp << '<?xml version="1.0" encoding="utf-8"?>\r\n'
 			'<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">\r\n'
 			'	<PropertyGroup />\r\n'
 			'</Project>\r\n';
 	});
 }
-
 
