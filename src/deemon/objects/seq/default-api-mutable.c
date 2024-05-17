@@ -425,7 +425,13 @@ DeeSeq_DefaultPopWithError(DeeObject *self, Dee_ssize_t index) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultRemoveWithTSCRemoveAll(DeeObject *self, DeeObject *item,
                                      size_t start, size_t end) {
-	return (*DeeType_SeqCache_RequireRemoveAll(Dee_TYPE(self)))(self, item, start, end, 1);
+	size_t result;
+	result = (*DeeType_SeqCache_RequireRemoveAll(Dee_TYPE(self)))(self, item, start, end, 1);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -473,7 +479,13 @@ DeeSeq_DefaultRemoveWithError(DeeObject *self, DeeObject *item,
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 DeeSeq_DefaultRemoveWithKeyWithTSCRemoveAllWithKey(DeeObject *self, DeeObject *item,
                                                    size_t start, size_t end, DeeObject *key) {
-	return (*DeeType_SeqCache_RequireRemoveAllWithKey(Dee_TYPE(self)))(self, item, start, end, 1, key);
+	size_t result;
+	result = (*DeeType_SeqCache_RequireRemoveAllWithKey(Dee_TYPE(self)))(self, item, start, end, 1, key);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
