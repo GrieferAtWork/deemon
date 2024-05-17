@@ -35,79 +35,73 @@
 		</ProjectConfiguration>
 	</ItemGroup>
 	<ItemGroup>
-		<ClInclude Include="..\..\src\dex\collections\_res.h" />
-		<ClInclude Include="..\..\src\dex\collections\libcollections.h" />
+		<ClInclude Include="..\..\src\dex\disassembler\libdisasm.h" />
 	</ItemGroup>
 	<ItemGroup>
-		<ClCompile Include="..\..\src\dex\collections\bitset.c" />
-		<ClCompile Include="..\..\src\dex\collections\deque.c" />
-		<ClCompile Include="..\..\src\dex\collections\fixedlist.c" />
-		<ClCompile Include="..\..\src\dex\collections\libcollections.c" />
-		<ClCompile Include="..\..\src\dex\collections\rangemap.c" />
-		<ClCompile Include="..\..\src\dex\collections\rbtree.c" />
-		<ClCompile Include="..\..\src\dex\collections\udict.c" />
-		<ClCompile Include="..\..\src\dex\collections\unique.c" />
-		<ClCompile Include="..\..\src\dex\collections\uset.c" />
+		<ClCompile Include="..\..\src\dex\disassembler\libdisasm.c" />
+		<ClCompile Include="..\..\src\dex\disassembler\printcode.c" />
+		<ClCompile Include="..\..\src\dex\disassembler\printinstr.c" />
 	</ItemGroup>
 	<PropertyGroup Label="Globals">
-		<ProjectGuid>{85DE4E2D-552A-48E3-A320-001BD8220AC3}</ProjectGuid>
-		<RootNamespace>collections</RootNamespace>
+		<ProjectGuid>{85DE4E2D-552A-48E3-A320-00D1B6988C5A}</ProjectGuid>
+		<RootNamespace>disassembler</RootNamespace>
 		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+		<ProjectName>disassembler</ProjectName>
 	</PropertyGroup>
 	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
@@ -147,6 +141,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>disassembler</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">
@@ -157,6 +152,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>disassembler</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
@@ -167,6 +163,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>disassembler</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
@@ -177,6 +174,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>disassembler</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">
@@ -187,6 +185,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>disassembler</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">
@@ -197,6 +196,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>disassembler</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">
@@ -207,6 +207,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>disassembler</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">
@@ -217,6 +218,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>disassembler</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">

@@ -35,165 +35,107 @@
 		</ProjectConfiguration>
 	</ItemGroup>
 	<ItemGroup>
-		<ClInclude Include="..\..\src\dex\ctypes\_res.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\c_api.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\cfunction-invoke.c.inl" />
-		<ClInclude Include="..\..\src\dex\ctypes\define-float.c.inl" />
-		<ClInclude Include="..\..\src\dex\ctypes\define-integer.c.inl" />
-		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\LICENSE" />
-		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\README" />
-		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\dlmalloc.inl" />
-		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi_common.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\fficonfig.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffitarget.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\libctypes.h" />
-		<ClInclude Include="..\..\src\dex\ctypes\pointer-math-impl.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\libposix.h" />
+		<ClInclude Include="..\..\src\dex\posix\p-access.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-chmod.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-chown.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-copyfile.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-cpucount.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-environ.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-errno.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-exit.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-fd.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-mkdir.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-ondemand.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-open.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-opendir.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-path.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-pipe.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-pwd.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-readlink.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-readwrite.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-realpath.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-remove.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-rename.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-sched.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-stat.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-symlink.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-sync.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-truncate.c.inl" />
+		<ClInclude Include="..\..\src\dex\posix\p-utime.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
-		<ClCompile Include="..\..\src\dex\ctypes\array.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\builtins.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\c_atomic.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\c_malloc.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\c_string.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\cfunction.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\core-operators.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\core.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\closures.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi64.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\prep_cif.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\raw_api.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\types.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\libctypes.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\pointer-math.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\pointer.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\shlib.c" />
-		<ClCompile Include="..\..\src\dex\ctypes\struct.c" />
+		<ClCompile Include="..\..\src\dex\posix\libposix.c" />
 	</ItemGroup>
 	<ItemGroup>
-		<CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S">
-			<FileType>Document</FileType>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"
-ml.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"
-ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"
-ml.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"
-ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"
-ml.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"
-ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"
-ml.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win32.ms-x86.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"
-ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.asm"</Command>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win32.ms-x86.obj;%(Outputs)</Outputs>
-			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">true</ExcludedFromBuild>
-			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">true</ExcludedFromBuild>
-			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">true</ExcludedFromBuild>
-			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">true</ExcludedFromBuild>
-		</CustomBuild>
-		<CustomBuild Include="..\..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S">
-			<FileType>Document</FileType>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"
-ml.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"
-ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"
-ml.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"
-ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"
-ml.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"
-ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"
-ml.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"</Command>
-			<Command Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">cl.exe /EP "$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc\win64.ms-x64.S" &gt; "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"
-ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj" "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.asm"</Command>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj;%(Outputs)</Outputs>
-			<Outputs Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-win64.ms-x64.obj;%(Outputs)</Outputs>
-			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">true</ExcludedFromBuild>
-			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">true</ExcludedFromBuild>
-			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">true</ExcludedFromBuild>
-			<ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">true</ExcludedFromBuild>
-		</CustomBuild>
+		<None Include="..\..\src\dex\posix\p-access-constants.def" />
+		<None Include="..\..\src\dex\posix\p-errno-constants.def" />
+		<None Include="..\..\src\dex\posix\p-exit-constants.def" />
+		<None Include="..\..\src\dex\posix\p-fd-constants.def" />
+		<None Include="..\..\src\dex\posix\p-open-constants.def" />
+		<None Include="..\..\src\dex\posix\p-readwrite-constants.def" />
+		<None Include="..\..\src\dex\posix\p-stat-constants.def" />
 	</ItemGroup>
 	<PropertyGroup Label="Globals">
-		<ProjectGuid>{85DE4E2D-552A-48E3-A320-000000362D5B}</ProjectGuid>
-		<RootNamespace>ctypes</RootNamespace>
+		<ProjectGuid>{85DE4E2D-552A-48E3-A320-00000007C1F0}</ProjectGuid>
+		<RootNamespace>posix</RootNamespace>
 		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+		<ProjectName>posix</ProjectName>
 	</PropertyGroup>
 	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
@@ -226,83 +168,91 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 	</ImportGroup>
 	<PropertyGroup Label="UserMacros" />
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">
-		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(IncludePath)</IncludePath>
+		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
 		<OutDir>$(SolutionDir)..\lib\</OutDir>
 		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
 		<IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>posix</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">
-		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(IncludePath)</IncludePath>
+		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
 		<OutDir>$(SolutionDir)..\lib\</OutDir>
 		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
 		<IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>posix</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
-		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(IncludePath)</IncludePath>
+		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
 		<OutDir>$(SolutionDir)..\lib\</OutDir>
 		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
 		<IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>posix</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
-		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(IncludePath)</IncludePath>
+		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
 		<OutDir>$(SolutionDir)..\lib\</OutDir>
 		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
 		<IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>posix</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">
-		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(IncludePath)</IncludePath>
+		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
 		<OutDir>$(SolutionDir)..\lib\</OutDir>
 		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
 		<IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>posix</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">
-		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(IncludePath)</IncludePath>
+		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
 		<OutDir>$(SolutionDir)..\lib\</OutDir>
 		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
 		<IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>posix</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">
-		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(IncludePath)</IncludePath>
+		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
 		<OutDir>$(SolutionDir)..\lib\</OutDir>
 		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
 		<IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>posix</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">
-		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(SolutionDir)..\src\dex\ctypes\ffi\libffi_msvc;$(IncludePath)</IncludePath>
+		<IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\include\deemon\kos-headers;$(IncludePath)</IncludePath>
 		<OutDir>$(SolutionDir)..\lib\</OutDir>
 		<CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
 		<IntDir>$(SolutionDir)..\build\.vs\$(ProjectName)\$(Platform)-$(Configuration)\a\b\c\</IntDir>
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>posix</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">
@@ -331,7 +281,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>false</EnableCOMDATFolding>
-			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -361,7 +310,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>false</EnableCOMDATFolding>
-			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -391,7 +339,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>false</EnableCOMDATFolding>
-			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -421,7 +368,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 			<LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>false</EnableCOMDATFolding>
-			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -449,7 +395,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>true</EnableCOMDATFolding>
-			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -477,7 +422,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>true</EnableCOMDATFolding>
-			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -505,7 +449,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>true</EnableCOMDATFolding>
-			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>
@@ -533,7 +476,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-dex-ctypes-ffi-libffi_msvc-wi
 			<LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
 			<GenerateDebugInformation>true</GenerateDebugInformation>
 			<EnableCOMDATFolding>true</EnableCOMDATFolding>
-			<ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
 		<AdditionalDependencies>deemon.lib;%(AdditionalDependencies)</AdditionalDependencies>
 		</Link>
 	</ItemDefinitionGroup>

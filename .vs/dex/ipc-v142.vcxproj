@@ -35,96 +35,74 @@
 		</ProjectConfiguration>
 	</ItemGroup>
 	<ItemGroup>
-		<ClInclude Include="..\..\src\dex\_hostasm\host.h" />
-		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\api.h" />
-		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\gen.h" />
-		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\register.h" />
-		<ClInclude Include="..\..\src\dex\_hostasm\libhostasm.h" />
-		<ClInclude Include="..\..\src\dex\_hostasm\unwind.h" />
+		<ClInclude Include="..\..\src\dex\ipc\libipc.h" />
+		<ClInclude Include="..\..\src\dex\ipc\nt.c.inl" />
+		<ClInclude Include="..\..\src\dex\ipc\pipe.c.inl" />
+		<ClInclude Include="..\..\src\dex\ipc\process.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
-		<ClCompile Include="..\..\src\dex\_hostasm\api.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\assembler.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\common.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-arch.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-common.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-deemon.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-rt.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-vmorph.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack-ccall.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack-direct.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack-ex.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-xmorph.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\libhostasm.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\loader-locuse.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\loader.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\memstate.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\unwind.c" />
-	</ItemGroup>
-	<ItemGroup>
-		<None Include="..\..\src\dex\_hostasm\libgen86\.git" />
-		<None Include="..\..\src\dex\_hostasm\libgen86\README.md" />
+		<ClCompile Include="..\..\src\dex\ipc\libipc.c" />
 	</ItemGroup>
 	<PropertyGroup Label="Globals">
-		<ProjectGuid>{85DE4E2D-552A-48E3-A320-00000A7043B5}</ProjectGuid>
-		<RootNamespace>_hostasm</RootNamespace>
+		<ProjectGuid>{85DE4E2D-552A-48E3-A320-0000000019A3}</ProjectGuid>
+		<RootNamespace>ipc</RootNamespace>
 		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+		<ProjectName>ipc</ProjectName>
 	</PropertyGroup>
 	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'" Label="Configuration">
 		<ConfigurationType>DynamicLibrary</ConfigurationType>
 		<UseDebugLibraries>false</UseDebugLibraries>
-		<PlatformToolset>v143</PlatformToolset>
+		<PlatformToolset>v142</PlatformToolset>
 		<WholeProgramOptimization>true</WholeProgramOptimization>
 		<CharacterSet>MultiByte</CharacterSet>
 	</PropertyGroup>
@@ -164,6 +142,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>ipc</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|x64'">
@@ -174,6 +153,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>ipc</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|Win32'">
@@ -184,6 +164,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>ipc</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC|x64'">
@@ -194,6 +175,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>ipc</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|Win32'">
@@ -204,6 +186,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>ipc</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC (NDEBUG)|x64'">
@@ -214,6 +197,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>ipc</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|Win32'">
@@ -224,6 +208,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>ipc</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-MSVC|x64'">
@@ -234,6 +219,7 @@
 		<NMakeBuildCommandLine>make</NMakeBuildCommandLine>
 		<NMakeReBuildCommandLine>make -B</NMakeReBuildCommandLine>
 		<NMakeCleanCommandLine>make</NMakeCleanCommandLine>
+		<TargetName>ipc</TargetName>
 		<LibraryPath>$(SolutionDir)..;$(LibraryPath)</LibraryPath>
 	</PropertyGroup>
 	<ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-MSVC (NDEBUG)|Win32'">

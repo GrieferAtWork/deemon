@@ -1280,6 +1280,7 @@ do_tp_iter_attr:
 #endif /* ... */
 
 #ifdef LOCAL_IS_FINDINFO
+			(void)self;
 			retinfo->ai_type = Dee_ATTRINFO_CUSTOM;
 			retinfo->ai_decl = (DeeObject *)tp_iter;
 			retinfo->ai_value.v_custom = tp_iter->tp_attr;
