@@ -42,9 +42,6 @@ DECL_BEGIN
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItemIndex, digi_seq) == offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_seq));
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItemIndex, digi_index) == offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_index));
 
-#define di_sgi_copy  di_gi_copy
-#define di_sgif_copy di_gi_copy
-#define di_stgi_copy di_gi_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_gi_copy(DefaultIterator_WithGetItemIndex *__restrict self,
            DefaultIterator_WithGetItemIndex *__restrict other) {
@@ -52,6 +49,19 @@ di_gi_copy(DefaultIterator_WithGetItemIndex *__restrict self,
 	Dee_Incref(self->digi_seq);
 	self->digi_tp_getitem_index = other->digi_tp_getitem_index;
 	self->digi_index = atomic_read(&other->digi_index);
+	return 0;
+}
+
+#define di_sgif_copy di_sgi_copy
+#define di_stgi_copy di_sgi_copy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_sgi_copy(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
+            DefaultIterator_WithSizeAndGetItemIndex *__restrict other) {
+	self->disgi_seq = other->disgi_seq;
+	Dee_Incref(self->disgi_seq);
+	self->disgi_tp_getitem_index = other->disgi_tp_getitem_index;
+	self->disgi_index = atomic_read(&other->disgi_index);
+	self->disgi_end   = other->disgi_end;
 	return 0;
 }
 

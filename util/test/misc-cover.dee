@@ -105,7 +105,7 @@ import * from collections;
 		repr(x);
 		assert x is Sequence;
 		local a = x.operator iter();
-		assert a is Iterator, "" + type(a);
+		assert a is Iterator, str type a;
 		local b = x.operator iter();
 		assert a == b;
 		assert !(a != b);
