@@ -354,7 +354,7 @@ err:
 /* >> operator str(): string;
  * >> operator str(fp: File); */
 DEFINE_OPERATOR_INVOKE(operator_str, &instance_str, &do_DeeType_InheritStr) {
-	DeeObject *fp;
+	DeeObject *fp = NULL;
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "|o:" OPNAME("str"), &fp))
@@ -372,7 +372,7 @@ err:
 /* >> operator repr(): string;
  * >> operator repr(fp: File); */
 DEFINE_OPERATOR_INVOKE(operator_repr, &instance_repr, &do_DeeType_InheritRepr) {
-	DeeObject *fp;
+	DeeObject *fp = NULL;
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "|o:" OPNAME("repr"), &fp))
