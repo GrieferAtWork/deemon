@@ -4037,8 +4037,11 @@ err:
 	return NULL;
 }
 
+
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_reversed(DeeObject *self, size_t argc, DeeObject *const *argv) {
+seq_reversed(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	(void)kw;
 	if (DeeArg_Unpack(argc, argv, ":reversed"))
 		goto err;
 	return DeeSeq_Reversed(self);
@@ -4058,6 +4061,7 @@ seq_sorted(DeeObject *self, size_t argc,
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_segments(DeeObject *self, size_t argc, DeeObject *const *argv) {
@@ -4131,6 +4135,7 @@ err:
 
 
 /* Mutable-Sequence functions */
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_insert(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
@@ -4163,11 +4168,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_erase(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	size_t start, count = 1, result;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_count,
-	                    UNPuSIZ "|" UNPuSIZ ":erase", &start, &count))
+	size_t index, count = 1, result;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count,
+	                    UNPuSIZ "|" UNPuSIZ ":erase", &index, &count))
 		goto err;
-	result = DeeSeq_Erase(self, start, count);
+	result = DeeSeq_Erase(self, index, count);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -4260,11 +4265,6 @@ seq_extend(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	return_none;
 err:
 	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_pushback(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeObject_CallAttr(self, (DeeObject *)&str_append, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4398,7 +4398,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_reverse(DeeObject *self, size_t argc, DeeObject *const *argv) {
+seq_reverse(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	(void)kw;
 	if (DeeArg_Unpack(argc, argv, ":reverse"))
 		goto err;
 	if (DeeSeq_Reverse(self))
@@ -4422,6 +4423,7 @@ seq_sort(DeeObject *self, size_t argc,
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 DOC_DEF(seq_byhash_doc,
@@ -4654,6 +4656,31 @@ err:
 	return NULL;
 }
 
+
+
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#define generic_seq_erase     seq_erase
+#define generic_seq_insert    seq_insert
+#define generic_seq_insertall seq_insertall
+#define generic_seq_pushfront seq_pushfront
+#define generic_seq_append    seq_append
+#define generic_seq_extend    seq_extend
+#define generic_seq_xchitem   seq_xchitem
+#define generic_seq_clear     seq_clear
+#define generic_seq_pop       seq_pop
+#define generic_seq_popfront  seq_popfront
+#define generic_seq_popback   seq_popback
+#define generic_seq_remove    seq_remove
+#define generic_seq_rremove   seq_rremove
+#define generic_seq_removeall seq_removeall
+#define generic_seq_removeif  seq_removeif
+#define generic_seq_resize    seq_resize
+#define generic_seq_fill      seq_fill
+#define generic_seq_reverse   seq_reverse
+#define generic_seq_reversed  seq_reversed
+#define generic_seq_sort      seq_sort
+#define generic_seq_sorted    seq_sorted
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 INTDEF struct type_method tpconst seq_methods[];
@@ -5191,16 +5218,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return result;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD("reversed",
-	            &seq_reversed,
-	            "->?DSequence\n"
-	            "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
-	            "The point at which @this Sequence is enumerated is implementation-defined"),
-	TYPE_KWMETHOD("sorted", &seq_sorted,
-	              "(key:?DCallable=!N)->?DSequence\n"
-	              "Return a Sequence that contains all elements from @this Sequence, "
-	              /**/ "but sorted in ascending order, or in accordance to @key\n"
-	              "The point at which @this Sequence is enumerated is implementation-defined"),
 	TYPE_METHOD("segments",
 	            &seq_segments,
 	            "(segment_size:?Dint)->?S?DSequence\n"
@@ -5275,6 +5292,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "Hint: The python equivalent of this function is "
 	            /**/ "#A{itertools.permutations|https://docs.python.org/3/library/itertools.html##itertools.permutations}"),
 
+	TYPE_KWMETHOD("byhash", &seq_byhash, DOC_GET(seq_byhash_doc)),
+
 	/* TODO: unique(key:?DCallable=!N)->?DSequence
 	 * Returns a generic Sequence proxy that contains all of the elements from @this Sequence,
 	 * however will only enumerate the first of n consecutive objects for which ${key(first) == key(nth)}
@@ -5309,7 +5328,16 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 
 	/* Functions for mutable sequences. */
-	TYPE_KWMETHOD(STR_insert, &seq_insert,
+	TYPE_KWMETHOD(STR_reversed, &generic_seq_reversed,
+	              "(start=!0,end=!-1)->?DSequence\n"
+	              "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
+	              "The point at which @this Sequence is enumerated is implementation-defined"),
+	TYPE_KWMETHOD(STR_sorted, &generic_seq_sorted,
+	              "(start=!0,end=!-1,key:?DCallable=!N)->?DSequence\n"
+	              "Return a Sequence that contains all elements from @this Sequence, "
+	              /**/ "but sorted in ascending order, or in accordance to @key\n"
+	              "The point at which @this Sequence is enumerated is implementation-defined"),
+	TYPE_KWMETHOD(STR_insert, &generic_seq_insert,
 	              "(index:?Dint,item)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
@@ -5355,7 +5383,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_insertall, &seq_insertall,
+	TYPE_KWMETHOD(STR_insertall, &generic_seq_insertall,
 	              "(index:?Dint,items:?DSequence)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
@@ -5404,7 +5432,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD(STR_append, &seq_append,
+	TYPE_METHOD(STR_append, &generic_seq_append,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
@@ -5442,7 +5470,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD(STR_extend, &seq_extend,
+	TYPE_METHOD(STR_extend, &generic_seq_extend,
 	            "(items:?DSequence)\n"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "For mutable sequences only: Append all elements from @items at the end of @this Sequence\n"
@@ -5480,7 +5508,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_KWMETHOD(STR_erase, &seq_erase,
+	TYPE_KWMETHOD(STR_erase, &generic_seq_erase,
 	              "(index:?Dint,count=!1)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -5525,10 +5553,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("xch", &seq_xchitem,
+	TYPE_KWMETHOD("xch", &generic_seq_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "Deprecated alias for ?#xchitem (will be removed soon)"),
-	TYPE_KWMETHOD(STR_xchitem, &seq_xchitem,
+	TYPE_KWMETHOD(STR_xchitem, &generic_seq_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -5558,7 +5586,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not mutable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_pop, &seq_pop,
+	TYPE_KWMETHOD(STR_pop, &generic_seq_pop,
 	              "(index=!-1)->\n"
 	              "#tIntegerOverflow{The given @index is too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -5595,11 +5623,11 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not mutable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD(STR_popfront, &seq_popfront,
+	TYPE_METHOD(STR_popfront, &generic_seq_popfront,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "For mutable sequences only: Convenience wrapper for #pop\n"
+	            "For mutable sequences only: Convenience wrapper for ?#pop\n"
 	            "${"
 	            /**/ "function popfront(): Object {\n"
 	            /**/ "	import Error from deemon;\n"
@@ -5610,11 +5638,11 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD(STR_popback, &seq_popback,
+	TYPE_METHOD(STR_popback, &generic_seq_popback,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "For mutable sequences only: Convenience wrapper for #pop\n"
+	            "For mutable sequences only: Convenience wrapper for ?#pop\n"
 	            "${"
 	            /**/ "function popfront(): Object {\n"
 	            /**/ "	import Error from deemon;\n"
@@ -5625,30 +5653,28 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD(STR_pushfront, &seq_pushfront,
+	TYPE_METHOD(STR_pushfront, &generic_seq_pushfront,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "For mutable sequences only: Convenience wrapper for #insert at position $0\n"
+	            "For mutable sequences only: Convenience wrapper for ?#insert at position $0\n"
 	            "${"
 	            /**/ "function pushfront(item: Object) {\n"
 	            /**/ "	return this.insert(0, item);\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD(STR_pushback, &seq_pushback,
+	TYPE_METHOD(STR_pushback, &generic_seq_append,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
-	            "For mutable sequences only: Convenience wrapper for #append\n"
+	            "Convenience alias for ?#append\n"
 	            "${"
 	            /**/ "function pushback(item: Object) {\n"
 	            /**/ "	return this.append(item);\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_KWMETHOD(STR_remove, &seq_remove,
-	              "(elem,key:?DCallable=!N)->?Dbool\n"
-	              "(elem,start:?Dint,key:?DCallable=!N)->?Dbool\n"
-	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool\n"
+	TYPE_KWMETHOD(STR_remove, &generic_seq_remove,
+	              "(elem,start=!0,end=!-1,key:?DCallable=!N)->?Dbool\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Find the first instance of @elem and remove it, "
@@ -5736,10 +5762,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return false;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_rremove, &seq_rremove,
-	              "(elem,key:?DCallable=!N)->?Dbool\n"
-	              "(elem,start:?Dint,key:?DCallable=!N)->?Dbool\n"
-	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dbool\n"
+	TYPE_KWMETHOD(STR_rremove, &generic_seq_rremove,
+	              "(elem,start=!0,end=!-1,key:?DCallable=!N)->?Dbool\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Find the last instance of @elem and remove it, "
@@ -5833,10 +5857,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return false;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_removeall, &seq_removeall,
-	              "(elem,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
+	TYPE_KWMETHOD(STR_removeall, &generic_seq_removeall,
+	              "(elem,start=!0,end=!-1,max=!-1,key:?DCallable=!N)->?Dint\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Find all instance of @elem and remove "
@@ -5985,8 +6007,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return count;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_removeif, &seq_removeif,
-	              "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
+	TYPE_KWMETHOD(STR_removeif, &generic_seq_removeif,
+	              "(should:?DCallable,start=!0,end=!-1,max=!-1)->?Dint\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Remove all elements within the given sub-range, "
@@ -6091,7 +6113,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return count;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD(STR_clear, &seq_clear,
+	TYPE_METHOD(STR_clear, &generic_seq_clear,
 	            "()\n"
 	            "#tSequenceError{@this Sequence is immutable}"
 	            "For mutable sequences only: Clear all elements from the Sequence\n"
@@ -6102,31 +6124,31 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	this[:] = none;\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_KWMETHOD(STR_resize, &seq_resize,
-	              "(int newsize,filler=!N)\n"
+	TYPE_KWMETHOD(STR_resize, &generic_seq_resize,
+	              "(size:?Dint,filler=!N)\n"
 	              "#tSequenceError{@this Sequence isn't resizable}"
-	              "Resize @this Sequence to have a new length of @newsize "
+	              "Resize @this Sequence to have a new length of @size "
 	              /**/ "items, using @filler to initialize newly added entries\n"
 	              "When not implemented by a sub-class, ?. "
 	              /**/ "implements this function as follows:\n"
 	              "${"
-	              /**/ "function resize(newsize: int, filler: Object = none) {\n"
+	              /**/ "function resize(size: int, filler: Object = none) {\n"
 	              /**/ "	import int, Sequence from deemon;\n"
-	              /**/ "	newsize = newsize.operator int();\n"
-	              /**/ "	if (!newsize) {\n"
+	              /**/ "	size = size.operator int();\n"
+	              /**/ "	if (!size) {\n"
 	              /**/ "		this.clear();\n"
 	              /**/ "	} else {\n"
 	              /**/ "		local oldsize = (##this).operator int();\n"
-	              /**/ "		if (newsize < oldsize) {\n"
-	              /**/ "			this.erase(newsize, -1);\n"
-	              /**/ "		} else if (newsize > oldsize) {\n"
-	              /**/ "			this.extend(Sequence.repeat(filler, newsize - oldsize));\n"
+	              /**/ "		if (size < oldsize) {\n"
+	              /**/ "			this.erase(size, -1);\n"
+	              /**/ "		} else if (size > oldsize) {\n"
+	              /**/ "			this.extend(Sequence.repeat(filler, size - oldsize));\n"
 	              /**/ "		}\n"
 	              /**/ "	}\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("fill", &seq_fill,
-	              "(start=!0,end=!-1,filler=!N)->?Dint\n"
+	TYPE_KWMETHOD(STR_fill, &generic_seq_fill,
+	              "(start=!0,end=!-1,filler=!N)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Assign @filler to all elements within "
 	              /**/ "the given sub-range, and return the number of written indices\n"
@@ -6164,19 +6186,19 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return end - start;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD("reverse", &seq_reverse,
-	            "()\n"
-	            "#tSequenceError{@this Sequence is immutable}"
-	            "For mutable sequences only: Reverse the order of all elements\n"
-	            "When not implemented by a sub-class, ?. implements "
-	            /**/ "this function as follows (s.a. ?#{op:assign}):\n"
-	            "${"
-	            /**/ "function reverse() {\n"
-	            /**/ "	this := (this as Sequence from deemon).reversed();\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_KWMETHOD("sort", &seq_sort,
-	              "(key:?DCallable=!N)\n"
+	TYPE_KWMETHOD(STR_reverse, &generic_seq_reverse,
+	              "(start=!0,end=!-1)\n"
+	              "#tSequenceError{@this Sequence is immutable}"
+	              "For mutable sequences only: Reverse the order of all elements\n"
+	              "When not implemented by a sub-class, ?. implements "
+	              /**/ "this function as follows (s.a. ?#{op:assign}):\n"
+	              "${"
+	              /**/ "function reverse() {\n"
+	              /**/ "	this := (this as Sequence from deemon).reversed();\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD(STR_sort, &generic_seq_sort,
+	              "(start=!0,end=!-1,key:?DCallable=!N)\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Sort the elements of @this Sequence\n"
@@ -6187,7 +6209,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	this := (this as Sequence from deemon).sorted(key);\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("byhash", &seq_byhash, DOC_GET(seq_byhash_doc)),
 
 	/* Binary search API */
 	TYPE_KWMETHOD("bfind", &seq_bfind,
@@ -6321,6 +6342,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_get_ismutable(DeeObject *__restrict self) {
 	int result = DeeSeq_IsMutable(self);
@@ -6340,6 +6362,7 @@ seq_get_isresizable(DeeObject *__restrict self) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_get_isfrozen(DeeObject *__restrict self) {
@@ -6472,6 +6495,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	                  /**/ "	}\n"
 	                  /**/ "}"
 	                  "}"),
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	TYPE_GETTER("ismutable", &seq_get_ismutable,
 	            "->?Dbool\n"
 	            "Try to determine if @this Sequence is mutable by looking at operators and "
@@ -6490,6 +6514,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            /**/ "Sequence can actually be manipulated, only that a sub-class provides special "
 	            /**/ "behavior for at least one of the following: ?#append, ?#extend, ?#insert, ?#insertall, "
 	            /**/ "?#erase, ?#pop, ?#resize, ?#pushfront, ?#pushback, ?#popfront or ?#popback"),
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	TYPE_GETTER("each", &DeeSeq_Each,
 	            "->?S?O\n"
 	            "Returns a special proxy object that mirrors any operation performed on "

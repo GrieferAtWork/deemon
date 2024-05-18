@@ -161,22 +161,22 @@ err_seq_not_mutablef(DeeObject *self, char const *method_format, ...) {
 /* erase()                                                              */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_DefaultEraseWithDelRangeIndex(DeeObject *self, size_t start, size_t count) {
+DeeSeq_DefaultEraseWithDelRangeIndex(DeeObject *self, size_t index, size_t count) {
 	struct type_seq *seq;
 	size_t end_index;
-	if unlikely(OVERFLOW_UADD(start, count, &end_index))
+	if unlikely(OVERFLOW_UADD(index, count, &end_index))
 		goto err_overflow;
 	if unlikely(end_index > SSIZE_MAX)
 		goto err_overflow;
 	seq = Dee_TYPE(self)->tp_seq;
-	return (*seq->tp_delrange_index)(self, (Dee_ssize_t)start, (Dee_ssize_t)end_index);
+	return (*seq->tp_delrange_index)(self, (Dee_ssize_t)index, (Dee_ssize_t)end_index);
 err_overflow:
 	return err_integer_overflow_i((sizeof(size_t) * 8) - 1, true);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_DefaultEraseWithError(DeeObject *self, size_t start, size_t count) {
-	return err_seq_not_mutablef(self, "erase(%" PRFuSIZ ", %" PRFuSIZ ")", start, count);
+DeeSeq_DefaultEraseWithError(DeeObject *self, size_t index, size_t count) {
+	return err_seq_not_mutablef(self, "erase(%" PRFuSIZ ", %" PRFuSIZ ")", index, count);
 }
 
 
@@ -1133,12 +1133,12 @@ DeeSeq_DefaultSortedWithKeyWithEnumerateDefaultAndCopy(DeeObject *self, size_t s
 /* Generic sequence mutable function pointers. */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_erase(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t start, count = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_count,
+	size_t index, count = 1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count,
 	                    UNPuSIZ "|" UNPuSIZ ":erase",
-	                    &start, &count))
+	                    &index, &count))
 		goto err;
-	if unlikely(new_DeeSeq_Erase(self, start, count))
+	if unlikely(new_DeeSeq_Erase(self, index, count))
 		goto err;
 	return_none;
 err:
@@ -1238,11 +1238,29 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_pop(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t index;
+	Dee_ssize_t index = -1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
-	                    UNPdSIZ ":pop", &index))
+	                    "|" UNPdSIZ ":pop", &index))
 		goto err;
 	return new_DeeSeq_Pop(self, index);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":popfront"))
+		goto err;
+	return new_DeeSeq_Pop(self, 0);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":popback"))
+		goto err;
+	return new_DeeSeq_Pop(self, -1);
 err:
 	return NULL;
 }

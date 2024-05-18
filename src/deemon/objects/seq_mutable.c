@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 #include <deemon/alloc.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
@@ -96,6 +95,41 @@ yes:
 	return 1;
 }
 
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name) {
+	DREF DeeObject *result;
+	dhash_t hash;
+	ASSERT_OBJECT(tp_self);
+	ASSERT_OBJECT(self);
+	ASSERT(DeeType_Check(tp_self));
+	ASSERT(DeeObject_InstanceOf(self, tp_self));
+	hash = DeeString_Hash(name);
+	/* TODO: Search the type's instance-attribute cache and check
+	 *       if the attribute is implemented by the type itself. */
+	if (DeeType_IsClass(tp_self)) {
+		struct class_attribute *member;
+		if ((member = DeeType_QueryAttributeHash(tp_self, tp_self, name, hash)) != NULL) {
+			struct class_desc *desc = DeeClass_DESC(tp_self);
+			return DeeInstance_GetAttribute(desc, DeeInstance_DESC(desc, self), self, member);
+		}
+		result = ITER_DONE;
+	} else {
+		result = ITER_DONE;
+		if (tp_self->tp_methods &&
+		    (result = DeeType_GetMethodAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+		if (tp_self->tp_getsets &&
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+		if (tp_self->tp_members &&
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+	}
+done:
+	return result;
+}
+
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 /* @return:  0: Call was OK.
  * @return:  1: No such attribute.
  * @return: -1: Error. */
@@ -139,40 +173,6 @@ done_call:
 		Dee_Decref(result);
 		result = real_result;
 	}
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name) {
-	DREF DeeObject *result;
-	dhash_t hash;
-	ASSERT_OBJECT(tp_self);
-	ASSERT_OBJECT(self);
-	ASSERT(DeeType_Check(tp_self));
-	ASSERT(DeeObject_InstanceOf(self, tp_self));
-	hash = DeeString_Hash(name);
-	/* TODO: Search the type's instance-attribute cache and check
-	 *       if the attribute is implemented by the type itself. */
-	if (DeeType_IsClass(tp_self)) {
-		struct class_attribute *member;
-		if ((member = DeeType_QueryAttributeHash(tp_self, tp_self, name, hash)) != NULL) {
-			struct class_desc *desc = DeeClass_DESC(tp_self);
-			return DeeInstance_GetAttribute(desc, DeeInstance_DESC(desc, self), self, member);
-		}
-		result = ITER_DONE;
-	} else {
-		result = ITER_DONE;
-		if (tp_self->tp_methods &&
-		    (result = DeeType_GetMethodAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
-			goto done;
-		if (tp_self->tp_getsets &&
-		    (result = DeeType_GetGetSetAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
-			goto done;
-		if (tp_self->tp_members &&
-		    (result = DeeType_GetMemberAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
-			goto done;
-	}
-done:
 	return result;
 }
 
@@ -4399,8 +4399,8 @@ DeeSeq_IsResizable(DeeObject *__restrict self) {
 	}
 	return 0;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 DECL_END
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_MUTABLE_C */

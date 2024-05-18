@@ -1293,14 +1293,14 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWLIST(kwlist__start_count, { K(start), K(count), KEND });
+PRIVATE DEFINE_KWLIST(kwlist__index_count, { K(index), K(count), KEND });
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_erase(Deque *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	size_t index, result;
 	size_t num_items = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_count, UNPdSIZ "|" UNPuSIZ ":erase", &index, &num_items))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count, UNPdSIZ "|" UNPuSIZ ":erase", &index, &num_items))
 		goto err;
 	result = Deque_Erase(self, index, num_items);
 	if unlikely(result == (size_t)-1)

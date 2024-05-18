@@ -77,7 +77,7 @@ local kw_lists = {
 	{"text", "module", "constants", "except", "nlocal", "nstack", "nref", "nstatic", "argc", "keywords", "defaults", "flags", "ddi"},
 	{"yfunc", "argc", "ridstart", "ridend"},
 	{"frame", "argc", "ridstart", "ridend", "localc", "stackc"},
-	{"start", "count"},
+	{"index", "count"},
 	{"index", "item"},
 	{"index", "items"},
 	{"index", "value"},
@@ -179,6 +179,7 @@ DECLARE_KWLIST(kwlist__getter_delete_setter, { KEX("getter", 0x3b6f31af, 0x2c857
 DECLARE_KWLIST(kwlist__guard_handlers_scope_loc, { KEX("guard", 0x8338047e, 0xa7c4a82949b93392), KEX("handlers", 0x840e9780, 0x552e754df097389b), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
 DECLARE_KWLIST(kwlist__head, { KEX("head", 0x95a53fc9, 0xd2803db826dcba8a), KEND });
 DECLARE_KWLIST(kwlist__index, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEND });
+DECLARE_KWLIST(kwlist__index_count, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEX("count", 0x54eac164, 0xbd66b5980d54babb), KEND });
 DECLARE_KWLIST(kwlist__index_item, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEX("item", 0x91b22efe, 0xe78210b41247a693), KEND });
 DECLARE_KWLIST(kwlist__index_items, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEX("items", 0x8858badc, 0xa52ef5f42baafa42), KEND });
 DECLARE_KWLIST(kwlist__index_value, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEND });
@@ -222,7 +223,6 @@ DECLARE_KWLIST(kwlist__radix_precision_mode, { KEX("radix", 0xb10d4185, 0xbf2dcb
 DECLARE_KWLIST(kwlist__should_start_end_max, { KEX("should", 0x28877b82, 0xbb3cb749df0a8b51), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEND });
 DECLARE_KWLIST(kwlist__signed, { KEX("signed", 0x17a15883, 0x58a245b6f802625f), KEND });
 DECLARE_KWLIST(kwlist__size_filler, { KEX("size", 0xed8917fa, 0x3fe8023bdf261c0f), KEX("filler", 0xb990988f, 0x6067d27b1e35cd17), KEND });
-DECLARE_KWLIST(kwlist__start_count, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("count", 0x54eac164, 0xbd66b5980d54babb), KEND });
 DECLARE_KWLIST(kwlist__start_end, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
 DECLARE_KWLIST(kwlist__start_end_filler, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("filler", 0xb990988f, 0x6067d27b1e35cd17), KEND });
 DECLARE_KWLIST(kwlist__start_end_key, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });

@@ -25,7 +25,6 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 /* TODO: All of this stuff here breaks when used on types with multiple bases.
  *
  * Solution:
@@ -60,6 +59,7 @@ DECL_BEGIN
 #define has_noninherited_size(tp, seq)     has_noninherited_seqfield(tp, seq, tp_sizeob)
 #define has_noninherited_bool(tp)          has_noninherited_field(tp, tp_cast.tp_bool)
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 /* Mutable-sequence API */
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelItem(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetItem(DeeObject *self, size_t index, DeeObject *value);

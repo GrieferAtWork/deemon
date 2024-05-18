@@ -581,18 +581,18 @@ DeeList_Pop(DeeObject *__restrict self, dssize_t index) {
  * @return: (size_t)-1: Error. */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeList_Erase(DeeObject *__restrict self,
-              size_t start, size_t count) {
+              size_t index, size_t count) {
 	size_t max_count;
 	List *me = (List *)self;
 	DREF DeeObject **delobv;
 	ASSERT_OBJECT_TYPE(me, &DeeList_Type);
 again:
 	DeeList_LockWrite(me);
-	if unlikely(start >= me->l_list.ol_elemc) {
+	if unlikely(index >= me->l_list.ol_elemc) {
 		DeeList_LockEndWrite(me);
 		return 0;
 	}
-	max_count = me->l_list.ol_elemc - start;
+	max_count = me->l_list.ol_elemc - index;
 	if (count > max_count)
 		count = max_count;
 	delobv = (DREF DeeObject **)Dee_TryMallocac(count, sizeof(DREF DeeObject *));
@@ -604,12 +604,12 @@ again:
 	}
 
 	/* Adjust to shift following elements downwards. */
-	memcpyc(delobv, me->l_list.ol_elemv + start,
+	memcpyc(delobv, me->l_list.ol_elemv + index,
 	        count, sizeof(DREF DeeObject *));
 	me->l_list.ol_elemc -= count;
-	memmovedownc(me->l_list.ol_elemv + start,
-	             me->l_list.ol_elemv + start + count,
-	             me->l_list.ol_elemc - start,
+	memmovedownc(me->l_list.ol_elemv + index,
+	             me->l_list.ol_elemv + index + count,
+	             me->l_list.ol_elemc - index,
 	             sizeof(DREF DeeObject *));
 	DeeList_LockEndWrite(me);
 	Dee_Decrefv(delobv, count);
@@ -2542,12 +2542,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_erase(List *me, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
-	size_t start, count = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_count,
+	size_t index, count = 1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count,
 	                    UNPuSIZ "|" UNPuSIZ ":erase",
-	                    &start, &count))
+	                    &index, &count))
 		goto err;
-	count = DeeList_Erase((DeeObject *)me, start, count);
+	count = DeeList_Erase((DeeObject *)me, index, count);
 	if unlikely(count == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(count);

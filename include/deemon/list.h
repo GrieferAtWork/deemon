@@ -129,7 +129,7 @@ DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t arg
  * @return: (size_t)-1: Error. */
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
 DeeList_Erase(DeeObject *__restrict self,
-              size_t start, size_t count);
+              size_t index, size_t count);
 
 /* @return: * :   The popped element.
  * @return: NULL: The given index was out-of-bounds and an IndexError was thrown. */

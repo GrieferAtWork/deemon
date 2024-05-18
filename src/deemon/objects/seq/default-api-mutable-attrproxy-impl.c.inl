@@ -171,9 +171,9 @@ DECL_BEGIN
 /************************************************************************/
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-LOCAL_DeeSeq_DefaultEraseWithCallAttrErase(DeeObject *self, size_t start, size_t count) {
+LOCAL_DeeSeq_DefaultEraseWithCallAttrErase(DeeObject *self, size_t index, size_t count) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_erase_data, &str_erase, PCKuSIZ PCKuSIZ, start, count);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_erase_data, &str_erase, PCKuSIZ PCKuSIZ, index, count);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);

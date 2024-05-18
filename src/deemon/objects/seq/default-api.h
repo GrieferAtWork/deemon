@@ -58,7 +58,7 @@ typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *Dee_tsc_rfind_t)(DeeObject *s
 typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *Dee_tsc_rfind_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
 /* Functions for mutable sequences. */
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_erase_t)(DeeObject *self, size_t start, size_t count);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_erase_t)(DeeObject *self, size_t index, size_t count);
 typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *Dee_tsc_insert_t)(DeeObject *self, size_t index, DeeObject *item);
 typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *Dee_tsc_insertall_t)(DeeObject *self, size_t index, DeeObject *items);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_pushfront_t)(DeeObject *self, DeeObject *item);
@@ -254,8 +254,8 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_sorted_with_key_t DCALL DeeT
 
 /* Invoke mutable-sequence operators */
 /* TODO: Remove the "new_" prefix and remove functions from "seq_mutable.c" */
-#define new_DeeSeq_Erase(self, start, count) \
-	(*DeeType_SeqCache_RequireErase(Dee_TYPE(self)))(self, start, count)
+#define new_DeeSeq_Erase(self, index, count) \
+	(*DeeType_SeqCache_RequireErase(Dee_TYPE(self)))(self, index, count)
 #define new_DeeSeq_Insert(self, index, item) \
 	(*DeeType_SeqCache_RequireInsert(Dee_TYPE(self)))(self, index, item)
 #define new_DeeSeq_InsertAll(self, index, items) \
@@ -360,12 +360,12 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithTSC
 
 
 /* Mutable sequence functions */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallAttrErase(DeeObject *self, size_t start, size_t count);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallEraseDataFunction(DeeObject *self, size_t start, size_t count);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallEraseDataMethod(DeeObject *self, size_t start, size_t count);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallEraseDataKwMethod(DeeObject *self, size_t start, size_t count);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithDelRangeIndex(DeeObject *self, size_t start, size_t count);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithError(DeeObject *self, size_t start, size_t count);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallAttrErase(DeeObject *self, size_t index, size_t count);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallEraseDataFunction(DeeObject *self, size_t index, size_t count);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallEraseDataMethod(DeeObject *self, size_t index, size_t count);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallEraseDataKwMethod(DeeObject *self, size_t index, size_t count);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithDelRangeIndex(DeeObject *self, size_t index, size_t count);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithError(DeeObject *self, size_t index, size_t count);
 
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultInsertWithCallAttrInsert(DeeObject *self, size_t index, DeeObject *item);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultInsertWithCallInsertDataFunction(DeeObject *self, size_t index, DeeObject *item);
@@ -589,6 +589,8 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_extend(DeeObject *
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_xchitem(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_clear(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_pop(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_remove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_rremove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_removeall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
