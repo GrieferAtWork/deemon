@@ -4043,12 +4043,29 @@ seq_reversed(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	DREF DeeObject *result;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPuSIZ UNPuSIZ ":reverse",
+	                    "|" UNPuSIZ UNPuSIZ ":reversed",
 	                    &start, &end))
 		goto err;
 	result = DeeList_FromSequence(self);
-	if likely(result)
-		DeeList_Reverse(result, start, end);
+	if unlikely(!result)
+		goto err;
+	if (end > DeeList_SIZE((DeeListObject *)result))
+		end = DeeList_SIZE((DeeListObject *)result);
+	if (start > end)
+		start = end;
+	if (start > 0 || end < DeeList_SIZE((DeeListObject *)result)) {
+		/* Super hacky, but OK since this code will be removed anyways */
+		DREF DeeObject *result2;
+		result2 = DeeObject_GetRangeIndex(result, (Dee_ssize_t)start, (Dee_ssize_t)end);
+		Dee_Decref(result);
+		if unlikely(!result2)
+			goto err;
+		result = DeeList_FromSequence(result2);
+		Dee_Decref(result2);
+		if unlikely(!result)
+			goto err;
+	}
+	DeeList_Reverse(result, 0, (size_t)-1);
 	return result;
 err:
 	return NULL;
@@ -4058,17 +4075,36 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_sorted(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	DeeObject *key = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sorted", &key))
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *key = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:sorted",
+	                    &start, &end, &key))
 		goto err;
-	if (DeeNone_Check(key))
-		key = NULL;
 	result = DeeList_FromSequence(self);
 	if unlikely(!result)
 		goto err;
+	if (end > DeeList_SIZE((DeeListObject *)result))
+		end = DeeList_SIZE((DeeListObject *)result);
+	if (start > end)
+		start = end;
+	if (start > 0 || end < DeeList_SIZE((DeeListObject *)result)) {
+		/* Super hacky, but OK since this code will be removed anyways */
+		DREF DeeObject *result2;
+		result2 = DeeObject_GetRangeIndex(result, (Dee_ssize_t)start, (Dee_ssize_t)end);
+		Dee_Decref(result);
+		if unlikely(!result2)
+			goto err;
+		result = DeeList_FromSequence(result2);
+		Dee_Decref(result2);
+		if unlikely(!result)
+			goto err;
+	}
 	if unlikely(DeeList_Sort(result, 0, (size_t)-1, key))
-		Dee_Clear(result);
+		goto err_r;
 	return result;
+err_r:
+	Dee_Decref(result);
 err:
 	return NULL;
 }
