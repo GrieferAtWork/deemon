@@ -56,6 +56,7 @@
 #include <stdarg.h>
 
 #include "../objects/int_logic.h"
+#include "../objects/seq/default-api.h"
 #include "../objects/seq/default-compare.h"
 #include "../objects/seq/default-iterators.h"
 #include "../objects/seq/default-sequences.h"
@@ -12441,6 +12442,8 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeWithSetRangeNoneDefault,
 	return DeeType_INVOKE_SETRANGE(tp_self, self, start, end, Dee_None);
 }
 
+
+/* tp_delrange_index */
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeIndexWithDelRange,
                          (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
 	int result;
@@ -12474,6 +12477,44 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexWithSetRangeIndexNoneDefau
 	return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start, end, Dee_None);
 }
 
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexWithSizeDefaultAndTSCErase,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	struct Dee_seq_range range;
+	size_t size;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	DeeSeqRange_Clamp(&range, start, end, size);
+	return (*DeeType_SeqCache_RequireErase(tp_self))(self, range.sr_start, range.sr_end - range.sr_start);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	struct Dee_seq_range range;
+	size_t size;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	DeeSeqRange_Clamp(&range, start, end, size);
+	while (range.sr_end > range.sr_start) {
+		--range.sr_end;
+		if unlikely(DeeType_INVOKE_DELITEMINDEX(tp_self, self, range.sr_end))
+			goto err;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+
+/* tp_delrange_index_n */
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeIndexNWithDelRange,
                          (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
 	int result;
@@ -12537,6 +12578,60 @@ err:
 	return -1;
 }
 
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSizeDefaultAndTSCErase,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	size_t size;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (start < 0) {
+		if (start < 0) {
+			start += size;
+			if unlikely(start < 0) {
+				if unlikely(size == 0)
+					goto empty_range;
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
+			}
+		}
+	}
+	return (*DeeType_SeqCache_RequireErase(tp_self))(self, (size_t)start, size - (size_t)start);
+empty_range:
+	return 0;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	size_t size;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (start < 0) {
+		if (start < 0) {
+			start += size;
+			if unlikely(start < 0) {
+				if unlikely(size == 0)
+					goto empty_range;
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
+			}
+		}
+	}
+	while (size > (size_t)start) {
+		--size;
+		if unlikely(DeeType_INVOKE_DELITEMINDEX(tp_self, self, size))
+			goto err;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+empty_range:
+	return 0;
+err:
+	return -1;
+}
+
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSetRangeIndexNNone,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
 	LOAD_TP_SELF;
@@ -12550,6 +12645,8 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSetRangeIndexNNoneDef
 }
 
 
+
+/* tp_setrange */
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN,
                          (DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value)) {
 	Dee_ssize_t start_index, end_index;
@@ -12580,6 +12677,8 @@ err:
 	return -1;
 }
 
+
+/* tp_setrange_index */
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeIndexWithSetRange,
                          (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
 	int result;
@@ -12601,54 +12700,28 @@ err:
 	return -1;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex,
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll,
                              (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
+	struct Dee_seq_range range;
+	size_t size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	DeeSeqRange_Clamp(&range, start, end, size);
+	if (range.sr_end > range.sr_start) {
+		/* Erase what was there before... */
+		if unlikely((*DeeType_SeqCache_RequireErase(tp_self))(self, range.sr_start, range.sr_end - range.sr_start))
+			goto err;
+	}
+	/* Insert new values. */
+	return (*DeeType_SeqCache_RequireInsertAll(tp_self))(self, range.sr_start, value);
+err:
+	return -1;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault,
-                             (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
-	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
-}
 
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeAndSetItemIndex,
-                             (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
-	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault,
-                             (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
-	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
-}
-
+/* tp_setrange_index_n */
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeIndexNWithSetRange,
                          (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
 	int result;
@@ -12663,7 +12736,6 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeIndexNWithSetRange,
 err:
 	return -1;
 }
-
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeAndSetRangeIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, DeeObject *value)) {
@@ -12713,48 +12785,28 @@ err:
 	return -1;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex,
-                             (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, DeeObject *value)) {
+	size_t size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault,
-                             (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
-	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeAndSetItemIndex,
-                             (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
-	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault,
-                             (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
-	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (start < 0) {
+		if (start < 0) {
+			start += size;
+			if unlikely(start < 0) {
+				if unlikely(size == 0)
+					goto empty_range;
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
+			}
+		}
+	}
+	return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start, (Dee_ssize_t)size, value);
+empty_range:
+	return 0;
+err:
+	return -1;
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -14173,6 +14225,7 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq, unsi
 PRIVATE NONNULL((1, 2)) void DCALL
 DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t features, int seqclass) {
 	struct type_seq *seq = self->tp_seq;
+	struct attrinfo info;
 	ASSERT(seq);
 
 	/* tp_iter */
@@ -14504,17 +14557,13 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		if (seq_featureset_test(features, FEAT_tp_setrange)) {
 			seq->tp_setrange_index = &DeeObject_DefaultSetRangeIndexWithSetRange;
 		} else if (seqclass == Dee_SEQCLASS_SEQ) {
-			if (seq_featureset_test(features, FEAT_tp_size) &&
-			    seq_featureset_test(features, FEAT_tp_delitem_index) &&
-			    seq_featureset_test(features, FEAT_tp_setitem_index)) {
-				seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex;
-			} else if (seq->tp_size && seq->tp_setitem_index && seq->tp_delitem_index) {
-				seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault;
-			} else if (seq_featureset_test(features, FEAT_tp_size) &&
-			           seq_featureset_test(features, FEAT_tp_setitem_index)) {
-				seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeAndSetItemIndex;
-			} else if (seq->tp_size && seq->tp_setitem_index) {
-				seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault;
+			/* Impl when type has insert/insertall + erase/pop */
+			if ((seq->tp_size != NULL) &&
+			    (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_insert, 6, Dee_HashStr__insert, &info) ||
+			     DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_insertall, 9, Dee_HashStr__insertall, &info)) &&
+			    (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_erase, 5, Dee_HashStr__erase, &info) ||
+			     DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_pop, 3, Dee_HashStr__pop, &info))) {
+				seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll;
 			}
 		}
 	}
@@ -14529,17 +14578,8 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 				seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetRangeIndex;
 			} else if (seq->tp_size && seq_featureset_test(features, FEAT_tp_setrange_index)) {
 				seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex;
-			} else if (seq_featureset_test(features, FEAT_tp_size) &&
-			           seq_featureset_test(features, FEAT_tp_delitem_index) &&
-			           seq_featureset_test(features, FEAT_tp_setitem_index)) {
-				seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex;
-			} else if (seq->tp_size && seq->tp_setitem_index && seq->tp_delitem_index) {
-				seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault;
-			} else if (seq_featureset_test(features, FEAT_tp_size) &&
-			           seq_featureset_test(features, FEAT_tp_setitem_index)) {
-				seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetItemIndex;
-			} else if (seq->tp_size && seq->tp_setitem_index) {
-				seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault;
+			} else if (seq->tp_size && seq->tp_setrange_index) {
+				seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault;
 			}
 		}
 	}
@@ -14549,7 +14589,7 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		if (seq_featureset_test(features, FEAT_tp_setrange_index) &&
 		    seq_featureset_test(features, FEAT_tp_setrange_index_n)) {
 			seq->tp_setrange = &DeeObject_DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN;
-		} else if (seq->tp_setrange_index || seq->tp_setrange_index_n) {
+		} else if (seq->tp_setrange_index) {
 			seq->tp_setrange = &DeeObject_DefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault;
 		}
 	}
@@ -14562,6 +14602,12 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_delrange_index = &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNone;
 		} else if (seq->tp_setrange_index) {
 			seq->tp_delrange_index = &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault;
+		} else if ((seq->tp_size != NULL) && seqclass == Dee_SEQCLASS_SEQ &&
+		           (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_erase, 5, Dee_HashStr__erase, &info) ||
+		            DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_pop, 3, Dee_HashStr__pop, &info))) {
+			seq->tp_delrange_index = &DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndTSCErase;
+		} else if (seq->tp_size && seq->tp_delitem_index && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_delrange_index = &DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault;
 		}
 	}
 
@@ -14580,6 +14626,12 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_delrange_index_n = &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNone;
 		} else if (seq->tp_setrange_index_n) {
 			seq->tp_delrange_index_n = &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault;
+		} else if ((seq->tp_size != NULL) && seqclass == Dee_SEQCLASS_SEQ &&
+		           (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_erase, 5, Dee_HashStr__erase, &info) ||
+		            DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_pop, 3, Dee_HashStr__pop, &info))) {
+			seq->tp_delrange_index_n = &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndTSCErase;
+		} else if (seq->tp_size && seq->tp_delitem_index && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_delrange_index_n = &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault;
 		}
 	}
 

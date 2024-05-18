@@ -176,6 +176,27 @@ err_overflow:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultEraseWithPop(DeeObject *self, size_t index, size_t count) {
+	size_t end_index;
+	Dee_tsc_pop_t tsc_pop;
+	if unlikely(OVERFLOW_UADD(index, count, &end_index))
+		goto err_overflow;
+	tsc_pop = DeeType_SeqCache_RequirePop(Dee_TYPE(self));
+	while (end_index > index) {
+		--end_index;
+		if unlikely((*tsc_pop)(self, (Dee_ssize_t)end_index))
+			goto err;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return 0;
+err_overflow:
+	err_integer_overflow_i((sizeof(size_t) * 8) - 1, true);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DefaultEraseWithError(DeeObject *self, size_t index, size_t count) {
 	return err_seq_not_mutablef(self, "erase(%" PRFuSIZ ", %" PRFuSIZ ")", index, count);
 }
@@ -390,6 +411,30 @@ DeeSeq_DefaultClearWithError(DeeObject *self) {
 /************************************************************************/
 /* pop()                                                                */
 /************************************************************************/
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultPopWithSizeAndGetItemIndexAndTSCErase(DeeObject *self, Dee_ssize_t index) {
+	size_t used_index = (size_t)index;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	DREF DeeObject *result;
+	if (index < 0) {
+		size_t selfsize;
+		selfsize = (*seq->tp_size)(self);
+		if unlikely(selfsize == (size_t)-1)
+			goto err;
+		used_index = DeeSeqRange_Clamp_n(index, selfsize);
+	}
+	result = (*seq->tp_getitem_index)(self, used_index);
+	if likely(result) {
+		if unlikely((*DeeType_SeqCache_RequireErase(Dee_TYPE(self)))(self, index, 1))
+			goto err_r;
+	}
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultPopWithSizeAndGetItemIndexAndDelItemIndex(DeeObject *self, Dee_ssize_t index) {
 	size_t used_index = (size_t)index;

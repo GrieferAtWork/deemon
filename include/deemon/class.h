@@ -2118,6 +2118,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_DefaultDelRangeWithSetRangeNo
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeObject_DefaultDelRangeIndexWithDelRange(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNone(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end); /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndTSCErase(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end); /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end); /* May call other DEFAULT operators */
 
 /* tp_delrange_index_n */
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeObject_DefaultDelRangeIndexNWithDelRange(DeeObject *__restrict self, Dee_ssize_t start);
@@ -2125,6 +2127,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexNWithSizeAndDel
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelRangeIndex(DeeObject *__restrict self, Dee_ssize_t start); /* May call other DEFAULT operators */
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNone(DeeObject *__restrict self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault(DeeObject *__restrict self, Dee_ssize_t start); /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndTSCErase(DeeObject *__restrict self, Dee_ssize_t start); /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault(DeeObject *__restrict self, Dee_ssize_t start); /* May call other DEFAULT operators */
 
 /* tp_setrange */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL DeeObject_DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value);
@@ -2132,19 +2136,13 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL DeeObject_DefaultSetRangeWithSetR
 
 /* tp_setrange_index */
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeObject_DefaultSetRangeIndexWithSetRange(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value); /* May call other DEFAULT operators */
-INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_DefaultSetRangeIndexWithSizeAndSetItemIndex(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value); /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
 
 /* tp_setrange_index_n */
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeObject_DefaultSetRangeIndexNWithSetRange(DeeObject *self, Dee_ssize_t start, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeAndSetRangeIndex(DeeObject *self, Dee_ssize_t start, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex(DeeObject *self, Dee_ssize_t start, DeeObject *value); /* May call other DEFAULT operators */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex(DeeObject *self, Dee_ssize_t start, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault(DeeObject *self, Dee_ssize_t start, DeeObject *value); /* May call other DEFAULT operators */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeAndSetItemIndex(DeeObject *self, Dee_ssize_t start, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault(DeeObject *self, Dee_ssize_t start, DeeObject *value); /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault(DeeObject *self, Dee_ssize_t start, DeeObject *value); /* May call other DEFAULT operators */
 /*[[[end:DEFAULT_OPERATORS]]]*/
 
 /* Extra map functions that are needed for implementing generic map operator. */
@@ -2823,25 +2821,23 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL DeeSeq_TDefaultDelRangeWithSetRan
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_TDefaultDelRangeIndexWithDelRange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexWithSetRangeIndexNone(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexWithSetRangeIndexNoneDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexWithSizeDefaultAndTSCErase(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_TDefaultDelRangeIndexNWithDelRange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexNWithSizeAndDelRangeIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndDelRangeIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexNWithSetRangeIndexNNone(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexNWithSetRangeIndexNNoneDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndTSCErase(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL DeeObject_TDefaultSetRangeWithSetRangeIndexAndSetRangeIndexN(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL DeeObject_TDefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeObject_TDefaultSetRangeIndexWithSetRange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeSeq_TDefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeSeq_TDefaultSetRangeIndexWithSizeAndSetItemIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeObject_TDefaultSetRangeIndexNWithSetRange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeAndSetRangeIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeAndSetItemIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
 #define DeeType_MapDefaultStr(tp_str, map, default) \
 	((tp_str) == &DeeObject_DefaultStrWithPrint ? map(DeeObject_TDefaultStrWithPrint) : default)
 #define DeeType_MapDefaultRepr(tp_repr, map, default) \
@@ -3389,30 +3385,28 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 #define DeeType_MapDefaultDelRangeIndex(tp_delrange_index, map, default) \
 	((tp_delrange_index) == &DeeObject_DefaultDelRangeIndexWithDelRange ? map(DeeObject_TDefaultDelRangeIndexWithDelRange) : \
 	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNone ? map(DeeSeq_TDefaultDelRangeIndexWithSetRangeIndexNone) : \
-	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault ? map(DeeSeq_TDefaultDelRangeIndexWithSetRangeIndexNoneDefault) : default)
+	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault ? map(DeeSeq_TDefaultDelRangeIndexWithSetRangeIndexNoneDefault) : \
+	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndTSCErase ? map(DeeSeq_TDefaultDelRangeIndexWithSizeDefaultAndTSCErase) : \
+	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault ? map(DeeSeq_TDefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault) : default)
 #define DeeType_MapDefaultDelRangeIndexN(tp_delrange_index_n, map, default) \
 	((tp_delrange_index_n) == &DeeObject_DefaultDelRangeIndexNWithDelRange ? map(DeeObject_TDefaultDelRangeIndexNWithDelRange) : \
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeAndDelRangeIndex ? map(DeeSeq_TDefaultDelRangeIndexNWithSizeAndDelRangeIndex) : \
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelRangeIndex ? map(DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndDelRangeIndex) : \
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNone ? map(DeeSeq_TDefaultDelRangeIndexNWithSetRangeIndexNNone) : \
-	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault ? map(DeeSeq_TDefaultDelRangeIndexNWithSetRangeIndexNNoneDefault) : default)
+	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault ? map(DeeSeq_TDefaultDelRangeIndexNWithSetRangeIndexNNoneDefault) : \
+	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndTSCErase ? map(DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndTSCErase) : \
+	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault ? map(DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault) : default)
 #define DeeType_MapDefaultSetRange(tp_setrange, map, default) \
 	((tp_setrange) == &DeeObject_DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN ? map(DeeObject_TDefaultSetRangeWithSetRangeIndexAndSetRangeIndexN) : \
 	 (tp_setrange) == &DeeObject_DefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault ? map(DeeObject_TDefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault) : default)
 #define DeeType_MapDefaultSetRangeIndex(tp_setrange_index, map, default) \
 	((tp_setrange_index) == &DeeObject_DefaultSetRangeIndexWithSetRange ? map(DeeObject_TDefaultSetRangeIndexWithSetRange) : \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex ? map(DeeSeq_TDefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex) : \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault ? map(DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault) : \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeAndSetItemIndex ? map(DeeSeq_TDefaultSetRangeIndexWithSizeAndSetItemIndex) : \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault ? map(DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault) : default)
+	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll ? map(DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll) : default)
 #define DeeType_MapDefaultSetRangeIndexN(tp_setrange_index_n, map, default) \
 	((tp_setrange_index_n) == &DeeObject_DefaultSetRangeIndexNWithSetRange ? map(DeeObject_TDefaultSetRangeIndexNWithSetRange) : \
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetRangeIndex ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeAndSetRangeIndex) : \
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex) : \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex) : \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault) : \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetItemIndex ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeAndSetItemIndex) : \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault) : default)
+	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault) : default)
 #define DeeType_IsDefaultStr(tp_str) \
 	((tp_str) == &DeeObject_DefaultStrWithPrint)
 #define DeeType_IsDefaultRepr(tp_repr) \
@@ -3979,30 +3973,28 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 #define DeeType_IsDefaultDelRangeIndex(tp_delrange_index) \
 	((tp_delrange_index) == &DeeObject_DefaultDelRangeIndexWithDelRange || \
 	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNone || \
-	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault)
+	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault || \
+	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndTSCErase || \
+	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault)
 #define DeeType_IsDefaultDelRangeIndexN(tp_delrange_index_n) \
 	((tp_delrange_index_n) == &DeeObject_DefaultDelRangeIndexNWithDelRange || \
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeAndDelRangeIndex || \
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelRangeIndex || \
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNone || \
-	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault)
+	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault || \
+	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndTSCErase || \
+	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault)
 #define DeeType_IsDefaultSetRange(tp_setrange) \
 	((tp_setrange) == &DeeObject_DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN || \
 	 (tp_setrange) == &DeeObject_DefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault)
 #define DeeType_IsDefaultSetRangeIndex(tp_setrange_index) \
 	((tp_setrange_index) == &DeeObject_DefaultSetRangeIndexWithSetRange || \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex || \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault || \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeAndSetItemIndex || \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault)
+	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll)
 #define DeeType_IsDefaultSetRangeIndexN(tp_setrange_index_n) \
 	((tp_setrange_index_n) == &DeeObject_DefaultSetRangeIndexNWithSetRange || \
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetRangeIndex || \
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex || \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex || \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault || \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetItemIndex || \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault)
+	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault)
 #define DeeType_invoke_cast_tp_str_DEFAULT(tp_self, tp_str, self, default) \
 	((tp_str) == &DeeObject_DefaultStrWithPrint ? DeeObject_TDefaultStrWithPrint(tp_self, self) : \
 	 default)
@@ -4632,6 +4624,8 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	((tp_delrange_index) == &DeeObject_DefaultDelRangeIndexWithDelRange ? DeeObject_TDefaultDelRangeIndexWithDelRange(tp_self, self, start, end) : \
 	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNone ? DeeSeq_TDefaultDelRangeIndexWithSetRangeIndexNone(tp_self, self, start, end) : \
 	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault ? DeeSeq_TDefaultDelRangeIndexWithSetRangeIndexNoneDefault(tp_self, self, start, end) : \
+	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndTSCErase ? DeeSeq_TDefaultDelRangeIndexWithSizeDefaultAndTSCErase(tp_self, self, start, end) : \
+	 (tp_delrange_index) == &DeeSeq_DefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault ? DeeSeq_TDefaultDelRangeIndexWithSizeDefaultAndDelItemIndexDefault(tp_self, self, start, end) : \
 	 default)
 #define DeeType_invoke_seq_tp_delrange_index_n_DEFAULT(tp_self, tp_delrange_index_n, self, start, default) \
 	((tp_delrange_index_n) == &DeeObject_DefaultDelRangeIndexNWithDelRange ? DeeObject_TDefaultDelRangeIndexNWithDelRange(tp_self, self, start) : \
@@ -4639,6 +4633,8 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelRangeIndex ? DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndDelRangeIndex(tp_self, self, start) : \
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNone ? DeeSeq_TDefaultDelRangeIndexNWithSetRangeIndexNNone(tp_self, self, start) : \
 	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault ? DeeSeq_TDefaultDelRangeIndexNWithSetRangeIndexNNoneDefault(tp_self, self, start) : \
+	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndTSCErase ? DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndTSCErase(tp_self, self, start) : \
+	 (tp_delrange_index_n) == &DeeSeq_DefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault ? DeeSeq_TDefaultDelRangeIndexNWithSizeDefaultAndDelItemIndexDefault(tp_self, self, start) : \
 	 default)
 #define DeeType_invoke_seq_tp_setrange_DEFAULT(tp_self, tp_setrange, self, start, end, value, default) \
 	((tp_setrange) == &DeeObject_DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN ? DeeObject_TDefaultSetRangeWithSetRangeIndexAndSetRangeIndexN(tp_self, self, start, end, value) : \
@@ -4646,19 +4642,13 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 default)
 #define DeeType_invoke_seq_tp_setrange_index_DEFAULT(tp_self, tp_setrange_index, self, start, end, value, default) \
 	((tp_setrange_index) == &DeeObject_DefaultSetRangeIndexWithSetRange ? DeeObject_TDefaultSetRangeIndexWithSetRange(tp_self, self, start, end, value) : \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex ? DeeSeq_TDefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex(tp_self, self, start, end, value) : \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault ? DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault(tp_self, self, start, end, value) : \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeAndSetItemIndex ? DeeSeq_TDefaultSetRangeIndexWithSizeAndSetItemIndex(tp_self, self, start, end, value) : \
-	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault ? DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault(tp_self, self, start, end, value) : \
+	 (tp_setrange_index) == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll ? DeeSeq_TDefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll(tp_self, self, start, end, value) : \
 	 default)
 #define DeeType_invoke_seq_tp_setrange_index_n_DEFAULT(tp_self, tp_setrange_index_n, self, start, value, default) \
 	((tp_setrange_index_n) == &DeeObject_DefaultSetRangeIndexNWithSetRange ? DeeObject_TDefaultSetRangeIndexNWithSetRange(tp_self, self, start, value) : \
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetRangeIndex ? DeeSeq_TDefaultSetRangeIndexNWithSizeAndSetRangeIndex(tp_self, self, start, value) : \
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex ? DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex(tp_self, self, start, value) : \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex ? DeeSeq_TDefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex(tp_self, self, start, value) : \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault ? DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault(tp_self, self, start, value) : \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetItemIndex ? DeeSeq_TDefaultSetRangeIndexNWithSizeAndSetItemIndex(tp_self, self, start, value) : \
-	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault ? DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault(tp_self, self, start, value) : \
+	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault ? DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault(tp_self, self, start, value) : \
 	 default)
 #define DeeType_invoke_cast_tp_str(tp_self, tp_str, self) \
 	 DeeType_invoke_cast_tp_str_DEFAULT(tp_self, tp_str, self, DeeType_invoke_cast_tp_str_NODEFAULT(tp_self, tp_str, self))

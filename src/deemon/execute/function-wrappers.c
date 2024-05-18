@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -3298,7 +3299,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framestack_nsi_pop(FrameStack *self, dssize_t index) {
+framestack_nsi_pop(FrameStack *self, Dee_ssize_t index) {
 	uint16_t stackc, i;
 	struct code_frame *frame;
 	DREF DeeObject **stackv;
@@ -3328,6 +3329,32 @@ framestack_nsi_pop(FrameStack *self, dssize_t index) {
 	--frame->cf_sp;
 	DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
 	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+framestack_insert(FrameStack *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t index;
+	DeeObject *item;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
+	                    UNPuSIZ "o:insert",
+	                    &index, &item))
+		goto err;
+	if unlikely(framestack_nsi_insert(self, index, item))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+framestack_pop(FrameStack *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t index = -1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
+	                    "|" UNPdSIZ ":pop", &index))
+		goto err;
+	return framestack_nsi_pop(self, index);
 err:
 	return NULL;
 }
@@ -3399,6 +3426,12 @@ PRIVATE struct type_seq framestack_seq = {
 	/* .tp_setrange_index_n   = */ NULL,
 };
 
+PRIVATE struct type_method tpconst framestack_methods[] = {
+	TYPE_KWMETHOD("insert", &framestack_insert, "(index:?Dint,item)"),
+	TYPE_KWMETHOD("pop", &framestack_pop, "(index=!-1)->"),
+	TYPE_METHOD_END
+};
+
 PRIVATE struct type_getset tpconst framestack_getsets[] = {
 	TYPE_GETTER("__func__", &framestack_get_func, "->?DFunction"),
 	TYPE_GETSET_END
@@ -3446,7 +3479,7 @@ INTERN DeeTypeObject FrameStack_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ framestack_methods,
 	/* .tp_getsets       = */ framestack_getsets,
 	/* .tp_members       = */ framestack_members,
 	/* .tp_class_methods = */ NULL,

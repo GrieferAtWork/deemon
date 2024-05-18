@@ -33,6 +33,7 @@
 #include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -1097,6 +1098,25 @@ DeeType_GetFirstOperatorOrigin(DeeTypeObject const *__restrict self,
 	return result;
 }
 
+PRIVATE ATTR_NOINLINE ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+find_erase_and_insert_origin(DeeTypeObject const *__restrict self) {
+	DeeTypeMRO mro;
+	DeeTypeObject *iter;
+	iter = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+	do {
+		struct Dee_attrinfo info;
+		struct type_seq *seq = iter->tp_seq;
+		if ((seq != NULL) && (seq->tp_size != NULL) &&
+		    (DeeObject_TFindAttrInfoStringLenHash(iter, NULL, STR_insert, 6, Dee_HashStr__insert, &info) ||
+		     DeeObject_TFindAttrInfoStringLenHash(iter, NULL, STR_insertall, 9, Dee_HashStr__insertall, &info)) &&
+		    (DeeObject_TFindAttrInfoStringLenHash(iter, NULL, STR_erase, 5, Dee_HashStr__erase, &info) ||
+		     DeeObject_TFindAttrInfoStringLenHash(iter, NULL, STR_pop, 3, Dee_HashStr__pop, &info)))
+			return iter;
+	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
+	/* Shouldn't get here... */
+	return (DeeTypeObject *)self;
+}
+
 /* Return the type from `self' inherited its operator `name'.
  * If `name' wasn't inherited, or isn't defined, simply re-return `self'.
  * Returns `NULL' when the operator isn't being implemented. */
@@ -1678,11 +1698,8 @@ find_origin_of_compare_default:
 		};
 		int (DCALL *tp_setrange_index)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *);
 		tp_setrange_index = self->tp_seq->tp_setrange_index;
-		if (tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex ||
-		    tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault ||
-		    tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeAndSetItemIndex ||
-		    tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault)
-			return DeeType_GetOperatorOrigin(self, OPERATOR_SETITEM);
+		if (tp_setrange_index == &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll)
+			return find_erase_and_insert_origin(self);
 		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_seq),
 		                                          setrange_group, COMPILER_LENOF(setrange_group));
 	}	break;
