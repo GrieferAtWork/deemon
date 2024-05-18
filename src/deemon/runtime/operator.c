@@ -15641,8 +15641,8 @@ DeeType_InheritContains(DeeTypeObject *__restrict self) {
 
 	base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-		if (!base->tp_seq || !base->tp_seq->tp_contains &&
-		    !DeeType_InheritContains(base))
+		if ((!base->tp_seq || !base->tp_seq->tp_contains) &&
+		    (!DeeType_InheritContains(base)))
 			continue;
 		base_seq = base->tp_seq;
 		LOG_INHERIT(base, self, "operator contains");
