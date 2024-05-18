@@ -2162,9 +2162,7 @@ generic_seq_xchitem(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObj
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
 	                    UNPuSIZ "o:xchitem", &index, &value))
 		goto err;
-	if unlikely(new_DeeSeq_XchItemIndex(self, index, value))
-		goto err;
-	return_none;
+	return new_DeeSeq_XchItemIndex(self, index, value);
 err:
 	return NULL;
 }
