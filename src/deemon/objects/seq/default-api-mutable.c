@@ -478,7 +478,7 @@ DeeSeq_DefaultRemoveWithTSCRemoveAll(DeeObject *self, DeeObject *item,
 	result = (*DeeType_SeqCache_RequireRemoveAll(Dee_TYPE(self)))(self, item, start, end, 1);
 	if unlikely(result == (size_t)-1)
 		goto err;
-	return 0;
+	return result ? 1 : 0;
 err:
 	return -1;
 }
