@@ -144,10 +144,10 @@ print("#error \"Unsupported hash configuration\"");
 print("#endif /" "* !... *" "/");
 print("};");
 ]]]*/
-#define NUM_BUILTINS_SYM  53
-#define NUM_BUILTINS_SPC  70
+#define NUM_BUILTINS_SYM  54
+#define NUM_BUILTINS_SPC  72
 #define BUILTINS_HASHMASK 0x7f
-STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == 53, "You need to re-run `deemon -F src/deemon/runtime/builtin.c'");
+STATIC_ASSERT_MSG(_NUM_BUILTINS_SYM == 54, "You need to re-run `deemon -F src/deemon/runtime/builtin.c'");
 PRIVATE struct module_symbol deemon_symbols[128] = {
 #if _Dee_HashSelect(32, 64) == 32
 	{ DeeString_STR(&str_none), NULL, UINT32_C(0xde6dda00), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_none } },
@@ -219,7 +219,7 @@ PRIVATE struct module_symbol deemon_symbols[128] = {
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ DeeString_STR(&str_Callable), NULL, UINT32_C(0xeb0130c3), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Callable } },
 	{ NULL, NULL, 0, 0, { 0 } },
-	{ NULL, NULL, 0, 0, { 0 } },
+	{ DeeString_STR(&str_equals), DOCOF_equals, UINT32_C(0xcf48fdb6), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_equals } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },
@@ -295,7 +295,7 @@ PRIVATE struct module_symbol deemon_symbols[128] = {
 	{ DeeString_STR(&str_Callable), NULL, UINT64_C(0xa323908e8099518d), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_Callable } },
 	{ DeeString_STR(&str_bool), NULL, UINT64_C(0x78e45f7b558db28e), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_bool } },
 	{ DeeString_STR(&str_WeakRefAble), NULL, UINT64_C(0x22c298dff7d3200f), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_WeakRefAble } },
-	{ NULL, NULL, 0, 0, { 0 } },
+	{ DeeString_STR(&str_equals), DOCOF_equals, UINT64_C(0x8ff48babe6a36c10), MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FNAMEOBJ, { id_equals } },
 	{ DeeString_STR(&str___giosi), NULL, UINT64_C(0x347263f7fbfcea2b), MODSYM_FREADONLY | MODSYM_FHIDDEN | MODSYM_FNAMEOBJ, { id___giosi } },
 	{ NULL, NULL, 0, 0, { 0 } },
 	{ NULL, NULL, 0, 0, { 0 } },

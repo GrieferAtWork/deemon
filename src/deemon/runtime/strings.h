@@ -165,6 +165,7 @@ local STRINGS = {
 	"boundattr",
 	"bounditem",
 	"compare",
+	"equals",
 	"__pooad",
 	"__neosb",
 	"__giosi",
@@ -575,6 +576,9 @@ DEF_STRING(str_bounditem, "bounditem", 0xbe8d5e6f, 0x95383275aec67fa5)
 #define Dee_HashStr__compare _Dee_HashSelectC(0x84b4e5c0, 0x9165e5178389f3e4)
 DEF_STRING(str_compare, "compare", 0x84b4e5c0, 0x9165e5178389f3e4)
 #define STR_compare DeeString_STR(&str_compare)
+#define Dee_HashStr__equals _Dee_HashSelectC(0xcf48fdb6, 0x8ff48babe6a36c10)
+DEF_STRING(str_equals, "equals", 0xcf48fdb6, 0x8ff48babe6a36c10)
+#define STR_equals DeeString_STR(&str_equals)
 #define Dee_HashStr____pooad _Dee_HashSelectC(0x38ba68c9, 0xd5562c36880fcfa0)
 DEF_STRING(str___pooad, "__pooad", 0x38ba68c9, 0xd5562c36880fcfa0)
 #define STR___pooad DeeString_STR(&str___pooad)

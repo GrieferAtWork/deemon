@@ -409,6 +409,7 @@ DDATDEF struct Dee_cmethod_object DeeBuiltin_HasItem;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_BoundAttr;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_BoundItem;
 DDATDEF struct Dee_kwcmethod_object DeeBuiltin_Compare;
+DDATDEF struct Dee_cmethod_object DeeBuiltin_Equals;
 DDATDEF struct Dee_kwcmethod_object DeeBuiltin_Import;
 DDATDEF struct Dee_cmethod_object DeeBuiltin_Hash;
 DDATDEF struct Dee_kwcmethod_object DeeBuiltin_Exec;

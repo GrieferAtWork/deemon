@@ -489,7 +489,7 @@ DeeSeq_DefaultRemoveWithTSCRemoveIf(DeeObject *self, DeeObject *item,
 	 * >>     static local didRemove = false;
 	 * >>     if (didRemove)
 	 * >>         return false;
-	 * >>     if (!util.equals(item, x))
+	 * >>     if (!deemon.equals(item, x))
 	 * >>         return false;
 	 * >>     didRemove = true;
 	 * >>     return true;
@@ -544,7 +544,7 @@ DeeSeq_DefaultRemoveWithKeyWithTSCRemoveIf(DeeObject *self, DeeObject *item,
 	 * >>     static local didRemove = false;
 	 * >>     if (didRemove)
 	 * >>         return false;
-	 * >>     if (!util.equals(keyedElem, key(x)))
+	 * >>     if (!deemon.equals(keyedElem, key(x)))
 	 * >>         return false;
 	 * >>     didRemove = true;
 	 * >>     return true;
@@ -654,7 +654,7 @@ DeeSeq_DefaultRemoveAllWithTSCRemoveIf(DeeObject *self, DeeObject *item,
 	 * >>     static local removeCount = 0;
 	 * >>     if (removeCount >= max)
 	 * >>         return false;
-	 * >>     if (!util.equals(item, x))
+	 * >>     if (!deemon.equals(item, x))
 	 * >>         return false;
 	 * >>     ++removeCount;
 	 * >>     return true;
@@ -722,7 +722,7 @@ DeeSeq_DefaultRemoveAllWithKeyWithTSCRemoveIf(DeeObject *self, DeeObject *item,
 	 * >>     static local removeCount = 0;
 	 * >>     if (removeCount >= max)
 	 * >>         return false;
-	 * >>     if (!util.equals(keyedElem, key(x)))
+	 * >>     if (!deemon.equals(keyedElem, key(x)))
 	 * >>         return false;
 	 * >>     ++removeCount;
 	 * >>     return true;

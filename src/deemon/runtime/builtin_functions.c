@@ -131,11 +131,25 @@ f_builtin_compare(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__lhs_rhs, "oo:compare", &lhs, &rhs))
 		goto err;
 	diff = DeeObject_Compare(lhs, rhs);
-	if unlikely(diff == -2)
+	if unlikely(diff == Dee_COMPARE_ERR)
 		goto err;
 	ASSERT(diff == -1 || diff == 0 || diff == 1);
 	result = DeeInt_FromSign(diff);
 	return_reference_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_builtin_equals(size_t argc, DeeObject *const *argv) {
+	int diff;
+	DeeObject *a, *b;
+	if (DeeArg_Unpack(argc, argv, "oo:equals", &a, &b))
+		goto err;
+	diff = DeeObject_TryCompareEq(a, b);
+	if unlikely(diff == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(diff == 0);
 err:
 	return NULL;
 }
@@ -559,6 +573,7 @@ PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasItem, &f_builtin_hasitem, METHOD_FNORMAL);  
 PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundAttr, &f_builtin_boundattr, METHOD_FNORMAL); /* TODO: CONSTCALL_IF_HASATTR */
 PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundItem, &f_builtin_bounditem, METHOD_FNORMAL); /* TODO: CONSTCALL_IF_HASITEM */
 PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Compare, &f_builtin_compare, METHOD_FNORMAL);   /* TODO: CONSTCALL_IF_COMPARE */
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_Equals, &f_builtin_equals, METHOD_FNORMAL);       /* TODO: CONSTCALL_IF_COMPARE_EQ */
 PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &f_builtin_import, METHOD_FNORMAL);     /* TODO: CONSTCALL_IF_MODULE_ALREADY_LOADED */
 PUBLIC DEFINE_CMETHOD(DeeBuiltin_Hash, &f_builtin_hash, METHOD_FNORMAL);           /* TODO: CONSTCALL_IF_ARGS_CONSTHASH */
 PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Exec, &f_builtin_exec, METHOD_FNORMAL);

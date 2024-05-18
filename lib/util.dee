@@ -261,22 +261,3 @@ function clamprange(start: int | none, end: int | none, length: int): (int, int)
 empty_range:
 	return (length, length);
 }
-
-
-@@Wrapper around @(operator ==) that automatically handles the following errors by returning @false:
-@@ - @Error.RuntimeError.NotImplemented  (usually thrown when an operator isn't supported)
-@@ - @Error.TypeError  (usually thrown when comparing incompatible types)
-@@ - @Error.ValueError  (usually thrown when types are compatible, but values aren't)
-@@NOTE: This function will invoke @(a.operator == (b))
-@@
-@@A semantically equivalent function is used by @switch-statements, and key-compare in hash mappings.
-function equals(a: Object, b: Object): bool {
-	switch (a) {
-	case b:
-		return true;
-	default:
-		break;
-	}
-	return false;
-}
-

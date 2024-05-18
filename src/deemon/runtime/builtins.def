@@ -207,6 +207,28 @@ BUILTIN_DOC(compare, &DeeBuiltin_Compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             /**/ "print compare(\"foo\", \"bar\"); /* 1 */"
             "}")
 
+BUILTIN_DOC(equals, &DeeBuiltin_Equals, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+            "(a,b)->?Dbool\n"
+            "#r{!t if @a and @b are equal, !f if they aren't or cannot be compared}"
+            "This function is similar to ${operator ==}, but automatically catches some errors:"
+            "#L-{"
+            /**/ ":NotImplemented Usually thrown when an operator isn't supported|"
+            /**/ ":TypeError Usually thrown when comparing incompatible types|"
+            /**/ ":ValueError Usually thrown when types are compatible, but values aren't"
+            "}"
+            "This function will invoke the ${operator ==} of @a with @b as argument."
+            "${"
+            /**/ "function equals(a, b): bool {\n"
+            /**/ "	switch (a) {\n"
+            /**/ "	case b:\n"
+            /**/ "		return true;\n"
+            /**/ "	default:\n"
+            /**/ "		break;\n"
+            /**/ "	}\n"
+            /**/ "	return false;\n"
+            /**/ "}"
+            "}")
+
 /* Load a module, given its name.
  * >> __import__(base: Module, name: string): string;
  * NOTE: This is what `import' links against when used
