@@ -423,7 +423,7 @@ PRIVATE struct type_member tpconst rs_gii_members[] = {
 
 INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_ReversedSeqWithGetItemIndex",
+	/* .tp_name     = */ "_SeqReversedWithGetItemIndex",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -468,7 +468,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 
 INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_ReversedSeqWithGetItemIndexFast",
+	/* .tp_name     = */ "_SeqReversedWithGetItemIndexFast",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -513,7 +513,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 
 INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_ReversedSeqWithTryGetItemIndex",
+	/* .tp_name     = */ "_SeqReversedWithTryGetItemIndex",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

@@ -527,7 +527,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 			return &DeeSeq_DefaultRemoveWithTSCRemoveIf;
 	}
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER))
+	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 		return &DeeSeq_DefaultRemoveWithEnumerateIndexAndDelItemIndex;
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveWithKey)
 	{
@@ -545,20 +545,22 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 			return &DeeSeq_DefaultRemoveWithKeyWithTSCRemoveIf;
 	}
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER))
+	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 		return &DeeSeq_DefaultRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemove)
-	if (DeeType_SeqCache_HasPrivateForeachReverse(self))
-		return &DeeSeq_DefaultRRemoveWithEnumerateIndexReverseAndDelItemIndex;
-	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER))
-		return &DeeSeq_DefaultRRemoveWithEnumerateIndexAndDelItemIndex;
+	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
+		if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(orig_type))
+			return &DeeSeq_DefaultRRemoveWithEnumerateIndexReverseAndDelItemIndex;
+		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+			return &DeeSeq_DefaultRRemoveWithEnumerateIndexAndDelItemIndex;
+	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemoveWithKey)
-	if (DeeType_SeqCache_HasPrivateForeachReverse(self))
-		return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexReverseAndDelItemIndex;
-	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER))
-		return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
+	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
+		if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(self))
+			return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexReverseAndDelItemIndex;
+		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+			return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
+	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveAll)
 	{
 		Dee_tsc_removeif_t tsc_removeif;
@@ -569,9 +571,14 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 	}
 	if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo))
 		return &DeeSeq_DefaultRemoveAllWithTSCRemove;
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ &&
+	    DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
+	    DeeType_HasOperator(orig_type, OPERATOR_GETITEM) &&
+	    DeeType_HasOperator(orig_type, OPERATOR_SIZE))
+		return &DeeSeq_DefaultRemoveAllWithSizeAndGetItemIndexAndDelItemIndex;
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER))
-		return &DeeSeq_DefaultRemoveAllWithEnumerateIndexAndDelItemIndex;
+	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+		return &DeeSeq_DefaultRemoveAllWithTSCRemove;
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveAllWithKey)
 	{
 		Dee_tsc_removeif_t tsc_removeif;
@@ -582,29 +589,34 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 	}
 	if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo))
 		return &DeeSeq_DefaultRemoveAllWithKeyWithTSCRemoveWithKey;
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ &&
+	    DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
+	    DeeType_HasOperator(orig_type, OPERATOR_GETITEM) &&
+	    DeeType_HasOperator(orig_type, OPERATOR_SIZE))
+		return &DeeSeq_DefaultRemoveAllWithKeyWithSizeAndGetItemIndexAndDelItemIndex;
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER))
-		return &DeeSeq_DefaultRemoveAllWithKeyWithEnumerateIndexAndDelItemIndex;
+	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+		return &DeeSeq_DefaultRemoveAllWithKeyWithTSCRemoveWithKey;
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveIf)
 	if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_removeall, 9, Dee_HashStr__removeall, &attrinfo))
 		return &DeeSeq_DefaultRemoveIfWithTSCRemoveAllWithKey;
-	{
-		Dee_tsc_removeif_t tsc_removeif;
-		tsc_removeif = DeeType_SeqCache_RequireRemoveIf_private_uncached(orig_type, self);
-		if (tsc_removeif != NULL &&
-		    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
-			return &DeeSeq_DefaultRemoveIfWithTSCRemoveAllWithKey;
-	}
 	if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo))
 		return &DeeSeq_DefaultRemoveIfWithTSCRemoveAllWithKey;
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ &&
+	    DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
+	    DeeType_HasOperator(orig_type, OPERATOR_GETITEM) &&
+	    DeeType_HasOperator(orig_type, OPERATOR_SIZE))
+		return &DeeSeq_DefaultRemoveIfWithSizeAndGetItemIndexAndDelItemIndex;
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER))
-		return &DeeSeq_DefaultRemoveIfWithEnumerateIndexAndDelItemIndex;
+	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+		return &DeeSeq_DefaultRemoveIfWithTSCRemoveAllWithKey;
 #elif defined(DEFINE_DeeType_SeqCache_RequireResize)
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ &&
 	    DeeType_HasPrivateOperator(self, OPERATOR_SETRANGE) &&
 	    DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
-		if (DeeType_HasOperator(orig_type, OPERATOR_DELRANGE))
+		if (DeeType_HasOperator(orig_type, OPERATOR_DELRANGE) &&
+		    orig_type->tp_seq->tp_delrange_index != &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNone &&
+		    orig_type->tp_seq->tp_delrange_index != &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault)
 			return &DeeSeq_DefaultResizeWithSizeAndSetRangeIndexAndDelRangeIndex;
 		return &DeeSeq_DefaultResizeWithSizeAndSetRangeIndex;
 	}

@@ -199,13 +199,6 @@ DeeType_SeqCache_TryRequireForeachReverse(DeeTypeObject *__restrict self) {
 	return NULL; /* Not possible... */
 }
 
-INTERN WUNUSED NONNULL((1)) bool DCALL
-DeeType_SeqCache_HasPrivateForeachReverse(DeeTypeObject *__restrict self) {
-	return DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ &&
-	       DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) &&
-	       DeeType_HasOperator(self, OPERATOR_SIZE);
-}
-
 INTERN WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_reverse_t DCALL
 DeeType_SeqCache_TryRequireEnumerateIndexReverse(DeeTypeObject *__restrict self) {
 	struct Dee_type_seq *seq = self->tp_seq;
@@ -328,7 +321,7 @@ DeeType_SeqCache_RequireFind(DeeTypeObject *__restrict self) {
 		if likely(sc && sc->tsc_find)
 			return sc->tsc_find;
 	}
-	result = &DeeSeq_DefaultFindWithTSCEnumerateIndex;
+	result = &DeeSeq_DefaultFindWithEnumerateIndex;
 	sc = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
 		atomic_write(&sc->tsc_find, result);
@@ -344,7 +337,7 @@ DeeType_SeqCache_RequireFindWithKey(DeeTypeObject *__restrict self) {
 		if likely(sc && sc->tsc_find_with_key)
 			return sc->tsc_find_with_key;
 	}
-	result = &DeeSeq_DefaultFindWithKeyWithTSCEnumerateIndex;
+	result = &DeeSeq_DefaultFindWithKeyWithEnumerateIndex;
 	sc = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
 		atomic_write(&sc->tsc_find_with_key, result);
@@ -363,7 +356,7 @@ DeeType_SeqCache_RequireRFind(DeeTypeObject *__restrict self) {
 	if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(self)) {
 		result = &DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse;
 	} else {
-		result = &DeeSeq_DefaultRFindWithTSCEnumerateIndex;
+		result = &DeeSeq_DefaultRFindWithEnumerateIndex;
 	}
 	sc = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
@@ -383,7 +376,7 @@ DeeType_SeqCache_RequireRFindWithKey(DeeTypeObject *__restrict self) {
 	if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(self)) {
 		result = &DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse;
 	} else {
-		result = &DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndex;
+		result = &DeeSeq_DefaultRFindWithKeyWithEnumerateIndex;
 	}
 	sc = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
@@ -1127,7 +1120,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultFindWithTSCEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end) {
+DeeSeq_DefaultFindWithEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
 	union generic_seq_find_data data;
 	data.gsfd_elem = item;
@@ -1170,8 +1163,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-DeeSeq_DefaultFindWithKeyWithTSCEnumerateIndex(DeeObject *self, DeeObject *item,
-                                               size_t start, size_t end, DeeObject *key) {
+DeeSeq_DefaultFindWithKeyWithEnumerateIndex(DeeObject *self, DeeObject *item,
+                                            size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct generic_seq_find_with_key_data data;
 	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &item);
@@ -1236,7 +1229,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultRFindWithTSCEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end) {
+DeeSeq_DefaultRFindWithEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
 	struct generic_seq_rfind_data data;
 	data.gsrfd_elem   = item;
@@ -1302,8 +1295,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndex(DeeObject *self, DeeObject *item,
-                                                size_t start, size_t end, DeeObject *key) {
+DeeSeq_DefaultRFindWithKeyWithEnumerateIndex(DeeObject *self, DeeObject *item,
+                                             size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct generic_seq_rfind_with_key_data data;
 	data.gsrfwkd_kelem = DeeObject_Call(key, 1, &item);

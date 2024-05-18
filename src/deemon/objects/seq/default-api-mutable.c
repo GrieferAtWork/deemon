@@ -26,6 +26,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -481,36 +482,255 @@ err:
 	return -1;
 }
 
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *srwrip_item; /* [1..1][const] Item to remove */
+} SeqRemoveWithRemoveIfPredicate;
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *srwripwk_item; /* [1..1][const] Keyed item to remove */
+	DREF DeeObject *srwripwk_key;  /* [1..1][const] Key to use during compare */
+} SeqRemoveWithRemoveIfPredicateWithKey;
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+srwrip_init(SeqRemoveWithRemoveIfPredicate *__restrict self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicate", &self->srwrip_item))
+		goto err;
+	Dee_Incref(self->srwrip_item);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+srwripwk_init(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "oo:_SeqRemoveWithRemoveIfPredicateWithKey",
+	                  &self->srwripwk_item, &self->srwripwk_key))
+		goto err;
+	Dee_Incref(self->srwripwk_item);
+	Dee_Incref(self->srwripwk_key);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+srwrip_fini(SeqRemoveWithRemoveIfPredicate *__restrict self) {
+	Dee_Decref(self->srwrip_item);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+srwrip_visit(SeqRemoveWithRemoveIfPredicate *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->srwrip_item);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+srwripwk_fini(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self) {
+	Dee_Decref(self->srwripwk_item);
+	Dee_Decref(self->srwripwk_key);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+srwripwk_visit(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->srwripwk_item);
+	Dee_Visit(self->srwripwk_key);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+srwrip_call(SeqRemoveWithRemoveIfPredicate *self, size_t argc, DeeObject *const *argv) {
+	int equals;
+	DeeObject *item;
+	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicate", &item))
+		goto err;
+	equals = DeeObject_TryCompareEq(self->srwrip_item, item);
+	if unlikely(equals == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(equals == 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+srwripwk_call(SeqRemoveWithRemoveIfPredicateWithKey *self, size_t argc, DeeObject *const *argv) {
+	int equals;
+	DeeObject *item;
+	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicateWithKey", &item))
+		goto err;
+	equals = DeeObject_TryCompareKeyEq(self->srwripwk_item, item, self->srwripwk_key);
+	if unlikely(equals == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(equals == 0);
+err:
+	return NULL;
+}
+
+STATIC_ASSERT(offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_item) ==
+              offsetof(SeqRemoveWithRemoveIfPredicate, srwrip_item));
+#define srwrip_members (srwripwk_members + 1)
+PRIVATE struct type_member tpconst srwripwk_members[] = {
+	TYPE_MEMBER_FIELD("__item__", STRUCT_OBJECT, offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_item)),
+	TYPE_MEMBER_FIELD("__key__", STRUCT_OBJECT, offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_key)),
+	TYPE_MEMBER_END
+};
+
+PRIVATE DeeTypeObject SeqRemoveWithRemoveIfPredicate_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqRemoveWithRemoveIfPredicate",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&srwrip_init,
+				TYPE_FIXED_ALLOCATOR(SeqRemoveWithRemoveIfPredicate)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srwrip_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&srwrip_call,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&srwrip_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ srwrip_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+};
+
+PRIVATE DeeTypeObject SeqRemoveWithRemoveIfPredicateWithKey_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqRemoveWithRemoveIfPredicateWithKey",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&srwripwk_init,
+				TYPE_FIXED_ALLOCATOR(SeqRemoveWithRemoveIfPredicateWithKey)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srwripwk_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&srwripwk_call,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&srwripwk_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ srwripwk_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+};
+
+
+
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultRemoveWithTSCRemoveIf(DeeObject *self, DeeObject *item,
                                     size_t start, size_t end) {
-	/* TODO:
-	 * >> self.removeif(start, end, x -> {
-	 * >>     static local didRemove = false;
-	 * >>     if (didRemove)
-	 * >>         return false;
-	 * >>     if (!deemon.equals(item, x))
-	 * >>         return false;
-	 * >>     didRemove = true;
-	 * >>     return true;
-	 * >> });
-	 */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	/* >> return !!self.removeif(x -> deemon.equals(item, x), start, end, 1); */
+	size_t result;
+	DREF SeqRemoveWithRemoveIfPredicate *pred;
+	pred = DeeObject_MALLOC(SeqRemoveWithRemoveIfPredicate);
+	if unlikely(!pred)
+		goto err;
+	Dee_Incref(item);
+	pred->srwrip_item = item;
+	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicate_Type);
+	result = (*DeeType_SeqCache_RequireRemoveIf(Dee_TYPE(self)))(self, (DeeObject *)pred, start, end, 1);
+	Dee_Decref_likely(pred);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return result ? 1 : 0;
+err:
+	return -1;
+}
+
+
+
+struct default_remove_with_enumerate_index_and_delitem_index_data {
+	DeeObject *drweiadiid_self; /* [1..1] The sequence from which to remove the object. */
+	DeeObject *drweiadiid_item; /* [1..1] The object to remove. */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_remove_with_enumerate_index_and_delitem_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	int equal;
+	struct default_remove_with_enumerate_index_and_delitem_index_data *data;
+	data = (struct default_remove_with_enumerate_index_and_delitem_index_data *)arg;
+	if (!value)
+		return 0;
+	equal = DeeObject_TryCompareEq(data->drweiadiid_item, value);
+	if unlikely(equal == Dee_COMPARE_ERR)
+		goto err;
+	if (equal != 0)
+		return 0;
+	if unlikely((*Dee_TYPE(data->drweiadiid_self)->tp_seq->tp_delitem_index)(data->drweiadiid_self, index))
+		goto err;
+	return -2;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultRemoveWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
                                                       size_t start, size_t end) {
-	/* TODO */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	Dee_ssize_t foreach_status;
+	struct default_remove_with_enumerate_index_and_delitem_index_data data;
+	data.drweiadiid_self = self;
+	data.drweiadiid_item = item;
+	foreach_status = (*Dee_TYPE(self)->tp_seq->tp_enumerate_index)(self, &default_remove_with_enumerate_index_and_delitem_index_cb,
+	                                                               &data, start, end);
+	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == 0)
+		return 0; /* Not found */
+	return 1;     /* Found and removed */
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -538,36 +758,77 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 DeeSeq_DefaultRemoveWithKeyWithTSCRemoveIf(DeeObject *self, DeeObject *item,
                                            size_t start, size_t end, DeeObject *key) {
-	/* TODO:
-	 * >> local keyedElem = key(item);
-	 * >> self.removeif(start, end, x -> {
-	 * >>     static local didRemove = false;
-	 * >>     if (didRemove)
-	 * >>         return false;
-	 * >>     if (!deemon.equals(keyedElem, key(x)))
-	 * >>         return false;
-	 * >>     didRemove = true;
-	 * >>     return true;
-	 * >> });
-	 */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	(void)key;
-	return DeeError_NOTIMPLEMENTED();
+	/* >> local keyedElem = key(item);
+	 * >> return !!self.removeif(x -> deemon.equals(keyedElem, key(x)), start, end, 1); */
+	size_t result;
+	DREF SeqRemoveWithRemoveIfPredicateWithKey *pred;
+	pred = DeeObject_MALLOC(SeqRemoveWithRemoveIfPredicateWithKey);
+	if unlikely(!pred)
+		goto err;
+	pred->srwripwk_item = DeeObject_Call(key, 1, &item);
+	if unlikely(!pred->srwripwk_item)
+		goto err_pred;
+	Dee_Incref(key);
+	pred->srwripwk_key = key;
+	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicateWithKey_Type);
+	result = (*DeeType_SeqCache_RequireRemoveIf(Dee_TYPE(self)))(self, (DeeObject *)pred, start, end, 1);
+	Dee_Decref_likely(pred);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return result ? 1 : 0;
+err_pred:
+	DeeObject_FREE(pred);
+err:
+	return -1;
 }
+
+struct default_remove_with_key_with_enumerate_index_and_delitem_index_data {
+	DeeObject *drwkweiadiid_self; /* [1..1] The sequence from which to remove the object. */
+	DeeObject *drwkweiadiid_item; /* [1..1] The object to remove (already keyed). */
+	DeeObject *drwkweiadiid_key;  /* [1..1] The key used for object compare. */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_remove_with_key_with_enumerate_index_and_delitem_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	int equal;
+	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data *data;
+	data = (struct default_remove_with_key_with_enumerate_index_and_delitem_index_data *)arg;
+	if (!value)
+		return 0;
+	equal = DeeObject_TryCompareKeyEq(data->drwkweiadiid_item, value, data->drwkweiadiid_key);
+	if unlikely(equal == Dee_COMPARE_ERR)
+		goto err;
+	if (equal != 0)
+		return 0;
+	if unlikely((*Dee_TYPE(data->drwkweiadiid_self)->tp_seq->tp_delitem_index)(data->drwkweiadiid_self, index))
+		goto err;
+	return -2;
+err:
+	return -1;
+}
+
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 DeeSeq_DefaultRemoveWithKeyWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
                                                              size_t start, size_t end, DeeObject *key) {
-	/* TODO */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	(void)key;
-	return DeeError_NOTIMPLEMENTED();
+	Dee_ssize_t foreach_status;
+	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data data;
+	data.drwkweiadiid_self = self;
+	data.drwkweiadiid_item = DeeObject_Call(key, 1, &item);
+	if unlikely(!data.drwkweiadiid_item)
+		goto err;
+	data.drwkweiadiid_key = key;
+	foreach_status = (*Dee_TYPE(self)->tp_seq->tp_enumerate_index)(self, &default_remove_with_key_with_enumerate_index_and_delitem_index_cb,
+	                                                               &data, start, end);
+	Dee_Decref(data.drwkweiadiid_item);
+	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == 0)
+		return 0; /* Not found */
+	return 1;     /* Found and removed */
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
@@ -583,23 +844,39 @@ DeeSeq_DefaultRemoveWithKeyWithError(DeeObject *self, DeeObject *item,
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultRRemoveWithEnumerateIndexReverseAndDelItemIndex(DeeObject *self, DeeObject *item,
                                                               size_t start, size_t end) {
-	/* TODO */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	Dee_ssize_t foreach_status;
+	struct default_remove_with_enumerate_index_and_delitem_index_data data;
+	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
+	data.drweiadiid_self = self;
+	data.drweiadiid_item = item;
+	tsc_enumerate_index_reverse = DeeType_SeqCache_TryRequireEnumerateIndexReverse(Dee_TYPE(self));
+	ASSERT(tsc_enumerate_index_reverse);
+	foreach_status = (*tsc_enumerate_index_reverse)(self, &default_remove_with_enumerate_index_and_delitem_index_cb,
+	                                                &data, start, end);
+	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == 0)
+		return 0; /* Not found */
+	return 1;     /* Found and removed */
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultRRemoveWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
                                                        size_t start, size_t end) {
-	/* TODO */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	size_t index;
+	index = DeeSeq_DefaultRFindWithEnumerateIndex(self, item, start, end);
+	if unlikely(index == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(index == (size_t)-1)
+		return 0;
+	if unlikely((*Dee_TYPE(self)->tp_seq->tp_delitem_index)(self, index))
+		goto err;
+	return 1;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -615,25 +892,43 @@ DeeSeq_DefaultRRemoveWithError(DeeObject *self, DeeObject *item,
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexReverseAndDelItemIndex(DeeObject *self, DeeObject *item,
                                                                      size_t start, size_t end, DeeObject *key) {
-	/* TODO */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	(void)key;
-	return DeeError_NOTIMPLEMENTED();
+	Dee_ssize_t foreach_status;
+	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data data;
+	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
+	data.drwkweiadiid_self = self;
+	data.drwkweiadiid_item = DeeObject_Call(key, 1, &item);
+	if unlikely(!data.drwkweiadiid_item)
+		goto err;
+	data.drwkweiadiid_key = key;
+	tsc_enumerate_index_reverse = DeeType_SeqCache_TryRequireEnumerateIndexReverse(Dee_TYPE(self));
+	ASSERT(tsc_enumerate_index_reverse);
+	foreach_status = (*tsc_enumerate_index_reverse)(self, &default_remove_with_key_with_enumerate_index_and_delitem_index_cb,
+	                                                &data, start, end);
+	Dee_Decref(data.drwkweiadiid_item);
+	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == 0)
+		return 0; /* Not found */
+	return 1;     /* Found and removed */
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
                                                               size_t start, size_t end, DeeObject *key) {
-	/* TODO */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	(void)key;
-	return DeeError_NOTIMPLEMENTED();
+	size_t index;
+	index = DeeSeq_DefaultRFindWithKeyWithEnumerateIndex(self, item, start, end, key);
+	if unlikely(index == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(index == (size_t)-1)
+		return 0;
+	if unlikely((*Dee_TYPE(self)->tp_seq->tp_delitem_index)(self, index))
+		goto err;
+	return 1;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
@@ -649,23 +944,20 @@ DeeSeq_DefaultRRemoveWithKeyWithError(DeeObject *self, DeeObject *item,
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_DefaultRemoveAllWithTSCRemoveIf(DeeObject *self, DeeObject *item,
                                        size_t start, size_t end, size_t max) {
-	/* TODO:
-	 * >> self.removeif(start, end, x -> {
-	 * >>     static local removeCount = 0;
-	 * >>     if (removeCount >= max)
-	 * >>         return false;
-	 * >>     if (!deemon.equals(item, x))
-	 * >>         return false;
-	 * >>     ++removeCount;
-	 * >>     return true;
-	 * >> });
-	 */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	(void)max;
-	return (size_t)DeeError_NOTIMPLEMENTED();
+	/* >> return self.removeif(x -> deemon.equals(item, x), start, end, max); */
+	size_t result;
+	DREF SeqRemoveWithRemoveIfPredicate *pred;
+	pred = DeeObject_MALLOC(SeqRemoveWithRemoveIfPredicate);
+	if unlikely(!pred)
+		goto err;
+	Dee_Incref(item);
+	pred->srwrip_item = item;
+	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicate_Type);
+	result = (*DeeType_SeqCache_RequireRemoveIf(Dee_TYPE(self)))(self, (DeeObject *)pred, start, end, max);
+	Dee_Decref_likely(pred);
+	return result;
+err:
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -691,21 +983,63 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultRemoveAllWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
-                                                         size_t start, size_t end, size_t max) {
-	/* TODO */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	(void)max;
-	return (size_t)DeeError_NOTIMPLEMENTED();
+DeeSeq_DefaultRemoveAllWithSizeAndGetItemIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
+                                                              size_t start, size_t end, size_t max) {
+	int sequence_size_changes_after_delitem = -1;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t selfsize, result = 0;
+	selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	while (start < end) {
+		DREF DeeObject *elem;
+		elem = (*seq->tp_trygetitem_index)(self, start);
+		if unlikely(!elem)
+			goto err;
+		if (elem != ITER_DONE) {
+			int equal;
+			equal = DeeObject_TryCompareEq(item, elem);
+			Dee_Decref(elem);
+			if unlikely(equal == Dee_COMPARE_ERR)
+				goto err;
+			if (equal == 0) {
+				/* Found one! (delete it) */
+				if unlikely((*seq->tp_delitem_index)(self, start))
+					goto err;
+				++result;
+				if (result >= max)
+					break;
+				if (sequence_size_changes_after_delitem == -1) {
+					size_t new_selfsize = (*seq->tp_size)(self);
+					if unlikely(new_selfsize == (size_t)-1)
+						goto err;
+					sequence_size_changes_after_delitem = selfsize > new_selfsize ? 1 : 0;
+				}
+				if (sequence_size_changes_after_delitem) {
+					--end;
+				} else {
+					++start;
+				}
+				goto check_interrupt;
+			}
+		}
+		++start;
+check_interrupt:
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err:
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_DefaultRemoveAllWithError(DeeObject *self, DeeObject *item,
                                  size_t start, size_t end, size_t max) {
-	return err_seq_not_mutablef(self, "removeall(%r, %" PRFuSIZ ", %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end, max);
+	return err_seq_not_mutablef(self, "removeall(%r, %" PRFuSIZ ", %" PRFuSIZ ", %" PRFuSIZ ")",
+	                            item, start, end, max);
 }
 
 
@@ -716,25 +1050,26 @@ INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
 DeeSeq_DefaultRemoveAllWithKeyWithTSCRemoveIf(DeeObject *self, DeeObject *item,
                                               size_t start, size_t end, size_t max,
                                               DeeObject *key) {
-	/* TODO:
-	 * >> local keyedElem = key(item);
-	 * >> self.removeif(start, end, x -> {
-	 * >>     static local removeCount = 0;
-	 * >>     if (removeCount >= max)
-	 * >>         return false;
-	 * >>     if (!deemon.equals(keyedElem, key(x)))
-	 * >>         return false;
-	 * >>     ++removeCount;
-	 * >>     return true;
-	 * >> });
-	 */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	(void)max;
-	(void)key;
-	return (size_t)DeeError_NOTIMPLEMENTED();
+	/* >> local keyedElem = key(item);
+	 * >> return self.removeif(x -> deemon.equals(keyedElem, key(x)), start, end, max); */
+	size_t result;
+	DREF SeqRemoveWithRemoveIfPredicateWithKey *pred;
+	pred = DeeObject_MALLOC(SeqRemoveWithRemoveIfPredicateWithKey);
+	if unlikely(!pred)
+		goto err;
+	pred->srwripwk_item = DeeObject_Call(key, 1, &item);
+	if unlikely(!pred->srwripwk_item)
+		goto err_pred;
+	Dee_Incref(key);
+	pred->srwripwk_key = key;
+	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicateWithKey_Type);
+	result = (*DeeType_SeqCache_RequireRemoveIf(Dee_TYPE(self)))(self, (DeeObject *)pred, start, end, max);
+	Dee_Decref_likely(pred);
+	return result;
+err_pred:
+	DeeObject_FREE(pred);
+err:
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
@@ -761,17 +1096,65 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
-DeeSeq_DefaultRemoveAllWithKeyWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
-                                                                size_t start, size_t end, size_t max,
-                                                                DeeObject *key) {
-	/* TODO */
-	(void)self;
-	(void)item;
-	(void)start;
-	(void)end;
-	(void)max;
-	(void)key;
-	return (size_t)DeeError_NOTIMPLEMENTED();
+DeeSeq_DefaultRemoveAllWithKeyWithSizeAndGetItemIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
+                                                                     size_t start, size_t end, size_t max,
+                                                                     DeeObject *key) {
+	int sequence_size_changes_after_delitem = -1;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t selfsize, result = 0;
+	selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	if unlikely(start >= end)
+		return 0;
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	do {
+		DREF DeeObject *elem;
+		elem = (*seq->tp_trygetitem_index)(self, start);
+		if unlikely(!elem)
+			goto err_item;
+		if (elem != ITER_DONE) {
+			int equal;
+			equal = DeeObject_TryCompareKeyEq(item, elem, key);
+			Dee_Decref(elem);
+			if unlikely(equal == Dee_COMPARE_ERR)
+				goto err_item;
+			if (equal == 0) {
+				/* Found one! (delete it) */
+				if unlikely((*seq->tp_delitem_index)(self, start))
+					goto err_item;
+				++result;
+				if (result >= max)
+					break;
+				if (sequence_size_changes_after_delitem == -1) {
+					size_t new_selfsize = (*seq->tp_size)(self);
+					if unlikely(new_selfsize == (size_t)-1)
+						goto err_item;
+					sequence_size_changes_after_delitem = selfsize > new_selfsize ? 1 : 0;
+				}
+				if (sequence_size_changes_after_delitem) {
+					--end;
+				} else {
+					++start;
+				}
+				goto check_interrupt;
+			}
+		}
+		++start;
+check_interrupt:
+		if (DeeThread_CheckInterrupt())
+			goto err_item;
+	} while (start < end);
+	Dee_Decref(item);
+	return result;
+err_item:
+	Dee_Decref(item);
+err:
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
@@ -786,33 +1169,257 @@ DeeSeq_DefaultRemoveAllWithKeyWithError(DeeObject *self, DeeObject *item,
 /************************************************************************/
 /* removeif()                                                           */
 /************************************************************************/
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seq_removeif_with_removeall_item_compare_eq(DeeObject *self, DeeObject *should_result) {
+	int result;
+	(void)self;
+	result = DeeObject_Bool(should_result);
+	if unlikely(result < 0)
+		goto err;
+	return result ? 0 : 1;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_removeif_with_removeall_item_eq(DeeObject *self, DeeObject *should_result) {
+	(void)self;
+	return_reference_(should_result);
+}
+
+PRIVATE struct type_cmp seq_removeif_with_removeall_item_cmp = {
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ &seq_removeif_with_removeall_item_compare_eq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ &seq_removeif_with_removeall_item_compare_eq,
+	/* .tp_eq            = */ &seq_removeif_with_removeall_item_eq,
+};
+
+PRIVATE DeeTypeObject SeqRemoveIfWithRemoveAllItem_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqRemoveIfWithRemoveAllItem",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &seq_removeif_with_removeall_item_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+};
+
+PRIVATE DeeObject SeqRemoveIfWithRemoveAllItem_DummyInstance = {
+	OBJECT_HEAD_INIT(&SeqRemoveIfWithRemoveAllItem_Type)
+};
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *sriwrak_should; /* [1..1] Predicate to determine if an element should be removed. */
+} SeqRemoveIfWithRemoveAllKey;
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seq_removeif_with_removeall_key_init(SeqRemoveIfWithRemoveAllKey *__restrict self,
+                                     size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveIfWithRemoveAllKey", &self->sriwrak_should))
+		goto err;
+	Dee_Incref(self->sriwrak_should);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+seq_removeif_with_removeall_key_fini(SeqRemoveIfWithRemoveAllKey *__restrict self) {
+	Dee_Decref(self->sriwrak_should);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+seq_removeif_with_removeall_key_visit(SeqRemoveIfWithRemoveAllKey *__restrict self,
+                                      dvisit_t proc, void *arg) {
+	Dee_Visit(self->sriwrak_should);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seq_removeif_with_removeall_key_printrepr(SeqRemoveIfWithRemoveAllKey *__restrict self,
+                                          Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "rt.SeqRemoveIfWithRemoveAllKey(%r)", self->sriwrak_should);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_removeif_with_removeall_key_call(SeqRemoveIfWithRemoveAllKey *__restrict self,
+                                     size_t argc, DeeObject *const *argv) {
+	DeeObject *item;
+	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveIfWithRemoveAllKey", &item))
+		goto err;
+	if (item == &SeqRemoveIfWithRemoveAllItem_DummyInstance)
+		return_reference_(item);
+	return DeeObject_Call(self->sriwrak_should, argc, argv);
+err:
+	return NULL;
+}
+
+PRIVATE DeeTypeObject SeqRemoveIfWithRemoveAllKey_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqRemoveIfWithRemoveAllKey",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&seq_removeif_with_removeall_key_init,
+				TYPE_FIXED_ALLOCATOR(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *))&seq_removeif_with_removeall_key_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&seq_removeif_with_removeall_key_printrepr,
+	},
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&seq_removeif_with_removeall_key_call,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *, dvisit_t, void *))&seq_removeif_with_removeall_key_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+};
+
+
+
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_DefaultRemoveIfWithTSCRemoveAllWithKey(DeeObject *self, DeeObject *should,
                                               size_t start, size_t end, size_t max) {
-	/* TODO:
-	 * >> class Dummy { operator == (other) -> other; };
-	 * >> self.removeall(start, end, max, Dummy(), key: x -> {
-	 * >>     return x is Dummy ? x : should(x);
-	 * >> });
-	 */
-	(void)self;
-	(void)should;
-	(void)start;
-	(void)end;
-	(void)max;
-	return (size_t)DeeError_NOTIMPLEMENTED();
+	/* >> global final class SeqRemoveIfWithRemoveAllItem { operator == (other) -> other; };
+	 * >> global final SeqRemoveIfWithRemoveAllItem_DummyInstance = SeqRemoveIfWithRemoveAllItem();
+	 * >>
+	 * >> class SeqRemoveIfWithRemoveAllItem { operator == (other) -> other; };
+	 * >> return self.removeall(SeqRemoveIfWithRemoveAllItem_DummyInstance, start, end, max, key: x -> {
+	 * >>     return x === SeqRemoveIfWithRemoveAllItem_DummyInstance ? x : should(x);
+	 * >> }); */
+	size_t result;
+	DREF SeqRemoveIfWithRemoveAllKey *key;
+	key = DeeObject_MALLOC(SeqRemoveIfWithRemoveAllKey);
+	if unlikely(!key)
+		goto err;
+	Dee_Incref(should);
+	key->sriwrak_should = should;
+	DeeObject_Init(key, &SeqRemoveIfWithRemoveAllKey_Type);
+	result = (*DeeType_SeqCache_RequireRemoveAllWithKey(Dee_TYPE(self)))(self, &SeqRemoveIfWithRemoveAllItem_DummyInstance,
+	                                                                     start, end, max, (DeeObject *)key);
+	Dee_Decref_likely(key);
+	return result;
+err:
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultRemoveIfWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *should,
-                                                        size_t start, size_t end, size_t max) {
-	/* TODO */
-	(void)self;
-	(void)should;
-	(void)start;
-	(void)end;
-	(void)max;
-	return (size_t)DeeError_NOTIMPLEMENTED();
+DeeSeq_DefaultRemoveIfWithSizeAndGetItemIndexAndDelItemIndex(DeeObject *self, DeeObject *should,
+                                                             size_t start, size_t end, size_t max) {
+	int sequence_size_changes_after_delitem = -1;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t selfsize, result = 0;
+	selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	while (start < end) {
+		DREF DeeObject *elem;
+		elem = (*seq->tp_trygetitem_index)(self, start);
+		if unlikely(!elem)
+			goto err;
+		if (elem != ITER_DONE) {
+			int should_remove;
+			DREF DeeObject *pred_result;
+			pred_result = DeeObject_Call(should, 1, &elem);
+			Dee_Decref(elem);
+			if unlikely(!pred_result)
+				goto err;
+			should_remove = DeeObject_BoolInherited(pred_result);
+			if unlikely(should_remove < 0)
+				goto err;
+			if (should_remove) {
+				/* Delete this one */
+				if unlikely((*seq->tp_delitem_index)(self, start))
+					goto err;
+				++result;
+				if (result >= max)
+					break;
+				if (sequence_size_changes_after_delitem == -1) {
+					size_t new_selfsize = (*seq->tp_size)(self);
+					if unlikely(new_selfsize == (size_t)-1)
+						goto err;
+					sequence_size_changes_after_delitem = selfsize > new_selfsize ? 1 : 0;
+				}
+				if (sequence_size_changes_after_delitem) {
+					--end;
+				} else {
+					++start;
+				}
+				goto check_interrupt;
+			}
+		}
+		++start;
+check_interrupt:
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err:
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -926,15 +1533,31 @@ err:
 	return -1;
 }
 
+struct default_fill_with_enumerate_index_and_setitem_index_data {
+	DeeObject *dfweiasiid_seq;    /* [1..1] Sequence whose items to set. */
+	DeeObject *dfweiasiid_filler; /* [1..1] Value to assign to indices. */
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *dfweiasiid_setitem_index)(DeeObject *self, size_t index, DeeObject *value);
+};
+
+PRIVATE WUNUSED Dee_ssize_t DCALL
+default_fill_with_enumerate_index_and_setitem_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	struct default_fill_with_enumerate_index_and_setitem_index_data *data;
+	(void)value;
+	data = (struct default_fill_with_enumerate_index_and_setitem_index_data *)arg;
+	return (*data->dfweiasiid_setitem_index)(data->dfweiasiid_seq, index, data->dfweiasiid_filler);
+}
+
+
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 DeeSeq_DefaultFillWithEnumerateIndexAndSetItemIndex(DeeObject *self, size_t start,
                                                     size_t end, DeeObject *filler) {
-	/* TODO */
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)filler;
-	return DeeError_NOTIMPLEMENTED();
+	struct default_fill_with_enumerate_index_and_setitem_index_data data;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	data.dfweiasiid_seq    = self;
+	data.dfweiasiid_filler = filler;
+	data.dfweiasiid_setitem_index = seq->tp_setitem_index;
+	return (int)(*seq->tp_enumerate_index)(self, &default_fill_with_enumerate_index_and_setitem_index_cb,
+	                                       &data, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
