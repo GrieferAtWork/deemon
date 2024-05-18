@@ -337,7 +337,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 LOCAL_DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll(DeeObject *self, DeeObject *item,
                                                    size_t start, size_t end, size_t max) {
-	int temp;
+	int error;
 	size_t result_count;
 	DREF DeeObject *result;
 	result = LOCAL_DeeObject_CallAttrf(self, tsc_removeall_data, &str_removeall,
@@ -345,9 +345,9 @@ LOCAL_DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll(DeeObject *self, DeeObject *i
 	                                   item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSize(result, &result_count);
+	error = DeeObject_AsSize(result, &result_count);
 	Dee_Decref(result);
-	if unlikely(!temp)
+	if unlikely(error)
 		goto err;
 	if unlikely(result_count == (size_t)-1)
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
@@ -360,7 +360,7 @@ INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
 LOCAL_DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll(DeeObject *self, DeeObject *item,
                                                           size_t start, size_t end,
                                                           size_t max, DeeObject *key) {
-	int temp;
+	int error;
 	size_t result_count;
 	DREF DeeObject *result;
 	result = LOCAL_DeeObject_CallAttrf(self, tsc_removeall_data, &str_removeall,
@@ -368,9 +368,9 @@ LOCAL_DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll(DeeObject *self, DeeOb
 	                                   item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSize(result, &result_count);
+	error = DeeObject_AsSize(result, &result_count);
 	Dee_Decref(result);
-	if unlikely(!temp)
+	if unlikely(error)
 		goto err;
 	if unlikely(result_count == (size_t)-1)
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
@@ -382,7 +382,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 LOCAL_DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf(DeeObject *self, DeeObject *should,
                                                  size_t start, size_t end, size_t max) {
-	int temp;
+	int error;
 	size_t result_count;
 	DREF DeeObject *result;
 	result = LOCAL_DeeObject_CallAttrf(self, tsc_removeif_data, &str_removeif,
@@ -390,9 +390,9 @@ LOCAL_DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf(DeeObject *self, DeeObject *sho
 	                                   should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	temp = DeeObject_AsSize(result, &result_count);
+	error = DeeObject_AsSize(result, &result_count);
 	Dee_Decref(result);
-	if unlikely(!temp)
+	if unlikely(error)
 		goto err;
 	if unlikely(result_count == (size_t)-1)
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
