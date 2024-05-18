@@ -46,7 +46,9 @@ make -j $(nproc)
 
 With visual studio  
 
-- Open `/.vs/deemon.sln`
+- Open `/.vs/deemon-{PlatformToolset}.sln`
+	- Select whichever `PlatformToolset` you have installed
+	- Deemon *should* be able to compile for any toolset, but sadly there's no way to just tell VS to "use whatever you have installed"
 - Select your preferred build configuration and architecture
 - `CTRL+SHIFT+B`
 
@@ -87,7 +89,7 @@ With visual studio
 	- Mutable/Immutable sequences (`List` / `Tuple`)
 	- Mutable/Immutable mappings (`Dict` / `Dict.Frozen`)
 	- Mutable/Immutable sets (`HashSet` / `HashSet.Frozen`)
-	- Everything inherits from a common `Sequence` class providing a full-featured sequence API
+	- Everything inherits from a common `Sequence` class providing a fully-featured sequence API
 - Everything is reference-counted (automatic cleanup)
 - Modules are compiled on first use and automatically re-compiled if modified
 - Deemon scripts are compiled and executed as bytecode for better performance
