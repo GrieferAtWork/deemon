@@ -178,6 +178,11 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_tpcontains(DeeObject *self, DeeObject *item) {
+	return DeeSeq_DefaultContainsWithForeachDefault(self, item);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_getitem(DeeObject *self, DeeObject *index) {
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
@@ -1965,7 +1970,7 @@ err:
 PRIVATE struct type_seq generic_seq_seq = {
 	/* .tp_iter     = */ &seq_iterself,
 	/* .tp_sizeob   = */ &seq_size,
-	/* .tp_contains = */ NULL,
+	/* .tp_contains = */ &seq_tpcontains,
 	/* .tp_getitem  = */ &seq_getitem,
 	/* .tp_delitem  = */ &seq_delitem,
 	/* .tp_setitem  = */ &seq_setitem,
