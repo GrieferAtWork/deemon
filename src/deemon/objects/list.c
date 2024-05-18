@@ -2515,7 +2515,7 @@ list_removeif(List *me, size_t argc,
 	size_t result, start = 0, end = (size_t)-1, max = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__should_start_end_max,
 	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ ":removeif",
-	                    &should, &start, &end))
+	                    &should, &start, &end, &max))
 		goto err;
 	result = DeeList_RemoveIf((DeeObject *)me, should, start, end, max);
 	if unlikely(result == (size_t)-1)
