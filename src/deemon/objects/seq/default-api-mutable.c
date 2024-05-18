@@ -2272,7 +2272,7 @@ generic_seq_removeif(DeeObject *self, size_t argc, DeeObject *const *argv, DeeOb
 	DeeObject *should;
 	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__should_start_end_max,
-	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
+	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ ":removeif",
 	                    &should, &start, &end, &max))
 		goto err;
 	result = new_DeeSeq_RemoveIf(self, should, start, end, max);
