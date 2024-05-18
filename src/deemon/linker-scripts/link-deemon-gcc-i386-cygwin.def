@@ -468,8 +468,8 @@ EXPORTS
 	_DeeList_Pop@8=DeeList_Pop@8
 	_DeeList_RemoveIf@20=DeeList_RemoveIf@20
 	_DeeList_Resize@12=DeeList_Resize@12
-	_DeeList_Reverse@4=DeeList_Reverse@4
-	_DeeList_Sort@8=DeeList_Sort@8
+	_DeeList_Reverse@12=DeeList_Reverse@12
+	_DeeList_Sort@16=DeeList_Sort@16
 	_DeeMapFile_Fini@4=DeeMapFile_Fini@4
 	_DeeMapFile_InitFile@32=DeeMapFile_InitFile@32
 	_DeeMapFile_InitSysFd@32=DeeMapFile_InitSysFd@32

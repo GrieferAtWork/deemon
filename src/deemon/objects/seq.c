@@ -4041,12 +4041,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_reversed(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	(void)kw;
-	if (DeeArg_Unpack(argc, argv, ":reversed"))
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|" UNPuSIZ UNPuSIZ ":reverse",
+	                    &start, &end))
 		goto err;
 	result = DeeList_FromSequence(self);
 	if likely(result)
-		DeeList_Reverse(result);
+		DeeList_Reverse(result, start, end);
 	return result;
 err:
 	return NULL;
@@ -4064,7 +4066,7 @@ seq_sorted(DeeObject *self, size_t argc,
 	result = DeeList_FromSequence(self);
 	if unlikely(!result)
 		goto err;
-	if unlikely(DeeList_Sort(result, key))
+	if unlikely(DeeList_Sort(result, 0, (size_t)-1, key))
 		Dee_Clear(result);
 	return result;
 err:
@@ -4408,12 +4410,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_reverse(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *reversed;
 	(void)kw;
 	if (DeeArg_Unpack(argc, argv, ":reverse"))
 		goto err;
-	if (DeeSeq_Reverse(self))
+	reversed = DeeList_FromSequence(self);
+	if unlikely(!reversed)
 		goto err;
+	DeeList_Reverse(reversed, 0, (size_t)-1);
+	if unlikely(DeeObject_Assign(self, reversed))
+		goto err_reversed;
+	Dee_Decref(reversed);
 	return_none;
+err_reversed:
+	Dee_Decref(reversed);
 err:
 	return NULL;
 }
@@ -4421,14 +4431,21 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_sort(DeeObject *self, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *key = NULL;
+	DREF DeeObject *sorted;
+	DeeObject *key = Dee_None;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sort", &key))
 		goto err;
-	if (DeeNone_Check(key))
-		key = NULL;
-	if (DeeSeq_Sort(self, key))
+	sorted = DeeList_FromSequence(self);
+	if unlikely(!sorted)
 		goto err;
+	if unlikely(DeeList_Sort(sorted, 0, (size_t)-1, key))
+		goto err_sorted;
+	if unlikely(DeeObject_Assign(self, sorted))
+		goto err_sorted;
+	Dee_Decref(sorted);
 	return_none;
+err_sorted:
+	Dee_Decref(sorted);
 err:
 	return NULL;
 }

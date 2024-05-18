@@ -79,7 +79,7 @@ local codecs = List {
 	("backslash-escape\0", "CODEC_C_ESCAPE"),
 	("c-escape\0",         "CODEC_C_ESCAPE"),
 };
-codecs.sort([](x) -> x[0]);
+codecs.sort(key: x -> x[0]);
 
 local inset = "\t";
 

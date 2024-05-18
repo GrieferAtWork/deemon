@@ -99,6 +99,7 @@ DDATDEF DeeObject        DeeTuple_Empty;
 #define Dee_return_empty_tuple  Dee_return_reference_(Dee_EmptyTuple)
 
 DDATDEF DeeTypeObject DeeTuple_Type;
+DDATDEF DeeTypeObject DeeNullableTuple_Type; /* Same as "DeeTuple_Type", but items are allowed to be NULL (meaning unbound) */
 #define DeeTuple_Check(x)       DeeObject_InstanceOfExact(x, &DeeTuple_Type) /* `Tuple' is final */
 #define DeeTuple_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeTuple_Type)
 
@@ -129,7 +130,7 @@ DeeTuple_FreeUninitialized(DREF DeeTupleObject *__restrict self);
 
 /* Create a new tuple object from a sequence or iterator. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromIterator(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_FromIterator(DeeObject *__restrict self); /* TODO: Deprecated */
 
 /* Return a new tuple object containing the types of each object of the given tuple. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_Types(DeeObject *__restrict self);

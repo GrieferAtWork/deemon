@@ -756,7 +756,7 @@ again:
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 4)) size_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeList_RemoveIf(DeeObject *self, DeeObject *should,
                  size_t start, size_t end, size_t max) {
 	List *me = (List *)self;
@@ -2874,12 +2874,16 @@ err:
 
 /* Reverse the order of the elements of `self' */
 PUBLIC NONNULL((1)) void DCALL
-DeeList_Reverse(DeeObject *__restrict self) {
+DeeList_Reverse(DeeObject *__restrict self, size_t start, size_t end) {
 	List *me = (List *)self;
 	DeeObject **lo, **hi;
 	DeeList_LockWrite(me);
-	lo = DeeList_ELEM(me);
-	hi = lo + DeeList_SIZE(me);
+	if (end > me->l_list.ol_elemc)
+		end = me->l_list.ol_elemc;
+	if unlikely(start > end)
+		start = end;
+	lo = DeeList_ELEM(me) + start;
+	hi = DeeList_ELEM(me) + end;
 	while (lo < hi) {
 		DeeObject *temp;
 		temp  = *lo;
@@ -2890,10 +2894,13 @@ DeeList_Reverse(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_reverse(List *me, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":reverse"))
+list_reverse(List *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|" UNPuSIZ UNPuSIZ ":reverse",
+	                    &start, &end))
 		goto err;
-	DeeList_Reverse((DeeObject *)me);
+	DeeList_Reverse((DeeObject *)me, start, end);
 	return_none;
 err:
 	return NULL;
@@ -2901,31 +2908,50 @@ err:
 
 
 
-/* Sort the given list ascendingly, or according to `key' */
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeList_Sort(DeeObject *self, DeeObject *key) {
+/* Sort the given list ascendingly, or according to `key'
+ * To use default sorting, pass `Dee_None' for `key' */
+PUBLIC WUNUSED NONNULL((1, 4)) int DCALL
+DeeList_Sort(DeeObject *self, size_t start, size_t end, DeeObject *key) {
 	List *me = (List *)self;
 	DeeObject **oldv, **newv;
-	size_t oldc, objc;
-	objc = DeeList_SIZE_ATOMIC(me);
+	size_t oldc, objc, list_objc;
+	size_t used_start = start;
+	size_t used_end = end;
+	list_objc = DeeList_SIZE_ATOMIC(me);
+	if (used_end > list_objc)
+		used_end = list_objc;
+	if unlikely(used_start > used_end)
+		used_start = used_end;
+	objc = used_end - used_start;
 	oldv = (DeeObject **)Dee_Mallocc(objc, sizeof(DeeObject *));
 	if unlikely(!oldv)
 		goto err;
 again:
 	DeeList_LockRead(me);
-	if unlikely(me->l_list.ol_elemc > objc) {
-		DeeObject **new_objv;
-		objc = me->l_list.ol_elemc;
-		DeeList_LockEndRead(me);
-		new_objv = (DeeObject **)Dee_Reallocc(oldv, objc, sizeof(DeeObject *));
-		if unlikely(!new_objv)
-			goto err_oldv;
-		oldv = new_objv;
-		goto again;
+	if unlikely(me->l_list.ol_elemc != list_objc) {
+		size_t new_used_start = start;
+		size_t new_used_end   = end;
+		list_objc = me->l_list.ol_elemc;
+		if (new_used_end > list_objc)
+			new_used_end = list_objc;
+		if unlikely(new_used_start > new_used_end)
+			new_used_start = new_used_end;
+		if (new_used_start != used_start || new_used_end != used_end) {
+			DeeObject **new_objv;
+			DeeList_LockEndRead(me);
+			new_objv = (DeeObject **)Dee_Reallocc(oldv, list_objc, sizeof(DeeObject *));
+			if unlikely(!new_objv)
+				goto err_oldv;
+			oldv       = new_objv;
+			used_start = new_used_start;
+			used_end   = new_used_end;
+			objc       = used_end - used_start;
+			goto again;
+		}
 	}
 
 	/* Read all the old elements from the list. */
-	Dee_Movrefv(oldv, me->l_list.ol_elemv, objc);
+	Dee_Movrefv(oldv, me->l_list.ol_elemv + used_start, objc);
 	DeeList_LockEndRead(me);
 
 	/* Allocate the new list */
@@ -2933,18 +2959,38 @@ again:
 	if unlikely(!newv)
 		goto err_oldv_elem;
 	/* Do the actual sorting. */
-	if unlikely(DeeSeq_MergeSort(newv, oldv, objc, key))
+	if unlikely(!DeeNone_Check(key)
+	            ? DeeSeq_SortVectorWithKey(objc, newv, oldv, key)
+	            : DeeSeq_SortVector(objc, newv, oldv))
 		goto err_newv;
-	Dee_Free(oldv);
-	DeeList_LockWrite(me);
-	oldv = me->l_list.ol_elemv;
-	oldc = me->l_list.ol_elemc;
-	me->l_list.ol_elemc = objc;
-	me->l_list.ol_elemv = newv;
-	_DeeList_SetAlloc(me, objc);
-	DeeList_LockEndWrite(me);
-	Dee_Decrefv(oldv, oldc);
-	Dee_Free(oldv);
+	if likely(objc == list_objc) {
+		/* Likely case: sort the whole list (replace the entire vector) */
+		Dee_Free(oldv);
+		DeeList_LockWrite(me);
+		oldv = me->l_list.ol_elemv;
+		oldc = me->l_list.ol_elemc;
+		me->l_list.ol_elemc = objc;
+		me->l_list.ol_elemv = newv;
+		_DeeList_SetAlloc(me, objc);
+		DeeList_LockEndWrite(me);
+		Dee_Decrefv(oldv, oldc);
+		Dee_Free(oldv);
+	} else {
+		/* Special case: only a sub-range of the list was sorted; must override that sub-range. */
+		DeeList_LockWrite(me);
+		if unlikely(me->l_list.ol_elemc < (used_start + objc)) {
+			DeeList_LockEndWrite(me);
+			Dee_Decrefv(newv, objc);
+			Dee_Free(newv);
+			goto again;
+		}
+		memcpyc(oldv, me->l_list.ol_elemv + used_start, objc, sizeof(DREF DeeObject *));
+		memcpyc(me->l_list.ol_elemv + used_start, newv, objc, sizeof(DREF DeeObject *));
+		DeeList_LockEndWrite(me);
+		Dee_Decrefv(oldv, objc);
+		Dee_Free(oldv);
+		Dee_Free(newv);
+	}
 	return 0;
 err_newv:
 	Dee_Free(newv);
@@ -2956,44 +3002,63 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeList_Sorted(DeeObject *self, DeeObject *key) {
-	List *me = (List *)self;
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeTupleObject *DCALL
+DeeList_Sorted(List *me, size_t start, size_t end, DeeObject *key) {
+	DREF DeeTupleObject *result;
 	DeeObject **oldv;
-	size_t objc;
-	DeeTupleObject *result;
-	objc = DeeList_SIZE_ATOMIC(me);
+	size_t objc, list_objc;
+	size_t used_start = start;
+	size_t used_end = end;
+	list_objc = DeeList_SIZE_ATOMIC(me);
+	if (used_end > list_objc)
+		used_end = list_objc;
+	if unlikely(used_start > used_end)
+		used_start = used_end;
+	objc = used_end - used_start;
 	oldv = (DeeObject **)Dee_Mallocc(objc, sizeof(DeeObject *));
 	if unlikely(!oldv)
 		goto err;
 again:
 	DeeList_LockRead(me);
-	if unlikely(DeeList_SIZE(me) > objc) {
-		DeeObject **new_objv;
-		objc = DeeList_SIZE(me);
-		DeeList_LockEndRead(me);
-		new_objv = (DeeObject **)Dee_Reallocc(oldv, objc, sizeof(DeeObject *));
-		if unlikely(!new_objv)
-			goto err_oldv;
-		oldv = new_objv;
-		goto again;
+	if unlikely(me->l_list.ol_elemc != list_objc) {
+		size_t new_used_start = start;
+		size_t new_used_end   = end;
+		list_objc = me->l_list.ol_elemc;
+		if (new_used_end > list_objc)
+			new_used_end = list_objc;
+		if unlikely(new_used_start > new_used_end)
+			new_used_start = new_used_end;
+		if (new_used_start != used_start || new_used_end != used_end) {
+			DeeObject **new_objv;
+			DeeList_LockEndRead(me);
+			new_objv = (DeeObject **)Dee_Reallocc(oldv, list_objc, sizeof(DeeObject *));
+			if unlikely(!new_objv)
+				goto err_oldv;
+			oldv       = new_objv;
+			used_start = new_used_start;
+			used_end   = new_used_end;
+			objc       = used_end - used_start;
+			goto again;
+		}
 	}
 
 	/* Read all the old elements from the list. */
-	Dee_Movrefv(oldv, DeeList_ELEM(me), objc);
+	Dee_Movrefv(oldv, me->l_list.ol_elemv + used_start, objc);
 	DeeList_LockEndRead(me);
 
-	/* Allocate the new list */
+	/* Allocate the new tuple */
 	result = DeeTuple_NewUninitialized(objc);
 	if unlikely(!result)
 		goto err_oldv_elem;
 
 	/* Do the actual sorting. */
-	if (DeeSeq_MergeSort(DeeTuple_ELEM(result), oldv, objc, key))
-		goto err_result;
+	if unlikely(!DeeNone_Check(key)
+	            ? DeeSeq_SortVectorWithKey(objc, result->t_elem, oldv, key)
+	            : DeeSeq_SortVector(objc, result->t_elem, oldv))
+		goto err_oldv_elem_result;
 	Dee_Free(oldv);
-	return (DeeObject *)result;
-err_result:
+	return result;
+err_oldv_elem_result:
 	DeeTuple_FreeUninitialized(result);
 err_oldv_elem:
 	Dee_Decrefv(oldv, objc);
@@ -3007,27 +3072,29 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_sort(List *me, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *key = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sort", &key))
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *key = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:sort",
+	                    &start, &end, &key))
 		goto err;
-	if (DeeNone_Check(key))
-		key = NULL;
-	if (DeeList_Sort((DeeObject *)me, key))
+	if unlikely(DeeList_Sort((DeeObject *)me, start, end, key))
 		goto err;
 	return_none;
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 list_sorted(List *me, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *key = NULL;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sorted", &key))
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *key = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:sorted",
+	                    &start, &end, &key))
 		goto err;
-	if (DeeNone_Check(key))
-		key = NULL;
-	return DeeList_Sorted((DeeObject *)me, key);
+	return DeeList_Sorted(me, start, end, key);
 err:
 	return NULL;
 }
@@ -3139,16 +3206,14 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	              "Same as ${this.pop(-1)}"),
 
 	/* List ordering functions. */
-	TYPE_METHOD_F("reverse", &list_reverse, METHOD_FNOREFESCAPE,
-	              "()\n"
-	              "Reverse the order of all the elements of @this List"),
-	TYPE_KWMETHOD_F("sort", &list_sort, METHOD_FNOREFESCAPE,
-	                "()\n"
-	                "(key:?DCallable)\n"
+	TYPE_KWMETHOD_F(STR_reverse, &list_reverse, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)\n"
+	                "Reverse the order of all the elements of @this List"),
+	TYPE_KWMETHOD_F(STR_sort, &list_sort, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1,key:?DCallable=!N)\n"
 	                "Sort the elements of @this List in ascending order, or in accordance to @key"),
-	TYPE_KWMETHOD_F("sorted", &list_sorted, METHOD_FNOREFESCAPE,
-	                "->?S?O\n"
-	                "(key:?DCallable)->?S?O\n"
+	TYPE_KWMETHOD_F(STR_sorted, &list_sorted, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1,key:?DCallable=!N)->?S?O\n"
 	                "Return a sequence that contains all elements from @this sequence, "
 	                /**/ "but sorted in ascending order, or in accordance to @key\n"
 	                "The type of sequence returned is implementation-defined"),

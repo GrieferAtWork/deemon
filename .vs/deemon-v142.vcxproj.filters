@@ -774,6 +774,9 @@
 		<ClInclude Include="..\src\deemon\objects\seq\smap.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\sort-impl.c.inl">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\sort.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>

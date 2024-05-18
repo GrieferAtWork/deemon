@@ -2184,7 +2184,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ NULL, NULL, MODSYM_FNORMAL },
 	{ NULL, (DeeObject *)&librt_argv_set, MODSYM_FNORMAL },
 
-
 	/* Internal types used to drive sequence proxies */
 	{ "SeqCombinations", (DeeObject *)&librt_get_SeqCombinations, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqCombinations_Type */
 	{ "SeqCombinationsIterator", (DeeObject *)&librt_get_SeqCombinationsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqCombinationsIterator_Type */
@@ -2234,7 +2233,31 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqEachCallAttrIterator", (DeeObject *)&librt_get_SeqEachCallAttrIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqEachCallAttrIterator_Type */
 	{ "SeqEachCallAttrKw", (DeeObject *)&librt_get_SeqEachCallAttrKw, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqEachCallAttrKw_Type */
 	{ "SeqEachCallAttrKwIterator", (DeeObject *)&librt_get_SeqEachCallAttrKwIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* SeqEachCallAttrKwIterator_Type */
-	/* TODO: SeqRemoveIfAllWrapper_Type */
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	/* TODO: IterWithGetItemIndex                       = DefaultIterator_WithGetItemIndex_Type */
+	/* TODO: IterWithSizeAndGetItemIndex                = DefaultIterator_WithSizeAndGetItemIndex_Type */
+	/* TODO: IterWithSizeAndGetItemIndexFast            = DefaultIterator_WithSizeAndGetItemIndexFast_Type */
+	/* TODO: IterWithGetItem                            = DefaultIterator_WithGetItem_Type */
+	/* TODO: IterWithTGetItem                           = DefaultIterator_WithTGetItem_Type */
+	/* TODO: IterWithSizeAndGetItem                     = DefaultIterator_WithSizeAndGetItem_Type */
+	/* TODO: IterWithTSizeAndGetItem                    = DefaultIterator_WithTSizeAndGetItem_Type */
+	/* TODO: IterWithNextAndLimit                       = DefaultIterator_WithNextAndLimit_Type */
+	/* TODO: SeqWithSizeAndGetItemIndex                 = DefaultSequence_WithSizeAndGetItemIndex_Type */
+	/* TODO: SeqWithSizeAndGetItemIndexFast             = DefaultSequence_WithSizeAndGetItemIndexFast_Type */
+	/* TODO: SeqWithSizeAndGetItem                      = DefaultSequence_WithSizeAndGetItem_Type */
+	/* TODO: SeqWithTSizeAndGetItem                     = DefaultSequence_WithTSizeAndGetItem_Type */
+	/* TODO: SeqWithIter                                = DefaultSequence_WithIter_Type */
+	/* TODO: SeqWithTIter                               = DefaultSequence_WithTIter_Type */
+	/* TODO: SeqReversedWithGetItemIndex                = DefaultReversed_WithGetItemIndex_Type */
+	/* TODO: SeqReversedWithGetItemIndexFast            = DefaultReversed_WithGetItemIndexFast_Type */
+	/* TODO: SeqReversedWithTryGetItemIndex             = DefaultReversed_WithTryGetItemIndex_Type */
+	/* TODO: SeqRemoveWithRemoveIfPredicate             = SeqRemoveWithRemoveIfPredicate_Type */
+	/* TODO: SeqRemoveWithRemoveIfPredicateWithKey      = SeqRemoveWithRemoveIfPredicateWithKey_Type */
+	/* TODO: SeqRemoveIfWithRemoveAllItem               = SeqRemoveIfWithRemoveAllItem_Type */
+	/* TODO: SeqRemoveIfWithRemoveAllItem_DummyInstance = SeqRemoveIfWithRemoveAllItem_DummyInstance */
+	/* TODO: SeqRemoveIfWithRemoveAllKey                = SeqRemoveIfWithRemoveAllKey_Type */
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+	{ "NullableTuple", (DeeObject *)&DeeNullableTuple_Type, MODSYM_FREADONLY },
 
 	/* Internal types used to drive set proxies */
 	{ "SetUnion", (DeeObject *)&librt_get_SetUnion, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SetUnion_Type */
@@ -2588,31 +2611,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FrameStack", (DeeObject *)&librt_get_FrameStack, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* FrameStack_Type */
 	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* FrameSymbolsByName_Type */
 	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* FrameSymbolsByName_Type */
-
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-	/* TODO: IterWithGetItemIndex                       = DefaultIterator_WithGetItemIndex_Type */
-	/* TODO: IterWithSizeAndGetItemIndex                = DefaultIterator_WithSizeAndGetItemIndex_Type */
-	/* TODO: IterWithSizeAndGetItemIndexFast            = DefaultIterator_WithSizeAndGetItemIndexFast_Type */
-	/* TODO: IterWithGetItem                            = DefaultIterator_WithGetItem_Type */
-	/* TODO: IterWithTGetItem                           = DefaultIterator_WithTGetItem_Type */
-	/* TODO: IterWithSizeAndGetItem                     = DefaultIterator_WithSizeAndGetItem_Type */
-	/* TODO: IterWithTSizeAndGetItem                    = DefaultIterator_WithTSizeAndGetItem_Type */
-	/* TODO: IterWithNextAndLimit                       = DefaultIterator_WithNextAndLimit_Type */
-	/* TODO: SeqWithSizeAndGetItemIndex                 = DefaultSequence_WithSizeAndGetItemIndex_Type */
-	/* TODO: SeqWithSizeAndGetItemIndexFast             = DefaultSequence_WithSizeAndGetItemIndexFast_Type */
-	/* TODO: SeqWithSizeAndGetItem                      = DefaultSequence_WithSizeAndGetItem_Type */
-	/* TODO: SeqWithTSizeAndGetItem                     = DefaultSequence_WithTSizeAndGetItem_Type */
-	/* TODO: SeqWithIter                                = DefaultSequence_WithIter_Type */
-	/* TODO: SeqWithTIter                               = DefaultSequence_WithTIter_Type */
-	/* TODO: SeqReversedWithGetItemIndex                = DefaultReversed_WithGetItemIndex_Type */
-	/* TODO: SeqReversedWithGetItemIndexFast            = DefaultReversed_WithGetItemIndexFast_Type */
-	/* TODO: SeqReversedWithTryGetItemIndex             = DefaultReversed_WithTryGetItemIndex_Type */
-	/* TODO: SeqRemoveWithRemoveIfPredicate             = SeqRemoveWithRemoveIfPredicate_Type */
-	/* TODO: SeqRemoveWithRemoveIfPredicateWithKey      = SeqRemoveWithRemoveIfPredicateWithKey_Type */
-	/* TODO: SeqRemoveIfWithRemoveAllItem               = SeqRemoveIfWithRemoveAllItem_Type */
-	/* TODO: SeqRemoveIfWithRemoveAllItem_DummyInstance = SeqRemoveIfWithRemoveAllItem_DummyInstance */
-	/* TODO: SeqRemoveIfWithRemoveAllKey                = SeqRemoveIfWithRemoveAllKey_Type */
-#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 	{ NULL }
 };

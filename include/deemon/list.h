@@ -141,13 +141,14 @@ DeeList_Pop(DeeObject *__restrict self, Dee_ssize_t index);
 DFUNDEF NONNULL((1)) bool DCALL
 DeeList_Clear(DeeObject *__restrict self);
 
-/* Sort the given list ascendingly, or according to `key' */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL
-DeeList_Sort(DeeObject *self, DeeObject *key);
+/* Sort the given list ascendingly, or according to `key'
+ * To use default sorting, pass `Dee_None' for `key' */
+DFUNDEF WUNUSED NONNULL((1, 4)) int DCALL
+DeeList_Sort(DeeObject *self, size_t start, size_t end, DeeObject *key);
 
 /* Reverse the order of the elements of `self' */
 DFUNDEF NONNULL((1)) void DCALL
-DeeList_Reverse(DeeObject *__restrict self);
+DeeList_Reverse(DeeObject *__restrict self, size_t start, size_t end);
 
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.

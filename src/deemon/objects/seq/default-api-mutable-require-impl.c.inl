@@ -274,7 +274,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultReversedWithCallReversedDataFunction
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultReversedWithCallReversedDataMethod
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultReversedWithCallReversedDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultReversedWithProxyCopyDefault
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultReversedWithCopyForeachDefault
 #elif defined(DEFINE_DeeType_SeqCache_RequireSort)
 #define LOCAL_CANONICAL_NAME                           sort
 #define LOCAL_generic_seq_foo                          generic_seq_sort
@@ -304,7 +304,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultSortedWithCallSortedDataFunction
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultSortedWithCallSortedDataMethod
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultSortedWithCallSortedDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithEnumerateDefaultAndCopy
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithCopyForeachDefault
 #elif defined(DEFINE_DeeType_SeqCache_RequireSortedWithKey)
 #define LOCAL_CANONICAL_NAME                           sorted
 #define LOCAL_generic_seq_foo                          generic_seq_sorted
@@ -314,7 +314,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultSortedWithKeyWithCallSortedDataMethod
 #define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultSortedWithKeyWithCallSortedDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithKeyWithEnumerateDefaultAndCopy
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault
 #else /* DEFINE_DeeType_SeqCache_Require... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeType_SeqCache_Require... */
@@ -656,7 +656,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		return &DeeSeq_DefaultReversedWithProxySizeAndGetItemIndex;
 	}
 	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
-		return &DeeSeq_DefaultReversedWithProxyCopyDefault; /* non-Default would also be OK */
+		return &DeeSeq_DefaultReversedWithCopyForeachDefault; /* non-Default would also be OK */
 #elif defined(DEFINE_DeeType_SeqCache_RequireSort)
 	if (DeeType_HasPrivateOperator(self, OPERATOR_SETRANGE))
 		return &DeeSeq_DefaultSortWithTSCSortedAndSetRangeIndex;
@@ -674,11 +674,25 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 	    DeeType_HasOperator(orig_type, OPERATOR_SIZE))
 		return &DeeSeq_DefaultSortWithKeyWithSizeAndGetItemIndexAndSetItemIndex;
 #elif defined(DEFINE_DeeType_SeqCache_RequireSorted)
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ &&
+	    DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) &&
+	    DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
+		if (orig_type->tp_seq->tp_getitem_index_fast)
+			return &DeeSeq_DefaultSortedWithCopySizeAndGetItemIndexFast;
+		return &DeeSeq_DefaultSortedWithCopySizeAndTryGetItemIndex;
+	}
 	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
-		return &DeeSeq_DefaultSortedWithEnumerateDefaultAndCopy; /* non-Default would also be OK */
+		return &DeeSeq_DefaultSortedWithCopyForeachDefault; /* non-Default would also be OK */
 #elif defined(DEFINE_DeeType_SeqCache_RequireSortedWithKey)
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ &&
+	    DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) &&
+	    DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
+		if (orig_type->tp_seq->tp_getitem_index_fast)
+			return &DeeSeq_DefaultSortedWithKeyWithCopySizeAndGetItemIndexFast;
+		return &DeeSeq_DefaultSortedWithKeyWithCopySizeAndTryGetItemIndex;
+	}
 	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
-		return &DeeSeq_DefaultSortedWithKeyWithEnumerateDefaultAndCopy; /* non-Default would also be OK */
+		return &DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault; /* non-Default would also be OK */
 #endif /* ... */
 	return NULL;
 }

@@ -45,6 +45,7 @@
 /**/
 #include "default-reversed.h"
 #include "repeat.h"
+#include "sort.h"
 
 /**/
 #include "../../runtime/kwlist.h"
@@ -1277,7 +1278,7 @@ seq_removeif_with_removeall_key_printrepr(SeqRemoveIfWithRemoveAllKey *__restric
 	return DeeFormat_Printf(printer, arg, "rt.SeqRemoveIfWithRemoveAllKey(%r)", self->sriwrak_should);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_removeif_with_removeall_key_call(SeqRemoveIfWithRemoveAllKey *__restrict self,
                                      size_t argc, DeeObject *const *argv) {
 	DeeObject *item;
@@ -1685,7 +1686,7 @@ DeeSeq_DefaultReversedWithProxySizeAndGetItemIndexFast(DeeObject *self, size_t s
 		goto err;
 	if (end > selfsize)
 		end = selfsize;
-	if (start > end)
+	if unlikely(start > end)
 		start = end;
 	result = DeeObject_MALLOC(DefaultReversed_WithGetItemIndex);
 	if unlikely(!result)
@@ -1710,7 +1711,7 @@ DeeSeq_DefaultReversedWithProxySizeAndGetItemIndex(DeeObject *self, size_t start
 		goto err;
 	if (end > selfsize)
 		end = selfsize;
-	if (start > end)
+	if unlikely(start > end)
 		start = end;
 	result = DeeObject_MALLOC(DefaultReversed_WithGetItemIndex);
 	if unlikely(!result)
@@ -1735,7 +1736,7 @@ DeeSeq_DefaultReversedWithProxySizeAndTryGetItemIndex(DeeObject *self, size_t st
 		goto err;
 	if (end > selfsize)
 		end = selfsize;
-	if (start > end)
+	if unlikely(start > end)
 		start = end;
 	result = DeeObject_MALLOC(DefaultReversed_WithGetItemIndex);
 	if unlikely(!result)
@@ -1751,14 +1752,93 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_DefaultReversedWithProxyCopyDefault(DeeObject *self, size_t start, size_t end) {
-	/* TODO */
-	(void)self;
-	(void)start;
-	(void)end;
-	DeeError_NOTIMPLEMENTED();
+struct foreach_subrange_as_tuple_data {
+	DREF DeeTupleObject *fesrat_result;  /* [1..1] The tuple being constructed. */
+	size_t               fesrat_used;    /* Used # of elements of `fesrat_result' */
+	size_t               fesrat_maxsize; /* Max value for `fesrat_used' */
+	size_t               fesrat_start;   /* # of elements that still need to be skipped. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+foreach_subrange_as_tuple_cb(void *arg, DeeObject *elem) {
+	struct foreach_subrange_as_tuple_data *data;
+	data = (struct foreach_subrange_as_tuple_data *)arg;
+	if (data->fesrat_start) {
+		--data->fesrat_start; /* Skip leading. */
+		return 0;
+	}
+	if (data->fesrat_used >= DeeTuple_SIZE(data->fesrat_result)) {
+		DREF DeeTupleObject *new_tuple;
+		size_t new_size = DeeTuple_SIZE(data->fesrat_result) * 2;
+		if (new_size < 16)
+			new_size = 16;
+		new_tuple = DeeTuple_TryResizeUninitialized(data->fesrat_result, new_size);
+		if unlikely(!new_tuple) {
+			new_size  = data->fesrat_used + 1;
+			new_tuple = DeeTuple_ResizeUninitialized(data->fesrat_result, new_size);
+			if unlikely(!new_tuple)
+				goto err;
+		}
+		data->fesrat_result = new_tuple;
+	}
+	Dee_Incref(elem);
+	data->fesrat_result->t_elem[data->fesrat_used++] = elem;
+	if (data->fesrat_used >= data->fesrat_maxsize)
+		return -2; /* Stop enumeration */
+	return 0;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_GetForeachSubRangeAsTuple(DeeObject *self, size_t start, size_t end) {
+	size_t fast_size;
+	Dee_ssize_t foreach_status;
+	struct foreach_subrange_as_tuple_data data;
+	if unlikely(start >= end)
+		return_empty_tuple;
+	fast_size = (*Dee_TYPE(self)->tp_seq->tp_size_fast)(self);
+	if (fast_size != (size_t)-1) {
+		data.fesrat_result = DeeTuple_NewUninitialized(fast_size);
+		if unlikely(!data.fesrat_result)
+			goto err;
+	} else {
+		Dee_Incref(Dee_EmptyTuple);
+		data.fesrat_result = (DREF DeeTupleObject *)Dee_EmptyTuple;
+	}
+	data.fesrat_used    = 0;
+	data.fesrat_maxsize = end - start;
+	data.fesrat_start   = start;
+	foreach_status = (*Dee_TYPE(self)->tp_seq->tp_foreach)(self, &foreach_subrange_as_tuple_cb, &data);
+	ASSERT(foreach_status == 0 || foreach_status == -1);
+	if unlikely(foreach_status < 0)
+		goto err_r;
+	data.fesrat_result = DeeTuple_TruncateUninitialized(data.fesrat_result, data.fesrat_used);
+	return (DREF DeeObject *)data.fesrat_result;
+err_r:
+	Dee_Decrefv(data.fesrat_result->t_elem, data.fesrat_used);
+	DeeTuple_FreeUninitialized(data.fesrat_result);
+err:
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultReversedWithCopyForeachDefault(DeeObject *self, size_t start, size_t end) {
+	DREF DeeObject *result;
+	result = DeeSeq_GetForeachSubRangeAsTuple(self, start, end);
+	if likely(result) {
+		DREF DeeObject **lo, **hi;
+		lo = DeeTuple_ELEM(result);
+		hi = lo + DeeTuple_SIZE(result);
+		while (lo < hi) {
+			DeeObject *temp;
+			temp  = *lo;
+			*lo++ = *--hi;
+			*hi   = temp;
+		}
+	}
+	return result;
 }
 
 
@@ -1833,12 +1913,79 @@ DeeSeq_DefaultSortWithKeyWithError(DeeObject *self, size_t start, size_t end, De
 /* sorted()                                                             */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_DefaultSortedWithEnumerateDefaultAndCopy(DeeObject *self, size_t start, size_t end) {
-	/* TODO */
-	(void)self;
-	(void)start;
-	(void)end;
-	DeeError_NOTIMPLEMENTED();
+DeeSeq_DefaultSortedWithCopySizeAndGetItemIndexFast(DeeObject *self, size_t start, size_t end) {
+	size_t selfsize;
+	DREF DeeTupleObject *result;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	if unlikely(start > end)
+		start = end;
+	result = DeeTuple_NewUninitialized(end - start);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeSeq_SortGetItemIndexFast(DeeTuple_SIZE(result), DeeTuple_ELEM(result),
+	                                        self, start, seq->tp_getitem_index_fast))
+		goto err_r;
+	if unlikely(DeeTuple_GET(result, 0) == NULL) {
+		/* Must trim unbound items (which were sorted to the start of the tuple) */
+
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultSortedWithCopySizeAndTryGetItemIndex(DeeObject *self, size_t start, size_t end) {
+	size_t selfsize;
+	DREF DeeTupleObject *result;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	if unlikely(start > end)
+		start = end;
+	result = DeeTuple_NewUninitialized(end - start);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeSeq_SortTryGetItemIndex(DeeTuple_SIZE(result), DeeTuple_ELEM(result),
+	                                       self, start, seq->tp_trygetitem_index))
+		goto err_r;
+	return (DREF DeeObject *)result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultSortedWithCopyForeachDefault(DeeObject *self, size_t start, size_t end) {
+	DREF DeeTupleObject *base, *result;
+	base = (DREF DeeTupleObject *)DeeSeq_GetForeachSubRangeAsTuple(self, start, end);
+	if unlikely(!base)
+		goto err;
+	result = DeeTuple_NewUninitialized(DeeTuple_SIZE(base));
+	if unlikely(!result)
+		goto err_base;
+	if unlikely(DeeSeq_SortVector(DeeTuple_SIZE(result),
+	                              DeeTuple_ELEM(result),
+	                              DeeTuple_ELEM(base)))
+		goto err_base_r;
+	DeeTuple_FreeUninitialized(base);
+	return (DREF DeeObject *)result;
+err_base_r:
+	DeeTuple_FreeUninitialized(result);
+err_base:
+	Dee_Decref(base);
+err:
 	return NULL;
 }
 
@@ -1847,13 +1994,76 @@ DeeSeq_DefaultSortedWithEnumerateDefaultAndCopy(DeeObject *self, size_t start, s
 /* sorted() (with key)                                                  */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-DeeSeq_DefaultSortedWithKeyWithEnumerateDefaultAndCopy(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	/* TODO */
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)key;
-	DeeError_NOTIMPLEMENTED();
+DeeSeq_DefaultSortedWithKeyWithCopySizeAndGetItemIndexFast(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+	size_t selfsize;
+	DREF DeeTupleObject *result;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	if unlikely(start > end)
+		start = end;
+	result = DeeTuple_NewUninitialized(end - start);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeSeq_SortGetItemIndexFastWithKey(DeeTuple_SIZE(result), DeeTuple_ELEM(result),
+	                                               self, start, seq->tp_getitem_index_fast, key))
+		goto err_r;
+	return (DREF DeeObject *)result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+DeeSeq_DefaultSortedWithKeyWithCopySizeAndTryGetItemIndex(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+	size_t selfsize;
+	DREF DeeTupleObject *result;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	if unlikely(start > end)
+		start = end;
+	result = DeeTuple_NewUninitialized(end - start);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeSeq_SortTryGetItemIndexWithKey(DeeTuple_SIZE(result), DeeTuple_ELEM(result),
+	                                              self, start, seq->tp_trygetitem_index, key))
+		goto err_r;
+	return (DREF DeeObject *)result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+	DREF DeeObject *base;
+	DREF DeeTupleObject *result;
+	base = DeeSeq_GetForeachSubRangeAsTuple(self, start, end);
+	if unlikely(!base)
+		goto err;
+	result = DeeTuple_NewUninitialized(DeeTuple_SIZE(base));
+	if unlikely(!result)
+		goto err_base;
+	if unlikely(DeeSeq_SortVectorWithKey(DeeTuple_SIZE(result),
+	                                     DeeTuple_ELEM(result),
+	                                     DeeTuple_ELEM(base),
+	                                     key))
+		goto err_base_r;
+	return (DREF DeeObject *)result;
+err_base_r:
+	DeeTuple_FreeUninitialized(result);
+err_base:
+	Dee_Decref(base);
+err:
 	return NULL;
 }
 

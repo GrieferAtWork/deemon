@@ -4275,41 +4275,6 @@ err_overflow:
 	return (size_t)-1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_Reverse(DeeObject *__restrict self) {
-	int result;
-	DREF DeeObject *reversed;
-	reversed = DeeList_FromSequence(self);
-	if unlikely(!reversed)
-		goto err;
-	DeeList_Reverse(reversed);
-	result = DeeObject_Assign(self, reversed);
-	Dee_Decref(reversed);
-	return result;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_Sort(DeeObject *self, DeeObject *key) {
-	int result;
-	DREF DeeObject *sorted;
-	sorted = DeeList_FromSequence(self);
-	if unlikely(!sorted)
-		goto err;
-	if unlikely(DeeList_Sort(sorted, key))
-		goto err_sorted;
-	result = DeeObject_Assign(self, sorted);
-	Dee_Decref(sorted);
-	return result;
-err_sorted:
-	Dee_Decref(sorted);
-err:
-	return -1;
-}
-
-
-
 PRIVATE DeeStringObject *tpconst mutable_sequence_attributes[] = {
 	&str_remove,
 	&str_rremove,

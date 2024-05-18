@@ -43,6 +43,11 @@
 
 #include <stddef.h>
 
+/**/
+#include "seq/sort.h"
+
+/**/
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -1402,10 +1407,10 @@ err:
 
 PRIVATE WUNUSED DREF Tuple *DCALL
 tuple_init(size_t argc, DeeObject *const *argv) {
-	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, "o:Tuple", &seq))
+	DeeObject *items;
+	if (DeeArg_Unpack(argc, argv, "o:Tuple", &items))
 		goto err;
-	return (DREF Tuple *)DeeTuple_FromSequence(seq);
+	return (DREF Tuple *)DeeTuple_FromSequence(items);
 err:
 	return NULL;
 }
@@ -1471,7 +1476,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getrange_index(Tuple *__restrict self,
-                 dssize_t begin, dssize_t end) {
+                     Dee_ssize_t begin, Dee_ssize_t end) {
 	size_t range_size;
 	struct Dee_seq_range range;
 	DeeSeqRange_Clamp(&range, begin, end, self->t_size);
@@ -1483,7 +1488,7 @@ tuple_getrange_index(Tuple *__restrict self,
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getrange_index_n(Tuple *__restrict self,
-                  dssize_t begin) {
+                  Dee_ssize_t begin) {
 #ifdef __OPTIMIZE_SIZE__
 	return tuple_getrange_index(self, begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
@@ -1500,7 +1505,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tuple_getrange(Tuple *__restrict self,
                DeeObject *__restrict begin,
                DeeObject *__restrict end) {
-	dssize_t i_begin, i_end;
+	Dee_ssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
@@ -1533,6 +1538,13 @@ err_bounds:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getitem_index_fast(Tuple *__restrict self, size_t index) {
 	ASSERT(index < self->t_size);
+	return_reference(self->t_elem[index]);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_trygetitem_index(Tuple *__restrict self, size_t index) {
+	if unlikely(index >= self->t_size)
+		return ITER_DONE;
 	return_reference(self->t_elem[index]);
 }
 
@@ -1678,7 +1690,7 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&tuple_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
@@ -1735,11 +1747,11 @@ tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg) {
 /* Print all elements of the given tuple without any separators in-between
  * elements. This is equivalent to `Tuple.operator str' and is related to
  * the change introduced for handling `print("foo", "bar");'-like statements */
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 tuple_print(Tuple *__restrict self,
             Dee_formatprinter_t printer, void *arg) {
 	size_t i;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		DeeObject *elem;
 		elem = DeeTuple_GET(self, i);
@@ -1788,7 +1800,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 tuple_printrepr(Tuple *__restrict self,
                 Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
@@ -1890,10 +1902,44 @@ err_empty:
 	return NULL;
 }
 
+INTDEF WUNUSED NONNULL((1)) DREF Tuple *DCALL
+tuple_sorted(Tuple *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF Tuple *result;
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *key = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:sorted",
+	                    &start, &end, &key))
+		goto err;
+	if (end > self->t_size)
+		end = self->t_size;
+	if unlikely(start > end)
+		start = end;
+	result = DeeTuple_NewUninitialized(end - start);
+	if unlikely(!result)
+		goto err;
+	if unlikely(!DeeNone_Check(key)
+	            ? DeeSeq_SortVectorWithKey(result->t_size, result->t_elem, self->t_elem + start, key)
+	            : DeeSeq_SortVector(result->t_size, result->t_elem, self->t_elem + start))
+		goto err_r;
+	Dee_Increfv(result->t_elem, result->t_size);
+	return result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+
+PRIVATE struct type_method tpconst tuple_methods[] = {
+	TYPE_KWMETHOD(STR_sorted, &tuple_sorted, "(start=!0,end=!-1,key=!n)->?."),
+	TYPE_METHOD_END
+};
 
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
 	TYPE_GETTER_F_NODOC(STR_first, &tuple_first, METHOD_FNOREFESCAPE),
 	TYPE_GETTER_F_NODOC(STR_last, &tuple_last, METHOD_FNOREFESCAPE),
+#define nullable_tuple_getsets (tuple_getsets + 2)
 	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
@@ -2207,8 +2253,8 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&tuple_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&tuple_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&tuple_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&tuple_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&tuple_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tuple_visit,
@@ -2220,7 +2266,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ tuple_methods,
 	/* .tp_getsets       = */ tuple_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ tuple_class_methods,
@@ -2240,6 +2286,296 @@ PUBLIC struct empty_tuple_object DeeTuple_Empty = {
 	DEE_REFTRACKER_UNTRACKED,
 #endif
 	0
+};
+
+
+
+
+PRIVATE struct empty_tuple_object DeeNullableTuple_Empty = {
+	OBJECT_HEAD_INIT(&DeeNullableTuple_Type),
+	0
+};
+
+
+LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+make_nullable(DREF DeeTupleObject *__restrict self) {
+	if unlikely(self == (DREF DeeTupleObject *)Dee_EmptyTuple) {
+		Dee_DecrefNokill(Dee_EmptyTuple);
+		Dee_Incref(&DeeNullableTuple_Empty);
+		return (DREF DeeTupleObject *)&DeeNullableTuple_Empty;
+	}
+	Dee_DecrefNokill(&DeeTuple_Type);
+	Dee_Incref(&DeeNullableTuple_Type);
+	self->ob_type = &DeeNullableTuple_Type;
+	return self;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
+nullable_tuple_unpack(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
+	DREF Tuple *result;
+	size_t num_items;
+	DeeObject *init;
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:unpack", &num_items, &init))
+		goto err;
+	result = DeeTuple_NewUninitialized(num_items);
+	if unlikely(!result)
+		goto done;
+	if unlikely(DeeObject_UnpackWithUnbound(init, num_items, DeeTuple_ELEM(result))) {
+		DeeTuple_FreeUninitialized(result);
+err:
+		result = NULL;
+	} else {
+		result = make_nullable(result);
+	}
+done:
+	return result;
+}
+
+
+PRIVATE WUNUSED DREF Tuple *DCALL nullable_tuple_ctor(void) {
+	return_reference_((DREF Tuple *)&DeeNullableTuple_Empty);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF Tuple *DCALL
+nullable_tuple_deepcopy(Tuple *__restrict self) {
+	DREF Tuple *result;
+	size_t i, size = DeeTuple_SIZE(self);
+	result = DeeTuple_NewUninitialized(size);
+	if unlikely(!result)
+		goto err;
+	for (i = 0; i < size; ++i) {
+		DREF DeeObject *temp;
+		temp = DeeTuple_GET(self, i);
+		if (temp) {
+			temp = DeeObject_DeepCopy(DeeTuple_GET(self, i));
+			if unlikely(!temp)
+				goto err_r;
+		}
+		DeeTuple_SET(result, i, temp); /* Inherit reference. */
+	}
+	return make_nullable(result);
+err_r:
+	Dee_XDecrefv_likely(DeeTuple_ELEM(result), i);
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF Tuple *DCALL
+nullable_tuple_init(size_t argc, DeeObject *const *argv) {
+	DREF Tuple *result;
+	DeeObject *items;
+	if (DeeArg_Unpack(argc, argv, "o:NullableTuple", &items))
+		goto err;
+	result = (DREF Tuple *)DeeTuple_FromSequence(items);
+	if likely(result)
+		result = make_nullable(result);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+nullable_tuple_fini(Tuple *__restrict self) {
+	Dee_XDecrefv(DeeTuple_ELEM(self),
+	             DeeTuple_SIZE(self));
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+nullable_tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg) {
+	Dee_XVisitv(DeeTuple_ELEM(self),
+	            DeeTuple_SIZE(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+nullable_tuple_contains(Tuple *self, DeeObject *item) {
+	int error;
+	size_t i, mylen;
+	mylen = DeeTuple_SIZE(self);
+	for (i = 0; i < mylen; ++i) {
+		DeeObject *ob;
+		ob = DeeTuple_GET(self, i);
+		if (!ob)
+			continue;
+		error = DeeObject_TryCompareEq(item, ob);
+		if unlikely(error == Dee_COMPARE_ERR)
+			goto err;
+		if (error == 0)
+			return_true;
+	}
+	return_false;
+err:
+	return NULL;
+}
+
+#define nullable_tuple_enumerate_index \
+	tuple_enumerate_index /* Actually works the same! */
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+nullable_tuple_getitem_index(Tuple *__restrict self, size_t index) {
+	if unlikely(index >= self->t_size)
+		goto err_bounds;
+	if (!self->t_elem[index])
+		goto err_unbound;
+	return_reference(self->t_elem[index]);
+err_unbound:
+	err_unbound_index((DeeObject *)self, index);
+	return NULL;
+err_bounds:
+	err_index_out_of_bounds((DeeObject *)self, index, self->t_size);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+nullable_tuple_getitem_index_fast(Tuple *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	ASSERT(index < self->t_size);
+	result = self->t_elem[index];
+	Dee_XIncref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+nullable_tuple_trygetitem_index(Tuple *__restrict self, size_t index) {
+	if unlikely(index >= self->t_size)
+		return ITER_DONE;
+	if (!self->t_elem[index])
+		return ITER_DONE;
+	return_reference(self->t_elem[index]);
+}
+
+
+PRIVATE struct type_seq nullable_tuple_seq = {
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nullable_tuple_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&nullable_tuple_enumerate_index,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&tuple_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&tuple_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&nullable_tuple_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&nullable_tuple_getitem_index_fast,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&nullable_tuple_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+};
+
+PRIVATE struct type_method tpconst nullable_tuple_class_methods[] = {
+	TYPE_METHOD("unpack", &nullable_tuple_unpack,
+	            "(num:?Dint,seq:?S?O)->?.\n"
+	            "#tUnpackError{The given @seq doesn't contain exactly @num elements}"
+	            "Unpack the given sequence @seq into a Tuple consisting of @num elements.\n"
+	            "Same as ?Aunpack?DTuple, except that unbound items are not silently skipped"),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_member tpconst nullable_tuple_class_members[] = {
+	TYPE_MEMBER_CONST("Frozen", &DeeNullableTuple_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_operator const nullable_tuple_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
+};
+
+PUBLIC DeeTypeObject DeeNullableTuple_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "NullableTuple",
+	/* .tp_doc      = */ DOC("Same as ?DTuple, but able to represent unbound elements\n"
+	                         "\n"
+
+	                         "()\n"
+	                         "Construct an empty ?.\n"
+	                         "\n"
+
+	                         "(items:?S?O)\n"
+	                         "Construct a new ?. that is pre-initializes with the elements from @items"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&nullable_tuple_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&nullable_tuple_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&nullable_tuple_init,
+#if CONFIG_TUPLE_CACHE_MAXCOUNT != 0
+				/* .tp_free      = */ (dfunptr_t)&tuple_tp_free
+#else /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
+				/* .tp_free      = */ (dfunptr_t)NULL
+#endif /* CONFIG_TUPLE_CACHE_MAXCOUNT == 0 */
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&nullable_tuple_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&tuple_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&nullable_tuple_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &nullable_tuple_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ nullable_tuple_getsets,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ nullable_tuple_class_methods,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ nullable_tuple_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ nullable_tuple_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(nullable_tuple_operators)
 };
 
 DECL_END

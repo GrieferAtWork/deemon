@@ -267,6 +267,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\set.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\smap.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\sort-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\sort.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\subrange.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\svec.h" />
