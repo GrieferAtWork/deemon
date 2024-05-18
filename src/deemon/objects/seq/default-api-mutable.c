@@ -42,6 +42,7 @@
 #include <hybrid/overflow.h>
 
 /**/
+#include "default-reversed.h"
 #include "repeat.h"
 
 /**/
@@ -70,30 +71,30 @@ DECL_BEGIN
 #define DeeType_RequireSetRangeIndex(tp_self)  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_setrange_index && (tp_self)->tp_seq->tp_setrange_index_n) || DeeType_InheritSetRange(tp_self))
 
 
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_erase_t DCALL DeeType_SeqCache_RequireErase_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_insert_t DCALL DeeType_SeqCache_RequireInsert_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_insertall_t DCALL DeeType_SeqCache_RequireInsertAll_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_pushfront_t DCALL DeeType_SeqCache_RequirePushFront_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_append_t DCALL DeeType_SeqCache_RequireAppend_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_extend_t DCALL DeeType_SeqCache_RequireExtend_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_xchitem_index_t DCALL DeeType_SeqCache_RequireXchItemIndex_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_clear_t DCALL DeeType_SeqCache_RequireClear_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_pop_t DCALL DeeType_SeqCache_RequirePop_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_remove_t DCALL DeeType_SeqCache_RequireRemove_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_remove_with_key_t DCALL DeeType_SeqCache_RequireRemoveWithKey_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_rremove_t DCALL DeeType_SeqCache_RequireRRemove_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_rremove_with_key_t DCALL DeeType_SeqCache_RequireRRemoveWithKey_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_removeall_t DCALL DeeType_SeqCache_RequireRemoveAll_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_removeall_with_key_t DCALL DeeType_SeqCache_RequireRemoveAllWithKey_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_removeif_t DCALL DeeType_SeqCache_RequireRemoveIf_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_resize_t DCALL DeeType_SeqCache_RequireResize_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_fill_t DCALL DeeType_SeqCache_RequireFill_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_reverse_t DCALL DeeType_SeqCache_RequireReverse_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_reversed_t DCALL DeeType_SeqCache_RequireReversed_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_sort_t DCALL DeeType_SeqCache_RequireSort_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_sort_with_key_t DCALL DeeType_SeqCache_RequireSortWithKey_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_sorted_t DCALL DeeType_SeqCache_RequireSorted_private_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_sorted_with_key_t DCALL DeeType_SeqCache_RequireSortedWithKey_private_uncached(DeeTypeObject *__restrict self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_erase_t DCALL DeeType_SeqCache_RequireErase_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_insert_t DCALL DeeType_SeqCache_RequireInsert_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_insertall_t DCALL DeeType_SeqCache_RequireInsertAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_pushfront_t DCALL DeeType_SeqCache_RequirePushFront_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_append_t DCALL DeeType_SeqCache_RequireAppend_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_extend_t DCALL DeeType_SeqCache_RequireExtend_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_xchitem_index_t DCALL DeeType_SeqCache_RequireXchItemIndex_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_clear_t DCALL DeeType_SeqCache_RequireClear_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_pop_t DCALL DeeType_SeqCache_RequirePop_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_remove_t DCALL DeeType_SeqCache_RequireRemove_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_remove_with_key_t DCALL DeeType_SeqCache_RequireRemoveWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_rremove_t DCALL DeeType_SeqCache_RequireRRemove_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_rremove_with_key_t DCALL DeeType_SeqCache_RequireRRemoveWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_removeall_t DCALL DeeType_SeqCache_RequireRemoveAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_removeall_with_key_t DCALL DeeType_SeqCache_RequireRemoveAllWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_removeif_t DCALL DeeType_SeqCache_RequireRemoveIf_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_resize_t DCALL DeeType_SeqCache_RequireResize_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_fill_t DCALL DeeType_SeqCache_RequireFill_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_reverse_t DCALL DeeType_SeqCache_RequireReverse_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_reversed_t DCALL DeeType_SeqCache_RequireReversed_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_sort_t DCALL DeeType_SeqCache_RequireSort_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_sort_with_key_t DCALL DeeType_SeqCache_RequireSortWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_sorted_t DCALL DeeType_SeqCache_RequireSorted_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_sorted_with_key_t DCALL DeeType_SeqCache_RequireSortedWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 
 PRIVATE WUNUSED NONNULL((1)) Dee_tsc_erase_t DCALL DeeType_SeqCache_RequireErase_uncached(DeeTypeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) Dee_tsc_insert_t DCALL DeeType_SeqCache_RequireInsert_uncached(DeeTypeObject *__restrict self);
@@ -1008,12 +1009,77 @@ DeeSeq_DefaultReverseWithError(DeeObject *self, size_t start, size_t end) {
 /* reversed()                                                           */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultReversedWithProxySizeAndGetItemIndexFast(DeeObject *self, size_t start, size_t end) {
+	DREF DefaultReversed_WithGetItemIndex *result;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	if (start > end)
+		start = end;
+	result = DeeObject_MALLOC(DefaultReversed_WithGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	result->drwgii_tp_getitem_index = seq->tp_getitem_index_fast;
+	Dee_Incref(self);
+	result->drwgii_seq  = self;
+	result->drwgii_max  = end - 1; /* It's ok if this underflows */
+	result->drwgii_size = end - start;
+	DeeObject_Init(result, &DefaultReversed_WithGetItemIndexFast_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultReversedWithProxySizeAndGetItemIndex(DeeObject *self, size_t start, size_t end) {
-	/* TODO */
-	(void)self;
-	(void)start;
-	(void)end;
-	DeeError_NOTIMPLEMENTED();
+	DREF DefaultReversed_WithGetItemIndex *result;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	if (start > end)
+		start = end;
+	result = DeeObject_MALLOC(DefaultReversed_WithGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	result->drwgii_tp_getitem_index = seq->tp_getitem_index;
+	Dee_Incref(self);
+	result->drwgii_seq  = self;
+	result->drwgii_max  = end - 1; /* It's ok if this underflows */
+	result->drwgii_size = end - start;
+	DeeObject_Init(result, &DefaultReversed_WithGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultReversedWithProxySizeAndTryGetItemIndex(DeeObject *self, size_t start, size_t end) {
+	DREF DefaultReversed_WithGetItemIndex *result;
+	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
+	size_t selfsize = (*seq->tp_size)(self);
+	if unlikely(selfsize == (size_t)-1)
+		goto err;
+	if (end > selfsize)
+		end = selfsize;
+	if (start > end)
+		start = end;
+	result = DeeObject_MALLOC(DefaultReversed_WithGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	result->drwgii_tp_getitem_index = seq->tp_trygetitem_index;
+	Dee_Incref(self);
+	result->drwgii_seq  = self;
+	result->drwgii_max  = end - 1; /* It's ok if this underflows */
+	result->drwgii_size = end - start;
+	DeeObject_Init(result, &DefaultReversed_WithTryGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 

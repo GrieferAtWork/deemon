@@ -17,16 +17,27 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_SEQ_REVERSED_H
-#define GUARD_DEEMON_OBJECTS_SEQ_REVERSED_H 1
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_REVERSED_H
+#define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_REVERSED_H 1
 
 #include <deemon/api.h>
 #include <deemon/object.h>
 
 DECL_BEGIN
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Reversed(DeeObject *__restrict self);
+typedef struct {
+	OBJECT_HEAD
+	/* [1..1][const] The `tp_getitem_index', `tp_getitem_index_fast' or `tp_trygetitem_index' operator of `drwgii_seq' */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *drwgii_tp_getitem_index)(DeeObject *self, size_t index);
+	DREF DeeObject *drwgii_seq;  /* [1..1][const] The sequence to reverse */
+	size_t          drwgii_max;  /* [const] Index of the 0'th element of the reversed of `drwgii_seq' */
+	size_t          drwgii_size; /* [const][<= (drwgii_max - 1)] Length of the reversed sequence. */
+} DefaultReversed_WithGetItemIndex;
+
+INTDEF DeeTypeObject DefaultReversed_WithGetItemIndex_Type;     /* DefaultReversed_WithGetItemIndex */
+INTDEF DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type; /* DefaultReversed_WithGetItemIndex */
+INTDEF DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type;  /* DefaultReversed_WithGetItemIndex */
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_SEQ_REVERSED_H */
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_REVERSED_H */

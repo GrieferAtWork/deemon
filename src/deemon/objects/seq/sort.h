@@ -35,9 +35,6 @@ DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
                      DREF DeeObject *const *__restrict src,
                      size_t objc, DeeObject *key);
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Sorted(DeeObject *self, DeeObject *key);
-
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_SORT_H */

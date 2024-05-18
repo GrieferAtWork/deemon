@@ -2604,6 +2604,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: SeqWithTSizeAndGetItem          = DefaultSequence_WithTSizeAndGetItem_Type */
 	/* TODO: SeqWithIter                     = DefaultSequence_WithIter_Type */
 	/* TODO: SeqWithTIter                    = DefaultSequence_WithTIter_Type */
+	/* TODO: ReversedSeqWithGetItemIndex     = DefaultReversed_WithGetItemIndex_Type */
+	/* TODO: ReversedSeqWithGetItemIndexFast = DefaultReversed_WithGetItemIndexFast_Type */
+	/* TODO: ReversedSeqWithTryGetItemIndex  = DefaultReversed_WithTryGetItemIndex_Type */
 #endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 	{ NULL }

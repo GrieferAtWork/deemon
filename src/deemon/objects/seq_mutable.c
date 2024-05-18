@@ -20,14 +20,14 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_MUTABLE_C
 #define GUARD_DEEMON_OBJECTS_SEQ_MUTABLE_C 1
 
-#include <deemon/api.h>
-
 #include <deemon/alloc.h>
+#include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/list.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -42,8 +42,6 @@
 #include "seq/concat.h"
 #include "seq/default-api.h"
 #include "seq/repeat.h"
-#include "seq/reversed.h"
-#include "seq/sort.h"
 #include "seq/svec.h"
 #include "seq_functions.h"
 
@@ -4279,12 +4277,12 @@ err_overflow:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_Reverse(DeeObject *__restrict self) {
-	DREF DeeObject *reversed;
 	int result;
-	/* TODO: This breaks when `reversed' is an index-based proxy! */
-	reversed = DeeSeq_Reversed(self);
+	DREF DeeObject *reversed;
+	reversed = DeeList_FromSequence(self);
 	if unlikely(!reversed)
 		goto err;
+	DeeList_Reverse(reversed);
 	result = DeeObject_Assign(self, reversed);
 	Dee_Decref(reversed);
 	return result;
@@ -4294,15 +4292,18 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_Sort(DeeObject *self, DeeObject *key) {
-	DREF DeeObject *sorted;
 	int result;
-	/* TODO: This breaks when `sorted' is an index-based proxy! */
-	sorted = DeeSeq_Sorted(self, key);
+	DREF DeeObject *sorted;
+	sorted = DeeList_FromSequence(self);
 	if unlikely(!sorted)
 		goto err;
+	if unlikely(DeeList_Sort(sorted, key))
+		goto err_sorted;
 	result = DeeObject_Assign(self, sorted);
 	Dee_Decref(sorted);
 	return result;
+err_sorted:
+	Dee_Decref(sorted);
 err:
 	return -1;
 }

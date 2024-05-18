@@ -361,19 +361,6 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Sorted(DeeObject *self, DeeObject *key) {
-	DREF DeeObject *result;
-	/* TODO: Using lists for this is less than optimal... */
-	result = DeeList_FromSequence(self);
-	if unlikely(!result)
-		goto done;
-	if unlikely(DeeList_Sort(result, key))
-		Dee_Clear(result);
-done:
-	return result;
-}
-
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_SORT_C */

@@ -29,6 +29,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -56,10 +57,8 @@
 #include "seq/hashfilter.h"
 #include "seq/locateall.h"
 #include "seq/repeat.h"
-#include "seq/reversed.h"
 #include "seq/segments.h"
 #include "seq/simpleproxy.h"
-#include "seq/sort.h"
 #include "seq/subrange.h"
 #include "seq/svec.h"
 #include "seq/transform.h"
@@ -4041,10 +4040,14 @@ err:
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_reversed(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
 	(void)kw;
 	if (DeeArg_Unpack(argc, argv, ":reversed"))
 		goto err;
-	return DeeSeq_Reversed(self);
+	result = DeeList_FromSequence(self);
+	if likely(result)
+		DeeList_Reverse(result);
+	return result;
 err:
 	return NULL;
 }
@@ -4052,12 +4055,18 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_sorted(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
 	DeeObject *key = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:sorted", &key))
 		goto err;
 	if (DeeNone_Check(key))
 		key = NULL;
-	return DeeSeq_Sorted(self, key);
+	result = DeeList_FromSequence(self);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeList_Sort(result, key))
+		Dee_Clear(result);
+	return result;
 err:
 	return NULL;
 }
