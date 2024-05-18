@@ -98,6 +98,15 @@ di_gi_visit(DefaultIterator_WithGetItemIndex *__restrict self,
 	Dee_Visit(self->digi_seq);
 }
 
+#define di_sgi_hash  di_gi_hash
+#define di_sgif_hash di_gi_hash
+#define di_stgi_hash di_gi_hash
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+di_gi_hash(DefaultIterator_WithGetItemIndex *self) {
+	return Dee_HashCombine(DeeObject_HashGeneric(self->digi_seq),
+	                       atomic_read(&self->digi_index));
+}
+
 #define di_sgi_compare  di_gi_compare
 #define di_sgif_compare di_gi_compare
 #define di_stgi_compare di_gi_compare
@@ -106,11 +115,11 @@ di_gi_compare(DefaultIterator_WithGetItemIndex *self,
               DefaultIterator_WithGetItemIndex *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	if (self->digi_seq != other->digi_seq) {
-		return Dee_CompareNe(DeeObject_Id(self->digi_seq),
+	Dee_return_compare_if_ne(DeeObject_Id(self->digi_seq),
 		                     DeeObject_Id(other->digi_seq));
-	}
-	return Dee_Compare(self->digi_index, other->digi_index);
+	Dee_return_compareT(size_t,
+	                    atomic_read(&self->digi_index),
+	                    atomic_read(&other->digi_index));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -242,7 +251,7 @@ err:
 #define di_sgif_cmp di_gi_cmp
 #define di_stgi_cmp di_gi_cmp
 PRIVATE struct type_cmp di_gi_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_gi_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
 	/* .tp_trycompare_eq = */ NULL,
@@ -585,6 +594,19 @@ di_g_setindex(DefaultIterator_WithGetItem *self, DeeObject *index) {
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+di_g_hash(DefaultIterator_WithGetItem *self) {
+	DREF DeeObject *index;
+	Dee_hash_t result = DeeObject_HashGeneric(self->dig_seq);
+	DefaultIterator_WithGetItem_LockAcquire(self);
+	index = self->dig_index;
+	Dee_Incref(index);
+	DefaultIterator_WithGetItem_LockRelease(self);
+	result = Dee_HashCombine(result, DeeObject_Hash(index));
+	Dee_Decref(index);
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_g_compare(DefaultIterator_WithGetItem *self,
              DefaultIterator_WithGetItem *other) {
@@ -700,7 +722,7 @@ err_new_index:
 
 #define di_tg_cmp di_g_cmp
 PRIVATE struct type_cmp di_g_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_g_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 	/* .tp_trycompare_eq = */ NULL,
@@ -1199,6 +1221,14 @@ err:
 #define di_nl_fini  di_sgi_fini
 #define di_nl_visit di_sgi_visit
 
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+di_nl_hash(DefaultIterator_WithNextAndLimit *self) {
+	Dee_hash_t result;
+	result = DeeObject_Hash(self->dinl_iter);
+	result = Dee_HashCombine(result, atomic_read(&self->dinl_limit));
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_nl_compare(DefaultIterator_WithNextAndLimit *self,
               DefaultIterator_WithNextAndLimit *other) {
@@ -1234,8 +1264,15 @@ di_nl_iter_next(DefaultIterator_WithNextAndLimit *self) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_nl_bool(DefaultIterator_WithNextAndLimit *self) {
+	if (atomic_read(&self->dinl_limit) == 0)
+		return 0;
+	return DeeObject_Bool(self->dinl_iter);
+}
+
 PRIVATE struct type_cmp di_nl_cmp = {
-	/* .tp_hash          = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_nl_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
 	/* .tp_trycompare_eq = */ NULL,
@@ -1272,7 +1309,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&di_nl_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_nl_visit,
