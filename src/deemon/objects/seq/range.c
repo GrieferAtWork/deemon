@@ -27,6 +27,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -83,18 +84,14 @@ function range(start, end, step?) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ri_ctor(RangeIterator *__restrict self) {
-	self->ri_range = (DREF Range *)DeeRange_New(Dee_None, Dee_None, NULL);
-	if unlikely(!self->ri_range)
-		goto err;
+	Dee_Incref_n(Dee_None, 2);
 	self->ri_index = Dee_None;
 	self->ri_end   = Dee_None;
 	self->ri_step  = NULL;
 	self->ri_first = true;
-	Dee_Incref(Dee_None);
+	self->ri_rev   = false;
 	Dee_atomic_rwlock_init(&self->ri_lock);
 	return 0;
-err:
-	return -1;
 }
 
 INTDEF DeeTypeObject SeqRange_Type;
@@ -102,16 +99,19 @@ INTDEF DeeTypeObject SeqRange_Type;
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ri_init(RangeIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRangeIterator", &self->ri_range))
+	Range *range;
+	if (DeeArg_Unpack(argc, argv, "o:_SeqRangeIterator", &range))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->ri_range, &SeqRange_Type))
+	if (DeeObject_AssertTypeExact(range, &SeqRange_Type))
 		goto err;
-	self->ri_index = self->ri_range->r_start;
-	self->ri_end   = self->ri_range->r_end;
-	self->ri_step  = self->ri_range->r_step;
-	Dee_Incref(self->ri_index);
-	Dee_Incref(self->ri_range);
+	Dee_Incref(range->r_start);
+	Dee_Incref(range->r_end);
+	Dee_XIncref(range->r_step);
+	self->ri_index = range->r_start;
+	self->ri_end   = range->r_end;
+	self->ri_step  = range->r_step;
 	self->ri_first = true;
+	self->ri_rev   = range->r_rev;
 	Dee_atomic_rwlock_init(&self->ri_lock);
 	return 0;
 err:
@@ -146,10 +146,11 @@ again:
 
 	/* Other members are constant, so we don't
 	 * need to bother with synchronizing them. */
-	self->ri_range = other->ri_range;
-	self->ri_end   = other->ri_end;
-	self->ri_step  = other->ri_step;
-	Dee_Incref(self->ri_range);
+	Dee_Incref(other->ri_end);
+	self->ri_end = other->ri_end;
+	Dee_Incref(other->ri_step);
+	self->ri_step = other->ri_step;
+	self->ri_rev  = other->ri_rev;
 	return 0;
 err:
 	return -1;
@@ -159,22 +160,27 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ri_deep(RangeIterator *__restrict self,
         RangeIterator *__restrict other) {
 	RangeIterator_LockRead(other);
-	self->ri_range = other->ri_range;
+	Dee_Incref(other->ri_index);
 	self->ri_index = other->ri_index;
 	self->ri_first = other->ri_first;
-	Dee_Incref(self->ri_range);
-	Dee_Incref(self->ri_index);
 	RangeIterator_LockEndRead(other);
 	if (DeeObject_InplaceDeepCopy(&self->ri_index))
-		goto err_r;
-	if (DeeObject_InplaceDeepCopy((DeeObject **)&self->ri_range))
-		goto err_r;
+		goto err_index;
 	Dee_atomic_rwlock_init(&self->ri_lock);
-	self->ri_end  = self->ri_range->r_end;
-	self->ri_step = self->ri_range->r_step;
+	self->ri_end = DeeObject_DeepCopy(other->ri_end);
+	if unlikely(!self->ri_end)
+		goto err_index;
+	self->ri_step = NULL;
+	if (other->ri_step) {
+		self->ri_step = DeeObject_DeepCopy(other->ri_step);
+		if unlikely(!self->ri_step)
+			goto err_index_end;
+	}
+	self->ri_rev = other->ri_rev;
 	return 0;
-err_r:
-	Dee_Decref_unlikely(self->ri_range);
+err_index_end:
+	Dee_Decref(self->ri_end);
+err_index:
 	Dee_Decref(self->ri_index);
 /*err:*/
 	return -1;
@@ -183,7 +189,8 @@ err_r:
 PRIVATE NONNULL((1)) void DCALL
 ri_fini(RangeIterator *__restrict self) {
 	Dee_Decref(self->ri_index);
-	Dee_Decref(self->ri_range);
+	Dee_Decref(self->ri_end);
+	Dee_XDecref(self->ri_step);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -192,7 +199,8 @@ ri_visit(RangeIterator *__restrict self,
 	RangeIterator_LockRead(self);
 	Dee_Visit(self->ri_index);
 	RangeIterator_LockEndRead(self);
-	Dee_Visit(self->ri_range);
+	Dee_Visit(self->ri_end);
+	Dee_XVisit(self->ri_step);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -203,11 +211,11 @@ ri_next(RangeIterator *__restrict self) {
 	bool is_first;
 again:
 	RangeIterator_LockRead(self);
-	new_index = self->ri_index;
 	old_index = self->ri_index;
 	is_first  = self->ri_first;
-	Dee_Incref(new_index);
+	Dee_Incref(old_index);
 	RangeIterator_LockEndRead(self);
+	new_index = old_index;
 
 	/* Skip the index modification on the first loop. */
 	if (!is_first) {
@@ -219,7 +227,7 @@ again:
 	}
 
 	/* Check if the end has been reached */
-	temp = likely(!self->ri_range->r_rev)
+	temp = likely(!self->ri_rev)
 	       ? DeeObject_CmpLoAsBool(new_index, self->ri_end)
 	       : DeeObject_CmpGrAsBool(new_index, self->ri_end);
 	if (temp <= 0) {
@@ -295,7 +303,7 @@ ri_bool(RangeIterator *__restrict self) {
 	DREF DeeObject *ni;
 	ni = ri_get_next_index(self);
 	/* Check if the end has been reached */
-	result = likely(!self->ri_range->r_rev)
+	result = likely(!self->ri_rev)
 	         ? DeeObject_CmpLoAsBool(ni, self->ri_end)
 	         : DeeObject_CmpGrAsBool(ni, self->ri_end);
 	Dee_Decref(ni);
@@ -310,20 +318,6 @@ ri_index_get(RangeIterator *__restrict self) {
 	Dee_Incref(result);
 	RangeIterator_LockEndRead(self);
 	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-ri_index_del(RangeIterator *__restrict self) {
-	DREF DeeObject *old_index;
-	RangeIterator_LockWrite(self);
-	old_index = self->ri_index;
-	/* Assign the original begin-index. */
-	self->ri_index = self->ri_range->r_start;
-	self->ri_first = true;
-	Dee_Incref(self->ri_index);
-	RangeIterator_LockEndWrite(self);
-	Dee_Decref(old_index);
-	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -346,16 +340,15 @@ ri_index_set(RangeIterator *__restrict self,
 }
 
 PRIVATE struct type_getset tpconst ri_getsets[] = {
-	TYPE_GETSET_F_NODOC(STR_index, &ri_index_get, &ri_index_del, &ri_index_set, METHOD_FNOREFESCAPE),
+	TYPE_GETSET_F_NODOC("__index__", &ri_index_get, NULL, &ri_index_set, METHOD_FNOREFESCAPE),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst ri_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RangeIterator, ri_range), "->?Ert:SeqRange"),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(RangeIterator, ri_end)),
 	TYPE_MEMBER_FIELD("__step__", STRUCT_OBJECT, offsetof(RangeIterator, ri_step)),
-	/* TODO: `__start__' is writeable when `ri_lock' is held! */
-	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_CBOOL, offsetof(RangeIterator, ri_first)),
+	/* TODO: `__isfirst__' is writeable when `ri_lock' is held! */
+	TYPE_MEMBER_FIELD("__isfirst__", STRUCT_CONST | STRUCT_CBOOL, offsetof(RangeIterator, ri_first)),
 	TYPE_MEMBER_END
 };
 
@@ -415,7 +408,7 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRangeIterator",
 	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqRange)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
@@ -426,7 +419,7 @@ INTERN DeeTypeObject SeqRangeIterator_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&ri_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&ri_deep,
 				/* .tp_any_ctor  = */ (dfunptr_t)&ri_init,
-				TYPE_FIXED_ALLOCATOR(RangeIterator)
+				TYPE_FIXED_ALLOCATOR_GC(RangeIterator)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ri_fini,
@@ -474,18 +467,20 @@ range_visit(Range *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) DREF RangeIterator *DCALL
 range_iter(Range *__restrict self) {
 	DREF RangeIterator *result;
-	result = DeeObject_MALLOC(RangeIterator);
+	result = DeeGCObject_MALLOC(RangeIterator);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &SeqRangeIterator_Type);
 	result->ri_index = self->r_start;
-	result->ri_range = self;
 	result->ri_end   = self->r_end;
 	result->ri_step  = self->r_step;
 	Dee_Incref(result->ri_index);
-	Dee_Incref(result->ri_range);
+	Dee_Incref(result->ri_end);
+	Dee_XIncref(result->ri_step);
 	result->ri_first = true;
+	result->ri_rev   = self->r_rev;
 	Dee_atomic_rwlock_init(&result->ri_lock);
+	DeeObject_Init(result, &SeqRangeIterator_Type);
+	result = (DREF RangeIterator *)DeeGC_Track((DeeObject *)result);
 done:
 	return result;
 }
@@ -1096,19 +1091,10 @@ INTERN DeeTypeObject SeqRange_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iri_ctor(IntRangeIterator *__restrict self) {
-	self->iri_range = DeeObject_MALLOC(IntRange);
-	if unlikely(!self->iri_range)
-		goto err;
-	DeeObject_Init(self->iri_range, &SeqIntRange_Type);
-	self->iri_range->ir_start = 0;
-	self->iri_range->ir_end   = 0;
-	self->iri_range->ir_step  = 0;
-	self->iri_index           = 0;
-	self->iri_end             = 0;
-	self->iri_step            = 0;
+	self->iri_index = 0;
+	self->iri_end   = 0;
+	self->iri_step  = 0;
 	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1117,22 +1103,20 @@ iri_copy(IntRangeIterator *__restrict self,
 	self->iri_index = READ_INDEX(other);
 	self->iri_end   = other->iri_end;
 	self->iri_step  = other->iri_step;
-	self->iri_range = other->iri_range;
-	Dee_Incref(self->iri_range);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iri_init(IntRangeIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqIntRangeIterator", &self->iri_range))
+	IntRange *range;
+	if (DeeArg_Unpack(argc, argv, "o:_SeqIntRangeIterator", &range))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->iri_range, &SeqIntRange_Type))
+	if (DeeObject_AssertTypeExact(range, &SeqIntRange_Type))
 		goto err;
-	self->iri_end   = self->iri_range->ir_end;
-	self->iri_step  = self->iri_range->ir_step;
-	self->iri_index = self->iri_range->ir_start;
-	Dee_Incref(self->iri_range);
+	self->iri_end   = range->ir_end;
+	self->iri_step  = range->ir_step;
+	self->iri_index = range->ir_start;
 	return 0;
 err:
 	return -1;
@@ -1145,17 +1129,6 @@ iri_bool(IntRangeIterator *__restrict self) {
 	return !(OVERFLOW_SADD(index, self->iri_step, &new_index) ||
 	         (likely(self->iri_step >= 0) ? index >= self->iri_end
 	                                      : index <= self->iri_end));
-}
-
-PRIVATE NONNULL((1)) void DCALL
-iri_fini(IntRangeIterator *__restrict self) {
-	Dee_Decref(self->iri_range);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-iri_visit(IntRangeIterator *__restrict self,
-          dvisit_t proc, void *arg) {
-	Dee_Visit(self->iri_range);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1175,7 +1148,6 @@ iri_next(IntRangeIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst iri_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(IntRangeIterator, iri_range), "->?Ert:SeqIntRange"),
 	/* We allow write-access to these members because doing so doesn't
 	 * actually harm anything, although fiddling with this stuff may
 	 * break some weak expectations but should never crash anything! */
@@ -1225,7 +1197,7 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(IntRangeIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&iri_fini,
+		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1235,7 +1207,7 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&iri_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&iri_visit,
+	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL, /* TODO: bi-directional iterator support */
 	/* .tp_cmp           = */ &iri_cmp,
@@ -1258,12 +1230,10 @@ intrange_iter(IntRange *__restrict self) {
 	result = DeeObject_MALLOC(IntRangeIterator);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &SeqIntRangeIterator_Type);
-	result->iri_range = self;
 	result->iri_step  = self->ir_step;
 	result->iri_end   = self->ir_end;
 	result->iri_index = self->ir_start;
-	Dee_Incref(self);
+	DeeObject_Init(result, &SeqIntRangeIterator_Type);
 done:
 	return result;
 }

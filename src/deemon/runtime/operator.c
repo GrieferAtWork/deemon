@@ -61,6 +61,7 @@
 #include "../objects/seq/default-iterators.h"
 #include "../objects/seq/default-sequences.h"
 #include "../objects/seq/each.h"
+#include "../objects/seq/range.h"
 #include "../objects/seq/svec.h"
 #include "runtime_error.h"
 #include "strings.h"
@@ -346,6 +347,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_ENUMERATE_NODEFAULT               DeeType_InvokeSeqEnumerate_NODEFAULT
 #define DeeType_INVOKE_ENUMERATE_INDEX                   DeeType_InvokeSeqEnumerateIndex
 #define DeeType_INVOKE_ENUMERATE_INDEX_NODEFAULT         DeeType_InvokeSeqEnumerateIndex_NODEFAULT
+#define DeeType_INVOKE_ITERKEYS                          DeeType_InvokeSeqIterKeys
+#define DeeType_INVOKE_ITERKEYS_NODEFAULT                DeeType_InvokeSeqIterKeys_NODEFAULT
 #define DeeType_INVOKE_BOUNDITEM                         DeeType_InvokeSeqBoundItem
 #define DeeType_INVOKE_BOUNDITEM_NODEFAULT               DeeType_InvokeSeqBoundItem_NODEFAULT
 #define DeeType_INVOKE_HASITEM                           DeeType_InvokeSeqHasItem
@@ -479,6 +482,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg)                        (*(tp_self)->tp_seq->tp_foreach_pair)(self, proc, arg)
 #define DeeType_INVOKE_ENUMERATE(tp_self, self, proc, arg)                           (*(tp_self)->tp_seq->tp_enumerate)(self, proc, arg)
 #define DeeType_INVOKE_ENUMERATE_INDEX(tp_self, self, proc, arg, start, end) (*(tp_self)->tp_seq->tp_enumerate_index)(self, proc, arg, start, end)
+#define DeeType_INVOKE_ITERKEYS(tp_self, self)                                       (*(tp_self)->tp_seq->tp_iterkeys)(self)
 #define DeeType_INVOKE_BOUNDITEM(tp_self, self, index)                               (*(tp_self)->tp_seq->tp_bounditem)(self, index)
 #define DeeType_INVOKE_HASITEM(tp_self, self, index)                                 (*(tp_self)->tp_seq->tp_hasitem)(self, index)
 #define DeeType_INVOKE_SIZE(tp_self, self)                                           (*(tp_self)->tp_seq->tp_size)(self)
@@ -578,6 +582,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_FOREACH_PAIR_NODEFAULT            DeeType_INVOKE_FOREACH_PAIR
 #define DeeType_INVOKE_ENUMERATE_NODEFAULT               DeeType_INVOKE_ENUMERATE
 #define DeeType_INVOKE_ENUMERATE_INDEX_NODEFAULT         DeeType_INVOKE_ENUMERATE_INDEX
+#define DeeType_INVOKE_ITERKEYS_NODEFAULT                DeeType_INVOKE_ITERKEYS
 #define DeeType_INVOKE_BOUNDITEM_NODEFAULT               DeeType_INVOKE_BOUNDITEM
 #define DeeType_INVOKE_HASITEM_NODEFAULT                 DeeType_INVOKE_HASITEM
 #define DeeType_INVOKE_SIZE_NODEFAULT                    DeeType_INVOKE_SIZE
@@ -5637,7 +5642,7 @@ err:
 
 
 /* Default wrappers for implementing OPERATOR_ITER via `tp_iter <===> tp_foreach <===> tp_foreach_pair' */
-DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeach, (DeeObject *__restrict self)) {
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeach, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	/* TODO: Custom iterator type that uses "tp_foreach" */
 	(void)tp_self;
@@ -5647,7 +5652,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeach, (DeeObject *_
 }
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeachPair,
-                         (DeeObject *__restrict self)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	/* TODO: Custom iterator type that uses "tp_foreach_pair" */
 	(void)tp_self;
@@ -5657,7 +5662,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeachPair,
 }
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithEnumerate,
-                         (DeeObject *__restrict self)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	/* TODO: Custom iterator type that uses "tp_enumerate" */
 	(void)tp_self;
@@ -5667,7 +5672,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithEnumerate,
 }
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithEnumerateIndex,
-                         (DeeObject *__restrict self)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	/* TODO: Custom iterator type that uses "tp_enumerate_index" */
 	(void)tp_self;
@@ -5676,10 +5681,68 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithEnumerateIndex,
 	return NULL;
 }
 
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithIterKeysAndTryGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type:
+	 * >> local it = self.operator iterkeys();
+	 * >> return (() -> {
+	 * >>     foreach (local key: it) {
+	 * >>         local value = self.trygetitem(key);
+	 * >>         if (value != ITER_DONE)
+	 * >>             yield value;
+	 * >>     }
+	 * >> })().operator iter();
+	 */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithIterKeysAndGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type:
+	 * >> local it = self.operator iterkeys();
+	 * >> return (() -> {
+	 * >>     foreach (local key: it) {
+	 * >>         local value = self.trygetitem(key);
+	 * >>         if (value != ITER_DONE)
+	 * >>             yield value;
+	 * >>     }
+	 * >> })().operator iter();
+	 */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithIterKeysAndTryGetItemDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type:
+	 * >> local it = self.operator iterkeys();
+	 * >> return (() -> {
+	 * >>     foreach (local key: it) {
+	 * >>         local value = self.trygetitem(key);
+	 * >>         if (value != ITER_DONE)
+	 * >>             yield value;
+	 * >>     }
+	 * >> })().operator iter();
+	 */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
 
 /* tp_foreach */
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithIter,
-                         (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
 	Dee_ssize_t temp, result;
 	DREF DeeObject *iter, *elem;
 	LOAD_TP_SELF;
@@ -5731,7 +5794,7 @@ default_foreach_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithEnumerate,
-                         (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
 	struct default_foreach_with_enumerate_data data;
 	LOAD_TP_SELF;
 	data.dfwe_proc = proc;
@@ -5740,7 +5803,7 @@ DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithEnumerate,
 }
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithEnumerateIndex,
-                         (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
 	struct default_foreach_with_enumerate_data data;
 	LOAD_TP_SELF;
 	data.dfwe_proc = proc;
@@ -5750,7 +5813,7 @@ DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithEnumerateIndex,
 
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithIter,
-                         (DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
 	Dee_ssize_t temp, result;
 	DREF DeeObject *iter, *elem;
 	LOAD_TP_SELF;
@@ -5818,6 +5881,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(Dee_ssize_t, DefaultForeachPairWithEnumerate,
 	return DeeType_INVOKE_ENUMERATE_NODEFAULT(tp_self, self, &default_map_foreach_pair_with_enumerate_cb, &data);
 }
 
+DEFINE_INTERNAL_MAP_OPERATOR(Dee_ssize_t, DefaultForeachPairWithEnumerateDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
+	struct default_map_foreach_pair_with_enumerate_data data;
+	LOAD_TP_SELF;
+	data.dmfpwe_proc = proc;
+	data.dmfpwe_arg  = arg;
+	return DeeType_INVOKE_ENUMERATE(tp_self, self, &default_map_foreach_pair_with_enumerate_cb, &data);
+}
+
 DEFINE_INTERNAL_MAP_OPERATOR(Dee_ssize_t, DefaultForeachPairWithEnumerateIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
 	struct default_map_foreach_pair_with_enumerate_data data;
@@ -5855,13 +5927,148 @@ err:
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithForeachPair,
-                         (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
 	struct default_foreach_with_foreach_pair_data data;
 	LOAD_TP_SELF;
 	data.dfwfp_proc = proc;
 	data.dfwfp_arg  = arg;
 	return DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_foreach_with_foreach_pair_cb, &data);
 }
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithForeachPairDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	struct default_foreach_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.dfwfp_proc = proc;
+	data.dfwfp_arg  = arg;
+	return DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_foreach_with_foreach_pair_cb, &data);
+}
+
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithIterKeysAndTryGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *iterkeys, *key;
+	LOAD_TP_SELF;
+	iterkeys = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
+	if unlikely(!iterkeys)
+		goto err;
+	while (ITER_ISOK(key = DeeObject_IterNext(iterkeys))) {
+		DREF DeeObject *value;
+		value = DeeType_INVOKE_TRYGETITEM_NODEFAULT(tp_self, self, key);
+		if unlikely(!value)
+			goto err_iterkeys_key;
+		if (value != ITER_DONE) {
+			temp = (*proc)(arg, value);
+			Dee_Decref(value);
+		} else {
+			temp = 0;
+		}
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err_iterkeys_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err_iterkeys;
+	}
+	Dee_Decref(iterkeys);
+	if unlikely(!key)
+		goto err;
+	return result;
+err_iterkeys_temp:
+	Dee_Decref(iterkeys);
+	return temp;
+err_iterkeys_key:
+	Dee_Decref(key);
+err_iterkeys:
+	Dee_Decref(iterkeys);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithIterKeysAndGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *iterkeys, *key;
+	LOAD_TP_SELF;
+	iterkeys = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
+	if unlikely(!iterkeys)
+		goto err;
+	while (ITER_ISOK(key = DeeObject_IterNext(iterkeys))) {
+		DREF DeeObject *value;
+		value = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, key);
+		if unlikely(!value) {
+			if (!DeeError_Catch(&DeeError_IndexError) &&
+			    !DeeError_Catch(&DeeError_KeyError) &&
+			    !DeeError_Catch(&DeeError_UnboundItem))
+				goto err_iterkeys_key;
+			temp = 0;
+		} else {
+			temp = (*proc)(arg, value);
+			Dee_Decref(value);
+		}
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err_iterkeys_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err_iterkeys;
+	}
+	Dee_Decref(iterkeys);
+	if unlikely(!key)
+		goto err;
+	return result;
+err_iterkeys_temp:
+	Dee_Decref(iterkeys);
+	return temp;
+err_iterkeys_key:
+	Dee_Decref(key);
+err_iterkeys:
+	Dee_Decref(iterkeys);
+err:
+	return -1;
+}
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithIterKeysAndTryGetItemDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *iterkeys, *key;
+	LOAD_TP_SELF;
+	iterkeys = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
+	if unlikely(!iterkeys)
+		goto err;
+	while (ITER_ISOK(key = DeeObject_IterNext(iterkeys))) {
+		DREF DeeObject *value;
+		value = DeeType_INVOKE_TRYGETITEM(tp_self, self, key);
+		if unlikely(!value)
+			goto err_iterkeys_key;
+		if (value != ITER_DONE) {
+			temp = (*proc)(arg, value);
+			Dee_Decref(value);
+		} else {
+			temp = 0;
+		}
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err_iterkeys_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err_iterkeys;
+	}
+	Dee_Decref(iterkeys);
+	if unlikely(!key)
+		goto err;
+	return result;
+err_iterkeys_temp:
+	Dee_Decref(iterkeys);
+	return temp;
+err_iterkeys_key:
+	Dee_Decref(key);
+err_iterkeys:
+	Dee_Decref(iterkeys);
+err:
+	return -1;
+}
+
 
 struct default_foreach_pair_with_foreach_data {
 	Dee_foreach_pair_t dfpwf_proc; /* [1..1] Underlying callback. */
@@ -6159,6 +6366,66 @@ err:
 	return NULL;
 }
 
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterWithIterKeysAndTryGetItem,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type:
+	 * >> local it = self.operator iterkeys();
+	 * >> return (() -> {
+	 * >>     foreach (local key: it) {
+	 * >>         local value = self.trygetitem(key);
+	 * >>         if (value != ITER_DONE)
+	 * >>             yield (key, value);
+	 * >>     }
+	 * >> })().operator iter();
+	 */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterWithIterKeysAndGetItem,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type:
+	 * >> local it = self.operator iterkeys();
+	 * >> return (() -> {
+	 * >>     foreach (local key: it) {
+	 * >>         local value = self.trygetitem(key);
+	 * >>         if (value != ITER_DONE)
+	 * >>             yield (key, value);
+	 * >>     }
+	 * >> })().operator iter();
+	 */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterWithIterKeysAndTryGetItemDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type:
+	 * >> local it = self.operator iterkeys();
+	 * >> return (() -> {
+	 * >>     foreach (local key: it) {
+	 * >>         local value = self.trygetitem(key);
+	 * >>         if (value != ITER_DONE)
+	 * >>             yield (key, value);
+	 * >>     }
+	 * >> })().operator iter();
+	 */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
+
+
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeAndGetItemIndexFast,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
 	Dee_ssize_t temp, result = 0;
@@ -6383,6 +6650,131 @@ DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateWithEnumerateIndex,
 	data.dewei_proc = proc;
 	data.dewei_arg  = arg;
 	return DeeType_INVOKE_ENUMERATE_INDEX_NODEFAULT(tp_self, self, &default_enumerate_with_enumerate_index_cb, &data, 0, (size_t)-1);
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateWithIterKeysAndTryGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *iterkeys, *key;
+	LOAD_TP_SELF;
+	iterkeys = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
+	if unlikely(!iterkeys)
+		goto err;
+	while (ITER_ISOK(key = DeeObject_IterNext(iterkeys))) {
+		DREF DeeObject *value;
+		value = DeeType_INVOKE_TRYGETITEM_NODEFAULT(tp_self, self, key);
+		if unlikely(!value)
+			goto err_iterkeys_key;
+		if (value != ITER_DONE) {
+			temp = (*proc)(arg, key, value);
+			Dee_Decref(value);
+		} else {
+			temp = (*proc)(arg, key, NULL);
+		}
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err_iterkeys_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err_iterkeys;
+	}
+	Dee_Decref(iterkeys);
+	if unlikely(!key)
+		goto err;
+	return result;
+err_iterkeys_temp:
+	Dee_Decref(iterkeys);
+	return temp;
+err_iterkeys_key:
+	Dee_Decref(key);
+err_iterkeys:
+	Dee_Decref(iterkeys);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateWithIterKeysAndGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *iterkeys, *key;
+	LOAD_TP_SELF;
+	iterkeys = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
+	if unlikely(!iterkeys)
+		goto err;
+	while (ITER_ISOK(key = DeeObject_IterNext(iterkeys))) {
+		DREF DeeObject *value;
+		value = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, key);
+		if unlikely(!value) {
+			if (!DeeError_Catch(&DeeError_IndexError) &&
+			    !DeeError_Catch(&DeeError_KeyError) &&
+			    !DeeError_Catch(&DeeError_UnboundItem))
+				goto err_iterkeys_key;
+			temp = (*proc)(arg, key, NULL);
+		} else {
+			temp = (*proc)(arg, key, value);
+			Dee_Decref(value);
+		}
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err_iterkeys_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err_iterkeys;
+	}
+	Dee_Decref(iterkeys);
+	if unlikely(!key)
+		goto err;
+	return result;
+err_iterkeys_temp:
+	Dee_Decref(iterkeys);
+	return temp;
+err_iterkeys_key:
+	Dee_Decref(key);
+err_iterkeys:
+	Dee_Decref(iterkeys);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateWithIterKeysAndTryGetItemDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_enumerate_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *iterkeys, *key;
+	LOAD_TP_SELF;
+	iterkeys = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
+	if unlikely(!iterkeys)
+		goto err;
+	while (ITER_ISOK(key = DeeObject_IterNext(iterkeys))) {
+		DREF DeeObject *value;
+		value = DeeType_INVOKE_TRYGETITEM(tp_self, self, key);
+		if unlikely(!value)
+			goto err_iterkeys_key;
+		if (value != ITER_DONE) {
+			temp = (*proc)(arg, key, value);
+			Dee_Decref(value);
+		} else {
+			temp = (*proc)(arg, key, NULL);
+		}
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err_iterkeys_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err_iterkeys;
+	}
+	Dee_Decref(iterkeys);
+	if unlikely(!key)
+		goto err;
+	return result;
+err_iterkeys_temp:
+	Dee_Decref(iterkeys);
+	return temp;
+err_iterkeys_key:
+	Dee_Decref(key);
+err_iterkeys:
+	Dee_Decref(iterkeys);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultEnumerateWithSizeAndGetItemIndexFast,
@@ -7017,6 +7409,132 @@ DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultEnumerateIndexWithEnumerateDefault,
 	data.deiwe_start = start;
 	data.deiwe_end   = end;
 	return DeeType_INVOKE_ENUMERATE(tp_self, self, &default_enumerate_index_with_enumerate_cb, &data);
+}
+
+
+
+
+
+
+
+/* tp_iterkeys */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterKeysWithEnumerate,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type that uses "tp_enumerate" */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterKeysWithEnumerateIndex,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type that uses "tp_enumerate_index" */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterKeysWithSize,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	size_t size;
+	DREF IntRangeIterator *result;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(IntRangeIterator);
+	if unlikely(!result)
+		goto err;
+	result->iri_index = 0;
+	result->iri_end   = (Dee_ssize_t)size; /* TODO: Need another range iterator type that uses unsigned indices */
+	result->iri_step  = 1;
+	DeeObject_Init(result, &SeqIntRangeIterator_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterKeysWithSizeOb,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	DREF DeeObject *sizeob;
+	DREF RangeIterator *result;
+	LOAD_TP_SELF;
+	sizeob = DeeType_INVOKE_SIZEOB_NODEFAULT(tp_self, self);
+	if unlikely(!sizeob)
+		goto err;
+	result = DeeGCObject_MALLOC(RangeIterator);
+	if unlikely(!result)
+		goto err;
+	result->ri_index = DeeObject_NewDefault(Dee_TYPE(sizeob));
+	if unlikely(!result->ri_index)
+		goto err_sizeob;
+	result->ri_end  = sizeob; /* Inherit reference */
+	result->ri_step = NULL;
+	Dee_atomic_rwlock_init(&result->ri_lock);
+	result->ri_first = true;
+	result->ri_rev   = false;
+	DeeObject_Init(result, &SeqIntRangeIterator_Type);
+	return DeeGC_Track((DREF DeeObject *)result);
+err_sizeob:
+	Dee_Decref(sizeob);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterKeysWithSizeDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	size_t size;
+	DREF IntRangeIterator *result;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(IntRangeIterator);
+	if unlikely(!result)
+		goto err;
+	result->iri_index = 0;
+	result->iri_end   = (Dee_ssize_t)size; /* TODO: Need another range iterator type that uses unsigned indices */
+	result->iri_step  = 1;
+	DeeObject_Init(result, &SeqIntRangeIterator_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterKeysWithIter,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type for:
+	 * >> local it = self.operator iter();
+	 * >> return (() -> {
+	 * >>      foreach (local x, none: it) 
+	 * >>          yield x;
+	 * >> })().operator iter();
+	 */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterKeysWithIterDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type for:
+	 * >> local it = self.operator iter();
+	 * >> return (() -> {
+	 * >>      foreach (local x, none: it) 
+	 * >>          yield x;
+	 * >> })().operator iter();
+	 */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
 }
 
 
@@ -13963,6 +14481,7 @@ enum seq_feature {
 	FEAT_tp_foreach_pair,
 	FEAT_tp_enumerate,
 	FEAT_tp_enumerate_index,
+	FEAT_tp_iterkeys,
 	FEAT_tp_bounditem,
 	FEAT_tp_hasitem,
 	FEAT_tp_size,
@@ -14154,13 +14673,18 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq, unsi
 		seq_featureset_set(self, FEAT_tp_setrange);
 	if (Dee_type_seq_has_custom_tp_foreach(seq))
 		seq_featureset_set(self, FEAT_tp_foreach);
-	if (seq->tp_foreach_pair && !DeeType_IsDefaultForeachPair(seq->tp_foreach_pair)) {
+	if (seq->tp_foreach_pair && !DeeType_IsDefaultForeachPair(seq->tp_foreach_pair))
 		seq_featureset_set(self, FEAT_tp_foreach_pair);
-		seq_featureset_set(self, FEAT_tp_enumerate);
-		if (seq->tp_enumerate == NULL && seqclass == Dee_SEQCLASS_MAP) /* Binary compatible! (so cheat a little) */
-			seq->tp_enumerate = seq->tp_foreach_pair;
-	} else if (seq->tp_enumerate && !DeeType_IsDefaultEnumerate(seq->tp_enumerate)) {
-		seq_featureset_set(self, FEAT_tp_enumerate);
+	if (seq->tp_iterkeys && !DeeType_IsDefaultIterKeys(seq->tp_iterkeys))
+		seq_featureset_set(self, FEAT_tp_iterkeys);
+	if (seq->tp_enumerate) {
+		if (!DeeType_IsDefaultEnumerate(seq->tp_enumerate))
+			seq_featureset_set(self, FEAT_tp_enumerate);
+	} else if (seq_featureset_test(self, FEAT_tp_foreach_pair)) {
+		if (seqclass == Dee_SEQCLASS_MAP && !seq_featureset_test(self, FEAT_tp_iterkeys)) {
+			seq->tp_enumerate = seq->tp_foreach_pair; /* Binary compatible! (so cheat a little) */
+			seq_featureset_set(self, FEAT_tp_enumerate);
+		}
 	}
 	if (seq->tp_enumerate_index && !DeeType_IsDefaultEnumerateIndex(seq->tp_enumerate_index))
 		seq_featureset_set(self, FEAT_tp_enumerate_index);
@@ -14255,6 +14779,19 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_iter = &DeeObject_DefaultIterWithEnumerate;
 		} else if (seq_featureset_test(features, FEAT_tp_enumerate_index)) {
 			seq->tp_iter = &DeeObject_DefaultIterWithEnumerateIndex;
+		} else if (seq_featureset_test(features, FEAT_tp_iterkeys)) {
+			if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
+				seq->tp_iter = seqclass == Dee_SEQCLASS_MAP ? &DeeMap_DefaultIterWithIterKeysAndTryGetItem
+				                                            : &DeeObject_DefaultIterWithIterKeysAndTryGetItem;
+			} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
+				seq->tp_iter = seqclass == Dee_SEQCLASS_MAP ? &DeeMap_DefaultIterWithIterKeysAndGetItem
+				                                            : &DeeObject_DefaultIterWithIterKeysAndGetItem;
+			} else if ((seq_featureset_test(features, FEAT_tp_trygetitem_index) || seq_featureset_test(features, FEAT_tp_getitem_index)) ||
+			           (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash) || seq_featureset_test(features, FEAT_tp_getitem_string_hash)) ||
+			           (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash) || seq_featureset_test(features, FEAT_tp_getitem_string_len_hash))) {
+				seq->tp_iter = seqclass == Dee_SEQCLASS_MAP ? &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault
+				                                            : &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault;
+			}
 		}
 	}
 
@@ -14434,19 +14971,18 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 
 	/* tp_foreach */
 	if (!seq->tp_foreach) {
-		if (seq->tp_size && seq->tp_getitem_index) {
+		if (seqclass == Dee_SEQCLASS_MAP && seq_featureset_test(features, FEAT_tp_iterkeys)) {
+			if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
+				seq->tp_foreach = &DeeObject_DefaultForeachWithIterKeysAndTryGetItem;
+			} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
+				seq->tp_foreach = &DeeObject_DefaultForeachWithIterKeysAndGetItem;
+			} else if (seq->tp_getitem_index) {
+				seq->tp_foreach = &DeeObject_DefaultForeachWithIterKeysAndTryGetItemDefault;
+			}
+		} else if (seq->tp_size && seq->tp_getitem_index && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault;
-		} else if (seq->tp_getitem) {
+		} else if (seq->tp_getitem && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_foreach = &DeeSeq_DefaultForeachWithGetItemIndexDefault;
-		}
-	}
-
-	/* tp_contains */
-	if (!seq->tp_contains) {
-		if (seqclass == Dee_SEQCLASS_MAP && seq->tp_enumerate) {
-			seq->tp_contains = &DeeMap_DefaultContainsWithEnumerateDefault;
-		} else if (seqclass == Dee_SEQCLASS_SEQ && seq->tp_foreach) {
-			seq->tp_contains = &DeeSeq_DefaultContainsWithForeachDefault;
 		}
 	}
 
@@ -14469,10 +15005,25 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		}
 	}
 
+	/* tp_getitem */
+	if (!seq->tp_getitem) {
+		if (seq->tp_enumerate && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_getitem = &DeeMap_DefaultGetItemWithEnumerateDefault;
+		} else if (seq->tp_getitem_index) {
+			seq->tp_getitem = &DeeObject_DefaultGetItemWithGetItemIndexDefault;
+		}
+	}
+
 	/* tp_enumerate */
 	if (!seq->tp_enumerate) {
 		if (seq_featureset_test(features, FEAT_tp_enumerate_index)) {
 			seq->tp_enumerate = &DeeObject_DefaultEnumerateWithEnumerateIndex;
+		} else if (seq_featureset_test(features, FEAT_tp_iterkeys) && seq_featureset_test(features, FEAT_tp_trygetitem)) {
+			seq->tp_enumerate = &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_iterkeys) && seq_featureset_test(features, FEAT_tp_getitem)) {
+			seq->tp_enumerate = &DeeObject_DefaultEnumerateWithIterKeysAndGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_iterkeys) && seq->tp_getitem) {
+			seq->tp_enumerate = &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItemDefault; /* tp_trygetitem is always available when tp_getitem is! */
 		} else if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
 			seq->tp_enumerate = &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndexFast;
 		} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_trygetitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
@@ -14500,13 +15051,17 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_enumerate = &DeeMap_DefaultEnumerateWithForeachPairDefault;
 		}
 	}
+	if (!seq->tp_foreach_pair && seq->tp_enumerate && seqclass == Dee_SEQCLASS_MAP)
+		seq->tp_foreach_pair = &DeeMap_DefaultForeachPairWithEnumerateDefault;
+	if (!seq->tp_foreach && seq->tp_foreach_pair)
+		seq->tp_foreach = &DeeObject_DefaultForeachWithForeachPairDefault;
 
-	/* tp_getitem */
-	if (!seq->tp_getitem) {
-		if (seq->tp_enumerate && seqclass == Dee_SEQCLASS_MAP) {
-			seq->tp_getitem = &DeeMap_DefaultGetItemWithEnumerateDefault;
-		} else if (seq->tp_getitem_index) {
-			seq->tp_getitem = &DeeObject_DefaultGetItemWithGetItemIndexDefault;
+	/* tp_contains */
+	if (!seq->tp_contains) {
+		if (seqclass == Dee_SEQCLASS_MAP && seq->tp_enumerate) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithEnumerateDefault;
+		} else if (seqclass == Dee_SEQCLASS_SEQ && seq->tp_foreach) {
+			seq->tp_contains = &DeeSeq_DefaultContainsWithForeachDefault;
 		}
 	}
 
@@ -14526,6 +15081,8 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 	if (!seq->tp_enumerate_index) {
 		if (seq_featureset_test(features, FEAT_tp_enumerate)) {
 			seq->tp_enumerate_index = &DeeObject_DefaultEnumerateIndexWithEnumerate;
+		} else if (seq_featureset_test(features, FEAT_tp_iterkeys)) {
+			seq->tp_enumerate_index = &DeeObject_DefaultEnumerateIndexWithEnumerateDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
 			seq->tp_enumerate_index = &DeeSeq_DefaultEnumerateIndexWithSizeAndGetItemIndexFast;
 		} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_trygetitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
@@ -14981,6 +15538,27 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_trygetitem = &DeeMap_DefaultTryGetItemWithEnumerateDefault;
 		} else if (seq->tp_getitem) {
 			seq->tp_trygetitem = &DeeObject_DefaultTryGetItemWithGetItemDefault;
+		}
+	}
+	if (!seq->tp_iter && seq_featureset_test(features, FEAT_tp_iterkeys) && seq->tp_trygetitem)
+		seq->tp_iter = &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault;
+
+	/* tp_iterkeys */
+	if (!seq->tp_iterkeys) {
+		if (seq_featureset_test(features, FEAT_tp_enumerate)) {
+			seq->tp_iterkeys = &DeeObject_DefaultIterKeysWithEnumerate;
+		} else if (seq_featureset_test(features, FEAT_tp_enumerate_index)) {
+			seq->tp_iterkeys = &DeeObject_DefaultIterKeysWithEnumerateIndex;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_iterkeys = &DeeSeq_DefaultIterKeysWithSize;
+		} else if (seq_featureset_test(features, FEAT_tp_sizeob) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_iterkeys = &DeeSeq_DefaultIterKeysWithSizeOb;
+		} else if (seq->tp_size && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_iterkeys = &DeeSeq_DefaultIterKeysWithSizeDefault;
+		} else if (seq_featureset_test(features, FEAT_tp_iter) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIter;
+		} else if (seq->tp_iter && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIterDefault;
 		}
 	}
 

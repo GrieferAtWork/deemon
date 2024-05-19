@@ -1429,7 +1429,8 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *t
 #define DeeType_invoke_seq_tp_foreach_NODEFAULT(tp_self, tp_foreach, self, proc, arg)                                                (*tp_foreach)(self, proc, arg)
 #define DeeType_invoke_seq_tp_foreach_pair_NODEFAULT(tp_self, tp_foreach_pair, self, proc, arg)                                      (*tp_foreach_pair)(self, proc, arg)
 #define DeeType_invoke_seq_tp_enumerate_NODEFAULT(tp_self, tp_enumerate, self, proc, arg)                                            (*tp_enumerate)(self, proc, arg)
-#define DeeType_invoke_seq_tp_enumerate_index_NODEFAULT(tp_self, tp_enumerate_index, self, proc, arg, start, end)            (*tp_enumerate_index)(self, proc, arg, start, end)
+#define DeeType_invoke_seq_tp_enumerate_index_NODEFAULT(tp_self, tp_enumerate_index, self, proc, arg, start, end)                    (*tp_enumerate_index)(self, proc, arg, start, end)
+#define DeeType_invoke_seq_tp_iterkeys_NODEFAULT(tp_self, tp_iterkeys, self)                                                         (*tp_iterkeys)(self)
 #define DeeType_invoke_seq_tp_bounditem_NODEFAULT(tp_self, tp_bounditem, self, index)                                                (*tp_bounditem)(self, index)
 #define DeeType_invoke_seq_tp_hasitem_NODEFAULT(tp_self, tp_hasitem, self, index)                                                    (*tp_hasitem)(self, index)
 #define DeeType_invoke_seq_tp_size_NODEFAULT(tp_self, tp_size, self)                                                                 (*tp_size)(self)
@@ -1700,18 +1701,28 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithForea
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithForeachPair(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithEnumerate(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithEnumerateIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithIterKeysAndTryGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithIterKeysAndGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterWithSizeAndGetItemIndexFast(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterWithSizeAndTryGetItemIndex(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterWithSizeAndGetItemIndex(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterWithGetItemIndex(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterWithSizeObAndGetItem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterWithGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterWithIterKeysAndTryGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterWithIterKeysAndGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault(DeeObject *__restrict self);
 
 /* tp_foreach */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithIter(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithEnumerate(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithEnumerateIndex(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithForeachPair(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithForeachPairDefault(DeeObject *__restrict self, Dee_foreach_t proc, void *arg); /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithIterKeysAndTryGetItem(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithIterKeysAndGetItem(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithIterKeysAndTryGetItemDefault(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachWithSizeAndGetItemIndex(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
@@ -1727,9 +1738,13 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachPairWit
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachPairWithIter(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeMap_DefaultForeachPairWithEnumerate(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeMap_DefaultForeachPairWithEnumerateIndex(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeMap_DefaultForeachPairWithEnumerateDefault(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg); /* May call other DEFAULT operators */
 
 /* tp_enumerate */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultEnumerateWithEnumerateIndex(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultEnumerateWithIterKeysAndTryGetItem(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultEnumerateWithIterKeysAndGetItem(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultEnumerateWithIterKeysAndTryGetItemDefault(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateWithSizeAndGetItemIndex(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
@@ -1756,6 +1771,15 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexWit
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexWithSizeDefaultAndGetItemIndexDefault(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end); /* May call other DEFAULT operators */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexWithCounterAndForeachDefault(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end); /* May call other DEFAULT operators */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultEnumerateIndexWithEnumerateDefault(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end); /* May call other DEFAULT operators */
+
+/* tp_iterkeys */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterKeysWithEnumerate(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterKeysWithEnumerateIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterKeysWithSize(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterKeysWithSizeOb(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultIterKeysWithSizeDefault(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithIter(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithIterDefault(DeeObject *__restrict self);
 
 /* tp_sizeob */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultSizeObWithSize(DeeObject *__restrict self);
@@ -2226,6 +2250,7 @@ function getTpName(groupName: string): string {
 	result = result.replace("print_repr", "printrepr");
 	result = result.replace("size_ob", "sizeob");
 	result = result.replace("try_", "try");
+	result = result.replace("iter_keys", "iterkeys");
 	return result;
 }
 
@@ -2298,6 +2323,7 @@ function getOperatorPackage(name: string): string {
 		"ForeachPair" : "seq",
 		"Enumerate" : "seq",
 		"EnumerateIndex" : "seq",
+		"IterKeys" : "seq",
 		"Contains" : "seq",
 	}.get(name, "math");
 }
@@ -2481,16 +2507,26 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithF
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithForeachPair(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithEnumerate(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithEnumerateIndex(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithIterKeysAndTryGetItem(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithIterKeysAndGetItem(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithIterKeysAndTryGetItemDefault(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterWithSizeAndGetItemIndexFast(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterWithSizeAndTryGetItemIndex(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterWithSizeAndGetItemIndex(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterWithGetItemIndex(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterWithSizeObAndGetItem(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterWithGetItem(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_TDefaultIterWithIterKeysAndTryGetItem(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_TDefaultIterWithIterKeysAndGetItem(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_TDefaultIterWithIterKeysAndTryGetItemDefault(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithIter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithEnumerate(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithEnumerateIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithForeachPair(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithForeachPairDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithIterKeysAndTryGetItem(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithIterKeysAndGetItem(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithIterKeysAndTryGetItemDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultForeachWithSizeAndGetItemIndexFast(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultForeachWithSizeAndTryGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultForeachWithSizeAndGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
@@ -2504,7 +2540,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPai
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPairWithIter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeMap_TDefaultForeachPairWithEnumerate(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeMap_TDefaultForeachPairWithEnumerateIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeMap_TDefaultForeachPairWithEnumerateDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultEnumerateWithEnumerateIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultEnumerateWithIterKeysAndTryGetItem(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultEnumerateWithIterKeysAndGetItem(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultEnumerateWithIterKeysAndTryGetItemDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultEnumerateWithSizeAndGetItemIndexFast(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultEnumerateWithSizeAndTryGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultEnumerateWithSizeAndGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_t proc, void *arg);
@@ -2525,6 +2565,13 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultEnumerateInde
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultEnumerateIndexWithSizeDefaultAndGetItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeSeq_TDefaultEnumerateIndexWithCounterAndForeachDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultEnumerateIndexWithEnumerateDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterKeysWithEnumerate(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterKeysWithEnumerateIndex(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterKeysWithSize(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterKeysWithSizeOb(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_TDefaultIterKeysWithSizeDefault(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_TDefaultIterKeysWithIter(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_TDefaultIterKeysWithIterDefault(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultSizeObWithSize(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultSizeObWithSizeDefault(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeObject_TDefaultSizeWithSizeOb(DeeTypeObject *tp_self, DeeObject *self);
@@ -3028,17 +3075,27 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_iter) == &DeeObject_DefaultIterWithForeachPair ? map(DeeObject_TDefaultIterWithForeachPair) : \
 	 (tp_iter) == &DeeObject_DefaultIterWithEnumerate ? map(DeeObject_TDefaultIterWithEnumerate) : \
 	 (tp_iter) == &DeeObject_DefaultIterWithEnumerateIndex ? map(DeeObject_TDefaultIterWithEnumerateIndex) : \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndTryGetItem ? map(DeeObject_TDefaultIterWithIterKeysAndTryGetItem) : \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndGetItem ? map(DeeObject_TDefaultIterWithIterKeysAndGetItem) : \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault ? map(DeeObject_TDefaultIterWithIterKeysAndTryGetItemDefault) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast ? map(DeeSeq_TDefaultIterWithSizeAndGetItemIndexFast) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex ? map(DeeSeq_TDefaultIterWithSizeAndTryGetItemIndex) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndGetItemIndex ? map(DeeSeq_TDefaultIterWithSizeAndGetItemIndex) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithGetItemIndex ? map(DeeSeq_TDefaultIterWithGetItemIndex) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeObAndGetItem ? map(DeeSeq_TDefaultIterWithSizeObAndGetItem) : \
-	 (tp_iter) == &DeeSeq_DefaultIterWithGetItem ? map(DeeSeq_TDefaultIterWithGetItem) : default)
+	 (tp_iter) == &DeeSeq_DefaultIterWithGetItem ? map(DeeSeq_TDefaultIterWithGetItem) : \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndTryGetItem ? map(DeeMap_TDefaultIterWithIterKeysAndTryGetItem) : \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndGetItem ? map(DeeMap_TDefaultIterWithIterKeysAndGetItem) : \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault ? map(DeeMap_TDefaultIterWithIterKeysAndTryGetItemDefault) : default)
 #define DeeType_MapDefaultForeach(tp_foreach, map, default) \
 	((tp_foreach) == &DeeObject_DefaultForeachWithIter ? map(DeeObject_TDefaultForeachWithIter) : \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithEnumerate ? map(DeeObject_TDefaultForeachWithEnumerate) : \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithEnumerateIndex ? map(DeeObject_TDefaultForeachWithEnumerateIndex) : \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithForeachPair ? map(DeeObject_TDefaultForeachWithForeachPair) : \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithForeachPairDefault ? map(DeeObject_TDefaultForeachWithForeachPairDefault) : \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndTryGetItem ? map(DeeObject_TDefaultForeachWithIterKeysAndTryGetItem) : \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndGetItem ? map(DeeObject_TDefaultForeachWithIterKeysAndGetItem) : \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndTryGetItemDefault ? map(DeeObject_TDefaultForeachWithIterKeysAndTryGetItemDefault) : \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast ? map(DeeSeq_TDefaultForeachWithSizeAndGetItemIndexFast) : \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex ? map(DeeSeq_TDefaultForeachWithSizeAndTryGetItemIndex) : \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ? map(DeeSeq_TDefaultForeachWithSizeAndGetItemIndex) : \
@@ -3052,9 +3109,13 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_foreach_pair) == &DeeObject_DefaultForeachPairWithForeachDefault ? map(DeeObject_TDefaultForeachPairWithForeachDefault) : \
 	 (tp_foreach_pair) == &DeeObject_DefaultForeachPairWithIter ? map(DeeObject_TDefaultForeachPairWithIter) : \
 	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerate ? map(DeeMap_TDefaultForeachPairWithEnumerate) : \
-	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerateIndex ? map(DeeMap_TDefaultForeachPairWithEnumerateIndex) : default)
+	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerateIndex ? map(DeeMap_TDefaultForeachPairWithEnumerateIndex) : \
+	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerateDefault ? map(DeeMap_TDefaultForeachPairWithEnumerateDefault) : default)
 #define DeeType_MapDefaultEnumerate(tp_enumerate, map, default) \
 	((tp_enumerate) == &DeeObject_DefaultEnumerateWithEnumerateIndex ? map(DeeObject_TDefaultEnumerateWithEnumerateIndex) : \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItem ? map(DeeObject_TDefaultEnumerateWithIterKeysAndTryGetItem) : \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndGetItem ? map(DeeObject_TDefaultEnumerateWithIterKeysAndGetItem) : \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItemDefault ? map(DeeObject_TDefaultEnumerateWithIterKeysAndTryGetItemDefault) : \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndexFast ? map(DeeSeq_TDefaultEnumerateWithSizeAndGetItemIndexFast) : \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndTryGetItemIndex ? map(DeeSeq_TDefaultEnumerateWithSizeAndTryGetItemIndex) : \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndex ? map(DeeSeq_TDefaultEnumerateWithSizeAndGetItemIndex) : \
@@ -3076,6 +3137,14 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_enumerate_index) == &DeeSeq_DefaultEnumerateIndexWithSizeDefaultAndGetItemIndexDefault ? map(DeeSeq_TDefaultEnumerateIndexWithSizeDefaultAndGetItemIndexDefault) : \
 	 (tp_enumerate_index) == &DeeSeq_DefaultEnumerateIndexWithCounterAndForeachDefault ? map(DeeSeq_TDefaultEnumerateIndexWithCounterAndForeachDefault) : \
 	 (tp_enumerate_index) == &DeeObject_DefaultEnumerateIndexWithEnumerateDefault ? map(DeeObject_TDefaultEnumerateIndexWithEnumerateDefault) : default)
+#define DeeType_MapDefaultIterKeys(tp_iterkeys, map, default) \
+	((tp_iterkeys) == &DeeObject_DefaultIterKeysWithEnumerate ? map(DeeObject_TDefaultIterKeysWithEnumerate) : \
+	 (tp_iterkeys) == &DeeObject_DefaultIterKeysWithEnumerateIndex ? map(DeeObject_TDefaultIterKeysWithEnumerateIndex) : \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSize ? map(DeeSeq_TDefaultIterKeysWithSize) : \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSizeOb ? map(DeeSeq_TDefaultIterKeysWithSizeOb) : \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSizeDefault ? map(DeeSeq_TDefaultIterKeysWithSizeDefault) : \
+	 (tp_iterkeys) == &DeeMap_DefaultIterKeysWithIter ? map(DeeMap_TDefaultIterKeysWithIter) : \
+	 (tp_iterkeys) == &DeeMap_DefaultIterKeysWithIterDefault ? map(DeeMap_TDefaultIterKeysWithIterDefault) : default)
 #define DeeType_MapDefaultSizeOb(tp_sizeob, map, default) \
 	((tp_sizeob) == &DeeObject_DefaultSizeObWithSize ? map(DeeObject_TDefaultSizeObWithSize) : \
 	 (tp_sizeob) == &DeeObject_DefaultSizeObWithSizeDefault ? map(DeeObject_TDefaultSizeObWithSizeDefault) : default)
@@ -3597,17 +3666,27 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_iter) == &DeeObject_DefaultIterWithForeachPair || \
 	 (tp_iter) == &DeeObject_DefaultIterWithEnumerate || \
 	 (tp_iter) == &DeeObject_DefaultIterWithEnumerateIndex || \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndTryGetItem || \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndGetItem || \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault || \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast || \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex || \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndGetItemIndex || \
 	 (tp_iter) == &DeeSeq_DefaultIterWithGetItemIndex || \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeObAndGetItem || \
-	 (tp_iter) == &DeeSeq_DefaultIterWithGetItem)
+	 (tp_iter) == &DeeSeq_DefaultIterWithGetItem || \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndTryGetItem || \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndGetItem || \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault)
 #define DeeType_IsDefaultForeach(tp_foreach) \
 	((tp_foreach) == &DeeObject_DefaultForeachWithIter || \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithEnumerate || \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithEnumerateIndex || \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithForeachPair || \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithForeachPairDefault || \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndTryGetItem || \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndGetItem || \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndTryGetItemDefault || \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast || \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex || \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex || \
@@ -3621,9 +3700,13 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_foreach_pair) == &DeeObject_DefaultForeachPairWithForeachDefault || \
 	 (tp_foreach_pair) == &DeeObject_DefaultForeachPairWithIter || \
 	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerate || \
-	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerateIndex)
+	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerateIndex || \
+	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerateDefault)
 #define DeeType_IsDefaultEnumerate(tp_enumerate) \
 	((tp_enumerate) == &DeeObject_DefaultEnumerateWithEnumerateIndex || \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItem || \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndGetItem || \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItemDefault || \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndexFast || \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndTryGetItemIndex || \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndex || \
@@ -3645,6 +3728,14 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_enumerate_index) == &DeeSeq_DefaultEnumerateIndexWithSizeDefaultAndGetItemIndexDefault || \
 	 (tp_enumerate_index) == &DeeSeq_DefaultEnumerateIndexWithCounterAndForeachDefault || \
 	 (tp_enumerate_index) == &DeeObject_DefaultEnumerateIndexWithEnumerateDefault)
+#define DeeType_IsDefaultIterKeys(tp_iterkeys) \
+	((tp_iterkeys) == &DeeObject_DefaultIterKeysWithEnumerate || \
+	 (tp_iterkeys) == &DeeObject_DefaultIterKeysWithEnumerateIndex || \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSize || \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSizeOb || \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSizeDefault || \
+	 (tp_iterkeys) == &DeeMap_DefaultIterKeysWithIter || \
+	 (tp_iterkeys) == &DeeMap_DefaultIterKeysWithIterDefault)
 #define DeeType_IsDefaultSizeOb(tp_sizeob) \
 	((tp_sizeob) == &DeeObject_DefaultSizeObWithSize || \
 	 (tp_sizeob) == &DeeObject_DefaultSizeObWithSizeDefault)
@@ -4230,18 +4321,28 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_iter) == &DeeObject_DefaultIterWithForeachPair ? DeeObject_TDefaultIterWithForeachPair(tp_self, self) : \
 	 (tp_iter) == &DeeObject_DefaultIterWithEnumerate ? DeeObject_TDefaultIterWithEnumerate(tp_self, self) : \
 	 (tp_iter) == &DeeObject_DefaultIterWithEnumerateIndex ? DeeObject_TDefaultIterWithEnumerateIndex(tp_self, self) : \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndTryGetItem ? DeeObject_TDefaultIterWithIterKeysAndTryGetItem(tp_self, self) : \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndGetItem ? DeeObject_TDefaultIterWithIterKeysAndGetItem(tp_self, self) : \
+	 (tp_iter) == &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault ? DeeObject_TDefaultIterWithIterKeysAndTryGetItemDefault(tp_self, self) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast ? DeeSeq_TDefaultIterWithSizeAndGetItemIndexFast(tp_self, self) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex ? DeeSeq_TDefaultIterWithSizeAndTryGetItemIndex(tp_self, self) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeAndGetItemIndex ? DeeSeq_TDefaultIterWithSizeAndGetItemIndex(tp_self, self) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithGetItemIndex ? DeeSeq_TDefaultIterWithGetItemIndex(tp_self, self) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithSizeObAndGetItem ? DeeSeq_TDefaultIterWithSizeObAndGetItem(tp_self, self) : \
 	 (tp_iter) == &DeeSeq_DefaultIterWithGetItem ? DeeSeq_TDefaultIterWithGetItem(tp_self, self) : \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndTryGetItem ? DeeMap_TDefaultIterWithIterKeysAndTryGetItem(tp_self, self) : \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndGetItem ? DeeMap_TDefaultIterWithIterKeysAndGetItem(tp_self, self) : \
+	 (tp_iter) == &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault ? DeeMap_TDefaultIterWithIterKeysAndTryGetItemDefault(tp_self, self) : \
 	 default)
 #define DeeType_invoke_seq_tp_foreach_DEFAULT(tp_self, tp_foreach, self, proc, arg, default) \
 	((tp_foreach) == &DeeObject_DefaultForeachWithIter ? DeeObject_TDefaultForeachWithIter(tp_self, self, proc, arg) : \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithEnumerate ? DeeObject_TDefaultForeachWithEnumerate(tp_self, self, proc, arg) : \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithEnumerateIndex ? DeeObject_TDefaultForeachWithEnumerateIndex(tp_self, self, proc, arg) : \
 	 (tp_foreach) == &DeeObject_DefaultForeachWithForeachPair ? DeeObject_TDefaultForeachWithForeachPair(tp_self, self, proc, arg) : \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithForeachPairDefault ? DeeObject_TDefaultForeachWithForeachPairDefault(tp_self, self, proc, arg) : \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndTryGetItem ? DeeObject_TDefaultForeachWithIterKeysAndTryGetItem(tp_self, self, proc, arg) : \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndGetItem ? DeeObject_TDefaultForeachWithIterKeysAndGetItem(tp_self, self, proc, arg) : \
+	 (tp_foreach) == &DeeObject_DefaultForeachWithIterKeysAndTryGetItemDefault ? DeeObject_TDefaultForeachWithIterKeysAndTryGetItemDefault(tp_self, self, proc, arg) : \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast ? DeeSeq_TDefaultForeachWithSizeAndGetItemIndexFast(tp_self, self, proc, arg) : \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex ? DeeSeq_TDefaultForeachWithSizeAndTryGetItemIndex(tp_self, self, proc, arg) : \
 	 (tp_foreach) == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ? DeeSeq_TDefaultForeachWithSizeAndGetItemIndex(tp_self, self, proc, arg) : \
@@ -4257,9 +4358,13 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_foreach_pair) == &DeeObject_DefaultForeachPairWithIter ? DeeObject_TDefaultForeachPairWithIter(tp_self, self, proc, arg) : \
 	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerate ? DeeMap_TDefaultForeachPairWithEnumerate(tp_self, self, proc, arg) : \
 	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerateIndex ? DeeMap_TDefaultForeachPairWithEnumerateIndex(tp_self, self, proc, arg) : \
+	 (tp_foreach_pair) == &DeeMap_DefaultForeachPairWithEnumerateDefault ? DeeMap_TDefaultForeachPairWithEnumerateDefault(tp_self, self, proc, arg) : \
 	 default)
 #define DeeType_invoke_seq_tp_enumerate_DEFAULT(tp_self, tp_enumerate, self, proc, arg, default) \
 	((tp_enumerate) == &DeeObject_DefaultEnumerateWithEnumerateIndex ? DeeObject_TDefaultEnumerateWithEnumerateIndex(tp_self, self, proc, arg) : \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItem ? DeeObject_TDefaultEnumerateWithIterKeysAndTryGetItem(tp_self, self, proc, arg) : \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndGetItem ? DeeObject_TDefaultEnumerateWithIterKeysAndGetItem(tp_self, self, proc, arg) : \
+	 (tp_enumerate) == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItemDefault ? DeeObject_TDefaultEnumerateWithIterKeysAndTryGetItemDefault(tp_self, self, proc, arg) : \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndexFast ? DeeSeq_TDefaultEnumerateWithSizeAndGetItemIndexFast(tp_self, self, proc, arg) : \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndTryGetItemIndex ? DeeSeq_TDefaultEnumerateWithSizeAndTryGetItemIndex(tp_self, self, proc, arg) : \
 	 (tp_enumerate) == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndex ? DeeSeq_TDefaultEnumerateWithSizeAndGetItemIndex(tp_self, self, proc, arg) : \
@@ -4282,6 +4387,15 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_enumerate_index) == &DeeSeq_DefaultEnumerateIndexWithSizeDefaultAndGetItemIndexDefault ? DeeSeq_TDefaultEnumerateIndexWithSizeDefaultAndGetItemIndexDefault(tp_self, self, proc, arg, start, end) : \
 	 (tp_enumerate_index) == &DeeSeq_DefaultEnumerateIndexWithCounterAndForeachDefault ? DeeSeq_TDefaultEnumerateIndexWithCounterAndForeachDefault(tp_self, self, proc, arg, start, end) : \
 	 (tp_enumerate_index) == &DeeObject_DefaultEnumerateIndexWithEnumerateDefault ? DeeObject_TDefaultEnumerateIndexWithEnumerateDefault(tp_self, self, proc, arg, start, end) : \
+	 default)
+#define DeeType_invoke_seq_tp_iterkeys_DEFAULT(tp_self, tp_iterkeys, self, default) \
+	((tp_iterkeys) == &DeeObject_DefaultIterKeysWithEnumerate ? DeeObject_TDefaultIterKeysWithEnumerate(tp_self, self) : \
+	 (tp_iterkeys) == &DeeObject_DefaultIterKeysWithEnumerateIndex ? DeeObject_TDefaultIterKeysWithEnumerateIndex(tp_self, self) : \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSize ? DeeSeq_TDefaultIterKeysWithSize(tp_self, self) : \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSizeOb ? DeeSeq_TDefaultIterKeysWithSizeOb(tp_self, self) : \
+	 (tp_iterkeys) == &DeeSeq_DefaultIterKeysWithSizeDefault ? DeeSeq_TDefaultIterKeysWithSizeDefault(tp_self, self) : \
+	 (tp_iterkeys) == &DeeMap_DefaultIterKeysWithIter ? DeeMap_TDefaultIterKeysWithIter(tp_self, self) : \
+	 (tp_iterkeys) == &DeeMap_DefaultIterKeysWithIterDefault ? DeeMap_TDefaultIterKeysWithIterDefault(tp_self, self) : \
 	 default)
 #define DeeType_invoke_seq_tp_sizeob_DEFAULT(tp_self, tp_sizeob, self, default) \
 	((tp_sizeob) == &DeeObject_DefaultSizeObWithSize ? DeeObject_TDefaultSizeObWithSize(tp_self, self) : \
@@ -4750,6 +4864,8 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 DeeType_invoke_seq_tp_enumerate_DEFAULT(tp_self, tp_enumerate, self, proc, arg, DeeType_invoke_seq_tp_enumerate_NODEFAULT(tp_self, tp_enumerate, self, proc, arg))
 #define DeeType_invoke_seq_tp_enumerate_index(tp_self, tp_enumerate_index, self, proc, arg, start, end) \
 	 DeeType_invoke_seq_tp_enumerate_index_DEFAULT(tp_self, tp_enumerate_index, self, proc, arg, start, end, DeeType_invoke_seq_tp_enumerate_index_NODEFAULT(tp_self, tp_enumerate_index, self, proc, arg, start, end))
+#define DeeType_invoke_seq_tp_iterkeys(tp_self, tp_iterkeys, self) \
+	 DeeType_invoke_seq_tp_iterkeys_DEFAULT(tp_self, tp_iterkeys, self, DeeType_invoke_seq_tp_iterkeys_NODEFAULT(tp_self, tp_iterkeys, self))
 #define DeeType_invoke_seq_tp_sizeob(tp_self, tp_sizeob, self) \
 	 DeeType_invoke_seq_tp_sizeob_DEFAULT(tp_self, tp_sizeob, self, DeeType_invoke_seq_tp_sizeob_NODEFAULT(tp_self, tp_sizeob, self))
 #define DeeType_invoke_seq_tp_size(tp_self, tp_size, self) \
@@ -4988,8 +5104,10 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 #define DeeType_InvokeSeqForeachPair_NODEFAULT(tp_self, self, proc, arg)                         DeeType_invoke_seq_tp_foreach_pair_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_foreach_pair, self, proc, arg)
 #define DeeType_InvokeSeqEnumerate(tp_self, self, proc, arg)                                     DeeType_invoke_seq_tp_enumerate(tp_self, (tp_self)->tp_seq->tp_enumerate, self, proc, arg)
 #define DeeType_InvokeSeqEnumerate_NODEFAULT(tp_self, self, proc, arg)                           DeeType_invoke_seq_tp_enumerate_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_enumerate, self, proc, arg)
-#define DeeType_InvokeSeqEnumerateIndex(tp_self, self, proc, arg, start, end)            DeeType_invoke_seq_tp_enumerate_index(tp_self, (tp_self)->tp_seq->tp_enumerate_index, self, proc, arg, start, end)
-#define DeeType_InvokeSeqEnumerateIndex_NODEFAULT(tp_self, self, proc, arg, start, end)  DeeType_invoke_seq_tp_enumerate_index_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_enumerate_index, self, proc, arg, start, end)
+#define DeeType_InvokeSeqEnumerateIndex(tp_self, self, proc, arg, start, end)                    DeeType_invoke_seq_tp_enumerate_index(tp_self, (tp_self)->tp_seq->tp_enumerate_index, self, proc, arg, start, end)
+#define DeeType_InvokeSeqEnumerateIndex_NODEFAULT(tp_self, self, proc, arg, start, end)          DeeType_invoke_seq_tp_enumerate_index_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_enumerate_index, self, proc, arg, start, end)
+#define DeeType_InvokeSeqIterKeys(tp_self, self)                                                 DeeType_invoke_seq_tp_iterkeys(tp_self, (tp_self)->tp_seq->tp_iterkeys, self)
+#define DeeType_InvokeSeqIterKeys_NODEFAULT(tp_self, self)                                       DeeType_invoke_seq_tp_iterkeys_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_iterkeys, self)
 #define DeeType_InvokeSeqBoundItem(tp_self, self, index)                                         DeeType_invoke_seq_tp_bounditem(tp_self, (tp_self)->tp_seq->tp_bounditem, self, index)
 #define DeeType_InvokeSeqBoundItem_NODEFAULT(tp_self, self, index)                               DeeType_invoke_seq_tp_bounditem_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_bounditem, self, index)
 #define DeeType_InvokeSeqHasItem(tp_self, self, index)                                           DeeType_invoke_seq_tp_hasitem(tp_self, (tp_self)->tp_seq->tp_hasitem, self, index)
