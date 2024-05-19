@@ -33,6 +33,7 @@
 #include <deemon/system-features.h> /* memcpy(), memset(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
@@ -4849,6 +4850,38 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+bytes_xchitem_index(Bytes *self, size_t index, DeeObject *value) {
+	byte_t val, result;
+	if (DeeObject_AsUIntX(value, &val))
+		goto err;
+	if unlikely(index >= DeeBytes_SIZE(self)) {
+		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
+		goto err;
+	}
+	if unlikely(!DeeBytes_WRITABLE(self))
+		goto err_readonly;
+	result = atomic_xch(&DeeBytes_DATA(self)[index], val);
+	return DeeInt_NEWU(result);
+err_readonly:
+	err_bytes_not_writable((DeeObject *)self);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_xchitem(Bytes *self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
+	size_t index;
+	DeeObject *value;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	                    UNPuSIZ "o:xchitem", &index, &value))
+		goto err;
+	return bytes_xchitem_index(self, index, value);
+err:
+	return NULL;
+}
+
 
 
 INTDEF struct type_method tpconst bytes_methods[];
@@ -6087,6 +6120,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "#tIndexError{No substring matching the given @pattern could be found}"
 	                "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
 
+	TYPE_KWMETHOD(STR_xchitem, &bytes_xchitem, "(index:?Dint,value)->"),
 	TYPE_METHOD_END
 };
 

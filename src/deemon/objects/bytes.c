@@ -44,6 +44,7 @@
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
+#include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 /**/
@@ -1381,25 +1382,6 @@ err_readonly:
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-bytes_nsi_xch(Bytes *self, size_t index, DeeObject *value) {
-	byte_t val, result;
-	if (DeeObject_AsUIntX(value, &val))
-		goto err;
-	if unlikely(index >= DeeBytes_SIZE(self)) {
-		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
-		goto err;
-	}
-	if unlikely(!DeeBytes_WRITABLE(self))
-		goto err_readonly;
-	result = atomic_xch(&DeeBytes_DATA(self)[index], val);
-	return DeeInt_NEWU(result);
-err_readonly:
-	err_bytes_not_writable((DeeObject *)self);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 bytes_foreach(Bytes *__restrict self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -1446,18 +1428,6 @@ PRIVATE struct type_nsi tpconst bytes_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)&bytes_delrange_index_n,
 			/* .nsi_setrange     = */ (dfunptr_t)&bytes_setrange_index,
 			/* .nsi_setrange_n   = */ (dfunptr_t)&bytes_setrange_index_n,
-			/* .nsi_find         = */ (dfunptr_t)NULL,
-			/* .nsi_rfind        = */ (dfunptr_t)NULL,
-			/* .nsi_xch          = */ (dfunptr_t)&bytes_nsi_xch,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -1652,9 +1622,6 @@ PRIVATE struct type_buffer bytes_buffer = {
 	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
-
-
-INTDEF struct type_method tpconst bytes_methods[];
 
 
 PRIVATE WUNUSED DREF Bytes *DCALL
@@ -1876,6 +1843,8 @@ PRIVATE struct type_operator const bytes_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES),
 	TYPE_OPERATOR_FLAGS(OPERATOR_8003_GETBUF, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES),
 };
+
+INTDEF struct type_method tpconst bytes_methods[];
 
 PUBLIC DeeTypeObject DeeBytes_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),

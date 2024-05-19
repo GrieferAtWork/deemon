@@ -2527,7 +2527,7 @@ ot_bounditem_index(ObjectTable *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-ot_nsi_xchitem(ObjectTable *self, size_t index, DeeObject *newval) {
+ot_xchitem_index(ObjectTable *self, size_t index, DeeObject *newval) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
@@ -2585,26 +2585,26 @@ PRIVATE struct type_nsi tpconst ot_nsi = {
 			/* .nsi_delitem      = */ (dfunptr_t)&ot_delitem_index,
 			/* .nsi_setitem      = */ (dfunptr_t)&ot_setitem_index,
 			/* .nsi_getitem_fast = */ (dfunptr_t)&ot_getitem_index_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)NULL,
-			/* .nsi_rfind        = */ (dfunptr_t)NULL,
-			/* .nsi_xch          = */ (dfunptr_t)&ot_nsi_xchitem,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ot_xchitem(ObjectTable *self, size_t argc,
+           DeeObject *const *argv, DeeObject *kw) {
+	size_t index;
+	DeeObject *value;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	                    UNPuSIZ "o:xchitem", &index, &value))
+		goto err;
+	return ot_xchitem_index(self, index, value);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_method tpconst ot_methods[] = {
+	TYPE_KWMETHOD(STR_xchitem, &ot_xchitem, "(index:?Dint,value)->"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_seq ot_seq = {
@@ -2802,7 +2802,7 @@ INTERN DeeTypeObject ObjectTable_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ ot_methods,
 	/* .tp_getsets       = */ ot_getsets,
 	/* .tp_members       = */ ot_members,
 	/* .tp_class_methods = */ NULL,

@@ -35,6 +35,7 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/atomic.h>
 
+#include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
@@ -378,7 +379,7 @@ rvec_getitem_index_fast(RefVector *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-rvec_nsi_xchitem(RefVector *self, size_t index, DeeObject *value) {
+rvec_xchitem_index(RefVector *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->rv_length) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
@@ -403,213 +404,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL
-rvec_nsi_cmpdelitem(RefVector *self, size_t index,
-                    DeeObject *old_value) {
-	ASSERT(index < self->rv_length);
-	ASSERT(RefVector_IsWritable(self));
-	RefVector_LockWrite(self);
-	if unlikely(self->rv_vector[index] != old_value) {
-		RefVector_LockEndWrite(self);
-		return false;
-	}
-	self->rv_vector[index] = NULL;
-	RefVector_LockEndWrite(self);
-	Dee_Decref(old_value);
-	return true;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-rvec_nsi_find(RefVector *self, size_t start, size_t end,
-              DeeObject *keyed_search_item, DeeObject *key) {
-	size_t i;
-	DREF DeeObject *item;
-	int temp;
-	if (start > self->rv_length)
-		start = self->rv_length;
-	for (i = start; i < end; ++i) {
-		item = rvec_getitem_index_fast(self, i);
-		if (!item)
-			continue; /* Unbound index */
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
-		Dee_Decref(item);
-		if (temp == 0)
-			continue;
-		if unlikely(temp < 0)
-			goto err;
-		return i;
-	}
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-rvec_nsi_rfind(RefVector *self, size_t start, size_t end,
-               DeeObject *keyed_search_item, DeeObject *key) {
-	size_t i;
-	DREF DeeObject *item;
-	int temp;
-	if (start > self->rv_length)
-		start = self->rv_length;
-	i = end;
-	while (i > start) {
-		--i;
-		item = rvec_getitem_index_fast(self, i);
-		if (!item)
-			continue; /* Unbound index */
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
-		Dee_Decref(item);
-		if (temp == 0)
-			continue;
-		if unlikely(temp < 0)
-			goto err;
-		return i;
-	}
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
-
-PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-rvec_nsi_remove(RefVector *self, size_t start, size_t end,
-                DeeObject *keyed_search_item, DeeObject *key) {
-	size_t i;
-	DREF DeeObject *item;
-	int temp;
-	if (!RefVector_IsWritable(self))
-		return err_readonly_rvec();
-	if (start > self->rv_length)
-		start = self->rv_length;
-again:
-	for (i = start; i < end; ++i) {
-		item = rvec_getitem_index_fast(self, i);
-		if (!item)
-			continue; /* Unbound index */
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
-		Dee_Decref(item);
-		if (temp == 0)
-			continue;
-		if unlikely(temp < 0)
-			goto err;
-		/* Found the item. */
-		if (!rvec_nsi_cmpdelitem(self, i, item))
-			goto again;
-		return 1;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-rvec_nsi_rremove(RefVector *self, size_t start, size_t end,
-                 DeeObject *keyed_search_item, DeeObject *key) {
-	size_t i;
-	DREF DeeObject *item;
-	int temp;
-	if (!RefVector_IsWritable(self))
-		return err_readonly_rvec();
-	if (start > self->rv_length)
-		start = self->rv_length;
-again:
-	i = end;
-	while (i > start) {
-		--i;
-		item = rvec_getitem_index_fast(self, i);
-		if (!item)
-			continue; /* Unbound index */
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
-		Dee_Decref(item);
-		if (temp == 0)
-			continue;
-		if unlikely(temp < 0)
-			goto err;
-		/* Found the item. */
-		if (!rvec_nsi_cmpdelitem(self, i, item))
-			goto again;
-		return 1;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-rvec_nsi_removeall(RefVector *self, size_t start, size_t end,
-                   DeeObject *keyed_search_item, DeeObject *key) {
-	size_t i;
-	size_t result = 0;
-	DREF DeeObject *item;
-	int temp;
-	if (!RefVector_IsWritable(self))
-		return err_readonly_rvec();
-	if (start > self->rv_length)
-		start = self->rv_length;
-again:
-	for (i = start; i < end; ++i) {
-		item = rvec_getitem_index_fast(self, i);
-		if (!item)
-			continue; /* Unbound index */
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
-		Dee_Decref(item);
-		if (temp == 0)
-			continue;
-		if unlikely(temp < 0)
-			goto err;
-		/* Found the item. */
-		if (!rvec_nsi_cmpdelitem(self, i, item))
-			goto again;
-		++result;
-		if unlikely(result == (size_t)-2)
-			break; /* Prevent overflows. */
-	}
-	return result;
-err:
-	return (size_t)-1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-rvec_nsi_removeif(RefVector *self, size_t start, size_t end,
-                  DeeObject *should_remove) {
-	size_t i;
-	size_t result = 0;
-	int temp;
-	DREF DeeObject *item, *callback_result;
-	if (!RefVector_IsWritable(self))
-		return err_readonly_rvec();
-	if (start > self->rv_length)
-		start = self->rv_length;
-again:
-	for (i = start; i < end; ++i) {
-		item = rvec_getitem_index_fast(self, i);
-		if (!item)
-			continue; /* Unbound index */
-		callback_result = DeeObject_Call(should_remove, 1, &item);
-		Dee_Decref(item);
-		if unlikely(!callback_result)
-			goto err;
-		temp = DeeObject_Bool(callback_result);
-		Dee_Decref(callback_result);
-		if (temp == 0)
-			continue;
-		if unlikely(temp < 0)
-			goto err;
-		/* Found the item. */
-		if (!rvec_nsi_cmpdelitem(self, i, item))
-			goto again;
-		++result;
-		if unlikely(result == (size_t)-2)
-			break; /* Prevent overflows. */
-	}
-	return result;
-err:
-	return (size_t)-1;
-}
-
 PRIVATE NONNULL((1)) void DCALL
-rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
+rvec_delitem_index_fast(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *oldobj;
 	ASSERT(index < self->rv_length);
 	ASSERT(RefVector_IsWritable(self));
@@ -629,7 +425,7 @@ rvec_delrange_index(RefVector *__restrict self,
 		return err_readonly_rvec();
 	DeeSeqRange_Clamp(&range, i_begin, i_end, self->rv_length);
 	for (i = range.sr_start; i < range.sr_end; ++i)
-		rvec_nsi_delitem_fast(self, i);
+		rvec_delitem_index_fast(self, i);
 	return 0;
 }
 
@@ -643,13 +439,13 @@ rvec_delrange_index_n(RefVector *__restrict self, Dee_ssize_t i_begin) {
 		return err_readonly_rvec();
 	start = DeeSeqRange_Clamp_n(i_begin, self->rv_length);
 	for (i = start; i < self->rv_length; ++i)
-		rvec_nsi_delitem_fast(self, i);
+		rvec_delitem_index_fast(self, i);
 	return 0;
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
 PRIVATE NONNULL((1, 3)) void DCALL
-rvec_nsi_setitem_fast(RefVector *self, size_t index,
+rvec_setitem_index_fast(RefVector *self, size_t index,
                       /*inherit(always)*/ DREF DeeObject *value) {
 	DREF DeeObject *oldobj;
 	ASSERT(index < self->rv_length);
@@ -680,7 +476,7 @@ rvec_setrange_index(RefVector *self, Dee_ssize_t i_begin,
 			elem = DeeFastSeq_GetItem_deprecated(values, i - range.sr_start);
 			if unlikely(!elem)
 				goto err;
-			rvec_nsi_setitem_fast(self, i, elem); /* Inherit reference. */
+			rvec_setitem_index_fast(self, i, elem); /* Inherit reference. */
 		}
 	} else {
 		DREF DeeObject *iterator;
@@ -698,7 +494,7 @@ err_iterator:
 				Dee_Decref(iterator);
 				goto err;
 			}
-			rvec_nsi_setitem_fast(self, i, elem); /* Inherit reference. */
+			rvec_setitem_index_fast(self, i, elem); /* Inherit reference. */
 		}
 		/* Make sure that the given iterator ends here! */
 		elem = DeeObject_IterNext(iterator);
@@ -791,20 +587,26 @@ PRIVATE struct type_nsi tpconst rvec_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)&rvec_delrange_index_n,
 			/* .nsi_setrange     = */ (dfunptr_t)&rvec_setrange_index,
 			/* .nsi_setrange_n   = */ (dfunptr_t)&rvec_setrange_index_n,
-			/* .nsi_find         = */ (dfunptr_t)&rvec_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&rvec_nsi_rfind,
-			/* .nsi_xch          = */ (dfunptr_t)&rvec_nsi_xchitem,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)&rvec_nsi_remove,
-			/* .nsi_rremove      = */ (dfunptr_t)&rvec_nsi_rremove,
-			/* .nsi_removeall    = */ (dfunptr_t)&rvec_nsi_removeall,
-			/* .nsi_removeif     = */ (dfunptr_t)&rvec_nsi_removeif
 		}
 	}
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+rvec_xchitem(RefVector *self, size_t argc,
+             DeeObject *const *argv, DeeObject *kw) {
+	size_t index;
+	DeeObject *value;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	                    UNPuSIZ "o:xchitem", &index, &value))
+		goto err;
+	return rvec_xchitem_index(self, index, value);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_method tpconst rvec_methods[] = {
+	TYPE_KWMETHOD(STR_xchitem, &rvec_xchitem, "(index:?Dint,value)->"),
+	TYPE_METHOD_END
 };
 
 
@@ -942,7 +744,7 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ rvec_methods,
 	/* .tp_getsets       = */ rvec_getsets,
 	/* .tp_members       = */ rvec_members,
 	/* .tp_class_methods = */ NULL,

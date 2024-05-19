@@ -552,158 +552,6 @@ typebases_size(TypeMRO *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-typemro_nsi_find(TypeMRO *self, size_t start, size_t end,
-                 DeeTypeObject *keyed_search_item, DeeObject *key) {
-	size_t result = 0;
-	DeeTypeMRO mro;
-	DeeTypeObject *iter;
-	iter = DeeTypeMRO_Init(&mro, self->tm_type);
-	if (key != NULL) {
-		do {
-			if (result >= start) {
-				int status;
-				status = DeeObject_TryCmpKeyEqAsBool((DeeObject *)keyed_search_item,
-				                                (DeeObject *)iter, key);
-				if unlikely(status < 0)
-					goto err;
-				if (status > 1)
-					return result;
-			}
-			++result;
-			if (result >= end)
-				break;
-		} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
-	} else {
-		do {
-			if (result >= start) {
-				if (iter == keyed_search_item)
-					return result;
-			}
-			++result;
-			if (result >= end)
-				break;
-		} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
-	}
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-typemro_nsi_rfind(TypeMRO *self, size_t start, size_t end,
-                  DeeTypeObject *keyed_search_item, DeeObject *key) {
-	size_t result = (size_t)-1, i = 0;
-	DeeTypeMRO mro;
-	DeeTypeObject *iter;
-	iter = DeeTypeMRO_Init(&mro, self->tm_type);
-	if (key != NULL) {
-		do {
-			if (i >= start) {
-				int status;
-				status = DeeObject_TryCmpKeyEqAsBool((DeeObject *)keyed_search_item,
-				                                (DeeObject *)iter, key);
-				if unlikely(status < 0)
-					goto err;
-				if (status > 1)
-					result = i;
-			}
-			++i;
-			if (i >= end)
-				break;
-		} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
-	} else {
-		do {
-			if (i >= start) {
-				if (iter == keyed_search_item)
-					result = i;
-			}
-			++i;
-			if (i >= end)
-				break;
-		} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
-	}
-	return result;
-err:
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-typebases_nsi_find(TypeMRO *self, size_t start, size_t end,
-                   DeeTypeObject *keyed_search_item, DeeObject *key) {
-	size_t result = 0;
-	DeeTypeMRO mro;
-	DeeTypeObject *iter;
-	iter = DeeTypeMRO_Init(&mro, self->tm_type);
-	if (key != NULL) {
-		while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL) {
-			if (result >= start) {
-				if (result >= end)
-					break;
-				int status;
-				status = DeeObject_TryCmpKeyEqAsBool((DeeObject *)keyed_search_item,
-				                                (DeeObject *)iter, key);
-				if unlikely(status < 0)
-					goto err;
-				if (status > 1)
-					return result;
-			}
-			++result;
-		}
-	} else {
-		while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL) {
-			if (result >= start) {
-				if (iter == keyed_search_item)
-					return result;
-			}
-			++result;
-			if (result >= end)
-				break;
-		}
-	}
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-typebases_nsi_rfind(TypeMRO *self, size_t start, size_t end,
-                    DeeTypeObject *keyed_search_item, DeeObject *key) {
-	size_t result = (size_t)-1, i = 0;
-	DeeTypeMRO mro;
-	DeeTypeObject *iter;
-	iter = DeeTypeMRO_Init(&mro, self->tm_type);
-	if (key != NULL) {
-		while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL) {
-			if (i >= start) {
-				int status;
-				status = DeeObject_TryCmpKeyEqAsBool((DeeObject *)keyed_search_item,
-				                                (DeeObject *)iter, key);
-				if unlikely(status < 0)
-					goto err;
-				if (status > 1)
-					result = i;
-			}
-			++i;
-			if (i >= end)
-				break;
-		}
-	} else {
-		while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL) {
-			if (i >= start) {
-				if (iter == keyed_search_item)
-					result = i;
-			}
-			++i;
-			if (i >= end)
-				break;
-		}
-	}
-	return result;
-err:
-	return (size_t)-2;
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 typemro_getitem_index(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
@@ -812,24 +660,6 @@ PRIVATE struct type_nsi tpconst typemro_nsi = {
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)&typemro_getitem_index_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&typemro_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&typemro_nsi_rfind,
-			/* .nsi_xch          = */ (dfunptr_t)NULL,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -845,24 +675,6 @@ PRIVATE struct type_nsi tpconst typebases_nsi = {
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)&typebases_getitem_index_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&typebases_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&typebases_nsi_rfind,
-			/* .nsi_xch          = */ (dfunptr_t)NULL,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };

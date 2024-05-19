@@ -618,218 +618,6 @@ again:
 	return count;
 }
 
-/* @return: 0 : The given `keyed_search_item' count not found found.
- * @return: 1 : The given `keyed_search_item' was deleted once.
- * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-DeeList_Remove(DeeObject *self, size_t start, size_t end,
-               DeeObject *keyed_search_item, DeeObject *key) {
-	List *me = (List *)self;
-	DeeObject **vector;
-	size_t i, length;
-	ASSERT_OBJECT_TYPE(me, &DeeList_Type);
-	ASSERT_OBJECT_OPT(key);
-	ASSERT_OBJECT(keyed_search_item);
-	DeeList_LockRead(me);
-again:
-	vector = me->l_list.ol_elemv;
-	length = me->l_list.ol_elemc;
-	for (i = start; i < length && i < end; ++i) {
-		DREF DeeObject *this_elem;
-		int temp;
-		this_elem = DeeList_GET(me, i);
-		Dee_Incref(this_elem);
-		DeeList_LockEndRead(me);
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, this_elem, key);
-		Dee_Decref(this_elem);
-		if unlikely(temp < 0)
-			return temp;
-		if (temp) {
-			/* This is the element we're supposed to remove. */
-			DeeList_LockWrite(me);
-
-			/* Check if the list was changed. */
-			if (me->l_list.ol_elemv != vector ||
-			    me->l_list.ol_elemc != length ||
-			    DeeList_GET(me, i) != this_elem) {
-				DeeList_LockDowngrade(me);
-				goto again;
-			}
-
-			/* Override the element with its successors. */
-			--length;
-			me->l_list.ol_elemc = length;
-			memmovedownc(me->l_list.ol_elemv + i,
-			             me->l_list.ol_elemv + i + 1,
-			             length - i,
-			             sizeof(DREF DeeObject *));
-			DeeList_LockEndWrite(me);
-
-			/* Drop the reference previously held by the list. */
-			Dee_Decref(this_elem);
-			return 1;
-		}
-
-		/* Continue onwards. */
-		DeeList_LockRead(me);
-
-		/* Check if the list was changed. */
-		if (me->l_list.ol_elemv != vector ||
-		    me->l_list.ol_elemc != length)
-			goto again;
-	}
-	DeeList_LockEndRead(me);
-	return 0;
-}
-
-/* @return: 0 : The given `keyed_search_item' count not found found.
- * @return: 1 : The given `keyed_search_item' was deleted once.
- * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-DeeList_RRemove(DeeObject *self, size_t start, size_t end,
-                DeeObject *keyed_search_item, DeeObject *key) {
-	List *me = (List *)self;
-	DeeObject **vector;
-	size_t i, length;
-	ASSERT_OBJECT_TYPE(me, &DeeList_Type);
-	ASSERT_OBJECT_OPT(key);
-	ASSERT_OBJECT(keyed_search_item);
-	DeeList_LockRead(me);
-again:
-	vector = me->l_list.ol_elemv;
-	length = me->l_list.ol_elemc;
-	i      = end;
-	if (i > length)
-		i = length;
-	for (;;) {
-		DREF DeeObject *this_elem;
-		int temp;
-		if (i <= start)
-			break;
-		--i;
-		this_elem = DeeList_GET(me, i);
-		Dee_Incref(this_elem);
-		DeeList_LockEndRead(me);
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, this_elem, key);
-		Dee_Decref(this_elem);
-		if unlikely(temp < 0)
-			return temp;
-		if (temp) {
-			/* This is the element we're supposed to remove. */
-			DeeList_LockWrite(me);
-
-			/* Check if the list was changed. */
-			if (me->l_list.ol_elemv != vector ||
-			    me->l_list.ol_elemc != length ||
-			    DeeList_GET(me, i) != this_elem) {
-				DeeList_LockDowngrade(me);
-				goto again;
-			}
-
-			/* Override the element with its successors. */
-			--length;
-			me->l_list.ol_elemc = length;
-			memmovedownc(me->l_list.ol_elemv + i,
-			             me->l_list.ol_elemv + i + 1,
-			             length - i,
-			             sizeof(DREF DeeObject *));
-			DeeList_LockEndWrite(me);
-
-			/* Drop the reference previously held by the list. */
-			Dee_Decref(this_elem);
-			return 1;
-		}
-
-		/* Continue onwards. */
-		DeeList_LockRead(me);
-
-		/* Check if the list was changed. */
-		if (me->l_list.ol_elemv != vector ||
-		    me->l_list.ol_elemc != length)
-			goto again;
-	}
-	DeeList_LockEndRead(me);
-	return 0;
-}
-
-
-/* Remove all items matching `!!should(item)'
- * @return: * : The number of removed items.
- * @return: -1: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeList_RemoveIf(DeeObject *self, DeeObject *should,
-                 size_t start, size_t end, size_t max) {
-	List *me = (List *)self;
-	DeeObject **vector;
-	size_t i, length, result = 0;
-	ASSERT_OBJECT_TYPE(me, &DeeList_Type);
-	if unlikely(!max)
-		goto done;
-	DeeList_LockRead(me);
-again:
-	vector = me->l_list.ol_elemv;
-	length = me->l_list.ol_elemc;
-	for (i = start; i < length && i < end; ++i) {
-		DREF DeeObject *callback_result;
-		DREF DeeObject *this_elem;
-		int temp;
-		this_elem = DeeList_GET(me, i);
-		Dee_Incref(this_elem);
-		DeeList_LockEndRead(me);
-
-		/* Invoke a predicate. */
-		callback_result = DeeObject_Call(should, 1, &this_elem);
-		Dee_Decref(this_elem);
-		if unlikely(!callback_result)
-			goto err;
-		temp = DeeObject_Bool(callback_result);
-		Dee_Decref(callback_result);
-		if unlikely(temp < 0)
-			goto err;
-		if (temp) {
-			/* This is the element we're supposed to remove. */
-			DeeList_LockWrite(me);
-
-			/* Check if the list was changed. */
-			if (me->l_list.ol_elemv != vector ||
-			    me->l_list.ol_elemc != length ||
-			    DeeList_GET(me, i) != this_elem) {
-				DeeList_LockDowngrade(me);
-				goto again;
-			}
-
-			/* Override the element with its successors. */
-			--length;
-			me->l_list.ol_elemc = length;
-			memmovedownc(me->l_list.ol_elemv + i,
-			             me->l_list.ol_elemv + i + 1,
-			             length - i,
-			             sizeof(DREF DeeObject *));
-			DeeList_LockEndWrite(me);
-			++result;
-
-			/* Drop the reference previously held by the list. */
-			Dee_Decref(this_elem);
-			if unlikely(result >= max)
-				goto done;
-		}
-
-		/* Continue onwards. */
-		DeeList_LockRead(me);
-
-		/* Check if the list was changed. */
-		if (me->l_list.ol_elemv != vector ||
-		    me->l_list.ol_elemc != length)
-			goto again;
-	}
-	DeeList_LockEndRead(me);
-done:
-	ASSERT(result != (size_t)-1);
-	return result;
-err:
-	return (size_t)-1;
-}
-
 /* Resize `self' to have a length of `newsize'.
  * If the size increases, use `filler' for new items.
  * @return: 0 : Success.
@@ -927,19 +715,21 @@ err:
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-DeeList_RemoveAll(List *self, size_t start, size_t end,
-                  DeeObject *keyed_search_item, DeeObject *key) {
+PUBLIC WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeList_RemoveIf(DeeObject *self, DeeObject *should,
+                 size_t start, size_t end, size_t max) {
 	List *me = (List *)self;
 	DeeObject **vector;
-	size_t i, length, result;
+	size_t i, length, result = 0;
 	ASSERT_OBJECT_TYPE(me, &DeeList_Type);
+	if unlikely(!max)
+		goto done;
 	DeeList_LockRead(me);
 again:
-	result = 0;
 	vector = me->l_list.ol_elemv;
 	length = me->l_list.ol_elemc;
 	for (i = start; i < length && i < end; ++i) {
+		DREF DeeObject *callback_result;
 		DREF DeeObject *this_elem;
 		int temp;
 		this_elem = DeeList_GET(me, i);
@@ -947,7 +737,12 @@ again:
 		DeeList_LockEndRead(me);
 
 		/* Invoke a predicate. */
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, this_elem, key);
+		callback_result = DeeObject_Call(should, 1, &this_elem);
+		Dee_Decref(this_elem);
+		if unlikely(!callback_result)
+			goto err;
+		temp = DeeObject_Bool(callback_result);
+		Dee_Decref(callback_result);
 		if unlikely(temp < 0)
 			goto err;
 		if (temp) {
@@ -969,11 +764,13 @@ again:
 			             me->l_list.ol_elemv + i + 1,
 			             length - i,
 			             sizeof(DREF DeeObject *));
-			++result;
 			DeeList_LockEndWrite(me);
+			++result;
 
 			/* Drop the reference previously held by the list. */
 			Dee_Decref(this_elem);
+			if unlikely(result >= max)
+				goto done;
 		}
 
 		/* Continue onwards. */
@@ -985,6 +782,7 @@ again:
 			goto again;
 	}
 	DeeList_LockEndRead(me);
+done:
 	ASSERT(result != (size_t)-1);
 	return result;
 err:
@@ -1446,7 +1244,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_getrange_index(List *__restrict me, dssize_t i_begin, dssize_t i_end) {
 	struct Dee_seq_range range;
 	size_t range_size;
@@ -1566,7 +1364,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_delitem_index(List *__restrict me, size_t index) {
 	DREF DeeObject *delob;
 	size_t length;
@@ -2304,7 +2102,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-list_nsi_xch(List *me, size_t index, DeeObject *value) {
+list_xchitem_index(List *me, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	DeeList_LockWrite(me);
 	if (index >= DeeList_SIZE(me)) {
@@ -2389,16 +2187,6 @@ PRIVATE struct type_nsi tpconst list_nsi = {
 			/* .nsi_setrange_n   = */ (dfunptr_t)&list_setrange_index_n,
 			/* .nsi_find         = */ (dfunptr_t)&list_nsi_find,
 			/* .nsi_rfind        = */ (dfunptr_t)&list_nsi_rfind,
-			/* .nsi_xch          = */ (dfunptr_t)&list_nsi_xch,
-			/* .nsi_insert       = */ (dfunptr_t)&DeeList_Insert,
-			/* .nsi_insertall    = */ (dfunptr_t)&DeeList_InsertSequence,
-			/* .nsi_insertvec    = */ (dfunptr_t)&DeeList_InsertVector,
-			/* .nsi_pop          = */ (dfunptr_t)&DeeList_Pop,
-			/* .nsi_erase        = */ (dfunptr_t)&DeeList_Erase,
-			/* .nsi_remove       = */ (dfunptr_t)&DeeList_Remove,
-			/* .nsi_rremove      = */ (dfunptr_t)&DeeList_RRemove,
-			/* .nsi_removeall    = */ (dfunptr_t)&DeeList_RemoveAll,
-			/* .nsi_removeif     = */ (dfunptr_t)&DeeList_RemoveIf
 		}
 	}
 };
@@ -2449,6 +2237,457 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+list_remove_impl(List *me, DeeObject *item, size_t start, size_t end) {
+	DeeObject **vector;
+	size_t i, length;
+	ASSERT_OBJECT(item);
+	DeeList_LockRead(me);
+again:
+	vector = me->l_list.ol_elemv;
+	length = me->l_list.ol_elemc;
+	for (i = start; i < length && i < end; ++i) {
+		DREF DeeObject *this_elem;
+		int temp;
+		this_elem = DeeList_GET(me, i);
+		Dee_Incref(this_elem);
+		DeeList_LockEndRead(me);
+		temp = DeeObject_TryCompareEq(item, this_elem);
+		Dee_Decref(this_elem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0) {
+			/* This is the element we're supposed to remove. */
+			DeeList_LockWrite(me);
+
+			/* Check if the list was changed. */
+			if (me->l_list.ol_elemv != vector ||
+			    me->l_list.ol_elemc != length ||
+			    DeeList_GET(me, i) != this_elem) {
+				DeeList_LockDowngrade(me);
+				goto again;
+			}
+
+			/* Override the element with its successors. */
+			--length;
+			me->l_list.ol_elemc = length;
+			memmovedownc(me->l_list.ol_elemv + i,
+			             me->l_list.ol_elemv + i + 1,
+			             length - i,
+			             sizeof(DREF DeeObject *));
+			DeeList_LockEndWrite(me);
+
+			/* Drop the reference previously held by the list. */
+			Dee_Decref(this_elem);
+			return 1;
+		}
+
+		/* Continue onwards. */
+		DeeList_LockRead(me);
+
+		/* Check if the list was changed. */
+		if (me->l_list.ol_elemv != vector ||
+		    me->l_list.ol_elemc != length)
+			goto again;
+	}
+	DeeList_LockEndRead(me);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+list_remove_with_key_impl(List *me, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	DeeObject **vector;
+	size_t i, length;
+	ASSERT_OBJECT(item);
+	DeeList_LockRead(me);
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+again:
+	vector = me->l_list.ol_elemv;
+	length = me->l_list.ol_elemc;
+	for (i = start; i < length && i < end; ++i) {
+		DREF DeeObject *this_elem;
+		int temp;
+		this_elem = DeeList_GET(me, i);
+		Dee_Incref(this_elem);
+		DeeList_LockEndRead(me);
+		temp = DeeObject_TryCompareKeyEq(item, this_elem, key);
+		Dee_Decref(this_elem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0) {
+			/* This is the element we're supposed to remove. */
+			DeeList_LockWrite(me);
+
+			/* Check if the list was changed. */
+			if (me->l_list.ol_elemv != vector ||
+			    me->l_list.ol_elemc != length ||
+			    DeeList_GET(me, i) != this_elem) {
+				DeeList_LockDowngrade(me);
+				goto again;
+			}
+
+			/* Override the element with its successors. */
+			--length;
+			me->l_list.ol_elemc = length;
+			memmovedownc(me->l_list.ol_elemv + i,
+			             me->l_list.ol_elemv + i + 1,
+			             length - i,
+			             sizeof(DREF DeeObject *));
+			DeeList_LockEndWrite(me);
+
+			/* Drop the reference previously held by the list. */
+			Dee_Decref(this_elem);
+			Dee_Decref(item);
+			return 1;
+		}
+
+		/* Continue onwards. */
+		DeeList_LockRead(me);
+
+		/* Check if the list was changed. */
+		if (me->l_list.ol_elemv != vector ||
+		    me->l_list.ol_elemc != length)
+			goto again;
+	}
+	DeeList_LockEndRead(me);
+	Dee_Decref(item);
+	return 0;
+err_item:
+	Dee_Decref(item);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+list_rremove_impl(List *me, DeeObject *item, size_t start, size_t end) {
+	DeeObject **vector;
+	size_t i, length;
+	DeeList_LockRead(me);
+again:
+	vector = me->l_list.ol_elemv;
+	length = me->l_list.ol_elemc;
+	i      = end;
+	if (i > length)
+		i = length;
+	for (;;) {
+		DREF DeeObject *this_elem;
+		int temp;
+		if (i <= start)
+			break;
+		--i;
+		this_elem = DeeList_GET(me, i);
+		Dee_Incref(this_elem);
+		DeeList_LockEndRead(me);
+		temp = DeeObject_TryCompareEq(item, this_elem);
+		Dee_Decref(this_elem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0) {
+			/* This is the element we're supposed to remove. */
+			DeeList_LockWrite(me);
+
+			/* Check if the list was changed. */
+			if (me->l_list.ol_elemv != vector ||
+			    me->l_list.ol_elemc != length ||
+			    DeeList_GET(me, i) != this_elem) {
+				DeeList_LockDowngrade(me);
+				goto again;
+			}
+
+			/* Override the element with its successors. */
+			--length;
+			me->l_list.ol_elemc = length;
+			memmovedownc(me->l_list.ol_elemv + i,
+			             me->l_list.ol_elemv + i + 1,
+			             length - i,
+			             sizeof(DREF DeeObject *));
+			DeeList_LockEndWrite(me);
+
+			/* Drop the reference previously held by the list. */
+			Dee_Decref(this_elem);
+			return 1;
+		}
+
+		/* Continue onwards. */
+		DeeList_LockRead(me);
+
+		/* Check if the list was changed. */
+		if (me->l_list.ol_elemv != vector ||
+		    me->l_list.ol_elemc != length)
+			goto again;
+	}
+	DeeList_LockEndRead(me);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+list_rremove_with_key_impl(List *me, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	DeeObject **vector;
+	size_t i, length;
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	DeeList_LockRead(me);
+again:
+	vector = me->l_list.ol_elemv;
+	length = me->l_list.ol_elemc;
+	i      = end;
+	if (i > length)
+		i = length;
+	for (;;) {
+		DREF DeeObject *this_elem;
+		int temp;
+		if (i <= start)
+			break;
+		--i;
+		this_elem = DeeList_GET(me, i);
+		Dee_Incref(this_elem);
+		DeeList_LockEndRead(me);
+		temp = DeeObject_TryCompareKeyEq(item, this_elem, key);
+		Dee_Decref(this_elem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0) {
+			/* This is the element we're supposed to remove. */
+			DeeList_LockWrite(me);
+
+			/* Check if the list was changed. */
+			if (me->l_list.ol_elemv != vector ||
+			    me->l_list.ol_elemc != length ||
+			    DeeList_GET(me, i) != this_elem) {
+				DeeList_LockDowngrade(me);
+				goto again;
+			}
+
+			/* Override the element with its successors. */
+			--length;
+			me->l_list.ol_elemc = length;
+			memmovedownc(me->l_list.ol_elemv + i,
+			             me->l_list.ol_elemv + i + 1,
+			             length - i,
+			             sizeof(DREF DeeObject *));
+			DeeList_LockEndWrite(me);
+
+			/* Drop the reference previously held by the list. */
+			Dee_Decref(this_elem);
+			Dee_Decref(item);
+			return 1;
+		}
+
+		/* Continue onwards. */
+		DeeList_LockRead(me);
+
+		/* Check if the list was changed. */
+		if (me->l_list.ol_elemv != vector ||
+		    me->l_list.ol_elemc != length)
+			goto again;
+	}
+	DeeList_LockEndRead(me);
+	Dee_Decref(item);
+	return 0;
+err_item:
+	Dee_Decref(item);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+list_removeall_impl(List *me, DeeObject *item, size_t start, size_t end, size_t max) {
+	DeeObject **vector;
+	size_t i, length, result = 0;
+	if unlikely(!max)
+		return 0;
+	DeeList_LockRead(me);
+again:
+	vector = me->l_list.ol_elemv;
+	length = me->l_list.ol_elemc;
+	for (i = start; i < length && i < end; ++i) {
+		DREF DeeObject *this_elem;
+		int temp;
+		this_elem = DeeList_GET(me, i);
+		Dee_Incref(this_elem);
+		DeeList_LockEndRead(me);
+
+		/* Invoke a predicate. */
+		temp = DeeObject_TryCompareEq(item, this_elem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0) {
+			/* This is the element we're supposed to remove. */
+			DeeList_LockWrite(me);
+
+			/* Check if the list was changed. */
+			if (me->l_list.ol_elemv != vector ||
+			    me->l_list.ol_elemc != length ||
+			    DeeList_GET(me, i) != this_elem) {
+				DeeList_LockDowngrade(me);
+				goto again;
+			}
+
+			/* Override the element with its successors. */
+			--length;
+			me->l_list.ol_elemc = length;
+			memmovedownc(me->l_list.ol_elemv + i,
+			             me->l_list.ol_elemv + i + 1,
+			             length - i,
+			             sizeof(DREF DeeObject *));
+			DeeList_LockEndWrite(me);
+
+			/* Drop the reference previously held by the list. */
+			Dee_Decref(this_elem);
+			++result;
+			if (result >= max)
+				goto done;
+		}
+
+		/* Continue onwards. */
+		DeeList_LockRead(me);
+
+		/* Check if the list was changed. */
+		if (me->l_list.ol_elemv != vector ||
+		    me->l_list.ol_elemc != length)
+			goto again;
+	}
+	DeeList_LockEndRead(me);
+done:
+	ASSERT(result != (size_t)-1);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 6)) size_t DCALL
+list_removeall_with_key_impl(List *me, DeeObject *item, size_t start,
+                             size_t end, size_t max, DeeObject *key) {
+	DeeObject **vector;
+	size_t i, length, result = 0;
+	if unlikely(!max)
+		return 0;
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	DeeList_LockRead(me);
+again:
+	vector = me->l_list.ol_elemv;
+	length = me->l_list.ol_elemc;
+	for (i = start; i < length && i < end; ++i) {
+		DREF DeeObject *this_elem;
+		int temp;
+		this_elem = DeeList_GET(me, i);
+		Dee_Incref(this_elem);
+		DeeList_LockEndRead(me);
+
+		/* Invoke a predicate. */
+		temp = DeeObject_TryCompareKeyEq(item, this_elem, key);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0) {
+			/* This is the element we're supposed to remove. */
+			DeeList_LockWrite(me);
+
+			/* Check if the list was changed. */
+			if (me->l_list.ol_elemv != vector ||
+			    me->l_list.ol_elemc != length ||
+			    DeeList_GET(me, i) != this_elem) {
+				DeeList_LockDowngrade(me);
+				goto again;
+			}
+
+			/* Override the element with its successors. */
+			--length;
+			me->l_list.ol_elemc = length;
+			memmovedownc(me->l_list.ol_elemv + i,
+			             me->l_list.ol_elemv + i + 1,
+			             length - i,
+			             sizeof(DREF DeeObject *));
+			DeeList_LockEndWrite(me);
+
+			/* Drop the reference previously held by the list. */
+			Dee_Decref(this_elem);
+			++result;
+			if (result >= max)
+				goto done;
+		}
+
+		/* Continue onwards. */
+		DeeList_LockRead(me);
+
+		/* Check if the list was changed. */
+		if (me->l_list.ol_elemv != vector ||
+		    me->l_list.ol_elemc != length)
+			goto again;
+	}
+	DeeList_LockEndRead(me);
+done:
+	ASSERT(result != (size_t)-1);
+	Dee_Decref(item);
+	return result;
+err_item:
+	Dee_Decref(item);
+err:
+	return (size_t)-1;
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1, 4)) void DCALL
+list_fill_impl_fallback(List *me, size_t start, size_t end, DeeObject *filler) {
+	DREF DeeObject *old_values[32];
+	size_t old_values_count;
+again:
+	old_values_count = 0;
+	DeeList_LockWrite(me);
+	while (start < end && start < me->l_list.ol_elemc) {
+		if unlikely(old_values_count >= COMPILER_LENOF(old_values)) {
+			DeeList_LockEndWrite(me);
+			Dee_Decrefv(old_values, COMPILER_LENOF(old_values));
+			goto again;
+		}
+		old_values[old_values_count++] = me->l_list.ol_elemv[start]; /* Inherit reference */
+		me->l_list.ol_elemv[start] = filler;
+		Dee_Incref(filler);
+	}
+	DeeList_LockEndWrite(me);
+	Dee_Decrefv(old_values, old_values_count);
+}
+
+PRIVATE NONNULL((1, 4)) void DCALL
+list_fill_impl(List *me, size_t start, size_t end, DeeObject *filler) {
+	DREF DeeObject **old_values;
+	size_t length = DeeList_SIZE_ATOMIC(me);
+	if (end > length)
+		end = length;
+	if unlikely(start >= end)
+		return;
+	length = end - start;
+	old_values = (DREF DeeObject **)Dee_TryMallocac(end - start, sizeof(DREF DeeObject *));
+	if likely(old_values) {
+		DeeList_LockWrite(me);
+		if unlikely(end > me->l_list.ol_elemc) {
+			end = me->l_list.ol_elemc;
+			if unlikely(start >= end) {
+				DeeList_LockEndWrite(me);
+				return;
+			}
+			length = end - start;
+		}
+		memcpyc(old_values, me->l_list.ol_elemv + start, length, sizeof(DREF DeeObject *));
+		Dee_Setrefv(me->l_list.ol_elemv + start, filler, length);
+		DeeList_LockEndWrite(me);
+		Dee_Decrefv(old_values, length);
+		Dee_Freea(old_values);
+	} else {
+		/* Must fill values non-atomically. */
+		list_fill_impl_fallback(me, start, end, filler);
+	}
+}
+
+
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2508,6 +2747,78 @@ err:
 	return NULL;
 }
 
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_remove(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	int result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:remove",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = DeeNone_Check(key)
+	         ? list_remove_impl(self, item, start, end)
+	         : list_remove_with_key_impl(self, item, start, end, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_rremove(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	int result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:rremove",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = DeeNone_Check(key)
+	         ? list_rremove_impl(self, item, start, end)
+	         : list_rremove_with_key_impl(self, item, start, end, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_removeall(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_max_key,
+	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
+	                    &item, &start, &end, &max, &key))
+		goto err;
+	result = DeeNone_Check(key)
+	         ? list_removeall_impl(self, item, start, end, max)
+	         : list_removeall_with_key_impl(self, item, start, end, max, key);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_fill(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *filler = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_filler,
+	                    "|" UNPuSIZ UNPuSIZ "o:fill",
+	                    &start, &end, &filler))
+		goto err;
+	list_fill_impl(self, start, end, filler);
+	return_none;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_removeif(List *me, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
@@ -2521,20 +2832,6 @@ list_removeif(List *me, size_t argc,
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-list_insertiter_deprecated(List *me,
-                           size_t argc, DeeObject *const *argv) {
-	size_t index;
-	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:insert_iter", &index, &seq))
-		goto err;
-	if (DeeList_InsertIterator((DeeObject *)me, index, seq))
-		goto err;
-	return_none;
 err:
 	return NULL;
 }
@@ -2556,14 +2853,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_xchitem(List *me, size_t argc,
-         DeeObject *const *argv, DeeObject *kw) {
+list_xchitem(List *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
 	                    UNPuSIZ "o:xchitem", &index, &value))
 		goto err;
-	return list_nsi_xch(me, index, value);
+	return list_xchitem_index(me, index, value);
 err:
 	return NULL;
 }
@@ -3116,6 +3412,21 @@ err:
 }
 
 
+/* Deprecated functions. */
+PRIVATE WUNUSED DREF DeeObject *DCALL
+list_insertiter_deprecated(List *me, size_t argc, DeeObject *const *argv) {
+	size_t index;
+	DeeObject *iter;
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:insert_iter", &index, &iter))
+		goto err;
+	if (DeeList_InsertIterator((DeeObject *)me, index, iter))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+
 PRIVATE struct type_getset tpconst list_getsets[] = {
 	TYPE_GETSET_F("allocated", &list_getallocated, &list_delallocated, &list_setallocated, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
@@ -3188,8 +3499,16 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	TYPE_METHOD_F(STR_clear, &list_clear, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Clear all items from @this List"),
+	TYPE_KWMETHOD_F(STR_remove, &list_remove, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD_F(STR_rremove, &list_rremove, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD_F(STR_removeall, &list_removeall, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,max=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F(STR_fill, &list_fill, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1,filler=!N)"),
 	TYPE_KWMETHOD_F(STR_removeif, &list_removeif, METHOD_FNOREFESCAPE,
-	                "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
+	                "(should:?DCallable,start=!0,end=!-1,max=!-1)->?Dint\n"
 	                "#r{The number of removed items}"
 	                "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
 	TYPE_METHOD_F(STR_pushfront, &list_pushfront, METHOD_FNOREFESCAPE,

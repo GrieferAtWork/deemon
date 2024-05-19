@@ -564,27 +564,6 @@ PRIVATE struct type_nsi tpconst repeat_nsi = {
 			/* .nsi_getsize      = */ (dfunptr_t)&repeat_size,
 			/* .nsi_getsize_fast = */ (dfunptr_t)&repeat_size_fast,
 			/* .nsi_getitem      = */ (dfunptr_t)&repeat_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)NULL,
-			/* .nsi_rfind        = */ (dfunptr_t)NULL,
-			/* .nsi_xch          = */ (dfunptr_t)NULL,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -996,38 +975,6 @@ repeatitem_getrange_index_n(RepeatItem *__restrict self,
 	return DeeSeq_RepeatItem(self->rpit_obj, self->rpit_num - start);
 }
 
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-repeatitem_nsi_find(RepeatItem *self,
-                    size_t start, size_t end,
-                    DeeObject *keyed_search_item,
-                    DeeObject *key) {
-	int error;
-	if (start >= self->rpit_num || start >= end)
-		return (size_t)-1;
-	error = DeeObject_TryCmpKeyEqAsBool(self->rpit_obj, keyed_search_item, key);
-	if unlikely(error < 0)
-		return (size_t)-2;
-	if (!error)
-		return (size_t)-1;
-	return start;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-repeatitem_nsi_rfind(RepeatItem *self,
-                     size_t start, size_t end,
-                     DeeObject *keyed_search_item,
-                     DeeObject *key) {
-	size_t result;
-	result = repeatitem_nsi_find(self, start, end, keyed_search_item, key);
-	if (result != (size_t)-1 && result != (size_t)-2) {
-		if (end > self->rpit_num)
-			end = self->rpit_num;
-		result = end - 1;
-	}
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 repeatitem_foreach(RepeatItem *self, Dee_foreach_t proc, void *arg) {
 	size_t i;
@@ -1079,22 +1026,6 @@ PRIVATE struct type_nsi tpconst repeatitem_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)&repeatitem_getitem_index_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)&repeatitem_getrange_index,
 			/* .nsi_getrange_n   = */ (dfunptr_t)&repeatitem_getrange_index_n,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&repeatitem_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&repeatitem_nsi_rfind,
-			/* .nsi_xch          = */ (dfunptr_t)NULL,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
