@@ -3968,80 +3968,6 @@ err:
 	return -1;
 }
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_find(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	struct sequence_find_data data;
-	if (get_sequence_find_args_kw("find", argc, argv, kw, &data))
-		goto err;
-	result = data.sfd_key ? DeeSeq_FindWithKey(self, data.sfd_elem, data.sfd_start, data.sfd_end, data.sfd_key)
-	                      : DeeSeq_Find(self, data.sfd_elem, data.sfd_start, data.sfd_end);
-	if unlikely(result == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_rfind(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	struct sequence_find_data data;
-	if (get_sequence_find_args_kw("rfind", argc, argv, kw, &data))
-		goto err;
-	result = data.sfd_key ? DeeSeq_RFindWithKey(self, data.sfd_elem, data.sfd_start, data.sfd_end, data.sfd_key)
-	                      : DeeSeq_RFind(self, data.sfd_elem, data.sfd_start, data.sfd_end);
-	if unlikely(result == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	struct sequence_find_data data;
-	if (get_sequence_find_args_kw(STR_index, argc, argv, kw, &data))
-		goto err;
-	result = data.sfd_key ? DeeSeq_FindWithKey(self, data.sfd_elem, data.sfd_start, data.sfd_end, data.sfd_key)
-	                      : DeeSeq_Find(self, data.sfd_elem, data.sfd_start, data.sfd_end);
-	if unlikely(result == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(result == (size_t)-1)
-		goto err_not_found;
-	return DeeInt_NewSize(result);
-err_not_found:
-	err_item_not_found(self, data.sfd_elem);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	struct sequence_find_data data;
-	if (get_sequence_find_args_kw("rindex", argc, argv, kw, &data))
-		goto err;
-	result = data.sfd_key ? DeeSeq_RFindWithKey(self, data.sfd_elem, data.sfd_start, data.sfd_end, data.sfd_key)
-	                      : DeeSeq_RFind(self, data.sfd_elem, data.sfd_start, data.sfd_end);
-	if unlikely(result == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(result == (size_t)-1)
-		goto err_not_found;
-	return DeeInt_NewSize(result);
-err_not_found:
-	err_item_not_found(self, data.sfd_elem);
-err:
-	return NULL;
-}
-
-
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_reversed(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -5066,26 +4992,24 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "The implementation of this is derived from #last, where the found is then compared "
 	            /**/ "against @elem, potentially through use of @{key}: ${key(last) == key(elem)} or ${last == elem}, "
 	            /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"),
-	TYPE_KWMETHOD("find", &seq_find,
-	              "(elem,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "#pelem{The element to search for}"
-	              "#pkey{A key function for transforming Sequence elements}"
+	TYPE_KWMETHOD(STR_find, &generic_seq_find,
+	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint\n"
+	              "#pitem{The element to search for}"
 	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
 	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
-	              "Search for the first element matching @elem and return its index\n"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "Search for the first element matching @item and return its index\n"
 	              "If no such element exists, return ${-1} instead\n"
 	              "Depending on the nearest implemented group of operators, "
 	              /**/ "one of the following implementations is chosen\n"
 	              "For ${operator []} and ${operator ##}:\n"
 	              "${"
-	              /**/ "function find(elem: int, start: int, end: int, key: Callable = none): int {\n"
+	              /**/ "function find(item: int, start: int, end: int, key: Callable = none): int {\n"
 	              /**/ "	import int, Error from deemon;\n"
 	              /**/ "	start = start.operator int();\n"
 	              /**/ "	end = end.operator int();\n"
 	              /**/ "	if (key !is none)\n"
-	              /**/ "		elem = key(elem);\n"
+	              /**/ "		item = key(item);\n"
 	              /**/ "	if (start >= end)\n"
 	              /**/ "		return -1;\n"
 	              /**/ "	local my_size = ##this;\n"
@@ -5101,10 +5025,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "			continue;\n"
 	              /**/ "		}\n"
 	              /**/ "		if (key !is none) {\n"
-	              /**/ "			if (elem == key(my_elem))\n"
+	              /**/ "			if (item == key(my_elem))\n"
 	              /**/ "				return index;\n"
 	              /**/ "		} else {\n"
-	              /**/ "			if (elem == my_elem)\n"
+	              /**/ "			if (item == my_elem)\n"
 	              /**/ "				return index;\n"
 	              /**/ "		}\n"
 	              /**/ "	}\n"
@@ -5113,12 +5037,12 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}\n"
 	              "For ${operator iter}:\n"
 	              "${"
-	              /**/ "function find(elem: int, start: int, end: int, key: Callable = none): int {\n"
+	              /**/ "function find(item: int, start: int, end: int, key: Callable = none): int {\n"
 	              /**/ "	import Signal, int from deemon;\n"
 	              /**/ "	start = start.operator int();\n"
 	              /**/ "	end = end.operator int();\n"
 	              /**/ "	if (key !is none)\n"
-	              /**/ "		elem = key(elem);\n"
+	              /**/ "		item = key(item);\n"
 	              /**/ "	if (start >= end)\n"
 	              /**/ "		return -1;\n"
 	              /**/ "	local it = this.operator iter();\n"
@@ -5140,10 +5064,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "			return -1;\n"
 	              /**/ "		}\n"
 	              /**/ "		if (key !is none) {\n"
-	              /**/ "			if (elem == key(my_elem))\n"
+	              /**/ "			if (item == key(my_elem))\n"
 	              /**/ "				return index;\n"
 	              /**/ "		} else {\n"
-	              /**/ "			if (elem == my_elem)\n"
+	              /**/ "			if (item == my_elem)\n"
 	              /**/ "				return index;\n"
 	              /**/ "		}\n"
 	              /**/ "		--search_size;\n"
@@ -5152,26 +5076,24 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return -1;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("rfind", &seq_rfind,
-	              "(elem,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "#pelem{The element to search for}"
-	              "#pkey{A key function for transforming Sequence elements}"
+	TYPE_KWMETHOD(STR_rfind, &generic_seq_rfind,
+	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint\n"
+	              "#pitem{The element to search for}"
 	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
 	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
-	              "Search for the last element matching @elem and return its index\n"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "Search for the last element matching @item and return its index\n"
 	              "If no such element exists, return ${-1} instead\n"
 	              "Depending on the nearest implemented group of operators, "
 	              /**/ "one of the following implementations is chosen\n"
 	              "For ${operator []} and ${operator ##}:\n"
 	              "${"
-	              /**/ "function rfind(elem: int, start: int, end: int, key: Callable = none): int {\n"
+	              /**/ "function rfind(item: int, start: int, end: int, key: Callable = none): int {\n"
 	              /**/ "	import int from deemon;\n"
 	              /**/ "	start = start.operator int();\n"
 	              /**/ "	end = end.operator int();\n"
 	              /**/ "	if (key !is none)\n"
-	              /**/ "		elem = key(elem);\n"
+	              /**/ "		item = key(item);\n"
 	              /**/ "	if (start >= end)\n"
 	              /**/ "		return -1;\n"
 	              /**/ "	local my_size = ##this;\n"
@@ -5181,7 +5103,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "		end = my_size;\n"
 	              /**/ "	local index = end-1;\n"
 	              /**/ "	if (key !is none)\n"
-	              /**/ "		elem = key(elem);\n"
+	              /**/ "		item = key(item);\n"
 	              /**/ "	for (;;) {\n"
 	              /**/ "		local my_elem;\n"
 	              /**/ "		try {\n"
@@ -5190,10 +5112,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "			goto next_item;\n"
 	              /**/ "		}\n"
 	              /**/ "		if (key !is none) {\n"
-	              /**/ "			if (key(my_elem) == elem)\n"
+	              /**/ "			if (key(my_elem) == item)\n"
 	              /**/ "				return index;\n"
 	              /**/ "		} else {\n"
-	              /**/ "			if (my_elem == elem)\n"
+	              /**/ "			if (my_elem == item)\n"
 	              /**/ "				return index;\n"
 	              /**/ "		}\n"
 	              /**/ "next_item:\n"
@@ -5206,7 +5128,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}\n"
 	              "For ${operator iter}:\n"
 	              "${"
-	              /**/ "function find(elem: int, start: int, end: int, key: Callable = none): int {\n"
+	              /**/ "function find(item: int, start: int, end: int, key: Callable = none): int {\n"
 	              /**/ "	import Signal, int from deemon;\n"
 	              /**/ "	start = start.operator int();\n"
 	              /**/ "	end = end.operator int();\n"
@@ -5224,7 +5146,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	local index = 0;\n"
 	              /**/ "	local result = -1;\n"
 	              /**/ "	if (key !is none)\n"
-	              /**/ "		elem = key(elem);\n"
+	              /**/ "		item = key(item);\n"
 	              /**/ "	while (search_size) {\n"
 	              /**/ "		local my_elem;\n"
 	              /**/ "		try {\n"
@@ -5233,7 +5155,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "			break;\n"
 	              /**/ "		}\n"
 	              /**/ "		if (key !is none) {\n"
-	              /**/ "			if (key(my_elem) == elem)\n"
+	              /**/ "			if (key(my_elem) == item)\n"
 	              /**/ "				result = index;\n"
 	              /**/ "		} else {\n"
 	              /**/ "			if (my_elem == elem)\n"
@@ -5245,41 +5167,37 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return result;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_index, &seq_index,
-	              "(elem,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "#pelem{The element to search for}"
+	TYPE_KWMETHOD(STR_index, &generic_seq_index,
+	              "(item,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
+	              "#pitem{The element to search for}"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
 	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
-	              "#tValueError{The Sequence does not contain an element matching @elem}"
-	              "Search for the first element matching @elem and return its index\n"
+	              "#tValueError{The Sequence does not contain an element matching @item}"
+	              "Search for the first element matching @item and return its index\n"
 	              "This function is implemented as:\n"
 	              "${"
-	              /**/ "function index(elem: Object, start: int, end: int, key: Callable = none): int {\n"
+	              /**/ "function index(item: Object, start: int, end: int, key: Callable = none): int {\n"
 	              /**/ "	import Sequence, Error from deemon;\n"
-	              /**/ "	local result = (this as Sequence).find(elem, start, end, key);\n"
+	              /**/ "	local result = (this as Sequence).find(item, start, end, key);\n"
 	              /**/ "	if (result == -1)\n"
 	              /**/ "		throw Error.ValueError(\"...\");\n"
 	              /**/ "	return result;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("rindex", &seq_rindex,
-	              "(elem,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?Dint\n"
-	              "#pelem{The element to search for}"
+	TYPE_KWMETHOD(STR_rindex, &generic_seq_rindex,
+	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint\n"
+	              "#pitem{The element to search for}"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
 	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
-	              "#tValueError{The Sequence does not contain an element matching @elem}"
-	              "Search for the last element matching @elem and return its index\n"
+	              "#tValueError{The Sequence does not contain an element matching @item}"
+	              "Search for the last element matching @item and return its index\n"
 	              "This function is implemented as:\n"
 	              "${"
-	              /**/ "function index(elem: Object, start: int, end: int, key: Callable = none): int {\n"
+	              /**/ "function index(item: Object, start: int, end: int, key: Callable = none): int {\n"
 	              /**/ "	import Sequence, Error from deemon;\n"
-	              /**/ "	local result = (this as Sequence).rfind(elem, start, end, key);\n"
+	              /**/ "	local result = (this as Sequence).rfind(item, start, end, key);\n"
 	              /**/ "	if (result == -1)\n"
 	              /**/ "		throw Error.ValueError(\"...\");\n"
 	              /**/ "	return result;\n"

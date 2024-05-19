@@ -56,6 +56,12 @@ typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *Dee_tsc_find_t)(DeeObject *se
 typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *Dee_tsc_find_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *Dee_tsc_rfind_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *Dee_tsc_rfind_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+/* @return: * : Index of `item' in `self'
+ * @return: (size_t)Dee_COMPARE_ERR: Error */
+typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *Dee_tsc_index_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *Dee_tsc_index_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *Dee_tsc_rindex_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *Dee_tsc_rindex_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
 /* Functions for mutable sequences. */
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_erase_t)(DeeObject *self, size_t index, size_t count);
@@ -112,13 +118,19 @@ struct Dee_type_seq_cache {
 	Dee_tsc_dellast_t   tsc_dellast;
 	Dee_tsc_setlast_t   tsc_setlast;
 
-	/* Find functions. */
-	Dee_tsc_find_t           tsc_find;
-	Dee_tsc_find_with_key_t  tsc_find_with_key;
-	Dee_tsc_rfind_t          tsc_rfind;
-	Dee_tsc_rfind_with_key_t tsc_rfind_with_key;
-
-	/* Functions for mutable sequences. */
+	/* Sequence functions. */
+	Dee_tsc_find_t               tsc_find;
+	Dee_tsc_find_with_key_t      tsc_find_with_key;
+	union Dee_tsc_uslot          tsc_find_data;
+	Dee_tsc_rfind_t              tsc_rfind;
+	Dee_tsc_rfind_with_key_t     tsc_rfind_with_key;
+	union Dee_tsc_uslot          tsc_rfind_data;
+	Dee_tsc_index_t              tsc_index;
+	Dee_tsc_index_with_key_t     tsc_index_with_key;
+	union Dee_tsc_uslot          tsc_index_data;
+	Dee_tsc_rindex_t             tsc_rindex;
+	Dee_tsc_rindex_with_key_t    tsc_rindex_with_key;
+	union Dee_tsc_uslot          tsc_rindex_data;
 	Dee_tsc_erase_t              tsc_erase;
 	union Dee_tsc_uslot          tsc_erase_data;
 	Dee_tsc_insert_t             tsc_insert;
@@ -195,12 +207,15 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundlast_t DCALL DeeType_Se
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_dellast_t DCALL DeeType_SeqCache_RequireDelLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_setlast_t DCALL DeeType_SeqCache_RequireSetLast(DeeTypeObject *__restrict self);
 
+/* Mutable sequence functions */
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_find_t DCALL DeeType_SeqCache_RequireFind(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_find_with_key_t DCALL DeeType_SeqCache_RequireFindWithKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rfind_t DCALL DeeType_SeqCache_RequireRFind(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rfind_with_key_t DCALL DeeType_SeqCache_RequireRFindWithKey(DeeTypeObject *__restrict self);
-
-/* Mutable sequence functions */
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_index_t DCALL DeeType_SeqCache_RequireIndex(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_index_with_key_t DCALL DeeType_SeqCache_RequireIndexWithKey(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rindex_t DCALL DeeType_SeqCache_RequireRIndex(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rindex_with_key_t DCALL DeeType_SeqCache_RequireRIndexWithKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_erase_t DCALL DeeType_SeqCache_RequireErase(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_insert_t DCALL DeeType_SeqCache_RequireInsert(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_insertall_t DCALL DeeType_SeqCache_RequireInsertAll(DeeTypeObject *__restrict self);
@@ -251,8 +266,24 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_sorted_with_key_t DCALL DeeT
 #define DeeSeq_RFindWithKey(self, item, start, end, key) \
 	(*DeeType_SeqCache_RequireRFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
 
-/* Invoke mutable-sequence operators */
+/* Invoke sequence functions */
 /* TODO: Remove the "new_" prefix and remove functions from "seq_mutable.c" */
+#define new_DeeSeqFind(self, item, start, end) \
+	(*DeeType_SeqCache_RequireFind(Dee_TYPE(self)))(self, item, start, end)
+#define new_DeeSeqFindWithKey(self, item, start, end, key) \
+	(*DeeType_SeqCache_RequireFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define new_DeeSeqRFind(self, item, start, end) \
+	(*DeeType_SeqCache_RequireRFind(Dee_TYPE(self)))(self, item, start, end)
+#define new_DeeSeqRFindWithKey(self, item, start, end, key) \
+	(*DeeType_SeqCache_RequireRFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define new_DeeSeqIndex(self, item, start, end) \
+	(*DeeType_SeqCache_RequireIndex(Dee_TYPE(self)))(self, item, start, end)
+#define new_DeeSeqIndexWithKey(self, item, start, end, key) \
+	(*DeeType_SeqCache_RequireIndexWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define new_DeeSeqRIndex(self, item, start, end) \
+	(*DeeType_SeqCache_RequireRIndex(Dee_TYPE(self)))(self, item, start, end)
+#define new_DeeSeqRIndexWithKey(self, item, start, end, key) \
+	(*DeeType_SeqCache_RequireRIndexWithKey(Dee_TYPE(self)))(self, item, start, end, key)
 #define new_DeeSeq_Erase(self, index, count) \
 	(*DeeType_SeqCache_RequireErase(Dee_TYPE(self)))(self, index, count)
 #define new_DeeSeq_Insert(self, index, item) \
@@ -350,15 +381,57 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithError(DeeObjec
 
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultNonEmptyWithError(DeeObject *__restrict self);
 
+/* Mutable sequence functions */
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultFindWithCallAttrFind(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultFindWithCallFindDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultFindWithCallFindDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultFindWithCallFindDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultFindWithEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
+
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultFindWithKeyWithCallAttrFind(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultFindWithKeyWithCallFindDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultFindWithKeyWithCallFindDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultFindWithKeyWithCallFindDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultFindWithKeyWithEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRFindWithCallAttrRFind(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRFindWithCallRFindDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRFindWithCallRFindDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRFindWithCallRFindDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRFindWithEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
+
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithCallAttrRFind(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithCallRFindDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithCallRFindDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRFindWithKeyWithEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultIndexWithCallAttrIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultIndexWithCallIndexDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultIndexWithCallIndexDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultIndexWithCallIndexDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultIndexWithTSCFind(DeeObject *self, DeeObject *item, size_t start, size_t end);
 
-/* Mutable sequence functions */
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultIndexWithKeyWithCallAttrIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultIndexWithKeyWithCallIndexDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultIndexWithKeyWithCallIndexDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultIndexWithKeyWithCallIndexDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultIndexWithKeyWithTSCFindWithKey(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRIndexWithCallAttrRIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRIndexWithCallRIndexDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRIndexWithCallRIndexDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRIndexWithCallRIndexDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_DefaultRIndexWithTSCRFind(DeeObject *self, DeeObject *item, size_t start, size_t end);
+
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRIndexWithKeyWithCallAttrRIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRIndexWithKeyWithCallRIndexDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRIndexWithKeyWithCallRIndexDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRIndexWithKeyWithCallRIndexDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL DeeSeq_DefaultRIndexWithKeyWithTSCRFindWithKey(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallAttrErase(DeeObject *self, size_t index, size_t count);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallEraseDataFunction(DeeObject *self, size_t index, size_t count);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultEraseWithCallEraseDataMethod(DeeObject *self, size_t index, size_t count);
@@ -451,7 +524,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultRRemoveWithCallAttrRRemov
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultRRemoveWithCallRRemoveDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultRRemoveWithCallRRemoveDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultRRemoveWithCallRRemoveDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultRRemoveWithEnumerateIndexReverseAndDelItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultRRemoveWithTSCEnumerateIndexReverseAndDelItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultRRemoveWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultRRemoveWithError(DeeObject *self, DeeObject *item, size_t start, size_t end);
 
@@ -587,6 +660,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_seq_endswith_with_key(DeeObj
 
 
 /* Generic sequence mutable function pointers. */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_find(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_rfind(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_erase(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_insert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_insertall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);

@@ -117,6 +117,10 @@ local STRINGS = {
 	"rremove",
 	"removeall",
 	"removeif",
+	"find",
+	"rfind",
+	"index",
+	"rindex",
 	"erase",
 	"insert",
 	"clear",
@@ -138,7 +142,6 @@ local STRINGS = {
 
 	"revert",
 	"advance",
-	"index",
 	"prev",
 	"hasprev",
 	"hasnext",
@@ -447,6 +450,18 @@ DEF_STRING(str_removeall, "removeall", 0x902407ed, 0x97879af70abc9349)
 #define Dee_HashStr__removeif _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e)
 DEF_STRING(str_removeif, "removeif", 0x156aa732, 0x96ad85f728d8a11e)
 #define STR_removeif DeeString_STR(&str_removeif)
+#define Dee_HashStr__find _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2)
+DEF_STRING(str_find, "find", 0x9e66372, 0x2b65fe03bbdde5b2)
+#define STR_find DeeString_STR(&str_find)
+#define Dee_HashStr__rfind _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d)
+DEF_STRING(str_rfind, "rfind", 0xfb368ca, 0x8b40ffa7172dc59d)
+#define STR_rfind DeeString_STR(&str_rfind)
+#define Dee_HashStr__index _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081)
+DEF_STRING(str_index, "index", 0x77f34f0, 0x440d5888c0ff3081)
+#define STR_index DeeString_STR(&str_index)
+#define Dee_HashStr__rindex _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c)
+DEF_STRING(str_rindex, "rindex", 0x1eb52bf1, 0xbce198a5867b343c)
+#define STR_rindex DeeString_STR(&str_rindex)
 #define Dee_HashStr__erase _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5)
 DEF_STRING(str_erase, "erase", 0x6f5916cf, 0x65f9c8b6514af4e5)
 #define STR_erase DeeString_STR(&str_erase)
@@ -507,9 +522,6 @@ DEF_STRING(str_revert, "revert", 0x98ca826, 0x626b4fca0d39dcf2)
 #define Dee_HashStr__advance _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d)
 DEF_STRING(str_advance, "advance", 0xdd1157a0, 0x8667ad2c6ab8d35d)
 #define STR_advance DeeString_STR(&str_advance)
-#define Dee_HashStr__index _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081)
-DEF_STRING(str_index, "index", 0x77f34f0, 0x440d5888c0ff3081)
-#define STR_index DeeString_STR(&str_index)
 #define Dee_HashStr__prev _Dee_HashSelectC(0xeb31683d, 0x7487ec947044729e)
 DEF_STRING(str_prev, "prev", 0xeb31683d, 0x7487ec947044729e)
 #define STR_prev DeeString_STR(&str_prev)

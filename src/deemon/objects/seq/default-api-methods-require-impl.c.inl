@@ -18,7 +18,15 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "default-api-mutable.c"
+#include "default-api-methods.c"
+//#define DEFINE_DeeType_SeqCache_RequireFind
+//#define DEFINE_DeeType_SeqCache_RequireFindWithKey
+//#define DEFINE_DeeType_SeqCache_RequireRFind
+//#define DEFINE_DeeType_SeqCache_RequireRFindWithKey
+#define DEFINE_DeeType_SeqCache_RequireIndex
+//#define DEFINE_DeeType_SeqCache_RequireIndexWithKey
+//#define DEFINE_DeeType_SeqCache_RequireRIndex
+//#define DEFINE_DeeType_SeqCache_RequireRIndexWithKey
 //#define DEFINE_DeeType_SeqCache_RequireErase
 //#define DEFINE_DeeType_SeqCache_RequireInsert
 //#define DEFINE_DeeType_SeqCache_RequireInsertAll
@@ -27,7 +35,7 @@
 //#define DEFINE_DeeType_SeqCache_RequireExtend
 //#define DEFINE_DeeType_SeqCache_RequireXchItemIndex
 //#define DEFINE_DeeType_SeqCache_RequireClear
-#define DEFINE_DeeType_SeqCache_RequirePop
+//#define DEFINE_DeeType_SeqCache_RequirePop
 //#define DEFINE_DeeType_SeqCache_RequireRemove
 //#define DEFINE_DeeType_SeqCache_RequireRemoveWithKey
 //#define DEFINE_DeeType_SeqCache_RequireRRemove
@@ -45,7 +53,15 @@
 //#define DEFINE_DeeType_SeqCache_RequireSortedWithKey
 #endif /* __INTELLISENSE__ */
 
-#if (defined(DEFINE_DeeType_SeqCache_RequireErase) +            \
+#if (defined(DEFINE_DeeType_SeqCache_RequireFind) +             \
+     defined(DEFINE_DeeType_SeqCache_RequireFindWithKey) +      \
+     defined(DEFINE_DeeType_SeqCache_RequireRFind) +            \
+     defined(DEFINE_DeeType_SeqCache_RequireRFindWithKey) +     \
+     defined(DEFINE_DeeType_SeqCache_RequireIndex) +            \
+     defined(DEFINE_DeeType_SeqCache_RequireIndexWithKey) +     \
+     defined(DEFINE_DeeType_SeqCache_RequireRIndex) +           \
+     defined(DEFINE_DeeType_SeqCache_RequireRIndexWithKey) +    \
+     defined(DEFINE_DeeType_SeqCache_RequireErase) +            \
      defined(DEFINE_DeeType_SeqCache_RequireInsert) +           \
      defined(DEFINE_DeeType_SeqCache_RequireInsertAll) +        \
      defined(DEFINE_DeeType_SeqCache_RequirePushFront) +        \
@@ -74,7 +90,87 @@
 
 DECL_BEGIN
 
-#ifdef DEFINE_DeeType_SeqCache_RequireErase
+#ifdef DEFINE_DeeType_SeqCache_RequireFind
+#define LOCAL_CANONICAL_NAME                           find
+#define LOCAL_generic_seq_foo                          generic_seq_find
+#define LOCAL_tsc_foo                                  tsc_find
+#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireFind
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultFindWithCallAttrFind
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultFindWithCallFindDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultFindWithCallFindDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultFindWithCallFindDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultFindWithEnumerateIndex
+#elif defined(DEFINE_DeeType_SeqCache_RequireFindWithKey)
+#define LOCAL_CANONICAL_NAME                           find
+#define LOCAL_generic_seq_foo                          generic_seq_find
+#define LOCAL_tsc_foo                                  tsc_find_with_key
+#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireFindWithKey
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultFindWithKeyWithCallAttrFind
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultFindWithKeyWithCallFindDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultFindWithKeyWithCallFindDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultFindWithKeyWithCallFindDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultFindWithKeyWithEnumerateIndex
+#elif defined(DEFINE_DeeType_SeqCache_RequireRFind)
+#define LOCAL_CANONICAL_NAME                           rfind
+#define LOCAL_generic_seq_foo                          generic_seq_rfind
+#define LOCAL_tsc_foo                                  tsc_rfind
+#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRFind
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRFindWithCallAttrRFind
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRFindWithCallRFindDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRFindWithCallRFindDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRFindWithCallRFindDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRFindWithEnumerateIndex
+#elif defined(DEFINE_DeeType_SeqCache_RequireRFindWithKey)
+#define LOCAL_CANONICAL_NAME                           rfind
+#define LOCAL_generic_seq_foo                          generic_seq_rfind
+#define LOCAL_tsc_foo                                  tsc_rfind_with_key
+#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRFindWithKey
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRFindWithKeyWithCallAttrRFind
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRFindWithKeyWithCallRFindDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRFindWithKeyWithCallRFindDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRFindWithKeyWithEnumerateIndex
+#elif defined(DEFINE_DeeType_SeqCache_RequireIndex)
+#define LOCAL_CANONICAL_NAME                           index
+#define LOCAL_generic_seq_foo                          generic_seq_index
+#define LOCAL_tsc_foo                                  tsc_index
+#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireIndex
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultIndexWithCallAttrIndex
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultIndexWithCallIndexDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultIndexWithCallIndexDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultIndexWithCallIndexDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultIndexWithTSCFind
+#elif defined(DEFINE_DeeType_SeqCache_RequireIndexWithKey)
+#define LOCAL_CANONICAL_NAME                           index
+#define LOCAL_generic_seq_foo                          generic_seq_index
+#define LOCAL_tsc_foo                                  tsc_index_with_key
+#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireIndexWithKey
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultIndexWithKeyWithCallAttrIndex
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultIndexWithKeyWithCallIndexDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultIndexWithKeyWithCallIndexDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultIndexWithKeyWithCallIndexDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultIndexWithKeyWithTSCFindWithKey
+#elif defined(DEFINE_DeeType_SeqCache_RequireRIndex)
+#define LOCAL_CANONICAL_NAME                           rindex
+#define LOCAL_generic_seq_foo                          generic_seq_rindex
+#define LOCAL_tsc_foo                                  tsc_rindex
+#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRIndex
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRIndexWithCallAttrRIndex
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRIndexWithCallRIndexDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRIndexWithCallRIndexDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRIndexWithCallRIndexDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRIndexWithTSCRFind
+#elif defined(DEFINE_DeeType_SeqCache_RequireRIndexWithKey)
+#define LOCAL_CANONICAL_NAME                           rindex
+#define LOCAL_generic_seq_foo                          generic_seq_rindex
+#define LOCAL_tsc_foo                                  tsc_rindex_with_key
+#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRIndexWithKey
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRIndexWithKeyWithCallAttrRIndex
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRIndexWithKeyWithCallRIndexDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRIndexWithKeyWithCallRIndexDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRIndexWithKeyWithCallRIndexDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRIndexWithKeyWithTSCRFindWithKey
+#elif defined(DEFINE_DeeType_SeqCache_RequireErase)
 #define LOCAL_CANONICAL_NAME                           erase
 #define LOCAL_generic_seq_foo                          generic_seq_erase
 #define LOCAL_tsc_foo                                  tsc_erase
@@ -378,7 +474,29 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		return &LOCAL_DeeSeq_DefaultFooWithCallAttrFoo;
 	}
 
-#ifdef DEFINE_DeeType_SeqCache_RequireErase
+#ifdef DEFINE_DeeType_SeqCache_RequireFind
+	/* ... */
+#elif defined(DEFINE_DeeType_SeqCache_RequireFindWithKey)
+	/* ... */
+#elif defined(DEFINE_DeeType_SeqCache_RequireRFind)
+	if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(self))
+		return &DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse;
+#elif defined(DEFINE_DeeType_SeqCache_RequireRFindWithKey)
+	if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(self))
+		return &DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse;
+#elif defined(DEFINE_DeeType_SeqCache_RequireIndex)
+	if (DeeType_SeqCache_RequireFind_private_uncached(orig_type, self))
+		return &DeeSeq_DefaultIndexWithTSCFind;
+#elif defined(DEFINE_DeeType_SeqCache_RequireIndexWithKey)
+	if (DeeType_SeqCache_RequireFindWithKey_private_uncached(orig_type, self))
+		return &DeeSeq_DefaultIndexWithKeyWithTSCFindWithKey;
+#elif defined(DEFINE_DeeType_SeqCache_RequireRIndex)
+	if (DeeType_SeqCache_RequireRFind_private_uncached(orig_type, self))
+		return &DeeSeq_DefaultRIndexWithTSCRFind;
+#elif defined(DEFINE_DeeType_SeqCache_RequireRIndexWithKey)
+	if (DeeType_SeqCache_RequireRFindWithKey_private_uncached(orig_type, self))
+		return &DeeSeq_DefaultRIndexWithKeyWithTSCRFindWithKey;
+#elif defined(DEFINE_DeeType_SeqCache_RequireErase)
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELRANGE))
 		return &DeeSeq_DefaultEraseWithDelRangeIndex;
 	{
@@ -526,6 +644,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
 			return &DeeSeq_DefaultRemoveWithTSCRemoveIf;
 	}
+	/* TODO: With find and delitem */
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
 	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 		return &DeeSeq_DefaultRemoveWithEnumerateIndexAndDelItemIndex;
@@ -544,13 +663,15 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
 			return &DeeSeq_DefaultRemoveWithKeyWithTSCRemoveIf;
 	}
+	/* TODO: With find and delitem */
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
 	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 		return &DeeSeq_DefaultRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemove)
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
 		if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(orig_type))
-			return &DeeSeq_DefaultRRemoveWithEnumerateIndexReverseAndDelItemIndex;
+			return &DeeSeq_DefaultRRemoveWithTSCEnumerateIndexReverseAndDelItemIndex;
+		/* TODO: With rfind and delitem */
 		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 			return &DeeSeq_DefaultRRemoveWithEnumerateIndexAndDelItemIndex;
 	}
@@ -558,6 +679,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
 		if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(self))
 			return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexReverseAndDelItemIndex;
+		/* TODO: With rfind and delitem */
 		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 			return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
 	}
@@ -749,6 +871,14 @@ LOCAL_DeeType_SeqCache_RequireFoo(DeeTypeObject *__restrict self) {
 
 DECL_END
 
+#undef DEFINE_DeeType_SeqCache_RequireFind
+#undef DEFINE_DeeType_SeqCache_RequireFindWithKey
+#undef DEFINE_DeeType_SeqCache_RequireRFind
+#undef DEFINE_DeeType_SeqCache_RequireRFindWithKey
+#undef DEFINE_DeeType_SeqCache_RequireIndex
+#undef DEFINE_DeeType_SeqCache_RequireIndexWithKey
+#undef DEFINE_DeeType_SeqCache_RequireRIndex
+#undef DEFINE_DeeType_SeqCache_RequireRIndexWithKey
 #undef DEFINE_DeeType_SeqCache_RequireErase
 #undef DEFINE_DeeType_SeqCache_RequireInsert
 #undef DEFINE_DeeType_SeqCache_RequireInsertAll
