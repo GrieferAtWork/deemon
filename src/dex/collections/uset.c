@@ -1230,8 +1230,6 @@ PRIVATE struct type_nsi tpconst uset_nsi = {
 	{
 		/* .nsi_setlike = */ {
 			/* .nsi_getsize = */ (dfunptr_t)&uset_size,
-			/* .nsi_insert  = */ (dfunptr_t)&USet_Insert,
-			/* .nsi_remove  = */ (dfunptr_t)&USet_Remove,
 		}
 	}
 };

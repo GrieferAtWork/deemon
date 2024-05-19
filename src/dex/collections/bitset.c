@@ -337,35 +337,6 @@ bs_size(Bitset *__restrict self) {
 	return bitset_popcount(self->bs_bitset, self->bs_nbits);
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bs_nsi_insert(Bitset *self, DeeObject *key) {
-	size_t bitno;
-	if (DeeObject_AsSize(key, &bitno))
-		goto err;
-	if unlikely(bitno >= self->bs_nbits)
-		goto err_too_large;
-	return bitset_atomic_fetchset(self->bs_bitset, bitno) ? 0 : 1;
-err_too_large:
-	return bs_err_bad_index(self, bitno);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bs_nsi_remove(Bitset *self, DeeObject *key) {
-	size_t bitno;
-	if (DeeObject_AsSize(key, &bitno))
-		goto err;
-	if unlikely(bitno >= self->bs_nbits)
-		goto err_too_large;
-	return bitset_atomic_fetchclear(self->bs_bitset, bitno) ? 1 : 0;
-err_too_large:
-	return bs_err_bad_index(self, bitno);
-err:
-	return -1;
-}
-
-
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 bs_hash(Bitset *__restrict self) {
 	size_t bitno;
@@ -1580,8 +1551,6 @@ PRIVATE struct type_nsi tpconst bs_nsi = {
 	{
 		/* .nsi_setlike = */ {
 			/* .nsi_getsize = */ (dfunptr_t)&bs_size,
-			/* .nsi_insert  = */ (dfunptr_t)&bs_nsi_insert,
-			/* .nsi_remove  = */ (dfunptr_t)&bs_nsi_remove,
 		}
 	}
 };
@@ -2573,49 +2542,6 @@ bsv_size(BitsetView *__restrict self) {
 	                        self->bsv_startbit,
 	                        self->bsv_endbit);
 }
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsv_nsi_insert(BitsetView *self, DeeObject *key) {
-	size_t bitno;
-	if (DeeObject_AsSize(key, &bitno))
-		goto err;
-	if unlikely(bitno >= BitsetView_GetNBits(self))
-		goto err_too_large;
-	if unlikely(!BitsetView_IsWritable(self))
-		goto err_readonly;
-	return bitset_atomic_fetchset(BitsetView_GetBitset(self),
-	                              self->bsv_startbit + bitno)
-	       ? 0
-	       : 1;
-err_readonly:
-	return bsv_err_readonly(self);
-err_too_large:
-	return bsv_err_bad_index(self, bitno);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsv_nsi_remove(BitsetView *self, DeeObject *key) {
-	size_t bitno;
-	if (DeeObject_AsSize(key, &bitno))
-		goto err;
-	if unlikely(bitno >= BitsetView_GetNBits(self))
-		goto err_too_large;
-	if unlikely(!BitsetView_IsWritable(self))
-		goto err_readonly;
-	return bitset_atomic_fetchclear(BitsetView_GetBitset(self),
-	                                self->bsv_startbit + bitno)
-	       ? 1
-	       : 0;
-err_readonly:
-	return bsv_err_readonly(self);
-err_too_large:
-	return bsv_err_bad_index(self, bitno);
-err:
-	return -1;
-}
-
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 bsv_hash(BitsetView *__restrict self) {
@@ -3913,8 +3839,6 @@ PRIVATE struct type_nsi tpconst bsv_nsi = {
 	{
 		/* .nsi_setlike = */ {
 			/* .nsi_getsize = */ (dfunptr_t)&bsv_size,
-			/* .nsi_insert  = */ (dfunptr_t)&bsv_nsi_insert,
-			/* .nsi_remove  = */ (dfunptr_t)&bsv_nsi_remove,
 		}
 	}
 };

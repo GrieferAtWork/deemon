@@ -451,36 +451,11 @@ struct Dee_type_nsi {
 			 * @return: 0:  `key' didn't exist and was thus added (*p_oldvalue is left unchanged)
 			 * @return: -1: Error. */
 			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_insertnew)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **p_oldvalue);
-
-#if 0 /* TODO: Do this to allow DEX modules to extend `DeeKw_GetItemNR()' */
-			/* All of the following are *always* and *unconditionally* implemented
-			 * when the associated type has the "tp_features & TF_KW" flag set,
-			 * with the exception of `DeeKwds_Type', which has that flag, but does
-			 * not implement these operators. */
-			WUNUSED_T NONNULL_T((1, 2)) DeeObject                  *(DCALL *nsi_kw_getitemnr)(DeeObject *__restrict self, /*string*/ DeeObject *__restrict name);
-			WUNUSED_T NONNULL_T((1, 2)) DeeObject                  *(DCALL *nsi_kw_getitemnr_string_hash)(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
-			WUNUSED_T ATTR_INS_T(2, 3) NONNULL_T((1)) DeeObject    *(DCALL *nsi_kw_getitemnr_string_len_hash)(DeeObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
-			WUNUSED_T NONNULL_T((1, 2, 3)) DeeObject               *(DCALL *nsi_kw_getitemnr_def)(DeeObject *__restrict self, /*string*/ DeeObject *name, DeeObject *def);
-			WUNUSED_T NONNULL_T((1, 2, 4)) DeeObject               *(DCALL *nsi_kw_getitemnr_string_hash_def)(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash, DeeObject *def);
-			WUNUSED_T ATTR_INS_T(2, 3) NONNULL_T((1, 5)) DeeObject *(DCALL *nsi_kw_getitemnr_string_len_hash_def)(DeeObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash, DeeObject *def);
-#endif
 		}                   nsi_maplike;
 
 		struct { /* TYPE_SEQX_CLASS_SET */
 			/* [1..1] ERROR: (size_t)-1 */
 			WUNUSED_T NONNULL_T((1))    size_t (DCALL *nsi_getsize)(DeeObject *__restrict self);
-
-			/* Insert a new `key' into the set
-			 * @return: 1:  The given `key' was inserted.
-			 * @return: 0:  A identical key was already apart of the set.
-			 * @return: -1: Error. */
-			WUNUSED_T NONNULL_T((1, 2)) int    (DCALL *nsi_insert)(DeeObject *self, DeeObject *key);
-
-			/* Remove a given `key' from the set
-			 * @return: 1:  The given `key' was removed.
-			 * @return: 0:  The given `key' could not be found within the set.
-			 * @return: -1: Error. */
-			WUNUSED_T NONNULL_T((1, 2)) int    (DCALL *nsi_remove)(DeeObject *self, DeeObject *key);
 		}                   nsi_setlike;
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION

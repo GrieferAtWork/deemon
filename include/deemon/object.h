@@ -2103,6 +2103,19 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 
+#if 0 /* TODO: Do this to allow DEX modules to extend `DeeKw_GetItemNR()' */
+	/* All of the following are *always* and *unconditionally* implemented
+	 * when the associated type has the "tp_features & TF_KW" flag set,
+	 * with the exception of `DeeKwds_Type', which has that flag, but does
+	 * not implement these operators. */
+	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_getitemnr)(DeeObject *__restrict self, /*string*/ DeeObject *__restrict name);
+	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_getitemnr_string_hash)(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_getitemnr_string_len_hash)(DeeObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr)(DeeObject *__restrict self, /*string*/ DeeObject *name);
+	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr_string_hash)(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr_string_len_hash)(DeeObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
+#endif
+
 	/* [0..1][owned][lock(WRITE_ONCE)]
 	 * Internal cache for how sequence functions are implemented for this type. */
 	struct Dee_type_seq_cache *_tp_seqcache;
