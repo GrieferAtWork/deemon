@@ -2368,6 +2368,32 @@ err:
 	return NULL;
 }
 
+#if 0
+PRIVATE struct type_method tpconst generic_seq_methods[] = {
+	TYPE_KWMETHOD(STR_reversed, &generic_seq_reversed, "(start=!0,end=!-1)->?DSequence"),
+	TYPE_KWMETHOD(STR_sorted, &generic_seq_sorted, "(start=!0,end=!-1,key:?DCallable=!N)->?DSequence"),
+	TYPE_KWMETHOD(STR_insert, &generic_seq_insert, "(index:?Dint,item)"),
+	TYPE_KWMETHOD(STR_insertall, &generic_seq_insertall, "(index:?Dint,items:?DSequence)"),
+	TYPE_METHOD(STR_append, &generic_seq_append, "(item)"),
+	TYPE_METHOD(STR_extend, &generic_seq_extend, "(items:?DSequence)"),
+	TYPE_KWMETHOD(STR_erase, &generic_seq_erase, "(index:?Dint,count=!1)"),
+	TYPE_KWMETHOD(STR_xchitem, &generic_seq_xchitem, "(index:?Dint,value)->"),
+	TYPE_KWMETHOD(STR_pop, &generic_seq_pop, "(index=!-1)->"),
+	TYPE_METHOD(STR_popfront, &generic_seq_popfront, "->"),
+	TYPE_METHOD(STR_popback, &generic_seq_popback, "->"),
+	TYPE_METHOD(STR_pushfront, &generic_seq_pushfront, "(item)"),
+	TYPE_KWMETHOD(STR_remove, &generic_seq_remove, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD(STR_rremove, &generic_seq_rremove, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD(STR_removeall, &generic_seq_removeall, "(item,start=!0,end=!-1,max=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD(STR_removeif, &generic_seq_removeif, "(should:?DCallable,start=!0,end=!-1,max=!-1)->?Dint"),
+	TYPE_METHOD(STR_clear, &generic_seq_clear, "()"),
+	TYPE_KWMETHOD(STR_resize, &generic_seq_resize, "(size:?Dint,filler=!N)"),
+	TYPE_KWMETHOD(STR_fill, &generic_seq_fill, "(start=!0,end=!-1,filler=!N)"),
+	TYPE_KWMETHOD(STR_reverse, &generic_seq_reverse, "(start=!0,end=!-1)"),
+	TYPE_KWMETHOD(STR_sort, &generic_seq_sort, "(start=!0,end=!-1,key:?DCallable=!N)"),
+	TYPE_METHOD_END
+};
+#endif
 
 DECL_END
 

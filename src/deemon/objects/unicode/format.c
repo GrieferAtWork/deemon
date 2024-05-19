@@ -40,6 +40,16 @@
 
 DECL_BEGIN
 
+/* TODO: Re-write this file such that "string.format" uses `DeeObject_Foreach()'.
+ *       For this purpose, scan ahead until the first '{'. If it is followed by
+ *       '}' or '!', assume that the format string is "simple", meaning that
+ *       every input parameter is only ever used once.
+ *
+ * TODO: Get rid of ':' and "DeeObject_PrintFormat()" (or at least re-work them)
+ */
+
+
+
 struct formatter {
 	/* TODO: Unicode support */
 	char           *f_iter;        /* [1..1] Current format string position. */
