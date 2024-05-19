@@ -1367,9 +1367,9 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_tp_next) == offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_tp_next));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_tp_getitem) == offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_tp_tgetitem));
 
-#define di_iktgis_copy di_ikgis_copy
-#define di_ikgim_copy  di_ikgis_copy
-#define di_iktgim_copy di_ikgis_copy
+#define di_iktrgis_copy di_ikgis_copy
+#define di_ikgim_copy   di_ikgis_copy
+#define di_iktrgim_copy di_ikgis_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_ikgis_copy(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
               DefaultIterator_WithIterKeysAndGetItem *__restrict other) {
@@ -1385,10 +1385,12 @@ err:
 	return -1;
 }
 
-#define di_ikttgim_copy di_ikttgis_copy
+#define di_iktgim_copy   di_ikttrgis_copy
+#define di_iktgis_copy   di_ikttrgis_copy
+#define di_ikttrgim_copy di_ikttrgis_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_ikttgis_copy(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
-                DefaultIterator_WithIterKeysAndTGetItem *__restrict other) {
+di_ikttrgis_copy(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
+                 DefaultIterator_WithIterKeysAndTGetItem *__restrict other) {
 	self->diiktgi_iter = DeeObject_Copy(other->diiktgi_iter);
 	if unlikely(!self->diiktgi_iter)
 		goto err;
@@ -1402,9 +1404,9 @@ err:
 	return -1;
 }
 
-#define di_iktgis_deepcopy di_ikgis_deepcopy
-#define di_ikgim_deepcopy  di_ikgis_deepcopy
-#define di_iktgim_deepcopy di_ikgis_deepcopy
+#define di_iktrgis_deepcopy di_ikgis_deepcopy
+#define di_iktrgim_deepcopy di_ikgis_deepcopy
+#define di_ikgim_deepcopy   di_ikgis_deepcopy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_ikgis_deepcopy(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
                   DefaultIterator_WithIterKeysAndGetItem *__restrict other) {
@@ -1423,10 +1425,12 @@ err:
 	return -1;
 }
 
-#define di_ikttgim_deepcopy di_ikttgis_deepcopy
+#define di_iktgis_deepcopy   di_ikttrgis_deepcopy
+#define di_iktgim_deepcopy   di_ikttrgis_deepcopy
+#define di_ikttrgim_deepcopy di_ikttrgis_deepcopy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_ikttgis_deepcopy(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
-                    DefaultIterator_WithIterKeysAndTGetItem *__restrict other) {
+di_ikttrgis_deepcopy(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
+                     DefaultIterator_WithIterKeysAndTGetItem *__restrict other) {
 	self->diiktgi_iter = DeeObject_DeepCopy(other->diiktgi_iter);
 	if unlikely(!self->diiktgi_iter)
 		goto err;
@@ -1443,43 +1447,51 @@ err:
 	return -1;
 }
 
-#define di_iktgis_fini  di_ikgis_fini
-#define di_ikttgis_fini di_ikgis_fini
-#define di_ikgim_fini   di_ikgis_fini
-#define di_iktgim_fini  di_ikgis_fini
-#define di_ikttgim_fini di_ikgis_fini
+#define di_iktrgis_fini  di_ikgis_fini
+#define di_ikttrgis_fini di_ikgis_fini
+#define di_ikgim_fini    di_ikgis_fini
+#define di_iktrgim_fini  di_ikgis_fini
+#define di_ikttrgim_fini di_ikgis_fini
+#define di_iktgis_fini   di_ikgis_fini
+#define di_iktgim_fini   di_ikgis_fini
 PRIVATE NONNULL((1)) void DCALL
 di_ikgis_fini(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
 	Dee_Decref(self->diikgi_seq);
 	Dee_Decref(self->diikgi_iter);
 }
 
-#define di_iktgis_visit  di_ikgis_visit
-#define di_ikttgis_visit di_ikgis_visit
-#define di_ikgim_visit   di_ikgis_visit
-#define di_iktgim_visit  di_ikgis_visit
-#define di_ikttgim_visit di_ikgis_visit
+#define di_iktrgis_visit  di_ikgis_visit
+#define di_ikttrgis_visit di_ikgis_visit
+#define di_ikgim_visit    di_ikgis_visit
+#define di_iktrgim_visit  di_ikgis_visit
+#define di_ikttrgim_visit di_ikgis_visit
+#define di_iktgis_visit   di_ikgis_visit
+#define di_iktgim_visit   di_ikgis_visit
 PRIVATE NONNULL((1, 2)) void DCALL
 di_ikgis_visit(DefaultIterator_WithIterKeysAndGetItem *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->diikgi_seq);
 	Dee_Visit(self->diikgi_iter);
 }
 
-#define di_iktgis_hash  di_ikgis_hash
-#define di_ikttgis_hash di_ikgis_hash
-#define di_ikgim_hash   di_ikgis_hash
-#define di_iktgim_hash  di_ikgis_hash
-#define di_ikttgim_hash di_ikgis_hash
+#define di_iktrgis_hash  di_ikgis_hash
+#define di_ikttrgis_hash di_ikgis_hash
+#define di_ikgim_hash    di_ikgis_hash
+#define di_iktrgim_hash  di_ikgis_hash
+#define di_ikttrgim_hash di_ikgis_hash
+#define di_iktgis_hash   di_ikgis_hash
+#define di_iktgim_hash   di_ikgis_hash
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 di_ikgis_hash(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
 	return DeeObject_Hash(self->diikgi_iter);
 }
 
-#define di_iktgis_compare_eq  di_ikgis_compare_eq
-#define di_ikttgis_compare_eq di_ikgis_compare_eq
-#define di_ikgim_compare_eq   di_ikgis_compare_eq
-#define di_iktgim_compare_eq  di_ikgis_compare_eq
-#define di_ikttgim_compare_eq di_ikgis_compare_eq
+#define di_iktrgis_compare_eq  di_ikgis_compare_eq
+#define di_ikttrgis_compare_eq di_ikgis_compare_eq
+#define di_ikgim_compare_eq    di_ikgis_compare_eq
+#define di_iktrgim_compare_eq  di_ikgis_compare_eq
+#define di_ikttrgim_compare_eq di_ikgis_compare_eq
+#define di_iktgis_compare_eq   di_ikgis_compare_eq
+#define di_iktgim_compare_eq   di_ikgis_compare_eq
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_ikgis_compare_eq(DefaultIterator_WithIterKeysAndGetItem *self,
                     DefaultIterator_WithIterKeysAndGetItem *other) {
@@ -1490,11 +1502,13 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-#define di_iktgis_compare  di_ikgis_compare
-#define di_ikttgis_compare di_ikgis_compare
-#define di_ikgim_compare   di_ikgis_compare
-#define di_iktgim_compare  di_ikgis_compare
-#define di_ikttgim_compare di_ikgis_compare
+#define di_iktrgis_compare  di_ikgis_compare
+#define di_ikttrgis_compare di_ikgis_compare
+#define di_ikgim_compare    di_ikgis_compare
+#define di_iktrgim_compare  di_ikgis_compare
+#define di_ikttrgim_compare di_ikgis_compare
+#define di_iktgis_compare   di_ikgis_compare
+#define di_iktgim_compare   di_ikgis_compare
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_ikgis_compare(DefaultIterator_WithIterKeysAndGetItem *self,
                  DefaultIterator_WithIterKeysAndGetItem *other) {
@@ -1505,11 +1519,13 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-#define di_iktgis_trycompare_eq  di_ikgis_trycompare_eq
-#define di_ikttgis_trycompare_eq di_ikgis_trycompare_eq
-#define di_ikgim_trycompare_eq   di_ikgis_trycompare_eq
-#define di_iktgim_trycompare_eq  di_ikgis_trycompare_eq
-#define di_ikttgim_trycompare_eq di_ikgis_trycompare_eq
+#define di_iktrgis_trycompare_eq  di_ikgis_trycompare_eq
+#define di_ikttrgis_trycompare_eq di_ikgis_trycompare_eq
+#define di_ikgim_trycompare_eq    di_ikgis_trycompare_eq
+#define di_iktrgim_trycompare_eq  di_ikgis_trycompare_eq
+#define di_ikttrgim_trycompare_eq di_ikgis_trycompare_eq
+#define di_iktgis_trycompare_eq   di_ikgis_trycompare_eq
+#define di_iktgim_trycompare_eq   di_ikgis_trycompare_eq
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_ikgis_trycompare_eq(DefaultIterator_WithIterKeysAndGetItem *self,
                        DefaultIterator_WithIterKeysAndGetItem *other) {
@@ -1518,11 +1534,13 @@ di_ikgis_trycompare_eq(DefaultIterator_WithIterKeysAndGetItem *self,
 	return DeeObject_TryCompareEq(self->diikgi_iter, other->diikgi_iter);
 }
 
-#define di_iktgis_cmp  di_ikgis_cmp
-#define di_ikttgis_cmp di_ikgis_cmp
-#define di_ikgim_cmp   di_ikgis_cmp
-#define di_iktgim_cmp  di_ikgis_cmp
-#define di_ikttgim_cmp di_ikgis_cmp
+#define di_iktrgis_cmp  di_ikgis_cmp
+#define di_ikttrgis_cmp di_ikgis_cmp
+#define di_ikgim_cmp    di_ikgis_cmp
+#define di_iktrgim_cmp  di_ikgis_cmp
+#define di_ikttrgim_cmp di_ikgis_cmp
+#define di_iktgis_cmp   di_ikgis_cmp
+#define di_iktgim_cmp   di_ikgis_cmp
 PRIVATE struct type_cmp di_ikgis_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_ikgis_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_ikgis_compare_eq,
@@ -1530,13 +1548,15 @@ PRIVATE struct type_cmp di_ikgis_cmp = {
 	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_ikgis_trycompare_eq,
 };
 
-#define di_ikttgim_members di_ikttgis_members
-PRIVATE struct type_member tpconst di_ikttgis_members[] = {
+#define di_ikttrgim_members di_ikttrgis_members
+#define di_iktgis_members   di_ikttrgis_members
+#define di_iktgim_members   di_ikttrgis_members
+PRIVATE struct type_member tpconst di_ikttrgis_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__tpseq__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_tp_seq), "->?DType"),
-#define di_ikgis_members  (di_ikttgis_members + 1)
-#define di_iktgis_members (di_ikttgis_members + 1)
-#define di_ikgim_members  (di_ikttgis_members + 1)
-#define di_iktgim_members (di_ikttgis_members + 1)
+#define di_ikgis_members  (di_ikttrgis_members + 1)
+#define di_iktrgis_members (di_ikttrgis_members + 1)
+#define di_ikgim_members  (di_ikttrgis_members + 1)
+#define di_iktrgim_members (di_ikttrgis_members + 1)
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD_DOC("__iterkeys__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
@@ -1547,7 +1567,7 @@ di_ikgis_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
 	DREF DeeObject *value;
 	DREF DeeObject *key;
 nextkey:
-	key = DeeObject_IterNext(self->diikgi_iter);
+	key = (*self->diikgi_tp_next)(self->diikgi_iter);
 	if unlikely(!ITER_ISOK(key))
 		return key;
 	value = (*self->diikgi_tp_getitem)(self->diikgi_seq, key);
@@ -1564,11 +1584,32 @@ nextkey:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-di_iktgis_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
+di_iktgis_iter_next(DefaultIterator_WithIterKeysAndTGetItem *__restrict self) {
 	DREF DeeObject *value;
 	DREF DeeObject *key;
 nextkey:
-	key = DeeObject_IterNext(self->diikgi_iter);
+	key = (*self->diiktgi_tp_next)(self->diiktgi_iter);
+	if unlikely(!ITER_ISOK(key))
+		return key;
+	value = (*self->diiktgi_tp_tgetitem)(self->diiktgi_tp_seq, self->diiktgi_seq, key);
+	Dee_Decref(key);
+	if unlikely(!value) {
+		if (DeeError_Catch(&DeeError_UnboundItem))
+			goto nextkey;
+		if (DeeError_Catch(&DeeError_IndexError))
+			goto nextkey;
+		if (DeeError_Catch(&DeeError_KeyError))
+			goto nextkey;
+	}
+	return value;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_iktrgis_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
+	DREF DeeObject *value;
+	DREF DeeObject *key;
+nextkey:
+	key = (*self->diikgi_tp_next)(self->diikgi_iter);
 	if unlikely(!ITER_ISOK(key))
 		return key;
 	value = (*self->diikgi_tp_getitem)(self->diikgi_seq, key);
@@ -1579,11 +1620,11 @@ nextkey:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-di_ikttgis_iter_next(DefaultIterator_WithIterKeysAndTGetItem *__restrict self) {
+di_ikttrgis_iter_next(DefaultIterator_WithIterKeysAndTGetItem *__restrict self) {
 	DREF DeeObject *value;
 	DREF DeeObject *key;
 nextkey:
-	key = DeeObject_IterNext(self->diiktgi_iter);
+	key = (*self->diiktgi_tp_next)(self->diiktgi_iter);
 	if unlikely(!ITER_ISOK(key))
 		return key;
 	value = (*self->diiktgi_tp_tgetitem)(self->diiktgi_tp_seq, self->diiktgi_seq, key);
@@ -1599,7 +1640,7 @@ di_ikgim_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
 	DREF DeeObject *value;
 	DREF DeeObject *key;
 nextkey:
-	key = DeeObject_IterNext(self->diikgi_iter);
+	key = (*self->diikgi_tp_next)(self->diikgi_iter);
 	if unlikely(!ITER_ISOK(key))
 		return (DREF DeeTupleObject *)key;
 	value = (*self->diikgi_tp_getitem)(self->diikgi_seq, key);
@@ -1628,12 +1669,46 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-di_iktgim_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
+di_iktgim_iter_next(DefaultIterator_WithIterKeysAndTGetItem *__restrict self) {
 	DREF DeeTupleObject *result;
 	DREF DeeObject *value;
 	DREF DeeObject *key;
 nextkey:
-	key = DeeObject_IterNext(self->diikgi_iter);
+	key = (*self->diiktgi_tp_next)(self->diiktgi_iter);
+	if unlikely(!ITER_ISOK(key))
+		return (DREF DeeTupleObject *)key;
+	value = (*self->diiktgi_tp_tgetitem)(self->diiktgi_tp_seq, self->diiktgi_seq, key);
+	if unlikely(!value) {
+		Dee_Decref(key);
+		if (DeeError_Catch(&DeeError_UnboundItem))
+			goto nextkey;
+		if (DeeError_Catch(&DeeError_IndexError))
+			goto nextkey;
+		if (DeeError_Catch(&DeeError_KeyError))
+			goto nextkey;
+		goto err;
+	}
+	result = DeeTuple_NewUninitialized(2);
+	if unlikely(!result)
+		goto err_key_value;
+	DeeTuple_SET(result, 0, key);
+	DeeTuple_SET(result, 1, value);
+	return result;
+err_key_value:
+	Dee_Decref(value);
+/*err_key:*/
+	Dee_Decref(key);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+di_iktrgim_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
+	DREF DeeTupleObject *result;
+	DREF DeeObject *value;
+	DREF DeeObject *key;
+nextkey:
+	key = (*self->diikgi_tp_next)(self->diikgi_iter);
 	if unlikely(!ITER_ISOK(key))
 		return (DREF DeeTupleObject *)key;
 	value = (*self->diikgi_tp_getitem)(self->diikgi_seq, key);
@@ -1657,12 +1732,12 @@ err_key:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-di_ikttgim_iter_next(DefaultIterator_WithIterKeysAndTGetItem *__restrict self) {
+di_ikttrgim_iter_next(DefaultIterator_WithIterKeysAndTGetItem *__restrict self) {
 	DREF DeeTupleObject *result;
 	DREF DeeObject *value;
 	DREF DeeObject *key;
 nextkey:
-	key = DeeObject_IterNext(self->diiktgi_iter);
+	key = (*self->diiktgi_tp_next)(self->diiktgi_iter);
 	if unlikely(!ITER_ISOK(key))
 		return (DREF DeeTupleObject *)key;
 	value = (*self->diiktgi_tp_tgetitem)(self->diiktgi_tp_seq, self->diiktgi_seq, key);
@@ -1687,7 +1762,7 @@ err_key:
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithKeysAndGetItemForSeq",
+	/* .tp_name     = */ "_IterWithIterKeysAndGetItemForSeq",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -1730,9 +1805,9 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
+INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithKeysAndTryGetItemForSeq",
+	/* .tp_name     = */ "_IterWithIterKeysAndTGetItemForSeq",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -1745,7 +1820,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktgis_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_iktgis_fini,
@@ -1775,9 +1850,9 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
+INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithKeysAndTTryGetItemForSeq",
+	/* .tp_name     = */ "_IterWithIterKeysAndTryGetItemForSeq",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -1787,13 +1862,13 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikttgis_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikttgis_deepcopy,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktrgis_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktrgis_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ikttgis_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_iktrgis_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1803,18 +1878,63 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_ikttgis_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_iktrgis_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &di_ikttgis_cmp,
+	/* .tp_cmp           = */ &di_iktrgis_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_ikttgis_iter_next,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_iktrgis_iter_next,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ di_ikttgis_members,
+	/* .tp_members       = */ di_iktrgis_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithIterKeysAndTTryGetItemForSeq",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikttrgis_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikttrgis_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ikttrgis_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_ikttrgis_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &di_ikttrgis_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_ikttrgis_iter_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ di_ikttrgis_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -1822,8 +1942,8 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithKeysAndGetItemForMap",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ "_IterWithIterKeysAndGetItemForMap",
+	/* .tp_doc      = */ DOC("next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1865,10 +1985,10 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
+INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithKeysAndTryGetItemForMap",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ "_IterWithIterKeysAndTGetItemForMap",
+	/* .tp_doc      = */ DOC("next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1880,7 +2000,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktgim_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_iktgim_fini,
@@ -1910,10 +2030,10 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
+INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithKeysAndTTryGetItemForMap",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ "_IterWithIterKeysAndTryGetItemForMap",
+	/* .tp_doc      = */ DOC("next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1922,13 +2042,13 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikttgim_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikttgim_deepcopy,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktrgim_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktrgim_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ikttgim_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_iktrgim_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -1938,18 +2058,63 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_ikttgim_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_iktrgim_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &di_ikttgim_cmp,
+	/* .tp_cmp           = */ &di_iktrgim_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_ikttgim_iter_next,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_iktrgim_iter_next,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ di_ikttgim_members,
+	/* .tp_members       = */ di_iktrgim_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithIterKeysAndTTryGetItemForMap",
+	/* .tp_doc      = */ DOC("next->?T2?O?O"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikttrgim_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikttrgim_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ikttrgim_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_ikttrgim_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &di_ikttrgim_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_ikttrgim_iter_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ di_ikttrgim_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -1984,10 +2149,273 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 /************************************************************************/
 
 INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
-	/* TODO */
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithForeach",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL, /* TODO */
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
 };
+
 INTERN DeeTypeObject DefaultIterator_WithForeachPair_Type = {
-	/* TODO */
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithForeachPair",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL, /* TODO */
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DefaultIterator_WithEnumerateSeq_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithEnumerateSeq",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL, /* TODO */
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DefaultIterator_WithEnumerateMap_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithEnumerateMap",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL, /* TODO */
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithEnumerateIndexSeq",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL, /* TODO */
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithEnumerateIndexMap",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DeeObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL, /* TODO */
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
 };
 
 

@@ -159,14 +159,20 @@ INTDEF DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type; /* DefaultIterato
 INTDEF DeeTypeObject DefaultIterator_WithNextAndLimit_Type; /* DefaultIterator_WithNextAndLimit */
 
 INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type;     /* DefaultIterator_WithIterKeysAndGetItem (yields only the value-part) */
+INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type;    /* DefaultIterator_WithIterKeysAndTGetItem (yields only the value-part) */
 INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type;  /* DefaultIterator_WithIterKeysAndGetItem (yields only the value-part) */
 INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type; /* DefaultIterator_WithIterKeysAndTGetItem (yields only the value-part) */
 INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type;     /* DefaultIterator_WithIterKeysAndGetItem (yields 2-element (key, value) tuples) */
+INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type;    /* DefaultIterator_WithIterKeysAndTGetItem (yields 2-element (key, value) tuples) */
 INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type;  /* DefaultIterator_WithIterKeysAndGetItem (yields 2-element (key, value) tuples) */
 INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type; /* DefaultIterator_WithIterKeysAndTGetItem (yields 2-element (key, value) tuples) */
 
-INTDEF DeeTypeObject DefaultIterator_WithForeach_Type;     /* DefaultIterator_WithForeach */
-INTDEF DeeTypeObject DefaultIterator_WithForeachPair_Type; /* DefaultIterator_WithForeachPair */
+INTDEF DeeTypeObject DefaultIterator_WithForeach_Type;           /* DefaultIterator_WithForeach */
+INTDEF DeeTypeObject DefaultIterator_WithForeachPair_Type;       /* DefaultIterator_WithForeachPair */
+INTDEF DeeTypeObject DefaultIterator_WithEnumerateSeq_Type;      /* DefaultIterator_WithEnumerate */
+INTDEF DeeTypeObject DefaultIterator_WithEnumerateMap_Type;      /* DefaultIterator_WithEnumerate */
+INTDEF DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type; /* DefaultIterator_WithEnumerateIndex */
+INTDEF DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type; /* DefaultIterator_WithEnumerateIndex */
 
 DECL_END
 

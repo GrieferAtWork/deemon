@@ -51,6 +51,7 @@
 #include "seq/concat.h"
 #include "seq/default-api.h"
 #include "seq/default-iterators.h"
+#include "seq/default-reversed.h"
 #include "seq/default-sequences.h"
 #include "seq/each.h"
 #include "seq/filter.h"
@@ -1679,17 +1680,17 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 			    DeeType_HasPrivateNSI(iter)) {
 				if (!self->tp_seq || !self->tp_seq->tp_nsi)
 					DeeType_InheritNSI(self);
-				ASSERT(self->tp_seq);
-				ASSERT(self->tp_seq->tp_nsi);
-				if likely(self->tp_seq->tp_nsi == seq->tp_nsi) {
-					if (seq->tp_nsi->nsi_seqlike.nsi_getitem_fast) {
-						if likely(DeeType_Implements(self, &DeeSeq_Type))
-							self->tp_seq->tp_iter = &seq_iterself_with_FastNsiIterator;
-						return_reference_(&DeeFastNsiIterator_Type);
-					} else if (seq->tp_nsi->nsi_seqlike.nsi_getitem) {
-						if likely(DeeType_Implements(self, &DeeSeq_Type))
-							self->tp_seq->tp_iter = &seq_iterself_with_NsiIterator;
-						return_reference_(&DeeNsiIterator_Type);
+				if (self->tp_seq && self->tp_seq->tp_nsi) {
+					if likely(self->tp_seq->tp_nsi == seq->tp_nsi) {
+						if (seq->tp_nsi->nsi_seqlike.nsi_getitem_fast) {
+							if likely(DeeType_Implements(self, &DeeSeq_Type))
+								self->tp_seq->tp_iter = &seq_iterself_with_FastNsiIterator;
+							return_reference_(&DeeFastNsiIterator_Type);
+						} else if (seq->tp_nsi->nsi_seqlike.nsi_getitem) {
+							if likely(DeeType_Implements(self, &DeeSeq_Type))
+								self->tp_seq->tp_iter = &seq_iterself_with_NsiIterator;
+							return_reference_(&DeeNsiIterator_Type);
+						}
 					}
 				}
 			}
@@ -2221,18 +2222,38 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 			result = &DefaultIterator_WithForeach_Type;
 		} else if (tp_iter == &DeeObject_DefaultIterWithForeachPair) {
 			result = &DefaultIterator_WithForeachPair_Type;
-		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndex) {
-			result = &DefaultIterator_WithSizeAndGetItemIndex_Type;
+		} else if (tp_iter == &DeeObject_DefaultIterWithEnumerate) {
+			result = &DefaultIterator_WithEnumerateSeq_Type;
+		} else if (tp_iter == &DeeObject_DefaultIterWithEnumerateIndex) {
+			result = &DefaultIterator_WithEnumerateIndexSeq_Type;
+		} else if (tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItem) {
+			result = &DefaultIterator_WithIterKeysAndTryGetItemSeq_Type;
+		} else if (tp_iter == &DeeObject_DefaultIterWithIterKeysAndGetItem) {
+			result = &DefaultIterator_WithIterKeysAndGetItemSeq_Type; /* or: DefaultIterator_WithIterKeysAndTGetItemSeq_Type */
+		} else if (tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault) {
+			result = &DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type; /* or: DefaultIterator_WithIterKeysAndTryGetItemSeq_Type */
 		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast) {
 			result = &DefaultIterator_WithSizeAndGetItemIndexFast_Type;
+		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex) {
+			result = &DefaultIterator_WithSizeAndTryGetItemIndex_Type;
+		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndex) {
+			result = &DefaultIterator_WithSizeAndGetItemIndex_Type;
 		} else if (tp_iter == &DeeSeq_DefaultIterWithGetItemIndex) {
 			result = &DefaultIterator_WithGetItemIndex_Type;
 		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem) {
-			result = &DefaultIterator_WithSizeAndGetItem_Type;
-			/*result = &DefaultIterator_WithTSizeAndGetItem_Type;*/
+			result = &DefaultIterator_WithSizeAndGetItem_Type; /*or: DefaultIterator_WithTSizeAndGetItem_Type */
 		} else if (tp_iter == &DeeSeq_DefaultIterWithGetItem) {
-			result = &DefaultIterator_WithGetItem_Type;
-			/*result = &DefaultIterator_WithTGetItem_Type;*/
+			result = &DefaultIterator_WithGetItem_Type; /* or: DefaultIterator_WithTGetItem_Type */
+		} else if (tp_iter == &DeeMap_DefaultIterWithEnumerate) {
+			result = &DefaultIterator_WithEnumerateMap_Type;
+		} else if (tp_iter == &DeeMap_DefaultIterWithEnumerateIndex) {
+			result = &DefaultIterator_WithEnumerateIndexMap_Type;
+		} else if (tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItem) {
+			result = &DefaultIterator_WithIterKeysAndTryGetItemMap_Type;
+		} else if (tp_iter == &DeeMap_DefaultIterWithIterKeysAndGetItem) {
+			result = &DefaultIterator_WithIterKeysAndGetItemMap_Type; /* or: DefaultIterator_WithIterKeysAndTGetItemMap_Type */
+		} else if (tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault) {
+			result = &DefaultIterator_WithIterKeysAndTTryGetItemMap_Type; /* or: DefaultIterator_WithIterKeysAndTryGetItemMap_Type */
 		}
 	}
 	return_reference_(result);
@@ -6433,7 +6454,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	                  /**/ "}"
 	                  "}"),
 	TYPE_GETTER("each", &DeeSeq_Each,
-	            "->?S?O\n"
+	            "->?Ert:SeqEach\n"
 	            "Returns a special proxy object that mirrors any operation performed on "
 	            /**/ "it onto each element of @this Sequence, evaluating to another proxy object "
 	            /**/ "that allows the same, but also allows being used as a regular Sequence:\n"
@@ -6454,8 +6475,8 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            "${"
 	            /**/ "local lists = { [10, 20, 30], [1, 2, 3], [19, 41, 57] };\n"
 	            /**/ "lists.each.insert(0, 9)...; /* Expand the wrapped Sequence to ensure invocation */\n"
-	            /**/ "lists.each[0] = 8;          /* No need for expand in this case */\n"
-	            /**/ "del lists.each[0];          /* No need for expand in this case */"
+	            /**/ "lists.each[0] = 8;          /* No need for (or way to) expand in this case */\n"
+	            /**/ "del lists.each[0];          /* No need for (or way to) expand in this case */"
 	            "}"),
 	TYPE_GETTER("ids", &SeqIds_New,
 	            "->?S?Dint\n"
@@ -6665,6 +6686,46 @@ PRIVATE struct type_operator const seq_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_CONSTELEM_ARGS_CONSTCAST),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL),
 };
+
+
+/* Use sequence class members to expose all of the default sequence/iterator types for use by `rt' */
+PRIVATE struct type_member tpconst seq_class_members[] = {
+	TYPE_MEMBER_CONST("__SeqWithSizeAndGetItemIndex__", &DefaultSequence_WithSizeAndGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__SeqWithSizeAndGetItemIndexFast__", &DefaultSequence_WithSizeAndGetItemIndexFast_Type),
+	TYPE_MEMBER_CONST("__SeqWithSizeAndTryGetItemIndex__", &DefaultSequence_WithSizeAndTryGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__SeqWithSizeAndGetItem__", &DefaultSequence_WithSizeAndGetItem_Type),
+	TYPE_MEMBER_CONST("__SeqWithTSizeAndGetItem__", &DefaultSequence_WithTSizeAndGetItem_Type),
+	TYPE_MEMBER_CONST("__SeqWithIter__", &DefaultSequence_WithIter_Type),
+	TYPE_MEMBER_CONST("__SeqWithTIter__", &DefaultSequence_WithTIter_Type),
+	TYPE_MEMBER_CONST("__IterWithGetItemIndex__", &DefaultIterator_WithGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndex__", &DefaultIterator_WithSizeAndGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndexFast__", &DefaultIterator_WithSizeAndGetItemIndexFast_Type),
+	TYPE_MEMBER_CONST("__IterWithSizeAndTryGetItemIndex__", &DefaultIterator_WithSizeAndTryGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__IterWithGetItem__", &DefaultIterator_WithGetItem_Type),
+	TYPE_MEMBER_CONST("__IterWithTGetItem__", &DefaultIterator_WithTGetItem_Type),
+	TYPE_MEMBER_CONST("__IterWithSizeAndGetItem__", &DefaultIterator_WithSizeAndGetItem_Type),
+	TYPE_MEMBER_CONST("__IterWithTSizeAndGetItem__", &DefaultIterator_WithTSizeAndGetItem_Type),
+	TYPE_MEMBER_CONST("__IterWithNextAndLimit__", &DefaultIterator_WithNextAndLimit_Type),
+	TYPE_MEMBER_CONST("__IterWithIterKeysAndGetItemForSeq__", &DefaultIterator_WithIterKeysAndGetItemSeq_Type),
+	TYPE_MEMBER_CONST("__IterWithIterKeysAndTGetItemForSeq__", &DefaultIterator_WithIterKeysAndTGetItemSeq_Type),
+	TYPE_MEMBER_CONST("__IterWithIterKeysAndTryGetItemForSeq__", &DefaultIterator_WithIterKeysAndTryGetItemSeq_Type),
+	TYPE_MEMBER_CONST("__IterWithIterKeysAndTTryGetItemForSeq__", &DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type),
+	TYPE_MEMBER_CONST("__IterWithIterKeysAndGetItemForMap__", &DefaultIterator_WithIterKeysAndGetItemMap_Type),
+	TYPE_MEMBER_CONST("__IterWithIterKeysAndTGetItemForMap__", &DefaultIterator_WithIterKeysAndTGetItemMap_Type),
+	TYPE_MEMBER_CONST("__IterWithIterKeysAndTryGetItemForMap__", &DefaultIterator_WithIterKeysAndTryGetItemMap_Type),
+	TYPE_MEMBER_CONST("__IterWithIterKeysAndTTryGetItemForMap__", &DefaultIterator_WithIterKeysAndTTryGetItemMap_Type),
+	TYPE_MEMBER_CONST("__IterWithForeach__", &DefaultIterator_WithForeach_Type),
+	TYPE_MEMBER_CONST("__IterWithForeachPair__", &DefaultIterator_WithForeachPair_Type),
+	TYPE_MEMBER_CONST("__IterWithEnumerateMap__", &DefaultIterator_WithEnumerateMap_Type),
+	TYPE_MEMBER_CONST("__IterWithEnumerateIndexSeq__", &DefaultIterator_WithEnumerateIndexSeq_Type),
+	TYPE_MEMBER_CONST("__IterWithEnumerateSeq__", &DefaultIterator_WithEnumerateSeq_Type),
+	TYPE_MEMBER_CONST("__IterWithEnumerateIndexMap__", &DefaultIterator_WithEnumerateIndexMap_Type),
+	TYPE_MEMBER_CONST("__SeqReversedWithGetItemIndex__", &DefaultReversed_WithGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__SeqReversedWithGetItemIndexFast__", &DefaultReversed_WithGetItemIndexFast_Type),
+	TYPE_MEMBER_CONST("__SeqReversedWithTryGetItemIndex__", &DefaultReversed_WithTryGetItemIndex_Type),
+	TYPE_MEMBER_END
+};
+
 
 /* `Sequence from deemon' */
 PUBLIC DeeTypeObject DeeSeq_Type = {
@@ -7337,7 +7398,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ seq_class_methods,
 	/* .tp_class_getsets = */ seq_class_getsets,
-	/* .tp_class_members = */ NULL,
+	/* .tp_class_members = */ seq_class_members,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ seq_operators,

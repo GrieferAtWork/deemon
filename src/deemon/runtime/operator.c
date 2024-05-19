@@ -5642,7 +5642,8 @@ err:
 
 
 /* Default wrappers for implementing OPERATOR_ITER via `tp_iter <===> tp_foreach <===> tp_foreach_pair' */
-DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeach, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeach,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	/* TODO: Custom iterator type that uses "tp_foreach" */
 	(void)tp_self;
@@ -5673,6 +5674,26 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithEnumerate,
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithEnumerateIndex,
                          (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type that uses "tp_enumerate_index" */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterWithEnumerate,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type that uses "tp_enumerate" */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterWithEnumerateIndex,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	/* TODO: Custom iterator type that uses "tp_enumerate_index" */
 	(void)tp_self;
@@ -5919,29 +5940,50 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithIterKeysAndGetItem,
 	 * >>     }
 	 * >> })().operator iter();
 	 */
+	DREF DeeObject *iter;
 	DREF DefaultIterator_WithIterKeysAndGetItem *result;
 	LOAD_TP_SELF;
+	iter = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
+	if unlikely(!iter)
+		goto err;
+	if unlikely(!Dee_TYPE(iter)->tp_iter_next &&
+	            !DeeType_InheritIterNext(Dee_TYPE(iter)))
+		goto err_iter_no_iter_next;
+#ifdef DEFINE_TYPED_OPERATORS
+	if (!Dee_TYPE(self)->tp_seq ||
+	    (Dee_TYPE(self)->tp_seq->tp_getitem != tp_self->tp_seq->tp_getitem)) {
+		DREF DeeObject *(DCALL *tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+		tp_tgetitem = tp_self->tp_seq->tp_getitem == &instance_getitem ? &instance_tgetitem : NULL;
+		if (tp_tgetitem) {
+			DREF DefaultIterator_WithIterKeysAndTGetItem *tresult;
+			tresult = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndTGetItem);
+			if unlikely(!tresult)
+				goto err_iter;
+			Dee_Incref(self);
+			tresult->diiktgi_iter        = iter; /* Inherit reference */
+			tresult->diiktgi_seq         = self; /* Inherit reference */
+			tresult->diiktgi_tp_next     = Dee_TYPE(iter)->tp_iter_next;
+			tresult->diiktgi_tp_tgetitem = tp_tgetitem;
+			tresult->diiktgi_tp_seq      = tp_self;
+			DeeObject_Init(tresult, &DefaultIterator_WithIterKeysAndTGetItemSeq_Type);
+			return (DREF DeeObject *)tresult;
+		}
+	}
+#endif /* DEFINE_TYPED_OPERATORS */
 	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
 	if unlikely(!result)
-		goto err;
-	result->diikgi_iter = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
-	if unlikely(!result->diikgi_iter)
-		goto err_r;
-	if unlikely(!Dee_TYPE(result->diikgi_iter)->tp_iter_next &&
-	            !DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
-		goto err_r_iter_no_iter_next;
+		goto err_iter;
 	Dee_Incref(self);
-	result->diikgi_seq        = self;
-	result->diikgi_tp_next    = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	result->diikgi_iter       = iter; /* Inherit reference */
+	result->diikgi_seq        = self; /* Inherit reference */
+	result->diikgi_tp_next    = Dee_TYPE(iter)->tp_iter_next;
 	result->diikgi_tp_getitem = tp_self->tp_seq->tp_getitem;
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemSeq_Type);
 	return (DREF DeeObject *)result;
-err_r_iter_no_iter_next:
-	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
-/*err_r_iter:*/
-	Dee_Decref(result->diikgi_iter);
-err_r:
-	DeeObject_FREE(result);
+err_iter_no_iter_next:
+	err_unimplemented_operator(Dee_TYPE(iter), OPERATOR_ITERNEXT);
+err_iter:
+	Dee_Decref(iter);
 err:
 	return NULL;
 }
@@ -6059,29 +6101,50 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterWithIterKeysAndGetItem
 	 * >>     }
 	 * >> })().operator iter();
 	 */
+	DREF DeeObject *iter;
 	DREF DefaultIterator_WithIterKeysAndGetItem *result;
 	LOAD_TP_SELF;
+	iter = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
+	if unlikely(!iter)
+		goto err;
+	if unlikely(!Dee_TYPE(iter)->tp_iter_next &&
+	            !DeeType_InheritIterNext(Dee_TYPE(iter)))
+		goto err_iter_no_iter_next;
+#ifdef DEFINE_TYPED_OPERATORS
+	if (!Dee_TYPE(self)->tp_seq ||
+	    (Dee_TYPE(self)->tp_seq->tp_getitem != tp_self->tp_seq->tp_getitem)) {
+		DREF DeeObject *(DCALL *tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+		tp_tgetitem = tp_self->tp_seq->tp_getitem == &instance_getitem ? &instance_tgetitem : NULL;
+		if (tp_tgetitem) {
+			DREF DefaultIterator_WithIterKeysAndTGetItem *tresult;
+			tresult = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndTGetItem);
+			if unlikely(!tresult)
+				goto err_iter;
+			Dee_Incref(self);
+			tresult->diiktgi_iter        = iter; /* Inherit reference */
+			tresult->diiktgi_seq         = self; /* Inherit reference */
+			tresult->diiktgi_tp_next     = Dee_TYPE(iter)->tp_iter_next;
+			tresult->diiktgi_tp_tgetitem = tp_tgetitem;
+			tresult->diiktgi_tp_seq      = tp_self;
+			DeeObject_Init(tresult, &DefaultIterator_WithIterKeysAndTGetItemMap_Type);
+			return (DREF DeeObject *)tresult;
+		}
+	}
+#endif /* DEFINE_TYPED_OPERATORS */
 	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
 	if unlikely(!result)
-		goto err;
-	result->diikgi_iter = DeeType_INVOKE_ITERKEYS_NODEFAULT(tp_self, self);
-	if unlikely(!result->diikgi_iter)
-		goto err_r;
-	if unlikely(!Dee_TYPE(result->diikgi_iter)->tp_iter_next &&
-	            !DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
-		goto err_r_iter_no_iter_next;
+		goto err_iter;
 	Dee_Incref(self);
-	result->diikgi_seq        = self;
-	result->diikgi_tp_next    = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	result->diikgi_iter       = iter; /* Inherit reference */
+	result->diikgi_seq        = self; /* Inherit reference */
+	result->diikgi_tp_next    = Dee_TYPE(iter)->tp_iter_next;
 	result->diikgi_tp_getitem = tp_self->tp_seq->tp_getitem;
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
 	return (DREF DeeObject *)result;
-err_r_iter_no_iter_next:
-	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
-/*err_r_iter:*/
-	Dee_Decref(result->diikgi_iter);
-err_r:
-	DeeObject_FREE(result);
+err_iter_no_iter_next:
+	err_unimplemented_operator(Dee_TYPE(iter), OPERATOR_ITERNEXT);
+err_iter:
+	Dee_Decref(iter);
 err:
 	return NULL;
 }
@@ -14943,9 +15006,11 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair)) {
 			seq->tp_iter = &DeeObject_DefaultIterWithForeachPair;
 		} else if (seq_featureset_test(features, FEAT_tp_enumerate)) {
-			seq->tp_iter = &DeeObject_DefaultIterWithEnumerate;
+			seq->tp_iter = seqclass == Dee_SEQCLASS_MAP ? &DeeMap_DefaultIterWithEnumerate
+			                                            : &DeeObject_DefaultIterWithEnumerate;
 		} else if (seq_featureset_test(features, FEAT_tp_enumerate_index)) {
-			seq->tp_iter = &DeeObject_DefaultIterWithEnumerateIndex;
+			seq->tp_iter = seqclass == Dee_SEQCLASS_MAP ? &DeeMap_DefaultIterWithEnumerateIndex
+			                                            : &DeeObject_DefaultIterWithEnumerateIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_iterkeys)) {
 			if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
 				seq->tp_iter = seqclass == Dee_SEQCLASS_MAP ? &DeeMap_DefaultIterWithIterKeysAndTryGetItem
@@ -15724,6 +15789,8 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_iterkeys = &DeeSeq_DefaultIterKeysWithSizeDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_iter) && seqclass == Dee_SEQCLASS_MAP) {
 			seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIter;
+		} else if (0) {
+			/* TODO: if (has_private_attr("keys")) tp_iterkeys = () -> self.keys.operator iter(); */
 		} else if (seq->tp_iter && seqclass == Dee_SEQCLASS_MAP) {
 			seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIterDefault;
 		}
