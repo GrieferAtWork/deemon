@@ -1177,15 +1177,15 @@ done:
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeModuleObject *modglobals_module; /* [1..1] The module who's exports are being viewed. */
+	DREF DeeModuleObject *mg_module; /* [1..1] The module who's exports are being viewed. */
 } ModuleGlobals;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modglobals_init(ModuleGlobals *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobals", &self->modglobals_module))
+	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobals", &self->mg_module))
 		goto err;
-	if (DeeObject_AssertType(self->modglobals_module, &DeeModule_Type))
+	if (DeeObject_AssertType(self->mg_module, &DeeModule_Type))
 		goto err;
 	Dee_Incref(&DeeModule_Empty);
 	return 0;
@@ -1193,8 +1193,8 @@ err:
 	return -1;
 }
 
-STATIC_ASSERT(offsetof(ModuleExports, me_module) == offsetof(ModuleGlobals, modglobals_module));
-STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) == offsetof(ModuleGlobals, modglobals_module));
+STATIC_ASSERT(offsetof(ModuleExports, me_module) == offsetof(ModuleGlobals, mg_module));
+STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) == offsetof(ModuleGlobals, mg_module));
 #define modglobals_ctor    modexports_ctor
 #define modglobals_fini    modexportsiter_fini
 #define modglobals_bool    modexports_bool
@@ -1203,14 +1203,14 @@ STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) == offsetof(ModuleGlob
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-modglobals_nsi_getsize(ModuleGlobals *__restrict self) {
-	return atomic_read(&self->modglobals_module->mo_globalc);
+modglobals_size(ModuleGlobals *__restrict self) {
+	return atomic_read(&self->mg_module->mo_globalc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-modglobals_nsi_getitem(ModuleGlobals *self, size_t index) {
+modglobals_getitem_index(ModuleGlobals *self, size_t index) {
 	DREF DeeObject *result;
-	DeeModuleObject *mod = self->modglobals_module;
+	DeeModuleObject *mod = self->mg_module;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
 	if (index >= mod->mo_globalc) {
@@ -1236,9 +1236,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-modglobals_nsi_setitem(ModuleGlobals *self, size_t index, DeeObject *value) {
+modglobals_setitem_index(ModuleGlobals *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldvalue;
-	DeeModuleObject *mod = self->modglobals_module;
+	DeeModuleObject *mod = self->mg_module;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
 	if (index >= mod->mo_globalc) {
@@ -1260,9 +1260,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-modglobals_nsi_bounditem(ModuleGlobals *self, size_t index) {
+modglobals_bounditem_index(ModuleGlobals *self, size_t index) {
 	DeeObject *value;
-	DeeModuleObject *mod = self->modglobals_module;
+	DeeModuleObject *mod = self->mg_module;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
 	if (index >= mod->mo_globalc) {
@@ -1278,10 +1278,16 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+modglobals_hasitem_index(ModuleGlobals *self, size_t index) {
+	DeeModuleObject *mod = self->mg_module;
+	return index < atomic_read(&mod->mo_globalc) ? 1 : 0;
+}
+
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-modglobals_nsi_xchitem(ModuleGlobals *self, size_t index, DeeObject *value) {
+modglobals_xchitem_index(ModuleGlobals *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldvalue;
-	DeeModuleObject *mod = self->modglobals_module;
+	DeeModuleObject *mod = self->mg_module;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
 	if (index >= mod->mo_globalc) {
@@ -1307,8 +1313,42 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-modglobals_nsi_delitem(ModuleGlobals *self, size_t index) {
-	return modglobals_nsi_setitem(self, index, NULL);
+modglobals_delitem_index(ModuleGlobals *self, size_t index) {
+	return modglobals_setitem_index(self, index, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+modglobals_enumerate_index(ModuleGlobals *__restrict self, Dee_enumerate_index_t proc,
+                           void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *item;
+	DeeModuleObject *mod = self->mg_module;
+	for (; start < end; ++start) {
+		if (DeeModule_LockSymbols(mod))
+			goto err;
+		if (end > mod->mo_globalc) {
+			end = mod->mo_globalc;
+			if (start >= end) {
+				DeeModule_UnlockSymbols(mod);
+				break;
+			}
+		}
+		DeeModule_LockRead(mod);
+		item = mod->mo_globalv[start];
+		Dee_XIncref(item);
+		DeeModule_LockEndRead(mod);
+		DeeModule_UnlockSymbols(mod);
+		temp = (*proc)(arg, start, item);
+		Dee_XDecref(item);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
 }
 
 PRIVATE struct type_nsi tpconst modglobals_nsi = {
@@ -1316,32 +1356,31 @@ PRIVATE struct type_nsi tpconst modglobals_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&modglobals_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&modglobals_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&modglobals_nsi_getitem,
-			/* .nsi_delitem      = */ (dfunptr_t)&modglobals_nsi_delitem,
-			/* .nsi_setitem      = */ (dfunptr_t)&modglobals_nsi_setitem,
-			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)NULL,
-			/* .nsi_rfind        = */ (dfunptr_t)NULL,
-			/* .nsi_xch          = */ (dfunptr_t)&modglobals_nsi_xchitem,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
+			/* .nsi_getsize      = */ (dfunptr_t)&modglobals_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&modglobals_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&modglobals_getitem_index,
+			/* .nsi_delitem      = */ (dfunptr_t)&modglobals_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&modglobals_setitem_index,
 		}
 	}
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+modglobals_xchitem(ModuleGlobals *self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw) {
+	size_t index;
+	DeeObject *value;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	                    UNPuSIZ "o:xchitem", &index, &value))
+		goto err;
+	return modglobals_xchitem_index(self, index, value);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_method tpconst modglobals_methods[] = {
+	TYPE_KWMETHOD(STR_xchitem, &modglobals_xchitem, "(index:?Dint,value)->"),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_seq modglobals_seq = {
@@ -1355,20 +1394,20 @@ PRIVATE struct type_seq modglobals_seq = {
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
 	/* .tp_nsi                = */ &modglobals_nsi,
-	/* .tp_foreach            = */ NULL, /* TODO */
+	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ NULL,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&modglobals_enumerate_index,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&modglobals_nsi_getsize,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&modglobals_nsi_getsize,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&modglobals_nsi_getitem,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&modglobals_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&modglobals_size,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&modglobals_getitem_index,
 	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
-	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&modglobals_nsi_delitem,
-	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&modglobals_nsi_setitem,
-	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&modglobals_nsi_bounditem,
-	/* .tp_hasitem_index      = */ NULL,
+	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&modglobals_delitem_index,
+	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&modglobals_setitem_index,
+	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&modglobals_bounditem_index,
+	/* .tp_hasitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&modglobals_hasitem_index,
 	/* .tp_getrange_index     = */ NULL,
 	/* .tp_delrange_index     = */ NULL,
 	/* .tp_setrange_index     = */ NULL,
@@ -1414,7 +1453,7 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ modglobals_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ modglobals_members,
 	/* .tp_class_methods = */ NULL,
@@ -1429,7 +1468,7 @@ DeeModule_ViewGlobals(DeeModuleObject *__restrict self) {
 	result = DeeObject_MALLOC(ModuleGlobals);
 	if unlikely(!result)
 		goto done;
-	result->modglobals_module = self;
+	result->mg_module = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &ModuleGlobals_Type);
 done:
