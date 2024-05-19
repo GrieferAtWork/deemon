@@ -745,6 +745,7 @@ PRIVATE struct type_seq smap_seq = {
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&smap_foreach,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL, /* default */
 	/* .tp_hasitem                    = */ NULL, /* default */
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&smap_size,

@@ -2142,6 +2142,7 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&list_enumerate_index,
+	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL, /* default */
 	/* .tp_hasitem                    = */ NULL, /* default */
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&list_size,

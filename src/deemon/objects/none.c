@@ -276,6 +276,7 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&none_s3,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2_1,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2_1,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&none_s1,

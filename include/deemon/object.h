@@ -2035,6 +2035,14 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 
+	/* Similar to "tp_iter", but create an iterator for enumerating the "keys" of this object.
+	 * The keys of an object are all of the values that exist as items (as per "tp_hasitem"),
+	 * meaning that "tp_getitem" will return something other than "IndexError" / "KeyError"
+	 * for them (though it may still return "UnboundItem" if a key exists but doesn't have
+	 * any value assigned to it).
+	 * The keys enumerated by the returned iterator as the same as also yielded by `tp_enumerate' */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_iterkeys)(DeeObject *__restrict self); /* TODO */
+
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
 	 * @return: 1 : Item is bound.
@@ -2223,6 +2231,13 @@ myob_enumerate_index(MyObject *__restrict self, Dee_enumerate_index_t proc, void
 	(void)proc;
 	(void)arg;
 	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+myob_iterkeys(MyObject *__restrict self) {
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2480,6 +2495,7 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&myob_foreach_pair,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&myob_enumerate,
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&myob_enumerate_index,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&myob_size,

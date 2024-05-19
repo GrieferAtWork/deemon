@@ -2948,6 +2948,7 @@ PRIVATE struct type_seq generic_seq_seq = {
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ &generic_seq_enumerate,
 	/* .tp_enumerate_index            = */ &generic_seq_enumerate_index,
+	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ &generic_seq_bounditem,
 	/* .tp_hasitem                    = */ &generic_seq_hasitem,
 	/* .tp_size                       = */ &generic_seq_size,
