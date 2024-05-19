@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SEQUENCES_C 1
 
 #include <deemon/api.h>
+#include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/gc.h>
@@ -47,16 +48,124 @@ DECL_BEGIN
 /* DefaultSequence_WithSizeAndTryGetItemIndex_Type                      */
 /************************************************************************/
 
-#define ds_sgif_fini  ds_sgi_fini
-#define ds_sgif_visit ds_sgi_visit
-#define ds_stgi_fini  ds_sgi_fini
-#define ds_stgi_visit ds_sgi_visit
+#define ds_sgif_copy ds_sgi_copy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_sgi_copy(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+            DefaultSequence_WithSizeAndGetItemIndex *__restrict other) {
+	Dee_Incref(other->dssgi_seq);
+	self->dssgi_seq              = other->dssgi_seq;
+	self->dssgi_tp_getitem_index = other->dssgi_tp_getitem_index;
+	self->dssgi_start            = other->dssgi_start;
+	self->dssgi_end              = other->dssgi_end;
+	return 0;
+}
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_stgi_copy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
+             DefaultSequence_WithTSizeAndGetItem *__restrict other) {
+	Dee_Incref(other->dstsg_seq);
+	self->dstsg_seq         = other->dstsg_seq;
+	self->dstsg_tp_tgetitem = other->dstsg_tp_tgetitem;
+	self->dstsg_start       = other->dstsg_start;
+	self->dstsg_end         = other->dstsg_end;
+	self->dstsg_tp_seq      = other->dstsg_tp_seq;
+	return 0;
+}
+
+#define ds_sgif_deepcopy ds_sgi_deepcopy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_sgi_deepcopy(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                DefaultSequence_WithSizeAndGetItemIndex *__restrict other) {
+	self->dssgi_seq = DeeObject_DeepCopy(other->dssgi_seq);
+	if unlikely(!self->dssgi_seq)
+		goto err;
+	self->dssgi_tp_getitem_index = other->dssgi_tp_getitem_index;
+	self->dssgi_start            = other->dssgi_start;
+	self->dssgi_end              = other->dssgi_end;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_stgi_deepcopy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
+                 DefaultSequence_WithTSizeAndGetItem *__restrict other) {
+	self->dstsg_tp_seq = other->dstsg_tp_seq;
+	return ds_sgi_deepcopy((DefaultSequence_WithSizeAndGetItemIndex *)self,
+	                       (DefaultSequence_WithSizeAndGetItemIndex *)other);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_sgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+            size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndGetItemIndex",
+	                  &self->dssgi_seq, &self->dssgi_start,
+	                  &self->dssgi_end))
+		goto err;
+	seqtyp = Dee_TYPE(self->dssgi_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index) &&
+	    !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->dssgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index;
+	Dee_Incref(self->dssgi_seq);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_sgif_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+             size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndGetItemIndexFast",
+	                  &self->dssgi_seq, &self->dssgi_start,
+	                  &self->dssgi_end))
+		goto err;
+	seqtyp = Dee_TYPE(self->dssgi_seq);
+	if (!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast)
+		goto err_no_getitem;
+	self->dssgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
+	Dee_Incref(self->dssgi_seq);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_stgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+             size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithSizeAndTryGetItemIndex",
+	                  &self->dssgi_seq, &self->dssgi_start,
+	                  &self->dssgi_end))
+		goto err;
+	seqtyp = Dee_TYPE(self->dssgi_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem_index) &&
+	    !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->dssgi_tp_getitem_index = seqtyp->tp_seq->tp_trygetitem_index;
+	Dee_Incref(self->dssgi_seq);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err:
+	return -1;
+}
+
+#define ds_sgif_fini ds_sgi_fini
+#define ds_stgi_fini ds_sgi_fini
 PRIVATE NONNULL((1)) void DCALL
 ds_sgi_fini(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 	Dee_Decref(self->dssgi_seq);
 }
 
+#define ds_sgif_visit ds_sgi_visit
+#define ds_stgi_visit ds_sgi_visit
 PRIVATE NONNULL((1, 2)) void DCALL
 ds_sgi_visit(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
              dvisit_t proc, void *arg) {
@@ -930,7 +1039,7 @@ PRIVATE struct type_seq ds_stgi_seq = {
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithSizeAndGetItemIndex",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItem,start:?Dint,end:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -939,9 +1048,9 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ds_sgi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&ds_sgi_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ds_sgi_init,
 				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeAndGetItemIndex)
 			}
 		},
@@ -975,7 +1084,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithSizeAndGetItemIndexFast",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItemIndexFast,start:?Dint,end:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -984,9 +1093,9 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ds_sgif_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&ds_sgif_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ds_sgif_init,
 				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeAndGetItemIndex)
 			}
 		},
@@ -1020,7 +1129,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithSizeAndTryGetItemIndex",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithTryGetItem,start:?Dint,end:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1029,9 +1138,9 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ds_stgi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&ds_stgi_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ds_stgi_init,
 				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeAndGetItemIndex)
 			}
 		},
@@ -1093,6 +1202,110 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 STATIC_ASSERT(offsetof(DefaultSequence_WithSizeAndGetItem, dssg_seq) == offsetof(DefaultSequence_WithTSizeAndGetItem, dstsg_seq));
 STATIC_ASSERT(offsetof(DefaultSequence_WithSizeAndGetItem, dssg_start) == offsetof(DefaultSequence_WithTSizeAndGetItem, dstsg_start));
 STATIC_ASSERT(offsetof(DefaultSequence_WithSizeAndGetItem, dssg_end) == offsetof(DefaultSequence_WithTSizeAndGetItem, dstsg_end));
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_sg_copy(DefaultSequence_WithSizeAndGetItem *__restrict self,
+           DefaultSequence_WithSizeAndGetItem *__restrict other) {
+	Dee_Incref(other->dssg_seq);
+	Dee_Incref(other->dssg_start);
+	Dee_Incref(other->dssg_end);
+	self->dssg_seq        = other->dssg_seq;
+	self->dssg_tp_getitem = other->dssg_tp_getitem;
+	self->dssg_start      = other->dssg_start;
+	self->dssg_end        = other->dssg_end;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_tsg_copy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
+            DefaultSequence_WithTSizeAndGetItem *__restrict other) {
+	self->dstsg_tp_seq = other->dstsg_tp_seq;
+	return ds_sg_copy((DefaultSequence_WithSizeAndGetItem *)self,
+	                  (DefaultSequence_WithSizeAndGetItem *)other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_sg_deepcopy(DefaultSequence_WithSizeAndGetItem *__restrict self,
+               DefaultSequence_WithSizeAndGetItem *__restrict other) {
+	self->dssg_seq = DeeObject_DeepCopy(other->dssg_seq);
+	if unlikely(!self->dssg_seq)
+		goto err;
+	self->dssg_start = DeeObject_DeepCopy(other->dssg_start);
+	if unlikely(!self->dssg_start)
+		goto err_seq;
+	self->dssg_end = DeeObject_DeepCopy(other->dssg_end);
+	if unlikely(!self->dssg_end)
+		goto err_seq_start;
+	self->dssg_tp_getitem = other->dssg_tp_getitem;
+	return 0;
+err_seq_start:
+	Dee_Decref(self->dssg_start);
+err_seq:
+	Dee_Decref(self->dssg_seq);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ds_tsg_deepcopy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
+                DefaultSequence_WithTSizeAndGetItem *__restrict other) {
+	self->dstsg_tp_seq = other->dstsg_tp_seq;
+	return ds_sg_deepcopy((DefaultSequence_WithSizeAndGetItem *)self,
+	                      (DefaultSequence_WithSizeAndGetItem *)other);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_sg_init(DefaultSequence_WithSizeAndGetItem *__restrict self,
+           size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "ooo:_SeqWithSizeAndGetItem",
+	                  &self->dssg_seq, &self->dssg_start, &self->dssg_end))
+		goto err;
+	seqtyp = Dee_TYPE(self->dssg_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) &&
+	    !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->dssg_tp_getitem = seqtyp->tp_seq->tp_getitem;
+	Dee_Incref(self->dssg_seq);
+	Dee_Incref(self->dssg_start);
+	Dee_Incref(self->dssg_end);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+generic_tp_tgetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
+	return (*tp_self->tp_seq->tp_getitem)(self, index);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_tsg_init(DefaultSequence_WithTSizeAndGetItem *__restrict self,
+            size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "ooo:_SeqWithTSizeAndGetItem",
+	                  &self->dstsg_seq, &self->dstsg_tp_seq,
+	                  &self->dstsg_start, &self->dstsg_end))
+		goto err;
+	if (DeeObject_AssertTypeOrAbstract(self->dstsg_seq, self->dstsg_tp_seq))
+		goto err;
+	if ((!self->dstsg_tp_seq->tp_seq || !self->dstsg_tp_seq->tp_seq->tp_getitem) &&
+	    !DeeType_InheritGetItem(self->dstsg_tp_seq))
+		goto err_no_getitem;
+	self->dstsg_tp_tgetitem = DeeType_MapDefaultGetItem(self->dstsg_tp_seq->tp_seq->tp_getitem, &,
+	                                                    self->dstsg_tp_seq->tp_seq->tp_getitem == &instance_getitem
+	                                                    ? &instance_tgetitem
+	                                                    : &generic_tp_tgetitem);
+	Dee_Incref(self->dstsg_seq);
+	Dee_Incref(self->dstsg_start);
+	Dee_Incref(self->dstsg_end);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(self->dstsg_tp_seq, OPERATOR_GETITEM);
+err:
+	return -1;
+}
 
 #define ds_tsg_fini ds_sg_fini
 PRIVATE NONNULL((1)) void DCALL
@@ -1894,7 +2107,7 @@ PRIVATE struct type_member ds_tsg_class_members[] = {
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithSizeAndGetItem",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItem,start,end)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1903,9 +2116,9 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ds_sg_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&ds_sg_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ds_sg_init,
 				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeAndGetItem)
 			}
 		},
@@ -1939,7 +2152,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type = {
 INTERN DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithTSizeAndGetItem",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItem,objType:?DType,start,end)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1948,9 +2161,9 @@ INTERN DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ds_tsg_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&ds_tsg_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ds_tsg_init,
 				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithTSizeAndGetItem)
 			}
 		},
@@ -2013,6 +2226,62 @@ STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_seq) == offsetof(DefaultSeq
 STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_seq) == offsetof(DefaultSequence_WithTIter, dsti_seq));
 STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_start) == offsetof(DefaultSequence_WithTIter, dsti_start));
 STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_limit) == offsetof(DefaultSequence_WithTIter, dsti_limit));
+
+#define ds_i_copy      ds_sgi_copy
+#define ds_ti_copy     ds_stgi_copy
+#define ds_i_deepcopy  ds_sgi_deepcopy
+#define ds_ti_deepcopy ds_stgi_deepcopy
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_i_init(DefaultSequence_WithIter *__restrict self,
+          size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithIter",
+	                  &self->dsi_seq, &self->dsi_start, &self->dsi_limit))
+		goto err;
+	seqtyp = Dee_TYPE(self->dsi_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_iter) &&
+	    !DeeType_InheritIter(seqtyp))
+		goto err_no_getitem;
+	self->dsi_tp_iter = seqtyp->tp_seq->tp_iter;
+	Dee_Incref(self->dsi_seq);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(seqtyp, OPERATOR_ITER);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_tp_titer(DeeTypeObject *tp_self, DeeObject *self) {
+	return (*tp_self->tp_seq->tp_iter)(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_ti_init(DefaultSequence_WithTIter *__restrict self,
+           size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithTIter",
+	                  &self->dsti_seq, &self->dsti_tp_seq,
+	                  &self->dsti_start, &self->dsti_limit))
+		goto err;
+	if (DeeObject_AssertTypeOrAbstract(self->dsti_seq, self->dsti_tp_seq))
+		goto err;
+	if ((!self->dsti_tp_seq->tp_seq || !self->dsti_tp_seq->tp_seq->tp_iter) &&
+	    !DeeType_InheritIter(self->dsti_tp_seq))
+		goto err_no_getitem;
+	self->dsti_tp_titer = DeeType_MapDefaultIter(self->dsti_tp_seq->tp_seq->tp_iter, &,
+	                                             self->dsti_tp_seq->tp_seq->tp_iter == &instance_iter
+	                                             ? &instance_titer
+	                                             : &generic_tp_titer);
+	Dee_Incref(self->dsti_seq);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(self->dsti_tp_seq, OPERATOR_ITER);
+err:
+	return -1;
+}
+
+
 
 #define ds_i_fini   ds_sgi_fini
 #define ds_ti_fini  ds_sgi_fini
@@ -2439,7 +2708,7 @@ PRIVATE struct type_member ds_i_class_members[] = {
 INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithIter",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithIter,start:?Dint,limit:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2448,9 +2717,9 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ds_i_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&ds_i_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ds_i_init,
 				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithIter)
 			}
 		},
@@ -2484,7 +2753,7 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 INTERN DeeTypeObject DefaultSequence_WithTIter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithTIter",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithIter,objType:?DType,start:?Dint,limit:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2493,9 +2762,9 @@ INTERN DeeTypeObject DefaultSequence_WithTIter_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&ds_ti_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&ds_ti_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&ds_ti_init,
 				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithTIter)
 			}
 		},

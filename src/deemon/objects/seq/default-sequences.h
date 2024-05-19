@@ -40,17 +40,17 @@ typedef struct {
 	DREF DeeObject *dssg_seq;   /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to load the `index'th element of `dssg_seq'. */
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dssg_tp_getitem)(DeeObject *self, DeeObject *index);
-	DREF DeeObject *dssg_start; /* [const] Starting index for enumeration. */
-	DREF DeeObject *dssg_end;   /* [const] Enumeration stop index. */
+	DREF DeeObject *dssg_start; /* [1..1][const] Starting index for enumeration. */
+	DREF DeeObject *dssg_end;   /* [1..1][const] Enumeration stop index. */
 } DefaultSequence_WithSizeAndGetItem;
 
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *dstsg_seq;    /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to load the `index'th element of `dstsg_seq'. */
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dstsg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-	DREF DeeObject *dstsg_start;  /* [const] Starting index for enumeration. */
-	DREF DeeObject *dstsg_end;    /* [const] Enumeration stop index. */
+	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *dstsg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+	DREF DeeObject *dstsg_start;  /* [1..1][const] Starting index for enumeration. */
+	DREF DeeObject *dstsg_end;    /* [1..1][const] Enumeration stop index. */
 	DeeTypeObject  *dstsg_tp_seq; /* [1..1][const] The type to pass to `dstsg_tp_tgetitem'. */
 } DefaultSequence_WithTSizeAndGetItem;
 
@@ -67,7 +67,7 @@ typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *dsti_seq;    /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to construct an iterator for `dsti_seq'. */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dsti_tp_titer)(DeeTypeObject *tp_self, DeeObject *self);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dsti_tp_titer)(DeeTypeObject *tp_self, DeeObject *self);
 	size_t          dsti_start;  /* [const] # of items to skip in constructed iterators. */
 	size_t          dsti_limit;  /* [const] Max # of items to enumerate starting with `dsi_start' (but enumeration may stop earlier than that) */
 	DeeTypeObject  *dsti_tp_seq; /* [1..1][const] The type to pass to `dsti_tp_titer'. */

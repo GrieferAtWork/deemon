@@ -292,7 +292,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndex_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_gi_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_gi_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithGetItemIndex)
 			}
 		},
@@ -337,7 +337,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_sgi_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_sgi_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithSizeAndGetItemIndex)
 			}
 		},
@@ -382,7 +382,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_sgif_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_sgif_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithSizeAndGetItemIndex)
 			}
 		},
@@ -427,7 +427,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_stgi_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_stgi_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithSizeAndGetItemIndex)
 			}
 		},
@@ -755,7 +755,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_g_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_g_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithGetItem)
 			}
 		},
@@ -800,7 +800,7 @@ INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_tg_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_tg_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithTGetItem)
 			}
 		},
@@ -1088,7 +1088,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItem_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_sg_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_sg_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithSizeAndGetItem)
 			}
 		},
@@ -1133,7 +1133,7 @@ INTERN DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_tsg_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_tsg_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithTSizeAndGetItem)
 			}
 		},
@@ -1299,7 +1299,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_nl_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_nl_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithNextAndLimit)
 			}
 		},
@@ -1774,7 +1774,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikgis_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
@@ -1819,7 +1819,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktgis_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
@@ -1864,7 +1864,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktrgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktrgis_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
@@ -1909,7 +1909,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikttrgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikttrgis_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
@@ -1954,7 +1954,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikgim_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
@@ -1999,7 +1999,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktgim_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
@@ -2044,7 +2044,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktrgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktrgim_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
@@ -2089,7 +2089,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikttrgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikttrgim_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
@@ -2146,6 +2146,10 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 /************************************************************************/
 /* DefaultIterator_WithForeach_Type                                     */
 /* DefaultIterator_WithForeachPair_Type                                 */
+/* DefaultIterator_WithEnumerateSeq_Type                                */
+/* DefaultIterator_WithEnumerateMap_Type                                */
+/* DefaultIterator_WithEnumerateIndexSeq_Type                           */
+/* DefaultIterator_WithEnumerateIndexMap_Type                           */
 /************************************************************************/
 
 INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
@@ -2160,9 +2164,9 @@ INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -2179,7 +2183,7 @@ INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO */
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL, /* TODO */
 	/* .tp_attr          = */ NULL,
@@ -2205,9 +2209,9 @@ INTERN DeeTypeObject DefaultIterator_WithForeachPair_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -2224,7 +2228,7 @@ INTERN DeeTypeObject DefaultIterator_WithForeachPair_Type = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO */
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL, /* TODO */
 	/* .tp_attr          = */ NULL,
@@ -2250,9 +2254,9 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateSeq_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -2269,7 +2273,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateSeq_Type = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO */
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL, /* TODO */
 	/* .tp_attr          = */ NULL,
@@ -2295,9 +2299,9 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateMap_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -2314,7 +2318,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateMap_Type = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO */
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL, /* TODO */
 	/* .tp_attr          = */ NULL,
@@ -2340,9 +2344,9 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -2359,7 +2363,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO */
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL, /* TODO */
 	/* .tp_attr          = */ NULL,
@@ -2385,9 +2389,9 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}
 		},
@@ -2404,7 +2408,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO */
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL, /* TODO */
 	/* .tp_attr          = */ NULL,
