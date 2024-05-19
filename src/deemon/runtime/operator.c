@@ -13698,7 +13698,7 @@ DEFINE_COMPARE_ASBOOL_OPERATOR(DeeObject_CmpGeAsBool, DeeObject_CmpGe)
  * @return: 1 : Compare returns "true"
  * @return: 0 : Compare returns "false"
  * @return: -1: Error */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
 (DCALL DeeObject_TryCmpEqAsBool)(DeeObject *self, DeeObject *some_object) {
 	int result = DeeObject_TryCompareEq(self, some_object);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -13710,7 +13710,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
  * @return:  > 0: `keyed_search_item == key(elem)'
  * @return: == 0: `keyed_search_item != key(elem)'
  * @return:  < 0: An error occurred. */
-PUBLIC WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
 (DCALL DeeObject_TryCmpKeyEqAsBool)(DeeObject *keyed_search_item,
                                     DeeObject *elem, /*nullable*/ DeeObject *key) {
 	int result = key ? DeeObject_TryCompareKeyEq(keyed_search_item, elem, key)

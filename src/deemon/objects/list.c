@@ -2579,7 +2579,7 @@ list_fill_impl_fallback(List *me, size_t start, size_t end, DeeObject *filler) {
 again:
 	old_values_count = 0;
 	DeeList_LockWrite(me);
-	while (start < end && start < me->l_list.ol_elemc) {
+	for (; start < end && start < me->l_list.ol_elemc; ++start) {
 		if unlikely(old_values_count >= COMPILER_LENOF(old_values)) {
 			DeeList_LockEndWrite(me);
 			Dee_Decrefv(old_values, COMPILER_LENOF(old_values));
@@ -2891,9 +2891,9 @@ list_remove(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    "o|" UNPuSIZ UNPuSIZ "o:remove",
 	                    &item, &start, &end, &key))
 		goto err;
-	result = DeeNone_Check(key)
-	         ? list_remove_impl(self, item, start, end)
-	         : list_remove_with_key_impl(self, item, start, end, key);
+	result = !DeeNone_Check(key)
+	         ? list_remove_with_key_impl(self, item, start, end, key)
+	         : list_remove_impl(self, item, start, end);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -2910,9 +2910,9 @@ list_rremove(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    "o|" UNPuSIZ UNPuSIZ "o:rremove",
 	                    &item, &start, &end, &key))
 		goto err;
-	result = DeeNone_Check(key)
-	         ? list_rremove_impl(self, item, start, end)
-	         : list_rremove_with_key_impl(self, item, start, end, key);
+	result = !DeeNone_Check(key)
+	         ? list_rremove_with_key_impl(self, item, start, end, key)
+	         : list_rremove_impl(self, item, start, end);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -2929,9 +2929,9 @@ list_removeall(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
 	                    &item, &start, &end, &max, &key))
 		goto err;
-	result = DeeNone_Check(key)
-	         ? list_removeall_impl(self, item, start, end, max)
-	         : list_removeall_with_key_impl(self, item, start, end, max, key);
+	result = !DeeNone_Check(key)
+	         ? list_removeall_with_key_impl(self, item, start, end, max, key)
+	         : list_removeall_impl(self, item, start, end, max);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);

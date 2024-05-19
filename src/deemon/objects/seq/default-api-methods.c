@@ -2795,9 +2795,9 @@ generic_seq_remove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObje
 	                    "o|" UNPuSIZ UNPuSIZ "o:remove",
 	                    &item, &start, &end, &key))
 		goto err;
-	result = DeeNone_Check(key)
-	         ? new_DeeSeq_Remove(self, item, start, end)
-	         : new_DeeSeq_RemoveWithKey(self, item, start, end, key);
+	result = !DeeNone_Check(key)
+	         ? new_DeeSeq_RemoveWithKey(self, item, start, end, key)
+	         : new_DeeSeq_Remove(self, item, start, end);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -2814,9 +2814,9 @@ generic_seq_rremove(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObj
 	                    "o|" UNPuSIZ UNPuSIZ "o:rremove",
 	                    &item, &start, &end, &key))
 		goto err;
-	result = DeeNone_Check(key)
-	         ? new_DeeSeq_RRemove(self, item, start, end)
-	         : new_DeeSeq_RRemoveWithKey(self, item, start, end, key);
+	result = !DeeNone_Check(key)
+	         ? new_DeeSeq_RRemoveWithKey(self, item, start, end, key)
+	         : new_DeeSeq_RRemove(self, item, start, end);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -2833,9 +2833,9 @@ generic_seq_removeall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeO
 	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
 	                    &item, &start, &end, &max, &key))
 		goto err;
-	result = DeeNone_Check(key)
-	         ? new_DeeSeq_RemoveAll(self, item, start, end, max)
-	         : new_DeeSeq_RemoveAllWithKey(self, item, start, end, max, key);
+	result = !DeeNone_Check(key)
+	         ? new_DeeSeq_RemoveAllWithKey(self, item, start, end, max, key)
+	         : new_DeeSeq_RemoveAll(self, item, start, end, max);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -2923,9 +2923,9 @@ generic_seq_sort(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject
 	                    "|" UNPuSIZ UNPuSIZ "o:sort",
 	                    &start, &end, &key))
 		goto err;
-	if unlikely(DeeNone_Check(key)
-	            ? new_DeeSeq_Sort(self, start, end)
-	            : new_DeeSeq_SortWithKey(self, start, end, key))
+	if unlikely(!DeeNone_Check(key)
+	            ? new_DeeSeq_SortWithKey(self, start, end, key)
+	            : new_DeeSeq_Sort(self, start, end))
 		goto err;
 	return_none;
 err:
@@ -2940,9 +2940,9 @@ generic_seq_sorted(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObje
 	                    "|" UNPuSIZ UNPuSIZ "o:sorted",
 	                    &start, &end, &key))
 		goto err;
-	return DeeNone_Check(key)
-	       ? new_DeeSeq_Sorted(self, start, end)
-	       : new_DeeSeq_SortedWithKey(self, start, end, key);
+	return !DeeNone_Check(key)
+	       ? new_DeeSeq_SortedWithKey(self, start, end, key)
+	       : new_DeeSeq_Sorted(self, start, end);
 err:
 	return NULL;
 }
