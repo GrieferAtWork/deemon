@@ -23,7 +23,7 @@
 //#define DEFINE_DeeType_SeqCache_RequireFindWithKey
 //#define DEFINE_DeeType_SeqCache_RequireRFind
 //#define DEFINE_DeeType_SeqCache_RequireRFindWithKey
-#define DEFINE_DeeType_SeqCache_RequireIndex
+//#define DEFINE_DeeType_SeqCache_RequireIndex
 //#define DEFINE_DeeType_SeqCache_RequireIndexWithKey
 //#define DEFINE_DeeType_SeqCache_RequireRIndex
 //#define DEFINE_DeeType_SeqCache_RequireRIndexWithKey
@@ -37,7 +37,7 @@
 //#define DEFINE_DeeType_SeqCache_RequireClear
 //#define DEFINE_DeeType_SeqCache_RequirePop
 //#define DEFINE_DeeType_SeqCache_RequireRemove
-//#define DEFINE_DeeType_SeqCache_RequireRemoveWithKey
+#define DEFINE_DeeType_SeqCache_RequireRemoveWithKey
 //#define DEFINE_DeeType_SeqCache_RequireRRemove
 //#define DEFINE_DeeType_SeqCache_RequireRRemoveWithKey
 //#define DEFINE_DeeType_SeqCache_RequireRemoveAll
@@ -644,10 +644,16 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
 			return &DeeSeq_DefaultRemoveWithTSCRemoveIf;
 	}
-	/* TODO: With find and delitem */
-	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
-		return &DeeSeq_DefaultRemoveWithEnumerateIndexAndDelItemIndex;
+	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
+		Dee_tsc_find_t tsc_find;
+		tsc_find = DeeType_SeqCache_RequireFind_private_uncached(orig_type, self);
+		if (tsc_find == &DeeSeq_DefaultFindWithEnumerateIndex)
+			return &DeeSeq_DefaultRemoveWithEnumerateIndexAndDelItemIndex;
+		if (tsc_find)
+			return &DeeSeq_DefaultRemoveWithTSCFindAndDelItemIndex;
+		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+			return &DeeSeq_DefaultRemoveWithEnumerateIndexAndDelItemIndex;
+	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveWithKey)
 	{
 		Dee_tsc_removeall_with_key_t tsc_removeall_with_key;
@@ -663,23 +669,43 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
 			return &DeeSeq_DefaultRemoveWithKeyWithTSCRemoveIf;
 	}
-	/* TODO: With find and delitem */
-	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
-		return &DeeSeq_DefaultRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
+	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
+		Dee_tsc_find_with_key_t tsc_find_with_key;
+		tsc_find_with_key = DeeType_SeqCache_RequireFindWithKey_private_uncached(orig_type, self);
+		if (tsc_find_with_key == &DeeSeq_DefaultFindWithKeyWithEnumerateIndex)
+			return &DeeSeq_DefaultRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
+		if (tsc_find_with_key)
+			return &DeeSeq_DefaultRemoveWithKeyWithTSCFindWithKeyAndDelItemIndex;
+		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+			return &DeeSeq_DefaultRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
+	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemove)
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
+		Dee_tsc_rfind_t tsc_rfind;
+		tsc_rfind = DeeType_SeqCache_RequireRFind_private_uncached(orig_type, self);
+		if (tsc_rfind == &DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse)
+			return &DeeSeq_DefaultRRemoveWithTSCEnumerateIndexReverseAndDelItemIndex;
+		if (tsc_rfind == &DeeSeq_DefaultRFindWithEnumerateIndex)
+			return &DeeSeq_DefaultRRemoveWithEnumerateIndexAndDelItemIndex;
+		if (tsc_rfind)
+			return &DeeSeq_DefaultRRemoveWithTSCRFindAndDelItemIndex;
 		if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(orig_type))
 			return &DeeSeq_DefaultRRemoveWithTSCEnumerateIndexReverseAndDelItemIndex;
-		/* TODO: With rfind and delitem */
 		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 			return &DeeSeq_DefaultRRemoveWithEnumerateIndexAndDelItemIndex;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemoveWithKey)
 	if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
-		if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(self))
-			return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexReverseAndDelItemIndex;
-		/* TODO: With rfind and delitem */
+		Dee_tsc_rfind_with_key_t tsc_rfind_with_key;
+		tsc_rfind_with_key = DeeType_SeqCache_RequireRFindWithKey_private_uncached(orig_type, self);
+		if (tsc_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse)
+			return &DeeSeq_DefaultRRemoveWithKeyWithTSCEnumerateIndexReverseAndDelItemIndex;
+		if (tsc_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithEnumerateIndex)
+			return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
+		if (tsc_rfind_with_key)
+			return &DeeSeq_DefaultRRemoveWithKeyWithTSCRFindWithKeyAndDelItemIndex;
+		if (DeeType_SeqCache_TryRequireEnumerateIndexReverse(orig_type))
+			return &DeeSeq_DefaultRRemoveWithKeyWithTSCEnumerateIndexReverseAndDelItemIndex;
 		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 			return &DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexAndDelItemIndex;
 	}

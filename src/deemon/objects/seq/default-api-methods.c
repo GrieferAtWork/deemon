@@ -1091,6 +1091,23 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_DefaultRemoveWithTSCFindAndDelItemIndex(DeeObject *self, DeeObject *item,
+                                               size_t start, size_t end) {
+	int result;
+	size_t index = (*DeeType_SeqCache_RequireFind(Dee_TYPE(self)))(self, item, start, end);
+	if unlikely(index == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if (index == (size_t)-1)
+		return 0;
+	result = (*Dee_TYPE(self)->tp_seq->tp_delitem_index)(self, index);
+	if unlikely(result)
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultRemoveWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
                                                       size_t start, size_t end) {
 	Dee_ssize_t foreach_status;
@@ -1188,6 +1205,23 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+DeeSeq_DefaultRemoveWithKeyWithTSCFindWithKeyAndDelItemIndex(DeeObject *self, DeeObject *item,
+                                                             size_t start, size_t end, DeeObject *key) {
+	int result;
+	size_t index = (*DeeType_SeqCache_RequireFindWithKey(Dee_TYPE(self)))(self, item, start, end, key);
+	if unlikely(index == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if (index == (size_t)-1)
+		return 0;
+	result = (*Dee_TYPE(self)->tp_seq->tp_delitem_index)(self, index);
+	if unlikely(result)
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 DeeSeq_DefaultRemoveWithKeyWithEnumerateIndexAndDelItemIndex(DeeObject *self, DeeObject *item,
                                                              size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t foreach_status;
@@ -1225,8 +1259,25 @@ DeeSeq_DefaultRemoveWithKeyWithError(DeeObject *self, DeeObject *item,
 /* rremove()                                                            */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_DefaultRRemoveWithTSCRFindAndDelItemIndex(DeeObject *self, DeeObject *item,
+                                                 size_t start, size_t end) {
+	int result;
+	size_t index = (*DeeType_SeqCache_RequireRFind(Dee_TYPE(self)))(self, item, start, end);
+	if unlikely(index == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if (index == (size_t)-1)
+		return 0;
+	result = (*Dee_TYPE(self)->tp_seq->tp_delitem_index)(self, index);
+	if unlikely(result)
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultRRemoveWithTSCEnumerateIndexReverseAndDelItemIndex(DeeObject *self, DeeObject *item,
-                                                              size_t start, size_t end) {
+                                                                 size_t start, size_t end) {
 	Dee_ssize_t foreach_status;
 	struct default_remove_with_enumerate_index_and_delitem_index_data data;
 	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
@@ -1277,8 +1328,25 @@ DeeSeq_DefaultRRemoveWithError(DeeObject *self, DeeObject *item,
 /* rremove() (with key)                                                 */
 /************************************************************************/
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
-DeeSeq_DefaultRRemoveWithKeyWithEnumerateIndexReverseAndDelItemIndex(DeeObject *self, DeeObject *item,
-                                                                     size_t start, size_t end, DeeObject *key) {
+DeeSeq_DefaultRRemoveWithKeyWithTSCRFindWithKeyAndDelItemIndex(DeeObject *self, DeeObject *item,
+                                                               size_t start, size_t end, DeeObject *key) {
+	int result;
+	size_t index = (*DeeType_SeqCache_RequireRFindWithKey(Dee_TYPE(self)))(self, item, start, end, key);
+	if unlikely(index == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if (index == (size_t)-1)
+		return 0;
+	result = (*Dee_TYPE(self)->tp_seq->tp_delitem_index)(self, index);
+	if unlikely(result)
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+DeeSeq_DefaultRRemoveWithKeyWithTSCEnumerateIndexReverseAndDelItemIndex(DeeObject *self, DeeObject *item,
+                                                                        size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data data;
 	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
