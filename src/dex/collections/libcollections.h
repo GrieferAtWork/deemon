@@ -180,7 +180,7 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_Pop_unlo
 
 /* Insert/delete an item at a given index. */
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL Deque_Insert(Deque *self, size_t index, DeeObject *item);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t num_items);
+INTDEF WUNUSED NONNULL((1)) int DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t count);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_Pop(Deque *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_Pops(Deque *__restrict self, Dee_ssize_t index);
 

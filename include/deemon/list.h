@@ -125,9 +125,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
                         /*inherit(on_success)*/ DREF DeeObject *const *argv);
 
-/* @return: * : The actual number of deleted items.
- * @return: (size_t)-1: Error. */
-DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeList_Erase(DeeObject *__restrict self,
               size_t index, size_t count);
 

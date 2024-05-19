@@ -420,44 +420,6 @@ struct Dee_type_nsi {
 			WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *nsi_setrange)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
 			WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *nsi_setrange_n)(DeeObject *self, Dee_ssize_t start, DeeObject *values); /* end: Dee_None */
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
-			/* NOTE: start/end in here operate differently (and simpler) than in ranges:
-			 *       If either value is `>= nsi_getsize()', truncate it to that length.
-			 * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
-			 * @return: * : Index of the matching item
-			 * @return: (size_t)-1: Index not found.
-			 * @return: (size_t)-2: Error. */
-			WUNUSED_T NONNULL_T((1, 4)) size_t          (DCALL *nsi_find)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
-			WUNUSED_T NONNULL_T((1, 4)) size_t          (DCALL *nsi_rfind)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
-
-			WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *nsi_xch)(DeeObject *self, size_t index, DeeObject *value);
-			WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *nsi_insert)(DeeObject *self, size_t index, DeeObject *value);
-			WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *nsi_insertall)(DeeObject *self, size_t index, DeeObject *values);
-			WUNUSED_T NONNULL_T((1))    int             (DCALL *nsi_insertvec)(DeeObject *self, size_t index, size_t insertc, DeeObject *const *insertv);
-
-			/* NOTE: When `index' is lower than ZERO(0), the length of the sequence `self' must be added
-			 *       first, such that `nsi_pop(self, -1)' is equivalent to a `popback()' function call. */
-			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_pop)(DeeObject *__restrict self, Dee_ssize_t index);
-
-			/* NOTE: erase differs from delrange, in that erase _always_ removes the indices,
-			 *       while delrange is allowed to leave the index range as unbound.
-			 * @return: * : Number or erased items.
-			 * @return: (size_t)-1: Error. */
-			WUNUSED_T NONNULL_T((1))    size_t          (DCALL *nsi_erase)(DeeObject *__restrict self, size_t index, size_t count);
-
-			/* Remove or unbind the first/last/all instance(s) of `elem'
-			 * NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
-			 * @return: 0 : Element not found.
-			 * @return: 1 : Element was unbound.
-			 * @return: -1: Error. */
-			WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *nsi_remove)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
-			WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *nsi_rremove)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
-
-			/* NOTE: Comparisons should be performed as `keyed_search_item == key(this[?])'
-			 * @return: * : The number of removed items.
-			 * @return: (size_t)-1: Error. */
-			WUNUSED_T NONNULL_T((1, 4)) size_t          (DCALL *nsi_removeall)(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key);
-			WUNUSED_T NONNULL_T((1, 4)) size_t          (DCALL *nsi_removeif)(DeeObject *self, size_t start, size_t end, DeeObject *should);
 		}                   nsi_seqlike;
 
 		struct { /* TYPE_SEQX_CLASS_MAP */

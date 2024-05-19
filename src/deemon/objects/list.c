@@ -577,9 +577,7 @@ DeeList_Pop(DeeObject *__restrict self, dssize_t index) {
 	return delob;
 }
 
-/* @return: * : The actual number of deleted items.
- * @return: (size_t)-1: Error. */
-PUBLIC WUNUSED NONNULL((1)) size_t DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeList_Erase(DeeObject *__restrict self,
               size_t index, size_t count) {
 	size_t max_count;
@@ -599,7 +597,7 @@ again:
 	if unlikely(!delobv) {
 		DeeList_LockEndWrite(me);
 		if (!Dee_CollectMemoryc(count, sizeof(DREF DeeObject *)))
-			return (size_t)-1;
+			goto err;
 		goto again;
 	}
 
@@ -614,8 +612,9 @@ again:
 	DeeList_LockEndWrite(me);
 	Dee_Decrefv(delobv, count);
 	Dee_Freea(delobv);
-	ASSERT(count != (size_t)-1);
-	return count;
+	return 0;
+err:
+	return -1;
 }
 
 /* Resize `self' to have a length of `newsize'.
@@ -2978,10 +2977,9 @@ list_erase(List *me, size_t argc,
 	                    UNPuSIZ "|" UNPuSIZ ":erase",
 	                    &index, &count))
 		goto err;
-	count = DeeList_Erase((DeeObject *)me, index, count);
-	if unlikely(count == (size_t)-1)
+	if unlikely(DeeList_Erase((DeeObject *)me, index, count))
 		goto err;
-	return DeeInt_NewSize(count);
+	return_none;
 err:
 	return NULL;
 }
@@ -3615,9 +3613,8 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	                "Insert all items from a sequence @seq at the specified @index\n"
 	                "When @index is lower than $0, or greater thatn ${##this}, append items at the end"),
 	TYPE_KWMETHOD_F(STR_erase, &list_erase, METHOD_FNOREFESCAPE,
-	                "(index:?Dint,count=!1)->?Dint\n"
+	                "(index:?Dint,count=!1)\n"
 	                "#tIntegerOverflow{The given @index or @count are lower than $0, or too large}"
-	                "#r{The number of erased items (Zero when @index is out of bounds)}"
 	                "Erase up to @count items starting at the given @index"),
 	TYPE_KWMETHOD_F(STR_pop, &list_pop, METHOD_FNOREFESCAPE,
 	                "(index=!-1)->\n"

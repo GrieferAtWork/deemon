@@ -1899,21 +1899,6 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-seq_nsi_insert_vec(DeeObject *self, size_t index,
-                   size_t objc, DeeObject *const *objv) {
-	DeeObject *shared_vector;
-	int result;
-	shared_vector = DeeSharedVector_NewShared(objc, objv);
-	if unlikely(!shared_vector)
-		goto err;
-	result = DeeSeq_InsertAll(self, index, shared_vector);
-	DeeSharedVector_Decref(shared_vector);
-	return result;
-err:
-	return -1;
-}
-
 PRIVATE struct type_nsi tpconst seq_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -1931,12 +1916,6 @@ PRIVATE struct type_nsi tpconst seq_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)&seq_nsi_delrange_n,
 			/* .nsi_setrange     = */ (dfunptr_t)&seq_nsi_setrange,
 			/* .nsi_setrange_n   = */ (dfunptr_t)&seq_nsi_setrange_n,
-			/* .nsi_find         = */ (dfunptr_t)NULL,
-			/* .nsi_rfind        = */ (dfunptr_t)NULL,
-			/* .nsi_xch          = */ (dfunptr_t)&DeeSeq_XchItem,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)&seq_nsi_insert_vec,
 		}
 	}
 };
@@ -4140,14 +4119,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_erase(DeeObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
-	size_t index, count = 1, result;
+	size_t index, count = 1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count,
-	                    UNPuSIZ "|" UNPuSIZ ":erase", &index, &count))
+	                    UNPuSIZ "|" UNPuSIZ ":erase",
+	                    &index, &count))
 		goto err;
-	result = DeeSeq_Erase(self, index, count);
-	if unlikely(result == (size_t)-1)
+	if unlikely(DeeSeq_Erase(self, index, count) == (size_t)-1)
 		goto err;
-	return DeeInt_NewSize(result);
+	return_none;
 err:
 	return NULL;
 }

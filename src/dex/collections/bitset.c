@@ -2221,8 +2221,6 @@ PRIVATE struct type_nsi tpconst robs_nsi = {
 	{
 		/* .nsi_setlike = */ {
 			/* .nsi_getsize = */ (dfunptr_t)&robs_nsi_getsize,
-			/* .nsi_insert  = */ NULL,
-			/* .nsi_remove  = */ NULL,
 		}
 	}
 };

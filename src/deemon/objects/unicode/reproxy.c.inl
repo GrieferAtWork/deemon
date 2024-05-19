@@ -1256,28 +1256,6 @@ PRIVATE struct type_nsi tpconst refa_nsi = {
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&refa_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getitem      = */ (dfunptr_t)NULL,
-			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)NULL,
-			/* .nsi_rfind        = */ (dfunptr_t)NULL,
-			/* .nsi_xch          = */ (dfunptr_t)NULL,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL
 		}
 	}
 };
@@ -2061,28 +2039,6 @@ PRIVATE struct type_nsi tpconst resp_nsi = {
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&resp_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getitem      = */ (dfunptr_t)NULL,
-			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)NULL,
-			/* .nsi_rfind        = */ (dfunptr_t)NULL,
-			/* .nsi_xch          = */ (dfunptr_t)NULL,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL
 		}
 	}
 };

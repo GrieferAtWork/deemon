@@ -1548,50 +1548,6 @@ tuple_trygetitem_index(Tuple *__restrict self, size_t index) {
 	return_reference(self->t_elem[index]);
 }
 
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-tuple_nsi_find(Tuple *__restrict self, size_t start, size_t end,
-               DeeObject *__restrict keyed_search_item,
-               DeeObject *key) {
-	size_t i;
-	int temp;
-	if (end > self->t_size)
-		end = self->t_size;
-	for (i = start; i < end; ++i) {
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, self->t_elem[i], key);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
-			return i;
-		}
-	}
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-tuple_nsi_rfind(Tuple *__restrict self, size_t start, size_t end,
-                DeeObject *__restrict keyed_search_item,
-                DeeObject *key) {
-	size_t i;
-	int temp;
-	if (end > self->t_size)
-		end = self->t_size;
-	i = end;
-	while (i > start) {
-		--i;
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, self->t_elem[i], key);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
-			return i;
-		}
-	}
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 tuple_foreach(Tuple *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -1638,21 +1594,6 @@ PRIVATE struct type_nsi tpconst tuple_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)&tuple_getitem_index_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)&tuple_getrange_index,
 			/* .nsi_getrange_n   = */ (dfunptr_t)&tuple_getrange_index_n,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&tuple_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&tuple_nsi_rfind,
-			/* .nsi_xch          = */ (dfunptr_t)NULL,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL
 		}
 	}
 };

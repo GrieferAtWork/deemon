@@ -39,6 +39,8 @@ local kw_lists = {
 	{"start", "end", "filler"},
 	{"start", "end"},
 	{"index", "value"},
+	{"index", "item"},
+	{"index", "count"},
 	{"index"},
 };
 
@@ -67,6 +69,8 @@ for (local cond, blocks: conditionalByCondition.sorted()) {
 }
 ]]]*/
 DECLARE_KWLIST(kwlist__index, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEND });
+DECLARE_KWLIST(kwlist__index_count, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEX("count", 0x54eac164, 0xbd66b5980d54babb), KEND });
+DECLARE_KWLIST(kwlist__index_item, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEX("item", 0x91b22efe, 0xe78210b41247a693), KEND });
 DECLARE_KWLIST(kwlist__index_value, { KEX("index", 0x77f34f0, 0x440d5888c0ff3081), KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEND });
 DECLARE_KWLIST(kwlist__item_start_end_key, { KEX("item", 0x91b22efe, 0xe78210b41247a693), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });
 DECLARE_KWLIST(kwlist__item_start_end_max_key, { KEX("item", 0x91b22efe, 0xe78210b41247a693), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });

@@ -38,6 +38,9 @@
 
 #include <hybrid/typecore.h>
 
+/**/
+#include "kwlist.h"
+
 DECL_BEGIN
 
 
@@ -452,8 +455,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) size_t DCALL
-Deque_Erase(Deque *__restrict self, size_t index, size_t num_items) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+Deque_Erase(Deque *__restrict self, size_t index, size_t count) {
 	size_t result;
 	size_t i;
 	DREF DeeObject **pop_objv;
@@ -462,14 +465,14 @@ again:
 	if (index > self->d_size)
 		index = self->d_size;
 	result = self->d_size - (size_t)index;
-	if (result > num_items)
-		result = num_items;
+	if (result > count)
+		result = count;
 	pop_objv = (DREF DeeObject **)Dee_TryMallocac(result, sizeof(DREF DeeObject *));
 	if unlikely(!pop_objv) {
 		Deque_LockEndWrite(self);
 		if (Dee_CollectMemory(result * sizeof(DREF DeeObject *)))
 			goto again;
-		return (size_t)-1;
+		goto err;
 	}
 	if ((size_t)index < (self->d_size - (size_t)index + result)) {
 		/* Pop from the left. */
@@ -484,7 +487,9 @@ again:
 	/* Drop references to popped objects. */
 	Dee_Decrefv(pop_objv, result);
 	Dee_Freea(pop_objv);
-	return (Dee_ssize_t)result;
+	return 0;
+err:
+	return -1;
 }
 
 
@@ -1106,27 +1111,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-deq_nsi_xchitem(Deque *self, size_t index, DeeObject *value) {
-	DREF DeeObject *oldval;
-	Deque_LockRead(self);
-	if (index >= self->d_size) {
-		size_t deq_size = self->d_size;
-		COMPILER_READ_BARRIER();
-		Deque_LockEndRead(self);
-		err_index_out_of_bounds((DeeObject *)self, index, deq_size);
-		goto err;
-	}
-	/* Exchange the stored item. */
-	Dee_Incref(value);
-	oldval = DEQUE_ITEM(self, index);
-	DEQUE_ITEM(self, index) = value;
-	Deque_LockEndRead(self);
-	return oldval;
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 deq_foreach(Deque *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -1160,21 +1144,6 @@ PRIVATE struct type_nsi tpconst deq_nsi = {
 			/* .nsi_getitem      = */ (dfunptr_t)&deq_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)&deq_delitem_index,
 			/* .nsi_setitem      = */ (dfunptr_t)&deq_setitem_index,
-			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)NULL,
-			/* .nsi_rfind        = */ (dfunptr_t)NULL,
-			/* .nsi_xch          = */ (dfunptr_t)&deq_nsi_xchitem,
-			/* .nsi_insert       = */ (dfunptr_t)&Deque_Insert,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)&Deque_Pops,
-			/* .nsi_erase        = */ (dfunptr_t)&Deque_Erase,
 		}
 	}
 };
@@ -1229,6 +1198,27 @@ PRIVATE struct type_seq deq_seq = {
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+deq_xchitem_index(Deque *self, size_t index, DeeObject *value) {
+	DREF DeeObject *oldval;
+	Deque_LockRead(self);
+	if (index >= self->d_size) {
+		size_t deq_size = self->d_size;
+		COMPILER_READ_BARRIER();
+		Deque_LockEndRead(self);
+		err_index_out_of_bounds((DeeObject *)self, index, deq_size);
+		goto err;
+	}
+	/* Exchange the stored item. */
+	Dee_Incref(value);
+	oldval = DEQUE_ITEM(self, index);
+	DEQUE_ITEM(self, index) = value;
+	Deque_LockEndRead(self);
+	return oldval;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_pushfront(Deque *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *item;
@@ -1272,13 +1262,12 @@ err:
 }
 
 
-PRIVATE DEFINE_KWLIST(kwlist_index_item, { K(index), K(item), KEND });
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_insert(Deque *self, size_t argc,
-           DeeObject *const *argv, DeeObject *kw) {
+deq_insert(Deque *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_index_item, UNPdSIZ "o:insert", &index, &item))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
+	                    UNPuSIZ "o:insert", &index, &item))
 		goto err;
 	if (Deque_Insert(self, index, item))
 		goto err;
@@ -1287,32 +1276,38 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWLIST(kwlist__index_count, { K(index), K(count), KEND });
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_erase(Deque *self, size_t argc,
-          DeeObject *const *argv, DeeObject *kw) {
-	size_t index, result;
-	size_t num_items = 1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count, UNPdSIZ "|" UNPuSIZ ":erase", &index, &num_items))
+deq_erase(Deque *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t index, count;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count,
+	                    UNPuSIZ UNPuSIZ ":erase",
+	                    &index, &count))
 		goto err;
-	result = Deque_Erase(self, index, num_items);
-	if unlikely(result == (size_t)-1)
+	if unlikely(Deque_Erase(self, index, count))
 		goto err;
-	return DeeInt_NewSize(result);
+	return_none;
 err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWLIST(kwlist__index, { K(index), KEND });
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_xchitem(Deque *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t index;
+	DeeObject *value;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	                    UNPuSIZ "o:xchitem", &index, &value))
+		goto err;
+	return deq_xchitem_index(me, index, value);
+err:
+	return NULL;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_pop(Deque *self, size_t argc,
-        DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
+deq_pop(Deque *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	Dee_ssize_t index = -1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index, UNPdSIZ ":pop", &index))
 		goto err;
-	return Deque_Pop(self, index);
+	return Deque_Pops(self, index);
 err:
 	return NULL;
 }
@@ -1392,6 +1387,9 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	                "#tIntegerOverflow{@index is negative or too large}"
 	                "#r{The actual number of erased items}"
 	                "Erase up to @num_items objects from @this deque, starting at @index"),
+	TYPE_KWMETHOD_F("xchitem", &deq_xchitem, METHOD_FNOREFESCAPE,
+	                "(index:?Dint,value)->\n"
+	                "#tIndexError{The given @index is out of bounds}"),
 	TYPE_KWMETHOD_F("pop", &deq_pop, METHOD_FNOREFESCAPE,
 	                "(index=!-1)->\n"
 	                "#tIntegerOverflow{@index is negative or too large}"

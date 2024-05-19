@@ -1229,9 +1229,9 @@ PRIVATE struct type_nsi tpconst uset_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_setlike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&uset_size,
-			/* .nsi_insert     = */ (dfunptr_t)&USet_Insert,
-			/* .nsi_remove     = */ (dfunptr_t)&USet_Remove,
+			/* .nsi_getsize = */ (dfunptr_t)&uset_size,
+			/* .nsi_insert  = */ (dfunptr_t)&USet_Insert,
+			/* .nsi_remove  = */ (dfunptr_t)&USet_Remove,
 		}
 	}
 };

@@ -1852,9 +1852,9 @@ PRIVATE struct type_nsi tpconst hashset_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_setlike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&hashset_size,
-			/* .nsi_insert     = */ (dfunptr_t)&DeeHashSet_Insert,
-			/* .nsi_remove     = */ (dfunptr_t)&DeeHashSet_Remove,
+			/* .nsi_getsize = */ (dfunptr_t)&hashset_size,
+			/* .nsi_insert  = */ (dfunptr_t)&DeeHashSet_Insert,
+			/* .nsi_remove  = */ (dfunptr_t)&DeeHashSet_Remove,
 		}
 	}
 };
