@@ -50,7 +50,7 @@ typedef struct deque_bucket {
 	((DequeBucket *)Dee_TryMalloc(SIZEOF_BUCKET(bucket_size)))
 
 
-typedef struct deque {
+typedef struct {
 	Dee_OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t d_lock;      /* Lock for this deque. */
@@ -111,7 +111,7 @@ typedef struct deque {
 
 
 /* Returns a pointer to the base-relative index'th item. */
-LOCAL DeeObject **DCALL
+LOCAL ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeObject **DCALL
 Deque_ItemPointer(Deque *__restrict self, size_t index) {
 	DequeBucket *iter = self->d_head;
 	Dee_ASSERT(index < self->d_size);
@@ -148,8 +148,8 @@ Deque_ItemPointer(Deque *__restrict self, size_t index) {
 
 
 /* Push/pop items from the front/back. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Deque_PushFront(Deque *__restrict self, DeeObject *__restrict item);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Deque_PushBack(Deque *__restrict self, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Deque_PushFront(Deque *self, DeeObject *item);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Deque_PushBack(Deque *self, DeeObject *item);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_PopFront(Deque *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_PopBack(Deque *__restrict self);
 
@@ -168,18 +168,18 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Deque_rrrot(Deque *__restrict self, size_t
 /* @return: true:  Successfully inserted the given item.
  * @return: false: Insertion failed. - Unlock the deque and collect
  *                `SIZEOF_BUCKET(self->d_bucket_sz)' bytes of memory. */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL Deque_PushFront_unlocked(Deque *__restrict self, DeeObject *__restrict item);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL Deque_PushBack_unlocked(Deque *__restrict self, DeeObject *__restrict item);
-INTDEF bool DCALL Deque_Insert_unlocked(Deque *__restrict self, size_t index, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL Deque_PushFront_unlocked(Deque *self, DeeObject *item);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL Deque_PushBack_unlocked(Deque *self, DeeObject *item);
+INTDEF WUNUSED NONNULL((1, 3)) bool DCALL Deque_Insert_unlocked(Deque *self, size_t index, DeeObject *item);
 
 /* @return: * : The item that was popped. */
-INTDEF ATTR_RETNONNULL DREF DeeObject *DCALL Deque_PopFront_unlocked(Deque *__restrict self);
-INTDEF ATTR_RETNONNULL DREF DeeObject *DCALL Deque_PopBack_unlocked(Deque *__restrict self);
-INTDEF ATTR_RETNONNULL DREF DeeObject *DCALL Deque_Pop_unlocked(Deque *__restrict self, size_t index);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_PopFront_unlocked(Deque *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_PopBack_unlocked(Deque *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_Pop_unlocked(Deque *__restrict self, size_t index);
 
 
 /* Insert/delete an item at a given index. */
-INTDEF int DCALL Deque_Insert(Deque *__restrict self, size_t index, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL Deque_Insert(Deque *self, size_t index, DeeObject *item);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t num_items);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_Pop(Deque *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_Pops(Deque *__restrict self, Dee_ssize_t index);

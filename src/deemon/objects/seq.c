@@ -1937,12 +1937,6 @@ PRIVATE struct type_nsi tpconst seq_nsi = {
 			/* .nsi_insert       = */ (dfunptr_t)NULL,
 			/* .nsi_insertall    = */ (dfunptr_t)NULL,
 			/* .nsi_insertvec    = */ (dfunptr_t)&seq_nsi_insert_vec,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };

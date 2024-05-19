@@ -2949,6 +2949,10 @@ err:
 
 #if 0
 PRIVATE struct type_method tpconst generic_seq_methods[] = {
+	TYPE_KWMETHOD(STR_find, &generic_seq_find, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD(STR_rfind, &generic_seq_rfind, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD(STR_index, &generic_seq_index, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD(STR_rindex, &generic_seq_rindex, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD(STR_reversed, &generic_seq_reversed, "(start=!0,end=!-1)->?DSequence"),
 	TYPE_KWMETHOD(STR_sorted, &generic_seq_sorted, "(start=!0,end=!-1,key:?DCallable=!N)->?DSequence"),
 	TYPE_KWMETHOD(STR_insert, &generic_seq_insert, "(index:?Dint,item)"),

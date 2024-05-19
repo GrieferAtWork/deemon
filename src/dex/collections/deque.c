@@ -151,7 +151,7 @@ Deque_PushBack_unlocked(Deque *self, DeeObject *item) {
 }
 
 
-INTERN ATTR_RETNONNULL DREF DeeObject *DCALL
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Deque_PopFront_unlocked(Deque *__restrict self) {
 	DREF DeeObject *result;
 	DequeBucket *head;
@@ -188,7 +188,7 @@ Deque_PopFront_unlocked(Deque *__restrict self) {
 	return result;
 }
 
-INTERN ATTR_RETNONNULL DREF DeeObject *DCALL
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Deque_PopBack_unlocked(Deque *__restrict self) {
 	DREF DeeObject *result;
 	DequeBucket *tail;
@@ -322,9 +322,8 @@ Deque_rrrot_unlocked(Deque *__restrict self, size_t num_objects) {
 
 
 
-INTERN bool DCALL
-Deque_Insert_unlocked(Deque *__restrict self, size_t index,
-                      DeeObject *__restrict item) {
+INTERN WUNUSED NONNULL((1, 3)) bool DCALL
+Deque_Insert_unlocked(Deque *self, size_t index, DeeObject *item) {
 	ASSERT(index <= self->d_size);
 	/* Optimize for special cases: front/back */
 	if (index == 0)
@@ -346,7 +345,7 @@ Deque_Insert_unlocked(Deque *__restrict self, size_t index,
 	return true;
 }
 
-INTERN ATTR_RETNONNULL DREF DeeObject *DCALL
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Deque_Pop_unlocked(Deque *__restrict self, size_t index) {
 	ASSERT(index < self->d_size);
 	/* Optimize for special cases: front/back */
@@ -369,7 +368,7 @@ Deque_Pop_unlocked(Deque *__restrict self, size_t index) {
 
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Deque_PushFront(Deque *__restrict self, DeeObject *__restrict item) {
+Deque_PushFront(Deque *self, DeeObject *item) {
 again:
 	Deque_LockWrite(self);
 	if (!Deque_PushFront_unlocked(self, item)) {
@@ -387,7 +386,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Deque_PushBack(Deque *__restrict self, DeeObject *__restrict item) {
+Deque_PushBack(Deque *self, DeeObject *item) {
 again:
 	Deque_LockWrite(self);
 	if (!Deque_PushBack_unlocked(self, item)) {
@@ -454,8 +453,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) size_t DCALL
-Deque_Erase(Deque *__restrict self,
-            size_t index, size_t num_items) {
+Deque_Erase(Deque *__restrict self, size_t index, size_t num_items) {
 	size_t result;
 	size_t i;
 	DREF DeeObject **pop_objv;
@@ -1177,10 +1175,6 @@ PRIVATE struct type_nsi tpconst deq_nsi = {
 			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
 			/* .nsi_pop          = */ (dfunptr_t)&Deque_Pops,
 			/* .nsi_erase        = */ (dfunptr_t)&Deque_Erase,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
 };
