@@ -6300,28 +6300,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_get_ismutable(DeeObject *__restrict self) {
-	int result = DeeSeq_IsMutable(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_get_isresizable(DeeObject *__restrict self) {
-	int result = DeeSeq_IsResizable(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_get_isfrozen(DeeObject *__restrict self) {
 	return_bool(Dee_TYPE(self) == &DeeSeq_Type);
@@ -6453,26 +6431,6 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	                  /**/ "	}\n"
 	                  /**/ "}"
 	                  "}"),
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-	TYPE_GETTER("ismutable", &seq_get_ismutable,
-	            "->?Dbool\n"
-	            "Try to determine if @this Sequence is mutable by looking at operators and "
-	            /**/ "member functions implemented by sub-classes. Note however that this property "
-	            /**/ "indicating ?t does not necessarily guaranty that elements of the Sequence "
-	            /**/ "can actually be manipulated, only that a sub-class provides special behavior "
-	            /**/ "for at least one of the following: ?#{op:setitem}, ?#{op:delitem}, ?#{op:setrange}, "
-	            /**/ "?#{op:delrange}, ?#append, ?#extend, ?#insert, ?#insertall, ?#erase, ?#remove, "
-	            /**/ "?#rremove, ?#removeall, ?#removeif, ?#pop, ?#xch, ?#resize, ?#clear, ?#pushfront, "
-	            /**/ "?#pushback, ?#popfront or ?#popback"),
-	TYPE_GETTER("isresizable", &seq_get_isresizable,
-	            "->?Dbool\n"
-	            "Similar to ?#ismutable, but tries to determine if @this Sequence is resizable by "
-	            /**/ "looking at member functions implemented by sub-classes. Note however that this "
-	            /**/ "property indicating ?t does not necessarily guaranty that elements of the "
-	            /**/ "Sequence can actually be manipulated, only that a sub-class provides special "
-	            /**/ "behavior for at least one of the following: ?#append, ?#extend, ?#insert, ?#insertall, "
-	            /**/ "?#erase, ?#pop, ?#resize, ?#pushfront, ?#pushback, ?#popfront or ?#popback"),
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	TYPE_GETTER("each", &DeeSeq_Each,
 	            "->?S?O\n"
 	            "Returns a special proxy object that mirrors any operation performed on "

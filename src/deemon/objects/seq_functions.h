@@ -82,13 +82,6 @@ INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RemoveAll(DeeObject *self, si
 INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RemoveIf(DeeObject *self, size_t start, size_t end, DeeObject *should);
 INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_Fill(DeeObject *self, size_t start, size_t end, DeeObject *value);
 
-/* Determine if a given sequence is mutable or resizable.
- * @return: 1:  The sequence is mutable or resizable.
- * @return: 0:  The sequence isn't mutable or resizable.
- * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_IsMutable(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_IsResizable(DeeObject *__restrict self);
-
 /* NOTE: Technically, all of these functions can be used on any type of object,
  *       but all objects derived from `DeeSeq_Type' automatically implement
  *       all of them as member functions.

@@ -85,8 +85,6 @@ DECL_BEGIN
  *        - `length: int'         (Read-only; same as `tp_sizeob')
  *        - `first: Object'       (Read-write; same as `tp_getitem(0)' / `tp_setitem(0)')
  *        - `last: Object'        (Read-write; same as `tp_getitem(length - 1)' / `tp_setitem(length - 1)')
- *        - `ismutable: bool'     (Read-only; s.a. `DeeSeq_IsMutable()')
- *        - `isresizable: bool'   (Read-only; s.a. `DeeSeq_IsResizable()')
  *        - `each: Sequence'      (Read-only; Proxy sequence for construction expressions to-be applied to each element)
  *        - `ids: {int...}'       (Read-only; Proxy sequence for object IDs for elements)
  *        - `types: {Type...}'    (Read-only; Proxy sequence for element types)
