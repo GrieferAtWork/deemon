@@ -1902,6 +1902,169 @@ err_empty:
 	return NULL;
 }
 
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+tuple_find_impl(Tuple *self, DeeObject *item, size_t start, size_t end) {
+	if (end > self->t_size)
+		end = self->t_size;
+	for (; start < end; ++start) {
+		int temp = DeeObject_TryCompareEq(item, self->t_elem[start]);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
+			return start;
+	}
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+tuple_find_with_key_impl(Tuple *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	if (end > self->t_size)
+		end = self->t_size;
+	for (; start < end; ++start) {
+		int temp = DeeObject_TryCompareKeyEq(item, self->t_elem[start], key);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0)
+			return start;
+	}
+	Dee_Decref(item);
+	return (size_t)-1;
+err_item:
+	Dee_Decref(item);
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+tuple_rfind_impl(Tuple *self, DeeObject *item, size_t start, size_t end) {
+	if (end > self->t_size)
+		end = self->t_size;
+	while (end > start) {
+		int temp;
+		--end;
+		temp = DeeObject_TryCompareEq(item, self->t_elem[end]);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
+			return end;
+	}
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+tuple_rfind_with_key_impl(Tuple *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	if (end > self->t_size)
+		end = self->t_size;
+	while (end > start) {
+		int temp;
+		--end;
+		temp = DeeObject_TryCompareKeyEq(item, self->t_elem[end], key);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0)
+			return end;
+	}
+	Dee_Decref(item);
+	return (size_t)-1;
+err_item:
+	Dee_Decref(item);
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_find(Tuple *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:find",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? tuple_find_with_key_impl(self, item, start, end, key)
+	         : tuple_find_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_rfind(Tuple *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:rfind",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? tuple_rfind_with_key_impl(self, item, start, end, key)
+	         : tuple_rfind_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_index(Tuple *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:index",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? tuple_find_with_key_impl(self, item, start, end, key)
+	         : tuple_find_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_not_found;
+	return DeeInt_NewSize(result);
+err_not_found:
+	err_item_not_found((DeeObject *)self, item);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_rindex(Tuple *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:rindex",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? tuple_rfind_with_key_impl(self, item, start, end, key)
+	         : tuple_rfind_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_not_found;
+	return DeeInt_NewSize(result);
+err_not_found:
+	err_item_not_found((DeeObject *)self, item);
+err:
+	return NULL;
+}
+
+
 INTDEF WUNUSED NONNULL((1)) DREF Tuple *DCALL
 tuple_sorted(Tuple *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF Tuple *result;
@@ -1932,15 +2095,24 @@ err:
 
 
 PRIVATE struct type_method tpconst tuple_methods[] = {
-	TYPE_KWMETHOD(STR_sorted, &tuple_sorted, "(start=!0,end=!-1,key=!n)->?."),
+	TYPE_KWMETHOD_F(STR_find, &tuple_find, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F(STR_rfind, &tuple_rfind, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F(STR_index, &tuple_index, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F(STR_rindex, &tuple_rindex, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F(STR_sorted, &tuple_sorted, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1,key=!n)->?."),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
-	TYPE_GETTER_F_NODOC(STR_first, &tuple_first, METHOD_FNOREFESCAPE),
-	TYPE_GETTER_F_NODOC(STR_last, &tuple_last, METHOD_FNOREFESCAPE),
+	TYPE_GETTER_F_NODOC(STR_first, &tuple_first, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
+	TYPE_GETTER_F_NODOC(STR_last, &tuple_last, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 #define nullable_tuple_getsets (tuple_getsets + 2)
-	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
