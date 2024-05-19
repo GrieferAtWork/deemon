@@ -339,8 +339,23 @@ ri_index_set(RangeIterator *__restrict self,
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ri_getfuture(RangeIterator *__restrict self) {
+	DREF DeeObject *index, *result;
+	RangeIterator_LockRead(self);
+	index = self->ri_index;
+	Dee_Incref(index);
+	RangeIterator_LockEndRead(self);
+	result = DeeRange_New(index, self->ri_end, self->ri_step);
+	Dee_Decref(index);
+	return result;
+}
+
 PRIVATE struct type_getset tpconst ri_getsets[] = {
 	TYPE_GETSET_F_NODOC("__index__", &ri_index_get, NULL, &ri_index_set, METHOD_FNOREFESCAPE),
+	TYPE_GETTER("future", &ri_getfuture,
+	            "->?Ert:SeqRange\n"
+	            "Range for yet-to-be-enumerated indices"),
 	TYPE_GETSET_END
 };
 
@@ -402,7 +417,6 @@ PRIVATE struct type_cmp ri_cmp = {
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&ri_compare_eq,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ri_compare,
 };
-
 
 INTERN DeeTypeObject SeqRangeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1147,6 +1161,17 @@ iri_next(IntRangeIterator *__restrict self) {
 	return DeeInt_NewSSize(result_index);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iri_getfuture(IntRangeIterator *__restrict self) {
+	return DeeRange_NewInt(atomic_read(&self->iri_index),
+	                       self->iri_end, self->iri_step);
+}
+
+PRIVATE struct type_getset tpconst iri_getsets[] = {
+	TYPE_GETTER("future", &iri_getfuture, "->?Ert:SeqIntRange\nRange for yet-to-be-enumerated indices"),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst iri_members[] = {
 	/* We allow write-access to these members because doing so doesn't
 	 * actually harm anything, although fiddling with this stuff may
@@ -1217,7 +1242,7 @@ INTERN DeeTypeObject SeqIntRangeIterator_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ iri_getsets,
 	/* .tp_members       = */ iri_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
