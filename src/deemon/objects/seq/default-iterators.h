@@ -124,6 +124,27 @@ typedef struct {
 	size_t            dinl_limit;  /* [lock(ATOMIC)] Max # of elements to still enumerate. */
 } DefaultIterator_WithNextAndLimit;
 
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject   *diikgi_seq;  /* [1..1][const] Sequence to read key values from */
+	DREF DeeObject   *diikgi_iter; /* [1..1][const] Key iterator */
+	/* [1..1][const] Callback to load the next key from `diikgi_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *diikgi_tp_next)(DeeObject *self);
+	/* [1..1][const] Callback to load a key value from `diikgi_seq'. */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *diikgi_tp_getitem)(DeeObject *self, DeeObject *key);
+} DefaultIterator_WithIterKeysAndGetItem;
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject   *diiktgi_seq;  /* [1..1][const] Sequence to read key values from */
+	DREF DeeObject   *diiktgi_iter; /* [1..1][const] Key iterator */
+	/* [1..1][const] Callback to load the next key from `diiktgi_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *diiktgi_tp_next)(DeeObject *self);
+	/* [1..1][const] Callback to load a key value from `diiktgi_seq'. */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *diiktgi_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *key);
+	DeeTypeObject    *diiktgi_tp_seq; /* [1..1][const] The type to pass to `diiktgi_tp_tgetitem'. */
+} DefaultIterator_WithIterKeysAndTGetItem;
+
 INTDEF DeeTypeObject DefaultIterator_WithGetItemIndex_Type;            /* DefaultIterator_WithGetItemIndex */
 INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type;     /* DefaultIterator_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type; /* DefaultIterator_WithSizeAndGetItemIndex */
@@ -137,7 +158,13 @@ INTDEF DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type; /* DefaultIterato
 
 INTDEF DeeTypeObject DefaultIterator_WithNextAndLimit_Type; /* DefaultIterator_WithNextAndLimit */
 
-/* TODO: Foreach iterators */
+INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type;     /* DefaultIterator_WithIterKeysAndGetItem (yields only the value-part) */
+INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type;  /* DefaultIterator_WithIterKeysAndGetItem (yields only the value-part) */
+INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type; /* DefaultIterator_WithIterKeysAndTGetItem (yields only the value-part) */
+INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type;     /* DefaultIterator_WithIterKeysAndGetItem (yields 2-element (key, value) tuples) */
+INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type;  /* DefaultIterator_WithIterKeysAndGetItem (yields 2-element (key, value) tuples) */
+INTDEF DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type; /* DefaultIterator_WithIterKeysAndTGetItem (yields 2-element (key, value) tuples) */
+
 INTDEF DeeTypeObject DefaultIterator_WithForeach_Type;     /* DefaultIterator_WithForeach */
 INTDEF DeeTypeObject DefaultIterator_WithForeachPair_Type; /* DefaultIterator_WithForeachPair */
 
