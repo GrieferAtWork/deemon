@@ -2040,67 +2040,6 @@ list_getitem_index_fast(List *__restrict me, size_t index) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-list_nsi_find(List *me,
-              size_t start, size_t end,
-              DeeObject *keyed_search_item,
-              DeeObject *key) {
-	DREF DeeObject *list_elem;
-	size_t i;
-	int temp;
-	DeeList_LockRead(me);
-	for (i = start; i < DeeList_SIZE(me) && i < end; ++i) {
-		list_elem = DeeList_GET(me, i);
-		Dee_Incref(list_elem);
-		DeeList_LockEndRead(me);
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, list_elem, key);
-		Dee_Decref_unlikely(list_elem);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
-			return i; /* Found it! */
-		}
-		DeeList_LockRead(me);
-	}
-	DeeList_LockEndRead(me);
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-list_nsi_rfind(List *me, size_t start, size_t end,
-               DeeObject *keyed_search_item,
-               DeeObject *key) {
-	DREF DeeObject *list_elem;
-	size_t i;
-	int temp;
-	DeeList_LockRead(me);
-	i = end;
-	for (;;) {
-		if (i > DeeList_SIZE(me))
-			i = DeeList_SIZE(me);
-		if (i <= start)
-			break;
-		--i;
-		list_elem = DeeList_GET(me, i);
-		Dee_Incref(list_elem);
-		DeeList_LockEndRead(me);
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, list_elem, key);
-		Dee_Decref_unlikely(list_elem);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
-			return i; /* Found it! */
-		}
-		DeeList_LockRead(me);
-	}
-	DeeList_LockEndRead(me);
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 list_xchitem_index(List *me, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
@@ -2185,8 +2124,6 @@ PRIVATE struct type_nsi tpconst list_nsi = {
 			/* .nsi_delrange_n   = */ (dfunptr_t)&list_delrange_index_n,
 			/* .nsi_setrange     = */ (dfunptr_t)&list_setrange_index,
 			/* .nsi_setrange_n   = */ (dfunptr_t)&list_setrange_index_n,
-			/* .nsi_find         = */ (dfunptr_t)&list_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&list_nsi_rfind,
 		}
 	}
 };
@@ -2688,6 +2625,203 @@ list_fill_impl(List *me, size_t start, size_t end, DeeObject *filler) {
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+list_find_impl(List *self, DeeObject *item, size_t start, size_t end) {
+	size_t i = start;
+	DeeList_LockRead(self);
+	for (; i < end && i < self->l_list.ol_elemc; ++i) {
+		DREF DeeObject *myitem;
+		int temp;
+		myitem = self->l_list.ol_elemv[i];
+		Dee_Incref(myitem);
+		DeeList_LockEndRead(self);
+		temp = DeeObject_TryCompareEq(item, myitem);
+		Dee_Decref(myitem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
+			return i;
+		DeeList_LockRead(self);
+	}
+	DeeList_LockEndRead(self);
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+list_find_with_key_impl(List *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t i = start;
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	DeeList_LockRead(self);
+	for (; i < end && i < self->l_list.ol_elemc; ++i) {
+		DREF DeeObject *myitem;
+		int temp;
+		myitem = self->l_list.ol_elemv[i];
+		Dee_Incref(myitem);
+		DeeList_LockEndRead(self);
+		temp = DeeObject_TryCompareKeyEq(item, myitem, key);
+		Dee_Decref(myitem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0)
+			return i;
+		DeeList_LockRead(self);
+	}
+	DeeList_LockEndRead(self);
+	Dee_Decref(item);
+	return (size_t)-1;
+err_item:
+	Dee_Decref(item);
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+list_rfind_impl(List *self, DeeObject *item, size_t start, size_t end) {
+	size_t i = end;
+	DeeList_LockRead(self);
+	for (;;) {
+		DREF DeeObject *myitem;
+		int temp;
+		if (i > self->l_list.ol_elemc)
+			i = self->l_list.ol_elemc;
+		if (i <= start)
+			break;
+		--i;
+		myitem = self->l_list.ol_elemv[i];
+		Dee_Incref(myitem);
+		DeeList_LockEndRead(self);
+		temp = DeeObject_TryCompareEq(item, myitem);
+		Dee_Decref(myitem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
+			return i;
+		DeeList_LockRead(self);
+	}
+	DeeList_LockEndRead(self);
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+list_rfind_with_key_impl(List *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t i = end;
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	DeeList_LockRead(self);
+	for (;;) {
+		DREF DeeObject *myitem;
+		int temp;
+		if (i > self->l_list.ol_elemc)
+			i = self->l_list.ol_elemc;
+		if (i <= start)
+			break;
+		--i;
+		myitem = self->l_list.ol_elemv[i];
+		Dee_Incref(myitem);
+		DeeList_LockEndRead(self);
+		temp = DeeObject_TryCompareKeyEq(item, myitem, key);
+		Dee_Decref(myitem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0)
+			return i;
+		DeeList_LockRead(self);
+	}
+	DeeList_LockEndRead(self);
+	Dee_Decref(item);
+	return (size_t)-1;
+err_item:
+	Dee_Decref(item);
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_find(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:find",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? list_find_with_key_impl(self, item, start, end, key)
+	         : list_find_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_rfind(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:rfind",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? list_rfind_with_key_impl(self, item, start, end, key)
+	         : list_rfind_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_index(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:index",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? list_find_with_key_impl(self, item, start, end, key)
+	         : list_find_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_not_found;
+	return DeeInt_NewSize(result);
+err_not_found:
+	err_item_not_found((DeeObject *)self, item);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+list_rindex(List *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:rindex",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? list_rfind_with_key_impl(self, item, start, end, key)
+	         : list_rfind_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_not_found;
+	return DeeInt_NewSize(result);
+err_not_found:
+	err_item_not_found((DeeObject *)self, item);
+err:
+	return NULL;
+}
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3499,6 +3633,14 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	TYPE_METHOD_F(STR_clear, &list_clear, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Clear all items from @this List"),
+	TYPE_KWMETHOD_F(STR_find, &list_find, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F(STR_rfind, &list_rfind, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F(STR_index, &list_index, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F(STR_rindex, &list_rindex, METHOD_FNOREFESCAPE,
+	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_remove, &list_remove, METHOD_FNOREFESCAPE,
 	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD_F(STR_rremove, &list_rremove, METHOD_FNOREFESCAPE,
