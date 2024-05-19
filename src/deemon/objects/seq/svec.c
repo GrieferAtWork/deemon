@@ -1047,67 +1047,6 @@ svec_getitem_index_fast(SharedVector *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-svec_nsi_find(SharedVector *__restrict self,
-              size_t start, size_t end,
-              DeeObject *__restrict keyed_search_item,
-              DeeObject *key) {
-	size_t i = start;
-	SharedVector_LockRead(self);
-	for (; i < end && i < self->sv_length; ++i) {
-		DREF DeeObject *item;
-		int temp;
-		item = self->sv_vector[i];
-		Dee_Incref(item);
-		SharedVector_LockEndRead(self);
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
-		Dee_Decref(item);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
-			return i;
-		}
-		SharedVector_LockRead(self);
-	}
-	SharedVector_LockEndRead(self);
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-svec_nsi_rfind(SharedVector *__restrict self,
-               size_t start, size_t end,
-               DeeObject *__restrict keyed_search_item,
-               DeeObject *key) {
-	size_t i = end;
-	SharedVector_LockRead(self);
-	for (;;) {
-		DREF DeeObject *item;
-		int temp;
-		if (i > self->sv_length)
-			i = self->sv_length;
-		if (i <= start)
-			break;
-		--i;
-		item = self->sv_vector[i];
-		Dee_Incref(item);
-		SharedVector_LockEndRead(self);
-		temp = DeeObject_TryCmpKeyEqAsBool(keyed_search_item, item, key);
-		Dee_Decref(item);
-		if (temp != 0) {
-			if unlikely(temp < 0)
-				goto err;
-			return i;
-		}
-		SharedVector_LockRead(self);
-	}
-	SharedVector_LockEndRead(self);
-	return (size_t)-1;
-err:
-	return (size_t)-2;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 svec_foreach(SharedVector *self, Dee_foreach_t proc, void *arg) {
 	size_t i;
@@ -1169,26 +1108,167 @@ PRIVATE struct type_nsi tpconst svec_nsi = {
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)&svec_getitem_index_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)NULL,
-			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_setrange     = */ (dfunptr_t)NULL,
-			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_find         = */ (dfunptr_t)&svec_nsi_find,
-			/* .nsi_rfind        = */ (dfunptr_t)&svec_nsi_rfind,
-			/* .nsi_xch          = */ (dfunptr_t)NULL,
-			/* .nsi_insert       = */ (dfunptr_t)NULL,
-			/* .nsi_insertall    = */ (dfunptr_t)NULL,
-			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
-			/* .nsi_pop          = */ (dfunptr_t)NULL,
-			/* .nsi_erase        = */ (dfunptr_t)NULL,
-			/* .nsi_remove       = */ (dfunptr_t)NULL,
-			/* .nsi_rremove      = */ (dfunptr_t)NULL,
-			/* .nsi_removeall    = */ (dfunptr_t)NULL,
-			/* .nsi_removeif     = */ (dfunptr_t)NULL
 		}
 	}
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+svec_find_impl(SharedVector *self, DeeObject *item, size_t start, size_t end) {
+	size_t i = start;
+	SharedVector_LockRead(self);
+	for (; i < end && i < self->sv_length; ++i) {
+		DREF DeeObject *myitem;
+		int temp;
+		myitem = self->sv_vector[i];
+		Dee_Incref(myitem);
+		SharedVector_LockEndRead(self);
+		temp = DeeObject_TryCompareEq(item, myitem);
+		Dee_Decref(myitem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
+			return i;
+		SharedVector_LockRead(self);
+	}
+	SharedVector_LockEndRead(self);
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+svec_find_with_key_impl(SharedVector *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t i = start;
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	SharedVector_LockRead(self);
+	for (; i < end && i < self->sv_length; ++i) {
+		DREF DeeObject *myitem;
+		int temp;
+		myitem = self->sv_vector[i];
+		Dee_Incref(myitem);
+		SharedVector_LockEndRead(self);
+		temp = DeeObject_TryCompareKeyEq(item, myitem, key);
+		Dee_Decref(myitem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0)
+			return i;
+		SharedVector_LockRead(self);
+	}
+	SharedVector_LockEndRead(self);
+	Dee_Decref(item);
+	return (size_t)-1;
+err_item:
+	Dee_Decref(item);
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+svec_rfind_impl(SharedVector *self, DeeObject *item, size_t start, size_t end) {
+	size_t i = end;
+	SharedVector_LockRead(self);
+	for (;;) {
+		DREF DeeObject *myitem;
+		int temp;
+		if (i > self->sv_length)
+			i = self->sv_length;
+		if (i <= start)
+			break;
+		--i;
+		myitem = self->sv_vector[i];
+		Dee_Incref(myitem);
+		SharedVector_LockEndRead(self);
+		temp = DeeObject_TryCompareEq(item, myitem);
+		Dee_Decref(myitem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		if (temp == 0)
+			return i;
+		SharedVector_LockRead(self);
+	}
+	SharedVector_LockEndRead(self);
+	return (size_t)-1;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+svec_rfind_with_key_impl(SharedVector *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t i = end;
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	SharedVector_LockRead(self);
+	for (;;) {
+		DREF DeeObject *myitem;
+		int temp;
+		if (i > self->sv_length)
+			i = self->sv_length;
+		if (i <= start)
+			break;
+		--i;
+		myitem = self->sv_vector[i];
+		Dee_Incref(myitem);
+		SharedVector_LockEndRead(self);
+		temp = DeeObject_TryCompareKeyEq(item, myitem, key);
+		Dee_Decref(myitem);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err_item;
+		if (temp == 0)
+			return i;
+		SharedVector_LockRead(self);
+	}
+	SharedVector_LockEndRead(self);
+	Dee_Decref(item);
+	return (size_t)-1;
+err_item:
+	Dee_Decref(item);
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+svec_find(SharedVector *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:find",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? svec_find_with_key_impl(self, item, start, end, key)
+	         : svec_find_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+svec_rfind(SharedVector *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:rfind",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? svec_rfind_with_key_impl(self, item, start, end, key)
+	         : svec_rfind_impl(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_method tpconst svec_methods[] = {
+	TYPE_KWMETHOD(STR_find, &svec_find, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD(STR_rfind, &svec_rfind, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
 };
 
 PRIVATE struct type_seq svec_seq = {
@@ -1340,7 +1420,7 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ svec_methods,
 	/* .tp_getsets       = */ svec_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
