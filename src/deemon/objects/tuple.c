@@ -1939,6 +1939,8 @@ tuple_find(Tuple *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	         : tuple_find_impl(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
+	if unlikely(result == (size_t)-1)
+		return_reference_(DeeInt_MinusOne);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -1957,6 +1959,8 @@ tuple_rfind(Tuple *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	         : tuple_rfind_impl(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
+	if unlikely(result == (size_t)-1)
+		return_reference_(DeeInt_MinusOne);
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
