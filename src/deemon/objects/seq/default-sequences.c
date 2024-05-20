@@ -125,7 +125,8 @@ ds_sgif_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	                  &self->dssgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dssgi_seq);
-	if (!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast)
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast) &&
+	    (!DeeType_InheritGetItem(seqtyp) || !seqtyp->tp_seq->tp_getitem_index_fast))
 		goto err_no_getitem;
 	self->dssgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
 	Dee_Incref(self->dssgi_seq);

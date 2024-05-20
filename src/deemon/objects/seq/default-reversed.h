@@ -31,7 +31,7 @@ typedef struct {
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *drwgii_tp_getitem_index)(DeeObject *self, size_t index);
 	DREF DeeObject *drwgii_seq;  /* [1..1][const] The sequence to reverse */
 	size_t          drwgii_max;  /* [const] Index of the 0'th element of the reversed of `drwgii_seq' */
-	size_t          drwgii_size; /* [const][<= (drwgii_max - 1)] Length of the reversed sequence. */
+	size_t          drwgii_size; /* [const][<= (drwgii_max + 1)] Length of the reversed sequence. */
 } DefaultReversed_WithGetItemIndex;
 
 INTDEF DeeTypeObject DefaultReversed_WithGetItemIndex_Type;     /* DefaultReversed_WithGetItemIndex */

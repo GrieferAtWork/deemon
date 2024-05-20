@@ -21,8 +21,10 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_REVERSED_C 1
 
 #include <deemon/api.h>
-#include <deemon/object.h>
+#include <deemon/arg.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
+#include <deemon/object.h>
 #include <deemon/seq.h>
 
 /**/
@@ -32,6 +34,112 @@
 #include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
+
+#define rs_giif_copy rs_gii_copy
+#define rs_tgii_copy rs_gii_copy
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rs_gii_copy(DefaultReversed_WithGetItemIndex *__restrict self,
+            DefaultReversed_WithGetItemIndex *__restrict other) {
+	Dee_Incref(self->drwgii_seq);
+	self->drwgii_tp_getitem_index = other->drwgii_tp_getitem_index;
+	self->drwgii_seq              = other->drwgii_seq;
+	self->drwgii_max              = other->drwgii_max;
+	self->drwgii_size             = other->drwgii_size;
+	return 0;
+}
+
+#define rs_giif_deepcopy rs_gii_deepcopy
+#define rs_tgii_deepcopy rs_gii_deepcopy
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rs_gii_deepcopy(DefaultReversed_WithGetItemIndex *__restrict self,
+                DefaultReversed_WithGetItemIndex *__restrict other) {
+	self->drwgii_seq = DeeObject_DeepCopy(other->drwgii_seq);
+	if unlikely(!self->drwgii_seq)
+		goto err;
+	self->drwgii_tp_getitem_index = other->drwgii_tp_getitem_index;
+	self->drwgii_max              = other->drwgii_max;
+	self->drwgii_size             = other->drwgii_size;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+verify_max_and_size(DefaultReversed_WithGetItemIndex *__restrict self) {
+	if unlikely(self->drwgii_max == (size_t)-1 ||
+	            self->drwgii_size > (self->drwgii_max + 1)) {
+		return DeeError_Throwf(&DeeError_ValueError,
+		                       "Bad max=%" PRFuSIZ ", size=%" PRFuSIZ " values",
+		                       self->drwgii_max, self->drwgii_size);
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rs_gii_init(DefaultReversed_WithGetItemIndex *__restrict self,
+            size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqReversedWithGetItemIndex",
+	                  &self->drwgii_seq, &self->drwgii_max, &self->drwgii_size))
+		goto err;
+	if unlikely(verify_max_and_size(self))
+		goto err;
+	seqtyp = Dee_TYPE(self->drwgii_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index) &&
+	    !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->drwgii_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index;
+	Dee_Incref(self->drwgii_seq);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rs_giif_init(DefaultReversed_WithGetItemIndex *__restrict self,
+             size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqReversedWithGetItemIndexFast",
+	                  &self->drwgii_seq, &self->drwgii_max, &self->drwgii_size))
+		goto err;
+	if unlikely(verify_max_and_size(self))
+		goto err;
+	seqtyp = Dee_TYPE(self->drwgii_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast) &&
+	    (!DeeType_InheritGetItem(seqtyp) || !seqtyp->tp_seq->tp_getitem_index_fast))
+		goto err_no_getitem;
+	self->drwgii_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
+	Dee_Incref(self->drwgii_seq);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rs_tgii_init(DefaultReversed_WithGetItemIndex *__restrict self,
+             size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqReversedWithTryGetItemIndex",
+	                  &self->drwgii_seq, &self->drwgii_max, &self->drwgii_size))
+		goto err;
+	if unlikely(verify_max_and_size(self))
+		goto err;
+	seqtyp = Dee_TYPE(self->drwgii_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem_index) &&
+	    !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->drwgii_tp_getitem_index = seqtyp->tp_seq->tp_trygetitem_index;
+	Dee_Incref(self->drwgii_seq);
+	return 0;
+err_no_getitem:
+	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err:
+	return -1;
+}
 
 #define rs_giif_fini rs_gii_fini
 #define rs_tgii_fini rs_gii_fini
@@ -427,7 +535,7 @@ PRIVATE struct type_member tpconst rs_gii_members[] = {
 INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqReversedWithGetItemIndex",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItem,max:?Dint,size:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -436,9 +544,9 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&rs_gii_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&rs_gii_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rs_gii_init,
 				TYPE_FIXED_ALLOCATOR(DefaultReversed_WithGetItemIndex)
 			}
 		},
@@ -472,7 +580,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqReversedWithGetItemIndexFast",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItemIndexFast,max:?Dint,size:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -481,9 +589,9 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&rs_giif_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&rs_giif_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rs_giif_init,
 				TYPE_FIXED_ALLOCATOR(DefaultReversed_WithGetItemIndex)
 			}
 		},
@@ -517,7 +625,7 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqReversedWithTryGetItemIndex",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItem,max:?Dint,size:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -526,9 +634,9 @@ INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&rs_tgii_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&rs_tgii_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rs_tgii_init,
 				TYPE_FIXED_ALLOCATOR(DefaultReversed_WithGetItemIndex)
 			}
 		},
