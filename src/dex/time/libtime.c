@@ -329,8 +329,8 @@ PRIVATE bool did_call_tzset = false;
 PRIVATE void do_call_tzset(void) {
 	int64_t tz_value;
 	tzset();
-	tz_value = (int64_t)timezone;
-	tz_value *= NANOSECONDS_PER_MINUTE;
+	tz_value = (int64_t)timezone; /* seconds West of UTC */
+	tz_value *= NANOSECONDS_PER_SECOND;
 	COMPILER_WRITE_BARRIER();
 	timezone_nanoseconds = tz_value;
 	COMPILER_WRITE_BARRIER();
