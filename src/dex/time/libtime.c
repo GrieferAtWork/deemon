@@ -236,6 +236,7 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 		struct timespec64 ts;
 		if likely(clock_gettime64(CLOCK_REALTIME, &ts) == 0) {
 			__hybrid_int128_set(*p_result, ts.tv_sec);
+			__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
 			__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
 			__hybrid_uint128_add32(*(Dee_uint128_t *)p_result, ts.tv_nsec);
 			return;
@@ -248,6 +249,7 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 		struct timeval64 ts;
 		if likely(gettimeofday64(&ts, NULL) == 0) {
 			__hybrid_int128_set(*p_result, ts.tv_sec);
+			__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
 			__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
 			__hybrid_uint128_add32(*(Dee_uint128_t *)p_result, ts.tv_usec * 1000);
 			return;
@@ -259,6 +261,7 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 	{
 		time64_t t = time64(NULL);
 		__hybrid_int128_set(*p_result, t);
+			__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
 		__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
 		return;
 	}
@@ -269,6 +272,7 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 		struct timespec ts;
 		if likely(clock_gettime(CLOCK_REALTIME, &ts) == 0) {
 			__hybrid_int128_set(*p_result, ts.tv_sec);
+			__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
 			__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
 			__hybrid_uint128_add32(*(Dee_uint128_t *)p_result, ts.tv_nsec);
 			return;
@@ -281,6 +285,7 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 		struct timeval tv;
 		if likely(gettimeofday(&tv, NULL) == 0) {
 			__hybrid_int128_set(*p_result, tv.tv_sec);
+			__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
 			__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
 			__hybrid_uint128_add32(*(Dee_uint128_t *)p_result, tv.tv_usec * 1000);
 			return;
@@ -292,6 +297,7 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 	{
 		time_t t = time(NULL);
 		__hybrid_int128_set(*p_result, t);
+			__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
 		__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
 		return;
 	}
@@ -299,9 +305,13 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 
 #ifdef time_now_utc_USE_DeeSystem_GetWalltime
 	{
-		uint64_t walltime = DeeSystem_GetWalltime();
-		__hybrid_uint128_set64(*(Dee_uint128_t *)p_result, walltime);
-		__hybrid_uint128_mul16(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_MICROSECOND);
+		uint64_t walltime_microseconds = DeeSystem_GetWalltime();
+		uint64_t walltime_seconds      = (uint64_t)(walltime_microseconds / UINT32_C(1000000));
+		uint32_t walltime_microsecond  = (uint32_t)(walltime_microseconds % UINT32_C(1000000));
+		__hybrid_uint128_set64(*(Dee_uint128_t *)p_result, walltime_seconds);
+		__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
+		__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
+		__hybrid_uint128_add32(*(Dee_uint128_t *)p_result, walltime_microsecond * UINT32_C(1000));
 		return;
 	}
 #endif /* time_now_utc_USE_DeeSystem_GetWalltime */
