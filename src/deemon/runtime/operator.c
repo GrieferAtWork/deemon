@@ -7935,199 +7935,358 @@ err:
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithHasItem,
                              (DeeObject *self, DeeObject *elem)) {
+	int result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	result = DeeType_INVOKE_HASITEM_NODEFAULT(tp_self, self, elem);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result != 0);
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithBoundItem,
                              (DeeObject *self, DeeObject *elem)) {
+	int result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	result = DeeType_INVOKE_BOUNDITEM_NODEFAULT(tp_self, self, elem);
+	if unlikely(result == -1)
+		goto err;
+	return_bool_(result > 0);
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithTryGetItem,
                              (DeeObject *self, DeeObject *elem)) {
+	DREF DeeObject *item;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	item = DeeType_INVOKE_TRYGETITEM_NODEFAULT(tp_self, self, elem);
+	if unlikely(!item)
+		goto err;
+	if (item == ITER_DONE)
+		return_false;
+	Dee_Decref(item);
+	return_true;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithGetItem,
                              (DeeObject *self, DeeObject *elem)) {
+	DREF DeeObject *item;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	item = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, elem);
+	if (item) {
+		Dee_Decref(item);
+		return_true;
+	}
+	if (DeeError_Catch(&DeeError_IndexError) ||
+	    DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_UnboundItem))
+		return_false;
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithHasItemStringHash,
                              (DeeObject *self, DeeObject *elem)) {
+	int result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (!DeeString_Check(elem))
+		goto nope;
+	result = DeeType_INVOKE_HASITEMSTRINGHASH_NODEFAULT(tp_self, self,
+	                                                    DeeString_STR(elem),
+	                                                    DeeString_Hash(elem));
+	if unlikely(result < 0)
+		goto err;
+	if (result)
+		return_true;
+nope:
+	return_false;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithHasItemStringLenHash,
                              (DeeObject *self, DeeObject *elem)) {
+	int result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (!DeeString_Check(elem))
+		goto nope;
+	result = DeeType_INVOKE_HASITEMSTRINGLENHASH_NODEFAULT(tp_self, self,
+	                                                       DeeString_STR(elem),
+	                                                       DeeString_SIZE(elem),
+	                                                       DeeString_Hash(elem));
+	if unlikely(result < 0)
+		goto err;
+	if (result)
+		return_true;
+nope:
+	return_false;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithHasItemIndex,
                              (DeeObject *self, DeeObject *elem)) {
+	int result;
+	size_t index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(elem, &index))
+		goto err_tryhandle;
+	result = DeeType_INVOKE_HASITEMINDEX_NODEFAULT(tp_self, self, index);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result != 0);
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_ValueError) ||
+	    DeeError_Catch(&DeeError_NotImplemented))
+		return_false;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithBoundItemStringHash,
                              (DeeObject *self, DeeObject *elem)) {
+	int result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (!DeeString_Check(elem))
+		goto nope;
+	result = DeeType_INVOKE_BOUNDITEMSTRINGHASH_NODEFAULT(tp_self, self,
+	                                                      DeeString_STR(elem),
+	                                                      DeeString_Hash(elem));
+	if unlikely(result == -1)
+		goto err;
+	if (result > 0)
+		return_true;
+nope:
+	return_false;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithBoundItemStringLenHash,
                              (DeeObject *self, DeeObject *elem)) {
+	int result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (!DeeString_Check(elem))
+		goto nope;
+	result = DeeType_INVOKE_BOUNDITEMSTRINGLENHASH_NODEFAULT(tp_self, self,
+	                                                         DeeString_STR(elem),
+	                                                         DeeString_SIZE(elem),
+	                                                         DeeString_Hash(elem));
+	if unlikely(result == -1)
+		goto err;
+	if (result > 0)
+		return_true;
+nope:
+	return_false;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithBoundItemIndex,
                              (DeeObject *self, DeeObject *elem)) {
+	int result;
+	size_t index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(elem, &index))
+		goto err_tryhandle;
+	result = DeeType_INVOKE_HASITEMINDEX_NODEFAULT(tp_self, self, index);
+	if unlikely(result == -1)
+		goto err;
+	return_bool_(result > 0);
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_ValueError) ||
+	    DeeError_Catch(&DeeError_NotImplemented))
+		return_false;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithTryGetItemStringHash,
                              (DeeObject *self, DeeObject *elem)) {
+	DREF DeeObject *item;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (!DeeString_Check(elem))
+		goto nope;
+	item = DeeType_INVOKE_TRYGETITEMSTRINGHASH_NODEFAULT(tp_self, self,
+	                                                     DeeString_STR(elem),
+	                                                     DeeString_Hash(elem));
+	if (item == ITER_DONE) {
+nope:
+		return_false;
+	}
+	if (item) {
+		Dee_Decref(item);
+		return_true;
+	}
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithTryGetItemIndex,
                              (DeeObject *self, DeeObject *elem)) {
+	DREF DeeObject *item;
+	size_t index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(elem, &index))
+		goto err_tryhandle;
+	item = DeeType_INVOKE_TRYGETITEMINDEX_NODEFAULT(tp_self, self, index);
+	if unlikely(!item)
+		goto err;
+	if (item == ITER_DONE) {
+nope:
+		return_false;
+	}
+	Dee_Decref(item);
+	return_true;
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_ValueError) ||
+	    DeeError_Catch(&DeeError_NotImplemented))
+		goto nope;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithTryGetItemStringLenHash,
                              (DeeObject *self, DeeObject *elem)) {
+	DREF DeeObject *item;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (!DeeString_Check(elem))
+		goto nope;
+	item = DeeType_INVOKE_TRYGETITEMSTRINGLENHASH_NODEFAULT(tp_self, self,
+	                                                        DeeString_STR(elem),
+	                                                        DeeString_SIZE(elem),
+	                                                        DeeString_Hash(elem));
+	if (item == ITER_DONE) {
+nope:
+		return_false;
+	}
+	if (item) {
+		Dee_Decref(item);
+		return_true;
+	}
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithGetItemStringHash,
                              (DeeObject *self, DeeObject *elem)) {
+	DREF DeeObject *item;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (!DeeString_Check(elem))
+		goto nope;
+	item = DeeType_INVOKE_GETITEMSTRINGHASH_NODEFAULT(tp_self, self,
+	                                                  DeeString_STR(elem),
+	                                                  DeeString_Hash(elem));
+	if (item) {
+		Dee_Decref(item);
+		return_true;
+	}
+	if (DeeError_Catch(&DeeError_IndexError) ||
+	    DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_UnboundItem)) {
+nope:
+		return_false;
+	}
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithGetItemStringLenHash,
                              (DeeObject *self, DeeObject *elem)) {
+	DREF DeeObject *item;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (!DeeString_Check(elem))
+		goto nope;
+	item = DeeType_INVOKE_GETITEMSTRINGLENHASH_NODEFAULT(tp_self, self,
+	                                                     DeeString_STR(elem),
+	                                                     DeeString_SIZE(elem),
+	                                                     DeeString_Hash(elem));
+	if (item) {
+		Dee_Decref(item);
+		return_true;
+	}
+	if (DeeError_Catch(&DeeError_IndexError) ||
+	    DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_UnboundItem)) {
+nope:
+		return_false;
+	}
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithGetItemIndex,
                              (DeeObject *self, DeeObject *elem)) {
+	DREF DeeObject *item;
+	size_t index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(elem, &index))
+		goto err_tryhandle;
+	item = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, index);
+	if (item) {
+		Dee_Decref(item);
+		return_true;
+	}
+	if (DeeError_Catch(&DeeError_IndexError) ||
+	    DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_UnboundItem)) {
+nope:
+		return_false;
+	}
+err:
 	return NULL;
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_ValueError) ||
+	    DeeError_Catch(&DeeError_NotImplemented))
+		goto nope;
+	goto err;
 }
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	(void)value;
+	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0)
+		return value ? -2 : -3; /* Stop iteration */
+	return 0;
+err:
+	return -1;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithEnumerate,
                              (DeeObject *self, DeeObject *elem)) {
+	Dee_ssize_t status;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	status = DeeType_INVOKE_ENUMERATE_NODEFAULT(tp_self, self, &default_map_bounditem_with_enumerate_cb, elem);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3 || status == -2)
+		return_true;
+	if unlikely(status == -1)
+		goto err;
+	return_false;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithEnumerateDefault,
                              (DeeObject *self, DeeObject *elem)) {
+	Dee_ssize_t status;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	status = DeeType_INVOKE_ENUMERATE(tp_self, self, &default_map_bounditem_with_enumerate_cb, elem);
+	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
+	if (status == -3 || status == -2)
+		return_true;
+	if unlikely(status == -1)
+		goto err;
+	return_false;
+err:
 	return NULL;
 }
 
@@ -10461,25 +10620,6 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithContains,
 err:
 	return -1;
 }
-
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
-
-#ifndef DEFINE_TYPED_OPERATORS
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
-	int temp;
-	(void)value;
-	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
-	if unlikely(temp == Dee_COMPARE_ERR)
-		goto err;
-	if (temp == 0)
-		return value ? -2 : -3; /* Stop iteration */
-	return 0;
-err:
-	return -1;
-}
-#endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithEnumerate,
                              (DeeObject *self, DeeObject *index)) {
