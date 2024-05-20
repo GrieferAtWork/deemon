@@ -69,6 +69,8 @@
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
+/* TODO: Re-write all of the documentation for functions/operators to document how defaults work now. */
+
 DECL_BEGIN
 
 #ifndef NDEBUG
@@ -304,7 +306,6 @@ err:
 
 typedef struct {
 	OBJECT_HEAD
-	/* TODO: Integrate NSI optimizations. */
 	DREF DeeObject *(DCALL *si_getitem)(DeeObject *self, DeeObject *index);
 	DREF DeeObject         *si_seq;   /* [1..1][const] The Sequence being iterated. */
 	DREF DeeObject         *si_size;  /* [1..1][const] The size of the Sequence. */
@@ -2092,7 +2093,7 @@ DeeSeq_Eq(DeeObject *lhs, DeeObject *rhs) {
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs) {
 	int result;
 	DREF DeeObject *lhs_iter;

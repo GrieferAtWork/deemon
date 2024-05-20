@@ -24,9 +24,11 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -54,14 +56,83 @@ err_not_bidirectional(DeeObject *__restrict self) {
 	                       Dee_TYPE(self));
 }
 
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-has_generic_attribute(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      DeeObject *__restrict attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-get_generic_attribute(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      DeeObject *__restrict name);
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) {
+	if (tp_self->tp_attr) {
+		if (tp_self->tp_attr->tp_getattr) {
+			DREF DeeObject *obj;
+			if (tp_self->tp_attr->tp_getattr == &instance_getattr) {
+				obj = instance_tgetattr(tp_self, self, attr);
+			} else {
+				obj = (*tp_self->tp_attr->tp_getattr)(self, attr);
+			}
+			if (obj) {
+				Dee_Decref(obj);
+				return 1;
+			}
+			if (DeeError_Catch(&DeeError_NotImplemented) ||
+			    DeeError_Catch(&DeeError_AttributeError))
+				return 0;
+			return -1;
+		}
+	} else {
+		char const *name = DeeString_STR(attr);
+		dhash_t hash     = DeeString_Hash(attr);
+		/* TODO: Search the type's instance-attribute cache and check
+		 *       if the attribute is implemented by the type itself. */
+		if (DeeType_IsClass(tp_self))
+			return DeeClass_QueryInstanceAttributeStringHash(tp_self, name, hash) != NULL ? 1 : 0;
+		if (tp_self->tp_methods &&
+		    DeeType_HasMethodAttrStringHash(tp_self, tp_self, name, hash))
+			goto yes;
+		if (tp_self->tp_getsets &&
+		    DeeType_HasGetSetAttrStringHash(tp_self, tp_self, name, hash))
+			goto yes;
+		if (tp_self->tp_members &&
+		    DeeType_HasMemberAttrStringHash(tp_self, tp_self, name, hash))
+			goto yes;
+	}
+	return 0;
+yes:
+	return 1;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name) {
+	DREF DeeObject *result;
+	dhash_t hash;
+	ASSERT_OBJECT(tp_self);
+	ASSERT_OBJECT(self);
+	ASSERT(DeeType_Check(tp_self));
+	ASSERT(DeeObject_InstanceOf(self, tp_self));
+	hash = DeeString_Hash(name);
+	/* TODO: Search the type's instance-attribute cache and check
+	 *       if the attribute is implemented by the type itself. */
+	if (DeeType_IsClass(tp_self)) {
+		struct class_attribute *member;
+		if ((member = DeeType_QueryAttributeHash(tp_self, tp_self, name, hash)) != NULL) {
+			struct class_desc *desc = DeeClass_DESC(tp_self);
+			return DeeInstance_GetAttribute(desc, DeeInstance_DESC(desc, self), self, member);
+		}
+		result = ITER_DONE;
+	} else {
+		result = ITER_DONE;
+		if (tp_self->tp_methods &&
+		    (result = DeeType_GetMethodAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+		if (tp_self->tp_getsets &&
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+		if (tp_self->tp_members &&
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+	}
+done:
+	return result;
+}
+
+
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL iterator_inc(DeeObject **__restrict p_self);

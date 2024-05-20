@@ -296,6 +296,7 @@ DeeSeq_CompareVS(DeeObject *const *lhsv, size_t lhsc,
 	return result;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_CompareFV(DeeObject *lhs, size_t lhsc,
                  DeeObject *const *rhsv, size_t rhsc) {
@@ -508,6 +509,7 @@ DeeSeq_CompareIS(DeeObject *lhs,
 	}
 	return result;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 
@@ -600,6 +602,7 @@ DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc,
 	return result;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_EqFV(DeeObject *lhs,
             DeeObject *const *rhsv, size_t elemc) {
@@ -820,8 +823,7 @@ DeeSeq_EqIS(DeeObject *lhs, DeeObject *rhs) {
 	}
 	return result;
 }
-
-
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 DECL_END
 
