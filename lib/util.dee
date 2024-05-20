@@ -188,76 +188,76 @@ function abs(x) {
 @@types, including @List and @Tuple.
 @@
 @@> import clamprange from util;
-@@> print repr clamprange(0, 10, length: 20);      // (0, 10)
-@@> print repr clamprange(0, 20, length: 20);      // (0, 20)
-@@> print repr clamprange(0, 21, length: 20);      // (0, 20)
-@@> print repr clamprange(0, -1, length: 20);      // (0, 19)
-@@> print repr clamprange(-2, -1, length: 20);     // (18, 19)
-@@> print repr clamprange(-20, -1, length: 20);    // (0, 19)
-@@> print repr clamprange(-21, -1, length: 20);    // (19, 19)
-@@> print repr clamprange(-22, -21, length: 20);   // (18, 19)
-@@> print repr clamprange(5, 0, length: 20);       // (5, 5)
-@@> print repr clamprange(5, none, length: 20);    // (5, 20)
-@@> print repr clamprange(none, 19, length: 20);   // (0, 19)
-@@> print repr clamprange(none, none, length: 20); // (0, 20)
-@@> print repr clamprange(-1, 10, length: 0);      // (0, 0)
+@@> print repr clamprange(0, 10, size: 20);      // (0, 10)
+@@> print repr clamprange(0, 20, size: 20);      // (0, 20)
+@@> print repr clamprange(0, 21, size: 20);      // (0, 20)
+@@> print repr clamprange(0, -1, size: 20);      // (0, 19)
+@@> print repr clamprange(-2, -1, size: 20);     // (18, 19)
+@@> print repr clamprange(-20, -1, size: 20);    // (0, 19)
+@@> print repr clamprange(-21, -1, size: 20);    // (19, 19)
+@@> print repr clamprange(-22, -21, size: 20);   // (18, 19)
+@@> print repr clamprange(5, 0, size: 20);       // (5, 5)
+@@> print repr clamprange(5, none, size: 20);    // (5, 20)
+@@> print repr clamprange(none, 19, size: 20);   // (0, 19)
+@@> print repr clamprange(none, none, size: 20); // (0, 20)
+@@> print repr clamprange(-1, 10, size: 0);      // (0, 0)
 @@
 @@@param start:  The range's starting index, or @none if omitted (as in @foo[:end])
 @@@param end:    The range's end index, or @none if omitted (as in @foo[start:])
-@@@param length: The associated sequence's length. The returned range's start/end
+@@@param size: The associated sequence's size. The returned range's start/end
 @@               indices are guarantied to be `<=` this value. Behavior is undefined
 @@               when this value is negative.
 @@@return: The [lo,hi) bounds of of the range that is *actually* being accessed.
-@@         This function guaranties that `lo <= hi <= length`
-function clamprange(start: int | none, end: int | none, length: int): (int, int) {
+@@         This function guaranties that `lo <= hi <= size`
+function clamprange(start: int | none, end: int | none, size: int): (int, int) {
 	/* NOTE: This function's implementation mirrors `DeeSeqRange_DoClamp()'
 	 *       from deemon's C implementation. */
 	if (start is none) {
 		start = 0;
-	} else if (start >= length) {
+	} else if (start >= size) {
 		goto empty_range;
 	} else if (start < 0) {
-		start += length;
+		start += size;
 		@[unlikely]
 		if (start < 0) {
 			try {
 #if 0 /* Not needed because deemon uses floor-mod */
-				start = length - ((-start) % length);
+				start = size - ((-start) % size);
 #else
-				start %= length;
+				start %= size;
 #endif
 			} catch (Error.ValueError.ArithmeticError.DivideByZero) {
 				goto empty_range;
 			}
 		}
 	}
-	/*assert start <= length;*/
+	/*assert start <= size;*/
 
 	if (end is none) {
-		end = length;
+		end = size;
 	} else if (end < 0) {
-		end += length;
+		end += size;
 		@[unlikely]
 		if (end < 0) {
 			try {
 #if 0 /* Not needed because deemon uses floor-mod */
-				end = length - ((-end) % length);
+				end = size - ((-end) % size);
 #else
-				end %= length;
+				end %= size;
 #endif
 			} catch (Error.ValueError.ArithmeticError.DivideByZero) {
 				goto empty_range;
 			}
 		}
-	} else if (end > length) {
-		end = length;
+	} else if (end > size) {
+		end = size;
 	}
-	/*assert end <= length;*/
+	/*assert end <= size;*/
 
 	@[unlikely]
 	if (end < start)
 		end = start;
 	return (start, end);
 empty_range:
-	return (length, length);
+	return (size, size);
 }
