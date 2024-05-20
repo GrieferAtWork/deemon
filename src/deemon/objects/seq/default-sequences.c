@@ -1277,7 +1277,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 generic_tp_tgetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	return (*tp_self->tp_seq->tp_getitem)(self, index);
 }
@@ -1285,7 +1285,7 @@ generic_tp_tgetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_tsg_init(DefaultSequence_WithTSizeAndGetItem *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "ooo:_SeqWithTSizeAndGetItem",
+	if (DeeArg_Unpack(argc, argv, "oooo:_SeqWithTSizeAndGetItem",
 	                  &self->dstsg_seq, &self->dstsg_tp_seq,
 	                  &self->dstsg_start, &self->dstsg_end))
 		goto err;
