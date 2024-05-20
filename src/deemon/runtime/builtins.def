@@ -209,14 +209,14 @@ BUILTIN_DOC(compare, &DeeBuiltin_Compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 
 BUILTIN_DOC(equals, &DeeBuiltin_Equals, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(a,b)->?Dbool\n"
-            "#r{!t if @a and @b are equal, !f if they aren't or cannot be compared}"
+            "#r{?t if @a and @b are equal, ?f if they aren't or cannot be compared}"
             "This function is similar to ${operator ==}, but automatically catches some errors:"
             "#L-{"
             /**/ ":NotImplemented Usually thrown when an operator isn't supported|"
             /**/ ":TypeError Usually thrown when comparing incompatible types|"
             /**/ ":ValueError Usually thrown when types are compatible, but values aren't"
             "}"
-            "This function will invoke the ${operator ==} of @a with @b as argument."
+            "This function will invoke the ${operator ==} of @a with @b as argument.\n"
             "${"
             /**/ "function equals(a, b): bool {\n"
             /**/ "	switch (a) {\n"

@@ -2046,7 +2046,7 @@ PRIVATE struct type_method tpconst tuple_methods[] = {
 	TYPE_KWMETHOD_F(STR_rindex, &tuple_rindex, METHOD_FNOREFESCAPE,
 	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_sorted, &tuple_sorted, METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1,key=!n)->?."),
+	                "(start=!0,end=!-1,key:?DCallable=!N)->?."),
 	TYPE_METHOD_END
 };
 
