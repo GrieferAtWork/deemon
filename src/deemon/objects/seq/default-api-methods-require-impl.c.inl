@@ -33,7 +33,7 @@
 //#define DEFINE_DeeType_SeqCache_RequireClear
 //#define DEFINE_DeeType_SeqCache_RequirePop
 //#define DEFINE_DeeType_SeqCache_RequireRemove
-#define DEFINE_DeeType_SeqCache_RequireRemoveWithKey
+//#define DEFINE_DeeType_SeqCache_RequireRemoveWithKey
 //#define DEFINE_DeeType_SeqCache_RequireRRemove
 //#define DEFINE_DeeType_SeqCache_RequireRRemoveWithKey
 //#define DEFINE_DeeType_SeqCache_RequireRemoveAll
@@ -47,6 +47,14 @@
 //#define DEFINE_DeeType_SeqCache_RequireSortWithKey
 //#define DEFINE_DeeType_SeqCache_RequireSorted
 //#define DEFINE_DeeType_SeqCache_RequireSortedWithKey
+//#define DEFINE_DeeType_SeqCache_RequireBFind
+#define DEFINE_DeeType_SeqCache_RequireBFindWithKey
+//#define DEFINE_DeeType_SeqCache_RequireBPosition
+//#define DEFINE_DeeType_SeqCache_RequireBPositionWithKey
+//#define DEFINE_DeeType_SeqCache_RequireBRange
+//#define DEFINE_DeeType_SeqCache_RequireBRangeWithKey
+//#define DEFINE_DeeType_SeqCache_RequireBLocate
+//#define DEFINE_DeeType_SeqCache_RequireBLocateWithKey
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeType_SeqCache_RequireFind) +             \
@@ -76,307 +84,276 @@
      defined(DEFINE_DeeType_SeqCache_RequireSort) +             \
      defined(DEFINE_DeeType_SeqCache_RequireSortWithKey) +      \
      defined(DEFINE_DeeType_SeqCache_RequireSorted) +           \
-     defined(DEFINE_DeeType_SeqCache_RequireSortedWithKey)) != 1
+     defined(DEFINE_DeeType_SeqCache_RequireSortedWithKey) +    \
+     defined(DEFINE_DeeType_SeqCache_RequireBFind) +            \
+     defined(DEFINE_DeeType_SeqCache_RequireBFindWithKey) +     \
+     defined(DEFINE_DeeType_SeqCache_RequireBPosition) +        \
+     defined(DEFINE_DeeType_SeqCache_RequireBPositionWithKey) + \
+     defined(DEFINE_DeeType_SeqCache_RequireBRange) +           \
+     defined(DEFINE_DeeType_SeqCache_RequireBRangeWithKey) +    \
+     defined(DEFINE_DeeType_SeqCache_RequireBLocate) +          \
+     defined(DEFINE_DeeType_SeqCache_RequireBLocateWithKey)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* DEFINE_DeeType_SeqCache_Require... */
 
 DECL_BEGIN
 
 #ifdef DEFINE_DeeType_SeqCache_RequireFind
-#define LOCAL_CANONICAL_NAME                           find
-#define LOCAL_generic_seq_foo                          generic_seq_find
-#define LOCAL_tsc_foo                                  tsc_find
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireFind
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultFindWithCallAttrFind
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultFindWithCallFindDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultFindWithCallFindDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultFindWithCallFindDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultFindWithEnumerateIndex
+#define LOCAL_CANONICAL_NAME             find
+#define LOCAL_generic_seq_foo            generic_seq_find
+#define LOCAL_tsc_foo                    tsc_find
+#define LOCAL_DeeSeq_AttrFoo             Find
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultFindWithEnumerateIndex
 #elif defined(DEFINE_DeeType_SeqCache_RequireFindWithKey)
-#define LOCAL_CANONICAL_NAME                           find
-#define LOCAL_generic_seq_foo                          generic_seq_find
-#define LOCAL_tsc_foo                                  tsc_find_with_key
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireFindWithKey
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultFindWithKeyWithCallAttrFind
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultFindWithKeyWithCallFindDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultFindWithKeyWithCallFindDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultFindWithKeyWithCallFindDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultFindWithKeyWithEnumerateIndex
+#define LOCAL_CANONICAL_NAME             find
+#define LOCAL_generic_seq_foo            generic_seq_find
+#define LOCAL_tsc_foo                    tsc_find_with_key
+#define LOCAL_DeeSeq_AttrFoo             FindWithKey
+#define LOCAL_DeeSeq_AttrBar             Find
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultFindWithKeyWithEnumerateIndex
 #elif defined(DEFINE_DeeType_SeqCache_RequireRFind)
-#define LOCAL_CANONICAL_NAME                           rfind
-#define LOCAL_generic_seq_foo                          generic_seq_rfind
-#define LOCAL_tsc_foo                                  tsc_rfind
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRFind
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRFindWithCallAttrRFind
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRFindWithCallRFindDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRFindWithCallRFindDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRFindWithCallRFindDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRFindWithEnumerateIndex
+#define LOCAL_CANONICAL_NAME             rfind
+#define LOCAL_generic_seq_foo            generic_seq_rfind
+#define LOCAL_tsc_foo                    tsc_rfind
+#define LOCAL_DeeSeq_AttrFoo             RFind
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultRFindWithEnumerateIndex
 #elif defined(DEFINE_DeeType_SeqCache_RequireRFindWithKey)
-#define LOCAL_CANONICAL_NAME                           rfind
-#define LOCAL_generic_seq_foo                          generic_seq_rfind
-#define LOCAL_tsc_foo                                  tsc_rfind_with_key
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRFindWithKey
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRFindWithKeyWithCallAttrRFind
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRFindWithKeyWithCallRFindDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRFindWithKeyWithCallRFindDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRFindWithKeyWithEnumerateIndex
+#define LOCAL_CANONICAL_NAME             rfind
+#define LOCAL_generic_seq_foo            generic_seq_rfind
+#define LOCAL_tsc_foo                    tsc_rfind_with_key
+#define LOCAL_DeeSeq_AttrFoo             RFindWithKey
+#define LOCAL_DeeSeq_AttrBar             RFind
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultRFindWithKeyWithEnumerateIndex
 #elif defined(DEFINE_DeeType_SeqCache_RequireErase)
-#define LOCAL_CANONICAL_NAME                           erase
-#define LOCAL_generic_seq_foo                          generic_seq_erase
-#define LOCAL_tsc_foo                                  tsc_erase
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireErase
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultEraseWithCallAttrErase
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultEraseWithCallEraseDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultEraseWithCallEraseDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultEraseWithCallEraseDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultEraseWithError
+#define LOCAL_CANONICAL_NAME  erase
+#define LOCAL_generic_seq_foo generic_seq_erase
+#define LOCAL_tsc_foo         tsc_erase
+#define LOCAL_DeeSeq_AttrFoo  Erase
 #elif defined(DEFINE_DeeType_SeqCache_RequireInsert)
-#define LOCAL_CANONICAL_NAME                           insert
-#define LOCAL_generic_seq_foo                          generic_seq_insert
-#define LOCAL_tsc_foo                                  tsc_insert
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireInsert
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultInsertWithCallAttrInsert
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultInsertWithCallInsertDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultInsertWithCallInsertDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultInsertWithCallInsertDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultInsertWithError
+#define LOCAL_CANONICAL_NAME  insert
+#define LOCAL_generic_seq_foo generic_seq_insert
+#define LOCAL_tsc_foo         tsc_insert
+#define LOCAL_DeeSeq_AttrFoo  Insert
 #elif defined(DEFINE_DeeType_SeqCache_RequireInsertAll)
-#define LOCAL_CANONICAL_NAME                           insertall
-#define LOCAL_generic_seq_foo                          generic_seq_insertall
-#define LOCAL_tsc_foo                                  tsc_insertall
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireInsertAll
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultInsertAllWithCallAttrInsertAll
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultInsertAllWithCallInsertAllDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultInsertAllWithCallInsertAllDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultInsertAllWithCallInsertAllDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultInsertAllWithError
+#define LOCAL_CANONICAL_NAME  insertall
+#define LOCAL_generic_seq_foo generic_seq_insertall
+#define LOCAL_tsc_foo         tsc_insertall
+#define LOCAL_DeeSeq_AttrFoo  InsertAll
 #elif defined(DEFINE_DeeType_SeqCache_RequirePushFront)
-#define LOCAL_CANONICAL_NAME                           pushfront
-#define LOCAL_generic_seq_foo                          generic_seq_pushfront
-#define LOCAL_tsc_foo                                  tsc_pushfront
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequirePushFront
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultPushFrontWithCallAttrPushFront
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultPushFrontWithCallPushFrontDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultPushFrontWithCallPushFrontDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultPushFrontWithCallPushFrontDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultPushFrontWithTSCInsert /* Use insert() by default */
+#define LOCAL_CANONICAL_NAME             pushfront
+#define LOCAL_generic_seq_foo            generic_seq_pushfront
+#define LOCAL_tsc_foo                    tsc_pushfront
+#define LOCAL_DeeSeq_AttrFoo             PushFront
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultPushFrontWithTSCInsert /* Use insert() by default */
 #elif defined(DEFINE_DeeType_SeqCache_RequireAppend)
-#define LOCAL_CANONICAL_NAME                           append
-#define LOCAL_generic_seq_foo                          generic_seq_append
-#define LOCAL_tsc_foo                                  tsc_append
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireAppend
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultAppendWithCallAttrAppend
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultAppendWithCallAppendDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultAppendWithCallAppendDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultAppendWithCallAppendDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultAppendWithError
+#define LOCAL_CANONICAL_NAME  append
+#define LOCAL_generic_seq_foo generic_seq_append
+#define LOCAL_tsc_foo         tsc_append
+#define LOCAL_DeeSeq_AttrFoo  Append
 #elif defined(DEFINE_DeeType_SeqCache_RequireExtend)
-#define LOCAL_CANONICAL_NAME                           extend
-#define LOCAL_generic_seq_foo                          generic_seq_extend
-#define LOCAL_tsc_foo                                  tsc_extend
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireExtend
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultExtendWithCallAttrExtend
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultExtendWithCallExtendDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultExtendWithCallExtendDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultExtendWithCallExtendDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultExtendWithError
+#define LOCAL_CANONICAL_NAME  extend
+#define LOCAL_generic_seq_foo generic_seq_extend
+#define LOCAL_tsc_foo         tsc_extend
+#define LOCAL_DeeSeq_AttrFoo  Extend
 #elif defined(DEFINE_DeeType_SeqCache_RequireXchItemIndex)
-#define LOCAL_CANONICAL_NAME                           xchitem
-#define LOCAL_generic_seq_foo                          generic_seq_xchitem
-#define LOCAL_tsc_foo                                  tsc_xchitem_index
-#define LOCAL_tsc_foo_data                             tsc_xchitem_index_data
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireXchItemIndex
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultXchItemIndexWithCallAttrXchItem
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultXchItemIndexWithCallXchItemIndexDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultXchItemIndexWithCallXchItemIndexDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultXchItemIndexWithCallXchItemIndexDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultXchItemIndexWithError
+#define LOCAL_CANONICAL_NAME  xchitem
+#define LOCAL_generic_seq_foo generic_seq_xchitem
+#define LOCAL_tsc_foo         tsc_xchitem_index
+#define LOCAL_tsc_foo_data    tsc_xchitem_data
+#define LOCAL_DeeSeq_AttrFoo  XchItemIndex
+#define LOCAL_DeeSeq_AttrBar  XchItem
 #elif defined(DEFINE_DeeType_SeqCache_RequireClear)
-#define LOCAL_CANONICAL_NAME                           clear
-#define LOCAL_generic_seq_foo                          generic_seq_clear
-#define LOCAL_tsc_foo                                  tsc_clear
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireClear
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultClearWithCallAttrClear
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultClearWithCallClearDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultClearWithCallClearDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultClearWithCallClearDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultClearWithError
+#define LOCAL_CANONICAL_NAME  clear
+#define LOCAL_generic_seq_foo generic_seq_clear
+#define LOCAL_tsc_foo         tsc_clear
+#define LOCAL_DeeSeq_AttrFoo  Clear
 #elif defined(DEFINE_DeeType_SeqCache_RequirePop)
-#define LOCAL_CANONICAL_NAME                           pop
-#define LOCAL_generic_seq_foo                          generic_seq_pop
-#define LOCAL_tsc_foo                                  tsc_pop
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequirePop
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultPopWithCallAttrPop
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultPopWithCallPopDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultPopWithCallPopDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultPopWithCallPopDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultPopWithError
+#define LOCAL_CANONICAL_NAME  pop
+#define LOCAL_generic_seq_foo generic_seq_pop
+#define LOCAL_tsc_foo         tsc_pop
+#define LOCAL_DeeSeq_AttrFoo  Pop
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemove)
-#define LOCAL_CANONICAL_NAME                           remove
-#define LOCAL_generic_seq_foo                          generic_seq_remove
-#define LOCAL_tsc_foo                                  tsc_remove
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRemove
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRemoveWithCallAttrRemove
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRemoveWithCallRemoveDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRemoveWithCallRemoveDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRemoveWithCallRemoveDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRemoveWithError
+#define LOCAL_CANONICAL_NAME  remove
+#define LOCAL_generic_seq_foo generic_seq_remove
+#define LOCAL_tsc_foo         tsc_remove
+#define LOCAL_DeeSeq_AttrFoo  Remove
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveWithKey)
-#define LOCAL_CANONICAL_NAME                           remove
-#define LOCAL_generic_seq_foo                          generic_seq_remove
-#define LOCAL_tsc_foo                                  tsc_remove_with_key
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRemoveWithKey
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRemoveWithKeyWithCallAttrRemove
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRemoveWithKeyWithError
+#define LOCAL_CANONICAL_NAME  remove
+#define LOCAL_generic_seq_foo generic_seq_remove
+#define LOCAL_tsc_foo         tsc_remove_with_key
+#define LOCAL_DeeSeq_AttrFoo  RemoveWithKey
+#define LOCAL_DeeSeq_AttrBar  Remove
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemove)
-#define LOCAL_CANONICAL_NAME                           rremove
-#define LOCAL_generic_seq_foo                          generic_seq_rremove
-#define LOCAL_tsc_foo                                  tsc_rremove
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRRemove
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRRemoveWithCallAttrRRemove
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRRemoveWithCallRRemoveDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRRemoveWithCallRRemoveDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRRemoveWithCallRRemoveDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRRemoveWithError
+#define LOCAL_CANONICAL_NAME  rremove
+#define LOCAL_generic_seq_foo generic_seq_rremove
+#define LOCAL_tsc_foo         tsc_rremove
+#define LOCAL_DeeSeq_AttrFoo  RRemove
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemoveWithKey)
-#define LOCAL_CANONICAL_NAME                           rremove
-#define LOCAL_generic_seq_foo                          generic_seq_rremove
-#define LOCAL_tsc_foo                                  tsc_rremove_with_key
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRRemoveWithKey
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRRemoveWithKeyWithCallAttrRRemove
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRRemoveWithKeyWithError
+#define LOCAL_CANONICAL_NAME  rremove
+#define LOCAL_generic_seq_foo generic_seq_rremove
+#define LOCAL_tsc_foo         tsc_rremove_with_key
+#define LOCAL_DeeSeq_AttrFoo  RRemoveWithKey
+#define LOCAL_DeeSeq_AttrBar  RRemove
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveAll)
-#define LOCAL_CANONICAL_NAME                           removeall
-#define LOCAL_generic_seq_foo                          generic_seq_removeall
-#define LOCAL_tsc_foo                                  tsc_removeall
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRemoveAll
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRemoveAllWithCallRemoveAllDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRemoveAllWithCallRemoveAllDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRemoveAllWithCallRemoveAllDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRemoveAllWithError
+#define LOCAL_CANONICAL_NAME  removeall
+#define LOCAL_generic_seq_foo generic_seq_removeall
+#define LOCAL_tsc_foo         tsc_removeall
+#define LOCAL_DeeSeq_AttrFoo  RemoveAll
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveAllWithKey)
-#define LOCAL_CANONICAL_NAME                           removeall
-#define LOCAL_generic_seq_foo                          generic_seq_removeall
-#define LOCAL_tsc_foo                                  tsc_removeall_with_key
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRemoveAllWithKey
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRemoveAllWithKeyWithError
+#define LOCAL_CANONICAL_NAME  removeall
+#define LOCAL_generic_seq_foo generic_seq_removeall
+#define LOCAL_tsc_foo         tsc_removeall_with_key
+#define LOCAL_DeeSeq_AttrFoo  RemoveAllWithKey
+#define LOCAL_DeeSeq_AttrBar  RemoveAll
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveIf)
-#define LOCAL_CANONICAL_NAME                           removeif
-#define LOCAL_generic_seq_foo                          generic_seq_removeif
-#define LOCAL_tsc_foo                                  tsc_removeif
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireRemoveIf
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultRemoveIfWithCallRemoveIfDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultRemoveIfWithCallRemoveIfDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultRemoveIfWithCallRemoveIfDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultRemoveIfWithError
+#define LOCAL_CANONICAL_NAME  removeif
+#define LOCAL_generic_seq_foo generic_seq_removeif
+#define LOCAL_tsc_foo         tsc_removeif
+#define LOCAL_DeeSeq_AttrFoo  RemoveIf
 #elif defined(DEFINE_DeeType_SeqCache_RequireResize)
-#define LOCAL_CANONICAL_NAME                           resize
-#define LOCAL_generic_seq_foo                          generic_seq_resize
-#define LOCAL_tsc_foo                                  tsc_resize
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireResize
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultResizeWithCallAttrResize
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultResizeWithCallResizeDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultResizeWithCallResizeDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultResizeWithCallResizeDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultResizeWithSizeAndTSCEraseAndTSCExtend /* Use erase() and extend() by default */
+#define LOCAL_CANONICAL_NAME             resize
+#define LOCAL_generic_seq_foo            generic_seq_resize
+#define LOCAL_tsc_foo                    tsc_resize
+#define LOCAL_DeeSeq_AttrFoo             Resize
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultResizeWithSizeAndTSCEraseAndTSCExtend /* Use erase() and extend() by default */
 #elif defined(DEFINE_DeeType_SeqCache_RequireFill)
-#define LOCAL_CANONICAL_NAME                           fill
-#define LOCAL_generic_seq_foo                          generic_seq_fill
-#define LOCAL_tsc_foo                                  tsc_fill
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireFill
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultFillWithCallAttrFill
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultFillWithCallFillDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultFillWithCallFillDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultFillWithCallFillDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultFillWithError
+#define LOCAL_CANONICAL_NAME  fill
+#define LOCAL_generic_seq_foo generic_seq_fill
+#define LOCAL_tsc_foo         tsc_fill
+#define LOCAL_DeeSeq_AttrFoo  Fill
 #elif defined(DEFINE_DeeType_SeqCache_RequireReverse)
-#define LOCAL_CANONICAL_NAME                           reverse
-#define LOCAL_generic_seq_foo                          generic_seq_reverse
-#define LOCAL_tsc_foo                                  tsc_reverse
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireReverse
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultReverseWithCallAttrReverse
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultReverseWithCallReverseDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultReverseWithCallReverseDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultReverseWithCallReverseDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultReverseWithError
+#define LOCAL_CANONICAL_NAME  reverse
+#define LOCAL_generic_seq_foo generic_seq_reverse
+#define LOCAL_tsc_foo         tsc_reverse
+#define LOCAL_DeeSeq_AttrFoo  Reverse
 #elif defined(DEFINE_DeeType_SeqCache_RequireReversed)
-#define LOCAL_CANONICAL_NAME                           reversed
-#define LOCAL_generic_seq_foo                          generic_seq_reversed
-#define LOCAL_tsc_foo                                  tsc_reversed
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireReversed
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultReversedWithCallAttrReversed
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultReversedWithCallReversedDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultReversedWithCallReversedDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultReversedWithCallReversedDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultReversedWithCopyForeachDefault
+#define LOCAL_CANONICAL_NAME             reversed
+#define LOCAL_generic_seq_foo            generic_seq_reversed
+#define LOCAL_tsc_foo                    tsc_reversed
+#define LOCAL_DeeSeq_AttrFoo             Reversed
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultReversedWithCopyForeachDefault
 #elif defined(DEFINE_DeeType_SeqCache_RequireSort)
-#define LOCAL_CANONICAL_NAME                           sort
-#define LOCAL_generic_seq_foo                          generic_seq_sort
-#define LOCAL_tsc_foo                                  tsc_sort
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireSort
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultSortWithCallAttrSort
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultSortWithCallSortDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultSortWithCallSortDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultSortWithCallSortDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortWithError
+#define LOCAL_CANONICAL_NAME  sort
+#define LOCAL_generic_seq_foo generic_seq_sort
+#define LOCAL_tsc_foo         tsc_sort
+#define LOCAL_DeeSeq_AttrFoo  Sort
 #elif defined(DEFINE_DeeType_SeqCache_RequireSortWithKey)
-#define LOCAL_CANONICAL_NAME                           sort
-#define LOCAL_generic_seq_foo                          generic_seq_sort
-#define LOCAL_tsc_foo                                  tsc_sort_with_key
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireSortWithKey
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultSortWithKeyWithCallAttrSort
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultSortWithKeyWithCallSortDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultSortWithKeyWithCallSortDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultSortWithKeyWithCallSortDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortWithKeyWithError
+#define LOCAL_CANONICAL_NAME  sort
+#define LOCAL_generic_seq_foo generic_seq_sort
+#define LOCAL_tsc_foo         tsc_sort_with_key
+#define LOCAL_DeeSeq_AttrFoo  SortWithKey
+#define LOCAL_DeeSeq_AttrBar  Sort
 #elif defined(DEFINE_DeeType_SeqCache_RequireSorted)
-#define LOCAL_CANONICAL_NAME                           sorted
-#define LOCAL_generic_seq_foo                          generic_seq_sorted
-#define LOCAL_tsc_foo                                  tsc_sorted
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireSorted
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultSortedWithCallAttrSorted
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultSortedWithCallSortedDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultSortedWithCallSortedDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultSortedWithCallSortedDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithCopyForeachDefault
+#define LOCAL_CANONICAL_NAME             sorted
+#define LOCAL_generic_seq_foo            generic_seq_sorted
+#define LOCAL_tsc_foo                    tsc_sorted
+#define LOCAL_DeeSeq_AttrFoo             Sorted
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultSortedWithCopyForeachDefault
 #elif defined(DEFINE_DeeType_SeqCache_RequireSortedWithKey)
-#define LOCAL_CANONICAL_NAME                           sorted
-#define LOCAL_generic_seq_foo                          generic_seq_sorted
-#define LOCAL_tsc_foo                                  tsc_sorted_with_key
-#define LOCAL_DeeType_SeqCache_RequireFoo              DeeType_SeqCache_RequireSortedWithKey
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrFoo         DeeSeq_DefaultSortedWithKeyWithCallAttrSorted
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod   DeeSeq_DefaultSortedWithKeyWithCallSortedDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod DeeSeq_DefaultSortedWithKeyWithCallSortedDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithError               DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault
+#define LOCAL_CANONICAL_NAME             sorted
+#define LOCAL_generic_seq_foo            generic_seq_sorted
+#define LOCAL_tsc_foo                    tsc_sorted_with_key
+#define LOCAL_DeeSeq_AttrFoo             SortedWithKey
+#define LOCAL_DeeSeq_AttrBar             Sorted
+#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault
+#elif defined(DEFINE_DeeType_SeqCache_RequireBFind)
+#define LOCAL_CANONICAL_NAME  bfind
+#define LOCAL_generic_seq_foo generic_seq_bfind
+#define LOCAL_tsc_foo         tsc_bfind
+#define LOCAL_DeeSeq_AttrFoo  BFind
+#elif defined(DEFINE_DeeType_SeqCache_RequireBFindWithKey)
+#define LOCAL_CANONICAL_NAME  bfind
+#define LOCAL_generic_seq_foo generic_seq_bfind
+#define LOCAL_tsc_foo         tsc_bfind_with_key
+#define LOCAL_DeeSeq_AttrFoo  BFindWithKey
+#define LOCAL_DeeSeq_AttrBar  BFind
+#elif defined(DEFINE_DeeType_SeqCache_RequireBPosition)
+#define LOCAL_CANONICAL_NAME  bposition
+#define LOCAL_generic_seq_foo generic_seq_bposition
+#define LOCAL_tsc_foo         tsc_bposition
+#define LOCAL_DeeSeq_AttrFoo  BPosition
+#elif defined(DEFINE_DeeType_SeqCache_RequireBPositionWithKey)
+#define LOCAL_CANONICAL_NAME  bposition
+#define LOCAL_generic_seq_foo generic_seq_bposition
+#define LOCAL_tsc_foo         tsc_bposition_with_key
+#define LOCAL_DeeSeq_AttrFoo  BPositionWithKey
+#define LOCAL_DeeSeq_AttrBar  BPosition
+#elif defined(DEFINE_DeeType_SeqCache_RequireBRange)
+#define LOCAL_CANONICAL_NAME  brange
+#define LOCAL_generic_seq_foo generic_seq_brange
+#define LOCAL_tsc_foo         tsc_brange
+#define LOCAL_DeeSeq_AttrFoo  BRange
+#elif defined(DEFINE_DeeType_SeqCache_RequireBRangeWithKey)
+#define LOCAL_CANONICAL_NAME  brange
+#define LOCAL_generic_seq_foo generic_seq_brange
+#define LOCAL_tsc_foo         tsc_brange_with_key
+#define LOCAL_DeeSeq_AttrFoo  BRangeWithKey
+#define LOCAL_DeeSeq_AttrBar  BRange
+#elif defined(DEFINE_DeeType_SeqCache_RequireBLocate)
+#define LOCAL_CANONICAL_NAME  blocate
+#define LOCAL_generic_seq_foo generic_seq_blocate
+#define LOCAL_tsc_foo         tsc_blocate
+#define LOCAL_DeeSeq_AttrFoo  BLocate
+#elif defined(DEFINE_DeeType_SeqCache_RequireBLocateWithKey)
+#define LOCAL_CANONICAL_NAME  blocate
+#define LOCAL_generic_seq_foo generic_seq_blocate
+#define LOCAL_tsc_foo         tsc_blocate_with_key
+#define LOCAL_DeeSeq_AttrFoo  BLocateWithKey
+#define LOCAL_DeeSeq_AttrBar  BLocate
 #else /* DEFINE_DeeType_SeqCache_Require... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeType_SeqCache_Require... */
 
+#ifndef LOCAL_DeeSeq_AttrBar
+#define LOCAL_DeeSeq_AttrBar LOCAL_DeeSeq_AttrFoo
+#endif /* !LOCAL_DeeSeq_AttrBar */
+
+#ifndef LOCAL_DeeType_SeqCache_RequireFoo
+#define LOCAL_DeeType_SeqCache_RequireFoo_private_uncached PP_CAT3(DeeType_SeqCache_Require, LOCAL_DeeSeq_AttrFoo, _private_uncached)
+#define LOCAL_DeeType_SeqCache_RequireFoo_uncached         PP_CAT3(DeeType_SeqCache_Require, LOCAL_DeeSeq_AttrFoo, _uncached)
+#define LOCAL_DeeType_SeqCache_RequireFoo                  PP_CAT2(DeeType_SeqCache_Require, LOCAL_DeeSeq_AttrFoo)
+#else /* !LOCAL_DeeType_SeqCache_RequireFoo */
+#ifndef LOCAL_DeeType_SeqCache_RequireFoo_private_uncached
 #define LOCAL_DeeType_SeqCache_RequireFoo_private_uncached PP_CAT2(LOCAL_DeeType_SeqCache_RequireFoo, _private_uncached)
-#define LOCAL_DeeType_SeqCache_RequireFoo_uncached         PP_CAT2(LOCAL_DeeType_SeqCache_RequireFoo, _uncached)
-#define LOCAL_Dee_tsc_foo_t                                PP_CAT3(Dee_, LOCAL_tsc_foo, _t)
+#endif /* !LOCAL_DeeType_SeqCache_RequireFoo_private_uncached */
+#ifndef LOCAL_DeeType_SeqCache_RequireFoo_uncached
+#define LOCAL_DeeType_SeqCache_RequireFoo_uncached PP_CAT2(LOCAL_DeeType_SeqCache_RequireFoo, _uncached)
+#endif /* !LOCAL_DeeType_SeqCache_RequireFoo_uncached */
+#endif /* LOCAL_DeeType_SeqCache_RequireFoo */
+
+#ifndef LOCAL_DeeSeq_DefaultFooWithCallAttrBar
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar \
+	PP_CAT4(DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCallAttr, LOCAL_DeeSeq_AttrBar)
+#endif /* !LOCAL_DeeSeq_DefaultFooWithCallAttrBar */
+#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction \
+	PP_CAT5(DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataFunction)
+#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction */
+#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod \
+	PP_CAT5(DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataMethod)
+#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod */
+#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod \
+	PP_CAT5(DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataKwMethod)
+#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod */
+#ifndef LOCAL_DeeSeq_DefaultFooWithError
+#define LOCAL_DeeSeq_DefaultFooWithError \
+	PP_CAT3(DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithError)
+#endif /* !LOCAL_DeeSeq_DefaultFooWithError */
+
+
+#ifndef LOCAL_Dee_tsc_foo_t
+#define LOCAL_Dee_tsc_foo_t PP_CAT3(Dee_, LOCAL_tsc_foo, _t)
+#endif /* !LOCAL_Dee_tsc_foo_t */
+#ifndef LOCAL_tsc_foo_data
+#define LOCAL_tsc_foo_data PP_CAT3(tsc_, LOCAL_CANONICAL_NAME, _data)
+#endif /* !LOCAL_tsc_foo_data */
+
 #define LOCAL_CANONICAL_NAME_LENGTHOF                      COMPILER_STRLEN(PP_STR(LOCAL_CANONICAL_NAME))
 #define LOCAL_CANONICAL_NAME_str                           PP_CAT2(str_, LOCAL_CANONICAL_NAME)
 #define LOCAL_CANONICAL_NAME_STR                           PP_CAT2(STR_, LOCAL_CANONICAL_NAME)
 #define LOCAL_CANONICAL_NAME_Dee_HashStr                   PP_CAT2(Dee_HashStr__, LOCAL_CANONICAL_NAME)
-#ifndef LOCAL_tsc_foo_data
-#define LOCAL_tsc_foo_data PP_CAT3(tsc_, LOCAL_CANONICAL_NAME, _data)
-#endif /* !LOCAL_tsc_foo_data */
 
 
 /* Mutable sequence functions */
@@ -400,8 +377,8 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 					return &LOCAL_DeeSeq_DefaultFooWithError;
 				atomic_write(&sc->LOCAL_tsc_foo_data.d_method, attrinfo.ai_value.v_method->m_func);
 				if (attrinfo.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
-					return &LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod;
-				return &LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod;
+					return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
+				return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
 			case Dee_ATTRINFO_ATTR:
 				ASSERT(attrinfo.ai_type == Dee_ATTRINFO_ATTR);
 				if ((attrinfo.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
@@ -416,14 +393,14 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 					if likely(callback) {
 						if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_foo_data.d_function, NULL, callback))
 							Dee_Decref(callback);
-						return &LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction;
+						return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
 					}
 				}
 				break;
 			default: break;
 			}
 		}
-		return &LOCAL_DeeSeq_DefaultFooWithCallAttrFoo;
+		return &LOCAL_DeeSeq_DefaultFooWithCallAttrBar;
 	}
 
 #ifdef DEFINE_DeeType_SeqCache_RequireFind
@@ -474,8 +451,8 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 					return &LOCAL_DeeSeq_DefaultFooWithError;
 				atomic_write(&sc->LOCAL_tsc_foo_data.d_method, attrinfo.ai_value.v_method->m_func);
 				if (attrinfo.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
-					return &LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod;
-				return &LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod;
+					return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
+				return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
 			case Dee_ATTRINFO_ATTR:
 				ASSERT(attrinfo.ai_type == Dee_ATTRINFO_ATTR);
 				if ((attrinfo.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
@@ -490,7 +467,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 					if likely(callback) {
 						if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_foo_data.d_function, NULL, callback))
 							Dee_Decref(callback);
-						return &LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction;
+						return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
 					}
 				}
 				break;
@@ -781,7 +758,80 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 	}
 	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
 		return &DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault; /* non-Default would also be OK */
+#elif defined(DEFINE_DeeType_SeqCache_RequireBFind)
+	{
+		Dee_tsc_brange_t tsc_brange;
+		tsc_brange = DeeType_SeqCache_RequireBRange_private_uncached(orig_type, self);
+		if (tsc_brange != NULL &&
+		    tsc_brange != &DeeSeq_DefaultBRangeWithError) {
+			if (tsc_brange == &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex)
+				return &DeeSeq_DefaultBFindWithSizeAndTryGetItemIndex;
+			return &DeeSeq_DefaultBFindWithTSCBRange;
+		}
+	}
+#elif defined(DEFINE_DeeType_SeqCache_RequireBFindWithKey)
+	{
+		Dee_tsc_brange_with_key_t tsc_brange_with_key;
+		tsc_brange_with_key = DeeType_SeqCache_RequireBRangeWithKey_private_uncached(orig_type, self);
+		if (tsc_brange_with_key != NULL &&
+		    tsc_brange_with_key != &DeeSeq_DefaultBRangeWithKeyWithError) {
+			if (tsc_brange_with_key == &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex)
+				return &DeeSeq_DefaultBFindWithKeyWithSizeAndTryGetItemIndex;
+			return &DeeSeq_DefaultBFindWithKeyWithTSCBRangeWithKey;
+		}
+	}
+#elif defined(DEFINE_DeeType_SeqCache_RequireBPosition)
+	{
+		Dee_tsc_brange_t tsc_brange;
+		tsc_brange = DeeType_SeqCache_RequireBRange_private_uncached(orig_type, self);
+		if (tsc_brange != NULL &&
+		    tsc_brange != &DeeSeq_DefaultBRangeWithError) {
+			if (tsc_brange == &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex)
+				return &DeeSeq_DefaultBPositionWithSizeAndTryGetItemIndex;
+			return &DeeSeq_DefaultBPositionWithTSCBRange;
+		}
+	}
+#elif defined(DEFINE_DeeType_SeqCache_RequireBPositionWithKey)
+	{
+		Dee_tsc_brange_with_key_t tsc_brange_with_key;
+		tsc_brange_with_key = DeeType_SeqCache_RequireBRangeWithKey_private_uncached(orig_type, self);
+		if (tsc_brange_with_key != NULL &&
+		    tsc_brange_with_key != &DeeSeq_DefaultBRangeWithKeyWithError) {
+			if (tsc_brange_with_key == &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex)
+				return &DeeSeq_DefaultBPositionWithKeyWithSizeAndTryGetItemIndex;
+			return &DeeSeq_DefaultBPositionWithKeyWithTSCBRangeWithKey;
+		}
+	}
+#elif defined(DEFINE_DeeType_SeqCache_RequireBRange)
+	if (DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) && DeeType_HasOperator(self, OPERATOR_SIZE))
+		return &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex;
+#elif defined(DEFINE_DeeType_SeqCache_RequireBRangeWithKey)
+	if (DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) && DeeType_HasOperator(self, OPERATOR_SIZE))
+		return &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex;
+#elif defined(DEFINE_DeeType_SeqCache_RequireBLocate)
+	{
+		Dee_tsc_bfind_t tsc_bfind;
+		tsc_bfind = DeeType_SeqCache_RequireBFind_private_uncached(orig_type, self);
+		if (tsc_bfind != NULL &&
+		    tsc_bfind != &DeeSeq_DefaultBFindWithError) {
+			if (tsc_bfind == &DeeSeq_DefaultBFindWithSizeAndTryGetItemIndex)
+				return &DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex;
+			return &DeeSeq_DefaultBLocateWithTSCBFindAndGetItemIndex;
+		}
+	}
+#elif defined(DEFINE_DeeType_SeqCache_RequireBLocateWithKey)
+	{
+		Dee_tsc_bfind_with_key_t tsc_bfind_with_key;
+		tsc_bfind_with_key = DeeType_SeqCache_RequireBFindWithKey_private_uncached(orig_type, self);
+		if (tsc_bfind_with_key != NULL &&
+		    tsc_bfind_with_key != &DeeSeq_DefaultBFindWithKeyWithError) {
+			if (tsc_bfind_with_key == &DeeSeq_DefaultBFindWithKeyWithSizeAndTryGetItemIndex)
+				return &DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex;
+			return &DeeSeq_DefaultBLocateWithKeyWithTSCBFindWithKeyAndGetItemIndex;
+		}
+	}
 #endif /* ... */
+
 	return NULL;
 }
 
@@ -817,23 +867,28 @@ LOCAL_DeeType_SeqCache_RequireFoo(DeeTypeObject *__restrict self) {
 }
 
 
-#undef LOCAL_CANONICAL_NAME
-#undef LOCAL_generic_seq_foo
-#undef LOCAL_tsc_foo
-#undef LOCAL_DeeType_SeqCache_RequireFoo
-#undef LOCAL_DeeSeq_DefaultFooWithCallAttrFoo
-#undef LOCAL_DeeSeq_DefaultFooWithCallFooDataFunction
-#undef LOCAL_DeeSeq_DefaultFooWithCallFooDataMethod
-#undef LOCAL_DeeSeq_DefaultFooWithCallFooDataKwMethod
-#undef LOCAL_DeeSeq_DefaultFooWithError
+#undef LOCAL_DeeSeq_AttrBar
 #undef LOCAL_DeeType_SeqCache_RequireFoo_private_uncached
 #undef LOCAL_DeeType_SeqCache_RequireFoo_uncached
+#undef LOCAL_DeeType_SeqCache_RequireFoo
+#undef LOCAL_DeeSeq_DefaultFooWithCallAttrBar
+#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction
+#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod
+#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod
+#undef LOCAL_DeeSeq_DefaultFooWithError
 #undef LOCAL_Dee_tsc_foo_t
 #undef LOCAL_tsc_foo_data
 #undef LOCAL_CANONICAL_NAME_LENGTHOF
 #undef LOCAL_CANONICAL_NAME_str
 #undef LOCAL_CANONICAL_NAME_STR
 #undef LOCAL_CANONICAL_NAME_Dee_HashStr
+
+
+#undef LOCAL_CANONICAL_NAME
+#undef LOCAL_generic_seq_foo
+#undef LOCAL_tsc_foo
+#undef LOCAL_DeeSeq_AttrFoo
+#undef LOCAL_DeeSeq_AttrBar
 
 DECL_END
 
@@ -865,3 +920,11 @@ DECL_END
 #undef DEFINE_DeeType_SeqCache_RequireSortWithKey
 #undef DEFINE_DeeType_SeqCache_RequireSorted
 #undef DEFINE_DeeType_SeqCache_RequireSortedWithKey
+#undef DEFINE_DeeType_SeqCache_RequireBFind
+#undef DEFINE_DeeType_SeqCache_RequireBFindWithKey
+#undef DEFINE_DeeType_SeqCache_RequireBPosition
+#undef DEFINE_DeeType_SeqCache_RequireBPositionWithKey
+#undef DEFINE_DeeType_SeqCache_RequireBRange
+#undef DEFINE_DeeType_SeqCache_RequireBRangeWithKey
+#undef DEFINE_DeeType_SeqCache_RequireBLocate
+#undef DEFINE_DeeType_SeqCache_RequireBLocateWithKey

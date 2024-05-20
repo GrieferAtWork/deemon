@@ -139,6 +139,10 @@ local STRINGS = {
 	"popfront",
 	"popback",
 	"frozen",
+	"bfind",
+	"bposition",
+	"brange",
+	"blocate",
 
 	"revert",
 	"advance",
@@ -516,6 +520,18 @@ DEF_STRING(str_popback, "popback", 0xd84577aa, 0xb77f74a49a9cc289)
 #define Dee_HashStr__frozen _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)
 DEF_STRING(str_frozen, "frozen", 0x82311b77, 0x7b55e2e6e642b6fd)
 #define STR_frozen DeeString_STR(&str_frozen)
+#define Dee_HashStr__bfind _Dee_HashSelectC(0xdb39cc6c, 0x5ec07aef149314c7)
+DEF_STRING(str_bfind, "bfind", 0xdb39cc6c, 0x5ec07aef149314c7)
+#define STR_bfind DeeString_STR(&str_bfind)
+#define Dee_HashStr__bposition _Dee_HashSelectC(0xba99f013, 0xc8f6389c9f293cb2)
+DEF_STRING(str_bposition, "bposition", 0xba99f013, 0xc8f6389c9f293cb2)
+#define STR_bposition DeeString_STR(&str_bposition)
+#define Dee_HashStr__brange _Dee_HashSelectC(0xb132222e, 0xfed8bb16d0ac0dd2)
+DEF_STRING(str_brange, "brange", 0xb132222e, 0xfed8bb16d0ac0dd2)
+#define STR_brange DeeString_STR(&str_brange)
+#define Dee_HashStr__blocate _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e)
+DEF_STRING(str_blocate, "blocate", 0x7aa979d3, 0xbda91c237d69489e)
+#define STR_blocate DeeString_STR(&str_blocate)
 #define Dee_HashStr__revert _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2)
 DEF_STRING(str_revert, "revert", 0x98ca826, 0x626b4fca0d39dcf2)
 #define STR_revert DeeString_STR(&str_revert)

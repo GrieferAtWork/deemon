@@ -696,15 +696,6 @@
 		<ClInclude Include="..\src\deemon\objects\int_logic.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\bsearch-impl.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\bsearch.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\bsearch.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
@@ -715,6 +706,9 @@
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-attrproxy-impl.c.inl">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-bsearch-impl.c.inl">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-require-impl.c.inl">
@@ -1258,9 +1252,6 @@
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq.c">
 			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\bsearch.c">
-			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\byattr.c">
 			<Filter>src\objects\seq</Filter>

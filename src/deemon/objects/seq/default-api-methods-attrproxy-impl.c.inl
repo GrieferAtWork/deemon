@@ -35,125 +35,54 @@ DECL_BEGIN
 #endif /* DEFINE_DeeSeq_Default... */
 
 #ifdef DEFINE_DeeSeq_DefaultFooWithCallAttrFoo
-#define LOCAL_DeeSeq_DefaultFindWithCallAttrFind                  DeeSeq_DefaultFindWithCallAttrFind
-#define LOCAL_DeeSeq_DefaultFindWithKeyWithCallAttrFind           DeeSeq_DefaultFindWithKeyWithCallAttrFind
-#define LOCAL_DeeSeq_DefaultRFindWithCallAttrRFind                DeeSeq_DefaultRFindWithCallAttrRFind
-#define LOCAL_DeeSeq_DefaultRFindWithKeyWithCallAttrRFind         DeeSeq_DefaultRFindWithKeyWithCallAttrRFind
-#define LOCAL_DeeSeq_DefaultEraseWithCallAttrErase                DeeSeq_DefaultEraseWithCallAttrErase
-#define LOCAL_DeeSeq_DefaultInsertWithCallAttrInsert              DeeSeq_DefaultInsertWithCallAttrInsert
-#define LOCAL_DeeSeq_DefaultInsertAllWithCallAttrInsertAll        DeeSeq_DefaultInsertAllWithCallAttrInsertAll
-#define LOCAL_DeeSeq_DefaultPushFrontWithCallAttrPushFront        DeeSeq_DefaultPushFrontWithCallAttrPushFront
-#define LOCAL_DeeSeq_DefaultAppendWithCallAttrAppend              DeeSeq_DefaultAppendWithCallAttrAppend
-#define LOCAL_DeeSeq_DefaultAppendWithCallAttrPushBack            DeeSeq_DefaultAppendWithCallAttrPushBack
-#define LOCAL_DeeSeq_DefaultExtendWithCallAttrExtend              DeeSeq_DefaultExtendWithCallAttrExtend
-#define LOCAL_DeeSeq_DefaultXchItemIndexWithCallAttrXchItem       DeeSeq_DefaultXchItemIndexWithCallAttrXchItem
-#define LOCAL_DeeSeq_DefaultClearWithCallAttrClear                DeeSeq_DefaultClearWithCallAttrClear
-#define LOCAL_DeeSeq_DefaultPopWithCallAttrPop                    DeeSeq_DefaultPopWithCallAttrPop
-#define LOCAL_DeeSeq_DefaultRemoveWithCallAttrRemove              DeeSeq_DefaultRemoveWithCallAttrRemove
-#define LOCAL_DeeSeq_DefaultRemoveWithKeyWithCallAttrRemove       DeeSeq_DefaultRemoveWithKeyWithCallAttrRemove
-#define LOCAL_DeeSeq_DefaultRRemoveWithCallAttrRRemove            DeeSeq_DefaultRRemoveWithCallAttrRRemove
-#define LOCAL_DeeSeq_DefaultRRemoveWithKeyWithCallAttrRRemove     DeeSeq_DefaultRRemoveWithKeyWithCallAttrRRemove
-#define LOCAL_DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll        DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll
-#define LOCAL_DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll
-#define LOCAL_DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf          DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf
-#define LOCAL_DeeSeq_DefaultResizeWithCallAttrResize              DeeSeq_DefaultResizeWithCallAttrResize
-#define LOCAL_DeeSeq_DefaultFillWithCallAttrFill                  DeeSeq_DefaultFillWithCallAttrFill
-#define LOCAL_DeeSeq_DefaultReverseWithCallAttrReverse            DeeSeq_DefaultReverseWithCallAttrReverse
-#define LOCAL_DeeSeq_DefaultReversedWithCallAttrReversed          DeeSeq_DefaultReversedWithCallAttrReversed
-#define LOCAL_DeeSeq_DefaultSortWithCallAttrSort                  DeeSeq_DefaultSortWithCallAttrSort
-#define LOCAL_DeeSeq_DefaultSortWithKeyWithCallAttrSort           DeeSeq_DefaultSortWithKeyWithCallAttrSort
-#define LOCAL_DeeSeq_DefaultSortedWithCallAttrSorted              DeeSeq_DefaultSortedWithCallAttrSorted
-#define LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted       DeeSeq_DefaultSortedWithKeyWithCallAttrSorted
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar) PP_CAT4(DeeSeq_Default, Foo, WithCallAttr, Bar)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataFunction)
-#define LOCAL_DeeSeq_DefaultFindWithCallAttrFind                  DeeSeq_DefaultFindWithCallFindDataFunction
-#define LOCAL_DeeSeq_DefaultFindWithKeyWithCallAttrFind           DeeSeq_DefaultFindWithKeyWithCallFindDataFunction
-#define LOCAL_DeeSeq_DefaultRFindWithCallAttrRFind                DeeSeq_DefaultRFindWithCallRFindDataFunction
-#define LOCAL_DeeSeq_DefaultRFindWithKeyWithCallAttrRFind         DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction
-#define LOCAL_DeeSeq_DefaultEraseWithCallAttrErase                DeeSeq_DefaultEraseWithCallEraseDataFunction
-#define LOCAL_DeeSeq_DefaultInsertWithCallAttrInsert              DeeSeq_DefaultInsertWithCallInsertDataFunction
-#define LOCAL_DeeSeq_DefaultInsertAllWithCallAttrInsertAll        DeeSeq_DefaultInsertAllWithCallInsertAllDataFunction
-#define LOCAL_DeeSeq_DefaultPushFrontWithCallAttrPushFront        DeeSeq_DefaultPushFrontWithCallPushFrontDataFunction
-#define LOCAL_DeeSeq_DefaultAppendWithCallAttrAppend              DeeSeq_DefaultAppendWithCallAppendDataFunction
-#define LOCAL_DeeSeq_DefaultExtendWithCallAttrExtend              DeeSeq_DefaultExtendWithCallExtendDataFunction
-#define LOCAL_DeeSeq_DefaultXchItemIndexWithCallAttrXchItem       DeeSeq_DefaultXchItemIndexWithCallXchItemIndexDataFunction
-#define LOCAL_DeeSeq_DefaultClearWithCallAttrClear                DeeSeq_DefaultClearWithCallClearDataFunction
-#define LOCAL_DeeSeq_DefaultPopWithCallAttrPop                    DeeSeq_DefaultPopWithCallPopDataFunction
-#define LOCAL_DeeSeq_DefaultRemoveWithCallAttrRemove              DeeSeq_DefaultRemoveWithCallRemoveDataFunction
-#define LOCAL_DeeSeq_DefaultRemoveWithKeyWithCallAttrRemove       DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataFunction
-#define LOCAL_DeeSeq_DefaultRRemoveWithCallAttrRRemove            DeeSeq_DefaultRRemoveWithCallRRemoveDataFunction
-#define LOCAL_DeeSeq_DefaultRRemoveWithKeyWithCallAttrRRemove     DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataFunction
-#define LOCAL_DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll        DeeSeq_DefaultRemoveAllWithCallRemoveAllDataFunction
-#define LOCAL_DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataFunction
-#define LOCAL_DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf          DeeSeq_DefaultRemoveIfWithCallRemoveIfDataFunction
-#define LOCAL_DeeSeq_DefaultResizeWithCallAttrResize              DeeSeq_DefaultResizeWithCallResizeDataFunction
-#define LOCAL_DeeSeq_DefaultFillWithCallAttrFill                  DeeSeq_DefaultFillWithCallFillDataFunction
-#define LOCAL_DeeSeq_DefaultReverseWithCallAttrReverse            DeeSeq_DefaultReverseWithCallReverseDataFunction
-#define LOCAL_DeeSeq_DefaultReversedWithCallAttrReversed          DeeSeq_DefaultReversedWithCallReversedDataFunction
-#define LOCAL_DeeSeq_DefaultSortWithCallAttrSort                  DeeSeq_DefaultSortWithCallSortDataFunction
-#define LOCAL_DeeSeq_DefaultSortWithKeyWithCallAttrSort           DeeSeq_DefaultSortWithKeyWithCallSortDataFunction
-#define LOCAL_DeeSeq_DefaultSortedWithCallAttrSorted              DeeSeq_DefaultSortedWithCallSortedDataFunction
-#define LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted       DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar) PP_CAT5(DeeSeq_Default, Foo, WithCall, Bar, DataFunction)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataMethod)
-#define LOCAL_DeeSeq_DefaultFindWithCallAttrFind                  DeeSeq_DefaultFindWithCallFindDataMethod
-#define LOCAL_DeeSeq_DefaultFindWithKeyWithCallAttrFind           DeeSeq_DefaultFindWithKeyWithCallFindDataMethod
-#define LOCAL_DeeSeq_DefaultRFindWithCallAttrRFind                DeeSeq_DefaultRFindWithCallRFindDataMethod
-#define LOCAL_DeeSeq_DefaultRFindWithKeyWithCallAttrRFind         DeeSeq_DefaultRFindWithKeyWithCallRFindDataMethod
-#define LOCAL_DeeSeq_DefaultEraseWithCallAttrErase                DeeSeq_DefaultEraseWithCallEraseDataMethod
-#define LOCAL_DeeSeq_DefaultInsertWithCallAttrInsert              DeeSeq_DefaultInsertWithCallInsertDataMethod
-#define LOCAL_DeeSeq_DefaultInsertAllWithCallAttrInsertAll        DeeSeq_DefaultInsertAllWithCallInsertAllDataMethod
-#define LOCAL_DeeSeq_DefaultPushFrontWithCallAttrPushFront        DeeSeq_DefaultPushFrontWithCallPushFrontDataMethod
-#define LOCAL_DeeSeq_DefaultAppendWithCallAttrAppend              DeeSeq_DefaultAppendWithCallAppendDataMethod
-#define LOCAL_DeeSeq_DefaultExtendWithCallAttrExtend              DeeSeq_DefaultExtendWithCallExtendDataMethod
-#define LOCAL_DeeSeq_DefaultXchItemIndexWithCallAttrXchItem       DeeSeq_DefaultXchItemIndexWithCallXchItemIndexDataMethod
-#define LOCAL_DeeSeq_DefaultClearWithCallAttrClear                DeeSeq_DefaultClearWithCallClearDataMethod
-#define LOCAL_DeeSeq_DefaultPopWithCallAttrPop                    DeeSeq_DefaultPopWithCallPopDataMethod
-#define LOCAL_DeeSeq_DefaultRemoveWithCallAttrRemove              DeeSeq_DefaultRemoveWithCallRemoveDataMethod
-#define LOCAL_DeeSeq_DefaultRemoveWithKeyWithCallAttrRemove       DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataMethod
-#define LOCAL_DeeSeq_DefaultRRemoveWithCallAttrRRemove            DeeSeq_DefaultRRemoveWithCallRRemoveDataMethod
-#define LOCAL_DeeSeq_DefaultRRemoveWithKeyWithCallAttrRRemove     DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataMethod
-#define LOCAL_DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll        DeeSeq_DefaultRemoveAllWithCallRemoveAllDataMethod
-#define LOCAL_DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataMethod
-#define LOCAL_DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf          DeeSeq_DefaultRemoveIfWithCallRemoveIfDataMethod
-#define LOCAL_DeeSeq_DefaultResizeWithCallAttrResize              DeeSeq_DefaultResizeWithCallResizeDataMethod
-#define LOCAL_DeeSeq_DefaultFillWithCallAttrFill                  DeeSeq_DefaultFillWithCallFillDataMethod
-#define LOCAL_DeeSeq_DefaultReverseWithCallAttrReverse            DeeSeq_DefaultReverseWithCallReverseDataMethod
-#define LOCAL_DeeSeq_DefaultReversedWithCallAttrReversed          DeeSeq_DefaultReversedWithCallReversedDataMethod
-#define LOCAL_DeeSeq_DefaultSortWithCallAttrSort                  DeeSeq_DefaultSortWithCallSortDataMethod
-#define LOCAL_DeeSeq_DefaultSortWithKeyWithCallAttrSort           DeeSeq_DefaultSortWithKeyWithCallSortDataMethod
-#define LOCAL_DeeSeq_DefaultSortedWithCallAttrSorted              DeeSeq_DefaultSortedWithCallSortedDataMethod
-#define LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted       DeeSeq_DefaultSortedWithKeyWithCallSortedDataMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar) PP_CAT5(DeeSeq_Default, Foo, WithCall, Bar, DataMethod)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataKwMethod)
-#define LOCAL_DeeSeq_DefaultFindWithCallAttrFind                  DeeSeq_DefaultFindWithCallFindDataKwMethod
-#define LOCAL_DeeSeq_DefaultFindWithKeyWithCallAttrFind           DeeSeq_DefaultFindWithKeyWithCallFindDataKwMethod
-#define LOCAL_DeeSeq_DefaultRFindWithCallAttrRFind                DeeSeq_DefaultRFindWithCallRFindDataKwMethod
-#define LOCAL_DeeSeq_DefaultRFindWithKeyWithCallAttrRFind         DeeSeq_DefaultRFindWithKeyWithCallRFindDataKwMethod
-#define LOCAL_DeeSeq_DefaultEraseWithCallAttrErase                DeeSeq_DefaultEraseWithCallEraseDataKwMethod
-#define LOCAL_DeeSeq_DefaultInsertWithCallAttrInsert              DeeSeq_DefaultInsertWithCallInsertDataKwMethod
-#define LOCAL_DeeSeq_DefaultInsertAllWithCallAttrInsertAll        DeeSeq_DefaultInsertAllWithCallInsertAllDataKwMethod
-#define LOCAL_DeeSeq_DefaultPushFrontWithCallAttrPushFront        DeeSeq_DefaultPushFrontWithCallPushFrontDataKwMethod
-#define LOCAL_DeeSeq_DefaultAppendWithCallAttrAppend              DeeSeq_DefaultAppendWithCallAppendDataKwMethod
-#define LOCAL_DeeSeq_DefaultExtendWithCallAttrExtend              DeeSeq_DefaultExtendWithCallExtendDataKwMethod
-#define LOCAL_DeeSeq_DefaultXchItemIndexWithCallAttrXchItem       DeeSeq_DefaultXchItemIndexWithCallXchItemIndexDataKwMethod
-#define LOCAL_DeeSeq_DefaultClearWithCallAttrClear                DeeSeq_DefaultClearWithCallClearDataKwMethod
-#define LOCAL_DeeSeq_DefaultPopWithCallAttrPop                    DeeSeq_DefaultPopWithCallPopDataKwMethod
-#define LOCAL_DeeSeq_DefaultRemoveWithCallAttrRemove              DeeSeq_DefaultRemoveWithCallRemoveDataKwMethod
-#define LOCAL_DeeSeq_DefaultRemoveWithKeyWithCallAttrRemove       DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataKwMethod
-#define LOCAL_DeeSeq_DefaultRRemoveWithCallAttrRRemove            DeeSeq_DefaultRRemoveWithCallRRemoveDataKwMethod
-#define LOCAL_DeeSeq_DefaultRRemoveWithKeyWithCallAttrRRemove     DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataKwMethod
-#define LOCAL_DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll        DeeSeq_DefaultRemoveAllWithCallRemoveAllDataKwMethod
-#define LOCAL_DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataKwMethod
-#define LOCAL_DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf          DeeSeq_DefaultRemoveIfWithCallRemoveIfDataKwMethod
-#define LOCAL_DeeSeq_DefaultResizeWithCallAttrResize              DeeSeq_DefaultResizeWithCallResizeDataKwMethod
-#define LOCAL_DeeSeq_DefaultFillWithCallAttrFill                  DeeSeq_DefaultFillWithCallFillDataKwMethod
-#define LOCAL_DeeSeq_DefaultReverseWithCallAttrReverse            DeeSeq_DefaultReverseWithCallReverseDataKwMethod
-#define LOCAL_DeeSeq_DefaultReversedWithCallAttrReversed          DeeSeq_DefaultReversedWithCallReversedDataKwMethod
-#define LOCAL_DeeSeq_DefaultSortWithCallAttrSort                  DeeSeq_DefaultSortWithCallSortDataKwMethod
-#define LOCAL_DeeSeq_DefaultSortWithKeyWithCallAttrSort           DeeSeq_DefaultSortWithKeyWithCallSortDataKwMethod
-#define LOCAL_DeeSeq_DefaultSortedWithCallAttrSorted              DeeSeq_DefaultSortedWithCallSortedDataKwMethod
-#define LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted       DeeSeq_DefaultSortedWithKeyWithCallSortedDataKwMethod
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar) PP_CAT5(DeeSeq_Default, Foo, WithCall, Bar, DataKwMethod)
 #else /* DEFINE_DeeSeq_Default... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeSeq_Default... */
+
+#define LOCAL_DeeSeq_DefaultFindWithCallAttrFind                  LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Find, Find)
+#define LOCAL_DeeSeq_DefaultFindWithKeyWithCallAttrFind           LOCAL_DeeSeq_DefaultFooWithCallAttrBar(FindWithKey, Find)
+#define LOCAL_DeeSeq_DefaultRFindWithCallAttrRFind                LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RFind, RFind)
+#define LOCAL_DeeSeq_DefaultRFindWithKeyWithCallAttrRFind         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RFindWithKey, RFind)
+#define LOCAL_DeeSeq_DefaultEraseWithCallAttrErase                LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Erase, Erase)
+#define LOCAL_DeeSeq_DefaultInsertWithCallAttrInsert              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Insert, Insert)
+#define LOCAL_DeeSeq_DefaultInsertAllWithCallAttrInsertAll        LOCAL_DeeSeq_DefaultFooWithCallAttrBar(InsertAll, InsertAll)
+#define LOCAL_DeeSeq_DefaultPushFrontWithCallAttrPushFront        LOCAL_DeeSeq_DefaultFooWithCallAttrBar(PushFront, PushFront)
+#define LOCAL_DeeSeq_DefaultAppendWithCallAttrAppend              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Append, Append)
+#define LOCAL_DeeSeq_DefaultAppendWithCallAttrPushBack            LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Append, PushBack)
+#define LOCAL_DeeSeq_DefaultExtendWithCallAttrExtend              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Extend, Extend)
+#define LOCAL_DeeSeq_DefaultXchItemIndexWithCallAttrXchItem       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(XchItemIndex, XchItem)
+#define LOCAL_DeeSeq_DefaultClearWithCallAttrClear                LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Clear, Clear)
+#define LOCAL_DeeSeq_DefaultPopWithCallAttrPop                    LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Pop, Pop)
+#define LOCAL_DeeSeq_DefaultRemoveWithCallAttrRemove              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Remove, Remove)
+#define LOCAL_DeeSeq_DefaultRemoveWithKeyWithCallAttrRemove       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RemoveWithKey, Remove)
+#define LOCAL_DeeSeq_DefaultRRemoveWithCallAttrRRemove            LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RRemove, RRemove)
+#define LOCAL_DeeSeq_DefaultRRemoveWithKeyWithCallAttrRRemove     LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RRemoveWithKey, RRemove)
+#define LOCAL_DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll        LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RemoveAll, RemoveAll)
+#define LOCAL_DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RemoveAllWithKey, RemoveAll)
+#define LOCAL_DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf          LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RemoveIf, RemoveIf)
+#define LOCAL_DeeSeq_DefaultResizeWithCallAttrResize              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Resize, Resize)
+#define LOCAL_DeeSeq_DefaultFillWithCallAttrFill                  LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Fill, Fill)
+#define LOCAL_DeeSeq_DefaultReverseWithCallAttrReverse            LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Reverse, Reverse)
+#define LOCAL_DeeSeq_DefaultReversedWithCallAttrReversed          LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Reversed, Reversed)
+#define LOCAL_DeeSeq_DefaultSortWithCallAttrSort                  LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Sort, Sort)
+#define LOCAL_DeeSeq_DefaultSortWithKeyWithCallAttrSort           LOCAL_DeeSeq_DefaultFooWithCallAttrBar(SortWithKey, Sort)
+#define LOCAL_DeeSeq_DefaultSortedWithCallAttrSorted              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Sorted, Sorted)
+#define LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(SortedWithKey, Sorted)
+#define LOCAL_DeeSeq_DefaultBFindWithCallAttrBFind                LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BFind, BFind)
+#define LOCAL_DeeSeq_DefaultBFindWithKeyWithCallAttrBFind         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BFindWithKey, BFind)
+#define LOCAL_DeeSeq_DefaultBPositionWithCallAttrBPosition        LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BPosition, BPosition)
+#define LOCAL_DeeSeq_DefaultBPositionWithKeyWithCallAttrBPosition LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BPositionWithKey, BPosition)
+#define LOCAL_DeeSeq_DefaultBRangeWithCallAttrBRange              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BRange, BRange)
+#define LOCAL_DeeSeq_DefaultBRangeWithKeyWithCallAttrBRange       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BRangeWithKey, BRange)
+#define LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate            LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BLocate, BLocate)
+#define LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate     LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BLocateWithKey, BLocate)
 
 
 
@@ -188,50 +117,78 @@ DECL_BEGIN
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 LOCAL_DeeSeq_DefaultFindWithCallAttrFind(DeeObject *self, DeeObject *item, size_t start, size_t end) {
+	int temp;
+	Dee_ssize_t result_index;
 	DREF DeeObject *result;
 	result = LOCAL_DeeObject_CallAttrf(self, tsc_find_data, &str_find, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
+	temp = DeeObject_AsSSize(result, &result_index);
 	Dee_Decref(result);
-	return 0;
+	if unlikely(temp)
+		goto err;
+	if unlikely(result_index == Dee_COMPARE_ERR)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return (size_t)result_index;
 err:
-	return (size_t)-1;
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 LOCAL_DeeSeq_DefaultFindWithKeyWithCallAttrFind(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	int temp;
+	Dee_ssize_t result_index;
 	DREF DeeObject *result;
 	result = LOCAL_DeeObject_CallAttrf(self, tsc_find_data, &str_find, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
+	temp = DeeObject_AsSSize(result, &result_index);
 	Dee_Decref(result);
-	return 0;
+	if unlikely(temp)
+		goto err;
+	if unlikely(result_index == Dee_COMPARE_ERR)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return (size_t)result_index;
 err:
-	return (size_t)-1;
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 LOCAL_DeeSeq_DefaultRFindWithCallAttrRFind(DeeObject *self, DeeObject *item, size_t start, size_t end) {
+	int temp;
+	Dee_ssize_t result_index;
 	DREF DeeObject *result;
 	result = LOCAL_DeeObject_CallAttrf(self, tsc_rfind_data, &str_rfind, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
+	temp = DeeObject_AsSSize(result, &result_index);
 	Dee_Decref(result);
-	return 0;
+	if unlikely(temp)
+		goto err;
+	if unlikely(result_index == Dee_COMPARE_ERR)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return (size_t)result_index;
 err:
-	return (size_t)-1;
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 LOCAL_DeeSeq_DefaultRFindWithKeyWithCallAttrRFind(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	int temp;
+	Dee_ssize_t result_index;
 	DREF DeeObject *result;
 	result = LOCAL_DeeObject_CallAttrf(self, tsc_rfind_data, &str_rfind, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
+	temp = DeeObject_AsSSize(result, &result_index);
 	Dee_Decref(result);
-	return 0;
+	if unlikely(temp)
+		goto err;
+	if unlikely(result_index == Dee_COMPARE_ERR)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return (size_t)result_index;
 err:
-	return (size_t)-1;
+	return (size_t)Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -322,7 +279,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultXchItemIndexWithCallAttrXchItem(DeeObject *self, size_t index, DeeObject *value) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_xchitem_index_data, &str_xchitem, PCKuSIZ "o", index, value);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_xchitem_data, &str_xchitem, PCKuSIZ "o", index, value);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -549,6 +506,154 @@ LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted(DeeObject *self, size_t star
 	                                 PCKuSIZ PCKuSIZ "o", start, end, key);
 }
 
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+LOCAL_DeeSeq_DefaultBFindWithCallAttrBFind(DeeObject *self, DeeObject *item,
+                                           size_t start, size_t end) {
+	int temp;
+	size_t result_index;
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_bfind_data, &str_bfind, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	if unlikely(!result)
+		goto err;
+	if (DeeNone_Check(result)) {
+		Dee_DecrefNokill(Dee_None);
+		return (size_t)-1;
+	}
+	temp = DeeObject_AsSize(result, &result_index);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto err;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return (size_t)result_index;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+LOCAL_DeeSeq_DefaultBFindWithKeyWithCallAttrBFind(DeeObject *self, DeeObject *item,
+                                                  size_t start, size_t end, DeeObject *key) {
+	int temp;
+	size_t result_index;
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_bfind_data, &str_bfind, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	if unlikely(!result)
+		goto err;
+	if (DeeNone_Check(result)) {
+		Dee_DecrefNokill(Dee_None);
+		return (size_t)-1;
+	}
+	temp = DeeObject_AsSize(result, &result_index);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto err;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return (size_t)result_index;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+LOCAL_DeeSeq_DefaultBPositionWithCallAttrBPosition(DeeObject *self, DeeObject *item,
+                                                   size_t start, size_t end) {
+	int temp;
+	size_t result_index;
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_bposition_data, &str_bposition, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	if unlikely(!result)
+		goto err;
+	temp = DeeObject_AsSize(result, &result_index);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto err;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return (size_t)result_index;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+LOCAL_DeeSeq_DefaultBPositionWithKeyWithCallAttrBPosition(DeeObject *self, DeeObject *item,
+                                                          size_t start, size_t end, DeeObject *key) {
+	int temp;
+	size_t result_index;
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_bposition_data, &str_bposition, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	if unlikely(!result)
+		goto err;
+	temp = DeeObject_AsSize(result, &result_index);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto err;
+	if unlikely(result_index == (size_t)Dee_COMPARE_ERR)
+		err_integer_overflow_i(sizeof(size_t) * 8, true);
+	return (size_t)result_index;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+LOCAL_DeeSeq_DefaultBRangeWithCallAttrBRange(DeeObject *self, DeeObject *item,
+                                             size_t start, size_t end, size_t result_range[2]) {
+	int temp;
+	DREF DeeObject *result, *result_range_objs[2];
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_brange_data, &str_brange, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	if unlikely(!result)
+		goto err;
+	temp = DeeObject_Unpack(result, 2, result_range_objs);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto err;
+	temp = DeeObject_AsSize(result_range_objs[0], &result_range[0]);
+	if likely(temp == 0)
+		temp = DeeObject_AsSize(result_range_objs[1], &result_range[1]);
+	Dee_Decrefv(result_range_objs, 2);
+	if unlikely(temp)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5, 6)) int DCALL
+LOCAL_DeeSeq_DefaultBRangeWithKeyWithCallAttrBRange(DeeObject *self, DeeObject *item,
+                                                    size_t start, size_t end, DeeObject *key,
+                                                    size_t result_range[2]) {
+	int temp;
+	DREF DeeObject *result, *result_range_objs[2];
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_brange_data, &str_brange, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	if unlikely(!result)
+		goto err;
+	temp = DeeObject_Unpack(result, 2, result_range_objs);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto err;
+	temp = DeeObject_AsSize(result_range_objs[0], &result_range[0]);
+	if likely(temp == 0)
+		temp = DeeObject_AsSize(result_range_objs[1], &result_range[1]);
+	Dee_Decrefv(result_range_objs, 2);
+	if unlikely(temp)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate(DeeObject *self, DeeObject *item,
+                                               size_t start, size_t end) {
+	return LOCAL_DeeObject_CallAttrf(self, tsc_blocate_data, &str_blocate, "o" PCKuSIZ PCKuSIZ, item, start, end);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate(DeeObject *self, DeeObject *item,
+                                                      size_t start, size_t end, DeeObject *key) {
+	return LOCAL_DeeObject_CallAttrf(self, tsc_blocate_data, &str_blocate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+}
+
+
 #undef LOCAL_DeeObject_CallAttr
 #undef LOCAL_DeeObject_CallAttrf
 
@@ -581,6 +686,16 @@ LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted(DeeObject *self, size_t star
 #undef LOCAL_DeeSeq_DefaultSortWithKeyWithCallAttrSort
 #undef LOCAL_DeeSeq_DefaultSortedWithCallAttrSorted
 #undef LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted
+#undef LOCAL_DeeSeq_DefaultBFindWithCallAttrBFind
+#undef LOCAL_DeeSeq_DefaultBFindWithKeyWithCallAttrBFind
+#undef LOCAL_DeeSeq_DefaultBPositionWithCallAttrBPosition
+#undef LOCAL_DeeSeq_DefaultBPositionWithKeyWithCallAttrBPosition
+#undef LOCAL_DeeSeq_DefaultBRangeWithCallAttrBRange
+#undef LOCAL_DeeSeq_DefaultBRangeWithKeyWithCallAttrBRange
+#undef LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate
+#undef LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate
+
+#undef LOCAL_DeeSeq_DefaultFooWithCallAttrBar
 
 DECL_END
 

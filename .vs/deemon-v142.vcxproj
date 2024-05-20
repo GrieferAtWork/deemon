@@ -241,13 +241,11 @@
 		<ClInclude Include="..\src\deemon\objects\gc_inspect.h" />
 		<ClInclude Include="..\src\deemon\objects\int-8bit.h" />
 		<ClInclude Include="..\src\deemon\objects\int_logic.h" />
-		<ClInclude Include="..\src\deemon\objects\seq\bsearch-impl.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\bsearch.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\bsearch.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\combinations.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\concat.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-attrproxy-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-bsearch-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-require-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api.h" />
@@ -430,7 +428,6 @@
 		<ClCompile Include="..\src\deemon\objects\rodict.c" />
 		<ClCompile Include="..\src\deemon\objects\roset.c" />
 		<ClCompile Include="..\src\deemon\objects\seq.c" />
-		<ClCompile Include="..\src\deemon\objects\seq\bsearch.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\byattr.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\combinations.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\concat.c" />

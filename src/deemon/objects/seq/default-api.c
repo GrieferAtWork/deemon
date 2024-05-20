@@ -135,8 +135,8 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 		Dee_tsc_uslot_fini_function(&self->tsc_append_data);
 	if (self->tsc_extend == &DeeSeq_DefaultExtendWithCallExtendDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_extend_data);
-	if (self->tsc_xchitem_index == &DeeSeq_DefaultXchItemIndexWithCallXchItemIndexDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_xchitem_index_data);
+	if (self->tsc_xchitem_index == &DeeSeq_DefaultXchItemIndexWithCallXchItemDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_xchitem_data);
 	if (self->tsc_clear == &DeeSeq_DefaultClearWithCallClearDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_clear_data);
 	if (self->tsc_pop == &DeeSeq_DefaultPopWithCallPopDataFunction)
