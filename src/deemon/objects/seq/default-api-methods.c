@@ -77,10 +77,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_find_t DCALL DeeType_SeqCache_RequireFin
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_find_with_key_t DCALL DeeType_SeqCache_RequireFindWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_rfind_t DCALL DeeType_SeqCache_RequireRFind_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_rfind_with_key_t DCALL DeeType_SeqCache_RequireRFindWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_index_t DCALL DeeType_SeqCache_RequireIndex_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_index_with_key_t DCALL DeeType_SeqCache_RequireIndexWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_rindex_t DCALL DeeType_SeqCache_RequireRIndex_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_rindex_with_key_t DCALL DeeType_SeqCache_RequireRIndexWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_erase_t DCALL DeeType_SeqCache_RequireErase_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_insert_t DCALL DeeType_SeqCache_RequireInsert_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_insertall_t DCALL DeeType_SeqCache_RequireInsertAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
@@ -110,10 +106,6 @@ PRIVATE WUNUSED NONNULL((1)) Dee_tsc_find_t DCALL DeeType_SeqCache_RequireFind_u
 PRIVATE WUNUSED NONNULL((1)) Dee_tsc_find_with_key_t DCALL DeeType_SeqCache_RequireFindWithKey_uncached(DeeTypeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) Dee_tsc_rfind_t DCALL DeeType_SeqCache_RequireRFind_uncached(DeeTypeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) Dee_tsc_rfind_with_key_t DCALL DeeType_SeqCache_RequireRFindWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_index_t DCALL DeeType_SeqCache_RequireIndex_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_index_with_key_t DCALL DeeType_SeqCache_RequireIndexWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_rindex_t DCALL DeeType_SeqCache_RequireRIndex_uncached(DeeTypeObject *__restrict self);
-PRIVATE WUNUSED NONNULL((1)) Dee_tsc_rindex_with_key_t DCALL DeeType_SeqCache_RequireRIndexWithKey_uncached(DeeTypeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) Dee_tsc_erase_t DCALL DeeType_SeqCache_RequireErase_uncached(DeeTypeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) Dee_tsc_insert_t DCALL DeeType_SeqCache_RequireInsert_uncached(DeeTypeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) Dee_tsc_insertall_t DCALL DeeType_SeqCache_RequireInsertAll_uncached(DeeTypeObject *__restrict self);
@@ -429,74 +421,6 @@ err:
 	return (size_t)Dee_COMPARE_ERR;
 }
 
-
-
-
-
-
-/************************************************************************/
-/* index()                                                              */
-/************************************************************************/
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultIndexWithTSCFind(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	size_t result = (*DeeType_SeqCache_RequireFind(Dee_TYPE(self)))(self, item, start, end);
-	if unlikely(result == (size_t)-1) {
-		err_item_not_found(self, item);
-		result = (size_t)Dee_COMPARE_ERR;
-	}
-	return result;
-}
-
-
-
-
-
-/************************************************************************/
-/* index() (with key)                                                   */
-/************************************************************************/
-INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-DeeSeq_DefaultIndexWithKeyWithTSCFindWithKey(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	size_t result = (*DeeType_SeqCache_RequireFindWithKey(Dee_TYPE(self)))(self, item, start, end, key);
-	if unlikely(result == (size_t)-1) {
-		err_item_not_found(self, item);
-		result = (size_t)Dee_COMPARE_ERR;
-	}
-	return result;
-}
-
-
-
-
-
-/************************************************************************/
-/* rindex()                                                              */
-/************************************************************************/
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeSeq_DefaultRIndexWithTSCRFind(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	size_t result = (*DeeType_SeqCache_RequireRFind(Dee_TYPE(self)))(self, item, start, end);
-	if unlikely(result == (size_t)-1) {
-		err_item_not_found(self, item);
-		result = (size_t)Dee_COMPARE_ERR;
-	}
-	return result;
-}
-
-
-
-
-
-/************************************************************************/
-/* rindex() (with key)                                                   */
-/************************************************************************/
-INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-DeeSeq_DefaultRIndexWithKeyWithTSCRFindWithKey(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	size_t result = (*DeeType_SeqCache_RequireRFindWithKey(Dee_TYPE(self)))(self, item, start, end, key);
-	if unlikely(result == (size_t)-1) {
-		err_item_not_found(self, item);
-		result = (size_t)Dee_COMPARE_ERR;
-	}
-	return result;
-}
 
 
 
@@ -2631,11 +2555,15 @@ generic_seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObjec
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? new_DeeSeqIndexWithKey(self, item, start, end, key)
-	         : new_DeeSeqIndex(self, item, start, end);
+	         ? new_DeeSeqFindWithKey(self, item, start, end, key)
+	         : new_DeeSeqFind(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_no_item;
 	return DeeInt_NewSize(result);
+err_no_item:
+	err_item_not_found(self, item);
 err:
 	return NULL;
 }
@@ -2649,11 +2577,15 @@ generic_seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObje
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? new_DeeSeqRIndexWithKey(self, item, start, end, key)
-	         : new_DeeSeqRIndex(self, item, start, end);
+	         ? new_DeeSeqRFindWithKey(self, item, start, end, key)
+	         : new_DeeSeqRFind(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_no_item;
 	return DeeInt_NewSize(result);
+err_no_item:
+	err_item_not_found(self, item);
 err:
 	return NULL;
 }
@@ -2993,14 +2925,6 @@ DECL_END
 #define DEFINE_DeeType_SeqCache_RequireRFind
 #include "default-api-methods-require-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRFindWithKey
-#include "default-api-methods-require-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireIndex
-#include "default-api-methods-require-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireIndexWithKey
-#include "default-api-methods-require-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireRIndex
-#include "default-api-methods-require-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireRIndexWithKey
 #include "default-api-methods-require-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireErase
 #include "default-api-methods-require-impl.c.inl"

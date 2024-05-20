@@ -123,12 +123,6 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 	if (self->tsc_rfind == &DeeSeq_DefaultRFindWithCallRFindDataFunction ||
 	    self->tsc_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_rfind_data);
-	if (self->tsc_index == &DeeSeq_DefaultIndexWithCallIndexDataFunction ||
-	    self->tsc_index_with_key == &DeeSeq_DefaultIndexWithKeyWithCallIndexDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_index_data);
-	if (self->tsc_rindex == &DeeSeq_DefaultRIndexWithCallRIndexDataFunction ||
-	    self->tsc_rindex_with_key == &DeeSeq_DefaultRIndexWithKeyWithCallRIndexDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_rindex_data);
 	if (self->tsc_erase == &DeeSeq_DefaultEraseWithCallEraseDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_erase_data);
 	if (self->tsc_insert == &DeeSeq_DefaultInsertWithCallInsertDataFunction)
