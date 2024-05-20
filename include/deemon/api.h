@@ -387,10 +387,10 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* ... */
 
 
-/* Use the new sequence operator inheritance system (currently incomplete). */
+/* Use the new sequence operator inheritance system (currently in testing). */
 #if (!defined(CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS) && \
      !defined(CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS))
-#if 0
+#if 1
 #define CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 #else
 #define CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
