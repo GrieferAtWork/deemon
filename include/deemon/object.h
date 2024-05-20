@@ -4845,6 +4845,12 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use t
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeObject_Enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
 
+/* Construct an iterator for the keys of "self". That is:
+ * - everything for which `DeeObject_HasItem()' returns true
+ * - everything passed as "key"-argumented to the callback taken by `DeeObject_Enumerate()' */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_IterKeys)(DeeObject *__restrict self);
+
 /* Same as `DeeObject_Enumerate()', but only valid when "self" uses integers for indices
  * or is a mapping where all keys are integers. In the former case, [start,end) can be
  * given in order to only enumerate indices that fall within that range (any index that

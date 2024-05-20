@@ -626,6 +626,11 @@ super_enumerate_index(Super *__restrict me, Dee_enumerate_index_t proc,
 	return DeeObject_TEnumerateIndex(me->s_type, me->s_self, proc, arg, start, end);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_iterkeys(Super *__restrict self) {
+	return DeeObject_TIterKeys(self->s_type, self->s_self);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_bounditem(Super *self, DeeObject *index) {
 	return DeeObject_TBoundItem(self->s_type, self->s_self, index);
@@ -787,7 +792,7 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&super_foreach_pair,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&super_enumerate,
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&super_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&super_size,

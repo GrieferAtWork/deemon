@@ -19767,8 +19767,23 @@ DEFINE_OPERATOR(Dee_ssize_t, Enumerate,
 	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_enumerate))
 		return (*tp_self->tp_seq->tp_enumerate)(self, proc, arg);
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Cannot enumerate non-sequence type `%r'",
+	                       "Cannot enumerate keys of non-sequence type `%r'",
 	                       tp_self);
+}
+
+/* Construct an iterator for the keys of "self". That is:
+ * - everything for which `DeeObject_HasItem()' returns true
+ * - everything passed as "key"-argumented to the callback taken by `DeeObject_Enumerate()' */
+DEFINE_OPERATOR(DREF DeeObject *, IterKeys,
+                (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_iterkeys) ||
+	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_iterkeys))
+		return (*tp_self->tp_seq->tp_iterkeys)(self);
+	DeeError_Throwf(&DeeError_NotImplemented,
+	                "Cannot enumerate keys of non-sequence type `%r'",
+	                tp_self);
+	return NULL;
 }
 
 /* Same as `DeeObject_Enumerate()', but only valid when "self" uses integers for indices
