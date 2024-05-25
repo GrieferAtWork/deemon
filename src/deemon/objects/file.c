@@ -844,7 +844,8 @@ do_invoke_ft_read:
 			if (!read_size || (!readall && read_size < bufsize))
 				break; /* EOF */
 			maxbytes -= read_size;
-			readtext_bufsize *= 2;
+			if (read_size >= bufsize)
+				readtext_bufsize *= 2;
 		}
 /*done_printer:*/
 		return bytes_printer_pack(&printer);
@@ -923,7 +924,8 @@ do_invoke_ft_pread:
 				break; /* EOF */
 			maxbytes -= read_size;
 			pos += read_size;
-			readtext_bufsize *= 2;
+			if (read_size >= bufsize)
+				readtext_bufsize *= 2;
 		}
 /*done_printer:*/
 		return bytes_printer_pack(&printer);
