@@ -181,11 +181,32 @@ public:
 		args[0] = name;
 		return inherit(DeeObject_CallAttrStringHash(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db), 1, args));
 	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (hasoperator)(DeeObject *name, DeeObject *argc) {
+		DeeObject *args[2];
+		args[0] = name;
+		args[1] = argc;
+		return inherit(DeeObject_CallAttrStringHash(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (hasoperator)(DeeObject *name, Dee_ssize_t argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db), "o" DEE_PCKdSIZ, name, argc));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (hasoperator)(DeeObject *name, size_t argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db), "o" DEE_PCKuSIZ, name, argc));
+	}
 	WUNUSED Ref<deemon::bool_> (hasoperator)(Dee_ssize_t name) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db),  DEE_PCKdSIZ, name));
 	}
 	WUNUSED Ref<deemon::bool_> (hasoperator)(char const *name) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db), "s", name));
+	}
+	WUNUSED NONNULL_CXX((2)) Ref<deemon::bool_> (hasoperator)(char const *name, DeeObject *argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db), "so", name, argc));
+	}
+	WUNUSED Ref<deemon::bool_> (hasoperator)(char const *name, Dee_ssize_t argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db), "s" DEE_PCKdSIZ, name, argc));
+	}
+	WUNUSED Ref<deemon::bool_> (hasoperator)(char const *name, size_t argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db), "s" DEE_PCKuSIZ, name, argc));
 	}
 	WUNUSED Ref<deemon::bool_> (hasoperator)(size_t name) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "hasoperator", _Dee_HashSelectC(0x42dfac16, 0x6fce8ab7562b35db),  DEE_PCKuSIZ, name));
@@ -195,11 +216,32 @@ public:
 		args[0] = name;
 		return inherit(DeeObject_CallAttrStringHash(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365), 1, args));
 	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (hasprivateoperator)(DeeObject *name, DeeObject *argc) {
+		DeeObject *args[2];
+		args[0] = name;
+		args[1] = argc;
+		return inherit(DeeObject_CallAttrStringHash(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (hasprivateoperator)(DeeObject *name, Dee_ssize_t argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365), "o" DEE_PCKdSIZ, name, argc));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (hasprivateoperator)(DeeObject *name, size_t argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365), "o" DEE_PCKuSIZ, name, argc));
+	}
 	WUNUSED Ref<deemon::bool_> (hasprivateoperator)(Dee_ssize_t name) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365),  DEE_PCKdSIZ, name));
 	}
 	WUNUSED Ref<deemon::bool_> (hasprivateoperator)(char const *name) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365), "s", name));
+	}
+	WUNUSED NONNULL_CXX((2)) Ref<deemon::bool_> (hasprivateoperator)(char const *name, DeeObject *argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365), "so", name, argc));
+	}
+	WUNUSED Ref<deemon::bool_> (hasprivateoperator)(char const *name, Dee_ssize_t argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365), "s" DEE_PCKdSIZ, name, argc));
+	}
+	WUNUSED Ref<deemon::bool_> (hasprivateoperator)(char const *name, size_t argc) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365), "s" DEE_PCKuSIZ, name, argc));
 	}
 	WUNUSED Ref<deemon::bool_> (hasprivateoperator)(size_t name) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "hasprivateoperator", _Dee_HashSelectC(0xfb82aa2c, 0xf3c5c25fc6acf365),  DEE_PCKuSIZ, name));
@@ -479,7 +521,7 @@ public:
 		return this;
 	}
 	class _Wrap___instancesize__
-		: public deemon::detail::ConstGetRefProxy<_Wrap___instancesize__, Object> {
+		: public deemon::detail::ConstGetRefProxy<_Wrap___instancesize__, deemon::int_> {
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
@@ -496,7 +538,7 @@ public:
 		return this;
 	}
 	class _Wrap___instance_size__
-		: public deemon::detail::ConstGetRefProxy<_Wrap___instance_size__, Object> {
+		: public deemon::detail::ConstGetRefProxy<_Wrap___instance_size__, deemon::int_> {
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
@@ -595,6 +637,23 @@ public:
 		}
 	};
 	WUNUSED _Wrap___isnamespace__ (__isnamespace__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___isconstcastable__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___isconstcastable__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___isconstcastable__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__isconstcastable__", _Dee_HashSelectC(0x9961c985, 0xb07a59c0b6d139fc));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__isconstcastable__", _Dee_HashSelectC(0x9961c985, 0xb07a59c0b6d139fc)));
+		}
+	};
+	WUNUSED _Wrap___isconstcastable__ (__isconstcastable__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___gcpriority__

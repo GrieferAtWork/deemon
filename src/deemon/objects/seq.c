@@ -4520,8 +4520,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "Same as ?#filter, but the returned sequence has the same size as @this, and filtered "
 	            /**/ "elements are simply treated as though they were unbound:\n"
 	            "${"
-	            /**/ "assert { 10, 20 }.ubfilter(x -> x > 10)[0] !is bound;"
-	            /**/ "assert { 10, 20 }.ubfilter(x -> x > 10)[1] is bound;"
+	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[0] !is bound;"
+	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[1] is bound;"
 	            "}"),
 	TYPE_METHOD("sum", &seq_sum,
 	            "->\nReturns the sum of all elements, or ?N if the Sequence is empty\n"

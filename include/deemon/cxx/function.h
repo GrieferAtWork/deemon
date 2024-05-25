@@ -138,7 +138,7 @@ public:
 		return inherit(DeeObject_CallAttrStringHashf(this, "optimized", _Dee_HashSelectC(0xe5639100, 0x7c60221260961ed8), "bb", tuple, kwds));
 	}
 	class _Wrap___name__
-		: public deemon::detail::ConstGetRefProxy<_Wrap___name__, Object> {
+		: public deemon::detail::ConstGetRefProxy<_Wrap___name__, string> {
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
@@ -172,7 +172,7 @@ public:
 		return this;
 	}
 	class _Wrap___type__
-		: public deemon::detail::ConstGetRefProxy<_Wrap___type__, Object> {
+		: public deemon::detail::ConstGetRefProxy<_Wrap___type__, Type> {
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
@@ -206,7 +206,7 @@ public:
 		return this;
 	}
 	class _Wrap___operator__
-		: public deemon::detail::ConstGetRefProxy<_Wrap___operator__, Object> {
+		: public deemon::detail::ConstGetRefProxy<_Wrap___operator__, deemon::int_> {
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
@@ -240,7 +240,7 @@ public:
 		return this;
 	}
 	class _Wrap___property__
-		: public deemon::detail::ConstGetRefProxy<_Wrap___property__, Object> {
+		: public deemon::detail::ConstGetRefProxy<_Wrap___property__, deemon::int_> {
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
@@ -273,6 +273,91 @@ public:
 	WUNUSED _Wrap___refs__ (__refs__)() DEE_CXX_NOTHROW {
 		return this;
 	}
+	class _Wrap___statics__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___statics__, Sequence<Object> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___statics__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__statics__", _Dee_HashSelectC(0x4147b465, 0x61d855a2a9645021));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__statics__", _Dee_HashSelectC(0x4147b465, 0x61d855a2a9645021)));
+		}
+	};
+	WUNUSED _Wrap___statics__ (__statics__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___refsbyname__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___refsbyname__, Mapping<Object, Object> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___refsbyname__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__refsbyname__", _Dee_HashSelectC(0x2d058153, 0x460f882177d836ba));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__refsbyname__", _Dee_HashSelectC(0x2d058153, 0x460f882177d836ba)));
+		}
+	};
+	WUNUSED _Wrap___refsbyname__ (__refsbyname__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___staticsbyname__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___staticsbyname__, Mapping<Object, Object> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___staticsbyname__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__staticsbyname__", _Dee_HashSelectC(0xce5fd2cf, 0x9fe58948bf03feb5));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__staticsbyname__", _Dee_HashSelectC(0xce5fd2cf, 0x9fe58948bf03feb5)));
+		}
+	};
+	WUNUSED _Wrap___staticsbyname__ (__staticsbyname__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___symbols__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___symbols__, Mapping<Object, Object> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___symbols__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__symbols__", _Dee_HashSelectC(0x81659df, 0xf4073184aaae4c4c));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__symbols__", _Dee_HashSelectC(0x81659df, 0xf4073184aaae4c4c)));
+		}
+	};
+	WUNUSED _Wrap___symbols__ (__symbols__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___nstatic__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___nstatic__, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___nstatic__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__nstatic__", _Dee_HashSelectC(0xafdbbdfd, 0x1562fdfd929de686));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__nstatic__", _Dee_HashSelectC(0xafdbbdfd, 0x1562fdfd929de686)));
+		}
+	};
+	WUNUSED _Wrap___nstatic__ (__nstatic__)() DEE_CXX_NOTHROW {
+		return this;
+	}
 	class _Wrap___kwds__
 		: public deemon::detail::ConstGetRefProxy<_Wrap___kwds__, Sequence<string> > {
 	private:
@@ -288,6 +373,312 @@ public:
 		}
 	};
 	WUNUSED _Wrap___kwds__ (__kwds__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___defaults__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___defaults__, Sequence<Object> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___defaults__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__defaults__", _Dee_HashSelectC(0x6b005e3c, 0xed5a4d61445c242a));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__defaults__", _Dee_HashSelectC(0x6b005e3c, 0xed5a4d61445c242a)));
+		}
+	};
+	WUNUSED _Wrap___defaults__ (__defaults__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___constants__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___constants__, Sequence<Object> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___constants__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__constants__", _Dee_HashSelectC(0x46fdb195, 0x9480d2e376e008de));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__constants__", _Dee_HashSelectC(0x46fdb195, 0x9480d2e376e008de)));
+		}
+	};
+	WUNUSED _Wrap___constants__ (__constants__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___argc_min__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___argc_min__, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___argc_min__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__argc_min__", _Dee_HashSelectC(0xf2637533, 0x5aba0afe6ddccfc9));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__argc_min__", _Dee_HashSelectC(0xf2637533, 0x5aba0afe6ddccfc9)));
+		}
+	};
+	WUNUSED _Wrap___argc_min__ (__argc_min__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___argc_max__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___argc_max__, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___argc_max__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__argc_max__", _Dee_HashSelectC(0x27fee104, 0xc4e17b1f57515826));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__argc_max__", _Dee_HashSelectC(0x27fee104, 0xc4e17b1f57515826)));
+		}
+	};
+	WUNUSED _Wrap___argc_max__ (__argc_max__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap_isyielding
+		: public deemon::detail::ConstGetRefProxy<_Wrap_isyielding, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_isyielding(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "isyielding", _Dee_HashSelectC(0x257a8fe5, 0x8bb98317141d1203));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isyielding", _Dee_HashSelectC(0x257a8fe5, 0x8bb98317141d1203)));
+		}
+	};
+	WUNUSED _Wrap_isyielding (isyielding)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap_iscopyable
+		: public deemon::detail::ConstGetRefProxy<_Wrap_iscopyable, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_iscopyable(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "iscopyable", _Dee_HashSelectC(0xac76e040, 0x70f159e10652f6e6));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "iscopyable", _Dee_HashSelectC(0xac76e040, 0x70f159e10652f6e6)));
+		}
+	};
+	WUNUSED _Wrap_iscopyable (iscopyable)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap_hasvarargs
+		: public deemon::detail::ConstGetRefProxy<_Wrap_hasvarargs, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_hasvarargs(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "hasvarargs", _Dee_HashSelectC(0x8a6b7de2, 0x8d2c7c3b884d483a));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "hasvarargs", _Dee_HashSelectC(0x8a6b7de2, 0x8d2c7c3b884d483a)));
+		}
+	};
+	WUNUSED _Wrap_hasvarargs (hasvarargs)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap_hasvarkwds
+		: public deemon::detail::ConstGetRefProxy<_Wrap_hasvarkwds, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_hasvarkwds(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "hasvarkwds", _Dee_HashSelectC(0x1ae4ea2a, 0xe5cbc54c861b87a));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "hasvarkwds", _Dee_HashSelectC(0x1ae4ea2a, 0xe5cbc54c861b87a)));
+		}
+	};
+	WUNUSED _Wrap_hasvarkwds (hasvarkwds)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___isthiscall__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___isthiscall__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___isthiscall__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__isthiscall__", _Dee_HashSelectC(0xef9a3351, 0xd4dba41168bf3c17));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__isthiscall__", _Dee_HashSelectC(0xef9a3351, 0xd4dba41168bf3c17)));
+		}
+	};
+	WUNUSED _Wrap___isthiscall__ (__isthiscall__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___hasassembly__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___hasassembly__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___hasassembly__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__hasassembly__", _Dee_HashSelectC(0xec18fcb7, 0x2901862357febcc7));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__hasassembly__", _Dee_HashSelectC(0xec18fcb7, 0x2901862357febcc7)));
+		}
+	};
+	WUNUSED _Wrap___hasassembly__ (__hasassembly__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___islenient__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___islenient__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___islenient__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__islenient__", _Dee_HashSelectC(0x45ac013a, 0x368423b672d44f8a));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__islenient__", _Dee_HashSelectC(0x45ac013a, 0x368423b672d44f8a)));
+		}
+	};
+	WUNUSED _Wrap___islenient__ (__islenient__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___hasheapframe__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___hasheapframe__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___hasheapframe__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__hasheapframe__", _Dee_HashSelectC(0xba738d07, 0x67cebfda2362f448));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__hasheapframe__", _Dee_HashSelectC(0xba738d07, 0x67cebfda2362f448)));
+		}
+	};
+	WUNUSED _Wrap___hasheapframe__ (__hasheapframe__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___hasfinally__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___hasfinally__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___hasfinally__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__hasfinally__", _Dee_HashSelectC(0x32ab2f3f, 0x790a8d5db5dafb1f));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__hasfinally__", _Dee_HashSelectC(0x32ab2f3f, 0x790a8d5db5dafb1f)));
+		}
+	};
+	WUNUSED _Wrap___hasfinally__ (__hasfinally__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___isconstructor__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___isconstructor__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___isconstructor__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__isconstructor__", _Dee_HashSelectC(0x8f659298, 0x953b024dbade9f7b));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__isconstructor__", _Dee_HashSelectC(0x8f659298, 0x953b024dbade9f7b)));
+		}
+	};
+	WUNUSED _Wrap___isconstructor__ (__isconstructor__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___nlocal__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___nlocal__, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___nlocal__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__nlocal__", _Dee_HashSelectC(0x255d5513, 0x632aec48256da3a5));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__nlocal__", _Dee_HashSelectC(0x255d5513, 0x632aec48256da3a5)));
+		}
+	};
+	WUNUSED _Wrap___nlocal__ (__nlocal__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___nconst__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___nconst__, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___nconst__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__nconst__", _Dee_HashSelectC(0x2fd6a3b7, 0xdd836d4e7609d99));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__nconst__", _Dee_HashSelectC(0x2fd6a3b7, 0xdd836d4e7609d99)));
+		}
+	};
+	WUNUSED _Wrap___nconst__ (__nconst__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___nref__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___nref__, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___nref__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__nref__", _Dee_HashSelectC(0x3cc8ae1b, 0x66c66e5b8fd3a748));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__nref__", _Dee_HashSelectC(0x3cc8ae1b, 0x66c66e5b8fd3a748)));
+		}
+	};
+	WUNUSED _Wrap___nref__ (__nref__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___nexcept__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___nexcept__, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___nexcept__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__nexcept__", _Dee_HashSelectC(0x275b7f2, 0x186fbb5e6f931993));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__nexcept__", _Dee_HashSelectC(0x275b7f2, 0x186fbb5e6f931993)));
+		}
+	};
+	WUNUSED _Wrap___nexcept__ (__nexcept__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

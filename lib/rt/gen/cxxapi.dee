@@ -399,7 +399,7 @@ final class CxxType {
 	this(typ: Type) {
 		this.typ = typ;
 		this.doc = Doc(typ);
-		local typBase = Type.__base__(typ);
+		local typBase = try Type.__base__(typ) catch (...) none;
 		this.base = typBase is none ? none : CxxType(typBase);
 	}
 

@@ -38609,6 +38609,18 @@ public:
 	WUNUSED Ref<Sequence<Object> > (regrindex)(char const *pattern, size_t start, size_t end, char const *rules) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "regrindex", _Dee_HashSelectC(0x35ad14ec, 0x7b427aa5f50f1073), "s" DEE_PCKuSIZ DEE_PCKuSIZ "s", pattern, start, end, rules));
 	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (xchitem)(DeeObject *index, DeeObject *value) {
+		DeeObject *args[2];
+		args[0] = index;
+		args[1] = value;
+		return inherit(DeeObject_CallAttrStringHash(this, "xchitem", _Dee_HashSelectC(0xc89decce, 0x16e81f00d8d95d57), 2, args));
+	}
+	WUNUSED NONNULL_CXX((2)) Ref<Object> (xchitem)(Dee_ssize_t index, DeeObject *value) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "xchitem", _Dee_HashSelectC(0xc89decce, 0x16e81f00d8d95d57),  DEE_PCKdSIZ "o", index, value));
+	}
+	WUNUSED NONNULL_CXX((2)) Ref<Object> (xchitem)(size_t index, DeeObject *value) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "xchitem", _Dee_HashSelectC(0xc89decce, 0x16e81f00d8d95d57),  DEE_PCKuSIZ "o", index, value));
+	}
 	class _Wrap_isreadonly
 		: public deemon::detail::ConstGetRefProxy<_Wrap_isreadonly, deemon::bool_> {
 	private:
@@ -38624,40 +38636,6 @@ public:
 		}
 	};
 	WUNUSED _Wrap_isreadonly (isreadonly)() DEE_CXX_NOTHROW {
-		return this;
-	}
-	class _Wrap_iswritable
-		: public deemon::detail::ConstGetRefProxy<_Wrap_iswritable, deemon::bool_> {
-	private:
-		DeeObject *m_self; /* [1..1] Linked object */
-	public:
-		_Wrap_iswritable(DeeObject *self) DEE_CXX_NOTHROW
-			: m_self(self) {}
-		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "iswritable", _Dee_HashSelectC(0x3113e646, 0x14cae1449201d41c));
-		}
-		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "iswritable", _Dee_HashSelectC(0x3113e646, 0x14cae1449201d41c)));
-		}
-	};
-	WUNUSED _Wrap_iswritable (iswritable)() DEE_CXX_NOTHROW {
-		return this;
-	}
-	class _Wrap_ismutable
-		: public deemon::detail::ConstGetRefProxy<_Wrap_ismutable, deemon::bool_> {
-	private:
-		DeeObject *m_self; /* [1..1] Linked object */
-	public:
-		_Wrap_ismutable(DeeObject *self) DEE_CXX_NOTHROW
-			: m_self(self) {}
-		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "ismutable", _Dee_HashSelectC(0x503e0af, 0x218befd96d70f7d4));
-		}
-		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ismutable", _Dee_HashSelectC(0x503e0af, 0x218befd96d70f7d4)));
-		}
-	};
-	WUNUSED _Wrap_ismutable (ismutable)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_first

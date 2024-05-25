@@ -70,11 +70,11 @@ public:
 	bool cclear() DEE_CXX_NOTHROW {
 		return DeeList_Clear(this);
 	}
-	void csort(DeeObject *key = NULL) {
-		throw_if_nonzero(DeeList_Sort(this, key));
+	void csort(size_t start = 0, size_t end = (size_t)-1, DeeObject *key = NULL) {
+		throw_if_nonzero(DeeList_Sort(this, start, end, key));
 	}
-	void creverse() DEE_CXX_NOTHROW {
-		DeeList_Reverse(this);
+	void creverse(size_t start = 0, size_t end = (size_t)-1) DEE_CXX_NOTHROW {
+		DeeList_Reverse(this, start, end);
 	}
 	void cappend(DeeObject *item) DEE_CXX_NOTHROW {
 		throw_if_nonzero(DeeList_Append(this, item));
@@ -160,46 +160,46 @@ public:
 	NONNULL_CXX((2)) void (insertall)(size_t index, DeeObject *seq) {
 		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "insertall", _Dee_HashSelectC(0xbf9bc3a9, 0x4f85971d093a27f2),  DEE_PCKuSIZ "o", index, seq)));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (erase)(DeeObject *index) {
+	NONNULL_CXX((1)) void (erase)(DeeObject *index) {
 		DeeObject *args[1];
 		args[0] = index;
-		return inherit(DeeObject_CallAttrStringHash(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5), 1, args));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5), 1, args)));
 	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (erase)(DeeObject *index, DeeObject *count) {
+	NONNULL_CXX((1, 2)) void (erase)(DeeObject *index, DeeObject *count) {
 		DeeObject *args[2];
 		args[0] = index;
 		args[1] = count;
-		return inherit(DeeObject_CallAttrStringHash(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5), 2, args));
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5), 2, args)));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (erase)(DeeObject *index, Dee_ssize_t count) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5), "o" DEE_PCKdSIZ, index, count));
+	NONNULL_CXX((1)) void (erase)(DeeObject *index, Dee_ssize_t count) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5), "o" DEE_PCKdSIZ, index, count)));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (erase)(DeeObject *index, size_t count) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5), "o" DEE_PCKuSIZ, index, count));
+	NONNULL_CXX((1)) void (erase)(DeeObject *index, size_t count) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5), "o" DEE_PCKuSIZ, index, count)));
 	}
-	WUNUSED Ref<deemon::int_> (erase)(Dee_ssize_t index) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKdSIZ, index));
+	void (erase)(Dee_ssize_t index) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKdSIZ, index)));
 	}
-	WUNUSED NONNULL_CXX((2)) Ref<deemon::int_> (erase)(Dee_ssize_t index, DeeObject *count) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKdSIZ "o", index, count));
+	NONNULL_CXX((2)) void (erase)(Dee_ssize_t index, DeeObject *count) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKdSIZ "o", index, count)));
 	}
-	WUNUSED Ref<deemon::int_> (erase)(Dee_ssize_t index, Dee_ssize_t count) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKdSIZ DEE_PCKdSIZ, index, count));
+	void (erase)(Dee_ssize_t index, Dee_ssize_t count) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKdSIZ DEE_PCKdSIZ, index, count)));
 	}
-	WUNUSED Ref<deemon::int_> (erase)(Dee_ssize_t index, size_t count) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKdSIZ DEE_PCKuSIZ, index, count));
+	void (erase)(Dee_ssize_t index, size_t count) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKdSIZ DEE_PCKuSIZ, index, count)));
 	}
-	WUNUSED Ref<deemon::int_> (erase)(size_t index) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKuSIZ, index));
+	void (erase)(size_t index) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKuSIZ, index)));
 	}
-	WUNUSED NONNULL_CXX((2)) Ref<deemon::int_> (erase)(size_t index, DeeObject *count) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKuSIZ "o", index, count));
+	NONNULL_CXX((2)) void (erase)(size_t index, DeeObject *count) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKuSIZ "o", index, count)));
 	}
-	WUNUSED Ref<deemon::int_> (erase)(size_t index, Dee_ssize_t count) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKuSIZ DEE_PCKdSIZ, index, count));
+	void (erase)(size_t index, Dee_ssize_t count) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKuSIZ DEE_PCKdSIZ, index, count)));
 	}
-	WUNUSED Ref<deemon::int_> (erase)(size_t index, size_t count) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKuSIZ DEE_PCKuSIZ, index, count));
+	void (erase)(size_t index, size_t count) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "erase", _Dee_HashSelectC(0x6f5916cf, 0x65f9c8b6514af4e5),  DEE_PCKuSIZ DEE_PCKuSIZ, index, count)));
 	}
 	WUNUSED Ref<T> (pop)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelectC(0x960361ff, 0x666fb01461b0a0eb), 0, NULL));
@@ -215,20 +215,796 @@ public:
 	WUNUSED Ref<T> (pop)(size_t index) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "pop", _Dee_HashSelectC(0x960361ff, 0x666fb01461b0a0eb),  DEE_PCKuSIZ, index));
 	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<T> (xch)(DeeObject *index, DeeObject *value) {
+	WUNUSED NONNULL_CXX((1, 2)) Ref<T> (xchitem)(DeeObject *index, DeeObject *value) {
 		DeeObject *args[2];
 		args[0] = index;
 		args[1] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "xch", _Dee_HashSelectC(0x818ce38a, 0x6bb37305be1b0321), 2, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "xchitem", _Dee_HashSelectC(0xc89decce, 0x16e81f00d8d95d57), 2, args));
 	}
-	WUNUSED NONNULL_CXX((2)) Ref<T> (xch)(Dee_ssize_t index, DeeObject *value) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "xch", _Dee_HashSelectC(0x818ce38a, 0x6bb37305be1b0321),  DEE_PCKdSIZ "o", index, value));
+	WUNUSED NONNULL_CXX((2)) Ref<T> (xchitem)(Dee_ssize_t index, DeeObject *value) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "xchitem", _Dee_HashSelectC(0xc89decce, 0x16e81f00d8d95d57),  DEE_PCKdSIZ "o", index, value));
 	}
-	WUNUSED NONNULL_CXX((2)) Ref<T> (xch)(size_t index, DeeObject *value) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "xch", _Dee_HashSelectC(0x818ce38a, 0x6bb37305be1b0321),  DEE_PCKuSIZ "o", index, value));
+	WUNUSED NONNULL_CXX((2)) Ref<T> (xchitem)(size_t index, DeeObject *value) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "xchitem", _Dee_HashSelectC(0xc89decce, 0x16e81f00d8d95d57),  DEE_PCKuSIZ "o", index, value));
 	}
 	void (clear)() {
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "clear", _Dee_HashSelectC(0x7857faae, 0x22a34b6f82b3b83c), 0, NULL)));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (find)(DeeObject *item) {
+		DeeObject *args[1];
+		args[0] = item;
+		return inherit(DeeObject_CallAttrStringHash(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (find)(DeeObject *item, DeeObject *start) {
+		DeeObject *args[2];
+		args[0] = item;
+		args[1] = start;
+		return inherit(DeeObject_CallAttrStringHash(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (find)(DeeObject *item, DeeObject *start, DeeObject *end) {
+		DeeObject *args[3];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<deemon::int_> (find)(DeeObject *item, DeeObject *start, DeeObject *end, DeeObject *key) {
+		DeeObject *args[4];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		args[3] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), 4, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (find)(DeeObject *item, DeeObject *start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "oo" DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (find)(DeeObject *item, DeeObject *start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "oo" DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (find)(DeeObject *item, DeeObject *start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "oo" DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (find)(DeeObject *item, DeeObject *start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "oo" DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (find)(DeeObject *item, Dee_ssize_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKdSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (find)(DeeObject *item, Dee_ssize_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKdSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (find)(DeeObject *item, Dee_ssize_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKdSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (find)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (find)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (find)(DeeObject *item, Dee_ssize_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (find)(DeeObject *item, Dee_ssize_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (find)(DeeObject *item, size_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKuSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (find)(DeeObject *item, size_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKuSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (find)(DeeObject *item, size_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKuSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (find)(DeeObject *item, size_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (find)(DeeObject *item, size_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (find)(DeeObject *item, size_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (find)(DeeObject *item, size_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "find", _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2), "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rfind)(DeeObject *item) {
+		DeeObject *args[1];
+		args[0] = item;
+		return inherit(DeeObject_CallAttrStringHash(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (rfind)(DeeObject *item, DeeObject *start) {
+		DeeObject *args[2];
+		args[0] = item;
+		args[1] = start;
+		return inherit(DeeObject_CallAttrStringHash(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (rfind)(DeeObject *item, DeeObject *start, DeeObject *end) {
+		DeeObject *args[3];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, DeeObject *start, DeeObject *end, DeeObject *key) {
+		DeeObject *args[4];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		args[3] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), 4, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (rfind)(DeeObject *item, DeeObject *start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "oo" DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, DeeObject *start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "oo" DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (rfind)(DeeObject *item, DeeObject *start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "oo" DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, DeeObject *start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "oo" DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rfind)(DeeObject *item, Dee_ssize_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKdSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (rfind)(DeeObject *item, Dee_ssize_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKdSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, Dee_ssize_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKdSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rfind)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rfind)(DeeObject *item, Dee_ssize_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, Dee_ssize_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rfind)(DeeObject *item, size_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKuSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (rfind)(DeeObject *item, size_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKuSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, size_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKuSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rfind)(DeeObject *item, size_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, size_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rfind)(DeeObject *item, size_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (rfind)(DeeObject *item, size_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rfind", _Dee_HashSelectC(0xfb368ca, 0x8b40ffa7172dc59d), "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (index)(DeeObject *item) {
+		DeeObject *args[1];
+		args[0] = item;
+		return inherit(DeeObject_CallAttrStringHash(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (index)(DeeObject *item, DeeObject *start) {
+		DeeObject *args[2];
+		args[0] = item;
+		args[1] = start;
+		return inherit(DeeObject_CallAttrStringHash(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (index)(DeeObject *item, DeeObject *start, DeeObject *end) {
+		DeeObject *args[3];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<deemon::int_> (index)(DeeObject *item, DeeObject *start, DeeObject *end, DeeObject *key) {
+		DeeObject *args[4];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		args[3] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), 4, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (index)(DeeObject *item, DeeObject *start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "oo" DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (index)(DeeObject *item, DeeObject *start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "oo" DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (index)(DeeObject *item, DeeObject *start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "oo" DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (index)(DeeObject *item, DeeObject *start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "oo" DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (index)(DeeObject *item, Dee_ssize_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKdSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (index)(DeeObject *item, Dee_ssize_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKdSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (index)(DeeObject *item, Dee_ssize_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKdSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (index)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (index)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (index)(DeeObject *item, Dee_ssize_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (index)(DeeObject *item, Dee_ssize_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (index)(DeeObject *item, size_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKuSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (index)(DeeObject *item, size_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKuSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (index)(DeeObject *item, size_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKuSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (index)(DeeObject *item, size_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (index)(DeeObject *item, size_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (index)(DeeObject *item, size_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (index)(DeeObject *item, size_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rindex)(DeeObject *item) {
+		DeeObject *args[1];
+		args[0] = item;
+		return inherit(DeeObject_CallAttrStringHash(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (rindex)(DeeObject *item, DeeObject *start) {
+		DeeObject *args[2];
+		args[0] = item;
+		args[1] = start;
+		return inherit(DeeObject_CallAttrStringHash(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (rindex)(DeeObject *item, DeeObject *start, DeeObject *end) {
+		DeeObject *args[3];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, DeeObject *start, DeeObject *end, DeeObject *key) {
+		DeeObject *args[4];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		args[3] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), 4, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (rindex)(DeeObject *item, DeeObject *start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "oo" DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, DeeObject *start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "oo" DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (rindex)(DeeObject *item, DeeObject *start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "oo" DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, DeeObject *start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "oo" DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rindex)(DeeObject *item, Dee_ssize_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKdSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (rindex)(DeeObject *item, Dee_ssize_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKdSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, Dee_ssize_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKdSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rindex)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rindex)(DeeObject *item, Dee_ssize_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, Dee_ssize_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rindex)(DeeObject *item, size_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKuSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (rindex)(DeeObject *item, size_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKuSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, size_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKuSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rindex)(DeeObject *item, size_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, size_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (rindex)(DeeObject *item, size_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (rindex)(DeeObject *item, size_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rindex", _Dee_HashSelectC(0x1eb52bf1, 0xbce198a5867b343c), "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *item) {
+		DeeObject *args[1];
+		args[0] = item;
+		return inherit(DeeObject_CallAttrStringHash(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (remove)(DeeObject *item, DeeObject *start) {
+		DeeObject *args[2];
+		args[0] = item;
+		args[1] = start;
+		return inherit(DeeObject_CallAttrStringHash(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::bool_> (remove)(DeeObject *item, DeeObject *start, DeeObject *end) {
+		DeeObject *args[3];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, DeeObject *start, DeeObject *end, DeeObject *key) {
+		DeeObject *args[4];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		args[3] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), 4, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (remove)(DeeObject *item, DeeObject *start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "oo" DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, DeeObject *start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "oo" DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (remove)(DeeObject *item, DeeObject *start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "oo" DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, DeeObject *start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "oo" DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *item, Dee_ssize_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKdSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::bool_> (remove)(DeeObject *item, Dee_ssize_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKdSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, Dee_ssize_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKdSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *item, Dee_ssize_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, Dee_ssize_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *item, size_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKuSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::bool_> (remove)(DeeObject *item, size_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKuSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, size_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKuSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *item, size_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, size_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *item, size_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::bool_> (remove)(DeeObject *item, size_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (rremove)(DeeObject *item) {
+		DeeObject *args[1];
+		args[0] = item;
+		return inherit(DeeObject_CallAttrStringHash(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (rremove)(DeeObject *item, DeeObject *start) {
+		DeeObject *args[2];
+		args[0] = item;
+		args[1] = start;
+		return inherit(DeeObject_CallAttrStringHash(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::bool_> (rremove)(DeeObject *item, DeeObject *start, DeeObject *end) {
+		DeeObject *args[3];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, DeeObject *start, DeeObject *end, DeeObject *key) {
+		DeeObject *args[4];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		args[3] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), 4, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (rremove)(DeeObject *item, DeeObject *start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "oo" DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, DeeObject *start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "oo" DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (rremove)(DeeObject *item, DeeObject *start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "oo" DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, DeeObject *start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "oo" DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (rremove)(DeeObject *item, Dee_ssize_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKdSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::bool_> (rremove)(DeeObject *item, Dee_ssize_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKdSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, Dee_ssize_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKdSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (rremove)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (rremove)(DeeObject *item, Dee_ssize_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, Dee_ssize_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (rremove)(DeeObject *item, size_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKuSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::bool_> (rremove)(DeeObject *item, size_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKuSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, size_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKuSIZ "oo", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (rremove)(DeeObject *item, size_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, size_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (rremove)(DeeObject *item, size_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::bool_> (rremove)(DeeObject *item, size_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "rremove", _Dee_HashSelectC(0x37ef1152, 0x199975a7908f6d6), "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item) {
+		DeeObject *args[1];
+		args[0] = item;
+		return inherit(DeeObject_CallAttrStringHash(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start) {
+		DeeObject *args[2];
+		args[0] = item;
+		args[1] = start;
+		return inherit(DeeObject_CallAttrStringHash(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, DeeObject *end) {
+		DeeObject *args[3];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, DeeObject *end, DeeObject *max) {
+		DeeObject *args[4];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		args[3] = max;
+		return inherit(DeeObject_CallAttrStringHash(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), 4, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, DeeObject *end, DeeObject *max, DeeObject *key) {
+		DeeObject *args[5];
+		args[0] = item;
+		args[1] = start;
+		args[2] = end;
+		args[3] = max;
+		args[4] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), 5, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, DeeObject *end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "ooo" DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, DeeObject *end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "ooo" DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, DeeObject *end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "ooo" DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, DeeObject *end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "ooo" DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, Dee_ssize_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKdSIZ "o", item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, Dee_ssize_t end, DeeObject *max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKdSIZ "oo", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, Dee_ssize_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, Dee_ssize_t end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, Dee_ssize_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, Dee_ssize_t end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, size_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKuSIZ "o", item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, size_t end, DeeObject *max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKuSIZ "oo", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, size_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, size_t end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, size_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, DeeObject *start, size_t end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "oo" DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, DeeObject *end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ "oo", item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, DeeObject *end, DeeObject *max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ "ooo", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, DeeObject *end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ "o" DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, DeeObject *end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ "o" DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, DeeObject *end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ "o" DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, DeeObject *end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ "o" DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, DeeObject *max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKdSIZ "oo", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, Dee_ssize_t end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, size_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, size_t end, DeeObject *max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKuSIZ "oo", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, size_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, size_t end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, size_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, Dee_ssize_t start, size_t end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKdSIZ DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ, item, start));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ "o", item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, DeeObject *end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ "oo", item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, DeeObject *end, DeeObject *max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ "ooo", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, DeeObject *end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ "o" DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, DeeObject *end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ "o" DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, DeeObject *end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ "o" DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, DeeObject *end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ "o" DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, Dee_ssize_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, Dee_ssize_t end, DeeObject *max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKdSIZ "oo", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, Dee_ssize_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKdSIZ DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, Dee_ssize_t end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKdSIZ DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, Dee_ssize_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKdSIZ DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, Dee_ssize_t end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKdSIZ DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, size_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 4, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, size_t end, DeeObject *max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKuSIZ "oo", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, size_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKuSIZ DEE_PCKdSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, size_t end, Dee_ssize_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKuSIZ DEE_PCKdSIZ "o", item, start, end, max, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, size_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKuSIZ DEE_PCKuSIZ, item, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 5)) Ref<deemon::int_> (removeall)(DeeObject *item, size_t start, size_t end, size_t max, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeall", _Dee_HashSelectC(0x902407ed, 0x97879af70abc9349), "o" DEE_PCKuSIZ DEE_PCKuSIZ DEE_PCKuSIZ "o", item, start, end, max, key));
+	}
+	void (fill)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4), 0, NULL)));
+	}
+	NONNULL_CXX((1)) void (fill)(DeeObject *start) {
+		DeeObject *args[1];
+		args[0] = start;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4), 1, args)));
+	}
+	NONNULL_CXX((1, 2)) void (fill)(DeeObject *start, DeeObject *end) {
+		DeeObject *args[2];
+		args[0] = start;
+		args[1] = end;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4), 2, args)));
+	}
+	NONNULL_CXX((1, 2, 3)) void (fill)(DeeObject *start, DeeObject *end, DeeObject *filler) {
+		DeeObject *args[3];
+		args[0] = start;
+		args[1] = end;
+		args[2] = filler;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4), 3, args)));
+	}
+	NONNULL_CXX((1)) void (fill)(DeeObject *start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4), "o" DEE_PCKdSIZ, start, end)));
+	}
+	NONNULL_CXX((1, 3)) void (fill)(DeeObject *start, Dee_ssize_t end, DeeObject *filler) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4), "o" DEE_PCKdSIZ "o", start, end, filler)));
+	}
+	NONNULL_CXX((1)) void (fill)(DeeObject *start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4), "o" DEE_PCKuSIZ, start, end)));
+	}
+	NONNULL_CXX((1, 3)) void (fill)(DeeObject *start, size_t end, DeeObject *filler) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4), "o" DEE_PCKuSIZ "o", start, end, filler)));
+	}
+	void (fill)(Dee_ssize_t start) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKdSIZ, start)));
+	}
+	NONNULL_CXX((2)) void (fill)(Dee_ssize_t start, DeeObject *end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKdSIZ "o", start, end)));
+	}
+	NONNULL_CXX((2, 3)) void (fill)(Dee_ssize_t start, DeeObject *end, DeeObject *filler) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKdSIZ "oo", start, end, filler)));
+	}
+	void (fill)(Dee_ssize_t start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKdSIZ DEE_PCKdSIZ, start, end)));
+	}
+	NONNULL_CXX((3)) void (fill)(Dee_ssize_t start, Dee_ssize_t end, DeeObject *filler) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKdSIZ DEE_PCKdSIZ "o", start, end, filler)));
+	}
+	void (fill)(Dee_ssize_t start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKdSIZ DEE_PCKuSIZ, start, end)));
+	}
+	NONNULL_CXX((3)) void (fill)(Dee_ssize_t start, size_t end, DeeObject *filler) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKdSIZ DEE_PCKuSIZ "o", start, end, filler)));
+	}
+	void (fill)(size_t start) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKuSIZ, start)));
+	}
+	NONNULL_CXX((2)) void (fill)(size_t start, DeeObject *end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKuSIZ "o", start, end)));
+	}
+	NONNULL_CXX((2, 3)) void (fill)(size_t start, DeeObject *end, DeeObject *filler) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKuSIZ "oo", start, end, filler)));
+	}
+	void (fill)(size_t start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKuSIZ DEE_PCKdSIZ, start, end)));
+	}
+	NONNULL_CXX((3)) void (fill)(size_t start, Dee_ssize_t end, DeeObject *filler) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKuSIZ DEE_PCKdSIZ "o", start, end, filler)));
+	}
+	void (fill)(size_t start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end)));
+	}
+	NONNULL_CXX((3)) void (fill)(size_t start, size_t end, DeeObject *filler) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "fill", _Dee_HashSelectC(0xbd501461, 0x7b3ed649c1abacf4),  DEE_PCKuSIZ DEE_PCKuSIZ "o", start, end, filler)));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should) {
 		DeeObject *args[1];
@@ -248,11 +1024,43 @@ public:
 		args[2] = end;
 		return inherit(DeeObject_CallAttrStringHash(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), 3, args));
 	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, DeeObject *end, DeeObject *max) {
+		DeeObject *args[4];
+		args[0] = should;
+		args[1] = start;
+		args[2] = end;
+		args[3] = max;
+		return inherit(DeeObject_CallAttrStringHash(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), 4, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, DeeObject *end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "ooo" DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, DeeObject *end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "ooo" DEE_PCKuSIZ, should, start, end, max));
+	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, Dee_ssize_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "oo" DEE_PCKdSIZ, should, start, end));
 	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, Dee_ssize_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "oo" DEE_PCKdSIZ "o", should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, Dee_ssize_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "oo" DEE_PCKdSIZ DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, Dee_ssize_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "oo" DEE_PCKdSIZ DEE_PCKuSIZ, should, start, end, max));
+	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "oo" DEE_PCKuSIZ, should, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, size_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "oo" DEE_PCKuSIZ "o", should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, size_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "oo" DEE_PCKuSIZ DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::int_> (removeif)(DeeObject *should, DeeObject *start, size_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "oo" DEE_PCKuSIZ DEE_PCKuSIZ, should, start, end, max));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ, should, start));
@@ -260,11 +1068,38 @@ public:
 	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, DeeObject *end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ "o", should, start, end));
 	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, DeeObject *end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ "oo", should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, DeeObject *end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ "o" DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, DeeObject *end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ "o" DEE_PCKuSIZ, should, start, end, max));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, Dee_ssize_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ DEE_PCKdSIZ, should, start, end));
 	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, Dee_ssize_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ DEE_PCKdSIZ "o", should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ DEE_PCKdSIZ DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, Dee_ssize_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ DEE_PCKdSIZ DEE_PCKuSIZ, should, start, end, max));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ DEE_PCKuSIZ, should, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, size_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ DEE_PCKuSIZ "o", should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, size_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ DEE_PCKuSIZ DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, Dee_ssize_t start, size_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKdSIZ DEE_PCKuSIZ DEE_PCKuSIZ, should, start, end, max));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ, should, start));
@@ -272,11 +1107,38 @@ public:
 	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, DeeObject *end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ "o", should, start, end));
 	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, DeeObject *end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ "oo", should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, DeeObject *end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ "o" DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, DeeObject *end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ "o" DEE_PCKuSIZ, should, start, end, max));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, Dee_ssize_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ DEE_PCKdSIZ, should, start, end));
 	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, Dee_ssize_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ DEE_PCKdSIZ "o", should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, Dee_ssize_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ DEE_PCKdSIZ DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, Dee_ssize_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ DEE_PCKdSIZ DEE_PCKuSIZ, should, start, end, max));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ DEE_PCKuSIZ, should, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 4)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, size_t end, DeeObject *max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ DEE_PCKuSIZ "o", should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, size_t end, Dee_ssize_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ DEE_PCKuSIZ DEE_PCKdSIZ, should, start, end, max));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (removeif)(DeeObject *should, size_t start, size_t end, size_t max) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "removeif", _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e), "o" DEE_PCKuSIZ DEE_PCKuSIZ DEE_PCKuSIZ, should, start, end, max));
 	}
 	NONNULL_CXX((1)) void (pushfront)(DeeObject *item) {
 		DeeObject *args[1];
@@ -297,21 +1159,196 @@ public:
 	void (reverse)() {
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a), 0, NULL)));
 	}
+	NONNULL_CXX((1)) void (reverse)(DeeObject *start) {
+		DeeObject *args[1];
+		args[0] = start;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a), 1, args)));
+	}
+	NONNULL_CXX((1, 2)) void (reverse)(DeeObject *start, DeeObject *end) {
+		DeeObject *args[2];
+		args[0] = start;
+		args[1] = end;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a), 2, args)));
+	}
+	NONNULL_CXX((1)) void (reverse)(DeeObject *start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a), "o" DEE_PCKdSIZ, start, end)));
+	}
+	NONNULL_CXX((1)) void (reverse)(DeeObject *start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a), "o" DEE_PCKuSIZ, start, end)));
+	}
+	void (reverse)(Dee_ssize_t start) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a),  DEE_PCKdSIZ, start)));
+	}
+	NONNULL_CXX((2)) void (reverse)(Dee_ssize_t start, DeeObject *end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a),  DEE_PCKdSIZ "o", start, end)));
+	}
+	void (reverse)(Dee_ssize_t start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a),  DEE_PCKdSIZ DEE_PCKdSIZ, start, end)));
+	}
+	void (reverse)(Dee_ssize_t start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a),  DEE_PCKdSIZ DEE_PCKuSIZ, start, end)));
+	}
+	void (reverse)(size_t start) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a),  DEE_PCKuSIZ, start)));
+	}
+	NONNULL_CXX((2)) void (reverse)(size_t start, DeeObject *end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a),  DEE_PCKuSIZ "o", start, end)));
+	}
+	void (reverse)(size_t start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a),  DEE_PCKuSIZ DEE_PCKdSIZ, start, end)));
+	}
+	void (reverse)(size_t start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "reverse", _Dee_HashSelectC(0xd8d820f4, 0x278cbcd3a230313a),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end)));
+	}
 	void (sort)() {
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1), 0, NULL)));
 	}
-	NONNULL_CXX((1)) void (sort)(DeeObject *key) {
+	NONNULL_CXX((1)) void (sort)(DeeObject *start) {
 		DeeObject *args[1];
-		args[0] = key;
+		args[0] = start;
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1), 1, args)));
+	}
+	NONNULL_CXX((1, 2)) void (sort)(DeeObject *start, DeeObject *end) {
+		DeeObject *args[2];
+		args[0] = start;
+		args[1] = end;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1), 2, args)));
+	}
+	NONNULL_CXX((1, 2, 3)) void (sort)(DeeObject *start, DeeObject *end, DeeObject *key) {
+		DeeObject *args[3];
+		args[0] = start;
+		args[1] = end;
+		args[2] = key;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1), 3, args)));
+	}
+	NONNULL_CXX((1)) void (sort)(DeeObject *start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1), "o" DEE_PCKdSIZ, start, end)));
+	}
+	NONNULL_CXX((1, 3)) void (sort)(DeeObject *start, Dee_ssize_t end, DeeObject *key) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1), "o" DEE_PCKdSIZ "o", start, end, key)));
+	}
+	NONNULL_CXX((1)) void (sort)(DeeObject *start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1), "o" DEE_PCKuSIZ, start, end)));
+	}
+	NONNULL_CXX((1, 3)) void (sort)(DeeObject *start, size_t end, DeeObject *key) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1), "o" DEE_PCKuSIZ "o", start, end, key)));
+	}
+	void (sort)(Dee_ssize_t start) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKdSIZ, start)));
+	}
+	NONNULL_CXX((2)) void (sort)(Dee_ssize_t start, DeeObject *end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKdSIZ "o", start, end)));
+	}
+	NONNULL_CXX((2, 3)) void (sort)(Dee_ssize_t start, DeeObject *end, DeeObject *key) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKdSIZ "oo", start, end, key)));
+	}
+	void (sort)(Dee_ssize_t start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKdSIZ DEE_PCKdSIZ, start, end)));
+	}
+	NONNULL_CXX((3)) void (sort)(Dee_ssize_t start, Dee_ssize_t end, DeeObject *key) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKdSIZ DEE_PCKdSIZ "o", start, end, key)));
+	}
+	void (sort)(Dee_ssize_t start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKdSIZ DEE_PCKuSIZ, start, end)));
+	}
+	NONNULL_CXX((3)) void (sort)(Dee_ssize_t start, size_t end, DeeObject *key) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKdSIZ DEE_PCKuSIZ "o", start, end, key)));
+	}
+	void (sort)(size_t start) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKuSIZ, start)));
+	}
+	NONNULL_CXX((2)) void (sort)(size_t start, DeeObject *end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKuSIZ "o", start, end)));
+	}
+	NONNULL_CXX((2, 3)) void (sort)(size_t start, DeeObject *end, DeeObject *key) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKuSIZ "oo", start, end, key)));
+	}
+	void (sort)(size_t start, Dee_ssize_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKuSIZ DEE_PCKdSIZ, start, end)));
+	}
+	NONNULL_CXX((3)) void (sort)(size_t start, Dee_ssize_t end, DeeObject *key) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKuSIZ DEE_PCKdSIZ "o", start, end, key)));
+	}
+	void (sort)(size_t start, size_t end) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end)));
+	}
+	NONNULL_CXX((3)) void (sort)(size_t start, size_t end, DeeObject *key) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "sort", _Dee_HashSelectC(0xde7868af, 0x58835b3b7416f7f1),  DEE_PCKuSIZ DEE_PCKuSIZ "o", start, end, key)));
 	}
 	WUNUSED Ref<Sequence<T> > (sorted)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860), 0, NULL));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<Sequence<T> > (sorted)(DeeObject *key) {
+	WUNUSED NONNULL_CXX((1)) Ref<Sequence<T> > (sorted)(DeeObject *start) {
 		DeeObject *args[1];
-		args[0] = key;
+		args[0] = start;
 		return inherit(DeeObject_CallAttrStringHash(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<Sequence<T> > (sorted)(DeeObject *start, DeeObject *end) {
+		DeeObject *args[2];
+		args[0] = start;
+		args[1] = end;
+		return inherit(DeeObject_CallAttrStringHash(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<Sequence<T> > (sorted)(DeeObject *start, DeeObject *end, DeeObject *key) {
+		DeeObject *args[3];
+		args[0] = start;
+		args[1] = end;
+		args[2] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Sequence<T> > (sorted)(DeeObject *start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860), "o" DEE_PCKdSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<Sequence<T> > (sorted)(DeeObject *start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860), "o" DEE_PCKdSIZ "o", start, end, key));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<Sequence<T> > (sorted)(DeeObject *start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860), "o" DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<Sequence<T> > (sorted)(DeeObject *start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860), "o" DEE_PCKuSIZ "o", start, end, key));
+	}
+	WUNUSED Ref<Sequence<T> > (sorted)(Dee_ssize_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKdSIZ, start));
+	}
+	WUNUSED NONNULL_CXX((2)) Ref<Sequence<T> > (sorted)(Dee_ssize_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKdSIZ "o", start, end));
+	}
+	WUNUSED NONNULL_CXX((2, 3)) Ref<Sequence<T> > (sorted)(Dee_ssize_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKdSIZ "oo", start, end, key));
+	}
+	WUNUSED Ref<Sequence<T> > (sorted)(Dee_ssize_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKdSIZ DEE_PCKdSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((3)) Ref<Sequence<T> > (sorted)(Dee_ssize_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKdSIZ DEE_PCKdSIZ "o", start, end, key));
+	}
+	WUNUSED Ref<Sequence<T> > (sorted)(Dee_ssize_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKdSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((3)) Ref<Sequence<T> > (sorted)(Dee_ssize_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKdSIZ DEE_PCKuSIZ "o", start, end, key));
+	}
+	WUNUSED Ref<Sequence<T> > (sorted)(size_t start) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKuSIZ, start));
+	}
+	WUNUSED NONNULL_CXX((2)) Ref<Sequence<T> > (sorted)(size_t start, DeeObject *end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKuSIZ "o", start, end));
+	}
+	WUNUSED NONNULL_CXX((2, 3)) Ref<Sequence<T> > (sorted)(size_t start, DeeObject *end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKuSIZ "oo", start, end, key));
+	}
+	WUNUSED Ref<Sequence<T> > (sorted)(size_t start, Dee_ssize_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKuSIZ DEE_PCKdSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((3)) Ref<Sequence<T> > (sorted)(size_t start, Dee_ssize_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKuSIZ DEE_PCKdSIZ "o", start, end, key));
+	}
+	WUNUSED Ref<Sequence<T> > (sorted)(size_t start, size_t end) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKuSIZ DEE_PCKuSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((3)) Ref<Sequence<T> > (sorted)(size_t start, size_t end, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "sorted", _Dee_HashSelectC(0x93fb6d4, 0x2fc60c43cfaf0860),  DEE_PCKuSIZ DEE_PCKuSIZ "o", start, end, key));
 	}
 	NONNULL_CXX((1)) void (reserve)(DeeObject *size) {
 		DeeObject *args[1];

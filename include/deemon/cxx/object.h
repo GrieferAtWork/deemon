@@ -364,49 +364,49 @@ public:
 		DREF DeeObject *oldval;
 		oldval = m_ptr;
 		m_ptr  = right.release();
-		Dee_Decref(oldval);
+		Dee_XDecref(oldval);
 	}
 	void set(RefBase const &right) {
 		DREF DeeObject *oldval;
 		oldval = m_ptr;
 		m_ptr  = incref(right.m_ptr);
-		Dee_Decref(oldval);
+		Dee_XDecref(oldval);
 	}
 	void set(DeeObject *ptr) {
 		DREF DeeObject *oldval;
 		oldval = m_ptr;
 		m_ptr  = incref(throw_if_null(ptr));
-		Dee_Decref(oldval);
+		Dee_XDecref(oldval);
 	}
 	template<class S> void set(detail::ObjNonNull<S> ptr) DEE_CXX_NOTHROW {
 		DREF DeeObject *oldval;
 		oldval = m_ptr;
 		m_ptr  = incref((DeeObject *)ptr);
-		Dee_Decref(oldval);
+		Dee_XDecref(oldval);
 	}
 	template<class S> void set(detail::ObjMaybeNull<S> ptr) DEE_CXX_NOTHROW {
 		DREF DeeObject *oldval;
 		oldval = m_ptr;
 		m_ptr  = xincref((DeeObject *)ptr);
-		Dee_Decref(oldval);
+		Dee_XDecref(oldval);
 	}
 	template<class S> void set(detail::ObjInherited<S> ptr) {
 		DREF DeeObject *oldval;
 		oldval = m_ptr;
 		m_ptr  = throw_if_null((DeeObject *)ptr);
-		Dee_Decref(oldval);
+		Dee_XDecref(oldval);
 	}
 	template<class S> void set(detail::ObjNonNullInherited<S> ptr) DEE_CXX_NOTHROW {
 		DREF DeeObject *oldval;
 		oldval = m_ptr;
 		m_ptr  = (DeeObject *)ptr;
-		Dee_Decref(oldval);
+		Dee_XDecref(oldval);
 	}
 	template<class S> void set(detail::ObjMaybeNullInherited<S> ptr) DEE_CXX_NOTHROW {
 		DREF DeeObject *oldval;
 		oldval = m_ptr;
 		m_ptr  = (DeeObject *)ptr;
-		Dee_Decref(oldval);
+		Dee_XDecref(oldval);
 	}
 
 	WUNUSED bool isempty() const DEE_CXX_NOTHROW {
