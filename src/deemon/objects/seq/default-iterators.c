@@ -604,6 +604,8 @@ di_tg_init(DefaultIterator_WithTGetItem *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "ooo:_IterWithTGetItem",
 	                  &self->ditg_seq, &self->ditg_tp_seq, &self->ditg_index))
 		goto err;
+	if (DeeObject_AssertType(self->ditg_tp_seq, &DeeType_Type))
+		goto err;
 	if (DeeObject_AssertTypeOrAbstract(self->ditg_seq, self->ditg_tp_seq))
 		goto err;
 	if ((!self->ditg_tp_seq->tp_seq || !self->ditg_tp_seq->tp_seq->tp_getitem) &&
@@ -1055,6 +1057,10 @@ di_tsg_init(DefaultIterator_WithTSizeAndGetItem *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "oooo:_IterWithTSizeAndGetItem",
 	                  &self->ditsg_seq, &self->ditsg_tp_seq,
 	                  &self->ditsg_index, &self->ditsg_end))
+		goto err;
+	if (DeeObject_AssertType(self->ditsg_tp_seq, &DeeType_Type))
+		goto err;
+	if (DeeObject_AssertTypeOrAbstract(self->ditsg_seq, self->ditsg_tp_seq))
 		goto err;
 	if ((!self->ditsg_tp_seq->tp_seq || !self->ditsg_tp_seq->tp_seq->tp_getitem) &&
 	    !DeeType_InheritGetItem(self->ditsg_tp_seq))
@@ -1565,6 +1571,132 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_tp_next) == offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_tp_next));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_tp_getitem) == offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_tp_tgetitem));
 
+#define di_ikgim_init di_ikgis_init
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_ikgis_init(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
+              size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp, *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndGetItemForSeq", /* And `_IterWithIterKeysAndGetItemForMap' */
+	                  &self->diikgi_seq, &self->diikgi_iter))
+		goto err;
+	itertyp = Dee_TYPE(self->diikgi_iter);
+	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+		goto err_no_next;
+	seqtyp = Dee_TYPE(self->diikgi_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) && !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->diikgi_tp_next    = itertyp->tp_iter_next;
+	self->diikgi_tp_getitem = seqtyp->tp_seq->tp_getitem;
+	Dee_Incref(self->diikgi_iter);
+	Dee_Incref(self->diikgi_seq);
+	return 0;
+err_no_getitem:
+	return err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err_no_next:
+	return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+#define di_iktgim_init di_iktgis_init
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_iktgis_init(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
+               size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp, *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "ooo:_IterWithIterKeysAndTGetItemForSeq", /* And `_IterWithIterKeysAndTGetItemForMap' */
+	                  &self->diiktgi_seq, &self->diiktgi_tp_seq, &self->diiktgi_iter))
+		goto err;
+	if (DeeObject_AssertType(self->diiktgi_tp_seq, &DeeType_Type))
+		goto err;
+	if (DeeObject_AssertTypeOrAbstract(self->diiktgi_seq, self->diiktgi_tp_seq))
+		goto err;
+	itertyp = Dee_TYPE(self->diiktgi_iter);
+	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+		goto err_no_next;
+	seqtyp = self->diiktgi_tp_seq;
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) && !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->diiktgi_tp_next     = itertyp->tp_iter_next;
+	self->diiktgi_tp_tgetitem = DeeType_MapDefaultGetItem(seqtyp->tp_seq->tp_getitem, &,
+	                                                      seqtyp->tp_seq->tp_getitem == &instance_getitem
+	                                                      ? &instance_tgetitem
+	                                                      : &generic_tp_tgetitem);
+	Dee_Incref(self->diiktgi_iter);
+	Dee_Incref(self->diiktgi_seq);
+	return 0;
+err_no_getitem:
+	return err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err_no_next:
+	return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+#define di_iktrgim_init di_iktrgis_init
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_iktrgis_init(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
+                size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp, *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndTryGetItemForSeq", /* And `_IterWithIterKeysAndTryGetItemForMap' */
+	                  &self->diikgi_seq, &self->diikgi_iter))
+		goto err;
+	itertyp = Dee_TYPE(self->diikgi_iter);
+	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+		goto err_no_next;
+	seqtyp = Dee_TYPE(self->diikgi_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->diikgi_tp_next    = itertyp->tp_iter_next;
+	self->diikgi_tp_getitem = seqtyp->tp_seq->tp_trygetitem;
+	Dee_Incref(self->diikgi_iter);
+	Dee_Incref(self->diikgi_seq);
+	return 0;
+err_no_getitem:
+	return err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err_no_next:
+	return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+generic_tp_ttrygetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
+	return (*tp_self->tp_seq->tp_trygetitem)(self, index);
+}
+
+#define di_ikttrgim_init di_ikttrgis_init
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_ikttrgis_init(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
+                 size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp, *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "ooo:_IterWithIterKeysAndTTryGetItemForSeq", /* And `_IterWithIterKeysAndTTryGetItemForMap' */
+	                  &self->diiktgi_seq, &self->diiktgi_tp_seq, &self->diiktgi_iter))
+		goto err;
+	if (DeeObject_AssertType(self->diiktgi_tp_seq, &DeeType_Type))
+		goto err;
+	if (DeeObject_AssertTypeOrAbstract(self->diiktgi_seq, self->diiktgi_tp_seq))
+		goto err;
+	itertyp = Dee_TYPE(self->diiktgi_iter);
+	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+		goto err_no_next;
+	seqtyp = self->diiktgi_tp_seq;
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	self->diiktgi_tp_next     = itertyp->tp_iter_next;
+	self->diiktgi_tp_tgetitem = DeeType_MapDefaultTryGetItem(seqtyp->tp_seq->tp_trygetitem, &,
+	                                                         &generic_tp_ttrygetitem);
+	Dee_Incref(self->diiktgi_iter);
+	Dee_Incref(self->diiktgi_seq);
+	return 0;
+err_no_getitem:
+	return err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err_no_next:
+	return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+
 #define di_iktrgis_copy di_ikgis_copy
 #define di_ikgim_copy   di_ikgis_copy
 #define di_iktrgim_copy di_ikgis_copy
@@ -1961,7 +2093,7 @@ err_key:
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndGetItemForSeq",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItem,objWithNext)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1972,7 +2104,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikgis_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_ikgis_init,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
@@ -2006,7 +2138,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type = {
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTGetItemForSeq",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithGetItem,objWithGetItemType:?DType,objWithNext)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2017,7 +2149,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktgis_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_iktgis_init,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
@@ -2051,7 +2183,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type = {
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTryGetItemForSeq",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithTryGetItem,objWithNext)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2062,7 +2194,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktrgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktrgis_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_iktrgis_init,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
@@ -2096,7 +2228,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTTryGetItemForSeq",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(objWithTryGetItem,objWithTryGetItemType:?DType,objWithNext)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2107,7 +2239,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikttrgis_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikttrgis_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_ikttrgis_init,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
@@ -2141,7 +2273,8 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndGetItemForMap",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"),
+	/* .tp_doc      = */ DOC("(objWithGetItem,objWithNext)\n"
+	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2152,7 +2285,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikgim_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_ikgim_init,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
@@ -2186,7 +2319,8 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTGetItemForMap",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"),
+	/* .tp_doc      = */ DOC("(objWithGetItem,objWithGetItemType:?DType,objWithNext)\n"
+	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2197,7 +2331,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktgim_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_iktgim_init,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},
@@ -2231,7 +2365,8 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type = {
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTryGetItemForMap",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"),
+	/* .tp_doc      = */ DOC("(objWithTryGetItem,objWithNext)\n"
+	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2242,7 +2377,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_iktrgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_iktrgim_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_iktrgim_init,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndGetItem)
 			}
 		},
@@ -2276,7 +2411,8 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTTryGetItemForMap",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"),
+	/* .tp_doc      = */ DOC("(objWithTryGetItem,objWithTryGetItemType:?DType,objWithNext)\n"
+	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2287,7 +2423,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_ikttrgim_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_ikttrgim_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_ikttrgim_init,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithIterKeysAndTGetItem)
 			}
 		},

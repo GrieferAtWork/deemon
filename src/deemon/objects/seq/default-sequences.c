@@ -1289,6 +1289,8 @@ ds_tsg_init(DefaultSequence_WithTSizeAndGetItem *__restrict self,
 	                  &self->dstsg_seq, &self->dstsg_tp_seq,
 	                  &self->dstsg_start, &self->dstsg_end))
 		goto err;
+	if (DeeObject_AssertType(self->dstsg_tp_seq, &DeeType_Type))
+		goto err;
 	if (DeeObject_AssertTypeOrAbstract(self->dstsg_seq, self->dstsg_tp_seq))
 		goto err;
 	if ((!self->dstsg_tp_seq->tp_seq || !self->dstsg_tp_seq->tp_seq->tp_getitem) &&
@@ -2264,6 +2266,8 @@ ds_ti_init(DefaultSequence_WithTIter *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithTIter",
 	                  &self->dsti_seq, &self->dsti_tp_seq,
 	                  &self->dsti_start, &self->dsti_limit))
+		goto err;
+	if (DeeObject_AssertType(self->dsti_tp_seq, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertTypeOrAbstract(self->dsti_seq, self->dsti_tp_seq))
 		goto err;
