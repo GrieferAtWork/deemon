@@ -334,7 +334,9 @@ struct Dee_type_seq_cache {
 	/* TODO */
 };
 
-INTDEF NONNULL((1)) void DCALL Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self);
+/* Destroy a lazily allocated sequence operator cache table. */
+INTDEF NONNULL((1)) void DCALL
+Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self);
 
 INTDEF WUNUSED NONNULL((1)) struct Dee_type_seq_cache *DCALL
 DeeType_TryRequireSeqCache(DeeTypeObject *__restrict self);
