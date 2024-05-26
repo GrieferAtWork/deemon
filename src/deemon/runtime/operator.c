@@ -2750,7 +2750,96 @@ DEFINE_OPERATOR(int, Get128Bit,
 err:
 	return -1;
 }
-#endif
+
+/* All of these return (T)-1 on error. When the object's actual value is `(T)-1', throw `IntegerOverflow' */
+PUBLIC WUNUSED NONNULL((1)) uint8_t
+(DCALL DeeObject_AsDirectUInt8)(DeeObject *__restrict self) {
+	uint8_t result;
+	if unlikely(DeeObject_AsUInt8(self, &result))
+		goto err;
+	if unlikely(result == (uint8_t)-1)
+		goto err_overflow;
+	return result;
+err_overflow:
+	err_integer_overflow_i(8, true);
+err:
+	return (uint8_t)-1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) uint16_t
+(DCALL DeeObject_AsDirectUInt16)(DeeObject *__restrict self) {
+	uint16_t result;
+	if unlikely(DeeObject_AsUInt16(self, &result))
+		goto err;
+	if unlikely(result == (uint16_t)-1)
+		goto err_overflow;
+	return result;
+err_overflow:
+	err_integer_overflow_i(16, true);
+err:
+	return (uint16_t)-1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) uint32_t
+(DCALL DeeObject_AsDirectUInt32)(DeeObject *__restrict self) {
+	uint32_t result;
+	if unlikely(DeeObject_AsUInt32(self, &result))
+		goto err;
+	if unlikely(result == (uint32_t)-1)
+		goto err_overflow;
+	return result;
+err_overflow:
+	err_integer_overflow_i(32, true);
+err:
+	return (uint32_t)-1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) uint64_t
+(DCALL DeeObject_AsDirectUInt64)(DeeObject *__restrict self) {
+	uint64_t result;
+	if unlikely(DeeObject_AsUInt64(self, &result))
+		goto err;
+	if unlikely(result == (uint64_t)-1)
+		goto err_overflow;
+	return result;
+err_overflow:
+	err_integer_overflow_i(64, true);
+err:
+	return (uint64_t)-1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) uint8_t
+(DCALL DeeObject_AsDirectUInt8Inherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	uint8_t result;
+	result = DeeObject_AsDirectUInt8(self);
+	Dee_Decref(self);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) uint16_t
+(DCALL DeeObject_AsDirectUInt16Inherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	uint16_t result;
+	result = DeeObject_AsDirectUInt16(self);
+	Dee_Decref(self);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) uint32_t
+(DCALL DeeObject_AsDirectUInt32Inherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	uint32_t result;
+	result = DeeObject_AsDirectUInt32(self);
+	Dee_Decref(self);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) uint64_t
+(DCALL DeeObject_AsDirectUInt64Inherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	uint64_t result;
+	result = DeeObject_AsDirectUInt64(self);
+	Dee_Decref(self);
+	return result;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
 
 
 #ifndef DEFINE_TYPED_OPERATORS

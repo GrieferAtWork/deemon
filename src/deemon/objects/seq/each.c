@@ -25,6 +25,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
@@ -38,6 +39,9 @@
 #include "../seq_functions.h"
 
 DECL_BEGIN
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg);
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachOperator *DCALL
 seqeach_makeop0(DeeObject *__restrict seq, Dee_operator_t opname) {
@@ -755,12 +759,12 @@ se_boundattr_string_len_hash(SeqEachBase *self, char const *attr,
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 se_print(SeqEachBase *__restrict self, dformatprinter printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<each of %r>", self->se_seq);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 se_printrepr(SeqEachBase *__restrict self, dformatprinter printer, void *arg) {
 	if (DeeSeq_Check(self->se_seq))
 		return DeeFormat_Printf(printer, arg, "%r.each", self->se_seq);
@@ -978,7 +982,7 @@ PRIVATE struct type_seq se_seq = {
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_iterkeys                   = */ NULL, /* TODO: `(for (local x: se_seq) rt.iterkeys(x))' */
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ NULL,
@@ -1071,7 +1075,7 @@ PRIVATE struct type_with se_with = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 se_enumattr_impl(DeeObject *seq, denum_t proc, void *arg) {
 	(void)seq;
 	(void)proc;
@@ -1081,7 +1085,7 @@ se_enumattr_impl(DeeObject *seq, denum_t proc, void *arg) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 se_enumattr(DeeTypeObject *UNUSED(tp_self),
             SeqEachBase *self, denum_t proc, void *arg) {
 	return se_enumattr_impl(self->se_seq, proc, arg);
@@ -1149,7 +1153,7 @@ PRIVATE struct type_attr tpconst se_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&se_setattr,
-	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&se_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&se_enumattr,
 	/* .tp_findattr                      = */ NULL,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_boundattr,
@@ -1199,10 +1203,10 @@ INTERN DeeTypeObject SeqEach_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqEach",
 	/* .tp_doc      = */ DOC("(seq:?DSequence)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL|TP_FMOVEANY,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FMOVEANY,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -1221,8 +1225,8 @@ INTERN DeeTypeObject SeqEach_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&se_bool,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&se_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&se_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&se_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&se_printrepr,
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&se_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&se_visit,
@@ -1355,7 +1359,7 @@ err:
 }
 
 #ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 seo_printrepr(SeqEachOperator *__restrict self,
               dformatprinter printer, void *arg) {
 	char const *each_suffix = ".each";
@@ -1712,7 +1716,7 @@ PRIVATE struct type_with sew_with = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 sew_enumattr(DeeTypeObject *UNUSED(tp_self),
              SeqEachBase *self, denum_t proc, void *arg) {
 	return se_enumattr_impl((DeeObject *)self, proc, arg);
@@ -2143,7 +2147,7 @@ PRIVATE struct type_attr tpconst seo_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&seo_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&seo_setattr,
-	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&sew_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&sew_enumattr,
 	/* .tp_findattr                      = */ NULL,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_boundattr,
@@ -2263,6 +2267,11 @@ sew_sizeob(SeqEachBase *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sew_iterkeys(SeqEachBase *__restrict self) {
+	return DeeObject_IterKeys(self->se_seq);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seo_getitem_index(SeqEachOperator *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->se_seq, index);
@@ -2350,7 +2359,7 @@ PRIVATE struct type_nsi tpconst seo_nsi = {
 PRIVATE struct type_seq seo_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seo_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
-	/* .tp_contains                   = */ NULL,
+	/* .tp_contains                   = */ &DeeSeq_DefaultContainsWithForeachDefault,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_getitem,
 	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_delitem,
 	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_setitem,
@@ -2359,10 +2368,10 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
 	/* .tp_nsi                        = */ &seo_nsi,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
-	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_foreach_pair               = */ NULL, /* &DeeObject_DefaultForeachPairWithForeachs */
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&seo_enumerate,
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&seo_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sew_size,
@@ -2409,10 +2418,10 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_name     = */ "_SeqEachOperator",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(seq:?DSequence,op:?X2?Dstring?Dint,args=!T0)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL|TP_FMOVEANY,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FMOVEANY,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -2433,8 +2442,10 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool,
 		/* .tp_print     = */ NULL,
 #ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&seo_printrepr,
-#endif /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&seo_printrepr,
+#else /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+		/* .tp_printrepr = */ &default_seq_printrepr,
+#endif /* !CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,

@@ -117,6 +117,19 @@ local STRINGS = {
 	"rremove",
 	"removeall",
 	"removeif",
+	"any",
+	"all",
+	"parity",
+	"reduce",
+	"min",
+	"max",
+	"sum",
+	"count",
+	"contains",
+	"locate",
+	"rlocate",
+	"startswith",
+	"endswith",
 	"find",
 	"rfind",
 	"index",
@@ -454,6 +467,45 @@ DEF_STRING(str_removeall, "removeall", 0x902407ed, 0x97879af70abc9349)
 #define Dee_HashStr__removeif _Dee_HashSelectC(0x156aa732, 0x96ad85f728d8a11e)
 DEF_STRING(str_removeif, "removeif", 0x156aa732, 0x96ad85f728d8a11e)
 #define STR_removeif DeeString_STR(&str_removeif)
+#define Dee_HashStr__any _Dee_HashSelectC(0x8125d3c6, 0xb4b817103f9d84ef)
+DEF_STRING(str_any, "any", 0x8125d3c6, 0xb4b817103f9d84ef)
+#define STR_any DeeString_STR(&str_any)
+#define Dee_HashStr__all _Dee_HashSelectC(0xb7e328b, 0xa812dcfcacc34ebc)
+DEF_STRING(str_all, "all", 0xb7e328b, 0xa812dcfcacc34ebc)
+#define STR_all DeeString_STR(&str_all)
+#define Dee_HashStr__parity _Dee_HashSelectC(0x92f3da0a, 0x254564db48674f28)
+DEF_STRING(str_parity, "parity", 0x92f3da0a, 0x254564db48674f28)
+#define STR_parity DeeString_STR(&str_parity)
+#define Dee_HashStr__reduce _Dee_HashSelectC(0x907b2992, 0xb7e66094a8a9409d)
+DEF_STRING(str_reduce, "reduce", 0x907b2992, 0xb7e66094a8a9409d)
+#define STR_reduce DeeString_STR(&str_reduce)
+#define Dee_HashStr__min _Dee_HashSelectC(0xde957cfa, 0xe6ffc7365e2d00ca)
+DEF_STRING(str_min, "min", 0xde957cfa, 0xe6ffc7365e2d00ca)
+#define STR_min DeeString_STR(&str_min)
+#define Dee_HashStr__max _Dee_HashSelectC(0xc293979b, 0x822bd5c706bd9850)
+DEF_STRING(str_max, "max", 0xc293979b, 0x822bd5c706bd9850)
+#define STR_max DeeString_STR(&str_max)
+#define Dee_HashStr__sum _Dee_HashSelectC(0xfdc548bb, 0x69e7b5a62f6dbc17)
+DEF_STRING(str_sum, "sum", 0xfdc548bb, 0x69e7b5a62f6dbc17)
+#define STR_sum DeeString_STR(&str_sum)
+#define Dee_HashStr__count _Dee_HashSelectC(0x54eac164, 0xbd66b5980d54babb)
+DEF_STRING(str_count, "count", 0x54eac164, 0xbd66b5980d54babb)
+#define STR_count DeeString_STR(&str_count)
+#define Dee_HashStr__contains _Dee_HashSelectC(0x9338eec0, 0x1e0128373382a209)
+DEF_STRING(str_contains, "contains", 0x9338eec0, 0x1e0128373382a209)
+#define STR_contains DeeString_STR(&str_contains)
+#define Dee_HashStr__locate _Dee_HashSelectC(0x72fc7691, 0xa3c641c56f3d6258)
+DEF_STRING(str_locate, "locate", 0x72fc7691, 0xa3c641c56f3d6258)
+#define STR_locate DeeString_STR(&str_locate)
+#define Dee_HashStr__rlocate _Dee_HashSelectC(0xe233056a, 0xf4759389157e74b)
+DEF_STRING(str_rlocate, "rlocate", 0xe233056a, 0xf4759389157e74b)
+#define STR_rlocate DeeString_STR(&str_rlocate)
+#define Dee_HashStr__startswith _Dee_HashSelectC(0x58e22b, 0x6251da2c5cdb654d)
+DEF_STRING(str_startswith, "startswith", 0x58e22b, 0x6251da2c5cdb654d)
+#define STR_startswith DeeString_STR(&str_startswith)
+#define Dee_HashStr__endswith _Dee_HashSelectC(0x8bdeff05, 0xca6abed3214345e1)
+DEF_STRING(str_endswith, "endswith", 0x8bdeff05, 0xca6abed3214345e1)
+#define STR_endswith DeeString_STR(&str_endswith)
 #define Dee_HashStr__find _Dee_HashSelectC(0x9e66372, 0x2b65fe03bbdde5b2)
 DEF_STRING(str_find, "find", 0x9e66372, 0x2b65fe03bbdde5b2)
 #define STR_find DeeString_STR(&str_find)

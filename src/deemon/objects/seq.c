@@ -1986,8 +1986,8 @@ sequence_should_use_getitem(DeeTypeObject *__restrict self) {
 	return false;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
@@ -2285,8 +2285,8 @@ foreach_seq_printrepr_cb(void *arg, DeeObject *elem) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
@@ -3435,16 +3435,6 @@ err:
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_reduce(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *combine, *init = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:reduce", &combine, &init))
-		goto err;
-	return generic_seq_reduce(self, combine, init);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_filter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *pred_keep;
 	if (DeeArg_Unpack(argc, argv, "o:filter", &pred_keep))
@@ -3460,122 +3450,6 @@ seq_ubfilter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:ubfilter", &pred_keep))
 		goto err;
 	return DeeSeq_FilterAsUnbound(self, pred_keep);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_sum(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":sum"))
-		goto err;
-	return DeeSeq_Sum(self);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_any(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int result;
-	if (DeeArg_Unpack(argc, argv, ":any"))
-		goto err;
-	result = DeeSeq_Any(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_all(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int result;
-	if (DeeArg_Unpack(argc, argv, ":all"))
-		goto err;
-	result = DeeSeq_All(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_parity(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int result;
-	if (DeeArg_Unpack(argc, argv, ":parity"))
-		goto err;
-	result = generic_seq_parity(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_min(DeeObject *self, size_t argc,
-        DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *key = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:min", &key))
-		goto err;
-	if (DeeNone_Check(key))
-		return DeeSeq_Min(self);
-	return generic_seq_min_with_key(self, key);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_max(DeeObject *self, size_t argc,
-        DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *key = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:max", &key))
-		goto err;
-	if (DeeNone_Check(key))
-		return DeeSeq_Max(self);
-	return generic_seq_max_with_key(self, key);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_count(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *elem, *key = Dee_None;
-	size_t result;
-	if (DeeArg_Unpack(argc, argv, "o|o:count", &elem, &key))
-		goto err;
-	if (DeeNone_Check(key)) {
-		result = generic_seq_count(self, elem);
-	} else {
-		result = generic_seq_count_with_key(self, elem, key);
-	}
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_locate(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *elem, *key = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:locate", &elem, &key))
-		goto err;
-	if (DeeNone_Check(key))
-		return generic_seq_locate(self, elem);
-	return generic_seq_locate_with_key(self, elem, key);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_rlocate(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *elem, *key = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:rlocate", &elem, &key))
-		goto err;
-	if (DeeNone_Check(key))
-		return generic_seq_rlocate(self, elem);
-	return generic_seq_rlocate_with_key(self, elem, key);
 err:
 	return NULL;
 }
@@ -3609,56 +3483,6 @@ seq_transform(DeeObject *self, size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_contains(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *elem, *key = Dee_None;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o|o:contains", &elem, &key))
-		goto err;
-	/* Without a key function, invoke the regular contains-operator. */
-	if (DeeNone_Check(key))
-		return DeeObject_Contains(self, elem);
-	result = generic_seq_contains_with_key(self, elem, key);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_startswith(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *elem, *key = Dee_None;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o|o:startswith", &elem, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? generic_seq_startswith_with_key(self, elem, key)
-	         : generic_seq_startswith(self, elem);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_endswith(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *elem, *key = Dee_None;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o|o:endswith", &elem, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? generic_seq_endswith_with_key(self, elem, key)
-	         : generic_seq_endswith(self, elem);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
 
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 struct sequence_find_data {
@@ -4303,8 +4127,8 @@ seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? new_DeeSeqFindWithKey(self, item, start, end, key)
-	         : new_DeeSeqFind(self, item, start, end);
+	         ? new_DeeSeq_FindWithKey(self, item, start, end, key)
+	         : new_DeeSeq_Find(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -4325,8 +4149,8 @@ seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? new_DeeSeqRFindWithKey(self, item, start, end, key)
-	         : new_DeeSeqRFind(self, item, start, end);
+	         ? new_DeeSeq_RFindWithKey(self, item, start, end, key)
+	         : new_DeeSeq_RFind(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -4452,62 +4276,61 @@ err:
 
 
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-#define generic_seq_erase     seq_erase
-#define generic_seq_insert    seq_insert
-#define generic_seq_insertall seq_insertall
-#define generic_seq_pushfront seq_pushfront
-#define generic_seq_append    seq_append
-#define generic_seq_extend    seq_extend
-#define generic_seq_xchitem   seq_xchitem
-#define generic_seq_clear     seq_clear
-#define generic_seq_pop       seq_pop
-#define generic_seq_popfront  seq_popfront
-#define generic_seq_popback   seq_popback
-#define generic_seq_remove    seq_remove
-#define generic_seq_rremove   seq_rremove
-#define generic_seq_removeall seq_removeall
-#define generic_seq_removeif  seq_removeif
-#define generic_seq_resize    seq_resize
-#define generic_seq_fill      seq_fill
-#define generic_seq_reverse   seq_reverse
-#define generic_seq_reversed  seq_reversed
-#define generic_seq_sort      seq_sort
-#define generic_seq_sorted    seq_sorted
+#define default_seq_erase     seq_erase
+#define default_seq_insert    seq_insert
+#define default_seq_insertall seq_insertall
+#define default_seq_pushfront seq_pushfront
+#define default_seq_append    seq_append
+#define default_seq_extend    seq_extend
+#define default_seq_xchitem   seq_xchitem
+#define default_seq_clear     seq_clear
+#define default_seq_pop       seq_pop
+#define default_seq_popfront  seq_popfront
+#define default_seq_popback   seq_popback
+#define default_seq_remove    seq_remove
+#define default_seq_rremove   seq_rremove
+#define default_seq_removeall seq_removeall
+#define default_seq_removeif  seq_removeif
+#define default_seq_resize    seq_resize
+#define default_seq_fill      seq_fill
+#define default_seq_reverse   seq_reverse
+#define default_seq_reversed  seq_reversed
+#define default_seq_sort      seq_sort
+#define default_seq_sorted    seq_sorted
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 INTDEF struct type_method tpconst seq_methods[];
 INTERN_TPCONST struct type_method tpconst seq_methods[] = {
-	TYPE_METHOD("reduce", &seq_reduce,
-	            "(merger:?DCallable)->\n"
-	            "(merger:?DCallable,init)->\n"
-	            "Combines consecutive elements of @this Sequence by passing them as pairs of 2 to @merger, "
-	            /**/ "then re-using its return value in the next invocation, before finally returning its last "
-	            /**/ "return value. If the Sequence consists of only 1 element, @merger is never invoked.\n"
-	            "If the Sequence is empty, ?N is returned\n"
-	            "When given, @init is used as the initial lhs-operand, "
-	            /**/ "rather than the first element of the Sequence\n"
-	            "${"
-	            /**/ "function reduce(merger: Callable, init?: Object): Object | none {\n"
-	            /**/ "	for (local x: this) {\n"
-	            /**/ "		if (init !is bound) {\n"
-	            /**/ "			init = x;\n"
-	            /**/ "		} else {\n"
-	            /**/ "			init = merger(init, x);\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "	if (init is bound)\n"
-	            /**/ "		return init;\n"
-	            /**/ "	return none;\n"
-	            /**/ "}"
-	            "}"),
+	TYPE_KWMETHOD(STR_reduce, &default_seq_reduce,
+	              "(combine:?DCallable,start=!0,end=!0,init?)->\n"
+	              "Combines consecutive elements of @this Sequence by passing them as pairs of 2 to @combine, "
+	              /**/ "then re-using its return value in the next invocation, before finally returning its last "
+	              /**/ "return value. If the Sequence consists of only 1 element, @combine is never invoked.\n"
+	              "If the Sequence is empty, ?N is returned\n"
+	              "When given, @init is used as the initial lhs-operand, "
+	              /**/ "rather than the first element of the Sequence\n"
+	              "${"
+	              /**/ "function reduce(combine: Callable, init?: Object): Object | none {\n"
+	              /**/ "	for (local x: this) {\n"
+	              /**/ "		if (init !is bound) {\n"
+	              /**/ "			init = x;\n"
+	              /**/ "		} else {\n"
+	              /**/ "			init = combine(init, x);\n"
+	              /**/ "		}\n"
+	              /**/ "	}\n"
+	              /**/ "	if (init is bound)\n"
+	              /**/ "		return init;\n"
+	              /**/ "	return none;\n"
+	              /**/ "}"
+	              "}"),
 	TYPE_METHOD("filter", &seq_filter,
 	            "(keep:?DCallable)->?DSequence\n"
 	            "#pkeep{A key function which is called for each element of @this Sequence"
 	            /**/ "Returns a sub-Sequence of all elements for which ${keep(elem)} evaluates to ?t}"
 	            "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
 	            "${"
-	            /**/ "function filter(keep): Sequence {\n"
+	            /**/ "function filter(keep: Callable): Sequence {\n"
 	            /**/ "	for (local x: this)\n"
 	            /**/ "		if (keep(x))\n"
 	            /**/ "			yield x;\n"
@@ -4523,65 +4346,66 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[0] !is bound;"
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[1] is bound;"
 	            "}"),
-	TYPE_METHOD("sum", &seq_sum,
-	            "->\nReturns the sum of all elements, or ?N if the Sequence is empty\n"
-	            "This, alongside :string.join is the preferred way of merging lists of strings "
-	            /**/ "into a single string\n"
-	            "${"
-	            /**/ "function sum() {\n"
-	            /**/ "	local result;\n"
-	            /**/ "	for (local x: this) {\n"
-	            /**/ "		if (result is bound) {\n"
-	            /**/ "			result = result + x;\n"
-	            /**/ "		} else {\n"
-	            /**/ "			result = x;\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "	return result is bound ? result : none;\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD("any", &seq_any,
-	            "->?Dbool\n"
-	            "Returns ?t if any element of @this Sequence evaluates to ?t\n"
-	            "If @this Sequence is empty, ?f is returned\n"
-	            "This function has the same effect as ${this || ...}\n"
-	            "${"
-	            /**/ "function any(): bool {\n"
-	            /**/ "	for (local x: this)\n"
-	            /**/ "		if (x)\n"
-	            /**/ "			return true;\n"
-	            /**/ "	return false;\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD("all", &seq_all,
-	            "->?Dbool\n"
-	            "Returns ?t if all elements of @this Sequence evaluate to ?t\n"
-	            "If @this Sequence is empty, ?t is returned\n"
-	            "This function has the same effect as ${this && ...}\n"
-	            "${"
-	            /**/ "function all(): bool {\n"
-	            /**/ "	for (local x: this)\n"
-	            /**/ "		if (!x)\n"
-	            /**/ "			return false;\n"
-	            /**/ "	return true;\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD("parity", &seq_parity,
-	            "->?Dbool\n"
-	            "Returns ?t or ?f indicative of the parity of Sequence elements that are ?t\n"
-	            "If @this Sequence is empty, ?f is returned\n"
-	            "Parity here refers to ${##this.filter(x -\\> !!x) % 2}\n"
-	            "${"
-	            /**/ "function parity(): bool {\n"
-	            /**/ "	local result = false;\n"
-	            /**/ "	for (local x: this)\n"
-	            /**/ "		if (x)\n"
-	            /**/ "			result = !result;\n"
-	            /**/ "	return result;\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_KWMETHOD("min", &seq_min,
-	              "(key:?DCallable=!N)->\n"
+	TYPE_KWMETHOD(STR_sum, &default_seq_sum,
+	              "(start=!0,end=!0)->\n"
+	              "Returns the sum of all elements, or ?N if the Sequence is empty\n"
+	              "This, alongside ?Ajoin?Dstring is the preferred way of merging lists of strings "
+	              /**/ "into a single string\n"
+	              "${"
+	              /**/ "function sum() {\n"
+	              /**/ "	local result;\n"
+	              /**/ "	for (local x: this) {\n"
+	              /**/ "		if (result is bound) {\n"
+	              /**/ "			result = result + x;\n"
+	              /**/ "		} else {\n"
+	              /**/ "			result = x;\n"
+	              /**/ "		}\n"
+	              /**/ "	}\n"
+	              /**/ "	return result is bound ? result : none;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD(STR_any, &default_seq_any,
+	              "(start=!0,end=!0,key:?DCallable=!N)->?Dbool\n"
+	              "Returns ?t if any element of @this Sequence evaluates to ?t\n"
+	              "If @this Sequence is empty, ?f is returned\n"
+	              "This function has the same effect as ${this || ...}\n"
+	              "${"
+	              /**/ "function any(): bool {\n"
+	              /**/ "	for (local x: this)\n"
+	              /**/ "		if (x)\n"
+	              /**/ "			return true;\n"
+	              /**/ "	return false;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD(STR_all, &default_seq_all,
+	              "(start=!0,end=!0,key:?DCallable=!N)->?Dbool\n"
+	              "Returns ?t if all elements of @this Sequence evaluate to ?t\n"
+	              "If @this Sequence is empty, ?t is returned\n"
+	              "This function has the same effect as ${this && ...}\n"
+	              "${"
+	              /**/ "function all(): bool {\n"
+	              /**/ "	for (local x: this)\n"
+	              /**/ "		if (!x)\n"
+	              /**/ "			return false;\n"
+	              /**/ "	return true;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD(STR_parity, &default_seq_parity,
+	              "(start=!0,end=!0,key:?DCallable=!N)->?Dbool\n"
+	              "Returns ?t or ?f indicative of the parity of Sequence elements that are ?t\n"
+	              "If @this Sequence is empty, ?f is returned\n"
+	              "Parity here refers to ${##this.filter(x -\\> !!x) % 2}\n"
+	              "${"
+	              /**/ "function parity(): bool {\n"
+	              /**/ "	local result = false;\n"
+	              /**/ "	for (local x: this)\n"
+	              /**/ "		if (x)\n"
+	              /**/ "			result = !result;\n"
+	              /**/ "	return result;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD(STR_min, &default_seq_min,
+	              "(start=!0,end=!0,key:?DCallable=!N)->\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "Returns the smallest element of @this Sequence\n"
 	              "If @this Sequence is empty, ?N is returned\n"
@@ -4610,8 +4434,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return result;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("max", &seq_max,
-	              "(key:?DCallable=!N)->\n"
+	TYPE_KWMETHOD(STR_max, &default_seq_max,
+	              "(start=!0,end=!0,key:?DCallable=!N)->\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "Returns the greatest element of @this Sequence\n"
 	              "If @this Sequence is empty, ?N is returned\n"
@@ -4639,115 +4463,106 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return result;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD("count", &seq_count,
-	            "(elem,key:?DCallable=!N)->?Dint\n"
-	            "#pelem{The element to search for}"
-	            "#pkey{A key function for transforming Sequence elements}"
-	            "Returns the number of instances of a given object @elem in @this Sequence\n"
-	            "${"
-	            /**/ "function count(elem: Object, key: Callable = none): int {\n"
-	            /**/ "	local result: int = 0;\n"
-	            /**/ "	if (key !is none)\n"
-	            /**/ "		elem = key(elem);\n"
-	            /**/ "	for (local x: this) {\n"
-	            /**/ "		if (key !is none) {\n"
-	            /**/ "			if (key(x) == elem)\n"
-	            /**/ "				++result;\n"
-	            /**/ "		} else {\n"
-	            /**/ "			if (x == elem)\n"
-	            /**/ "				++result;\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "	return result;\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD("locate", &seq_locate,
-	            /* TODO:
-	             * "(elem,key:?DCallable=!N,defl?)->\n"
-	             * "(elem,start:?Dint,key:?DCallable=!N,defl?)->\n"
-	             * "(elem,start:?Dint,end:?Dint,key:?DCallable=!N,defl?)->\n" */
-	            "(elem,key:?DCallable=!N)->\n"
-	            "#pelem{The element to search for}"
-	            "#pkey{A key function for transforming Sequence elements}"
-	            "#tValueError{The Sequence does not contain an element matching @elem}"
-	            "Returns the first item equal to @elem\n"
-	            "${"
-	            /**/ "function locate(elem: Object, key: Callable = none): Object {\n"
-	            /**/ "	import Error from deemon;\n"
-	            /**/ "	if (key !is none)\n"
-	            /**/ "		elem = key(elem);\n"
-	            /**/ "	for (local x: this) {\n"
-	            /**/ "		if (key !is none) {\n"
-	            /**/ "			if (elem == key(x))\n"
-	            /**/ "				return x;\n"
-	            /**/ "		} else {\n"
-	            /**/ "			if (elem == x)\n"
-	            /**/ "				return x;\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "	throw Error.ValueError(\"Item not found...\")\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD("rlocate", &seq_rlocate,
-	            /* TODO:
-	             * "(elem,key:?DCallable=!N,defl?)->\n"
-	             * "(elem,start:?Dint,key:?DCallable=!N,defl?)->\n"
-	             * "(elem,start:?Dint,end:?Dint,key:?DCallable=!N,defl?)->\n" */
-	            "(elem,key:?DCallable=!N)->\n"
-	            "#pelem{The element to search for}"
-	            "#pkey{A key function for transforming Sequence elements}"
-	            "#tValueError{The Sequence does not contain an element matching @elem}"
-	            "Returns the last item equal to @elem\n"
-	            "${"
-	            /**/ "function rlocate(elem, key: Callable) {\n"
-	            /**/ "	import Error from deemon;\n"
-	            /**/ "	local result;\n"
-	            /**/ "	if (key !is none)\n"
-	            /**/ "		elem = key(elem);\n"
-	            /**/ "	for (local x: this) {\n"
-	            /**/ "		if (key !is none) {\n"
-	            /**/ "			if (elem == key(x))\n"
-	            /**/ "				result = x;\n"
-	            /**/ "		} else {\n"
-	            /**/ "			if (elem == x)\n"
-	            /**/ "				result = x;\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
-	            /**/ "	if (result is bound)\n"
-	            /**/ "		return result;\n"
-	            /**/ "	throw Error.ValueError(\"Item not found...\")\n"
-	            /**/ "}"
-	            "}"),
-	/* TODO: findall:
-	 * "(elem,key:?DCallable=!N)->?S?Dint\n"
-	 * "(elem,start:?Dint,key:?DCallable=!N)->?S?Dint\n"
-	 * "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?Dint\n" */
+	TYPE_KWMETHOD(STR_count, &default_seq_count,
+	              "(item,start=!0,end=!0,key:?DCallable=!N)->?Dint\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "Returns the number of instances of a given object @elem in @this Sequence\n"
+	              "${"
+	              /**/ "function count(elem: Object, key: Callable = none): int {\n"
+	              /**/ "	local result: int = 0;\n"
+	              /**/ "	if (key !is none)\n"
+	              /**/ "		elem = key(elem);\n"
+	              /**/ "	for (local x: this) {\n"
+	              /**/ "		if (key !is none) {\n"
+	              /**/ "			if (key(x) == elem)\n"
+	              /**/ "				++result;\n"
+	              /**/ "		} else {\n"
+	              /**/ "			if (x == elem)\n"
+	              /**/ "				++result;\n"
+	              /**/ "		}\n"
+	              /**/ "	}\n"
+	              /**/ "	return result;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD(STR_locate, &default_seq_locate,
+	              "(item,start=!0,end=!0,key:?DCallable=!N)->\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#tValueError{The Sequence does not contain an element matching @elem}"
+	              "Returns the first item equal to @elem\n"
+	              "${"
+	              /**/ "function locate(elem: Object, key: Callable = none): Object {\n"
+	              /**/ "	import Error from deemon;\n"
+	              /**/ "	if (key !is none)\n"
+	              /**/ "		elem = key(elem);\n"
+	              /**/ "	for (local x: this) {\n"
+	              /**/ "		if (key !is none) {\n"
+	              /**/ "			if (elem == key(x))\n"
+	              /**/ "				return x;\n"
+	              /**/ "		} else {\n"
+	              /**/ "			if (elem == x)\n"
+	              /**/ "				return x;\n"
+	              /**/ "		}\n"
+	              /**/ "	}\n"
+	              /**/ "	throw Error.ValueError(\"Item not found...\")\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD("rlocate", &default_seq_rlocate,
+	              "(item,start=!0,end=!0,key:?DCallable=!N)->\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "#tValueError{The Sequence does not contain an element matching @elem}"
+	              "Returns the last item equal to @elem\n"
+	              "${"
+	              /**/ "function rlocate(elem, key: Callable) {\n"
+	              /**/ "	import Error from deemon;\n"
+	              /**/ "	local result;\n"
+	              /**/ "	if (key !is none)\n"
+	              /**/ "		elem = key(elem);\n"
+	              /**/ "	for (local x: this) {\n"
+	              /**/ "		if (key !is none) {\n"
+	              /**/ "			if (elem == key(x))\n"
+	              /**/ "				result = x;\n"
+	              /**/ "		} else {\n"
+	              /**/ "			if (elem == x)\n"
+	              /**/ "				result = x;\n"
+	              /**/ "		}\n"
+	              /**/ "	}\n"
+	              /**/ "	if (result is bound)\n"
+	              /**/ "		return result;\n"
+	              /**/ "	throw Error.ValueError(\"Item not found...\")\n"
+	              /**/ "}"
+	              "}"),
+	/* TODO: findall: "(item,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?Dint" */
+	/* TODO: findallof: "(items:?S?O,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?Dint" */
+	/* TODO: findany: "(items:?S?O,start=!0,end=!-1,key:?DCallable=!N)->?X2?Dint?N" */
+	/* TODO: rfindany: "(items:?S?O,start=!0,end=!-1,key:?DCallable=!N)->?X2?Dint?N" */
+	/* TODO: indexany: "(items:?S?O,start=!0,end=!-1,key:?DCallable=!N)->?Dint" */
+	/* TODO: rindexany: "(items:?S?O,start=!0,end=!-1,key:?DCallable=!N)->?Dint" */
 	TYPE_METHOD("locateall", &seq_locateall,
-	            /* TODO:
-	             * "(elem,key:?DCallable=!N)->?S?O\n"
-	             * "(elem,start:?Dint,key:?DCallable=!N)->?S?O\n"
-	             * "(elem,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?O\n" */
-	            "(elem,key:?DCallable=!N)->?S?O\n"
-	            "#pelem{The element to search for}"
+	            /* TODO: "(item,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?O\n" */
+	            "(item,key:?DCallable=!N)->?S?O\n"
+	            "#pitem{The element to search for}"
 	            "#pkey{A key function for transforming Sequence elements}"
-	            "Returns a Sequence of items equal to @elem\n"
+	            "Returns a Sequence of items equal to @item\n"
 	            "${"
-	            /**/ "function locateall(elem: Object, key: Callable): Sequence {\n"
+	            /**/ "function locateall(item: Object, key: Callable): Sequence {\n"
 	            /**/ "	import Error from deemon;\n"
 	            /**/ "	if (key !is none)\n"
-	            /**/ "		elem = key(elem);\n"
+	            /**/ "		item = key(item);\n"
 	            /**/ "	for (local x: this) {\n"
 	            /**/ "		if (key !is none) {\n"
-	            /**/ "			if (elem == key(x))\n"
+	            /**/ "			if (item == key(x))\n"
 	            /**/ "				yield x;\n"
 	            /**/ "		} else {\n"
-	            /**/ "			if (elem == x)\n"
+	            /**/ "			if (item == x)\n"
 	            /**/ "				yield x;\n"
 	            /**/ "		}\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD("transform", &seq_transform,
+	TYPE_METHOD("transform", &seq_transform, /* TODO: Rename to "map" */
 	            "(transformation:?DCallable)->?DSequence\n"
 	            "#ptransformation{A key function invoked to transform members of @this Sequence}"
 	            "Returns a Sequence that is a transformation of @this, with each element passed "
@@ -4759,40 +4574,40 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "}"
 	            "}\n"
 	            "Hint: The python equivalent of this function is #A{map|https://docs.python.org/3/library/functions.html##map}"),
-	TYPE_METHOD("contains", &seq_contains,
-	            "(elem,key:?DCallable=!N)->?Dbool\n"
-	            "#pelem{The element to search for}"
-	            "#pkey{A key function for transforming Sequence elements}"
-	            "Returns ?t if @this Sequence contains an element matching @elem\n"
-	            "${"
-	            /**/ "function contains(elem: Object, key: Callable): bool {\n"
-	            /**/ "	if (key is none)\n"
-	            /**/ "		return elem in this;\n"
-	            /**/ "	elem = key(elem);\n"
-	            /**/ "	for (local x: this) {\n"
-	            /**/ "		if (elem == key(x))\n"
-	            /**/ "			return true;\n"
-	            /**/ "	}\n"
-	            /**/ "	return false;\n"
-	            /**/ "}"
-	            "}"),
-	TYPE_METHOD("startswith", &seq_startswith,
-	            "(elem,key:?DCallable=!N)->?Dbool\n"
-	            "#pelem{The element to compare against}"
-	            "#pkey{A key function for transforming Sequence elements}"
-	            "Returns ?t / ?f indicative of @this Sequence's first element matching :elem\n"
-	            "The implementation of this is derived from #first, where the found is then compared "
-	            /**/ "against @elem, potentially through use of @{key}: ${key(first) == key(elem)} or ${first == elem}, "
-	            /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"),
-	TYPE_METHOD("endswith", &seq_endswith,
-	            "(elem,key:?DCallable=!N)->?Dbool\n"
-	            "#pelem{The element to compare against}"
-	            "#pkey{A key function for transforming Sequence elements}"
-	            "Returns ?t / ?f indicative of @this Sequence's last element matching :elem\n"
-	            "The implementation of this is derived from #last, where the found is then compared "
-	            /**/ "against @elem, potentially through use of @{key}: ${key(last) == key(elem)} or ${last == elem}, "
-	            /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"),
-	TYPE_KWMETHOD(STR_find, &generic_seq_find,
+	TYPE_KWMETHOD(STR_contains, &default_seq_contains,
+	              "(item,start=!0,end=!0,key:?DCallable=!N)->?Dbool\n"
+	              "#pelem{The element to search for}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "Returns ?t if @this Sequence contains an element matching @elem\n"
+	              "${"
+	              /**/ "function contains(elem: Object, key: Callable): bool {\n"
+	              /**/ "	if (key is none)\n"
+	              /**/ "		return elem in this;\n"
+	              /**/ "	elem = key(elem);\n"
+	              /**/ "	for (local x: this) {\n"
+	              /**/ "		if (elem == key(x))\n"
+	              /**/ "			return true;\n"
+	              /**/ "	}\n"
+	              /**/ "	return false;\n"
+	              /**/ "}"
+	              "}"),
+	TYPE_KWMETHOD(STR_startswith, &default_seq_startswith,
+	              "(item,start=!0,end=!0,key:?DCallable=!N)->?Dbool\n"
+	              "#pelem{The element to compare against}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "Returns ?t / ?f indicative of @this Sequence's first element matching :elem\n"
+	              "The implementation of this is derived from #first, where the found is then compared "
+	              /**/ "against @elem, potentially through use of @{key}: ${key(first) == key(elem)} or ${first == elem}, "
+	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"),
+	TYPE_KWMETHOD(STR_endswith, &default_seq_endswith,
+	              "(item,start=!0,end=!0,key:?DCallable=!N)->?Dbool\n"
+	              "#pelem{The element to compare against}"
+	              "#pkey{A key function for transforming Sequence elements}"
+	              "Returns ?t / ?f indicative of @this Sequence's last element matching :elem\n"
+	              "The implementation of this is derived from #last, where the found is then compared "
+	              /**/ "against @elem, potentially through use of @{key}: ${key(last) == key(elem)} or ${last == elem}, "
+	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"),
+	TYPE_KWMETHOD(STR_find, &default_seq_find,
 	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint\n"
 	              "#pitem{The element to search for}"
 	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
@@ -4876,7 +4691,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return -1;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_rfind, &generic_seq_rfind,
+	TYPE_KWMETHOD(STR_rfind, &default_seq_rfind,
 	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint\n"
 	              "#pitem{The element to search for}"
 	              "#pstart{The start index for a sub-range to search (clamped by ${##this})}"
@@ -5113,16 +4928,16 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 
 	/* Functions for mutable sequences. */
-	TYPE_KWMETHOD(STR_reversed, &generic_seq_reversed,
+	TYPE_KWMETHOD(STR_reversed, &default_seq_reversed,
 	              "(start=!0,end=!-1)->?DSequence\n"
 	              "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"),
-	TYPE_KWMETHOD(STR_sorted, &generic_seq_sorted,
+	TYPE_KWMETHOD(STR_sorted, &default_seq_sorted,
 	              "(start=!0,end=!-1,key:?DCallable=!N)->?DSequence\n"
 	              "Return a Sequence that contains all elements from @this Sequence, "
 	              /**/ "but sorted in ascending order, or in accordance to @key\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"),
-	TYPE_KWMETHOD(STR_insert, &generic_seq_insert,
+	TYPE_KWMETHOD(STR_insert, &default_seq_insert,
 	              "(index:?Dint,item)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
@@ -5168,7 +4983,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_insertall, &generic_seq_insertall,
+	TYPE_KWMETHOD(STR_insertall, &default_seq_insertall,
 	              "(index:?Dint,items:?DSequence)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
@@ -5217,7 +5032,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD(STR_append, &generic_seq_append,
+	TYPE_METHOD(STR_append, &default_seq_append,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
@@ -5255,7 +5070,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD(STR_extend, &generic_seq_extend,
+	TYPE_METHOD(STR_extend, &default_seq_extend,
 	            "(items:?DSequence)\n"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "For mutable sequences only: Append all elements from @items at the end of @this Sequence\n"
@@ -5293,7 +5108,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_KWMETHOD(STR_erase, &generic_seq_erase,
+	TYPE_KWMETHOD(STR_erase, &default_seq_erase,
 	              "(index:?Dint,count=!1)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -5338,10 +5153,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("xch", &generic_seq_xchitem,
+	TYPE_KWMETHOD("xch", &default_seq_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "Deprecated alias for ?#xchitem (will be removed soon)"),
-	TYPE_KWMETHOD(STR_xchitem, &generic_seq_xchitem,
+	TYPE_KWMETHOD(STR_xchitem, &default_seq_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -5371,7 +5186,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not mutable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_pop, &generic_seq_pop,
+	TYPE_KWMETHOD(STR_pop, &default_seq_pop,
 	              "(index=!-1)->\n"
 	              "#tIntegerOverflow{The given @index is too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -5408,7 +5223,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError.SequenceError(\"Sequence not mutable\");\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD(STR_popfront, &generic_seq_popfront,
+	TYPE_METHOD(STR_popfront, &default_seq_popfront,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
@@ -5423,7 +5238,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD(STR_popback, &generic_seq_popback,
+	TYPE_METHOD(STR_popback, &default_seq_popback,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
@@ -5438,7 +5253,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD(STR_pushfront, &generic_seq_pushfront,
+	TYPE_METHOD(STR_pushfront, &default_seq_pushfront,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
@@ -5448,7 +5263,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	return this.insert(0, item);\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_METHOD(STR_pushback, &generic_seq_append,
+	TYPE_METHOD(STR_pushback, &default_seq_append,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
@@ -5458,7 +5273,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	return this.append(item);\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_KWMETHOD(STR_remove, &generic_seq_remove,
+	TYPE_KWMETHOD(STR_remove, &default_seq_remove,
 	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
@@ -5547,7 +5362,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return false;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_rremove, &generic_seq_rremove,
+	TYPE_KWMETHOD(STR_rremove, &default_seq_rremove,
 	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
@@ -5642,7 +5457,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return false;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_removeall, &generic_seq_removeall,
+	TYPE_KWMETHOD(STR_removeall, &default_seq_removeall,
 	              "(item,start=!0,end=!-1,max=!-1,key:?DCallable=!N)->?Dint\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
@@ -5792,7 +5607,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return count;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_removeif, &generic_seq_removeif,
+	TYPE_KWMETHOD(STR_removeif, &default_seq_removeif,
 	              "(should:?DCallable,start=!0,end=!-1,max=!-1)->?Dint\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
@@ -5898,7 +5713,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return count;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_METHOD(STR_clear, &generic_seq_clear,
+	TYPE_METHOD(STR_clear, &default_seq_clear,
 	            "()\n"
 	            "#tSequenceError{@this Sequence is immutable}"
 	            "For mutable sequences only: Clear all elements from the Sequence\n"
@@ -5909,7 +5724,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "	this[:] = none;\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_KWMETHOD(STR_resize, &generic_seq_resize,
+	TYPE_KWMETHOD(STR_resize, &default_seq_resize,
 	              "(size:?Dint,filler=!N)\n"
 	              "#tSequenceError{@this Sequence isn't resizable}"
 	              "Resize @this Sequence to have a new length of @size "
@@ -5932,7 +5747,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	}\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_fill, &generic_seq_fill,
+	TYPE_KWMETHOD(STR_fill, &default_seq_fill,
 	              "(start=!0,end=!-1,filler=!N)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Assign @filler to all elements within "
@@ -5971,7 +5786,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	return end - start;\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_reverse, &generic_seq_reverse,
+	TYPE_KWMETHOD(STR_reverse, &default_seq_reverse,
 	              "(start=!0,end=!-1)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "For mutable sequences only: Reverse the order of all elements\n"
@@ -5982,7 +5797,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	this := (this as Sequence from deemon).reversed();\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD(STR_sort, &generic_seq_sort,
+	TYPE_KWMETHOD(STR_sort, &default_seq_sort,
 	              "(start=!0,end=!-1,key:?DCallable=!N)\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "#tSequenceError{@this Sequence is immutable}"
@@ -5996,7 +5811,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 
 	/* Binary search API */
-	TYPE_KWMETHOD("bfind", &generic_seq_bfind,
+	TYPE_KWMETHOD("bfind", &default_seq_bfind,
 	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?X2?Dint?N\n"
 	              "#pitem{The itement to search for}"
 	              "#pkey{A key function for transforming Sequence elements}"
@@ -6021,7 +5836,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "#tValueError{The Sequence does not contain an itement matching @item}"
 	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N."),
-	TYPE_KWMETHOD("bposition", &generic_seq_bposition,
+	TYPE_KWMETHOD("bposition", &default_seq_bposition,
 	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint\n"
 	              "#pitem{The itement to search for}"
 	              "#pkey{A key function for transforming Sequence elements}"
@@ -6029,7 +5844,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "#pend{The end index for a sub-range to search (clamped by ${##this})}"
 	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
 	              /**/ "than ?N when @this doesn't contain any matching object"),
-	TYPE_KWMETHOD("brange", &generic_seq_brange,
+	TYPE_KWMETHOD("brange", &default_seq_brange,
 	              "(item,start=!0,end=!-1,key:?DCallable=!N)->?T2?Dint?Dint\n"
 	              "#pitem{The itement to search for}"
 	              "#pkey{A key function for transforming Sequence elements}"
@@ -6039,7 +5854,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "the lower and upper bound of indices for elements from @this matching @item.\n"
 	              "NOTE: The returned tuple is allowed to be an ASP, meaning that its elements may "
 	              /**/ "be calculated lazily, and are prone to change as the result of @this changing."),
-	TYPE_KWMETHOD("blocate", &generic_seq_blocate,
+	TYPE_KWMETHOD("blocate", &default_seq_blocate,
 	              "(item,start=!0,end=!-1,key:?DCallable=!N,defl?)->\n"
 	              "#pitem{The itement to search for}"
 	              "#pkey{A key function for transforming Sequence elements}"
@@ -6143,10 +5958,10 @@ err:
 PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("length", &DeeObject_SizeOb, "->?Dint\nAlias for ${##this}"),
 	TYPE_GETSET_BOUND(STR_first,
-	                  &generic_seq_getfirst,
-	                  &generic_seq_delfirst,
-	                  &generic_seq_setfirst,
-	                  &generic_seq_boundfirst,
+	                  &default_seq_getfirst,
+	                  &default_seq_delfirst,
+	                  &default_seq_setfirst,
+	                  &default_seq_boundfirst,
 	                  "->\n"
 	                  "Access the first item of the Sequence\n"
 	                  "Depending on the nearest implemented group of operators, "
@@ -6193,10 +6008,10 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	                  /**/ "}"
 	                  "}"),
 	TYPE_GETSET_BOUND(STR_last,
-	                  &generic_seq_getlast,
-	                  &generic_seq_dellast,
-	                  &generic_seq_setlast,
-	                  &generic_seq_boundlast,
+	                  &default_seq_getlast,
+	                  &default_seq_dellast,
+	                  &default_seq_setlast,
+	                  &default_seq_boundlast,
 	                  "->\n"
 	                  "Access the last item of the Sequence\n"
 	                  "Depending on the nearest implemented group of operators, "
@@ -7172,7 +6987,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ &generic_seq_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ &seq_printrepr
+		/* .tp_printrepr = */ &default_seq_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

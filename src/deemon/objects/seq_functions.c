@@ -167,7 +167,7 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
 				if unlikely(!result)
 					goto err;
 return_result_first:
-				real_result = generic_seq_getfirst(result);
+				real_result = default_seq_getfirst(result);
 				Dee_Decref(result);
 				if unlikely(!real_result) {
 					/* Translate the empty-sequence error into an index-out-of-bounds */

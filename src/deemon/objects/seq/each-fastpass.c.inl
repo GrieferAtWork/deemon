@@ -746,7 +746,7 @@ PRIVATE struct type_nsi tpconst F(nsi) = {
 PRIVATE struct type_seq F(seq) = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&F(iter),
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
-	/* .tp_contains                   = */ NULL,
+	/* .tp_contains                   = */ &DeeSeq_DefaultContainsWithForeachDefault,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&F(getitem),
 	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(delitem),
 	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(setitem),
@@ -755,10 +755,10 @@ PRIVATE struct type_seq F(seq) = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&F(setrange),
 	/* .tp_nsi                        = */ &F(nsi),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&F(foreach),
-	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_foreach_pair               = */ NULL, /* &DeeObject_DefaultForeachPairWithForeachs */
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&F(enumerate),
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&F(enumerate_index),
-	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sew_size,
@@ -830,7 +830,7 @@ F(visit)(STRUCT_TYPE *__restrict self, dvisit_t proc, void *arg) {
 }
 
 #ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 F(printrepr)(STRUCT_TYPE *__restrict self,
              dformatprinter printer, void *arg) {
 	char const *each_suffix = ".each";
@@ -1083,7 +1083,7 @@ PRIVATE struct type_attr tpconst F(attr) = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&F(delattr),
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&F(setattr),
-	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&sew_enumattr,
+	/* .tp_enumattr                      = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&sew_enumattr,
 	/* .tp_findattr                      = */ NULL,
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(hasattr),
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(boundattr),
@@ -1149,7 +1149,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 #endif /* !... */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
 		{
 #if !(TYPE_FLAGS & TP_FVARIABLE)
@@ -1180,8 +1180,10 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool,
 		/* .tp_print     = */ NULL,
 #ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&F(printrepr),
-#endif /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&F(printrepr),
+#else /* CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
+		/* .tp_printrepr = */ &default_seq_printrepr,
+#endif /* !CONFIG_HAVE_SEQEACH_OPERATOR_REPR */
 	},
 #ifdef DEFINE_GETATTR
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&F(call),

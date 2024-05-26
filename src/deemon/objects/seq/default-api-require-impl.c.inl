@@ -61,8 +61,8 @@ DECL_BEGIN
 #define LOCAL_tsc_Xlast                                      tsc_getlast
 #define LOCAL_Dee_tsc_Xfirst_t                               Dee_tsc_getfirst_t
 #define LOCAL_Dee_tsc_Xlast_t                                Dee_tsc_getlast_t
-#define LOCAL_generic_seq_Xfirst                             generic_seq_getfirst
-#define LOCAL_generic_seq_Xlast                              generic_seq_getlast
+#define LOCAL_default_seq_Xfirst                             default_seq_getfirst
+#define LOCAL_default_seq_Xlast                              default_seq_getlast
 #define LOCAL_DeeSeq_DefaultXFirstWithXAttr                  DeeSeq_DefaultGetFirstWithGetAttr
 #define LOCAL_DeeSeq_DefaultXFirstWithXItem                  DeeSeq_DefaultGetFirstWithGetItem
 #define LOCAL_DeeSeq_DefaultXFirstWithXItemIndex             DeeSeq_DefaultGetFirstWithGetItemIndex
@@ -80,8 +80,8 @@ DECL_BEGIN
 #define LOCAL_tsc_Xlast                                      tsc_boundlast
 #define LOCAL_Dee_tsc_Xfirst_t                               Dee_tsc_boundfirst_t
 #define LOCAL_Dee_tsc_Xlast_t                                Dee_tsc_boundlast_t
-#define LOCAL_generic_seq_Xfirst                             generic_seq_boundfirst
-#define LOCAL_generic_seq_Xlast                              generic_seq_boundlast
+#define LOCAL_default_seq_Xfirst                             default_seq_boundfirst
+#define LOCAL_default_seq_Xlast                              default_seq_boundlast
 #define LOCAL_DeeSeq_DefaultXFirstWithXAttr                  DeeSeq_DefaultBoundFirstWithBoundAttr
 #define LOCAL_DeeSeq_DefaultXFirstWithXItem                  DeeSeq_DefaultBoundFirstWithBoundItem
 #define LOCAL_DeeSeq_DefaultXFirstWithXItemIndex             DeeSeq_DefaultBoundFirstWithBoundItemIndex
@@ -99,8 +99,8 @@ DECL_BEGIN
 #define LOCAL_tsc_Xlast                                tsc_dellast
 #define LOCAL_Dee_tsc_Xfirst_t                         Dee_tsc_delfirst_t
 #define LOCAL_Dee_tsc_Xlast_t                          Dee_tsc_dellast_t
-#define LOCAL_generic_seq_Xfirst                       generic_seq_delfirst
-#define LOCAL_generic_seq_Xlast                        generic_seq_dellast
+#define LOCAL_default_seq_Xfirst                       default_seq_delfirst
+#define LOCAL_default_seq_Xlast                        default_seq_dellast
 #define LOCAL_DeeSeq_DefaultXFirstWithXAttr            DeeSeq_DefaultDelFirstWithDelAttr
 #define LOCAL_DeeSeq_DefaultXFirstWithXItem            DeeSeq_DefaultDelFirstWithDelItem
 #define LOCAL_DeeSeq_DefaultXFirstWithXItemIndex       DeeSeq_DefaultDelFirstWithDelItemIndex
@@ -117,8 +117,8 @@ DECL_BEGIN
 #define LOCAL_tsc_Xlast                                tsc_setlast
 #define LOCAL_Dee_tsc_Xfirst_t                         Dee_tsc_setfirst_t
 #define LOCAL_Dee_tsc_Xlast_t                          Dee_tsc_setlast_t
-#define LOCAL_generic_seq_Xfirst                       generic_seq_setfirst
-#define LOCAL_generic_seq_Xlast                        generic_seq_setlast
+#define LOCAL_default_seq_Xfirst                       default_seq_setfirst
+#define LOCAL_default_seq_Xlast                        default_seq_setlast
 #define LOCAL_DeeSeq_DefaultXFirstWithXAttr            DeeSeq_DefaultSetFirstWithSetAttr
 #define LOCAL_DeeSeq_DefaultXFirstWithXItem            DeeSeq_DefaultSetFirstWithSetItem
 #define LOCAL_DeeSeq_DefaultXFirstWithXItemIndex       DeeSeq_DefaultSetFirstWithSetItemIndex
@@ -147,7 +147,7 @@ LOCAL_DeeType_SeqCache_RequireXFirst(DeeTypeObject *__restrict self) {
 		struct Dee_attrinfo attr;
 		if (DeeObject_TFindAttrInfo(self, NULL, (DeeObject *)&str_first, &attr)) {
 			if (attr.ai_type == Dee_ATTRINFO_GETSET) {
-				if (attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_generic_seq_Xfirst ||
+				if (attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_default_seq_Xfirst ||
 				    attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_DeeSeq_DefaultXFirstWithXAttr ||
 				    attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_DeeSeq_DefaultXFirstWithXItem ||
 				    attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_DeeSeq_DefaultXFirstWithXItemIndex ||
@@ -191,7 +191,7 @@ LOCAL_DeeType_SeqCache_RequireXLast(DeeTypeObject *__restrict self) {
 		struct Dee_attrinfo attr;
 		if (DeeObject_TFindAttrInfo(self, NULL, (DeeObject *)&str_last, &attr)) {
 			if (attr.ai_type == Dee_ATTRINFO_GETSET) {
-				if (attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_generic_seq_Xlast ||
+				if (attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_default_seq_Xlast ||
 				    attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_DeeSeq_DefaultXLastWithXAttr ||
 				    attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_DeeSeq_DefaultXLastWithSizeObAndXItem ||
 				    attr.ai_value.v_getset->LOCAL_gs_X == &LOCAL_DeeSeq_DefaultXLastWithSizeAndXItemIndex ||
@@ -235,8 +235,8 @@ detect_for_sequence_type:
 #undef LOCAL_tsc_Xlast
 #undef LOCAL_Dee_tsc_Xfirst_t
 #undef LOCAL_Dee_tsc_Xlast_t
-#undef LOCAL_generic_seq_Xfirst
-#undef LOCAL_generic_seq_Xlast
+#undef LOCAL_default_seq_Xfirst
+#undef LOCAL_default_seq_Xlast
 #undef LOCAL_DeeSeq_DefaultXFirstWithXAttr
 #undef LOCAL_DeeSeq_DefaultXFirstWithXItem
 #undef LOCAL_DeeSeq_DefaultXFirstWithXItemIndex
