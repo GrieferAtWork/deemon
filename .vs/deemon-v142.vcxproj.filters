@@ -726,6 +726,9 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\default-enumerate.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-iterators.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
@@ -1269,6 +1272,9 @@
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\default-compare.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\default-enumerate.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\default-iterators.c">

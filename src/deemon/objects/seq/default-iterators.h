@@ -89,7 +89,7 @@ typedef struct {
 	Dee_atomic_lock_t disg_lock;  /* Lock for `disg_index' */
 #endif /* !CONFIG_NO_THREADS */
 	DREF DeeObject   *disg_end;   /* [1..1][const] Iteration stop index. */
-} DefaultIterator_WithSizeAndGetItem;
+} DefaultIterator_WithSizeObAndGetItem;
 #define DefaultIterator_WithSizeAndGetItem_LockAvailable(self)  Dee_atomic_lock_available(&(self)->disg_lock)
 #define DefaultIterator_WithSizeAndGetItem_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->disg_lock)
 #define DefaultIterator_WithSizeAndGetItem_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->disg_lock)
@@ -145,16 +145,21 @@ typedef struct {
 	DeeTypeObject    *diiktgi_tp_seq; /* [1..1][const] The type to pass to `diiktgi_tp_tgetitem'. */
 } DefaultIterator_WithIterKeysAndTGetItem;
 
-INTDEF DeeTypeObject DefaultIterator_WithGetItemIndex_Type;            /* DefaultIterator_WithGetItemIndex */
-INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type;     /* DefaultIterator_WithSizeAndGetItemIndex */
-INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type; /* DefaultIterator_WithSizeAndGetItemIndex */
-INTDEF DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type;  /* DefaultIterator_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithGetItemIndex_Type;                /* DefaultIterator_WithGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithGetItemIndexPair_Type;            /* DefaultIterator_WithGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type;         /* DefaultIterator_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexPair_Type;     /* DefaultIterator_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type;     /* DefaultIterator_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFastPair_Type; /* DefaultIterator_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type;      /* DefaultIterator_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndexPair_Type;  /* DefaultIterator_WithSizeAndGetItemIndex */
 
 INTDEF DeeTypeObject DefaultIterator_WithGetItem_Type;  /* DefaultIterator_WithGetItem */
 INTDEF DeeTypeObject DefaultIterator_WithTGetItem_Type; /* DefaultIterator_WithTGetItem */
 
-INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItem_Type;  /* DefaultIterator_WithSizeAndGetItem */
-INTDEF DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type; /* DefaultIterator_WithTSizeAndGetItem */
+INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type;     /* DefaultIterator_WithSizeObAndGetItem */
+INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type; /* DefaultIterator_WithSizeObAndGetItem */
+INTDEF DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type;    /* DefaultIterator_WithTSizeAndGetItem */
 
 INTDEF DeeTypeObject DefaultIterator_WithNextAndLimit_Type; /* DefaultIterator_WithNextAndLimit */
 

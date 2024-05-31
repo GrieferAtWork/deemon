@@ -2241,7 +2241,7 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 		} else if (tp_iter == &DeeSeq_DefaultIterWithGetItemIndex) {
 			result = &DefaultIterator_WithGetItemIndex_Type;
 		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem) {
-			result = &DefaultIterator_WithSizeAndGetItem_Type; /*or: DefaultIterator_WithTSizeAndGetItem_Type */
+			result = &DefaultIterator_WithSizeObAndGetItem_Type; /*or: DefaultIterator_WithTSizeAndGetItem_Type */
 		} else if (tp_iter == &DeeSeq_DefaultIterWithGetItem) {
 			result = &DefaultIterator_WithGetItem_Type; /* or: DefaultIterator_WithTGetItem_Type */
 		} else if (tp_iter == &DeeMap_DefaultIterWithEnumerate) {
@@ -4346,6 +4346,26 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[0] !is bound;\n"
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[1] is bound;"
 	            "}"),
+	TYPE_KWMETHOD("enumerate", &default_seq_enumerate,
+	              "(start=!0,end=!0)->?S?T2?Dint?O\n"
+	              "(cb:?DCallable,start=!0,end=!0)->?X2?O?N\n"
+	              "Enumerate indices/keys and associated values of @this sequence\n"
+	              "This function can be used to easily enumerate sequence indices and values, "
+	              /**/ "including being able to enumerate indices/keys that are currently unbound\n"
+	              "${"
+	              /**/ "import FixedList from collections;\n"
+	              /**/ "local x = FixedList(4);\n"
+	              /**/ "x[1] = 10;\n"
+	              /**/ "x[3] = 20;\n"
+	              /**/ "/* [1]: 10                 [3]: 20 */\n"
+	              /**/ "for (local key, value: x.enumerate())\n"
+	              /**/ "	print f\"[{repr key}]: {repr value}\"\n"
+	              /**/ "/* [0]: <unbound>          [1]: 10\n"
+	              /**/ " * [2]: <unbound>          [3]: 20 */\n"
+	              /**/ "x.enumerate((key, value?) -\\> {\n"
+	              /**/ "	print f\"[{repr key}]: {value is bound ? repr value : \"<unbound>\"}\"\n"
+	              /**/ "});"
+	              "}"),
 	TYPE_KWMETHOD(STR_sum, &default_seq_sum,
 	              "(start=!0,end=!0)->?X2?O?N\n"
 	              "Returns the sum of all elements, or ?N if the Sequence is empty\n"
@@ -6301,13 +6321,17 @@ PRIVATE struct type_member tpconst seq_class_members[] = {
 	TYPE_MEMBER_CONST("__SeqWithIter__", &DefaultSequence_WithIter_Type),
 	TYPE_MEMBER_CONST("__SeqWithTIter__", &DefaultSequence_WithTIter_Type),
 	TYPE_MEMBER_CONST("__IterWithGetItemIndex__", &DefaultIterator_WithGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__IterWithGetItemIndexPair__", &DefaultIterator_WithGetItemIndexPair_Type),
 	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndex__", &DefaultIterator_WithSizeAndGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndexPair__", &DefaultIterator_WithSizeAndGetItemIndexPair_Type),
 	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndexFast__", &DefaultIterator_WithSizeAndGetItemIndexFast_Type),
+	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndexFastPair__", &DefaultIterator_WithSizeAndGetItemIndexFastPair_Type),
 	TYPE_MEMBER_CONST("__IterWithSizeAndTryGetItemIndex__", &DefaultIterator_WithSizeAndTryGetItemIndex_Type),
+	TYPE_MEMBER_CONST("__IterWithSizeAndTryGetItemIndexPair__", &DefaultIterator_WithSizeAndTryGetItemIndexPair_Type),
 	TYPE_MEMBER_CONST("__IterWithGetItem__", &DefaultIterator_WithGetItem_Type),
 	TYPE_MEMBER_CONST("__IterWithTGetItem__", &DefaultIterator_WithTGetItem_Type),
-	TYPE_MEMBER_CONST("__IterWithSizeAndGetItem__", &DefaultIterator_WithSizeAndGetItem_Type),
-	TYPE_MEMBER_CONST("__IterWithTSizeAndGetItem__", &DefaultIterator_WithTSizeAndGetItem_Type),
+	TYPE_MEMBER_CONST("__IterWithSizeObAndGetItem__", &DefaultIterator_WithSizeObAndGetItem_Type),
+	TYPE_MEMBER_CONST("__IterWithTSizeObAndGetItem__", &DefaultIterator_WithTSizeAndGetItem_Type),
 	TYPE_MEMBER_CONST("__IterWithNextAndLimit__", &DefaultIterator_WithNextAndLimit_Type),
 	TYPE_MEMBER_CONST("__IterWithIterKeysAndGetItemForSeq__", &DefaultIterator_WithIterKeysAndGetItemSeq_Type),
 	TYPE_MEMBER_CONST("__IterWithIterKeysAndTGetItemForSeq__", &DefaultIterator_WithIterKeysAndTGetItemSeq_Type),

@@ -154,10 +154,15 @@ function typeExprToCxxType(tx: TypeExpr): string {
 	default:
 		break;
 	}
-	local deemonType = commonType(tx.types);
-	while (deemonType !in cxxTypes)
-		deemonType = deemonType.__base__;
-	return cxxTypes[deemonType];
+	try {
+		local deemonType = commonType(tx.types);
+		while (deemonType !in cxxTypes)
+			deemonType = deemonType.__base__;
+		return cxxTypes[deemonType];
+	} catch (...) {
+		print File.stderr: "In:", repr tx;
+		throw;
+	}
 }
 
 global final cxxParameterTypes: {Type: {string...}} = {

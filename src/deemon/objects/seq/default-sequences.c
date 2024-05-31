@@ -1327,10 +1327,10 @@ ds_sg_visit(DefaultSequence_WithSizeAndGetItem *__restrict self,
 	Dee_Visit(self->dssg_end);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeAndGetItem *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeObAndGetItem *DCALL
 ds_sg_iter(DefaultSequence_WithSizeAndGetItem *__restrict self) {
-	DREF DefaultIterator_WithSizeAndGetItem *result;
-	result = DeeGCObject_MALLOC(DefaultIterator_WithSizeAndGetItem);
+	DREF DefaultIterator_WithSizeObAndGetItem *result;
+	result = DeeGCObject_MALLOC(DefaultIterator_WithSizeObAndGetItem);
 	if unlikely(!result)
 		goto err;
 	Dee_Incref(self->dssg_seq);
@@ -1341,8 +1341,8 @@ ds_sg_iter(DefaultSequence_WithSizeAndGetItem *__restrict self) {
 	result->disg_index      = self->dssg_start;
 	result->disg_end        = self->dssg_end;
 	Dee_atomic_lock_init(&result->disg_lock);
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItem_Type);
-	return (DREF DefaultIterator_WithSizeAndGetItem *)DeeGC_Track((DREF DeeObject *)result);
+	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
+	return (DREF DefaultIterator_WithSizeObAndGetItem *)DeeGC_Track((DREF DeeObject *)result);
 err:
 	return NULL;
 }
@@ -2098,7 +2098,7 @@ PRIVATE struct type_member tpconst ds_tsg_members[] = {
 };
 
 PRIVATE struct type_member ds_sg_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeAndGetItem_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeObAndGetItem_Type),
 	TYPE_MEMBER_END
 };
 

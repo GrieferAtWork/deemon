@@ -148,13 +148,17 @@ print define_Dee_HashStr("__SeqWithTSizeAndGetItem__");
 print define_Dee_HashStr("__SeqWithIter__");
 print define_Dee_HashStr("__SeqWithTIter__");
 print define_Dee_HashStr("__IterWithGetItemIndex__");
+print define_Dee_HashStr("__IterWithGetItemIndexPair__");
 print define_Dee_HashStr("__IterWithSizeAndGetItemIndex__");
+print define_Dee_HashStr("__IterWithSizeAndGetItemIndexPair__");
 print define_Dee_HashStr("__IterWithSizeAndGetItemIndexFast__");
+print define_Dee_HashStr("__IterWithSizeAndGetItemIndexFastPair__");
 print define_Dee_HashStr("__IterWithSizeAndTryGetItemIndex__");
+print define_Dee_HashStr("__IterWithSizeAndTryGetItemIndexPair__");
 print define_Dee_HashStr("__IterWithGetItem__");
 print define_Dee_HashStr("__IterWithTGetItem__");
-print define_Dee_HashStr("__IterWithSizeAndGetItem__");
-print define_Dee_HashStr("__IterWithTSizeAndGetItem__");
+print define_Dee_HashStr("__IterWithSizeObAndGetItem__");
+print define_Dee_HashStr("__IterWithTSizeObAndGetItem__");
 print define_Dee_HashStr("__IterWithNextAndLimit__");
 print define_Dee_HashStr("__IterWithIterKeysAndGetItemForSeq__");
 print define_Dee_HashStr("__IterWithIterKeysAndTGetItemForSeq__");
@@ -233,13 +237,17 @@ print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
 #define Dee_HashStr____SeqWithIter__ _Dee_HashSelectC(0x337ea2df, 0xb25329aebe2c9945)
 #define Dee_HashStr____SeqWithTIter__ _Dee_HashSelectC(0xdca105d2, 0x4d0ba4e75bfbeab6)
 #define Dee_HashStr____IterWithGetItemIndex__ _Dee_HashSelectC(0x559cb3c7, 0x3fe88840c3037835)
+#define Dee_HashStr____IterWithGetItemIndexPair__ _Dee_HashSelectC(0x1c8026f5, 0xaa83c1108d104707)
 #define Dee_HashStr____IterWithSizeAndGetItemIndex__ _Dee_HashSelectC(0xffbfe311, 0x2a69983a21e6e8ee)
+#define Dee_HashStr____IterWithSizeAndGetItemIndexPair__ _Dee_HashSelectC(0x85412a68, 0x852c99b853d8b7be)
 #define Dee_HashStr____IterWithSizeAndGetItemIndexFast__ _Dee_HashSelectC(0x95e0bfef, 0xacc1895d7bb8b382)
+#define Dee_HashStr____IterWithSizeAndGetItemIndexFastPair__ _Dee_HashSelectC(0xfd604f6d, 0x8f5fde1e57348668)
 #define Dee_HashStr____IterWithSizeAndTryGetItemIndex__ _Dee_HashSelectC(0x98f0352, 0x566aa6df8e33a12f)
+#define Dee_HashStr____IterWithSizeAndTryGetItemIndexPair__ _Dee_HashSelectC(0x196602aa, 0xb87fc6db5525d6b)
 #define Dee_HashStr____IterWithGetItem__ _Dee_HashSelectC(0x5c8aa1a2, 0xab2e8fa95299d4b6)
 #define Dee_HashStr____IterWithTGetItem__ _Dee_HashSelectC(0x8d4a99c5, 0xcb2ddede6e2dd560)
-#define Dee_HashStr____IterWithSizeAndGetItem__ _Dee_HashSelectC(0xbeeb39d6, 0x59dbaed750a697a6)
-#define Dee_HashStr____IterWithTSizeAndGetItem__ _Dee_HashSelectC(0xcf49e1ab, 0x3ef1480c1e0426da)
+#define Dee_HashStr____IterWithSizeObAndGetItem__ _Dee_HashSelectC(0x35a2f112, 0x49f59c3bd3d9abeb)
+#define Dee_HashStr____IterWithTSizeObAndGetItem__ _Dee_HashSelectC(0xbe92e0b5, 0x9c856daf2d4cfca2)
 #define Dee_HashStr____IterWithNextAndLimit__ _Dee_HashSelectC(0xe462e41a, 0x3b6e080d98bbe43d)
 #define Dee_HashStr____IterWithIterKeysAndGetItemForSeq__ _Dee_HashSelectC(0x83a441d8, 0x7311bdee0353ceb9)
 #define Dee_HashStr____IterWithIterKeysAndTGetItemForSeq__ _Dee_HashSelectC(0xf61c258e, 0xbbe64b8354df7e59)
@@ -1254,8 +1262,18 @@ librt_get_IterWithGetItemIndex_Type_f(size_t UNUSED(argc), DeeObject *const *UNU
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithGetItemIndexPair_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithGetItemIndexPair__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_IterWithSizeAndGetItemIndex_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_default_sequence_type(__IterWithSizeAndGetItemIndex__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithSizeAndGetItemIndexPair_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithSizeAndGetItemIndexPair__);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1264,8 +1282,18 @@ librt_get_IterWithSizeAndGetItemIndexFast_Type_f(size_t UNUSED(argc), DeeObject 
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithSizeAndGetItemIndexFastPair_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithSizeAndGetItemIndexFastPair__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_IterWithSizeAndTryGetItemIndex_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_default_sequence_type(__IterWithSizeAndTryGetItemIndex__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithSizeAndTryGetItemIndexPair_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithSizeAndTryGetItemIndexPair__);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1279,13 +1307,13 @@ librt_get_IterWithTGetItem_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IterWithSizeAndGetItem_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_default_sequence_type(__IterWithSizeAndGetItem__);
+librt_get_IterWithSizeObAndGetItem_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithSizeObAndGetItem__);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IterWithTSizeAndGetItem_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_default_sequence_type(__IterWithTSizeAndGetItem__);
+librt_get_IterWithTSizeObAndGetItem_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithTSizeObAndGetItem__);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2181,13 +2209,17 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqWithTSizeAndGetItem, &librt_get_SeqWithTSize
 PRIVATE DEFINE_CMETHOD(librt_get_SeqWithIter, &librt_get_SeqWithIter_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqWithTIter, &librt_get_SeqWithTIter_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithGetItemIndex, &librt_get_IterWithGetItemIndex_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithGetItemIndexPair, &librt_get_IterWithGetItemIndexPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndGetItemIndex, &librt_get_IterWithSizeAndGetItemIndex_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndGetItemIndexPair, &librt_get_IterWithSizeAndGetItemIndexPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndGetItemIndexFast, &librt_get_IterWithSizeAndGetItemIndexFast_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndGetItemIndexFastPair, &librt_get_IterWithSizeAndGetItemIndexFastPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndTryGetItemIndex, &librt_get_IterWithSizeAndTryGetItemIndex_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndTryGetItemIndexPair, &librt_get_IterWithSizeAndTryGetItemIndexPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithGetItem, &librt_get_IterWithGetItem_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithTGetItem, &librt_get_IterWithTGetItem_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndGetItem, &librt_get_IterWithSizeAndGetItem_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_IterWithTSizeAndGetItem, &librt_get_IterWithTSizeAndGetItem_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeObAndGetItem, &librt_get_IterWithSizeObAndGetItem_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithTSizeObAndGetItem, &librt_get_IterWithTSizeObAndGetItem_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextAndLimit, &librt_get_IterWithNextAndLimit_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithIterKeysAndGetItemForSeq, &librt_get_IterWithIterKeysAndGetItemForSeq_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithIterKeysAndTGetItemForSeq, &librt_get_IterWithIterKeysAndTGetItemForSeq_Type_f, METHOD_FCONSTCALL);
@@ -2511,13 +2543,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqWithIter", (DeeObject *)&librt_get_SeqWithIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                   /* DefaultSequence_WithIter_Type */
 	{ "SeqWithTIter", (DeeObject *)&librt_get_SeqWithTIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* DefaultSequence_WithTIter_Type */
 	{ "IterWithGetItemIndex", (DeeObject *)&librt_get_IterWithGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithGetItemIndex_Type */
+	{ "IterWithGetItemIndexPair", (DeeObject *)&librt_get_IterWithGetItemIndexPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* DefaultIterator_WithGetItemIndexPair_Type */
 	{ "IterWithSizeAndGetItemIndex", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultIterator_WithSizeAndGetItemIndex_Type */
+	{ "IterWithSizeAndGetItemIndexPair", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndexPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DefaultIterator_WithSizeAndGetItemIndexPair_Type */
 	{ "IterWithSizeAndGetItemIndexFast", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DefaultIterator_WithSizeAndGetItemIndexFast_Type */
+	{ "IterWithSizeAndGetItemIndexFastPair", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndexFastPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* DefaultIterator_WithSizeAndGetItemIndexFastPair_Type */
 	{ "IterWithSizeAndTryGetItemIndex", (DeeObject *)&librt_get_IterWithSizeAndTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DefaultIterator_WithSizeAndTryGetItemIndex_Type */
+	{ "IterWithSizeAndTryGetItemIndexPair", (DeeObject *)&librt_get_IterWithSizeAndTryGetItemIndexPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* DefaultIterator_WithSizeAndTryGetItemIndexPair_Type */
 	{ "IterWithGetItem", (DeeObject *)&librt_get_IterWithGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* DefaultIterator_WithGetItem_Type */
 	{ "IterWithTGetItem", (DeeObject *)&librt_get_IterWithTGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* DefaultIterator_WithTGetItem_Type */
-	{ "IterWithSizeAndGetItem", (DeeObject *)&librt_get_IterWithSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* DefaultIterator_WithSizeAndGetItem_Type */
-	{ "IterWithTSizeAndGetItem", (DeeObject *)&librt_get_IterWithTSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* DefaultIterator_WithTSizeAndGetItem_Type */
+	{ "IterWithSizeAndGetItem", (DeeObject *)&librt_get_IterWithSizeObAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* DefaultIterator_WithSizeObAndGetItem_Type */
+	{ "IterWithTSizeObAndGetItem", (DeeObject *)&librt_get_IterWithTSizeObAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* DefaultIterator_WithTSizeAndGetItem_Type */
 	{ "IterWithNextAndLimit", (DeeObject *)&librt_get_IterWithNextAndLimit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithNextAndLimit_Type */
 	{ "IterWithIterKeysAndGetItemForSeq", (DeeObject *)&librt_get_IterWithIterKeysAndGetItemForSeq, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* DefaultIterator_WithIterKeysAndGetItemSeq_Type */
 	{ "IterWithIterKeysAndTGetItemForSeq", (DeeObject *)&librt_get_IterWithIterKeysAndTGetItemForSeq, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* DefaultIterator_WithIterKeysAndTGetItemSeq_Type */

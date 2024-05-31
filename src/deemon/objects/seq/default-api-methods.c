@@ -280,6 +280,28 @@ err_seq_unsupportedf(DeeObject *self, char const *method_format, ...) {
 }
 
 
+/* Error implementations for `Sequence.enumerate()' */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithError(DeeObject *self) {
+	err_seq_unsupportedf(self, "enumerate()");
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithIntRangeWithError(DeeObject *self, size_t start, size_t end) {
+	err_seq_unsupportedf(self, "enumerate(%" PRFuSIZ ", %" PRFuSIZ ")", start, end);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end) {
+	err_seq_unsupportedf(self, "enumerate(%r, %r)", start, end);
+	return NULL;
+}
+
+
+
+
 
 /* Special sequence functions that have dedicated operators. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
@@ -305,6 +327,152 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeSeq_Max)(DeeObject *__restrict self) {
 	return new_DeeSeq_Max(self);
+}
+
+
+
+
+
+/************************************************************************/
+/* enumerate()                                                          */
+/************************************************************************/
+/* Helpers for enumerating a sequence by invoking a given callback. */
+
+struct seq_enumerate_data {
+	DeeObject      *sed_cb;     /* [1..1] Enumeration callback */
+	DREF DeeObject *sed_result; /* [?..1][valid_if(return == -2)] Enumeration result */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+seq_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+	DREF DeeObject *result;
+	DeeObject *args[2];
+	struct seq_enumerate_data *data;
+	data    = (struct seq_enumerate_data *)arg;
+	args[0] = index;
+	args[1] = value;
+	result  = DeeObject_Call(data->sed_cb, value ? 2 : 1, args);
+	if unlikely(!result)
+		goto err;
+	if (DeeNone_Check(result)) {
+		Dee_DecrefNokill(Dee_None);
+		return 0;
+	}
+	data->sed_result = result;
+	return -2; /* Stop enumeration! */
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED Dee_ssize_t DCALL
+seq_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	DREF DeeObject *result;
+	DeeObject *args[2];
+	struct seq_enumerate_data *data;
+	data    = (struct seq_enumerate_data *)arg;
+	args[0] = DeeInt_NewSize(index);
+	if unlikely(!args[0])
+		goto err;
+	args[1] = value;
+	result  = DeeObject_Call(data->sed_cb, value ? 2 : 1, args);
+	Dee_Decref(args[0]);
+	if unlikely(!result)
+		goto err;
+	if (DeeNone_Check(result)) {
+		Dee_DecrefNokill(Dee_None);
+		return 0;
+	}
+	data->sed_result = result;
+	return -2; /* Stop enumeration! */
+err:
+	return -1;
+}
+
+INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_Enumerate(DeeObject *self, DeeObject *cb) {
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_data data;
+	data.sed_cb    = cb;
+	foreach_status = DeeObject_Enumerate(self, &seq_enumerate_cb, &data);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sed_result;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_EnumerateWithIntRange(DeeObject *self, DeeObject *cb, size_t start, size_t end) {
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_data data;
+	data.sed_cb    = cb;
+	foreach_status = DeeObject_EnumerateIndex(self, &seq_enumerate_index_cb, &data, start, end);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sed_result;
+	return_none;
+err:
+	return NULL;
+}
+
+struct seq_enumerate_with_filter_data {
+	DeeObject      *sedwf_cb;     /* [1..1] Enumeration callback */
+	DREF DeeObject *sedwf_result; /* [?..1][valid_if(return == -2)] Enumeration result */
+	DeeObject      *sedwf_start;  /* [1..1] Filter start */
+	DeeObject      *sedwf_end;    /* [1..1] Filter end */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+seq_enumerate_with_filter_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+	int temp;
+	DREF DeeObject *result;
+	DeeObject *args[2];
+	struct seq_enumerate_with_filter_data *data;
+	data = (struct seq_enumerate_with_filter_data *)arg;
+	/* if (data->sedwf_start <= index && data->sedwf_end > index) ... */
+	temp = DeeObject_CmpLeAsBool(data->sedwf_start, index);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 0;
+	temp = DeeObject_CmpGrAsBool(data->sedwf_end, index);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 0;
+	args[0] = index;
+	args[1] = value;
+	result  = DeeObject_Call(data->sedwf_cb, value ? 2 : 1, args);
+	if unlikely(!result)
+		goto err;
+	if (DeeNone_Check(result)) {
+		Dee_DecrefNokill(Dee_None);
+		return 0;
+	}
+	data->sedwf_result = result;
+	return -2; /* Stop enumeration! */
+err:
+	return -1;
+}
+
+INTERN NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+DeeSeq_EnumerateWithRange(DeeObject *self, DeeObject *cb, DeeObject *start, DeeObject *end) {
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_with_filter_data data;
+	data.sedwf_cb    = cb;
+	data.sedwf_start = start;
+	data.sedwf_end   = end;
+	foreach_status = DeeObject_Enumerate(self, &seq_enumerate_with_filter_cb, &data);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sedwf_result;
+	return_none;
+err:
+	return NULL;
 }
 
 
@@ -4674,6 +4842,203 @@ default_seq_setlast(DeeObject *self, DeeObject *value) {
 	return DeeSeq_SetLast(self, value);
 }
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("cb");
+print define_Dee_HashStr("start");
+print define_Dee_HashStr("end");
+]]]*/
+#define Dee_HashStr__cb _Dee_HashSelectC(0x75ffadba, 0x2501dbb50208b92e)
+#define Dee_HashStr__start _Dee_HashSelectC(0xa2ed6890, 0x80b621ce3c3982d5)
+#define Dee_HashStr__end _Dee_HashSelectC(0x37fb4a05, 0x6de935c204dc3d01)
+/*[[[end]]]*/
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+do_default_seq_enumerate_with_kw(DeeObject *self, size_t argc,
+                                 DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
+	DeeObject *cb, *startob, *endob;
+	size_t start, end;
+	DeeKwArgs kwds;
+	if (DeeKwArgs_Init(&kwds, &argc, argv, kw))
+		goto err;
+	switch (argc) {
+
+	case 0: {
+		if unlikely((cb = DeeKwArgs_TryGetItemNRStringHash(&kwds, "cb", Dee_HashStr__cb)) == NULL)
+			goto err;
+		if unlikely((startob = DeeKwArgs_TryGetItemNRStringHash(&kwds, "start", Dee_HashStr__start)) == NULL)
+			goto err;
+		if unlikely((endob = DeeKwArgs_TryGetItemNRStringHash(&kwds, "end", Dee_HashStr__end)) == NULL)
+			goto err;
+		if (cb != ITER_DONE) {
+handle_with_cb:
+			if (endob != ITER_DONE) {
+				if (startob != ITER_DONE) {
+					if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
+					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+						result = DeeSeq_EnumerateWithIntRange(self, cb, start, end);
+					} else {
+						result = DeeSeq_EnumerateWithRange(self, cb, startob, endob);
+					}
+				} else if (DeeInt_Check(endob) && DeeInt_TryAsSize(endob, &end)) {
+					result = DeeSeq_EnumerateWithIntRange(self, cb, 0, end);
+				} else {
+					startob = DeeObject_NewDefault(Dee_TYPE(endob));
+					if unlikely(!startob)
+						goto err;
+					result = DeeSeq_EnumerateWithRange(self, cb, startob, endob);
+					Dee_Decref(startob);
+				}
+			} else if (startob == ITER_DONE) {
+				result = DeeSeq_Enumerate(self, cb);
+			} else {
+				ASSERT(startob != ITER_DONE);
+				ASSERT(endob == ITER_DONE);
+				if (DeeObject_AsSize(startob, &start))
+					goto err;
+				result = DeeSeq_EnumerateWithIntRange(self, cb, start, (size_t)-1);
+			}
+		} else {
+			if (endob != ITER_DONE) {
+				if (startob != ITER_DONE) {
+					if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
+					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+						result = DeeSeq_MakeEnumerationWithIntRange(self, start, end);
+					} else {
+						result = DeeSeq_MakeEnumerationWithRange(self, startob, endob);
+					}
+				} else if (DeeInt_Check(endob) && DeeInt_TryAsSize(endob, &end)) {
+					result = DeeSeq_MakeEnumerationWithIntRange(self, 0, end);
+				} else {
+					startob = DeeObject_NewDefault(Dee_TYPE(endob));
+					if unlikely(!startob)
+						goto err;
+					result = DeeSeq_MakeEnumerationWithRange(self, startob, endob);
+					Dee_Decref(startob);
+				}
+			} else if (startob == ITER_DONE) {
+				result = DeeSeq_MakeEnumeration(self);
+			} else {
+				ASSERT(startob != ITER_DONE);
+				ASSERT(endob == ITER_DONE);
+				if (DeeObject_AsSize(startob, &start))
+					goto err;
+				result = DeeSeq_MakeEnumerationWithIntRange(self, start, (size_t)-1);
+			}
+		}
+	}	break;
+
+	case 1: {
+		cb = argv[0];
+		if unlikely((endob = DeeKwArgs_TryGetItemNRStringHash(&kwds, "end", Dee_HashStr__end)) == NULL)
+			goto err;
+		if (DeeCallable_Check(cb)) {
+			if unlikely((startob = DeeKwArgs_TryGetItemNRStringHash(&kwds, "start", Dee_HashStr__start)) == NULL)
+				goto err;
+			goto handle_with_cb;
+		}
+		startob = cb;
+		if (endob != ITER_DONE) {
+			if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
+			    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+				result = DeeSeq_MakeEnumerationWithIntRange(self, start, end);
+			} else {
+				result = DeeSeq_MakeEnumerationWithRange(self, startob, endob);
+			}
+		} else {
+			if (DeeObject_AsSize(startob, &start))
+				goto err;
+			result = DeeSeq_MakeEnumerationWithIntRange(self, start, (size_t)-1);
+		}
+	}	break;
+
+	case 2: {
+		cb = argv[0];
+		if (DeeCallable_Check(cb)) {
+			if unlikely((endob = DeeKwArgs_TryGetItemNRStringHash(&kwds, "end", Dee_HashStr__end)) == NULL)
+				goto err;
+			startob = argv[1];
+			goto handle_with_cb;
+		}
+		startob = argv[0];
+		endob   = argv[1];
+		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
+		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+			result = DeeSeq_MakeEnumerationWithIntRange(self, start, end);
+		} else {
+			result = DeeSeq_MakeEnumerationWithRange(self, startob, endob);
+		}
+	}	break;
+
+	case 3: {
+		cb      = argv[0];
+		startob = argv[1];
+		endob   = argv[2];
+		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
+		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+			result = DeeSeq_EnumerateWithIntRange(self, cb, start, end);
+		} else {
+			result = DeeSeq_EnumerateWithRange(self, cb, startob, endob);
+		}
+	}	break;
+
+	default:
+		goto err_bad_args;
+	}
+	if unlikely(DeeKwArgs_Done(&kwds, argc, "enumerate"))
+		goto err_r;
+	return result;
+err_bad_args:
+	err_invalid_argc("enumerate", argc, 0, 3);
+	goto err;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t start, end;
+	if unlikely(kw)
+		return do_default_seq_enumerate_with_kw(self, argc, argv, kw);
+	if likely(argc == 0)
+		return DeeSeq_MakeEnumeration(self);
+	if (DeeCallable_Check(argv[0])) {
+		if (argc == 1)
+			return DeeSeq_Enumerate(self, argv[0]);
+		if unlikely(argc == 2) {
+			if (DeeObject_AsSize(argv[1], &start))
+				goto err;
+			return DeeSeq_EnumerateWithIntRange(self, argv[0], start, (size_t)-1);
+		}
+		if (argc != 3)
+			goto err_bad_args;
+		if ((DeeInt_Check(argv[1]) && DeeInt_Check(argv[2])) &&
+		    (DeeInt_TryAsSize(argv[1], &start) && DeeInt_TryAsSize(argv[2], &end)))
+			return DeeSeq_EnumerateWithIntRange(self, argv[0], start, end);
+		return DeeSeq_EnumerateWithRange(self, argv[0], argv[1], argv[2]);
+	} else {
+		if unlikely(argc == 1) {
+			if (DeeObject_AsSize(argv[0], &start))
+				goto err;
+			return DeeSeq_MakeEnumerationWithIntRange(self, start, (size_t)-1);
+		}
+		if (argc != 2)
+			goto err_bad_args;
+		if ((DeeInt_Check(argv[0]) && DeeInt_Check(argv[1])) &&
+		    (DeeInt_TryAsSize(argv[0], &start) && DeeInt_TryAsSize(argv[1], &end)))
+			return DeeSeq_MakeEnumerationWithIntRange(self, start, end);
+		return DeeSeq_MakeEnumerationWithRange(self, argv[0], argv[1]);
+	}
+	__builtin_unreachable();
+err_bad_args:
+	err_invalid_argc("enumerate", argc, 0, 3);
+err:
+	return NULL;
+}
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default_seq_any(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int result;
@@ -5390,6 +5755,8 @@ PRIVATE struct type_getset tpconst default_seq_getsets[] = {
 };
 
 PRIVATE struct type_method tpconst default_seq_methods[] = {
+	TYPE_KWMETHOD(STR_any, &default_seq_enumerate, "(start=!0,end=!0)->?S?T2?Dint?O\n"
+	                                               "(cb:?DCallable,start=!0,end=!0)->?X2?O?N"),
 	TYPE_KWMETHOD(STR_any, &default_seq_any, "(start=!0,end=!0,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD(STR_all, &default_seq_all, "(start=!0,end=!0,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD(STR_parity, &default_seq_parity, "(start=!0,end=!0,key:?DCallable=!N)->?Dbool"),

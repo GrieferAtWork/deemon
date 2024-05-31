@@ -251,6 +251,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-api.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-enumerate.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-iterators.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-reversed.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-sequences.h" />
@@ -434,6 +435,7 @@
 		<ClCompile Include="..\src\deemon\objects\seq\default-api-methods.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-api.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-compare.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\default-enumerate.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-iterators.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-reversed.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-sequences.c" />

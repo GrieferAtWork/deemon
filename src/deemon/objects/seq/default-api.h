@@ -165,6 +165,11 @@ typedef WUNUSED_T NONNULL_T((1, 2, 5, 6)) int (DCALL *Dee_tsc_brange_with_key_t)
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_blocate_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 5)) DREF DeeObject *(DCALL *Dee_tsc_blocate_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
+/* Operators for the purpose of constructing `DefaultEnumeration_With*' objects. */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_makeenumeration_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_makeenumeration_with_int_range_t)(DeeObject *self, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *Dee_tsc_makeenumeration_with_range_t)(DeeObject *self, DeeObject *start, DeeObject *end);
+
 union Dee_tsc_uslot {
 	DREF DeeObject   *d_function;  /* [1..1][valid_if(tsc_erase == ...)] Thiscall function. */
 	Dee_objmethod_t   d_method;    /* [1..1][valid_if(tsc_erase == ...)] Method callback. */
@@ -179,6 +184,11 @@ struct Dee_type_seq_cache {
 	Dee_tsc_enumerate_index_t         tsc_enumerate_index; /* Same as normal enumerate-index, but treated like `(self as Sequence).<enumerate_index>' */
 	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
 	Dee_tsc_nonempty_t                tsc_nonempty;
+
+	/* Operators for the purpose of constructing `DefaultEnumeration_With*' objects. */
+	Dee_tsc_makeenumeration_t                tsc_makeenumeration;
+	Dee_tsc_makeenumeration_with_int_range_t tsc_makeenumeration_with_int_range;
+	Dee_tsc_makeenumeration_with_range_t     tsc_makeenumeration_with_range;
 
 	/* Returns the first element of the sequence.
 	 * Calls `err_empty_sequence()' when it is empty. */
@@ -347,6 +357,12 @@ INTDEF WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_reverse_t DCALL DeeType_SeqC
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL DeeType_SeqCache_HasPrivateEnumerateIndexReverse(DeeTypeObject *orig_type, DeeTypeObject *self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_t DCALL DeeType_SeqCache_RequireEnumerateIndex(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_nonempty_t DCALL DeeType_SeqCache_RequireNonEmpty(DeeTypeObject *__restrict self);
+
+/* Operators for the purpose of constructing `DefaultEnumeration_With*' objects. */
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_t DCALL DeeType_SeqCache_RequireMakeEnumeration(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_with_int_range_t DCALL DeeType_SeqCache_RequireMakeEnumerationWithIntRange(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_with_range_t DCALL DeeType_SeqCache_RequireMakeEnumerationWithRange(DeeTypeObject *__restrict self);
+
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_getfirst_t DCALL DeeType_SeqCache_RequireGetFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundfirst_t DCALL DeeType_SeqCache_RequireBoundFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_delfirst_t DCALL DeeType_SeqCache_RequireDelFirst(DeeTypeObject *__restrict self);
@@ -447,6 +463,22 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_blocate_with_key_t DCALL Dee
 /* Same as `DeeObject_EnumerateIndex()', but also works for treats `self' as `self as Sequence' */
 #define DeeSeq_EnumerateIndex(self, proc, arg, start, end) \
 	(*DeeType_SeqCache_RequireEnumerateIndex(Dee_TYPE(self)))(self, proc, arg, start, end)
+
+
+/* Helpers for constructing enumeration proxy objects. */
+#define DeeSeq_MakeEnumeration(self) \
+	(*DeeType_SeqCache_RequireMakeEnumeration(Dee_TYPE(self)))(self)
+#define DeeSeq_MakeEnumerationWithIntRange(self, start, end) \
+	(*DeeType_SeqCache_RequireMakeEnumerationWithIntRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_MakeEnumerationWithRange(self, start, end) \
+	(*DeeType_SeqCache_RequireMakeEnumerationWithRange(Dee_TYPE(self)))(self, start, end)
+
+/* Helpers for enumerating a sequence by invoking a given callback. */
+INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Enumerate(DeeObject *self, DeeObject *cb);
+INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_EnumerateWithIntRange(DeeObject *self, DeeObject *cb, size_t start, size_t end);
+INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeSeq_EnumerateWithRange(DeeObject *self, DeeObject *cb, DeeObject *start, DeeObject *end);
+
+
 
 /* Helpers to quickly invoke default sequence functions. */
 #define DeeSeq_GetFirst(self)    (*DeeType_SeqCache_RequireGetFirst(Dee_TYPE(self)))(self)
@@ -1204,6 +1236,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default_seq_setlast(DeeObject *self, De
 
 /* Default sequence function pointers (including ones for mutable sequences). */
 /* Functions that need additional variants for sequence sub-types that don't have indices (sets, maps) */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_any(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_all(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_parity(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);

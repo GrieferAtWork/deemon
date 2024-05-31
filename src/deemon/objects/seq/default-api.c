@@ -39,6 +39,9 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
+/**/
+#include "default-enumerate.h"
+
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 #include "../seq_functions.h"
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
@@ -398,6 +401,180 @@ DeeType_SeqCache_RequireNonEmpty(DeeTypeObject *__restrict self) {
 	return result;
 }
 
+
+/* Operators for the purpose of constructing `DefaultEnumeration_With*' objects. */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithError(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithIntRangeWithError(DeeObject *self, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end);
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_t DCALL
+DeeType_SeqCache_RequireMakeEnumeration_uncached(DeeTypeObject *__restrict self) {
+	if (DeeType_HasOperator(self, OPERATOR_ITER)) {
+		unsigned int seqclass;
+		if (self->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItem ||
+		    self->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndGetItem ||
+		    self->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItemDefault) {
+			return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
+		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndexFast) {
+			return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
+		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndex ||
+		           self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeDefaultAndGetItemIndexDefault) {
+			return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
+		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndTryGetItemIndex) {
+			return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
+		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeObAndGetItem) {
+			return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
+		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithCounterAndForeach ||
+		           self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithCounterAndIter) {
+			if (self->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItem ||
+			    self->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndGetItem ||
+			    self->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault ||
+			    self->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItem ||
+			    self->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndGetItem ||
+			    self->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault)
+				return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
+			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast)
+				return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
+			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndex)
+				return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
+			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex)
+				return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
+			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem)
+				return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
+			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithGetItemIndex ||
+			    self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithGetItem)
+				return &DeeSeq_DefaultMakeEnumerationWithGetItemIndex;
+			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
+		} else if (self->tp_seq->tp_enumerate == &DeeMap_DefaultEnumerateWithIter) {
+			return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
+		}
+		seqclass = DeeType_GetSeqClass(self);
+		if (self->tp_seq->tp_iterkeys && !DeeType_IsDefaultIterKeys(self->tp_seq->tp_iterkeys))
+			return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
+		if (seqclass == Dee_SEQCLASS_SEQ) {
+			if (DeeType_HasOperator(self, OPERATOR_SIZE)) {
+				if (self->tp_seq->tp_getitem_index_fast)
+					return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
+				if (DeeType_HasOperator(self, OPERATOR_GETITEM)) {
+					if (!DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index))
+						return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
+					if (!DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index))
+						return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
+					return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
+				}
+			} else if (DeeType_HasOperator(self, OPERATOR_GETITEM)) {
+				return &DeeSeq_DefaultMakeEnumerationWithGetItemIndex;
+			}
+			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
+		}
+		if (self->tp_seq->tp_enumerate != NULL &&
+		    self->tp_seq->tp_enumerate != self->tp_seq->tp_foreach_pair &&
+		    !DeeType_IsDefaultEnumerate(self->tp_seq->tp_enumerate)) {
+			return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
+		} else if (self->tp_seq->tp_enumerate_index != NULL &&
+		           !DeeType_IsDefaultEnumerateIndex(self->tp_seq->tp_enumerate_index)) {
+			return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
+		}
+		if (seqclass == Dee_SEQCLASS_MAP) {
+			return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
+		} else if (seqclass == Dee_SEQCLASS_NONE) {
+			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
+		}
+	}
+	return &DeeSeq_DefaultMakeEnumerationWithError;
+}
+
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_t DCALL
+DeeType_SeqCache_RequireMakeEnumeration(DeeTypeObject *__restrict self) {
+	Dee_tsc_makeenumeration_t result;
+	struct Dee_type_seq_cache *sc;
+	if likely(self->tp_seq) {
+		sc = self->tp_seq->_tp_seqcache;
+		if likely(sc && sc->tsc_makeenumeration)
+			return sc->tsc_makeenumeration;
+	}
+	result = DeeType_SeqCache_RequireMakeEnumeration_uncached(self);
+	sc     = DeeType_TryRequireSeqCache(self);
+	if likely(sc)
+		atomic_write(&sc->tsc_makeenumeration, result);
+	return result;
+}
+
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_with_int_range_t DCALL
+DeeType_SeqCache_RequireMakeEnumerationWithIntRange(DeeTypeObject *__restrict self) {
+	Dee_tsc_makeenumeration_with_int_range_t result;
+	Dee_tsc_makeenumeration_t base;
+	struct Dee_type_seq_cache *sc;
+	if likely(self->tp_seq) {
+		sc = self->tp_seq->_tp_seqcache;
+		if likely(sc && sc->tsc_makeenumeration_with_int_range)
+			return sc->tsc_makeenumeration_with_int_range;
+	}
+	base = DeeType_SeqCache_RequireMakeEnumeration(self);
+	if (base == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast) {
+		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndGetItemIndexFastAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex) {
+		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndTryGetItemIndexAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex) {
+		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndGetItemIndexAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem) {
+		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeObAndGetItemAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithGetItemIndex) {
+		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithGetItemIndexAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem) {
+		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndTryGetItemAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithIterAndCounter) {
+		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterAndCounterAndFilter;
+	} else if (base == &DeeMap_DefaultMakeEnumerationWithIterAndUnpack) {
+		result = &DeeMap_DefaultMakeEnumerationWithIntRangeWithIterAndUnpackAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithEnumerate) {
+		result = &DeeMap_DefaultMakeEnumerationWithIntRangeWithEnumerateIndex;
+	} else {
+		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithError;
+	}
+	sc = DeeType_TryRequireSeqCache(self);
+	if likely(sc)
+		atomic_write(&sc->tsc_makeenumeration_with_int_range, result);
+	return result;
+}
+
+INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_with_range_t DCALL
+DeeType_SeqCache_RequireMakeEnumerationWithRange(DeeTypeObject *__restrict self) {
+	Dee_tsc_makeenumeration_with_range_t result;
+	Dee_tsc_makeenumeration_t base;
+	struct Dee_type_seq_cache *sc;
+	if likely(self->tp_seq) {
+		sc = self->tp_seq->_tp_seqcache;
+		if likely(sc && sc->tsc_makeenumeration_with_range)
+			return sc->tsc_makeenumeration_with_range;
+	}
+	base = DeeType_SeqCache_RequireMakeEnumeration(self);
+	if (base == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast ||
+	    base == &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex ||
+	    base == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex ||
+	    base == &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem) {
+		result = &DeeSeq_DefaultMakeEnumerationWithRangeWithSizeObAndGetItemAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithGetItemIndex) {
+		result = &DeeSeq_DefaultMakeEnumerationWithRangeWithGetItemAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem) {
+		result = &DeeSeq_DefaultMakeEnumerationWithRangeWithIterKeysAndTryGetItemAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithIterAndCounter) {
+		result = &DeeSeq_DefaultMakeEnumerationWithRangeWithIterAndCounterAndFilter;
+	} else if (base == &DeeMap_DefaultMakeEnumerationWithIterAndUnpack) {
+		result = &DeeMap_DefaultMakeEnumerationWithRangeWithIterAndUnpackAndFilter;
+	} else if (base == &DeeSeq_DefaultMakeEnumerationWithEnumerate) {
+		result = &DeeMap_DefaultMakeEnumerationWithRangeWithEnumerateAndFilter;
+	} else {
+		result = &DeeSeq_DefaultMakeEnumerationWithRangeWithError;
+	}
+	sc = DeeType_TryRequireSeqCache(self);
+	if likely(sc)
+		atomic_write(&sc->tsc_makeenumeration_with_range, result);
+	return result;
+}
 
 
 

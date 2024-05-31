@@ -5910,8 +5910,8 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeObAndGetItem,
 	}
 #endif /* DEFINE_TYPED_OPERATORS */
 	{
-		DREF DefaultIterator_WithSizeAndGetItem *result;
-		result = DeeGCObject_MALLOC(DefaultIterator_WithSizeAndGetItem);
+		DREF DefaultIterator_WithSizeObAndGetItem *result;
+		result = DeeGCObject_MALLOC(DefaultIterator_WithSizeObAndGetItem);
 		if unlikely(!result)
 			goto err_size_ob;
 		result->disg_index = DeeObject_NewDefault(Dee_TYPE(sizeob));
@@ -5924,7 +5924,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeObAndGetItem,
 		result->disg_tp_getitem = tp_self->tp_seq->tp_getitem;
 		result->disg_end        = sizeob; /* Inherit reference */
 		Dee_atomic_lock_init(&result->disg_lock);
-		DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItem_Type);
+		DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
 		return DeeGC_Track((DREF DeeObject *)result);
 	}
 	__builtin_unreachable();
