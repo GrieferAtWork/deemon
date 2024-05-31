@@ -4319,9 +4319,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "			init = combine(init, x);\n"
 	              /**/ "		}\n"
 	              /**/ "	}\n"
-	              /**/ "	if (init is bound)\n"
-	              /**/ "		return init;\n"
-	              /**/ "	return none;\n"
+	              /**/ "	if (init !is bound)\n"
+	              /**/ "		throw ValueError(\"Empty sequence\");\n"
+	              /**/ "	return init;\n"
 	              /**/ "}"
 	              "}"),
 	TYPE_METHOD("filter", &seq_filter,
@@ -4343,25 +4343,22 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "Same as ?#filter, but the returned sequence has the same size as @this, and filtered "
 	            /**/ "elements are simply treated as though they were unbound:\n"
 	            "${"
-	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[0] !is bound;"
+	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[0] !is bound;\n"
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[1] is bound;"
 	            "}"),
 	TYPE_KWMETHOD(STR_sum, &default_seq_sum,
-	              "(start=!0,end=!0)->\n"
+	              "(start=!0,end=!0)->?X2?O?N\n"
 	              "Returns the sum of all elements, or ?N if the Sequence is empty\n"
 	              "This, alongside ?Ajoin?Dstring is the preferred way of merging lists of strings "
 	              /**/ "into a single string\n"
 	              "${"
 	              /**/ "function sum() {\n"
 	              /**/ "	local result;\n"
-	              /**/ "	for (local x: this) {\n"
-	              /**/ "		if (result is bound) {\n"
-	              /**/ "			result = result + x;\n"
-	              /**/ "		} else {\n"
-	              /**/ "			result = x;\n"
-	              /**/ "		}\n"
-	              /**/ "	}\n"
-	              /**/ "	return result is bound ? result : none;\n"
+	              /**/ "	for (local x: this)\n"
+	              /**/ "		result = result is bound ? result + x : x;\n"
+	              /**/ "	if (result !is bound)\n"
+	              /**/ "		throw ValueError(\"Empty sequence\");\n"
+	              /**/ "	return result;\n"
 	              /**/ "}"
 	              "}"),
 	TYPE_KWMETHOD(STR_any, &default_seq_any,
@@ -4405,7 +4402,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "}"
 	              "}"),
 	TYPE_KWMETHOD(STR_min, &default_seq_min,
-	              "(start=!0,end=!0,key:?DCallable=!N)->\n"
+	              "(start=!0,end=!0,key:?DCallable=!N)->?X2?O?N\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "Returns the smallest element of @this Sequence\n"
 	              "If @this Sequence is empty, ?N is returned\n"
@@ -4435,7 +4432,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "}"
 	              "}"),
 	TYPE_KWMETHOD(STR_max, &default_seq_max,
-	              "(start=!0,end=!0,key:?DCallable=!N)->\n"
+	              "(start=!0,end=!0,key:?DCallable=!N)->?X2?O?N\n"
 	              "#pkey{A key function for transforming Sequence elements}"
 	              "Returns the greatest element of @this Sequence\n"
 	              "If @this Sequence is empty, ?N is returned\n"
@@ -4508,7 +4505,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	throw Error.ValueError(\"Item not found...\")\n"
 	              /**/ "}"
 	              "}"),
-	TYPE_KWMETHOD("rlocate", &default_seq_rlocate,
+	TYPE_KWMETHOD(STR_rlocate, &default_seq_rlocate,
 	              "(item,start=!0,end=!0,key:?DCallable=!N)->\n"
 	              "#pelem{The element to search for}"
 	              "#pkey{A key function for transforming Sequence elements}"

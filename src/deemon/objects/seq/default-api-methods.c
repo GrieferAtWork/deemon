@@ -26,12 +26,14 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
+#include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
-#include <deemon/bytes.h>
+#include <deemon/kwds.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -807,7 +809,7 @@ DeeSeq_DefaultMinWithForeach(DeeObject *self) {
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		err_empty_sequence(self);
+		return_none;
 	return result;
 err_r:
 	Dee_XDecref(result);
@@ -826,8 +828,7 @@ DeeSeq_DefaultMinWithKeyWithForeach(DeeObject *self, DeeObject *key) {
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		err_empty_sequence(self);
-		goto err;
+		return_none;
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -839,7 +840,7 @@ err_data:
 	} else if (data.gsmmwk_result) {
 		Dee_Decref(data.gsmmwk_result);
 	}
-err:
+/*err:*/
 	return NULL;
 }
 
@@ -851,7 +852,7 @@ DeeSeq_DefaultMinWithRangeWithEnumerateIndex(DeeObject *self, size_t start, size
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		err_empty_sequence(self);
+		return_none;
 	return result;
 err_r:
 	Dee_XDecref(result);
@@ -870,8 +871,7 @@ DeeSeq_DefaultMinWithRangeAndKeyWithEnumerateIndex(DeeObject *self, size_t start
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		err_empty_sequence(self);
-		goto err;
+		return_none;
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -883,7 +883,7 @@ err_data:
 	} else if (data.gsmmwk_result) {
 		Dee_Decref(data.gsmmwk_result);
 	}
-err:
+/*err:*/
 	return NULL;
 }
 
@@ -979,7 +979,7 @@ DeeSeq_DefaultMaxWithForeach(DeeObject *self) {
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		err_empty_sequence(self);
+		return_none;
 	return result;
 err_r:
 	Dee_XDecref(result);
@@ -1021,7 +1021,7 @@ DeeSeq_DefaultMaxWithRangeWithEnumerateIndex(DeeObject *self, size_t start, size
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		err_empty_sequence(self);
+		return_none;
 	return result;
 err_r:
 	Dee_XDecref(result);
@@ -1040,8 +1040,7 @@ DeeSeq_DefaultMaxWithRangeAndKeyWithEnumerateIndex(DeeObject *self, size_t start
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		err_empty_sequence(self);
-		goto err;
+		return_none;
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -1053,7 +1052,7 @@ err_data:
 	} else if (data.gsmmwk_result) {
 		Dee_Decref(data.gsmmwk_result);
 	}
-err:
+/*err:*/
 	return NULL;
 }
 
@@ -1067,15 +1066,27 @@ err:
 /************************************************************************/
 
 struct default_seq_sum_data {
-#define GENERIC_SEQ_SUM_MODE_FIRST  0 /* Mode not yet determined (still at first item) */
-#define GENERIC_SEQ_SUM_MODE_OBJECT 1 /* Generic object sum mode (using "operator +") */
-#define GENERIC_SEQ_SUM_MODE_STRING 2 /* Use a unicode printer */
-#define GENERIC_SEQ_SUM_MODE_BYTES  3 /* Use a bytes printer */
+#define GENERIC_SEQ_SUM_MODE_FIRST  0 /* Mode not yet determined (expecting first item) */
+#define GENERIC_SEQ_SUM_MODE_SECOND 1 /* Always comes after `GENERIC_SEQ_SUM_MODE_FIRST' and selects which mode to use */
+#define GENERIC_SEQ_SUM_MODE_OBJECT 2 /* Generic object sum mode (using "operator +") */
+#define GENERIC_SEQ_SUM_MODE_STRING 3 /* Use a unicode printer */
+#define GENERIC_SEQ_SUM_MODE_BYTES  4 /* Use a bytes printer */
+#define GENERIC_SEQ_SUM_MODE_INT    5 /* Got a single item, which had type "int" */
+#ifndef CONFIG_NO_FPU
+#define GENERIC_SEQ_SUM_MODE_FLOAT  6 /* Got a single item, which had type "float" */
+#endif /* !CONFIG_NO_FPU */
 	uintptr_t gss_mode; /* Sum-mode (one of `GENERIC_SEQ_SUM_MODE_*') */
 	union {
-		DREF DeeObject        *v_object; /* GENERIC_SEQ_SUM_MODE_OBJECT */
+		DREF DeeObject        *v_object; /* GENERIC_SEQ_SUM_MODE_SECOND, GENERIC_SEQ_SUM_MODE_OBJECT */
 		struct unicode_printer v_string; /* GENERIC_SEQ_SUM_MODE_STRING */
 		struct bytes_printer   v_bytes;  /* GENERIC_SEQ_SUM_MODE_BYTES */
+		Dee_ssize_t            v_int;    /* GENERIC_SEQ_SUM_MODE_INT2 */
+#ifndef CONFIG_NO_FPU
+		double                 v_float;  /* GENERIC_SEQ_SUM_MODE_FLOAT2 */
+#endif /* !CONFIG_NO_FPU */
+		/* TODO: Special optimization for Sequence concat */
+		/* TODO: Special optimization for Tuple */
+		/* TODO: Special optimization for List */
 	} gss_value;
 };
 
@@ -1084,12 +1095,19 @@ default_seq_sum_data_pack(struct default_seq_sum_data *__restrict self) {
 	switch (self->gss_mode) {
 	case GENERIC_SEQ_SUM_MODE_FIRST:
 		return_none;
+	case GENERIC_SEQ_SUM_MODE_SECOND:
 	case GENERIC_SEQ_SUM_MODE_OBJECT:
 		return self->gss_value.v_object;
 	case GENERIC_SEQ_SUM_MODE_STRING:
 		return unicode_printer_pack(&self->gss_value.v_string);
 	case GENERIC_SEQ_SUM_MODE_BYTES:
 		return bytes_printer_pack(&self->gss_value.v_bytes);
+	case GENERIC_SEQ_SUM_MODE_INT:
+		return DeeInt_NewSSize(self->gss_value.v_int);
+#ifndef CONFIG_NO_FPU
+	case GENERIC_SEQ_SUM_MODE_FLOAT:
+		return DeeFloat_New(self->gss_value.v_float);
+#endif /* !CONFIG_NO_FPU */
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
@@ -1099,8 +1117,13 @@ PRIVATE NONNULL((1)) void DCALL
 default_seq_sum_data_fini(struct default_seq_sum_data *__restrict self) {
 	switch (self->gss_mode) {
 	case GENERIC_SEQ_SUM_MODE_FIRST:
+	case GENERIC_SEQ_SUM_MODE_INT:
+#ifndef CONFIG_NO_FPU
+	case GENERIC_SEQ_SUM_MODE_FLOAT:
+#endif /* !CONFIG_NO_FPU */
 		break;
 	case GENERIC_SEQ_SUM_MODE_OBJECT:
+	case GENERIC_SEQ_SUM_MODE_SECOND:
 		Dee_Decref(self->gss_value.v_object);
 		break;
 	case GENERIC_SEQ_SUM_MODE_STRING:
@@ -1119,25 +1142,74 @@ default_seq_sum_foreach_cb(void *arg, DeeObject *item) {
 	data = (struct default_seq_sum_data *)arg;
 	switch (data->gss_mode) {
 
-	case GENERIC_SEQ_SUM_MODE_FIRST: {
-		DeeTypeObject *tp_elem = Dee_TYPE(item);
+	case GENERIC_SEQ_SUM_MODE_FIRST:
+		Dee_Incref(item);
+		data->gss_value.v_object = item;
+		data->gss_mode = GENERIC_SEQ_SUM_MODE_SECOND;
+		break;
+
+	case GENERIC_SEQ_SUM_MODE_SECOND: {
+		DeeTypeObject *tp_elem;
+		DREF DeeObject *first = data->gss_value.v_object;
+		tp_elem = Dee_TYPE(first);
 		if (tp_elem == &DeeString_Type) {
+			Dee_ssize_t temp;
 			data->gss_mode = GENERIC_SEQ_SUM_MODE_STRING;
 			unicode_printer_init(&data->gss_value.v_string);
+			temp = unicode_printer_printstring(&data->gss_value.v_string, first);
+			Dee_Decref(first);
+			if unlikely(temp < 0)
+				return temp;
 			goto do_print_string;
 		} else if (tp_elem == &DeeBytes_Type) {
+			Dee_ssize_t temp;
 			data->gss_mode = GENERIC_SEQ_SUM_MODE_BYTES;
 			bytes_printer_init(&data->gss_value.v_bytes);
+			temp = Dee_bytes_printer_printbytes(&data->gss_value.v_bytes, first);
+			Dee_Decref(first);
+			if unlikely(temp < 0)
+				return temp;
 			goto do_print_bytes;
+		} else if (tp_elem == &DeeInt_Type) {
+			Dee_ssize_t a, b;
+			if (Dee_TYPE(item) != &DeeInt_Type)
+				goto generic_second;
+			if unlikely(!DeeInt_TryAsSSize(first, &a))
+				goto generic_second;
+			if unlikely(!DeeInt_TryAsSSize(item, &b))
+				goto generic_second;
+			if unlikely(OVERFLOW_SADD(a, b, &a))
+				goto generic_second;
+			Dee_Decref(first);
+			data->gss_mode = GENERIC_SEQ_SUM_MODE_INT;
+			data->gss_value.v_int = a;
+			break;
+#ifndef CONFIG_NO_FPU
+		} else if (tp_elem == &DeeFloat_Type) {
+			double total;
+			if (DeeObject_AsDouble(item, &total))
+				goto err;
+			total += DeeFloat_VALUE(first);
+			Dee_Decref(first);
+			data->gss_mode = GENERIC_SEQ_SUM_MODE_FLOAT;
+			data->gss_value.v_float = total;
+			break;
+#endif /* !CONFIG_NO_FPU */
 		} else {
-			data->gss_mode = GENERIC_SEQ_SUM_MODE_OBJECT;
-			data->gss_value.v_object = item;
-			Dee_Incref(item);
+			/* ... */
 		}
+generic_second:
+		item = DeeObject_Add(first, item);
+		if unlikely(!item)
+			goto err;
+		Dee_Decref(first);
+		data->gss_value.v_object = item;
+		data->gss_mode = GENERIC_SEQ_SUM_MODE_OBJECT;
 	}	break;
 
 	case GENERIC_SEQ_SUM_MODE_OBJECT: {
 		DREF DeeObject *result;
+do_handle_object:
 		result = DeeObject_Add(data->gss_value.v_object, item);
 		if unlikely(!result)
 			goto err;
@@ -1153,11 +1225,37 @@ do_print_string:
 do_print_bytes:
 		return bytes_printer_printobject(&data->gss_value.v_bytes, item);
 
+	case GENERIC_SEQ_SUM_MODE_INT: {
+		Dee_ssize_t total;
+		if (!DeeInt_Check(item))
+			goto switch_to_handle_object_from_int2;
+		if unlikely(!DeeInt_TryAsSSize(item, &total))
+			goto switch_to_handle_object_from_int2;
+		if unlikely(OVERFLOW_SADD(data->gss_value.v_int, total, &total))
+			goto switch_to_handle_object_from_int2;
+		data->gss_value.v_int = total;
+	}	break;
+
+#ifndef CONFIG_NO_FPU
+	case GENERIC_SEQ_SUM_MODE_FLOAT: {
+		double total;
+		if unlikely(!DeeObject_AsDouble(item, &total))
+			goto err;
+		data->gss_value.v_float += total;
+	}	break;
+#endif /* !CONFIG_NO_FPU */
+
 	default: __builtin_unreachable();
 	}
 	return 0;
 err:
 	return -1;
+switch_to_handle_object_from_int2:
+	data->gss_value.v_object = DeeInt_NewSSize(data->gss_value.v_int);
+	if unlikely(!data->gss_value.v_object)
+		goto err;
+	data->gss_mode = GENERIC_SEQ_SUM_MODE_OBJECT;
+	goto do_handle_object;
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -5296,9 +5394,9 @@ PRIVATE struct type_method tpconst default_seq_methods[] = {
 	TYPE_KWMETHOD(STR_all, &default_seq_all, "(start=!0,end=!0,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD(STR_parity, &default_seq_parity, "(start=!0,end=!0,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD(STR_reduce, &default_seq_reduce, "(combine:?DCallable,start=!0,end=!0,init?)->"),
-	TYPE_KWMETHOD(STR_min, &default_seq_min, "(start=!0,end=!0,key:?DCallable=!N)->")
-	TYPE_KWMETHOD(STR_max, &default_seq_max, "(start=!0,end=!0,key:?DCallable=!N)->"),
-	TYPE_KWMETHOD(STR_sum, &default_seq_sum, "(start=!0,end=!0)->"),
+	TYPE_KWMETHOD(STR_min, &default_seq_min, "(start=!0,end=!0,key:?DCallable=!N)->?X2?O?N")
+	TYPE_KWMETHOD(STR_max, &default_seq_max, "(start=!0,end=!0,key:?DCallable=!N)->?X2?O?N"),
+	TYPE_KWMETHOD(STR_sum, &default_seq_sum, "(start=!0,end=!0)->?X2?O?N"),
 	TYPE_KWMETHOD(STR_count, &default_seq_count, "(item,start=!0,end=!0,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD(STR_contains, &default_seq_contains, "(item,start=!0,end=!0,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD(STR_locate, &default_seq_locate, "(item,start=!0,end=!0,key:?DCallable=!N)->"),

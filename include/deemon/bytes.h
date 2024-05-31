@@ -247,6 +247,7 @@ struct Dee_bytes_printer {
 #define Dee_bytes_printer_release         bytes_printer_release
 #define Dee_bytes_printer_printf          bytes_printer_printf
 #define Dee_bytes_printer_vprintf         bytes_printer_vprintf
+#define Dee_bytes_printer_printbytes      bytes_printer_printbytes
 #define Dee_bytes_printer_printobject     bytes_printer_printobject
 #define Dee_bytes_printer_printobjectrepr bytes_printer_printobjectrepr
 #endif /* __INTELLISENSE__ */
@@ -310,11 +311,13 @@ DFUNDEF NONNULL((1)) void
 #ifdef __INTELLISENSE__
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printf)(struct Dee_bytes_printer *__restrict self, char const *__restrict format, ...);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_vprintf)(struct Dee_bytes_printer *__restrict self, char const *__restrict format, va_list args);
+WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printbytes)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printobject)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printobjectrepr)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
 #else /* __INTELLISENSE__ */
 #define Dee_bytes_printer_printf(self, ...)           DeeFormat_Printf(&Dee_bytes_printer_print, self, __VA_ARGS__)
 #define Dee_bytes_printer_vprintf(self, format, args) DeeFormat_VPrintf(&Dee_bytes_printer_print, self, format, args)
+#define Dee_bytes_printer_printbytes(self, ob)        Dee_bytes_printer_append(self, DeeBytes_DATA(ob), DeeBytes_SIZE(ob))
 #define Dee_bytes_printer_printobject(self, ob)       DeeObject_Print(ob, &Dee_bytes_printer_print, self)
 #define Dee_bytes_printer_printobjectrepr(self, ob)   DeeObject_PrintRepr(ob, &Dee_bytes_printer_print, self)
 #endif /* !__INTELLISENSE__ */
