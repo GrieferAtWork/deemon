@@ -159,7 +159,7 @@ INTDEF DeeTypeObject DefaultIterator_WithTGetItem_Type; /* DefaultIterator_WithT
 
 INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type;     /* DefaultIterator_WithSizeObAndGetItem */
 INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type; /* DefaultIterator_WithSizeObAndGetItem */
-INTDEF DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type;    /* DefaultIterator_WithTSizeAndGetItem */
+INTDEF DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type;      /* DefaultIterator_WithTSizeAndGetItem */
 
 INTDEF DeeTypeObject DefaultIterator_WithNextAndLimit_Type; /* DefaultIterator_WithNextAndLimit */
 
@@ -178,6 +178,44 @@ INTDEF DeeTypeObject DefaultIterator_WithEnumerateSeq_Type;      /* DefaultItera
 INTDEF DeeTypeObject DefaultIterator_WithEnumerateMap_Type;      /* DefaultIterator_WithEnumerate */
 INTDEF DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type; /* DefaultIterator_WithEnumerateIndex */
 INTDEF DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type; /* DefaultIterator_WithEnumerateIndex */
+
+
+/************************************************************************/
+/* Extra iterators for default enumeration sequence types               */
+/************************************************************************/
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject   *dinc_iter;    /* [1..1][const] The underlying iterator */
+	/* [1..1][const] Callback to load the next element from `dinc_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dinc_tp_next)(DeeObject *self);
+	size_t            dinc_counter; /* [lock(ATOMIC)] Index of the next element to-be read from "dinc_iter". */
+} DefaultIterator_WithNextAndCounter;
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject   *dincl_iter;    /* [1..1][const] The underlying iterator */
+	/* [1..1][const] Callback to load the next element from `dincl_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dincl_tp_next)(DeeObject *self);
+	size_t            dincl_counter; /* [lock(ATOMIC)] Index of the next element to-be read from "dincl_iter". */
+	size_t            dincl_limit;   /* [const] First value for `dincl_counter' that must not be yielded. */
+} DefaultIterator_WithNextAndCounterAndLimit;
+
+typedef struct {
+	/* Enumerate stuff from "dinuf_iter", whose items are unpacked as a pair,
+	 * and then filtered by only re-yielding those items where the first element
+	 * "key" of the item-pair matches `dinuf_start <= key && dinuf_end > key'. */
+	OBJECT_HEAD
+	DREF DeeObject   *dinuf_iter;    /* [1..1][const] The underlying iterator */
+	/* [1..1][const] Callback to load the next element from `dinuf_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dinuf_tp_next)(DeeObject *self);
+	DREF DeeObject   *dinuf_start;   /* [1..1][const] Range start for unpack pair key. */
+	DREF DeeObject   *dinuf_end;     /* [1..1][const] Range end for unpack pair key. */
+} DefaultIterator_WithNextAndUnpackFilter;
+
+INTDEF DeeTypeObject DefaultIterator_WithNextAndCounterPair_Type;         /* DefaultIterator_WithNextAndCounter */
+INTDEF DeeTypeObject DefaultIterator_WithNextAndCounterAndLimitPair_Type; /* DefaultIterator_WithNextAndCounterAndLimit */
+INTDEF DeeTypeObject DefaultIterator_WithNextAndUnpackFilter_Type;        /* DefaultIterator_WithNextAndUnpackFilter */
 
 DECL_END
 

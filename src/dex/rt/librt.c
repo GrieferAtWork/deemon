@@ -174,6 +174,9 @@ print define_Dee_HashStr("__IterWithEnumerateMap__");
 print define_Dee_HashStr("__IterWithEnumerateIndexSeq__");
 print define_Dee_HashStr("__IterWithEnumerateSeq__");
 print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
+print define_Dee_HashStr("__IterWithNextAndCounterPair__");
+print define_Dee_HashStr("__IterWithNextAndCounterAndLimitPair__");
+print define_Dee_HashStr("__IterWithNextAndUnpackFilter__");
 print define_Dee_HashStr("__SeqReversedWithGetItemIndex__");
 print define_Dee_HashStr("__SeqReversedWithGetItemIndexFast__");
 print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
@@ -263,6 +266,9 @@ print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
 #define Dee_HashStr____IterWithEnumerateIndexSeq__ _Dee_HashSelectC(0x46c315bf, 0xfbcafdb8adece080)
 #define Dee_HashStr____IterWithEnumerateSeq__ _Dee_HashSelectC(0x9f86b78c, 0x4fe8bf8aafe855be)
 #define Dee_HashStr____IterWithEnumerateIndexMap__ _Dee_HashSelectC(0xf2e455a4, 0x4693cf704005698)
+#define Dee_HashStr____IterWithNextAndCounterPair__ _Dee_HashSelectC(0xe847502, 0x4c1b270a7a03a66)
+#define Dee_HashStr____IterWithNextAndCounterAndLimitPair__ _Dee_HashSelectC(0x39224947, 0x1ff9b5affcef7183)
+#define Dee_HashStr____IterWithNextAndUnpackFilter__ _Dee_HashSelectC(0x8a057e21, 0x9969f3c5cebf8b7)
 #define Dee_HashStr____SeqReversedWithGetItemIndex__ _Dee_HashSelectC(0x7dfc3c38, 0x91802e721476e82b)
 #define Dee_HashStr____SeqReversedWithGetItemIndexFast__ _Dee_HashSelectC(0x8379a7f8, 0xc13488af177e13c0)
 #define Dee_HashStr____SeqReversedWithTryGetItemIndex__ _Dee_HashSelectC(0xd4188f23, 0xcf27233daa85e03c)
@@ -1392,6 +1398,21 @@ librt_get_IterWithEnumerateIndexMap_Type_f(size_t UNUSED(argc), DeeObject *const
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithNextAndCounterPair_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithNextAndCounterPair__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithNextAndCounterAndLimitPair_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithNextAndCounterAndLimitPair__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithNextAndUnpackFilter_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithNextAndUnpackFilter__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqReversedWithGetItemIndex_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_default_sequence_type(__SeqReversedWithGetItemIndex__);
 }
@@ -2235,6 +2256,9 @@ PRIVATE DEFINE_CMETHOD(librt_get_IterWithEnumerateMap, &librt_get_IterWithEnumer
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithEnumerateIndexSeq, &librt_get_IterWithEnumerateIndexSeq_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithEnumerateSeq, &librt_get_IterWithEnumerateSeq_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithEnumerateIndexMap, &librt_get_IterWithEnumerateIndexMap_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextAndCounterPair, &librt_get_IterWithNextAndCounterPair_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextAndCounterAndLimitPair, &librt_get_IterWithNextAndCounterAndLimitPair_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextAndUnpackFilter, &librt_get_IterWithNextAndUnpackFilter_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithGetItemIndex, &librt_get_SeqReversedWithGetItemIndex_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithGetItemIndexFast, &librt_get_SeqReversedWithGetItemIndexFast_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithTryGetItemIndex, &librt_get_SeqReversedWithTryGetItemIndex_Type_f, METHOD_FCONSTCALL);
@@ -2569,6 +2593,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "IterWithEnumerateIndexSeq", (DeeObject *)&librt_get_IterWithEnumerateIndexSeq, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* DefaultIterator_WithEnumerateIndexSeq_Type */
 	{ "IterWithEnumerateSeq", (DeeObject *)&librt_get_IterWithEnumerateSeq, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithEnumerateSeq_Type */
 	{ "IterWithEnumerateIndexMap", (DeeObject *)&librt_get_IterWithEnumerateIndexMap, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* DefaultIterator_WithEnumerateIndexMap_Type */
+	{ "IterWithNextAndCounterPair", (DeeObject *)&librt_get_IterWithNextAndCounterPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* DefaultIterator_WithNextAndCounterPair_Type */
+	{ "IterWithNextAndCounterAndLimitPair", (DeeObject *)&librt_get_IterWithNextAndCounterAndLimitPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* DefaultIterator_WithNextAndCounterAndLimitPair_Type */
+	{ "IterWithNextAndUnpackFilter", (DeeObject *)&librt_get_IterWithNextAndUnpackFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultIterator_WithNextAndUnpackFilter_Type */
 	{ "SeqReversedWithGetItemIndex", (DeeObject *)&librt_get_SeqReversedWithGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultReversed_WithGetItemIndex_Type */
 	{ "SeqReversedWithGetItemIndexFast", (DeeObject *)&librt_get_SeqReversedWithGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DefaultReversed_WithGetItemIndexFast_Type */
 	{ "SeqReversedWithTryGetItemIndex", (DeeObject *)&librt_get_SeqReversedWithTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DefaultReversed_WithTryGetItemIndex_Type */
@@ -2578,6 +2605,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: SeqRemoveIfWithRemoveAllItem               = SeqRemoveIfWithRemoveAllItem_Type */
 	/* TODO: SeqRemoveIfWithRemoveAllItem_DummyInstance = SeqRemoveIfWithRemoveAllItem_DummyInstance */
 	/* TODO: SeqRemoveIfWithRemoveAllKey                = SeqRemoveIfWithRemoveAllKey_Type */
+	/* TODO: All of the sequence enumeration wrappers */
+
+	/* The special "nullable" tuple sequence type. */
 	{ "NullableTuple", (DeeObject *)&DeeNullableTuple_Type, MODSYM_FREADONLY },
 
 	/* Internal types used to drive set proxies */

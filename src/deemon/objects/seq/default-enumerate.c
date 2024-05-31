@@ -50,6 +50,8 @@ DECL_BEGIN
 #define de_wgii_copy      fullrange_copy
 #define de_wgiiaf_copy    withintrange_copy
 #define de_wgiaf_copy     withrange_copy
+#define de_wikagi_copy    fullrange_copy
+#define de_wikagiaf_copy  withrange_copy
 #define de_wikatgi_copy   fullrange_copy
 #define de_wikatgiaf_copy withrange_copy
 #define de_wiac_copy      fullrange_copy
@@ -104,6 +106,8 @@ withrange_copy(DefaultEnumeration_WithRange *__restrict self,
 #define de_wgii_deepcopy      fullrange_deepcopy
 #define de_wgiiaf_deepcopy    withintrange_deepcopy
 #define de_wgiaf_deepcopy     withrange_deepcopy
+#define de_wikagi_deepcopy    fullrange_deepcopy
+#define de_wikagiaf_deepcopy  withrange_deepcopy
 #define de_wikatgi_deepcopy   fullrange_deepcopy
 #define de_wikatgiaf_deepcopy withrange_deepcopy
 #define de_wiac_deepcopy      fullrange_deepcopy
@@ -195,6 +199,8 @@ err:
 #define de_wgii_fini      fullrange_fini
 #define de_wgiiaf_fini    withintrange_fini
 #define de_wgiaf_fini     withrange_fini
+#define de_wikagi_fini    fullrange_fini
+#define de_wikagiaf_fini  withrange_fini
 #define de_wikatgi_fini   fullrange_fini
 #define de_wikatgiaf_fini withrange_fini
 #define de_wiac_fini      fullrange_fini
@@ -229,6 +235,8 @@ withrange_fini(DefaultEnumeration_WithRange *__restrict self) {
 #define de_wgii_visit      fullrange_visit
 #define de_wgiiaf_visit    withintrange_visit
 #define de_wgiaf_visit     withrange_visit
+#define de_wikagi_visit    fullrange_visit
+#define de_wikagiaf_visit  withrange_visit
 #define de_wikatgi_visit   fullrange_visit
 #define de_wikatgiaf_visit withrange_visit
 #define de_wiac_visit      fullrange_visit
@@ -514,6 +522,61 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
+de_wikagi_init(DefaultEnumeration_FullRange *__restrict self,
+               size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "o:_SeqEnumWithIterKeysAndGetItem", &self->defr_seq))
+		goto err;
+	seqtyp = Dee_TYPE(self->defr_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index) &&
+	    !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_iterkeys) &&
+	    (!DeeType_InheritIter(seqtyp) || !seqtyp->tp_seq->tp_iterkeys))
+		goto err_no_enum;
+	self->defr_tp_seq = seqtyp->tp_seq;
+	Dee_Incref(self->defr_seq);
+	return 0;
+err_no_getitem:
+	return err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err_no_enum:
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Cannot enumerate keys of non-sequence type `%r'",
+	                       seqtyp);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+de_wikagiaf_init(DefaultEnumeration_WithRange *__restrict self,
+                 size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *seqtyp;
+	if (DeeArg_Unpack(argc, argv, "ooo:_SeqEnumWithIterKeysAndGetItemAndFilter",
+	                  &self->dewr_seq, &self->dewr_start, &self->dewr_end))
+		goto err;
+	seqtyp = Dee_TYPE(self->dewr_seq);
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) &&
+	    !DeeType_InheritGetItem(seqtyp))
+		goto err_no_getitem;
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_iterkeys) &&
+	    (!DeeType_InheritIter(seqtyp) || !seqtyp->tp_seq->tp_iterkeys))
+		goto err_no_enum;
+	self->dewr_tp_seq = seqtyp->tp_seq;
+	Dee_Incref(self->dewr_seq);
+	Dee_Incref(self->dewr_start);
+	Dee_Incref(self->dewr_end);
+	return 0;
+err_no_getitem:
+	return err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
+err_no_enum:
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Cannot enumerate keys of non-sequence type `%r'",
+	                       seqtyp);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 de_wikatgi_init(DefaultEnumeration_FullRange *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *seqtyp;
@@ -547,7 +610,7 @@ de_wikatgiaf_init(DefaultEnumeration_WithRange *__restrict self,
 	                  &self->dewr_seq, &self->dewr_start, &self->dewr_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dewr_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) &&
+	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem) &&
 	    !DeeType_InheritGetItem(seqtyp))
 		goto err_no_getitem;
 	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_iterkeys) &&
@@ -943,11 +1006,69 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithIterKeysAndGetItem *DCALL
+de_wikagi_iter(DefaultEnumeration_FullRange *__restrict self) {
+	DREF DefaultIterator_WithIterKeysAndGetItem *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
+	if unlikely(!result)
+		goto err;
+	result->diikgi_iter = (*self->defr_tp_seq->tp_iterkeys)(self->defr_seq);
+	if unlikely(!result->diikgi_iter)
+		goto err_r;
+	result->diikgi_tp_next = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	if (!result->diikgi_tp_next) {
+		if (!DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
+			goto err_r_no_next;
+		result->diikgi_tp_next = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	}
+	result->diikgi_tp_getitem = self->defr_tp_seq->tp_getitem;
+	Dee_Incref(self->defr_seq);
+	result->diikgi_seq = self->defr_seq;
+	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
+	return result;
+err_r_no_next:
+	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
+	Dee_Decref(result->diikgi_iter);
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-de_wikatgi_iter(DefaultEnumeration_FullRange *__restrict self) {
+de_wikagiaf_iter(DefaultEnumeration_WithRange *__restrict self) {
 	/* TODO: Custom iterator type */
 	(void)self;
 	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithIterKeysAndGetItem *DCALL
+de_wikatgi_iter(DefaultEnumeration_FullRange *__restrict self) {
+	DREF DefaultIterator_WithIterKeysAndGetItem *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
+	if unlikely(!result)
+		goto err;
+	result->diikgi_iter = (*self->defr_tp_seq->tp_iterkeys)(self->defr_seq);
+	if unlikely(!result->diikgi_iter)
+		goto err_r;
+	result->diikgi_tp_next = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	if (!result->diikgi_tp_next) {
+		if (!DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
+			goto err_r_no_next;
+		result->diikgi_tp_next = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	}
+	result->diikgi_tp_getitem = self->defr_tp_seq->tp_trygetitem;
+	Dee_Incref(self->defr_seq);
+	result->diikgi_seq = self->defr_seq;
+	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type);
+	return result;
+err_r_no_next:
+	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
+	Dee_Decref(result->diikgi_iter);
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -959,27 +1080,92 @@ de_wikatgiaf_iter(DefaultEnumeration_WithRange *__restrict self) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithNextAndCounter *DCALL
 de_wiac_iter(DefaultEnumeration_FullRange *__restrict self) {
-	/* TODO: Custom iterator type */
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	DREF DefaultIterator_WithNextAndCounter *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithNextAndCounter);
+	if unlikely(!result)
+		goto err;
+	result->dinc_iter = (*self->defr_tp_seq->tp_iter)(self->defr_seq);
+	if unlikely(!result->dinc_iter)
+		goto err_r;
+	result->dinc_tp_next = Dee_TYPE(result->dinc_iter)->tp_iter_next;
+	if unlikely(!result->dinc_tp_next) {
+		if (!DeeType_InheritIterNext(Dee_TYPE(result->dinc_iter)))
+			goto err_r_iter_no_next;
+		result->dinc_tp_next = Dee_TYPE(result->dinc_iter)->tp_iter_next;
+	}
+	result->dinc_counter = 0;
+	DeeObject_Init(result, &DefaultIterator_WithNextAndCounterPair_Type);
+	return result;
+err_r_iter_no_next:
+	err_unimplemented_operator(Dee_TYPE(result->dinc_iter), OPERATOR_ITERNEXT);
+	Dee_Decref(result->dinc_iter);
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithNextAndCounterAndLimit *DCALL
 de_wiacaf_iter(DefaultEnumeration_WithIntRange *__restrict self) {
-	/* TODO: Custom iterator type */
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	DREF DefaultIterator_WithNextAndCounterAndLimit *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithNextAndCounterAndLimit);
+	if unlikely(!result)
+		goto err;
+	result->dincl_iter = (*self->dewir_tp_seq->tp_iter)(self->dewir_seq);
+	if unlikely(!result->dincl_iter)
+		goto err_r;
+	result->dincl_tp_next = Dee_TYPE(result->dincl_iter)->tp_iter_next;
+	if unlikely(!result->dincl_tp_next) {
+		if (!DeeType_InheritIterNext(Dee_TYPE(result->dincl_iter)))
+			goto err_r_iter_no_next;
+		result->dincl_tp_next = Dee_TYPE(result->dincl_iter)->tp_iter_next;
+	}
+	if (DeeObject_IterAdvance(result->dincl_iter, self->dewir_start) == (size_t)-1)
+		goto err_r_iter;
+	result->dincl_counter = self->dewir_start;
+	result->dincl_limit   = self->dewir_end;
+	DeeObject_Init(result, &DefaultIterator_WithNextAndCounterAndLimitPair_Type);
+	return result;
+err_r_iter_no_next:
+	err_unimplemented_operator(Dee_TYPE(result->dincl_iter), OPERATOR_ITERNEXT);
+err_r_iter:
+	Dee_Decref(result->dincl_iter);
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithNextAndUnpackFilter *DCALL
 de_wiauaf_iter(DefaultEnumeration_WithRange *__restrict self) {
-	/* TODO: Custom iterator type */
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	DREF DefaultIterator_WithNextAndUnpackFilter *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithNextAndUnpackFilter);
+	if unlikely(!result)
+		goto err;
+	result->dinuf_iter = (*self->dewr_tp_seq->tp_iter)(self->dewr_seq);
+	if unlikely(!result->dinuf_iter)
+		goto err_r;
+	result->dinuf_tp_next = Dee_TYPE(result->dinuf_iter)->tp_iter_next;
+	if unlikely(!result->dinuf_tp_next) {
+		if (!DeeType_InheritIterNext(Dee_TYPE(result->dinuf_iter)))
+			goto err_r_iter_no_next;
+		result->dinuf_tp_next = Dee_TYPE(result->dinuf_iter)->tp_iter_next;
+	}
+	Dee_Incref(self->dewr_start);
+	result->dinuf_start = self->dewr_start;
+	Dee_Incref(self->dewr_end);
+	result->dinuf_end = self->dewr_end;
+	DeeObject_Init(result, &DefaultIterator_WithNextAndUnpackFilter_Type);
+	return result;
+err_r_iter_no_next:
+	err_unimplemented_operator(Dee_TYPE(result->dinuf_iter), OPERATOR_ITERNEXT);
+/*err_r_iter:*/
+	Dee_Decref(result->dinuf_iter);
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -1682,8 +1868,8 @@ err_i:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-de_wikatgi_foreach_pair(DefaultEnumeration_FullRange *__restrict self,
-                        Dee_foreach_pair_t cb, void *arg) {
+de_wikagi_foreach_pair(DefaultEnumeration_FullRange *__restrict self,
+                       Dee_foreach_pair_t cb, void *arg) {
 	DREF DeeObject *key, *iterkeys, *value;
 	Dee_ssize_t temp, result;
 	struct type_seq *tp_seq = self->defr_tp_seq;
@@ -1710,8 +1896,141 @@ de_wikatgi_foreach_pair(DefaultEnumeration_FullRange *__restrict self,
 		if unlikely(!value) {
 			if (DeeError_Catch(&DeeError_UnboundItem))
 				goto next_index;
-			if (DeeError_Catch(&DeeError_IndexError))
+			if (DeeError_Catch(&DeeError_IndexError)) {
+				Dee_Decref(key);
 				break;
+			}
+			goto err_iterkeys_key;
+		}
+		temp = (*cb)(arg, key, value);
+		Dee_Decref(value);
+		if unlikely(temp < 0)
+			goto err_iterkeys_key_temp;
+		result += temp;
+next_index:
+		Dee_Decref(key);
+		if (DeeThread_CheckInterrupt())
+			goto err_iterkeys;
+	}
+	Dee_Decref(iterkeys);
+	return result;
+err_iterkeys_key_temp:
+	Dee_Decref(key);
+	Dee_Decref(iterkeys);
+	return temp;
+err_iterkeys_key:
+	Dee_Decref(key);
+err_iterkeys:
+	Dee_Decref(iterkeys);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+de_wikagiaf_foreach_pair(DefaultEnumeration_WithRange *__restrict self,
+                         Dee_foreach_pair_t cb, void *arg) {
+	DREF DeeObject *key, *iterkeys, *value;
+	Dee_ssize_t temp, result;
+	struct type_seq *tp_seq = self->dewr_tp_seq;
+
+	/* If object supports tp_enumerate, use that. */
+	ASSERT(tp_seq == Dee_TYPE(self->dewr_seq)->tp_seq);
+	if likely(likely(tp_seq->tp_enumerate) ||
+	          unlikely(DeeType_InheritIter(Dee_TYPE(self->dewr_seq)) && tp_seq->tp_enumerate)) {
+		struct foreach_with_enumerate_and_filter_data data;
+		data.feweaf_cb    = cb;
+		data.feweaf_arg   = arg;
+		data.feweaf_start = self->dewr_start;
+		data.feweaf_end   = self->dewr_end;
+		return (*tp_seq->tp_enumerate)(self->dewr_seq, &foreach_with_enumerate_and_filter_cb, &data);
+	}
+
+	/* Else, manually enumerate here using the designated method (index < size). */
+	iterkeys = (*tp_seq->tp_iterkeys)(self->dewr_seq);
+	if unlikely(!iterkeys)
+		goto err;
+	result = 0;
+	for (;;) {
+		int key_is_ok;
+		key = DeeObject_IterNext(iterkeys);
+		if (!ITER_ISOK(key)) {
+			if (key == ITER_DONE)
+				break;
+			goto err_iterkeys;
+		}
+		key_is_ok = DeeObject_CmpLeAsBool(self->dewr_start, key);
+		if unlikely(key_is_ok <= 0) {
+err_iterkeys_key_or_filtered:
+			if (key_is_ok == 0)
+				goto next_index;
+			goto err_iterkeys_key;
+		}
+		key_is_ok = DeeObject_CmpGrAsBool(self->dewr_end, key);
+		if unlikely(key_is_ok <= 0)
+			goto err_iterkeys_key_or_filtered;
+		value = (*tp_seq->tp_getitem)(self->dewr_seq, key);
+		if unlikely(!value) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				goto next_index;
+			if (DeeError_Catch(&DeeError_IndexError)) {
+				Dee_Decref(key);
+				break;
+			}
+			goto err_iterkeys_key;
+		}
+		temp = (*cb)(arg, key, value);
+		Dee_Decref(value);
+		if unlikely(temp < 0)
+			goto err_iterkeys_key_temp;
+		result += temp;
+next_index:
+		Dee_Decref(key);
+		if (DeeThread_CheckInterrupt())
+			goto err_iterkeys;
+	}
+	Dee_Decref(iterkeys);
+	return result;
+err_iterkeys_key_temp:
+	Dee_Decref(key);
+	Dee_Decref(iterkeys);
+	return temp;
+err_iterkeys_key:
+	Dee_Decref(key);
+err_iterkeys:
+	Dee_Decref(iterkeys);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+de_wikatgi_foreach_pair(DefaultEnumeration_FullRange *__restrict self,
+                        Dee_foreach_pair_t cb, void *arg) {
+	DREF DeeObject *key, *iterkeys, *value;
+	Dee_ssize_t temp, result;
+	struct type_seq *tp_seq = self->defr_tp_seq;
+
+	/* If object supports tp_enumerate, use that. */
+	ASSERT(tp_seq == Dee_TYPE(self->defr_seq)->tp_seq);
+	if likely(likely(tp_seq->tp_enumerate) ||
+	          unlikely(DeeType_InheritIter(Dee_TYPE(self->defr_seq)) && tp_seq->tp_enumerate))
+		return DeeMap_DefaultForeachPairWithEnumerate(self->defr_seq, cb, arg);
+
+	/* Else, manually enumerate here using the designated method (index < size). */
+	iterkeys = (*tp_seq->tp_iterkeys)(self->defr_seq);
+	if unlikely(!iterkeys)
+		goto err;
+	result = 0;
+	for (;;) {
+		key = DeeObject_IterNext(iterkeys);
+		if (!ITER_ISOK(key)) {
+			if (key == ITER_DONE)
+				break;
+			goto err_iterkeys;
+		}
+		value = (*tp_seq->tp_trygetitem)(self->defr_seq, key);
+		if unlikely(!ITER_ISOK(value)) {
+			if (value == ITER_DONE)
+				goto next_index;
 			goto err_iterkeys_key;
 		}
 		temp = (*cb)(arg, key, value);
@@ -1781,11 +2100,9 @@ err_iterkeys_key_or_filtered:
 		if unlikely(key_is_ok <= 0)
 			goto err_iterkeys_key_or_filtered;
 		value = (*tp_seq->tp_getitem)(self->dewr_seq, key);
-		if unlikely(!value) {
-			if (DeeError_Catch(&DeeError_UnboundItem))
+		if unlikely(!ITER_ISOK(value)) {
+			if (value == ITER_DONE)
 				goto next_index;
-			if (DeeError_Catch(&DeeError_IndexError))
-				break;
 			goto err_iterkeys_key;
 		}
 		temp = (*cb)(arg, key, value);
@@ -2189,6 +2506,36 @@ PRIVATE struct type_seq de_wgiaf_seq = {
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wgiaf_foreach_pair,
 };
 
+PRIVATE struct type_seq de_wikagi_seq = {
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wikagi_iter,
+	/* .tp_sizeob       = */ NULL,
+	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_nsi          = */ NULL,
+	/* .tp_foreach      = */ NULL,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wikagi_foreach_pair,
+};
+
+PRIVATE struct type_seq de_wikagiaf_seq = {
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wikagiaf_iter,
+	/* .tp_sizeob       = */ NULL,
+	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_getitem      = */ NULL,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
+	/* .tp_nsi          = */ NULL,
+	/* .tp_foreach      = */ NULL,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wikagiaf_foreach_pair,
+};
+
 PRIVATE struct type_seq de_wikatgi_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wikatgi_iter,
 	/* .tp_sizeob       = */ NULL,
@@ -2320,6 +2667,8 @@ PRIVATE struct type_seq de_weaf_seq = {
 #define de_wgii_members      fullrange_members
 #define de_wgiiaf_members    withintrange_members
 #define de_wgiaf_members     withrange_members
+#define de_wikagi_members    fullrange_members
+#define de_wikagiaf_members  withrange_members
 #define de_wikatgi_members   fullrange_members
 #define de_wikatgiaf_members withrange_members
 #define de_wiac_members      fullrange_members
@@ -2375,8 +2724,18 @@ PRIVATE struct type_member tpconst de_wgii_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member tpconst de_wikatgi_class_members[] = {
+PRIVATE struct type_member tpconst de_wikagi_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithIterKeysAndGetItemMap_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst de_wikagiaf_class_members[] = {
 	/* TODO: TYPE_MEMBER_CONST(STR_Iterator, &TODO), */
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst de_wikatgi_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type),
 	TYPE_MEMBER_END
 };
 
@@ -2386,17 +2745,17 @@ PRIVATE struct type_member tpconst de_wikatgiaf_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst de_wiac_class_members[] = {
-	/* TODO: TYPE_MEMBER_CONST(STR_Iterator, &TODO), */
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextAndCounterPair_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst de_wiacaf_class_members[] = {
-	/* TODO: TYPE_MEMBER_CONST(STR_Iterator, &TODO), */
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextAndCounterAndLimitPair_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst de_wiauaf_class_members[] = {
-	/* TODO: TYPE_MEMBER_CONST(STR_Iterator, &TODO), */
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextAndUnpackFilter_Type),
 	TYPE_MEMBER_END
 };
 
@@ -2912,6 +3271,96 @@ INTERN DeeTypeObject DefaultEnumeration_WithGetItemAndFilter_Type = {
 	/* .tp_class_members = */ de_wgiaf_class_members,
 };
 
+INTERN DeeTypeObject DefaultEnumeration_WithIterKeysAndGetItem_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqEnumWithIterKeysAndGetItem",
+	/* .tp_doc      = */ DOC("(objWithIterKeysAndGetItem)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&de_wikagi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&de_wikagi_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&de_wikagi_init,
+				TYPE_FIXED_ALLOCATOR(DefaultEnumeration_FullRange)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_wikagi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&de_wikagi_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &de_wikagi_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ de_wikagi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ de_wikagi_class_members,
+};
+
+INTERN DeeTypeObject DefaultEnumeration_WithIterKeysAndGetItemAndFilter_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqEnumWithIterKeysAndGetItemAndFilter",
+	/* .tp_doc      = */ DOC("(objWithIterKeysAndGetItem,start,end)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&de_wikagiaf_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&de_wikagiaf_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&de_wikagiaf_init,
+				TYPE_FIXED_ALLOCATOR(DefaultEnumeration_WithRange)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_wikagiaf_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&de_wikagiaf_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &de_wikagiaf_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ de_wikagiaf_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ de_wikagiaf_class_members,
+};
+
 INTERN DeeTypeObject DefaultEnumeration_WithIterKeysAndTryGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqEnumWithIterKeysAndTryGetItem",
@@ -3318,6 +3767,11 @@ DeeSeq_DefaultMakeEnumerationWithGetItemIndex(DeeObject *self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem(DeeObject *self) {
+	IMPL_return_new_DefaultEnumeration_FullRange(self, &DefaultEnumeration_WithIterKeysAndGetItem_Type);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem(DeeObject *self) {
 	IMPL_return_new_DefaultEnumeration_FullRange(self, &DefaultEnumeration_WithIterKeysAndTryGetItem_Type);
 }
@@ -3389,6 +3843,11 @@ DeeSeq_DefaultMakeEnumerationWithIntRangeWithGetItemIndexAndFilter(DeeObject *se
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndGetItemAndFilter(DeeObject *self, size_t start, size_t end) {
+	IMPL_return_new_DefaultEnumeration_WithIntRange(self, start, end, &DefaultEnumeration_WithIterKeysAndGetItemAndFilter_Type);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndTryGetItemAndFilter(DeeObject *self, size_t start, size_t end) {
 	IMPL_return_new_DefaultEnumeration_WithIntRange(self, start, end, &DefaultEnumeration_WithIterKeysAndTryGetItemAndFilter_Type);
 }
@@ -3449,6 +3908,11 @@ DeeSeq_DefaultMakeEnumerationWithRangeWithSizeObAndGetItemAndFilter(DeeObject *s
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeSeq_DefaultMakeEnumerationWithRangeWithGetItemAndFilter(DeeObject *self, DeeObject *start, DeeObject *end) {
 	IMPL_return_new_DefaultEnumeration_WithRange(self, start, end, &DefaultEnumeration_WithGetItemAndFilter_Type);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeSeq_DefaultMakeEnumerationWithRangeWithIterKeysAndGetItemAndFilter(DeeObject *self, DeeObject *start, DeeObject *end) {
+	IMPL_return_new_DefaultEnumeration_WithRange(self, start, end, &DefaultEnumeration_WithIterKeysAndGetItemAndFilter_Type);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL

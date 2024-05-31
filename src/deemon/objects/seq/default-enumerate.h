@@ -88,6 +88,8 @@ INTDEF DeeTypeObject DefaultEnumeration_WithSizeObAndGetItemAndFilter_Type;     
 INTDEF DeeTypeObject DefaultEnumeration_WithGetItemIndex_Type;                     /* DefaultEnumeration_FullRange:    de_wgii_ */
 INTDEF DeeTypeObject DefaultEnumeration_WithGetItemIndexAndFilter_Type;            /* DefaultEnumeration_WithIntRange: de_wgiiaf_ */
 INTDEF DeeTypeObject DefaultEnumeration_WithGetItemAndFilter_Type;                 /* DefaultEnumeration_WithRange:    de_wgiaf_ */
+INTDEF DeeTypeObject DefaultEnumeration_WithIterKeysAndGetItem_Type;               /* DefaultEnumeration_FullRange:    de_wikagi_ */
+INTDEF DeeTypeObject DefaultEnumeration_WithIterKeysAndGetItemAndFilter_Type;      /* DefaultEnumeration_WithRange:    de_wikagiaf_ */
 INTDEF DeeTypeObject DefaultEnumeration_WithIterKeysAndTryGetItem_Type;            /* DefaultEnumeration_FullRange:    de_wikatgi_ */
 INTDEF DeeTypeObject DefaultEnumeration_WithIterKeysAndTryGetItemAndFilter_Type;   /* DefaultEnumeration_WithRange:    de_wikatgiaf_ */
 INTDEF DeeTypeObject DefaultEnumeration_WithIterAndCounter_Type;                   /* DefaultEnumeration_FullRange:    de_wiac_ */
@@ -104,6 +106,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationW
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex(DeeObject *self);     /* DefaultEnumeration_WithSizeAndGetItemIndex_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem(DeeObject *self);        /* DefaultEnumeration_WithSizeObAndGetItem_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithGetItemIndex(DeeObject *self);            /* DefaultEnumeration_WithGetItemIndex_Type */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem(DeeObject *self);      /* DefaultEnumeration_WithIterKeysAndGetItem_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem(DeeObject *self);   /* DefaultEnumeration_WithIterKeysAndTryGetItem_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIterAndCounter(DeeObject *self);          /* DefaultEnumeration_WithIterAndCounter_Type */
 /*INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultMakeEnumerationWithIterAndUnpack(DeeObject *self);          * DefaultEnumeration_WithIterAndUnpack_Type (Not needed; can use identity for this one!) */
@@ -115,6 +118,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationW
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndGetItemIndexAndFilter(DeeObject *self, size_t start, size_t end);     /* DefaultEnumeration_WithSizeAndGetItemIndexAndFilter_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeObAndGetItemAndFilter(DeeObject *self, size_t start, size_t end);        /* DefaultEnumeration_WithSizeObAndGetItemAndFilter_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIntRangeWithGetItemIndexAndFilter(DeeObject *self, size_t start, size_t end);            /* DefaultEnumeration_WithGetItemIndexAndFilter_Type */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndGetItemAndFilter(DeeObject *self, size_t start, size_t end);      /* DefaultEnumeration_WithIterKeysAndGetItemAndFilter_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndTryGetItemAndFilter(DeeObject *self, size_t start, size_t end);   /* DefaultEnumeration_WithIterKeysAndTryGetItemAndFilter_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterAndCounterAndFilter(DeeObject *self, size_t start, size_t end);          /* DefaultEnumeration_WithIterAndCounterAndFilter_Type */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultMakeEnumerationWithIntRangeWithIterAndUnpackAndFilter(DeeObject *self, size_t start, size_t end);           /* DefaultEnumeration_WithIterAndUnpackAndFilter_Type */
@@ -122,6 +126,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultMakeEnumerationW
 
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithRangeWithSizeObAndGetItemAndFilter(DeeObject *self, DeeObject *start, DeeObject *end);      /* DefaultEnumeration_WithSizeObAndGetItemAndFilter_Type */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithRangeWithGetItemAndFilter(DeeObject *self, DeeObject *start, DeeObject *end);               /* DefaultEnumeration_WithGetItemAndFilter_Type */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithRangeWithIterKeysAndGetItemAndFilter(DeeObject *self, DeeObject *start, DeeObject *end);    /* DefaultEnumeration_WithIterKeysAndGetItemAndFilter_Type */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithRangeWithIterKeysAndTryGetItemAndFilter(DeeObject *self, DeeObject *start, DeeObject *end); /* DefaultEnumeration_WithIterKeysAndTryGetItemAndFilter_Type */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultMakeEnumerationWithRangeWithIterAndCounterAndFilter(DeeObject *self, DeeObject *start, DeeObject *end);        /* DefaultEnumeration_WithIterAndCounterAndFilter_Type  (same as `DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterAndCounterAndFilter') */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultMakeEnumerationWithRangeWithIterAndUnpackAndFilter(DeeObject *self, DeeObject *start, DeeObject *end);         /* DefaultEnumeration_WithIterAndUnpackAndFilter_Type */

@@ -1797,7 +1797,7 @@ di_nl_copy(DefaultIterator_WithNextAndLimit *__restrict self,
 	if unlikely(!self->dinl_iter)
 		goto err;
 	self->dinl_tp_next = other->dinl_tp_next;
-	self->dinl_limit   = other->dinl_limit;
+	self->dinl_limit   = atomic_read(&other->dinl_limit);
 	return 0;
 err:
 	return -1;
@@ -1810,7 +1810,7 @@ di_nl_deepcopy(DefaultIterator_WithNextAndLimit *__restrict self,
 	if unlikely(!self->dinl_iter)
 		goto err;
 	self->dinl_tp_next = other->dinl_tp_next;
-	self->dinl_limit   = other->dinl_limit;
+	self->dinl_limit   = atomic_read(&other->dinl_limit);
 	return 0;
 err:
 	return -1;
@@ -1847,7 +1847,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_nl_iter_next(DefaultIterator_WithNextAndLimit *self) {
 	DREF DeeObject *result;
-	if (atomic_read(&self->dinl_limit) == 0)
+	if unlikely(atomic_read(&self->dinl_limit) == 0)
 		return ITER_DONE;
 	result = (*self->dinl_tp_next)(self->dinl_iter);
 	if (ITER_ISOK(result)) {
@@ -3148,6 +3148,418 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
+
+
+
+
+
+/************************************************************************/
+/* Extra iterators for default enumeration sequence types               */
+/************************************************************************/
+
+STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndLimit, dinl_iter) == offsetof(DefaultIterator_WithNextAndCounter, dinc_iter));
+STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndLimit, dinl_tp_next) == offsetof(DefaultIterator_WithNextAndCounter, dinc_tp_next));
+STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndLimit, dinl_limit) == offsetof(DefaultIterator_WithNextAndCounter, dinc_counter));
+STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_iter) == offsetof(DefaultIterator_WithNextAndCounter, dinc_iter));
+STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_tp_next) == offsetof(DefaultIterator_WithNextAndCounter, dinc_tp_next));
+STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_counter) == offsetof(DefaultIterator_WithNextAndCounter, dinc_counter));
+
+#define di_ncp_copy     di_nl_copy
+#define di_ncp_deepcopy di_nl_deepcopy
+#define di_ncp_fini     di_nl_fini
+#define di_ncp_visit    di_nl_visit
+#define di_ncp_hash     di_nl_hash
+#define di_ncpl_fini    di_ncp_fini
+#define di_ncpl_visit   di_ncp_visit
+#define di_ncpl_hash    di_ncp_hash
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_ncpl_copy(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
+             DefaultIterator_WithNextAndCounterAndLimit *__restrict other) {
+	self->dincl_limit = other->dincl_limit;
+	return di_ncp_copy((DefaultIterator_WithNextAndLimit *)self,
+	                   (DefaultIterator_WithNextAndLimit *)other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_ncpl_deepcopy(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
+                 DefaultIterator_WithNextAndCounterAndLimit *__restrict other) {
+	self->dincl_limit = other->dincl_limit;
+	return di_ncp_deepcopy((DefaultIterator_WithNextAndLimit *)self,
+	                       (DefaultIterator_WithNextAndLimit *)other);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_ncp_init(DefaultIterator_WithNextAndCounter *__restrict self,
+            size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_IterWithNextAndCounter",
+	                  &self->dinc_iter, &self->dinc_counter))
+		goto err;
+	itertyp = Dee_TYPE(self->dinc_iter);
+	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+		goto err_no_next;
+	self->dinc_tp_next = itertyp->tp_iter_next;
+	Dee_Incref(self->dinc_iter);
+	return 0;
+err_no_next:
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_ncpl_init(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
+             size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_IterWithNextAndCounterAndLimit",
+	                  &self->dincl_iter, &self->dincl_counter, &self->dincl_limit))
+		goto err;
+	itertyp = Dee_TYPE(self->dincl_iter);
+	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+		goto err_no_next;
+	self->dincl_tp_next = itertyp->tp_iter_next;
+	Dee_Incref(self->dincl_iter);
+	return 0;
+err_no_next:
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+#define di_ncpl_compare di_ncp_compare
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_ncp_compare(DefaultIterator_WithNextAndCounter *self,
+               DefaultIterator_WithNextAndCounter *other) {
+	int result;
+	size_t my_counter, ot_counter;
+	if (DeeObject_AssertTypeExact(other, &DefaultIterator_WithNextAndCounterPair_Type))
+		goto err;
+	my_counter = atomic_read(&self->dinc_counter);
+	ot_counter = atomic_read(&other->dinc_counter);
+	result = Dee_Compare(my_counter, ot_counter);
+	if (result == 0)
+		result = DeeObject_Compare(self->dinc_iter, other->dinc_iter);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_ncp_iter_next(DefaultIterator_WithNextAndCounter *self) {
+	DREF DeeObject *value;
+	value = (*self->dinc_tp_next)(self->dinc_iter);
+	if (ITER_ISOK(value)) {
+		size_t key = atomic_fetchinc(&self->dinc_counter);
+		value = DeeTuple_Newf(PCKuSIZ "O", key, value);
+	}
+	return value;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_ncpl_iter_next(DefaultIterator_WithNextAndCounterAndLimit *self) {
+	DREF DeeObject *value;
+	if unlikely(atomic_read(&self->dincl_limit) == 0)
+		return ITER_DONE;
+	value = (*self->dincl_tp_next)(self->dincl_iter);
+	if (ITER_ISOK(value)) {
+		size_t key, limit;
+		do {
+			limit = atomic_read(&self->dincl_limit);
+			if unlikely(limit == 0)
+				break;
+		} while (!atomic_cmpxch_or_write(&self->dincl_limit,
+		                                 limit, limit - 1));
+		key = atomic_fetchinc(&self->dincl_counter);
+		value = DeeTuple_Newf(PCKuSIZ "O", key, value);
+	}
+	return value;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_ncp_bool(DefaultIterator_WithNextAndCounter *self) {
+	return DeeObject_Bool(self->dinc_iter);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_ncpl_bool(DefaultIterator_WithNextAndCounterAndLimit *self) {
+	if (atomic_read(&self->dincl_limit) == 0)
+		return 0;
+	return DeeObject_Bool(self->dincl_iter);
+}
+
+#define di_ncpl_cmp di_ncp_cmp
+PRIVATE struct type_cmp di_ncp_cmp = {
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_ncp_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_ncp_compare,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_ncp_compare,
+	/* .tp_trycompare_eq = */ NULL,
+};
+
+
+PRIVATE struct type_member tpconst di_ncpl_members[] = {
+	TYPE_MEMBER_FIELD("__limit__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_limit)),
+#define di_ncp_members (di_ncpl_members + 1)
+	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndCounter, dinc_iter)),
+	TYPE_MEMBER_FIELD("__counter__", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(DefaultIterator_WithNextAndCounter, dinc_counter)),
+	TYPE_MEMBER_END,
+};
+
+INTERN DeeTypeObject DefaultIterator_WithNextAndCounterPair_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithNextAndCounterPair",
+	/* .tp_doc      = */ DOC("(objWithNext,counter:?Dint)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_ncp_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_ncp_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_ncp_init,
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithNextAndCounter)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ncp_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&di_ncp_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_ncp_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &di_ncp_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_ncp_iter_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ di_ncp_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DefaultIterator_WithNextAndCounterAndLimitPair_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithNextAndCounterAndLimitPair",
+	/* .tp_doc      = */ DOC("(objWithNext,counter:?Dint,limit:?Dint)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_ncpl_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_ncpl_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_ncpl_init,
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithNextAndCounterAndLimit)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_ncpl_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&di_ncpl_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_ncpl_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &di_ncpl_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_ncpl_iter_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ di_ncpl_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
+STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_iter) ==
+              offsetof(DefaultIterator_WithNextAndCounter, dinc_iter));
+#define di_nuf_bool di_ncp_bool
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_nuf_copy(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
+            DefaultIterator_WithNextAndUnpackFilter *__restrict other) {
+	self->dinuf_iter = DeeObject_Copy(other->dinuf_iter);
+	if unlikely(!self->dinuf_iter)
+		goto err;
+	self->dinuf_tp_next = other->dinuf_tp_next;
+	Dee_Incref(other->dinuf_start);
+	self->dinuf_start = other->dinuf_start;
+	Dee_Incref(other->dinuf_end);
+	self->dinuf_end = other->dinuf_end;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_nuf_deepcopy(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
+                DefaultIterator_WithNextAndUnpackFilter *__restrict other) {
+	self->dinuf_iter = DeeObject_DeepCopy(other->dinuf_iter);
+	if unlikely(!self->dinuf_iter)
+		goto err;
+	self->dinuf_tp_next = other->dinuf_tp_next;
+	self->dinuf_start = DeeObject_DeepCopy(other->dinuf_start);
+	if unlikely(!self->dinuf_start)
+		goto err_iter;
+	self->dinuf_end = DeeObject_DeepCopy(other->dinuf_end);
+	if unlikely(!self->dinuf_end)
+		goto err_iter_start;
+	return 0;
+err_iter_start:
+	Dee_Decref(self->dinuf_start);
+err_iter:
+	Dee_Decref(self->dinuf_iter);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+di_nuf_init(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
+            size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp;
+	if (DeeArg_Unpack(argc, argv, "ooo:_IterWithNextAndUnpackFilter",
+	                  &self->dinuf_iter, &self->dinuf_start, &self->dinuf_end))
+		goto err;
+	itertyp = Dee_TYPE(self->dinuf_iter);
+	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+		goto err_no_next;
+	self->dinuf_tp_next = itertyp->tp_iter_next;
+	Dee_Incref(self->dinuf_iter);
+	Dee_Incref(self->dinuf_start);
+	Dee_Incref(self->dinuf_end);
+	return 0;
+err_no_next:
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+di_nuf_fini(DefaultIterator_WithNextAndUnpackFilter *__restrict self) {
+	Dee_Decref(self->dinuf_iter);
+	Dee_Decref(self->dinuf_start);
+	Dee_Decref(self->dinuf_end);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+di_nuf_visit(DefaultIterator_WithNextAndUnpackFilter *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->dinuf_iter);
+	Dee_Visit(self->dinuf_start);
+	Dee_Visit(self->dinuf_end);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_nuf_iter_next(DefaultIterator_WithNextAndUnpackFilter *self) {
+	int temp;
+	DREF DeeObject *result;
+	DREF DeeObject *key_and_value[2];
+again:
+	result = (*self->dinuf_tp_next)(self->dinuf_iter);
+	if (ITER_ISOK(result)) {
+		if (DeeObject_Unpack(result, 2, key_and_value))
+			goto err_r;
+		Dee_Decref(key_and_value[1]);
+		temp = DeeObject_CmpLeAsBool(self->dinuf_start, key_and_value[0]);
+		if unlikely(temp <= 0)
+			goto temp_err_or_again_r_key_and_value_0;
+		temp = DeeObject_CmpGrAsBool(self->dinuf_end, key_and_value[0]);
+		if unlikely(temp <= 0)
+			goto temp_err_or_again_r_key_and_value_0;
+	}
+	return result;
+temp_err_or_again_r_key_and_value_0:
+	if unlikely(temp < 0)
+		goto err_r_key_and_value_0;
+/*again_r_key_and_value_0:*/
+	Dee_Decref(key_and_value[0]);
+	Dee_Decref(result);
+	goto again;
+err_r_key_and_value_0:
+	Dee_Decref(key_and_value[0]);
+err_r:
+	Dee_Decref(result);
+	return NULL;
+}
+
+PRIVATE struct type_member tpconst di_nuf_members[] = {
+	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_iter)),
+	TYPE_MEMBER_FIELD("__startkey__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_start)),
+	TYPE_MEMBER_FIELD("__endkey__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_end)),
+	TYPE_MEMBER_END,
+};
+
+INTERN DeeTypeObject DefaultIterator_WithNextAndUnpackFilter_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithNextAndUnpackFilter",
+	/* .tp_doc      = */ DOC("(objWithNext,start,end)\n"
+	                         "\n"
+	                         "next->?T2?O?O"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_nuf_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_nuf_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_nuf_init,
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithNextAndUnpackFilter)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_nuf_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&di_nuf_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_nuf_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_nuf_iter_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ di_nuf_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
 
 
 DECL_END
