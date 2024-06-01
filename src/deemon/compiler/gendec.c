@@ -793,7 +793,7 @@ PRIVATE struct dec_recursion_frame *dec_obj_recursion = NULL;
 
 /* Protection against GC-enabled object recursion:
  * DEC cannot encode recursive sequence objects.
- * Because of this, a non-implemented error is thrown if this
+ * Because of this, a not-implemented error is thrown if this
  * function determines that DEC type codes for the the given
  * object `self' are already being generated.
  * NOTE: This function must only be called

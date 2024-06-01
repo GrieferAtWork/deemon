@@ -518,10 +518,10 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 #define INT_NEG_OVERFLOW Dee_INT_NEG_OVERFLOW /* ERROR: The returned integer value overflows into the negative. */
 #endif /* DEE_SOURCE */
 
-/* Extract the 32-, 64- or 128-bit value of the given integer.
- * NOTE: In theory, deemon integers can have arbitrarily large
- *       values, however in deemon's C api, we must limit ourself
- *       to only a set number of bits.
+/* Extract the 8-, 16-, 32-, 64- or 128-bit value of the given integer.
+ * NOTE: In theory, deemon integers can have arbitrarily large values,
+ *       however in deemon's C api, we must limit ourself to only a set
+ *       number of bits.
  * @return: One of `INT_*' (See above) */
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL DeeInt_TryGet8Bit(/*Int*/ DeeObject *__restrict self, int8_t *__restrict value);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL DeeInt_TryGet16Bit(/*Int*/ DeeObject *__restrict self, int16_t *__restrict value);
@@ -542,7 +542,7 @@ DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt64(/*Int*/ D
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) bool DCALL DeeInt_TryAsUInt128(/*Int*/ DeeObject *__restrict self, Dee_uint128_t *__restrict value);
 
 /* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow'
- * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
+ * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and return `-1'. */
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL DeeInt_Get8Bit(/*Int*/ DeeObject *__restrict self, int8_t *__restrict value);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL DeeInt_Get16Bit(/*Int*/ DeeObject *__restrict self, int16_t *__restrict value);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL DeeInt_Get32Bit(/*Int*/ DeeObject *__restrict self, int32_t *__restrict value);

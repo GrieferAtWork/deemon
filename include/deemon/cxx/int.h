@@ -87,6 +87,9 @@ public:
 	static WUNUSED Ref<int_> minus_one() {
 		return nonnull(DeeInt_MinusOne);
 	}
+	static WUNUSED Ref<int_> ofsign(int sign) {
+		return nonnull(DeeInt_FromSign(sign));
+	}
 	static WUNUSED Ref<int_> of(__INT8_TYPE__ value) {
 		return inherit(DeeInt_NewInt8(value));
 	}

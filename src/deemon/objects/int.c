@@ -2628,10 +2628,10 @@ err:
 
 
 
-/* Extract the 32-, 64- or 128-bit value of the given integer.
- * NOTE: In theory, deemon integers can have arbitrarily large
- *       values, however in deemon's C api, we must limit ourself
- *       to only a set number of bits.
+/* Extract the 8-, 16-, 32-, 64- or 128-bit value of the given integer.
+ * NOTE: In theory, deemon integers can have arbitrarily large values,
+ *       however in deemon's C api, we must limit ourself to only a set
+ *       number of bits.
  * @return: One of `INT_*' (See above) */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int DCALL
 DeeInt_TryGet8Bit(/*Int*/ DeeObject *__restrict self,
@@ -2992,7 +2992,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) bool
 
 
 /* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow'
- * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
+ * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and return `-1'. */
 PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 (DCALL DeeInt_Get8Bit)(/*Int*/ DeeObject *__restrict self,
                        int8_t *__restrict value) {

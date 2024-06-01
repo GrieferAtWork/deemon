@@ -570,6 +570,14 @@ EXPORTS
 	_DeeObject_AddUInt64@12=DeeObject_AddUInt64@12
 	_DeeObject_And@8=DeeObject_And@8
 	_DeeObject_AndUInt32@8=DeeObject_AndUInt32@8
+	_DeeObject_AsDirectUInt16@4=DeeObject_AsDirectUInt16@4
+	_DeeObject_AsDirectUInt16Inherited@4=DeeObject_AsDirectUInt16Inherited@4
+	_DeeObject_AsDirectUInt32@4=DeeObject_AsDirectUInt32@4
+	_DeeObject_AsDirectUInt32Inherited@4=DeeObject_AsDirectUInt32Inherited@4
+	_DeeObject_AsDirectUInt64@4=DeeObject_AsDirectUInt64@4
+	_DeeObject_AsDirectUInt64Inherited@4=DeeObject_AsDirectUInt64Inherited@4
+	_DeeObject_AsDirectUInt8@4=DeeObject_AsDirectUInt8@4
+	_DeeObject_AsDirectUInt8Inherited@4=DeeObject_AsDirectUInt8Inherited@4
 	_DeeObject_AsDouble@8=DeeObject_AsDouble@8
 	_DeeObject_AsInt128@8=DeeObject_AsInt128@8
 	_DeeObject_AsInt16@8=DeeObject_AsInt16@8
@@ -723,6 +731,7 @@ EXPORTS
 	_DeeObject_InvokeOperator@16=DeeObject_InvokeOperator@16
 	_DeeObject_Iter@4=DeeObject_Iter@4
 	_DeeObject_IterAdvance@8=DeeObject_IterAdvance@8
+	_DeeObject_IterKeys@4=DeeObject_IterKeys@4
 	_DeeObject_IterNext@4=DeeObject_IterNext@4
 	_DeeObject_Leave@4=DeeObject_Leave@4
 	_DeeObject_Mod@8=DeeObject_Mod@8
@@ -889,6 +898,7 @@ EXPORTS
 	_DeeObject_TInv@8=DeeObject_TInv@8
 	_DeeObject_TInvokeOperator@20=DeeObject_TInvokeOperator@20
 	_DeeObject_TIter@8=DeeObject_TIter@8
+	_DeeObject_TIterKeys@8=DeeObject_TIterKeys@8
 	_DeeObject_TIterNext@8=DeeObject_TIterNext@8
 	_DeeObject_TLeave@8=DeeObject_TLeave@8
 	_DeeObject_TMod@12=DeeObject_TMod@12
