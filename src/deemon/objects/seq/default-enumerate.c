@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
@@ -258,6 +259,157 @@ withrange_visit(DefaultEnumeration_WithRange *__restrict self,
 	Dee_Visit(self->dewr_seq);
 	Dee_Visit(self->dewr_start);
 	Dee_Visit(self->dewr_end);
+}
+
+
+
+#define de_wsagiif_contains   fullrange_contains
+#define de_wsatgii_contains   fullrange_contains
+#define de_wsagii_contains    fullrange_contains
+#define de_wsoagi_contains    fullrange_contains
+#define de_wsagiifaf_contains withintrange_contains
+#define de_wsatgiiaf_contains withintrange_contains
+#define de_wsagiiaf_contains  withintrange_contains
+#define de_wsoagiaf_contains  withrange_contains
+#define de_wgii_contains      fullrange_contains
+#define de_wgiiaf_contains    withintrange_contains
+#define de_wgiaf_contains     withrange_contains
+#define de_wikagi_contains    fullrange_contains
+#define de_wikagiaf_contains  withrange_contains
+#define de_wikatgi_contains   fullrange_contains
+#define de_wikatgiaf_contains withrange_contains
+#define de_wiac_contains      fullrange_contains
+#define de_wiacaf_contains    withintrange_contains
+#define de_wiauaf_contains    withintrange_contains
+#define de_we_contains        fullrange_contains
+#define de_wei_contains       withintrange_contains
+#define de_weaf_contains      withrange_contains
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+fullrange_contains(DefaultEnumeration_FullRange *self, DeeObject *item) {
+	int temp;
+	DREF DeeObject *real_value;
+	DREF DeeObject *key_and_value[2];
+	if unlikely(DeeObject_Unpack(item, 2, key_and_value))
+		goto err_tryhandle;
+	real_value = DeeObject_TryGetItem(self->defr_seq, key_and_value[0]);
+	Dee_Decref(key_and_value[0]);
+	if (!ITER_ISOK(real_value)) {
+		Dee_Decref(key_and_value[1]);
+		if unlikely(!real_value)
+			goto err_tryhandle;
+		goto nope;
+	}
+	temp = DeeObject_TryCompareEq(key_and_value[1], real_value);
+	Dee_Decref(real_value);
+	Dee_Decref(key_and_value[1]);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(temp == 0);
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_ValueError) ||
+	    DeeError_Catch(&DeeError_TypeError) ||
+	    DeeError_Catch(&DeeError_NotImplemented))
+		goto nope;
+err:
+	return NULL;
+nope:
+	return_false;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+withintrange_contains(DefaultEnumeration_WithIntRange *self, DeeObject *item) {
+	int temp;
+	DREF DeeObject *real_value;
+	DREF DeeObject *key_and_value[2];
+	if unlikely(DeeObject_Unpack(item, 2, key_and_value))
+		goto err_tryhandle;
+	/* if (!(self->dewr_start <= key_and_value[0]) ||
+	 *     !(self->dewr_end > key_and_value[0]))
+	 *     goto nope; */
+	temp = DeeInt_Size_Compare(self->dewir_start, key_and_value[0]);
+	if (temp == Dee_COMPARE_ERR)
+		goto err_key_and_value;
+	if (temp > 0)
+		goto nope_key_and_value;
+	temp = DeeInt_Size_Compare(self->dewir_end, key_and_value[0]);
+	if (temp == Dee_COMPARE_ERR)
+		goto err_key_and_value;
+	if (temp <= 0)
+		goto nope_key_and_value;
+	real_value = DeeObject_TryGetItem(self->dewir_seq, key_and_value[0]);
+	Dee_Decref(key_and_value[0]);
+	if (!ITER_ISOK(real_value)) {
+		Dee_Decref(key_and_value[1]);
+		if unlikely(!real_value)
+			goto err_tryhandle;
+		goto nope;
+	}
+	temp = DeeObject_TryCompareEq(key_and_value[1], real_value);
+	Dee_Decref(real_value);
+	Dee_Decref(key_and_value[1]);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(temp == 0);
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_ValueError) ||
+	    DeeError_Catch(&DeeError_TypeError) ||
+	    DeeError_Catch(&DeeError_NotImplemented))
+		goto nope;
+err:
+	return NULL;
+err_key_and_value:
+	Dee_Decrefv(key_and_value, 2);
+	goto err;
+nope_key_and_value:
+	Dee_Decrefv(key_and_value, 2);
+nope:
+	return_false;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+withrange_contains(DefaultEnumeration_WithRange *self, DeeObject *item) {
+	int temp;
+	DREF DeeObject *real_value;
+	DREF DeeObject *key_and_value[2];
+	if unlikely(DeeObject_Unpack(item, 2, key_and_value))
+		goto err_tryhandle;
+	/* if (!(self->dewr_start <= key_and_value[0]) ||
+	 *     !(self->dewr_end > key_and_value[0]))
+	 *     goto nope; */
+	temp = DeeObject_CmpLeAsBool(self->dewr_start, key_and_value[0]);
+	if (temp <= 0)
+		goto err_key_and_value_or_nope;
+	temp = DeeObject_CmpGrAsBool(self->dewr_end, key_and_value[0]);
+	if (temp <= 0)
+		goto err_key_and_value_or_nope;
+	real_value = DeeObject_TryGetItem(self->dewr_seq, key_and_value[0]);
+	Dee_Decref(key_and_value[0]);
+	if (!ITER_ISOK(real_value)) {
+		Dee_Decref(key_and_value[1]);
+		if unlikely(!real_value)
+			goto err_tryhandle;
+		goto nope;
+	}
+	temp = DeeObject_TryCompareEq(key_and_value[1], real_value);
+	Dee_Decref(real_value);
+	Dee_Decref(key_and_value[1]);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(temp == 0);
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_ValueError) ||
+	    DeeError_Catch(&DeeError_TypeError) ||
+	    DeeError_Catch(&DeeError_NotImplemented))
+		goto nope;
+err:
+	return NULL;
+err_key_and_value_or_nope:
+	Dee_Decrefv(key_and_value, 2);
+	if unlikely(temp < 0)
+		goto err;
+nope:
+	return_false;
 }
 
 
@@ -2344,7 +2496,7 @@ de_weaf_foreach_pair(DefaultEnumeration_WithRange *__restrict self,
 PRIVATE struct type_seq de_wsagiif_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wsagiif_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wsagiif_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2359,7 +2511,7 @@ PRIVATE struct type_seq de_wsagiif_seq = {
 PRIVATE struct type_seq de_wsatgii_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wsatgii_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wsatgii_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2374,7 +2526,7 @@ PRIVATE struct type_seq de_wsatgii_seq = {
 PRIVATE struct type_seq de_wsagii_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wsagii_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wsagii_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2389,7 +2541,7 @@ PRIVATE struct type_seq de_wsagii_seq = {
 PRIVATE struct type_seq de_wsoagi_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wsoagi_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wsoagi_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2404,7 +2556,7 @@ PRIVATE struct type_seq de_wsoagi_seq = {
 PRIVATE struct type_seq de_wsagiifaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wsagiifaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wsagiifaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2419,7 +2571,7 @@ PRIVATE struct type_seq de_wsagiifaf_seq = {
 PRIVATE struct type_seq de_wsatgiiaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wsatgiiaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wsatgiiaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2434,7 +2586,7 @@ PRIVATE struct type_seq de_wsatgiiaf_seq = {
 PRIVATE struct type_seq de_wsagiiaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wsagiiaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wsagiiaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2449,7 +2601,7 @@ PRIVATE struct type_seq de_wsagiiaf_seq = {
 PRIVATE struct type_seq de_wsoagiaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wsoagiaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wsoagiaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2464,7 +2616,7 @@ PRIVATE struct type_seq de_wsoagiaf_seq = {
 PRIVATE struct type_seq de_wgii_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wgii_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wgii_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2479,7 +2631,7 @@ PRIVATE struct type_seq de_wgii_seq = {
 PRIVATE struct type_seq de_wgiiaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wgiiaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wgiiaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2494,7 +2646,7 @@ PRIVATE struct type_seq de_wgiiaf_seq = {
 PRIVATE struct type_seq de_wgiaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wgiaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wgiaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2509,7 +2661,7 @@ PRIVATE struct type_seq de_wgiaf_seq = {
 PRIVATE struct type_seq de_wikagi_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wikagi_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wikagi_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2524,7 +2676,7 @@ PRIVATE struct type_seq de_wikagi_seq = {
 PRIVATE struct type_seq de_wikagiaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wikagiaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wikagiaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2539,7 +2691,7 @@ PRIVATE struct type_seq de_wikagiaf_seq = {
 PRIVATE struct type_seq de_wikatgi_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wikatgi_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wikatgi_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2554,7 +2706,7 @@ PRIVATE struct type_seq de_wikatgi_seq = {
 PRIVATE struct type_seq de_wikatgiaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wikatgiaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wikatgiaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2569,7 +2721,7 @@ PRIVATE struct type_seq de_wikatgiaf_seq = {
 PRIVATE struct type_seq de_wiac_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wiac_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wiac_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2584,7 +2736,7 @@ PRIVATE struct type_seq de_wiac_seq = {
 PRIVATE struct type_seq de_wiacaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wiacaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wiacaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2599,7 +2751,7 @@ PRIVATE struct type_seq de_wiacaf_seq = {
 PRIVATE struct type_seq de_wiauaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wiauaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wiauaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2614,7 +2766,7 @@ PRIVATE struct type_seq de_wiauaf_seq = {
 PRIVATE struct type_seq de_we_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_we_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_we_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2629,7 +2781,7 @@ PRIVATE struct type_seq de_we_seq = {
 PRIVATE struct type_seq de_wei_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_wei_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_wei_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
@@ -2644,7 +2796,7 @@ PRIVATE struct type_seq de_wei_seq = {
 PRIVATE struct type_seq de_weaf_seq = {
 	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&de_weaf_iter,
 	/* .tp_sizeob       = */ NULL,
-	/* .tp_contains     = */ NULL, /* TODO: (item) -> { local a, b = item...; return hasitem(seq, a) && equals(seq[a], b); } */
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&de_weaf_contains,
 	/* .tp_getitem      = */ NULL,
 	/* .tp_delitem      = */ NULL,
 	/* .tp_setitem      = */ NULL,
