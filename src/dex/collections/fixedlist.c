@@ -1569,16 +1569,16 @@ err:
 }
 
 PRIVATE struct type_method tpconst fl_methods[] = {
-	TYPE_KWMETHOD_F("find", &fl_find, METHOD_FNOREFESCAPE, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
-	TYPE_KWMETHOD_F("rfind", &fl_rfind, METHOD_FNOREFESCAPE, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F("find", &fl_find, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F("rfind", &fl_rfind, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F("xchitem", &fl_xchitem, METHOD_FNOREFESCAPE, "(index:?Dint,value)->"),
 	TYPE_KWMETHOD_F("pop", &fl_pop, METHOD_FNOREFESCAPE, "(index=!-1)->"),
-	TYPE_KWMETHOD_F("remove", &fl_remove, METHOD_FNOREFESCAPE, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD_F("rremove", &fl_rremove, METHOD_FNOREFESCAPE, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD_F("removeall", &fl_removeall, METHOD_FNOREFESCAPE, "(item,start=!0,end=!-1,max=!-1,key:?DCallable=!N)->?Dint"),
-	TYPE_KWMETHOD_F("removeif", &fl_removeif, METHOD_FNOREFESCAPE, "(should:?DCallable,start=!0,end=!-1,max=!-1)->?Dint"),
-	TYPE_KWMETHOD_F("fill", &fl_fill, METHOD_FNOREFESCAPE, "(start=!0,end=!-1,filler=!N)"),
-	TYPE_KWMETHOD_F("reverse", &fl_reverse, METHOD_FNOREFESCAPE, "(start=!0,end=!-1)"),
+	TYPE_KWMETHOD_F("remove", &fl_remove, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD_F("rremove", &fl_rremove, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD_F("removeall", &fl_removeall, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD_F("removeif", &fl_removeif, METHOD_FNOREFESCAPE, "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint"),
+	TYPE_KWMETHOD_F("fill", &fl_fill, METHOD_FNOREFESCAPE, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)"),
+	TYPE_KWMETHOD_F("reverse", &fl_reverse, METHOD_FNOREFESCAPE, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"),
 	TYPE_METHOD_F("clear", &fl_clear, METHOD_FNOREFESCAPE, "()"),
 	TYPE_METHOD_END
 };

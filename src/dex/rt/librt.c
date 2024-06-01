@@ -138,7 +138,7 @@ print define_Dee_HashStr("segments");
 print define_Dee_HashStr("seq");
 print define_Dee_HashStr("split");
 print define_Dee_HashStr("splitlines");
-print define_Dee_HashStr("transform");
+print define_Dee_HashStr("map");
 print define_Dee_HashStr("types");
 print define_Dee_HashStr("__SeqWithSizeAndGetItemIndex__");
 print define_Dee_HashStr("__SeqWithSizeAndGetItemIndexFast__");
@@ -230,7 +230,7 @@ print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
 #define Dee_HashStr__seq _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251)
 #define Dee_HashStr__split _Dee_HashSelectC(0x916f9388, 0xca3aa391a92a6314)
 #define Dee_HashStr__splitlines _Dee_HashSelectC(0xed695afd, 0xbac074bd124b8342)
-#define Dee_HashStr__transform _Dee_HashSelectC(0x1f489cc3, 0x9dc554137fbc6ef6)
+#define Dee_HashStr__map _Dee_HashSelectC(0xeb1d32c8, 0x6ed228005fef6a3)
 #define Dee_HashStr__types _Dee_HashSelectC(0x871b2836, 0xde8693a2d24930)
 #define Dee_HashStr____SeqWithSizeAndGetItemIndex__ _Dee_HashSelectC(0xe4975d67, 0xe3253d16df5a36a)
 #define Dee_HashStr____SeqWithSizeAndGetItemIndexFast__ _Dee_HashSelectC(0xddb17763, 0x1d55f6c48f906dac)
@@ -996,19 +996,19 @@ librt_get_SeqSubRangeN_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 LOCAL WUNUSED DREF DeeObject *DCALL
-librt_get_SeqTransformation_impl_f(void) {
+librt_get_SeqMapped_impl_f(void) {
 	DeeObject *argv[] = { Dee_None };
-	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptySeq, STR_AND_HASH(transform), 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptySeq, STR_AND_HASH(map), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqTransformation_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_SeqTransformation_impl_f();
+librt_get_SeqMapped_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_SeqMapped_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqTransformationIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_SeqTransformation_impl_f());
+librt_get_SeqMappedIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_SeqMapped_impl_f());
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -2197,8 +2197,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqSubRange, &librt_get_SeqSubRange_f, METHOD_F
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSubRangeIterator, &librt_get_SeqSubRangeIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSubRangeN, &librt_get_SeqSubRangeN_f, METHOD_FCONSTCALL);
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-PRIVATE DEFINE_CMETHOD(librt_get_SeqTransformation, &librt_get_SeqTransformation_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqTransformationIterator, &librt_get_SeqTransformationIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqMapped, &librt_get_SeqMapped_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqMappedIterator, &librt_get_SeqMappedIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqRange, &librt_get_SeqRange_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqRangeIterator, &librt_get_SeqRangeIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqIntRange, &librt_get_SeqIntRange_f, METHOD_FCONSTCALL);
@@ -2531,8 +2531,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqSubRangeIterator", (DeeObject *)&librt_get_SeqSubRangeIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqSubRangeIterator_Type */
 	{ "SeqSubRangeN", (DeeObject *)&librt_get_SeqSubRangeN, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* SeqSubRangeN_Type */
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-	{ "SeqTransformation", (DeeObject *)&librt_get_SeqTransformation, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqTransformation_Type */
-	{ "SeqTransformationIterator", (DeeObject *)&librt_get_SeqTransformationIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* SeqTransformationIterator_Type */
+	{ "SeqMapped", (DeeObject *)&librt_get_SeqMapped, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqMapped_Type */
+	{ "SeqMappedIterator", (DeeObject *)&librt_get_SeqMappedIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqMappedIterator_Type */
 	{ "SeqRange", (DeeObject *)&librt_get_SeqRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqRange_Type */
 	{ "SeqRangeIterator", (DeeObject *)&librt_get_SeqRangeIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* SeqRangeIterator_Type */
 	{ "SeqIntRange", (DeeObject *)&librt_get_SeqIntRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SeqIntRange_Type */

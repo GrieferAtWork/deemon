@@ -10205,7 +10205,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_KWMETHOD_F(name, &func,                                              \
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | \
 	                METHOD_FNOREFESCAPE,                                      \
-	                "(start=!0,end=!-1)->?Dbool\n" doc)
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n" doc)
 #define DEFINE_ANY_STRING_TRAIT(name, func, is_xxx) \
 	DEFINE_ANY_STRING_TRAIT_EX(name, func, "Returns ?t if any character in ${this.substr(start, end)} " is_xxx)
 	DEFINE_ANY_STRING_TRAIT("isanycntrl", string_isanycntrl, "is a control character"),
@@ -10280,28 +10280,28 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* String conversion */
 	TYPE_KWMETHOD_F("lower", &string_lower,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns @this ?. converted to lower-case"),
 	TYPE_KWMETHOD_F("upper", &string_upper,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns @this ?. converted to upper-case"),
 	TYPE_KWMETHOD_F("title", &string_title,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns @this ?. converted to title-casing"),
 	TYPE_KWMETHOD_F("capitalize", &string_capitalize,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns @this ?. with each word capitalized"),
 	TYPE_KWMETHOD_F("swapcase", &string_swapcase,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns @this ?. with the casing of each "
 	                /**/ "character that has two different casings swapped"),
 	TYPE_KWMETHOD_F("casefold", &string_casefold,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns @this ?. with its casing folded.\n"
 
 	                "The equivalent of the string returned by this function is what is "
@@ -10329,66 +10329,66 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Find up to @max occurrences of @find and replace each with @replace, then return the resulting ?."),
 	TYPE_KWMETHOD_F("find", &string_find,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Find the first instance of @needle within ${this.substr(start, end)}, "
 	                "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("rfind", &string_rfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Find the last instance of @needle within ${this.substr(start, end)}, "
 	                "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F(STR_index, &string_index,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the first instance of @needle within ${this.substr(start, end)}, "
 	                "and return its starting index"),
 	TYPE_KWMETHOD_F("rindex", &string_rindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the last instance of @needle within ${this.substr(start, end)}, "
 	                "and return its starting index"),
 	TYPE_KWMETHOD_F("findany", &string_findany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end=!-1)->?X2?Dint?N\n"
+	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "Find the first instance of any of the given @needles within ${this.substr(start, end)}, "
 	                "and return its starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD_F("rfindany", &string_rfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end=!-1)->?X2?Dint?N\n"
+	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "Find the last instance of any of the given @needles within ${this.substr(start, end)}, "
 	                "and return its starting index, or ?N if no such position exists"),
 	TYPE_KWMETHOD_F("indexany", &string_indexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end=!-1)->?Dint\n"
+	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIndexError{No instance of @needles can be found within ${this.substr(start, end)}}"
 	                "Find the first instance of any of the given @needles within ${this.substr(start, end)}, "
 	                "and return its starting index"),
 	TYPE_KWMETHOD_F("rindexany", &string_rindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end=!-1)->?Dint\n"
+	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIndexError{No instance of @needles can be found within ${this.substr(start, end)}}"
 	                "Find the last instance of any of the given @needles within ${this.substr(start, end)}, "
 	                "and return its starting index"),
 	TYPE_KWMETHOD_F("findall", &string_findall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end=!-1)->?S?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?Dint\n"
 	                "Find all instances of @needle within ${this.substr(start, end)}, "
 	                "and return their starting indices as a sequence"),
 	TYPE_KWMETHOD_F("count", &string_count,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Count the number of instances of @needle that exist within ${this.substr(start, end)}, "
 	                /**/ "and return now many were found"),
 	TYPE_KWMETHOD_F("contains", &string_contains_f,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Check if @needle can be found within ${this.substr(start, end)}, "
 	                /**/ "and return a boolean indicative of that"),
 	TYPE_KWMETHOD_F("substr", &string_substr,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Similar to ${this[start:end]}, however only integer-convertible objects may "
 	                /**/ "be passed (passing ?N will invoke ${(int)none}, which results in $0), and "
 	                /**/ "passing negative values for either @start or @end will cause ?ASIZE_MAX?Dint to "
@@ -10498,37 +10498,37 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "than bytes apart of its $mask character."),
 	TYPE_KWMETHOD_F("startswith", &string_startswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Return ?t if the sub-string ${this.substr(start, end)} starts with @needle"),
 	TYPE_KWMETHOD_F("endswith", &string_endswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Return ?t if the sub-string ${this.substr(start, end)} ends with @needle"),
 	TYPE_KWMETHOD_F("partition", &string_partition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	                "Search for the first instance of @needle within ${this.substr(start, end)} and "
 	                /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	                "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
 	TYPE_KWMETHOD_F("rpartition", &string_rpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	                "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	                /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	                "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
 	TYPE_METHOD_F("compare", &string_compare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Compare the sub-string ${left = this.substr(my_start, my_end)} with "
 	              "${right = other.substr(other_start, other_end)}, returning ${< 0} if "
 	              "${left < right}, ${> 0} if ${left > right}, and ${== 0} if they are equal"),
 	TYPE_METHOD_F("vercompare", &string_vercompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Performs a version-string comparison. This is similar to ?#compare, but rather than "
 	              /**/ "performing a strict lexicographical comparison, the numbers found in the strings "
 	              /**/ "being compared are compared as a whole, solving the common problem seen in applications "
@@ -10540,9 +10540,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "for which you may follow the link for further details"),
 	TYPE_METHOD_F("wildcompare", &string_wildcompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "(pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start, my_end)} "
 	              /**/ "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
 	              /**/ "if ${left > right}, or ${== 0} if they are equal\n"
@@ -10551,9 +10551,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "any number of characters"),
 	TYPE_METHOD_F("fuzzycompare", &string_fuzzycompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Perform a fuzzy string comparison between ${this.substr(my_start, my_end)} and "
 	              /**/ "${other.substr(other_start, other_end)}\n"
 	              "The return value is a similarty-factor that can be used to score how close the "
@@ -10567,9 +10567,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "Note that there is another version ?#casefuzzycompare that also ignores casing"),
 	TYPE_METHOD_F("wmatch", &string_wmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
+	              "(pattern:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(my_start:?Dint,pattern:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	              "Same as ?#wildcompare, returning ?t where ?#wildcompare would return $0, "
 	              /**/ "and ?f in all pattern cases"),
 
@@ -10580,60 +10580,60 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#replace, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casefind", &string_casefind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#find, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caserfind", &string_caserfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#rfind, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caseindex", &string_caseindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	                "Same as ?#index, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caserindex", &string_caserindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	                "Same as ?#rindex, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casefindany", &string_casefindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#findany, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caserfindany", &string_caserfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	                "Same as ?#rfindany, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)\n"
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caseindexany", &string_caseindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	                "Same as ?#indexany, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caserindexany", &string_caserindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needles:?S?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	                "(needles:?S?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	                "Same as ?#rindexany, however perform a case-folded search and return the start and end "
 	                /**/ "indices of the match (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casefindall", &string_casefindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?Dint\n"
 	                "Same as ?#findall, however perform a case-folded search and return the star and end "
 	                /**/ "indices of matches (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casecount", &string_casecount,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Same as ?#count, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casecontains", &string_casecontains_f,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Same as ?#contains, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casestrip", &string_casestrip,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
@@ -10685,49 +10685,49 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "Same as ?#rsstriplines, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casestartswith", &string_casestartswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Same as ?#startswith, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caseendswith", &string_caseendswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(needle:?.,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Same as ?#endswith, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("casepartition", &string_casepartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	                "Same as ?#partition, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_KWMETHOD_F("caserpartition", &string_caserpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	                "(needle:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	                "Same as ?#rpartition, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casecompare", &string_casecompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#compare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casevercompare", &string_casevercompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#vercompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casewildcompare", &string_casewildcompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "(pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#wildcompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casefuzzycompare", &string_casefuzzycompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#fuzzycompare, however compare strings with their casing folded (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casewmatch", &string_casewmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
+	              "(pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	              "Same as ?#wmatch, however compare strings with their casing folded (s.a. ?#casefold)"),
 
 	/* String alignment functions. */
@@ -10753,7 +10753,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "to pad the resulting ?. to a length of @width characters"),
 	TYPE_KWMETHOD_F("reversed", &string_reversed,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Return the sub-string ${this.substr(start, end)} with its character order reversed"),
 	TYPE_METHOD_F("expandtabs", &string_expandtabs,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
@@ -10810,34 +10810,34 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Common-character search functions. */
 	TYPE_METHOD_F("common", &string_common,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Returns the number of common leading characters shared between @this and @other, "
 	              /**/ "or in other words: the lowest index $i for which ${this[i] != other[i]} is true"),
 	TYPE_METHOD_F("rcommon", &string_rcommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Returns the number of common trailing characters shared between @this and @other"),
 	TYPE_METHOD_F("casecommon", &string_casecommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#common, however perform a case-folded search"),
 	TYPE_METHOD_F("casercommon", &string_casercommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#rcommon, however perform a case-folded search"),
 
 	/* Find match character sequences */
 	TYPE_METHOD_F("findmatch", &string_findmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Similar to ?#find, but do a recursive search for the "
 	              /**/ "first @close that doesn't have a match @{open}:\n"
 	              "${"
@@ -10852,27 +10852,27 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "strings, are allowed to be of any length"),
 	TYPE_METHOD_F("indexmatch", &string_indexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "#tIndexError{No instance of @close without a matching @open "
 	              /*             */ "exists within ${this.substr(start, end)}}"
 	              "Same as ?#findmatch, but throw an :IndexError instead of "
 	              /**/ "returning ${-1} if no @close without a matching @open exists"),
 	TYPE_METHOD_F("casefindmatch", &string_casefindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	              "Same as ?#findmatch, however perform a case-folded search and "
 	              /**/ "return the start and end indices of the match\n"
 	              "If no match if found, ?N is returned"),
 	TYPE_METHOD_F("caseindexmatch", &string_caseindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	              "#tIndexError{No instance of @close without a matching @open "
 	              /*             */ "exists within ${this.substr(start, end)}}"
 	              "Same as ?#indexmatch, however perform a case-folded search and "
 	              /**/ "return the start and end indices of the match"),
 	TYPE_METHOD_F("rfindmatch", &string_rfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Similar to ?#findmatch, but operate in a mirrored fashion, "
 	              /**/ "searching for the last instance of @open that has no match "
 	              /**/ "@close within ${this.substr(start, end)}:\n"
@@ -10886,20 +10886,20 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "If no @open without a matching @close exists, ${-1} is returned"),
 	TYPE_METHOD_F("rindexmatch", &string_rindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "#tIndexError{No instance of @open without a matching @close "
 	              /*             */ "exists within ${this.substr(start, end)}}"
 	              "Same as ?#rfindmatch, but throw an :IndexError instead of "
 	              /**/ "returning ${-1} if no @open without a matching @close exists"),
 	TYPE_METHOD_F("caserfindmatch", &string_caserfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	              "Same as ?#rfindmatch, however perform a case-folded search and "
 	              /**/ "return the start and end indices of the match\n"
 	              "If no match if found, ?N is returned"),
 	TYPE_METHOD_F("caserindexmatch", &string_caserindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	              "#tIndexError{No instance of @open without a matching @close exists "
 	              /**/ "within ${this.substr(start, end)}}"
 	              "Same as ?#rindexmatch, however perform a case-folded search and return "
@@ -10908,7 +10908,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Using the find-match functionality, also provide a partitioning version */
 	TYPE_METHOD_F("partitionmatch", &string_partitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	              "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
 	              "the matched string portion, the first being the substring prior to the match, "
 	              "the second being the matched ?. itself (including the @open and @close strings), "
@@ -10934,7 +10934,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_METHOD_F("rpartitionmatch", &string_rpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	              "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
 	              /**/ "the matched string portion, the first being the substring prior to the match, "
 	              /**/ "the second being the matched ?. itself (including the @open and @close strings), "
@@ -10960,11 +10960,11 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "}"),
 	TYPE_METHOD_F("casepartitionmatch", &string_casepartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	              "Same as #partitionmatch, however perform a case-folded search"),
 	TYPE_METHOD_F("caserpartitionmatch", &string_caserpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	              "(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(open:?.,close:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	              "Same as #rpartitionmatch, however perform a case-folded search"),
 
 	TYPE_METHOD_F("segments", &string_segments,
@@ -10989,7 +10989,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Regex functions. */
 	TYPE_KWMETHOD_F("rematch", &string_rematch,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?Dint?N\n"
 	                "#tValueError{The given @pattern is malformed}"
 	                "#r{The number of leading characters in ${this.substr(start, end)} "
 	                /*    */ "matched by @pattern, or ?N if @pattern doesn't match}"
@@ -11115,7 +11115,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("rematches", &string_rematches,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11123,7 +11123,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function behaves identical to ${this.rematch(...) == ?#this}"),
 	TYPE_KWMETHOD_F("refind", &string_refind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11132,7 +11132,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Note that using ?N in an expand expression will expand to the all ?N-values"),
 	TYPE_KWMETHOD_F("rerfind", &string_rerfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11141,7 +11141,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "or ?N if no match exists (s.a. #refind)"),
 	TYPE_KWMETHOD_F("reindex", &string_reindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11150,7 +11150,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#refind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("rerindex", &string_rerindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11159,7 +11159,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#rerfind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("relocate", &string_relocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11170,7 +11170,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function has nothing to do with relocations! - it's pronounced R.E. locate"),
 	TYPE_KWMETHOD_F("rerlocate", &string_rerlocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11180,7 +11180,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "given regular expression, or ?N if not found"),
 	TYPE_KWMETHOD_F("repartition", &string_repartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11198,7 +11198,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}}"),
 	TYPE_KWMETHOD_F("rerpartition", &string_rerpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11233,7 +11233,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("refindall", &string_refindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11242,7 +11242,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Note that the matches returned are ordered ascendingly"),
 	TYPE_KWMETHOD_F("relocateall", &string_relocateall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11253,7 +11253,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "This function has nothing to do with relocations! - it's pronounced R.E. locate all"),
 	TYPE_KWMETHOD_F("resplit", &string_resplit,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11272,7 +11272,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "as a sequence"),
 	TYPE_KWMETHOD_F("restartswith", &string_restartswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11284,7 +11284,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("reendswith", &string_reendswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11297,28 +11297,28 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("restrip", &string_restrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)"),
 	TYPE_KWMETHOD_F("relstrip", &string_relstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD_F("rerstrip", &string_rerstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD_F("recount", &string_recount,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11327,7 +11327,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Instances where @pattern matches epsilon are not counted"),
 	TYPE_KWMETHOD_F("recontains", &string_recontains,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -11335,7 +11335,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}"),
 	TYPE_KWMETHOD_F("rescanf", &string_rescanf,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11347,7 +11347,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */
 	TYPE_KWMETHOD_F("regmatch", &string_regmatch,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#rematch, but rather than only return the number of characters that were "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11371,7 +11371,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "all of the matched groups, you should use ?#regfind instead."),
 	TYPE_KWMETHOD_F("regfind", &string_regfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refind, but rather than only return the character-range "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11379,7 +11379,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regrfind", &string_regrfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#rerfind, but rather than only return the character-range "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11387,7 +11387,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regfindall", &string_regfindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refindall, but rather than only return the character-ranges "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -11395,7 +11395,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regindex", &string_regindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11404,7 +11404,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "Same as ?#regfind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("regrindex", &string_regrindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(pattern:?.,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -11415,7 +11415,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	/* Deprecated functions. */
 	TYPE_KWMETHOD_F("reverse", &string_reversed,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Deprecated alias for ?#reversed"),
 	TYPE_METHOD_END
 };

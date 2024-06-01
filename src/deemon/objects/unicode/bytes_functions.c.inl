@@ -4901,7 +4901,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "Same as ?Aencode?Dstring, but instead use the data of @this ?. object as characters to decode"),
 	TYPE_KWMETHOD_F("bytes", &bytes_substr,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Same as ?#substr (here for ABI compatibility with ?Abytes?Dstring)"),
 	TYPE_METHOD_F("ord", &bytes_ord,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
@@ -4932,7 +4932,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "print repr y; /* \"foobar??" "??" "??" "??" "??\" */"
 	              "}"),
 	TYPE_KWMETHOD("reverse", &bytes_reverse,
-	              "(start=!0,end=!-1)->?.\n"
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	              "#tBufferError{@this ?. object is not writable}"
 	              "Same as ?#reversed, but modifications are performed "
 	              /**/ "in-line, before @this ?. object is re-returned"),
@@ -4954,7 +4954,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	            "}}"),
 	TYPE_KWMETHOD_F("hex", &bytes_hex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?Dstring\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dstring\n"
 	                "Returns a hex-encoded string for the bytes contained within "
 	                /**/ "${this.substr(start, end)}, that is a string containing 2 characters "
 	                /**/ "for each encoded byte, both of which are lower-case hexadecimal digits\n"
@@ -5039,7 +5039,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_KWMETHOD_F(name, &func,                                                      \
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | \
 	                METHOD_FNOREFESCAPE,                                              \
-	                "(start=!0,end=!-1)->?Dbool\n" doc)
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n" doc)
 #define DEFINE_ANY_BYTES_TRAIT(name, func, is_xxx) \
 	DEFINE_ANY_BYTES_TRAIT_EX(name, func, "Returns ?t if any character in ${this.substr(start, end)} " is_xxx)
 	DEFINE_ANY_BYTES_TRAIT("isanycntrl", bytes_isanycntrl, "is a control character"),
@@ -5066,7 +5066,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	DEFINE_ANY_BYTES_TRAIT("isanyspacexlf", bytes_isanycempty, "is a space character, where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed) (alias for ?#isanycempty)"),
 	TYPE_KWMETHOD_F("isanyascii", &bytes_isanyascii,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?Dbool\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Returns ?t if any character in ${this.substr(start, end)} is "
 	                /**/ "an ascii character, that is has an ordinal value ${<= 0x7f}"),
 #undef DEFINE_ANY_BYTES_TRAIT
@@ -5109,54 +5109,54 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Bytes conversion functions */
 	TYPE_KWMETHOD_F("lower", &bytes_lower,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns a writable copy of @this ?. object converted to lower-case (when interpreted as ASCII)"),
 	TYPE_KWMETHOD_F("upper", &bytes_upper,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns a writable copy of @this ?. object converted to upper-case (when interpreted as ASCII)"),
 	TYPE_KWMETHOD_F("title", &bytes_title,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns a writable copy of @this ?. object converted to title-casing (when interpreted as ASCII)"),
 	TYPE_KWMETHOD_F("capitalize", &bytes_capitalize,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns a writable copy of @this ?. object with each word capitalized (when interpreted as ASCII)"),
 	TYPE_KWMETHOD_F("swapcase", &bytes_swapcase,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Returns a writable copy of @this ?. object with the casing of each "
 	                /**/ "character that has two different casings swapped (when interpreted as ASCII)"),
 	TYPE_KWMETHOD_F("casefold", &bytes_lower,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Alias for ?#{lower}. This function exists to match ?Acasefold?Dstring in "
 	                /**/ "order to improve binary compatibility between ?. and ?Dstring objects"),
 
 	/* Inplace variants of bytes conversion functions */
 	TYPE_KWMETHOD("tolower", &bytes_tolower,
-	              "(start=!0,end=!-1)->?.\n"
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	              "#tBufferError{@this ?. object is not writable}"
 	              "Same as ?#lower, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	TYPE_KWMETHOD("toupper", &bytes_toupper,
-	              "(start=!0,end=!-1)->?.\n"
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	              "#tBufferError{@this ?. object is not writable}"
 	              "Same as ?#upper, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	TYPE_KWMETHOD("totitle", &bytes_totitle,
-	              "(start=!0,end=!-1)->?.\n"
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	              "#tBufferError{@this ?. object is not writable}"
 	              "Same as ?#title, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	TYPE_KWMETHOD("tocapitalize", &bytes_tocapitalize,
-	              "(start=!0,end=!-1)->?.\n"
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	              "#tBufferError{@this ?. object is not writable}"
 	              "Same as ?#capitalize, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	TYPE_KWMETHOD("toswapcase", &bytes_toswapcase,
-	              "(start=!0,end=!-1)->?.\n"
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	              "#tBufferError{@this ?. object is not writable}"
 	              "Same as ?#swapcase, but character modifications are performed in-place, and @this ?. object is re-returned"),
 	TYPE_KWMETHOD("tocasefold", &bytes_tolower,
-	              "(start=!0,end=!-1)->?.\n"
+	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	              "#tBufferError{@this ?. object is not writable}"
 	              "Alias for ?#tolower, here to coincide with ?#casefold existing as an alias for ?#lower"),
 
@@ -5176,76 +5176,76 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "Same as ?#replace, but the ?. object is modified in-place, and @this is re-returned"),
 	TYPE_KWMETHOD_F("find", &bytes_find,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tValueError{The given @needle is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("rfind", &bytes_rfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tValueError{The given @needle is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F(STR_index, &bytes_index,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index"),
 	TYPE_KWMETHOD_F("rindex", &bytes_rindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index"),
 	TYPE_KWMETHOD_F("findany", &bytes_findany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tValueError{One of the given @needles is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("rfindany", &bytes_rfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tValueError{One of the given @needles is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index, or ${-1} if no such position exists"),
 	TYPE_KWMETHOD_F("indexany", &bytes_indexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index"),
 	TYPE_KWMETHOD_F("rindexany", &bytes_rindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dint?N\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return its starting index"),
 	TYPE_KWMETHOD_F("findall", &bytes_findall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?Dint\n"
 	                "Find all instances of @needle within ${this.substr(start, end)}, "
 	                /**/ "and return their starting indices as a sequence"),
 	TYPE_KWMETHOD_F("count", &bytes_count,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Count the number of instances of @needle that exists within ${this.substr(start, end)}, "
 	                /**/ "and return now many were found"),
 	TYPE_KWMETHOD_F("contains", &bytes_contains_f,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Check if @needle can be found within ${this.substr(start, end)}, and return a boolean indicative of that"),
 	TYPE_KWMETHOD_F("substr", &bytes_substr,
 	                /* Because modifications made to the returned proxy get mirrored in "thisarg",
 	                 * said proxy can already be constructed at compile-time, so this function is
 	                 * a constcall, even if the Bytes object is writable. */
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Similar to ${this[start:end]}, and semantically equialent to ?Asubstr?Dstring\n"
 	                "This function can be used to view a sub-set of bytes from @this ?. object\n"
 	                "Modifications then made to the returned ?. object will affect the same memory already described by @this ?. object"),
@@ -5331,36 +5331,36 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              /**/ "than bytes apart of its $mask character."),
 	TYPE_KWMETHOD_F("startswith", &bytes_startswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Return ?t if the sub-string ${this.substr(start, end)} starts with @other"),
 	TYPE_KWMETHOD_F("endswith", &bytes_endswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Return ?t if the sub-string ${this.substr(start, end)} ends with @other"),
 	TYPE_KWMETHOD_F("partition", &bytes_partition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	                "Search for the first instance of @needle within ${this.substr(start, end)} and "
 	                /**/ "return a 3-element sequence of byte objects ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	                "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
 	TYPE_KWMETHOD_F("rpartition", &bytes_rpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	                "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	                "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	                "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
 	TYPE_METHOD_F("compare", &bytes_compare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Compare the sub-string ${left = this.substr(my_start, my_end)} with ${right = other.substr(other_start, other_end)}, "
 	              /**/ "returning ${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal"),
 	TYPE_METHOD_F("vercompare", &bytes_vercompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Performs a version-string comparison. This is similar to ?#compare, but rather than "
 	              /**/ "performing a strict lexicographical comparison, the numbers found in the strings "
 	              /**/ "being compared are compared as a whole, solving the common problem seen in applications "
@@ -5371,9 +5371,9 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              /**/ "for which you may follow the link for further details"),
 	TYPE_METHOD_F("wildcompare", &bytes_wildcompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end=!-1)->?Dint\n"
+	              "(pattern:?X2?.?Dstring,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,pattern_start=!0,pattern_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start,my_end)} "
 	              /**/ "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
 	              /**/ "if ${left > right}, or ${== 0} if they are equal\n"
@@ -5382,9 +5382,9 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              /**/ "any number of characters"),
 	TYPE_METHOD_F("fuzzycompare", &bytes_fuzzycompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Perform a fuzzy string comparison between ${this.substr(my_start,my_end)} and ${other.substr(other_start,other_end)}\n"
 	              "The return value is a similarty-factor that can be used to score how close the two strings look alike.\n"
 	              "How exactly the scoring is done is implementation-specific, however a score of $0 is reserved for two "
@@ -5395,9 +5395,9 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "Note that there is another version ?#casefuzzycompare that also ignores casing"),
 	TYPE_METHOD_F("wmatch", &bytes_wmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+	              "(pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	              "Same as ?#wildcompare, returning ?t where ?#wildcompare would return $0, and ?f in all pattern cases"),
 
 	/* Case-insensitive query functions */
@@ -5416,7 +5416,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "Same as ?#toreplace, however ascii-casing is ignored during character comparisons"),
 	TYPE_KWMETHOD_F("casefind", &bytes_casefind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	                "#tValueError{The given @needle is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Same as ?#find, however ascii-casing is ignored during character comparisons\n"
@@ -5424,7 +5424,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caserfind", &bytes_caserfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	                "#tValueError{The given @needle is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Same as ?#rfind, however ascii-casing is ignored during character comparisons\n"
@@ -5432,19 +5432,19 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caseindex", &bytes_caseindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Same as ?#index, however ascii-casing is ignored during character comparisons\n"
 	                "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	TYPE_KWMETHOD_F("caserindex", &bytes_caserindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Same as ?#rindex, however ascii-casing is ignored during character comparisons\n"
 	                "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	TYPE_KWMETHOD_F("casefindany", &bytes_casefindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	                "#tValueError{The given @needle is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Same as ?#findany, however ascii-casing is ignored during character comparisons\n"
@@ -5452,7 +5452,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caserfindany", &bytes_caserfindany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	                "#tValueError{The given @needle is a string containing characters ${> 0xff}}"
 	                "#tIntegerOverflow{The given @needle is an integer lower than $0, or greater than $0xff}"
 	                "Same as ?#rfindany, however ascii-casing is ignored during character comparisons\n"
@@ -5460,28 +5460,28 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "If no match if found, ?N is returned"),
 	TYPE_KWMETHOD_F("caseindexany", &bytes_caseindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Same as ?#indexany, however ascii-casing is ignored during character comparisons\n"
 	                "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	TYPE_KWMETHOD_F("caserindexany", &bytes_caserindexany,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	                "(needles:?S?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	                "#tIndexError{No instance of @needle can be found within ${this.substr(start, end)}}"
 	                "Same as ?#rindexany, however ascii-casing is ignored during character comparisons\n"
 	                "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	TYPE_KWMETHOD_F("casefindall", &bytes_casefindall,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?Dint\n"
 	                "Same as ?#findall, however ascii-casing is ignored during character comparisons\n"
 	                "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	TYPE_KWMETHOD_F("casecount", &bytes_casecount,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Same as ?#count, however ascii-casing is ignored during character comparisons"),
 	TYPE_KWMETHOD_F("casecontains", &bytes_casecontains_f,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Same as ?#contains, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD_F("casestrip", &bytes_casestrip,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
@@ -5533,49 +5533,49 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "Same as ?#rsstriplines, however ascii-casing is ignored during character comparisons"),
 	TYPE_KWMETHOD_F("casestartswith", &bytes_casestartswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Same as ?#startswith, however ascii-casing is ignored during character comparisons"),
 	TYPE_KWMETHOD_F("caseendswith", &bytes_caseendswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	                "Same as ?#endswith, however ascii-casing is ignored during character comparisons"),
 	TYPE_KWMETHOD_F("casepartition", &bytes_casepartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	                "Same as ?#partition, however ascii-casing is ignored during character comparisons"),
 	TYPE_KWMETHOD_F("caserpartition", &bytes_caserpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	                "(needle:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	                "Same as ?#rpartition, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD_F("casecompare", &bytes_casecompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#compare, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD_F("casevercompare", &bytes_casevercompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#vercompare, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD_F("casewildcompare", &bytes_casewildcompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#wildcompare, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD_F("casefuzzycompare", &bytes_casefuzzycompare,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#fuzzycompare, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD_F("casewmatch", &bytes_casewmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	              "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
+	              "(pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
+	              "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dbool\n"
 	              "Same as ?#casewmatch, however ascii-casing is ignored during character comparisons"),
 
 	/* Bytes alignment functions. */
@@ -5601,7 +5601,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              /**/ "to pad the resulting string to a length of @width bytes"),
 	TYPE_KWMETHOD_F("reversed", &bytes_reversed,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)->?.\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Return a copy of the sub-string ${this.substr(start, end)} with its byte order reversed"),
 	TYPE_METHOD_F("expandtabs", &bytes_expandtabs,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
@@ -5677,58 +5677,58 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Common-character search functions. */
 	TYPE_METHOD_F("common", &bytes_common,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Returns the number of common leading bytes shared between @this and @other, "
 	              /**/ "or in other words: the lowest index $i for which ${this[i] != other.bytes()[i]} is true"),
 	TYPE_METHOD_F("rcommon", &bytes_rcommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Returns the number of common trailing bytes shared between @this and @other"),
 	TYPE_METHOD_F("casecommon", &bytes_casecommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#common, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD_F("casercommon", &bytes_casercommon,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
+	              "(other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
+	              "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Same as ?#rcommon, however ascii-casing is ignored during character comparisons"),
 
 	/* Find match character sequences */
 	TYPE_METHOD_F("findmatch", &bytes_findmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Similar to ?#find, but do a recursive search for the "
 	              /**/ "first @close that doesn't have a match @{open}\n"
 	              "For more information, see :string.findmatch"),
 	TYPE_METHOD_F("indexmatch", &bytes_indexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "#tIndexError{No instance of @close without a matching @open exists within ${this.substr(start, end)}}"
 	              "Same as ?#findmatch, but throw an :IndexError instead of "
 	              /**/ "returning ${-1} if no @close without a matching @open exists"),
 	TYPE_METHOD_F("casefindmatch", &bytes_casefindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	              "Same as ?#findmatch, however casing is ignored during character comparisons\n"
 	              "Upon success, the second returned integer is equal to ${return[0] + ?#close}\n"
 	              "If no match if found, ?N is returned"),
 	TYPE_METHOD_F("caseindexmatch", &bytes_caseindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	              "#tIndexError{No instance of @close without a matching @open exists within ${this.substr(start, end)}}"
 	              "Same as ?#indexmatch, however casing is ignored during character comparisons\n"
 	              "Upon success, the second returned integer is equal to ${return[0] + ?#close}"),
 	TYPE_METHOD_F("rfindmatch", &bytes_rfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
 	              /**/ "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
 	              "${"
@@ -5741,18 +5741,18 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "If no @open without a matching @close exists, ${-1} is returned"),
 	TYPE_METHOD_F("rindexmatch", &bytes_rindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              "#tIndexError{No instance of @open without a matching @close exists within ${this.substr(start, end)}}"
 	              "Same as ?#rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a matching @close exists"),
 	TYPE_METHOD_F("caserfindmatch", &bytes_caserfindmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?T2?Dint?Dint?N\n"
 	              "Same as ?#rfindmatch, however ascii-casing is ignored during character comparisons\n"
 	              "Upon success, the second returned integer is equal to ${return[0] + ?#open}\n"
 	              "If no match if found, ?N is returned"),
 	TYPE_METHOD_F("caserindexmatch", &bytes_caserindexmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T2?Dint?Dint\n"
 	              "#tIndexError{No instance of @open without a matching @close exists within ${this.substr(start, end)}}"
 	              "Same as ?#rindexmatch, however ascii-casing is ignored during character comparisons\n"
 	              "Upon success, the second returned integer is equal to ${return[0] + ?#open}"),
@@ -5760,7 +5760,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Using the find-match functionality, also provide a partitioning version */
 	TYPE_METHOD_F("partitionmatch", &bytes_partitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	              "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
 	              /**/ "the matched string portion, the first being the substring prior to the match, "
 	              /**/ "the second being the matched string itself (including the @open and @close strings), "
@@ -5768,7 +5768,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "For more information see ?Apartitionmatch?Dstring"),
 	TYPE_METHOD_F("rpartitionmatch", &bytes_rpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	              "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
 	              /**/ "the matched string portion, the first being the substring prior to the match, "
 	              /**/ "the second being the matched string itself (including the @open and @close strings), "
@@ -5776,11 +5776,11 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	              "For more information see ?Arpartitionmatch?Dstring"),
 	TYPE_METHOD_F("casepartitionmatch", &bytes_casepartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	              "Same as ?#partitionmatch, however casing is ignored during character comparisons"),
 	TYPE_METHOD_F("caserpartitionmatch", &bytes_caserpartitionmatch,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
+	              "(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?T3?.?.?.\n"
 	              "Same as ?#rpartitionmatch, however casing is ignored during character comparisons"),
 
 	TYPE_METHOD_F("segments", &bytes_segments,
@@ -5807,7 +5807,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Regex functions. */
 	TYPE_KWMETHOD_F("rematch", &bytes_rematch,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?X2?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?Dint?N\n"
 	                "#tValueError{The given @pattern is malformed}"
 	                "#r{The number of leading bytes in ${this.substr(start, end)} "
 	                /*    */ "matched by @pattern, or ?N if @pattern doesn't match}"
@@ -5818,7 +5818,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "@pattern. For more information, see ?Arematch?Dstring"),
 	TYPE_KWMETHOD_F("rematches", &bytes_rematches,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -5826,7 +5826,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "This function behaves identical to ${this.rematch(...) == ?#this}"),
 	TYPE_KWMETHOD_F("refind", &bytes_refind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -5835,7 +5835,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "Note that using ?N in an expand expression will expand to the all ?N-values"),
 	TYPE_KWMETHOD_F("rerfind", &bytes_rerfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -5844,7 +5844,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                /**/ "or ?N if no match exists (s.a. #refind)"),
 	TYPE_KWMETHOD_F("reindex", &bytes_reindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -5853,7 +5853,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "Same as ?#refind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("rerindex", &bytes_rerindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -5862,7 +5862,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "Same as ?#rerfind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("relocate", &bytes_relocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -5873,7 +5873,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "This function has nothing to do with relocations! - it's pronounced R.E. locate"),
 	TYPE_KWMETHOD_F("rerlocate", &bytes_rerlocate,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -5883,7 +5883,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                /**/ "given regular expression, or ?N if not found"),
 	TYPE_KWMETHOD_F("repartition", &bytes_repartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -5901,7 +5901,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "}}"),
 	TYPE_KWMETHOD_F("rerpartition", &bytes_rerpartition,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(pattern:?Dstring,start=!0,end=!-1,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,range:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?T3?.?.?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -5937,7 +5937,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_KWMETHOD_F("refindall", &bytes_refindall,
 	                /* CONSTCALL even though "Bytes" are mutable, because this returns a proxy */
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?T2?Dint?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -5947,7 +5947,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_KWMETHOD_F("relocateall", &bytes_relocateall,
 	                /* CONSTCALL even though "Bytes" are mutable, because this returns a proxy */
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?.\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -5959,7 +5959,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_KWMETHOD_F("resplit", &bytes_resplit,
 	                /* CONSTCALL even though "Bytes" are mutable, because this returns a proxy */
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?.\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -5978,7 +5978,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "as a sequence"),
 	TYPE_KWMETHOD_F("restartswith", &bytes_restartswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -5990,7 +5990,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("reendswith", &bytes_reendswith,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -6003,28 +6003,28 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "}"),
 	TYPE_KWMETHOD_F("restrip", &bytes_restrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all leading and trailing matches for @pattern from @this ?. and return the result (s.a. ?#strip)"),
 	TYPE_KWMETHOD_F("relstrip", &bytes_relstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all leading matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD_F("rerstrip", &bytes_rerstrip,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?.\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
 	                "Strip all trailing matches for @pattern from @this ?. and return the result (s.a. ?#lstrip)"),
 	TYPE_KWMETHOD_F("recount", &bytes_recount,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dint\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dint\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -6033,7 +6033,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "Instances where @pattern matches epsilon are not counted"),
 	TYPE_KWMETHOD_F("recontains", &bytes_recontains,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?Dbool\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?Dbool\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
 	                "#tValueError{The given @pattern is malformed}"
@@ -6042,7 +6042,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_KWMETHOD_F("rescanf", &bytes_rescanf,
 	                /* CONSTCALL even though "Bytes" are mutable, because this returns a proxy */
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?X2?.?N\n"
+	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?.?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -6054,7 +6054,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* Regex functions that return the start-/end-offsets of all groups (rather than only the whole match) */
 	TYPE_KWMETHOD_F("regmatch", &bytes_regmatch,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#rematch, but rather than only return the number of characters that were "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -6078,7 +6078,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "all of the matched groups, you should use ?#regfind instead."),
 	TYPE_KWMETHOD_F("regfind", &bytes_regfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refind, but rather than only return the character-range "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -6086,7 +6086,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regrfind", &bytes_regrfind,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#rerfind, but rather than only return the character-range "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -6095,7 +6095,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_KWMETHOD_F("regfindall", &bytes_regfindall,
 	                /* CONSTCALL even though "Bytes" are mutable, because this returns a proxy */
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refindall, but rather than only return the character-ranges "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
 	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
@@ -6103,7 +6103,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regindex", &bytes_regindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"
@@ -6112,7 +6112,7 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "Same as ?#regfind, but throw an :IndexError when no match can be found"),
 	TYPE_KWMETHOD_F("regrindex", &bytes_regrindex,
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
-	                "(pattern:?Dstring,start=!0,end=!-1,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
+	                "(pattern:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?X2?T2?Dint?Dint?N\n"
 	                "#ppattern{The regular expression pattern (s.a. ?#rematch)}"
 	                "#prange{The max number of search attempts to perform}"
 	                "#prules{The regular expression rules (s.a. ?#rematch)}"

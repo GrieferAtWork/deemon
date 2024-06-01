@@ -732,7 +732,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_FileReader",
 		/* .tp_doc      = */ DOC("()\n"
-		                         "(data:?DBytes,start=!0,end=!-1,pos=!0)\n"
+		                         "(data:?DBytes,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,pos=!0)\n"
 		                         "Create a file stream for reading data of the given @data as a buffer, "
 		                         /**/ "starting at its byte-offset @start and ending at @end\n"
 		                         "Note that the given indices @start and @end refer to byte "
@@ -2028,7 +2028,7 @@ PRIVATE struct type_getset tpconst mapfile_getsets[] = {
 PUBLIC DeeTypeObject DeeMapFile_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFile",
-	/* .tp_doc      = */ DOC("(fd:?X2?Dint?DFile,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)"),
+	/* .tp_doc      = */ DOC("(fd:?X2?Dint?DFile,maxbytes:?Dint=!A!Dint!PSIZE_MAX,offset:?Dint=!A!Dint!PSIZE_MAX,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

@@ -466,7 +466,7 @@ PRIVATE struct type_member tpconst bcf_class_members[] = {
 INTERN DeeTypeObject BytesFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesFind",
-	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!-1)"),
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -511,7 +511,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 INTERN DeeTypeObject BytesCaseFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseFind",
-	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end=!-1)"),
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,needle:?DBytes,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

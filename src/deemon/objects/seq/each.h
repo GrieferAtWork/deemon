@@ -48,7 +48,7 @@ DECL_BEGIN
  * >> print repr x.each.upper(); // { "FOO", "BAR", "FOOBAR" }
  * >> print repr x.each.upper().center(8); // { "   FOO  ", "   BAR  ", " FOOBAR " }
  * >> // Same as this:
- * >> print repr x.transform([](x) -> x.upper());
+ * >> print repr x.map(x -> x.upper().center(8));
  */
 
 struct string_object;

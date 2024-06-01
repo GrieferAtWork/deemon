@@ -244,14 +244,14 @@ err:
 }
 #endif /* !posix_read_USE_STUB */
 
-#define POSIX_READ_DEF                                     \
-	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,    \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!-1)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint") },
-#define POSIX_READ_DEF_DOC(doc)                            \
-	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,    \
-	  DOC("(fd:?X2?Dint?DFile,count:?Dint=!-1)->?DBytes\n" \
-		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
+#define POSIX_READ_DEF                                                         \
+	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                        \
+	  DOC("(fd:?X2?Dint?DFile,count:?Dint:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
+		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint:?Dint=!A!Dint!PSIZE_MAX)->?Dint") },
+#define POSIX_READ_DEF_DOC(doc)                                                \
+	{ "read", (DeeObject *)&posix_read, MODSYM_FNORMAL,                        \
+	  DOC("(fd:?X2?Dint?DFile,count:?Dint:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n" \
+		  "(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n" doc) },
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const *argv) {
 #ifndef posix_read_USE_STUB
 	int fd_fd;
@@ -259,7 +259,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 	DeeObject *buf_or_count = DeeInt_MinusOne;
 	size_t count = (size_t)-1;
 	dssize_t error;
-	if (DeeArg_Unpack(argc, argv, "o|o" UNPdSIZ ":read", &fd, &buf_or_count, &count))
+	if (DeeArg_Unpack(argc, argv, "o|o" UNPuSIZ ":read", &fd, &buf_or_count, &count))
 		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
@@ -588,7 +588,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *cons
 		PREAD_OFF_T offset;
 		int fd_fd;
 		/* Read into a given buffer. */
-		if (DeeArg_Unpack(argc, argv, "o" UNPdSIZ PREAD_PRIOFF ":pread", &fd, &count, &offset))
+		if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ PREAD_PRIOFF ":pread", &fd, &count, &offset))
 			goto err;
 		fd_fd = DeeUnixSystem_GetFD(fd);
 		if unlikely(fd_fd == -1)
@@ -646,7 +646,7 @@ err_bytes_printer:
 		int fd_fd;
 		DeeBuffer buf;
 		/* Read into a given buffer. */
-		if (DeeArg_Unpack(argc, argv, "oo" UNPdSIZ PREAD_PRIOFF ":pread", &fd, &buf_ob, &count, &offset))
+		if (DeeArg_Unpack(argc, argv, "oo" UNPuSIZ PREAD_PRIOFF ":pread", &fd, &buf_ob, &count, &offset))
 			goto err;
 		fd_fd = DeeUnixSystem_GetFD(fd);
 		if unlikely(fd_fd == -1)
@@ -698,7 +698,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *cons
 	DeeObject *fd;
 	DeeObject *buf;
 	size_t count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_count, "oo|" UNPdSIZ ":write", &fd, &buf, &count))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_count, "oo|" UNPuSIZ ":write", &fd, &buf, &count))
 		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)

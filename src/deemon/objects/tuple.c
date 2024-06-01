@@ -2042,15 +2042,15 @@ err:
 
 PRIVATE struct type_method tpconst tuple_methods[] = {
 	TYPE_KWMETHOD_F(STR_find, &tuple_find, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_rfind, &tuple_rfind, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_index, &tuple_index, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_rindex, &tuple_rindex, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_sorted, &tuple_sorted, METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1,key:?DCallable=!N)->?."),
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?."),
 	TYPE_METHOD_END
 };
 

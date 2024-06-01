@@ -1232,6 +1232,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_getlast(DeeObject 
 INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_boundlast(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_dellast(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default_seq_setlast(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_bool(DeeObject *__restrict self);
 
 
 /* Default sequence function pointers (including ones for mutable sequences). */

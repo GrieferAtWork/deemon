@@ -26,9 +26,11 @@ function assertEqualSequence(expected, actual) {
 	assert expected == actual;
 	assert expected == Tuple(actual);
 	assert expected == List(actual);
+	assert expected == FixedList(actual);
 	assert actual == expected;
 	assert Tuple(actual) == expected;
 	assert List(actual) == expected;
+	assert FixedList(actual) == expected;
 	for (local x: expected) {
 		local a, b = x...;
 		assert (a, b) in actual;

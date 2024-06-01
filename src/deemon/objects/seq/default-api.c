@@ -360,8 +360,6 @@ DeeType_SeqCache_RequireEnumerateIndex(DeeTypeObject *__restrict self) {
 	return result;
 }
 
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_seq_bool(DeeObject *self);
-
 INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_nonempty_t DCALL
 DeeType_SeqCache_RequireNonEmpty(DeeTypeObject *__restrict self) {
 	Dee_tsc_nonempty_t result;
@@ -373,7 +371,7 @@ DeeType_SeqCache_RequireNonEmpty(DeeTypeObject *__restrict self) {
 	}
 	result = &DeeSeq_DefaultNonEmptyWithError;
 	if (DeeType_GetSeqClass(self) != Dee_SEQCLASS_NONE) {
-		if (DeeType_RequireBool(self) && self->tp_cast.tp_bool != &generic_seq_bool) {
+		if (DeeType_RequireBool(self) && self->tp_cast.tp_bool != &default_seq_bool) {
 			result = self->tp_cast.tp_bool;
 		} else if (Dee_type_seq_has_custom_tp_size(self->tp_seq)) {
 			result = &DeeSeq_DefaultBoolWithSize;

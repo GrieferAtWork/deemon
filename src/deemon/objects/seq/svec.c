@@ -1272,8 +1272,8 @@ err:
 }
 
 PRIVATE struct type_method tpconst svec_methods[] = {
-	TYPE_KWMETHOD(STR_find, &svec_find, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
-	TYPE_KWMETHOD(STR_rfind, &svec_rfind, "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD(STR_find, &svec_find, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD(STR_rfind, &svec_rfind, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 };
 
 PRIVATE struct type_seq svec_seq = {

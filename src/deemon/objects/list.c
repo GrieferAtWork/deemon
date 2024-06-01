@@ -3636,23 +3636,23 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	              "()\n"
 	              "Clear all items from @this List"),
 	TYPE_KWMETHOD_F(STR_find, &list_find, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_rfind, &list_rfind, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_index, &list_index, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_rindex, &list_rindex, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_remove, &list_remove, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD_F(STR_rremove, &list_rremove, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dbool"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD_F(STR_removeall, &list_removeall, METHOD_FNOREFESCAPE,
-	                "(item,start=!0,end=!-1,max=!-1,key:?DCallable=!N)->?Dint"),
+	                "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD_F(STR_fill, &list_fill, METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1,filler=!N)"),
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)"),
 	TYPE_KWMETHOD_F(STR_removeif, &list_removeif, METHOD_FNOREFESCAPE,
-	                "(should:?DCallable,start=!0,end=!-1,max=!-1)->?Dint\n"
+	                "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "#r{The number of removed items}"
 	                "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
 	TYPE_METHOD_F(STR_pushfront, &list_pushfront, METHOD_FNOREFESCAPE,
@@ -3670,13 +3670,13 @@ PRIVATE struct type_method tpconst list_methods[] = {
 
 	/* List ordering functions. */
 	TYPE_KWMETHOD_F(STR_reverse, &list_reverse, METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1)\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
 	                "Reverse the order of all the elements of @this List"),
 	TYPE_KWMETHOD_F(STR_sort, &list_sort, METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1,key:?DCallable=!N)\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)\n"
 	                "Sort the elements of @this List in ascending order, or in accordance to @key"),
 	TYPE_KWMETHOD_F(STR_sorted, &list_sorted, METHOD_FNOREFESCAPE,
-	                "(start=!0,end=!-1,key:?DCallable=!N)->?S?O\n"
+	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?O\n"
 	                "Return a sequence that contains all elements from @this sequence, "
 	                /**/ "but sorted in ascending order, or in accordance to @key\n"
 	                "The type of sequence returned is implementation-defined"),
@@ -3693,7 +3693,7 @@ PRIVATE struct type_method tpconst list_methods[] = {
 
 	/* Deprecated aliases / functions. */
 	TYPE_KWMETHOD_F("remove_if", &list_removeif, METHOD_FNOREFESCAPE,
-	                "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
+	                "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Deprecated alias for ?#removeif"),
 	TYPE_KWMETHOD_F("insert_list", &list_insertall, METHOD_FNOREFESCAPE,
 	                "(index:?Dint,items:?S?O)\n"

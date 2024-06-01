@@ -753,6 +753,9 @@
 		<ClInclude Include="..\src\deemon\objects\seq\locateall.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\mapped.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\range.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
@@ -781,9 +784,6 @@
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\svec.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\transform.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\typemro.h">
@@ -1301,6 +1301,9 @@
 		<ClCompile Include="..\src\deemon\objects\seq\locateall.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\mapped.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\range.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
@@ -1326,9 +1329,6 @@
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\svec.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\transform.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\typemro.c">

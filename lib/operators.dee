@@ -118,19 +118,19 @@ varying function setattr(self, name: string, value): none -> self.operator .= (n
 varying function enumattr(self): {Attribute...} -> self.operator enumattr();
 varying function enter(self): none -> self.operator enter();
 varying function leave(self): none -> self.operator leave();
-@[optional.gatw.doc("(self:?DFile,max_bytes=!-1)->?Dstring")]
+@[optional.gatw.doc("(self:?DFile,maxBytes:?Dint=!A!Dint!PSIZE_MAX)->?Dstring")]
 varying function read(self, ...) -> self.operator read(...);
-@[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,start=!0,end=!-1)->?Dint")]
+@[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint")]
 varying function write(self, ...) -> self.operator write(...);
 varying function seek(self: File, off: int from deemon, whence: int from deemon): int from deemon -> self.operator seek(off, whence);
 varying function sync(self: File): none -> self.operator sync();
 varying function trunc(self: File, pos: int from deemon): none -> self.operator trunc(pos);
 varying function close(self: File): none -> self.operator close();
 @[optional.gatw.doc("(self:?DFile,pos:?Dint)->?Dstring")]
-@[optional.gatw.doc("(self:?DFile,max_bytes:?Dint,pos:?Dint)->?Dstring")]
+@[optional.gatw.doc("(self:?DFile,maxBytes:?Dint,pos:?Dint)->?Dstring")]
 varying function pread(self, ...) -> self.operator pread(...);
 @[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,pos:?Dint)->?Dint")]
-@[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,max_bytes:?Dint,pos:?Dint)->?Dint")]
+@[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,maxBytes:?Dint,pos:?Dint)->?Dint")]
 @[optional.gatw.doc("(self:?DFile,data:?X2?DBytes?Dstring,start:?Dint,end:?Dint,pos:?Dint)->?Dint")]
 varying function pwrite(self, ...) -> self.operator pwrite(...);
 varying function getc(self: File): int from deemon -> self.operator getc();

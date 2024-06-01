@@ -35,12 +35,14 @@
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/map.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
+#include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* bzero(), ... */
@@ -4220,6 +4222,29 @@ type_get_classdesc(DeeTypeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_get_seqclass(DeeTypeObject *__restrict self) {
+	DREF DeeObject *result;
+	unsigned int cls = DeeType_GetSeqClass(self);
+	switch (cls) {
+	case Dee_SEQCLASS_NONE:
+		result = Dee_None;
+		break;
+	case Dee_SEQCLASS_SEQ:
+		result = (DREF DeeObject *)&DeeSeq_Type;
+		break;
+	case Dee_SEQCLASS_SET:
+		result = (DREF DeeObject *)&DeeSet_Type;
+		break;
+	case Dee_SEQCLASS_MAP:
+		result = (DREF DeeObject *)&DeeMapping_Type;
+		break;
+	default: __builtin_unreachable();
+	}
+	Dee_Incref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_issingleton(DeeTypeObject *__restrict self) {
 	if (self->tp_features & TF_SINGLETON)
 		return_true; /* Alternative means of creation. */
@@ -4517,7 +4542,7 @@ PRIVATE struct type_member tpconst type_members[] = {
 	                      "->?X2?Dstring?N\n"
 	                      "Doc string for this type, including documentation on operators, or ?N if it has none"),
 	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT, offsetof(DeeTypeObject, tp_base),
-	                      "->?DType\n"
+	                      "->?.\n"
 	                      "#t{UnboundAttribute}"
 	                      "The immediate/primary base of this type"),
 	TYPE_MEMBER_BITFIELD_DOC("isfinal", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FFINAL,
@@ -4565,16 +4590,26 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	TYPE_GETTER_F("__bases__", &TypeBases_New,
 	              METHOD_FCONSTCALL,
 	              "->?Ert:TypeBases\n"
-	              "Returns a sequence type ?S?DType that represents all immediate bases of @this ?DType"),
+	              "Returns a sequence of ?. that represents all immediate bases of @this ?."),
 	TYPE_GETTER_F("__mro__", &TypeMRO_New,
 	              METHOD_FCONSTCALL,
 	              "->?Ert:TypeMRO\n"
-	              "Returns a sequence type ?S?DType that represents the MethodResolutionOrder of @this ?DType"),
+	              "Returns a sequence of ?. that represents the MethodResolutionOrder of @this ?."),
 	TYPE_GETTER_F("__class__", &type_get_classdesc,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Ert:ClassDescriptor\n"
 	              "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"
 	              "Returns the internal class-descriptor descriptor for a user-defined class"),
+	TYPE_GETTER_F("__seqclass__", &type_get_seqclass,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?X2?.?N\n"
+	              "Returns the #C{sequence classification} of this type, which is the first of the "
+	              /**/ "following types to appear in ?#__mro__:"
+	              "#L-{"
+	              /**/ "?DSequence|"
+	              /**/ "?DSet|"
+	              /**/ "?DMapping"
+	              "}"),
 	TYPE_GETTER_F("__issingleton__", &type_issingleton,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"

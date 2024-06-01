@@ -17554,7 +17554,7 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_trycompare_eq_t)(DeeO
  * optimized `Dee(Seq|Set|Map)_Default*' functions based on sequence
  * features supported by the target type. */
 INTDEF struct Dee_type_cmp generic_seq_cmp;
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_seq_bool(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_bool(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_seq_hash(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_seq_eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_seq_ne(DeeObject *lhs, DeeObject *rhs);
@@ -17592,7 +17592,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_trycompare_eq(DeeObject *lh
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_bool_t DCALL
 DeeType_Optimize_tp_bool(DeeTypeObject *__restrict dst,
                          DeeType_tp_bool_t tp_bool) {
-	if (tp_bool == &generic_seq_bool ||
+	if (tp_bool == &default_seq_bool ||
 	    tp_bool == &DeeSeq_DefaultBoolWithSize ||
 	    tp_bool == &DeeSeq_DefaultBoolWithSizeOb ||
 	    tp_bool == &DeeSeq_DefaultBoolWithForeach ||
@@ -17620,7 +17620,7 @@ DeeType_Optimize_tp_bool(DeeTypeObject *__restrict dst,
 				return &DeeSeq_DefaultBoolWithForeachDefault;
 			}
 		}
-		return &generic_seq_bool;
+		return &default_seq_bool;
 	}
 	return tp_bool;
 }

@@ -260,6 +260,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\filter.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\hashfilter.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\locateall.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\mapped.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\range.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\repeat.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\segments.h" />
@@ -270,7 +271,6 @@
 		<ClInclude Include="..\src\deemon\objects\seq\sort.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\subrange.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\svec.h" />
-		<ClInclude Include="..\src\deemon\objects\seq\transform.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\typemro.h" />
 		<ClInclude Include="..\src\deemon\objects\seq_functions.h" />
 		<ClInclude Include="..\src\deemon\objects\type-operators.h" />
@@ -444,6 +444,7 @@
 		<ClCompile Include="..\src\deemon\objects\seq\filter.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\hashfilter.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\locateall.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\mapped.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\range.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\repeat.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\segments.c" />
@@ -453,7 +454,6 @@
 		<ClCompile Include="..\src\deemon\objects\seq\sort.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\subrange.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\svec.c" />
-		<ClCompile Include="..\src\deemon\objects\seq\transform.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\typemro.c" />
 		<ClCompile Include="..\src\deemon\objects\seq_functions.c" />
 		<ClCompile Include="..\src\deemon\objects\seq_mutable.c" />

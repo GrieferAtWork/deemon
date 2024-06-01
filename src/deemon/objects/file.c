@@ -2396,7 +2396,7 @@ err:
 
 PRIVATE struct type_method tpconst file_methods[] = {
 	TYPE_KWMETHOD("read", &file_read,
-	              "(maxbytes=!-1,readall=!f)->?DBytes\n"
+	              "(maxbytes:?Dint=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
 	              "Read and return at most @maxbytes of data from the file stream. "
 	              /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
 	              /**/ "read-callback returns $0, rather than until it returns something other than "
@@ -2414,7 +2414,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	              /**/ "returns $0 or until all data has been written, rather than invoke "
 	              /**/ "the write-callback only a single time."),
 	TYPE_KWMETHOD("pread", &file_pread,
-	              "(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
+	              "(pos:?Dint,maxbytes:?Dint=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
 	              "Similar to ?#read, but read data from a given file-offset "
 	              /**/ "@pos, rather than from the current file position"),
 	TYPE_KWMETHOD("preadinto", &file_preadinto,
@@ -2492,14 +2492,14 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            "Returns the size (in bytes) of the file stream."),
 	TYPE_METHOD("readline", &file_readline,
 	            "(keeplf:?Dbool)->?X2?DBytes?N\n"
-	            "(maxbytes=!-1,keeplf=!t)->?X2?DBytes?N\n"
+	            "(maxbytes:?Dint=!A!Dint!PSIZE_MAX,keeplf=!t)->?X2?DBytes?N\n"
 	            "Read one line from the file stream, but read at most @maxbytes bytes.\n"
 	            "When @keeplf is ?f, strip the trailing linefeed from the returned ?DBytes object.\n"
 	            "Once EOF is reached, return ?N instead."),
 
 	/* mmap support */
 	TYPE_KWMETHOD("mmap", &file_mmap,
-	              "(minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytes\n"
+	              "(minbytes=!0,maxbytes:?Dint=!A!Dint!PSIZE_MAX,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytes\n"
 	              "#pminbytes{The min number of bytes (excluding @nulbytes) that should be mapped "
 	              /*      */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
 	              /*      */ "this number of bytes has been reached, nul bytes are mapped for its remainder.}"
@@ -2524,16 +2524,16 @@ PRIVATE struct type_method tpconst file_methods[] = {
 
 	/* Deprecated functions. */
 	TYPE_METHOD("readall", &file_readall,
-	            "(maxbytes=!-1)->?DBytes\n"
+	            "(maxbytes:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n"
 	            "Deprecated alias for ${this.read(maxbytes, true)}"),
 	TYPE_KWMETHOD("readat", &file_pread,
-	              "(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
+	              "(pos:?Dint,maxbytes:?Dint=!A!Dint!PSIZE_MAX,readall=!f)->?DBytes\n"
 	              "Deprecated alias for ?#pread"),
 	TYPE_KWMETHOD("writeat", &file_pwrite,
 	              "(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
 	              "Deprecated alias for ?#pwrite"),
 	TYPE_METHOD("readallat", &file_readallat,
-	            "(pos:?Dint,maxbytes=!-1)->?DBytes\n"
+	            "(pos:?Dint,maxbytes:?Dint=!A!Dint!PSIZE_MAX)->?DBytes\n"
 	            "Deprecated alias for ${this.pread(pos, maxbytes, true)}"),
 	TYPE_KWMETHOD("setpos", &file_seek,
 	              "(pos:?Dint)->?Dint\n"

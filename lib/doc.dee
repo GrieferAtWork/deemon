@@ -2090,6 +2090,8 @@ done:
 
 		case "O":
 			/* TODO: Operator */
+			if (docstring == "!A!Dint!PSIZE_MAX")
+				return "int.SIZE_MAX"; /* Ugly hack until this is done properly */
 			return "TODO:operator:" + docstring;
 
 		default:
