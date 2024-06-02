@@ -118,6 +118,7 @@ none_i5(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
 #define none_s1 none_i1
 #define none_s3 none_i3
+#define none_s5 none_i5
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
 PRIVATE size_t DCALL
 none_s1(void *UNUSED(a)) {
@@ -125,6 +126,10 @@ none_s1(void *UNUSED(a)) {
 }
 PRIVATE size_t DCALL
 none_s3(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c)) {
+	return 0;
+}
+PRIVATE size_t DCALL
+none_s5(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e)) {
 	return 0;
 }
 #endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
@@ -324,9 +329,9 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_nsi                          = */ &none_nsi,
 	/* .tp_foreach                      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&none_s3,
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&none_s3,
-	/* .tp_enumerate                    = */ NULL,
-	/* .tp_enumerate_index              = */ NULL,
-	/* .tp_iterkeys                     = */ NULL,
+	/* .tp_enumerate                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&none_s3,
+	/* .tp_enumerate_index              = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&none_s5,
+	/* .tp_iterkeys                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
 	/* .tp_bounditem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2_1,
 	/* .tp_hasitem                      = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2_1,
 	/* .tp_size                         = */ (size_t (DCALL *)(DeeObject *__restrict))&none_s1,
