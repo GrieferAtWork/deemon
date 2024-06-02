@@ -252,7 +252,7 @@ INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeBlackListKwds_IsBlackListed(DeeBlackListKwdsObject *__restrict self,
-                               DeeObject *__restrict name) {
+                               /*string*/ DeeObject *__restrict name) {
 	Dee_hash_t i, perturb;
 	DeeStringObject *str;
 	Dee_hash_t hash;
@@ -426,114 +426,6 @@ again:
 	return false;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKwds_GetItemNR(DeeBlackListKwdsObject *__restrict self,
-                           DeeObject *__restrict name) {
-	DeeObject *result;
-	size_t index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, name);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListed(self, name))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	return result;
-missing:
-	err_unknown_key((DeeObject *)self, name);
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKwds_GetItemNRStringHash(DeeBlackListKwdsObject *__restrict self,
-                                     char const *__restrict name, Dee_hash_t hash) {
-	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, name, hash))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	return result;
-missing:
-	err_unknown_key_str((DeeObject *)self, name);
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKwds_GetItemNRStringLenHash(DeeBlackListKwdsObject *__restrict self,
-                                        char const *__restrict name,
-                                        size_t namelen, Dee_hash_t hash) {
-	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	return result;
-missing:
-	err_unknown_key_str_len((DeeObject *)self, name, namelen);
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKwds_TryGetItemNR(DeeBlackListKwdsObject *self,
-                              DeeObject *name) {
-	DeeObject *result;
-	size_t index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, name);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListed(self, name))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	return result;
-missing:
-	return ITER_DONE;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKwds_TryGetItemNRStringHash(DeeBlackListKwdsObject *__restrict self,
-                                        char const *__restrict name, Dee_hash_t hash) {
-	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, name, hash))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	return result;
-missing:
-	return ITER_DONE;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKwds_TryGetItemNRStringLenHash(DeeBlackListKwdsObject *__restrict self,
-                                           char const *__restrict name,
-                                           size_t namelen, Dee_hash_t hash) {
-	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	return result;
-missing:
-	return ITER_DONE;
-}
-
-
 PRIVATE NONNULL((1)) void DCALL
 blv_fini(DeeBlackListKwdsObject *__restrict self) {
 	size_t argc = DeeKwds_SIZE(self->blkd_kwds);
@@ -604,25 +496,6 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-blv_nsi_getdefault(DeeBlackListKwdsObject *self, DeeObject *key, DeeObject *def) {
-	DREF DeeObject *result;
-	if unlikely(!DeeString_Check(key)) {
-		if (def != ITER_DONE)
-			Dee_Incref(def);
-		return def;
-	}
-	result = DeeBlackListKwds_TryGetItemNR(self, key);
-	if (result == ITER_DONE) {
-		result = def;
-		if (result != ITER_DONE)
-			Dee_Incref(result);
-	} else if (result) {
-		Dee_Incref(result);
-	}
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blv_contains(DeeBlackListKwdsObject *self, DeeObject *key) {
 	size_t index;
@@ -638,6 +511,113 @@ nope:
 	return_false;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blv_getitemnr(DeeBlackListKwdsObject *__restrict self,
+              /*string*/ DeeObject *__restrict name) {
+	DeeObject *result;
+	size_t index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, name);
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(DeeBlackListKwds_IsBlackListed(self, name))
+		goto missing;
+	DeeBlackListKwds_LockRead(self);
+	result = self->blkd_argv[index];
+	DeeBlackListKwds_LockEndRead(self);
+	return result;
+missing:
+	err_unknown_key((DeeObject *)self, name);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blv_getitemnr_string_hash(DeeBlackListKwdsObject *__restrict self,
+                          char const *__restrict name, Dee_hash_t hash) {
+	DeeObject *result;
+	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, name, hash))
+		goto missing;
+	DeeBlackListKwds_LockRead(self);
+	result = self->blkd_argv[index];
+	DeeBlackListKwds_LockEndRead(self);
+	return result;
+missing:
+	err_unknown_key_str((DeeObject *)self, name);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blv_getitemnr_string_len_hash(DeeBlackListKwdsObject *__restrict self,
+                              char const *__restrict name,
+                              size_t namelen, Dee_hash_t hash) {
+	DeeObject *result;
+	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash))
+		goto missing;
+	DeeBlackListKwds_LockRead(self);
+	result = self->blkd_argv[index];
+	DeeBlackListKwds_LockEndRead(self);
+	return result;
+missing:
+	err_unknown_key_str_len((DeeObject *)self, name, namelen);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blv_trygetitemnr(DeeBlackListKwdsObject *__restrict self,
+                 /*string*/ DeeObject *__restrict name) {
+	DeeObject *result;
+	size_t index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, name);
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(DeeBlackListKwds_IsBlackListed(self, name))
+		goto missing;
+	DeeBlackListKwds_LockRead(self);
+	result = self->blkd_argv[index];
+	DeeBlackListKwds_LockEndRead(self);
+	return result;
+missing:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blv_trygetitemnr_string_hash(DeeBlackListKwdsObject *__restrict self,
+                             char const *__restrict name, Dee_hash_t hash) {
+	DeeObject *result;
+	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, name, hash))
+		goto missing;
+	DeeBlackListKwds_LockRead(self);
+	result = self->blkd_argv[index];
+	DeeBlackListKwds_LockEndRead(self);
+	return result;
+missing:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blv_trygetitemnr_string_len_hash(DeeBlackListKwdsObject *__restrict self,
+                                 char const *__restrict name,
+                                 size_t namelen, Dee_hash_t hash) {
+	DeeObject *result;
+	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
+	if unlikely(index == (size_t)-1)
+		goto missing;
+	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash))
+		goto missing;
+	DeeBlackListKwds_LockRead(self);
+	result = self->blkd_argv[index];
+	DeeBlackListKwds_LockEndRead(self);
+	return result;
+missing:
+	return ITER_DONE;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blv_getitem(DeeBlackListKwdsObject *self, DeeObject *key) {
 	DREF DeeObject *result;
@@ -645,7 +625,7 @@ blv_getitem(DeeBlackListKwdsObject *self, DeeObject *key) {
 		err_unknown_key((DeeObject *)self, key);
 		return NULL;
 	}
-	result = DeeBlackListKwds_GetItemNR(self, key);
+	result = blv_getitemnr(self, key);
 	Dee_XIncref(result);
 	return result;
 }
@@ -653,7 +633,7 @@ blv_getitem(DeeBlackListKwdsObject *self, DeeObject *key) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blv_getitem_string_hash(DeeBlackListKwdsObject *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
-	result = DeeBlackListKwds_GetItemNRStringHash(self, key, hash);
+	result = blv_getitemnr_string_hash(self, key, hash);
 	Dee_XIncref(result);
 	return result;
 }
@@ -661,63 +641,38 @@ blv_getitem_string_hash(DeeBlackListKwdsObject *self, char const *key, Dee_hash_
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blv_getitem_string_len_hash(DeeBlackListKwdsObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DREF DeeObject *result;
-	result = DeeBlackListKwds_GetItemNRStringLenHash(self, key, keylen, hash);
+	result = blv_getitemnr_string_len_hash(self, key, keylen, hash);
 	Dee_XIncref(result);
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blv_trygetitem(DeeBlackListKwdsObject *self, DeeObject *key) {
-	DeeObject *result;
-	size_t index;
+	DREF DeeObject *result;
 	if unlikely(!DeeString_Check(key))
-		goto missing;
-	index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, key);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListed(self, key))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	Dee_Incref(result);
+		return ITER_DONE;
+	result = blv_trygetitemnr(self, key);
+	if (ITER_ISOK(result))
+		Dee_Incref(result);
 	return result;
-missing:
-	return ITER_DONE;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blv_trygetitem_string_hash(DeeBlackListKwdsObject *self, char const *key, Dee_hash_t hash) {
-	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, key, hash);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, key, hash))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	Dee_Incref(result);
+	DREF DeeObject *result;
+	result = blv_trygetitemnr_string_hash(self, key, hash);
+	if (ITER_ISOK(result))
+		Dee_Incref(result);
 	return result;
-missing:
-	return ITER_DONE;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blv_trygetitem_string_len_hash(DeeBlackListKwdsObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	DeeObject *result;
-	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, key, keylen, hash);
-	if unlikely(index == (size_t)-1)
-		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, key, keylen, hash))
-		goto missing;
-	DeeBlackListKwds_LockRead(self);
-	result = self->blkd_argv[index];
-	DeeBlackListKwds_LockEndRead(self);
-	Dee_Incref(result);
+	DREF DeeObject *result;
+	result = blv_trygetitemnr_string_len_hash(self, key, keylen, hash);
+	if (ITER_ISOK(result))
+		Dee_Incref(result);
 	return result;
-missing:
-	return ITER_DONE;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -784,6 +739,24 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+blv_nsi_getdefault(DeeBlackListKwdsObject *self, DeeObject *key, DeeObject *def) {
+	DREF DeeObject *result;
+	if unlikely(!DeeString_Check(key)) {
+		if (def != ITER_DONE)
+			Dee_Incref(def);
+		return def;
+	}
+	result = blv_trygetitemnr(self, key);
+	if (result == ITER_DONE) {
+		result = def;
+		if (result != ITER_DONE)
+			Dee_Incref(result);
+	} else if (result) {
+		Dee_Incref(result);
+	}
+	return result;
+}
 
 PRIVATE struct type_nsi tpconst blv_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
@@ -799,51 +772,57 @@ PRIVATE struct type_nsi tpconst blv_nsi = {
 };
 
 PRIVATE struct type_seq blv_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blv_iter,
-	/* .tp_sizeob                     = */ NULL,
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blv_contains,
-	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blv_getitem,
-	/* .tp_delitem                    = */ NULL,
-	/* .tp_setitem                    = */ NULL,
-	/* .tp_getrange                   = */ NULL,
-	/* .tp_delrange                   = */ NULL,
-	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &blv_nsi,
-	/* .tp_foreach                    = */ NULL,
-	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&blv_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ NULL,
-	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&blv_hasitem,
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&blv_size,
-	/* .tp_size_fast                  = */ NULL, /*(size_t (DCALL *)(DeeObject *__restrict))&blv_size,*/ /* Does not run in O(1) */
-	/* .tp_getitem_index              = */ NULL,
-	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ NULL,
-	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
-	/* .tp_getrange_index             = */ NULL,
-	/* .tp_delrange_index             = */ NULL,
-	/* .tp_setrange_index             = */ NULL,
-	/* .tp_getrange_index_n           = */ NULL,
-	/* .tp_delrange_index_n           = */ NULL,
-	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blv_trygetitem,
-	/* .tp_trygetitem_index           = */ NULL,
-	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&blv_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&blv_getitem_string_hash,
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ NULL,
-	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&blv_hasitem_string_hash,
-	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blv_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blv_getitem_string_len_hash,
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ NULL,
-	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blv_hasitem_string_len_hash,
+	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blv_iter,
+	/* .tp_sizeob                       = */ NULL,
+	/* .tp_contains                     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blv_contains,
+	/* .tp_getitem                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blv_getitem,
+	/* .tp_delitem                      = */ NULL,
+	/* .tp_setitem                      = */ NULL,
+	/* .tp_getrange                     = */ NULL,
+	/* .tp_delrange                     = */ NULL,
+	/* .tp_setrange                     = */ NULL,
+	/* .tp_nsi                          = */ &blv_nsi,
+	/* .tp_foreach                      = */ NULL,
+	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&blv_foreach_pair,
+	/* .tp_enumerate                    = */ NULL,
+	/* .tp_enumerate_index              = */ NULL,
+	/* .tp_iterkeys                     = */ NULL,
+	/* .tp_bounditem                    = */ NULL,
+	/* .tp_hasitem                      = */ (int (DCALL *)(DeeObject *, DeeObject *))&blv_hasitem,
+	/* .tp_size                         = */ (size_t (DCALL *)(DeeObject *__restrict))&blv_size,
+	/* .tp_size_fast                    = */ NULL, /*(size_t (DCALL *)(DeeObject *__restrict))&blv_size,*/ /* Does not run in O(1) */
+	/* .tp_getitem_index                = */ NULL,
+	/* .tp_getitem_index_fast           = */ NULL,
+	/* .tp_delitem_index                = */ NULL,
+	/* .tp_setitem_index                = */ NULL,
+	/* .tp_bounditem_index              = */ NULL,
+	/* .tp_hasitem_index                = */ NULL,
+	/* .tp_getrange_index               = */ NULL,
+	/* .tp_delrange_index               = */ NULL,
+	/* .tp_setrange_index               = */ NULL,
+	/* .tp_getrange_index_n             = */ NULL,
+	/* .tp_delrange_index_n             = */ NULL,
+	/* .tp_setrange_index_n             = */ NULL,
+	/* .tp_trygetitem                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blv_trygetitem,
+	/* .tp_trygetitem_index             = */ NULL,
+	/* .tp_trygetitem_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&blv_trygetitem_string_hash,
+	/* .tp_getitem_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&blv_getitem_string_hash,
+	/* .tp_delitem_string_hash          = */ NULL,
+	/* .tp_setitem_string_hash          = */ NULL,
+	/* .tp_bounditem_string_hash        = */ NULL,
+	/* .tp_hasitem_string_hash          = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&blv_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blv_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blv_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash      = */ NULL,
+	/* .tp_setitem_string_len_hash      = */ NULL,
+	/* .tp_bounditem_string_len_hash    = */ NULL,
+	/* .tp_hasitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blv_hasitem_string_len_hash,
+	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&blv_getitemnr,
+	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&blv_getitemnr_string_hash,
+	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&blv_getitemnr_string_len_hash,
+	/* .tp_trygetitemnr                 = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&blv_trygetitemnr,
+	/* .tp_trygetitemnr_string_hash     = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&blv_trygetitemnr_string_hash,
+	/* .tp_trygetitemnr_string_len_hash = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&blv_trygetitemnr_string_len_hash,
 };
 
 PRIVATE struct type_getset tpconst blv_getsets[] = {
@@ -1512,9 +1491,9 @@ again:
 
 
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKw_GetItemNR(DeeBlackListKwObject *__restrict self,
-                         /*string*/ DeeObject *__restrict name) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blkw_getitemnr(DeeBlackListKwObject *__restrict self,
+               /*string*/ DeeObject *__restrict name) {
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if likely(!DeeBlackListKw_IsBlackListed(self, name))
 		return DeeKw_GetItemNR(DeeBlackListKw_KW(self), name);
@@ -1522,46 +1501,46 @@ DeeBlackListKw_GetItemNR(DeeBlackListKwObject *__restrict self,
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKw_GetItemNRStringHash(DeeBlackListKwObject *__restrict self,
-                                   char const *__restrict name, Dee_hash_t hash) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blkw_getitemnr_string_hash(DeeBlackListKwObject *__restrict self,
+                           char const *__restrict name, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringHash(self, name, hash))
 		return DeeKw_GetItemNRStringHash(DeeBlackListKw_KW(self), name, hash);
 	err_unknown_key_str((DeeObject *)self, name);
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKw_GetItemNRStringLenHash(DeeBlackListKwObject *__restrict self,
-                                      char const *__restrict name,
-                                      size_t namelen, Dee_hash_t hash) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blkw_getitemnr_string_len_hash(DeeBlackListKwObject *__restrict self,
+                               char const *__restrict name,
+                               size_t namelen, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
 		return DeeKw_GetItemNRStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash);
 	err_unknown_key_str_len((DeeObject *)self, name, namelen);
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKw_TryGetItemNR(DeeBlackListKwObject *self,
-                            /*string*/ DeeObject *name) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blkw_trygetitemnr(DeeBlackListKwObject *__restrict self,
+                  /*string*/ DeeObject *__restrict name) {
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if likely(!DeeBlackListKw_IsBlackListed(self, name))
 		return DeeKw_TryGetItemNR(DeeBlackListKw_KW(self), name);
 	return ITER_DONE;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKw_TryGetItemNRStringHash(DeeBlackListKwObject *self,
-                                      char const *__restrict name, Dee_hash_t hash) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blkw_trygetitemnr_string_hash(DeeBlackListKwObject *__restrict self,
+                              char const *__restrict name, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringHash(self, name, hash))
 		return DeeKw_TryGetItemNRStringHash(DeeBlackListKw_KW(self), name, hash);
 	return ITER_DONE;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeBlackListKw_TryGetItemNRStringLenHash(DeeBlackListKwObject *self,
-                                         char const *__restrict name,
-                                         size_t namelen, Dee_hash_t hash) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+blkw_trygetitemnr_string_len_hash(DeeBlackListKwObject *__restrict self,
+                                  char const *__restrict name,
+                                  size_t namelen, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
 		return DeeKw_TryGetItemNRStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash);
 	return ITER_DONE;
@@ -1653,7 +1632,7 @@ return_def:
 			Dee_Incref(def);
 		return def;
 	}
-	result = DeeBlackListKw_TryGetItemNR(self, key);
+	result = blkw_trygetitemnr(self, key);
 	if (result == ITER_DONE)
 		goto return_def;
 	if (result)
@@ -1793,51 +1772,57 @@ PRIVATE struct type_nsi tpconst blkw_nsi = {
 };
 
 PRIVATE struct type_seq blkw_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blkw_iter,
-	/* .tp_sizeob                     = */ NULL,
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blkw_contains,
-	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blkw_getitem,
-	/* .tp_delitem                    = */ NULL,
-	/* .tp_setitem                    = */ NULL,
-	/* .tp_getrange                   = */ NULL,
-	/* .tp_delrange                   = */ NULL,
-	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &blkw_nsi,
-	/* .tp_foreach                    = */ NULL,
-	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&blkw_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&blkw_bounditem,
-	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&blkw_hasitem,
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&blkw_size,
-	/* .tp_size_fast                  = */ NULL,
-	/* .tp_getitem_index              = */ NULL,
-	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ NULL,
-	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
-	/* .tp_getrange_index             = */ NULL,
-	/* .tp_delrange_index             = */ NULL,
-	/* .tp_setrange_index             = */ NULL,
-	/* .tp_getrange_index_n           = */ NULL,
-	/* .tp_delrange_index_n           = */ NULL,
-	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blkw_trygetitem,
-	/* .tp_trygetitem_index           = */ NULL,
-	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&blkw_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&blkw_getitem_string_hash,
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&blkw_bounditem_string_hash,
-	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&blkw_hasitem_string_hash,
-	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blkw_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blkw_getitem_string_len_hash,
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blkw_bounditem_string_len_hash,
-	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blkw_hasitem_string_len_hash,
+	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blkw_iter,
+	/* .tp_sizeob                       = */ NULL,
+	/* .tp_contains                     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blkw_contains,
+	/* .tp_getitem                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blkw_getitem,
+	/* .tp_delitem                      = */ NULL,
+	/* .tp_setitem                      = */ NULL,
+	/* .tp_getrange                     = */ NULL,
+	/* .tp_delrange                     = */ NULL,
+	/* .tp_setrange                     = */ NULL,
+	/* .tp_nsi                          = */ &blkw_nsi,
+	/* .tp_foreach                      = */ NULL,
+	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&blkw_foreach_pair,
+	/* .tp_enumerate                    = */ NULL,
+	/* .tp_enumerate_index              = */ NULL,
+	/* .tp_iterkeys                     = */ NULL,
+	/* .tp_bounditem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&blkw_bounditem,
+	/* .tp_hasitem                      = */ (int (DCALL *)(DeeObject *, DeeObject *))&blkw_hasitem,
+	/* .tp_size                         = */ (size_t (DCALL *)(DeeObject *__restrict))&blkw_size,
+	/* .tp_size_fast                    = */ NULL,
+	/* .tp_getitem_index                = */ NULL,
+	/* .tp_getitem_index_fast           = */ NULL,
+	/* .tp_delitem_index                = */ NULL,
+	/* .tp_setitem_index                = */ NULL,
+	/* .tp_bounditem_index              = */ NULL,
+	/* .tp_hasitem_index                = */ NULL,
+	/* .tp_getrange_index               = */ NULL,
+	/* .tp_delrange_index               = */ NULL,
+	/* .tp_setrange_index               = */ NULL,
+	/* .tp_getrange_index_n             = */ NULL,
+	/* .tp_delrange_index_n             = */ NULL,
+	/* .tp_setrange_index_n             = */ NULL,
+	/* .tp_trygetitem                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blkw_trygetitem,
+	/* .tp_trygetitem_index             = */ NULL,
+	/* .tp_trygetitem_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&blkw_trygetitem_string_hash,
+	/* .tp_getitem_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&blkw_getitem_string_hash,
+	/* .tp_delitem_string_hash          = */ NULL,
+	/* .tp_setitem_string_hash          = */ NULL,
+	/* .tp_bounditem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&blkw_bounditem_string_hash,
+	/* .tp_hasitem_string_hash          = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&blkw_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blkw_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blkw_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash      = */ NULL,
+	/* .tp_setitem_string_len_hash      = */ NULL,
+	/* .tp_bounditem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blkw_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&blkw_hasitem_string_len_hash,
+	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&blkw_getitemnr,
+	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&blkw_getitemnr_string_hash,
+	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&blkw_getitemnr_string_len_hash,
+	/* .tp_trygetitemnr                 = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&blkw_trygetitemnr,
+	/* .tp_trygetitemnr_string_hash     = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&blkw_trygetitemnr_string_hash,
+	/* .tp_trygetitemnr_string_len_hash = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&blkw_trygetitemnr_string_len_hash,
 };
 
 PRIVATE WUNUSED DREF DeeBlackListKwObject *DCALL

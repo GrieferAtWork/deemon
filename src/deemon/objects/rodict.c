@@ -491,8 +491,8 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeRoDict_GetItemNR(RoDict *self, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+rodict_getitemnr(RoDict *__restrict self, DeeObject *__restrict key) {
 	Dee_hash_t i, perturb, hash;
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
@@ -517,10 +517,10 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeRoDict_GetItemNRStringHash(DeeRoDictObject *__restrict self,
-                              char const *__restrict key,
-                              Dee_hash_t hash) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+rodict_getitemnr_string_hash(DeeRoDictObject *__restrict self,
+                             char const *__restrict key,
+                             Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
 	perturb = i = RODICT_HASHST(self, hash);
@@ -539,9 +539,10 @@ DeeRoDict_GetItemNRStringHash(DeeRoDictObject *__restrict self,
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeRoDict_GetItemNRStringLenHash(DeeRoDictObject *__restrict self,
-                                 char const *__restrict key, size_t keylen, Dee_hash_t hash) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+rodict_getitemnr_string_len_hash(DeeRoDictObject *__restrict self,
+                                 char const *__restrict key,
+                                 size_t keylen, Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
 	perturb = i = RODICT_HASHST(self, hash);
@@ -560,8 +561,9 @@ DeeRoDict_GetItemNRStringLenHash(DeeRoDictObject *__restrict self,
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeRoDict_TryGetItemNR(DeeRoDictObject *self, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+rodict_trygetitemnr(DeeRoDictObject *__restrict self,
+                    /*string*/ DeeObject *__restrict key) {
 	Dee_hash_t i, perturb, hash;
 	struct rodict_item *item;
 	hash     = DeeObject_Hash(key);
@@ -586,10 +588,10 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeRoDict_TryGetItemNRStringHash(DeeRoDictObject *self,
-                                 char const *__restrict key,
-                                 Dee_hash_t hash) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+rodict_trygetitemnr_string_hash(DeeRoDictObject *__restrict self,
+                                char const *__restrict key,
+                                Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
 	perturb = i = RODICT_HASHST(self, hash);
@@ -607,8 +609,8 @@ DeeRoDict_TryGetItemNRStringHash(DeeRoDictObject *self,
 	return ITER_DONE;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-DeeRoDict_TryGetItemNRStringLenHash(DeeRoDictObject *self,
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+rodict_trygetitemnr_string_len_hash(DeeRoDictObject *__restrict self,
                                     char const *__restrict key,
                                     size_t keylen, Dee_hash_t hash) {
 	size_t i, perturb;
@@ -996,51 +998,57 @@ PRIVATE struct type_nsi tpconst rodict_nsi = {
 
 
 PRIVATE struct type_seq rodict_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_iter,
-	/* .tp_sizeob                     = */ NULL,
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_contains,
-	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_getitem,
-	/* .tp_delitem                    = */ NULL,
-	/* .tp_setitem                    = */ NULL,
-	/* .tp_getrange                   = */ NULL,
-	/* .tp_delrange                   = */ NULL,
-	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &rodict_nsi,
-	/* .tp_foreach                    = */ NULL,
-	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rodict_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ NULL,
-	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodict_hasitem,
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rodict_size,
-	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&rodict_size,
-	/* .tp_getitem_index              = */ NULL,
-	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ NULL,
-	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
-	/* .tp_getrange_index             = */ NULL,
-	/* .tp_delrange_index             = */ NULL,
-	/* .tp_setrange_index             = */ NULL,
-	/* .tp_getrange_index_n           = */ NULL,
-	/* .tp_delrange_index_n           = */ NULL,
-	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_trygetitem,
-	/* .tp_trygetitem_index           = */ NULL,
-	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_getitem_string_hash,
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ NULL,
-	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_hasitem_string_hash,
-	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_getitem_string_len_hash,
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ NULL,
-	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_hasitem_string_len_hash,
+	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_iter,
+	/* .tp_sizeob                       = */ NULL,
+	/* .tp_contains                     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_contains,
+	/* .tp_getitem                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_getitem,
+	/* .tp_delitem                      = */ NULL,
+	/* .tp_setitem                      = */ NULL,
+	/* .tp_getrange                     = */ NULL,
+	/* .tp_delrange                     = */ NULL,
+	/* .tp_setrange                     = */ NULL,
+	/* .tp_nsi                          = */ &rodict_nsi,
+	/* .tp_foreach                      = */ NULL,
+	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rodict_foreach_pair,
+	/* .tp_enumerate                    = */ NULL,
+	/* .tp_enumerate_index              = */ NULL,
+	/* .tp_iterkeys                     = */ NULL,
+	/* .tp_bounditem                    = */ NULL,
+	/* .tp_hasitem                      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodict_hasitem,
+	/* .tp_size                         = */ (size_t (DCALL *)(DeeObject *__restrict))&rodict_size,
+	/* .tp_size_fast                    = */ (size_t (DCALL *)(DeeObject *__restrict))&rodict_size,
+	/* .tp_getitem_index                = */ NULL,
+	/* .tp_getitem_index_fast           = */ NULL,
+	/* .tp_delitem_index                = */ NULL,
+	/* .tp_setitem_index                = */ NULL,
+	/* .tp_bounditem_index              = */ NULL,
+	/* .tp_hasitem_index                = */ NULL,
+	/* .tp_getrange_index               = */ NULL,
+	/* .tp_delrange_index               = */ NULL,
+	/* .tp_setrange_index               = */ NULL,
+	/* .tp_getrange_index_n             = */ NULL,
+	/* .tp_delrange_index_n             = */ NULL,
+	/* .tp_setrange_index_n             = */ NULL,
+	/* .tp_trygetitem                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_trygetitem,
+	/* .tp_trygetitem_index             = */ NULL,
+	/* .tp_trygetitem_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_trygetitem_string_hash,
+	/* .tp_getitem_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_getitem_string_hash,
+	/* .tp_delitem_string_hash          = */ NULL,
+	/* .tp_setitem_string_hash          = */ NULL,
+	/* .tp_bounditem_string_hash        = */ NULL,
+	/* .tp_hasitem_string_hash          = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash      = */ NULL,
+	/* .tp_setitem_string_len_hash      = */ NULL,
+	/* .tp_bounditem_string_len_hash    = */ NULL,
+	/* .tp_hasitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_hasitem_string_len_hash,
+	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&rodict_getitemnr,
+	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&rodict_getitemnr_string_hash,
+	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&rodict_getitemnr_string_len_hash,
+	/* .tp_trygetitemnr                 = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&rodict_trygetitemnr,
+	/* .tp_trygetitemnr_string_hash     = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&rodict_trygetitemnr_string_hash,
+	/* .tp_trygetitemnr_string_len_hash = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&rodict_trygetitemnr_string_len_hash,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

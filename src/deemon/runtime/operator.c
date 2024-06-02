@@ -19506,21 +19506,6 @@ DEFINE_OPERATOR(DREF DeeObject *, GetItemStringHash, (DeeObject *self, char cons
 again:
 	if (tp_self == &DeeDict_Type) {
 		return DeeDict_GetItemStringHash(self, key, hash);
-	} else if (tp_self == &DeeRoDict_Type) {
-		result = DeeRoDict_GetItemNRStringHash((DeeRoDictObject *)self, key, hash);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeKwdsMapping_Type) {
-		result = DeeKwdsMapping_GetItemNRStringHash((DeeKwdsMappingObject *)self, key, hash);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeBlackListKwds_Type) {
-		result = DeeBlackListKwds_GetItemNRStringHash((DeeBlackListKwdsObject *)self, key, hash);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeBlackListKw_Type) {
-		result = DeeBlackListKw_GetItemNRStringHash((DeeBlackListKwObject *)self, key, hash);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeCachedDict_Type) {
-		result = DeeCachedDict_GetItemNRStringHash((DeeCachedDictObject *)self, key, hash);
-		goto xincref_result_and_return;
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -19533,9 +19518,6 @@ again:
 		goto err;
 	result = DeeObject_TGetItem(tp_self, self, keyob);
 	Dee_Decref(keyob);
-	return result;
-xincref_result_and_return:
-	Dee_XIncref(result);
 	return result;
 err:
 	return NULL;
@@ -19550,21 +19532,6 @@ DEFINE_OPERATOR(DREF DeeObject *, GetItemStringLenHash,
 again:
 	if (tp_self == &DeeDict_Type) {
 		return DeeDict_GetItemStringLenHash(self, key, keylen, hash);
-	} else if (tp_self == &DeeRoDict_Type) {
-		result = DeeRoDict_GetItemNRStringLenHash((DeeRoDictObject *)self, key, keylen, hash);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeKwdsMapping_Type) {
-		result = DeeKwdsMapping_GetItemNRStringLenHash((DeeKwdsMappingObject *)self, key, keylen, hash);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeBlackListKwds_Type) {
-		result = DeeBlackListKwds_GetItemNRStringLenHash((DeeBlackListKwdsObject *)self, key, keylen, hash);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeBlackListKw_Type) {
-		result = DeeBlackListKw_GetItemNRStringLenHash((DeeBlackListKwObject *)self, key, keylen, hash);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeCachedDict_Type) {
-		result = DeeCachedDict_GetItemNRStringLenHash((DeeCachedDictObject *)self, key, keylen, hash);
-		goto xincref_result_and_return;
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -19577,9 +19544,6 @@ again:
 		goto err;
 	result = DeeObject_TGetItem(tp_self, self, keyob);
 	Dee_Decref(keyob);
-	return result;
-xincref_result_and_return:
-	Dee_XIncref(result);
 	return result;
 err:
 	return NULL;

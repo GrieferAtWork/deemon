@@ -82,15 +82,6 @@ DDATDEF DeeTypeObject DeeCachedDict_Type;
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCachedDict_New(DeeObject *__restrict mapping);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCachedDict_NewInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict mapping);
 
-#ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_GetItemNR(DeeCachedDictObject *self, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_GetItemNRStringHash(DeeCachedDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_GetItemNRStringLenHash(DeeCachedDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_TryGetItemNR(DeeCachedDictObject *self, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_TryGetItemNRStringHash(DeeCachedDictObject *self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_TryGetItemNRStringLenHash(DeeCachedDictObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-#endif /* CONFIG_BUILDING_DEEMON */
-
 /* Hash iteration helpers. */
 #define DeeCachedDict_HashSt(self, hash)  ((hash) & (self)->cd_mask)
 #define DeeCachedDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */

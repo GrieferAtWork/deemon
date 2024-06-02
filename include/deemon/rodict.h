@@ -99,21 +99,6 @@ DDATDEF DeeObject DeeRoDict_EmptyInstance;
 #define Dee_EmptyRoDict (&DeeRoDict_EmptyInstance)
 #endif /* !GUARD_DEEMON_OBJECTS_RODICT_C */
 
-
-
-#ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_GetItemNR(DeeRoDictObject *self, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_GetItemNRStringHash(DeeRoDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_GetItemNRStringLenHash(DeeRoDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_TryGetItemNR(DeeRoDictObject *self, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_TryGetItemNRStringHash(DeeRoDictObject *self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_TryGetItemNRStringLenHash(DeeRoDictObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-#define DeeRoDict_GetItemNRString(self, key)               DeeRoDict_GetItemNRStringHash(self, key, Dee_HashStr(key))
-#define DeeRoDict_GetItemNRStringLen(self, key, keylen)    DeeRoDict_GetItemNRStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#define DeeRoDict_TryGetItemNRString(self, key)            DeeRoDict_TryGetItemNRStringHash(self, key, Dee_HashStr(key))
-#define DeeRoDict_TryGetItemNRStringLen(self, key, keylen) DeeRoDict_TryGetItemNRStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#endif /* !CONFIG_BUILDING_DEEMON */
-
 /* Hash-iteration control. */
 #define DeeRoDict_HashSt(self, hash)  ((hash) & (self)->rd_mask)
 #define DeeRoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
