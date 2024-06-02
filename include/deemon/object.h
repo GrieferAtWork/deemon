@@ -2120,6 +2120,9 @@ struct Dee_type_seq {
 	 * - This operator must NOT produce NULL-elements in "dst". The produced
 	 *   vector of items must be equivalent to what would be produced by a
 	 *   call to "tp_foreach" (which in turn must be equivalent to "tp_iter").
+	 * - This operator must NOT invoke user-code (except as a result of OOM
+	 *   handling). - Repeated invocations of this must not have any side-
+	 *   effects!
 	 *
 	 * @return: <= dst_length: Success: the first "return" elements of "dst" were filled with the items of this sequence.
 	 * @return: > dst_length:  The given "dst_length" is too short. In this case, "dst" may have been modified,
