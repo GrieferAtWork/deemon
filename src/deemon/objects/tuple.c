@@ -1581,6 +1581,14 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+tuple_asvector(Tuple *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	if unlikely(dst_length < self->t_size)
+		return self->t_size;
+	Dee_Movrefv(dst, self->t_elem, self->t_size);
+	return self->t_size;
+}
+
 PRIVATE struct type_nsi tpconst tuple_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -1645,6 +1653,7 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&tuple_asvector,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL

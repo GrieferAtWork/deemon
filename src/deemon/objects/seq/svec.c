@@ -1097,6 +1097,17 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+svec_asvector(SharedVector *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	size_t realsize;
+	SharedVector_LockRead(self);
+	realsize = self->sv_length;
+	if likely(dst_length >= realsize)
+		Dee_Movrefv(dst, self->sv_vector, realsize);
+	SharedVector_LockEndRead(self);
+	return realsize;
+}
+
 
 PRIVATE struct type_nsi tpconst svec_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -1322,6 +1333,7 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&svec_asvector,
 };
 
 PRIVATE struct type_getset tpconst svec_getsets[] = {

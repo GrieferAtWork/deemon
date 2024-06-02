@@ -1847,6 +1847,26 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+hashset_asvector(HashSet *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	size_t result;
+	DeeHashSet_LockRead(self);
+	result = self->hs_used;
+	if likely(dst_length >= result) {
+		struct hashset_item *iter, *end;
+		end = (iter = self->hs_elem) + (self->hs_mask + 1);
+		for (; iter < end; ++iter) {
+			DeeObject *key = iter->hsi_key;
+			if (key == NULL || key == dummy)
+				continue;
+			Dee_Incref(key);
+			*dst++ = key;
+		}
+	}
+	DeeHashSet_LockEndRead(self);
+	return result;
+}
+
 PRIVATE struct type_nsi tpconst hashset_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SET,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
@@ -1903,6 +1923,7 @@ PRIVATE struct type_seq hashset_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&hashset_asvector,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

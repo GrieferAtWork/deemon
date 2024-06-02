@@ -34,6 +34,8 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/overflow.h>
+
 #include "../../runtime/runtime_error.h"
 #include "range.h"
 #include "subrange.h"
@@ -285,6 +287,82 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict p_length) {
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	struct foreach_seq_as_heap_vector_data data;
+	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
+	              unlikely(DeeType_InheritIter(tp_self)))) {
+		err_unimplemented_operator(tp_self, OPERATOR_ITER);
+		goto err;
+	}
+
+	/* Try to use "tp_size_fast" to get a good guess regarding the initial buffer size. */
+	if likely(tp_self->tp_seq->tp_size_fast) {
+		data.sahvd_alloc = (*tp_self->tp_seq->tp_size_fast)(self);
+		if (data.sahvd_alloc == (size_t)-1)
+			data.sahvd_alloc = 16;
+	} else {
+		data.sahvd_alloc = 16;
+	}
+	data.sahvd_vector = (DREF DeeObject **)Dee_TryMallocc(data.sahvd_alloc, sizeof(DREF DeeObject *));
+	if unlikely(!data.sahvd_vector) {
+		data.sahvd_alloc  = 1;
+		data.sahvd_vector = (DREF DeeObject **)Dee_Mallocc(1, sizeof(DREF DeeObject *));
+		if unlikely(!data.sahvd_vector)
+			goto err;
+	}
+
+	/* Check if the type supports the "tp_asvector" extension. */
+	if (tp_self->tp_seq->tp_asvector) {
+		DREF DeeObject **new_vector;
+again_asvector:
+		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_vector, data.sahvd_alloc);
+		if likely(data.sahvd_size <= data.sahvd_alloc) {
+			if unlikely(data.sahvd_size < data.sahvd_alloc)
+				goto resize_data_and_done;
+			goto done;
+		}
+		if unlikely(data.sahvd_size == (size_t)-1)
+			goto err_vector;
+		/* Need a larger vector buffer. */
+		data.sahvd_alloc = data.sahvd_size;
+		new_vector = (DREF DeeObject **)Dee_Reallocc(data.sahvd_vector,
+		                                             data.sahvd_alloc,
+		                                             sizeof(DREF DeeObject *));
+		if unlikely(!new_vector)
+			goto err_vector;
+		data.sahvd_vector = new_vector;
+		goto again_asvector;
+	}
+
+	/* Fallback: use "tp_foreach" to enumerate sequence items. */
+	data.sahvd_size = 0;
+	if unlikely((*tp_self->tp_seq->tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
+		goto err_vector_data;
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
+
+	/* Free unused memory. */
+	if (data.sahvd_size < data.sahvd_alloc) {
+		DREF DeeObject **new_vector;
+resize_data_and_done:
+		new_vector = (DREF DeeObject **)Dee_TryReallocc(data.sahvd_vector,
+		                                                data.sahvd_size,
+		                                                sizeof(DREF DeeObject *));
+		if likely(new_vector)
+			data.sahvd_vector = new_vector;
+	}
+
+	/* Save the resulting length. */
+done:
+	*p_length = data.sahvd_size;
+	return data.sahvd_vector;
+err_vector_data:
+	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
+err_vector:
+	Dee_Free(data.sahvd_vector);
+err:
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	struct foreach_seq_as_heap_vector_data data;
 	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
 	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
@@ -343,6 +421,7 @@ err_data:
 	Dee_Free(data.sahvd_vector);
 err:
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 #ifdef Dee_MallocUsableSize
@@ -371,6 +450,71 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              /*[out]*/ size_t *__restrict p_allocated)
 #endif /* !Dee_MallocUsableSize */
 {
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	struct foreach_seq_as_heap_vector_data data;
+	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
+	              unlikely(DeeType_InheritIter(tp_self)))) {
+		err_unimplemented_operator(tp_self, OPERATOR_ITER);
+		goto err;
+	}
+
+	/* Try to use "tp_size_fast" to get a good guess regarding the initial buffer size. */
+	if likely(tp_self->tp_seq->tp_size_fast) {
+		data.sahvd_alloc = (*tp_self->tp_seq->tp_size_fast)(self);
+		if (data.sahvd_alloc == (size_t)-1)
+			data.sahvd_alloc = 16;
+	} else {
+		data.sahvd_alloc = 16;
+	}
+	data.sahvd_vector = (DREF DeeObject **)Dee_TryMallocc(data.sahvd_alloc, sizeof(DREF DeeObject *));
+	if unlikely(!data.sahvd_vector) {
+		data.sahvd_alloc  = 1;
+		data.sahvd_vector = (DREF DeeObject **)Dee_Mallocc(1, sizeof(DREF DeeObject *));
+		if unlikely(!data.sahvd_vector)
+			goto err;
+	}
+
+	/* Check if the type supports the "tp_asvector" extension. */
+	if (tp_self->tp_seq->tp_asvector) {
+		DREF DeeObject **new_vector;
+again_asvector:
+		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_vector, data.sahvd_alloc);
+		if likely(data.sahvd_size <= data.sahvd_alloc)
+			goto done;
+		if unlikely(data.sahvd_size == (size_t)-1)
+			goto err_vector;
+		/* Need a larger vector buffer. */
+		data.sahvd_alloc = data.sahvd_size;
+		new_vector = (DREF DeeObject **)Dee_Reallocc(data.sahvd_vector,
+		                                             data.sahvd_alloc,
+		                                             sizeof(DREF DeeObject *));
+		if unlikely(!new_vector)
+			goto err_vector;
+		data.sahvd_vector = new_vector;
+		goto again_asvector;
+	}
+
+	/* Fallback: use "tp_foreach" to enumerate sequence items. */
+	data.sahvd_size = 0;
+	if unlikely((*tp_self->tp_seq->tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
+		goto err_vector_data;
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
+
+	/* Save the resulting length. */
+done:
+#ifndef Dee_MallocUsableSize
+	*p_allocated = data.sahvd_alloc;
+#endif /* !Dee_MallocUsableSize */
+	*p_length = data.sahvd_size;
+	return data.sahvd_vector;
+err_vector_data:
+	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
+err_vector:
+	Dee_Free(data.sahvd_vector);
+err:
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	struct foreach_seq_as_heap_vector_data data;
 	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
 	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
@@ -425,6 +569,7 @@ err_data:
 	Dee_Free(data.sahvd_vector);
 err:
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 
@@ -474,6 +619,78 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out*/ size_t *__restrict p_allocated)
 #endif /* !Dee_MallocUsableSize */
 {
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	struct foreach_seq_as_heap_vector_data data;
+	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
+	              unlikely(DeeType_InheritIter(tp_self)))) {
+		err_unimplemented_operator(tp_self, OPERATOR_ITER);
+		goto err;
+	}
+
+	data.sahvd_vector = *p_vector;
+#ifdef Dee_MallocUsableSize
+	data.sahvd_alloc = Dee_MallocUsableSize(data.sahvd_vector) / sizeof(DREF DeeObject *);
+#else /* Dee_MallocUsableSize */
+	data.sahvd_alloc = *p_allocated;
+#endif /* !Dee_MallocUsableSize */
+	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
+
+	/* Try to use "tp_size_fast" to get a good guess regarding the initial buffer size. */
+	if likely(tp_self->tp_seq->tp_size_fast) {
+		size_t min_alloc;
+		min_alloc = (*tp_self->tp_seq->tp_size_fast)(self);
+		if (min_alloc != (size_t)-1 && min_alloc > data.sahvd_alloc) {
+			DREF DeeObject **new_vector;
+			new_vector = (DREF DeeObject **)Dee_TryReallocc(data.sahvd_vector, min_alloc,
+			                                                sizeof(DREF DeeObject *));
+			if likely(new_vector) {
+				data.sahvd_vector = new_vector;
+				data.sahvd_alloc  = min_alloc;
+			}
+		}
+	}
+
+	/* Check if the type supports the "tp_asvector" extension. */
+	if (tp_self->tp_seq->tp_asvector) {
+		DREF DeeObject **new_vector;
+again_asvector:
+		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_vector, data.sahvd_alloc);
+		if likely(data.sahvd_size <= data.sahvd_alloc)
+			goto done;
+		if unlikely(data.sahvd_size == (size_t)-1)
+			goto done;
+		/* Need a larger vector buffer. */
+		data.sahvd_alloc = data.sahvd_size;
+		new_vector = (DREF DeeObject **)Dee_Reallocc(data.sahvd_vector,
+		                                             data.sahvd_alloc,
+		                                             sizeof(DREF DeeObject *));
+		if unlikely(!new_vector)
+			goto err_writeback;
+		data.sahvd_vector = new_vector;
+		goto again_asvector;
+	}
+
+	/* Fallback: use "tp_foreach" to enumerate sequence items. */
+	data.sahvd_size = 0;
+	if unlikely((*tp_self->tp_seq->tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
+		goto err_writeback_data;
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
+
+done:
+	*p_vector = data.sahvd_vector;
+#ifndef Dee_MallocUsableSize
+	*p_allocated = data.sahvd_alloc;
+#endif /* !Dee_MallocUsableSize */
+	return data.sahvd_size;
+err_writeback_data:
+	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
+err_writeback:
+	data.sahvd_size = (size_t)-1;
+	goto done;
+err:
+	return (size_t)-1;
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	Dee_ssize_t error;
 	struct foreach_seq_as_heap_vector_data data;
 	data.sahvd_vector = *p_vector;
@@ -511,7 +728,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 				elem = DeeFastSeq_GetItem_deprecated(self, i);
 				if unlikely(!elem) {
 					data.sahvd_size = i;
-					goto err_data;
+					goto err_writeback_data;
 				}
 				data.sahvd_vector[i] = elem; /* Inherit reference. */
 			}
@@ -528,12 +745,13 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 	*p_allocated = data.sahvd_alloc;
 #endif /* !Dee_MallocUsableSize */
 	if unlikely(error)
-		goto err_data;
+		goto err_writeback_data;
 	return data.sahvd_size;
-err_data:
+err_writeback_data:
 	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
 err:
 	return (size_t)-1;
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 
@@ -575,6 +793,93 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in*/ size_t offset)
 #endif /* !Dee_MallocUsableSize */
 {
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	struct foreach_seq_as_heap_vector_data data;
+	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
+	              unlikely(DeeType_InheritIter(tp_self)))) {
+		err_unimplemented_operator(tp_self, OPERATOR_ITER);
+		goto err;
+	}
+
+	data.sahvd_vector = *p_vector;
+#ifdef Dee_MallocUsableSize
+	data.sahvd_alloc = Dee_MallocUsableSize(data.sahvd_vector) / sizeof(DREF DeeObject *);
+#else /* Dee_MallocUsableSize */
+	data.sahvd_alloc = *p_allocated;
+#endif /* !Dee_MallocUsableSize */
+	ASSERT(data.sahvd_alloc >= offset);
+	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
+
+	/* Try to use "tp_size_fast" to get a good guess regarding the initial buffer size. */
+	if likely(tp_self->tp_seq->tp_size_fast) {
+		size_t min_alloc;
+		min_alloc = (*tp_self->tp_seq->tp_size_fast)(self);
+		if (min_alloc != (size_t)-1 && !OVERFLOW_UADD(min_alloc, offset, &min_alloc)) {
+			if (min_alloc > data.sahvd_alloc) {
+				DREF DeeObject **new_vector;
+				new_vector = (DREF DeeObject **)Dee_TryReallocc(data.sahvd_vector, min_alloc,
+				                                                sizeof(DREF DeeObject *));
+				if likely(new_vector) {
+					data.sahvd_vector = new_vector;
+					data.sahvd_alloc  = min_alloc;
+				}
+			}
+		}
+	}
+
+	/* Check if the type supports the "tp_asvector" extension. */
+	if (tp_self->tp_seq->tp_asvector) {
+		DREF DeeObject **new_vector;
+again_asvector:
+		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self,
+		                                                  data.sahvd_vector + offset,
+		                                                  data.sahvd_alloc - offset);
+		if likely(data.sahvd_size <= (data.sahvd_alloc - offset)) {
+			data.sahvd_size += offset;
+			goto done;
+		}
+		if unlikely(data.sahvd_size == (size_t)-1) {
+			data.sahvd_size += offset;
+			goto done;
+		}
+		/* Need a larger vector buffer. */
+		if unlikely(OVERFLOW_UADD(data.sahvd_size, offset, &data.sahvd_alloc)) {
+			Dee_BadAlloc((size_t)-1);
+			goto err_writeback;
+		}
+		new_vector = (DREF DeeObject **)Dee_Reallocc(data.sahvd_vector,
+		                                             data.sahvd_alloc,
+		                                             sizeof(DREF DeeObject *));
+		if unlikely(!new_vector)
+			goto err_writeback;
+		data.sahvd_vector = new_vector;
+		goto again_asvector;
+	}
+
+	/* Use `DeeObject_Foreach()' */
+	data.sahvd_size = offset;
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
+	if unlikely((*tp_self->tp_seq->tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
+		goto err_writeback_data;
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
+	ASSERT(data.sahvd_size >= offset);
+
+done:
+	*p_vector = data.sahvd_vector;
+#ifndef Dee_MallocUsableSize
+	*p_allocated = data.sahvd_alloc;
+#endif /* !Dee_MallocUsableSize */
+	return data.sahvd_size - offset;
+err_writeback_data:
+	Dee_Decrefv(data.sahvd_vector + offset,
+	            data.sahvd_size - offset);
+err_writeback:
+	data.sahvd_size = (size_t)-1;
+	goto done;
+err:
+	return (size_t)-1;
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	Dee_ssize_t error;
 	struct foreach_seq_as_heap_vector_data data;
 	data.sahvd_vector = *p_vector;
@@ -640,6 +945,7 @@ err_data:
 	            data.sahvd_size - offset);
 err:
 	return (size_t)-1;
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 

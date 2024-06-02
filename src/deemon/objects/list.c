@@ -2105,6 +2105,16 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+list_asvector(List *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	size_t realsize;
+	DeeList_LockRead(self);
+	realsize = self->l_list.ol_elemc;
+	if likely(dst_length >= realsize)
+		Dee_Movrefv(dst, self->l_list.ol_elemv, realsize);
+	DeeList_LockEndRead(self);
+	return realsize;
+}
 
 PRIVATE struct type_nsi tpconst list_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -2173,6 +2183,7 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&list_asvector,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

@@ -1406,6 +1406,29 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+bytes_asvector(Bytes *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	size_t size = DeeBytes_SIZE(self);
+	if likely(dst_length >= size) {
+		size_t i;
+		for (i = 0; i < size; ++i) {
+			DREF DeeObject *int_value;
+			byte_t value = DeeBytes_DATA(self)[i];
+#ifdef DeeInt_8bit
+			int_value = (DREF DeeObject *)(DeeInt_8bit + value);
+			Dee_Incref(int_value);
+#else /* DeeInt_8bit */
+			int_value = DeeInt_NewUInt8(value);
+			if unlikely(!int_value) {
+				Dee_Decrefv(dst, i);
+				return (size_t)-1;
+			}
+#endif /* !DeeInt_8bit */
+			dst[i] = int_value; /* Inherit reference */
+		}
+	}
+	return size;
+}
 
 PRIVATE struct type_nsi tpconst bytes_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -1482,6 +1505,7 @@ PRIVATE struct type_seq bytes_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&bytes_asvector,
 };
 
 

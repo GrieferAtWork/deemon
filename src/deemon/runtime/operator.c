@@ -16517,6 +16517,7 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self, unsigned int seqclas
 			self->tp_seq->tp_setitem_string_len_hash    = base_seq->tp_setitem_string_len_hash;
 			self->tp_seq->tp_bounditem_string_len_hash  = base_seq->tp_bounditem_string_len_hash;
 			self->tp_seq->tp_hasitem_string_len_hash    = base_seq->tp_hasitem_string_len_hash;
+			self->tp_seq->tp_asvector                   = base_seq->tp_asvector;
 		} else {
 			self->tp_seq = base_seq;
 		}
@@ -16589,6 +16590,7 @@ DeeType_InheritIter(DeeTypeObject *__restrict self) {
 			self->tp_seq->tp_iter         = base_seq->tp_iter;
 			self->tp_seq->tp_foreach      = base_seq->tp_foreach;
 			self->tp_seq->tp_foreach_pair = base_seq->tp_foreach_pair;
+			self->tp_seq->tp_asvector     = base_seq->tp_asvector;
 		} else {
 			self->tp_seq = base_seq;
 		}

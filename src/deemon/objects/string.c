@@ -1610,6 +1610,69 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+string_asvector(String *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	size_t result;
+	union dcharptr ptr, end;
+	DREF DeeObject **dst_iter = dst;
+	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+
+	CASE_WIDTH_1BYTE:
+		ptr.cp8 = DeeString_Get1Byte((DeeObject *)self);
+		result  = WSTR_LENGTH(ptr.cp8);
+		if unlikely(dst_length < result)
+			break;
+		end.cp8 = ptr.cp8 + result;
+		for (; ptr.cp8 < end.cp8; ++ptr.cp8) {
+			DREF DeeObject *chr;
+#ifdef CONFIG_STRING_LATIN1_STATIC
+			chr = (DeeObject *)&DeeString_Latin1[*ptr.cp8];
+			Dee_Incref(chr);
+#else /* CONFIG_STRING_LATIN1_STATIC */
+			chr = DeeString_Chr(*ptr.cp8);
+			if unlikely(!chr)
+				goto err_dst_iter;
+#endif /* !CONFIG_STRING_LATIN1_STATIC */
+			*dst_iter++ = chr;
+		}
+		break;
+
+	CASE_WIDTH_2BYTE:
+		ptr.cp16 = DeeString_Get2Byte((DeeObject *)self);
+		result   = WSTR_LENGTH(ptr.cp16);
+		if unlikely(dst_length < result)
+			break;
+		end.cp16 = ptr.cp16 + result;
+		for (; ptr.cp16 < end.cp16; ++ptr.cp16) {
+			DREF DeeObject *chr;
+			chr = DeeString_Chr(*ptr.cp16);
+			if unlikely(!chr)
+				goto err_dst_iter;
+			*dst_iter++ = chr;
+		}
+		break;
+
+	CASE_WIDTH_4BYTE:
+		ptr.cp32 = DeeString_Get4Byte((DeeObject *)self);
+		result   = WSTR_LENGTH(ptr.cp32);
+		if unlikely(dst_length < result)
+			break;
+		end.cp32 = ptr.cp32 + result;
+		for (; ptr.cp32 < end.cp32; ++ptr.cp32) {
+			DREF DeeObject *chr;
+			chr = DeeString_Chr(*ptr.cp32);
+			if unlikely(!chr)
+				goto err_dst_iter;
+			*dst_iter++ = chr;
+		}
+		break;
+	}
+	return result;
+err_dst_iter:
+	Dee_Decrefv(dst, (size_t)(dst_iter - dst));
+	return (size_t)-1;
+}
+
 PRIVATE struct type_nsi tpconst string_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -1673,6 +1736,7 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&string_asvector,
 };
 
 PRIVATE struct type_member tpconst string_class_members[] = {

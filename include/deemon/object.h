@@ -2111,6 +2111,23 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 
+	/* Optional helper to help implement `DeeSeq_AsHeapVector()' & friends.
+	 * NOTES:
+	 * - This operator is NOT used to implement stuff above, and will NOT
+	 *   be substituted using other operators. This operator gets inherited
+	 *   alongside "tp_iter", though its presence does not qualify for that
+	 *   operator being present!
+	 * - This operator must NOT produce NULL-elements in "dst". The produced
+	 *   vector of items must be equivalent to what would be produced by a
+	 *   call to "tp_foreach" (which in turn must be equivalent to "tp_iter").
+	 *
+	 * @return: <= dst_length: Success: the first "return" elements of "dst" were filled with the items of this sequence.
+	 * @return: > dst_length:  The given "dst_length" is too short. In this case, "dst" may have been modified,
+	 *                         but will not contain any object references. You must resize it until it is able
+	 *                         to hold at least "return" elements, and call this operator again.
+	 * @return: (size_t)-1:    Error. */
+	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector)(DeeObject *self, /*out*/ DREF DeeObject **dst, size_t dst_length);
+
 	/* All of the following are *always* and *unconditionally* implemented
 	 * when the associated type has the "tp_features & TF_KW" flag set,
 	 * with the exception of `DeeKwds_Type', which has that flag, but does
@@ -2484,6 +2501,14 @@ myob_hasitem_string_len_hash(MyObject *self, char const *key, size_t keylen, Dee
 	return DeeError_NOTIMPLEMENTED();
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+myob_asvector(MyObject *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	(void)self;
+	(void)dst;
+	(void)dst_length;
+	return (size_t)DeeError_NOTIMPLEMENTED();
+}
+
 PRIVATE struct type_seq myob_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_sizeob,
@@ -2530,6 +2555,7 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&myob_setitem_string_len_hash,
 	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_bounditem_string_len_hash,
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_hasitem_string_len_hash,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&myob_asvector,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))NULL,
 	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))NULL,
 	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))NULL,
