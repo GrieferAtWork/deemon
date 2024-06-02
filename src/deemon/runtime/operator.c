@@ -18068,13 +18068,13 @@ DEFINE_OPERATOR(size_t, SizeFast, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 }
 
 DEFINE_OPERATOR(size_t, Size, (DeeObject *RESTRICT_IF_NOTYPE self)) {
-#ifdef CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_size) ||
 	          unlikely(DeeType_InheritSize(tp_self) && tp_self->tp_seq->tp_size))
 		return DeeType_INVOKE_SIZE(tp_self, self);
 	return (size_t)err_unimplemented_operator(tp_self, OPERATOR_SIZE);
-#else /* CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	DREF DeeObject *sizeob;
 	size_t result;
 	LOAD_TP_SELF;
@@ -18104,7 +18104,7 @@ err_ob:
 	Dee_Decref(sizeob);
 err:
 	return (size_t)-1;
-#endif /* !CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 
