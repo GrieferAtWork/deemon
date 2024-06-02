@@ -23,26 +23,11 @@ import * from deemon;
 import * from errors;
 import json;
 
-class MyDTO2 {
-	this = default;
-	public member foo: {(int | string)...};
-}
-
-class MyDTO3 {
-	this = default;
-	public member foo: {bool...};
-}
-
-class MyDTO {
-	this = default;
-	public member x: int;
-	public member y: int;
-	public member z: MyDTO2 | MyDTO3;
-}
-
 /* Assert that JSON is able to parse simple expressions */
 assert json.parse(r'"foo"') == "foo";
 assert json.parse(r'"foo"', into: string) == "foo";
+assert json.parse(r'0') == 0;
+assert json.parse(r'0', into: int) == 0;
 assert json.parse(r'42') == 42;
 assert json.parse(r'42', into: int) == 42;
 assert json.parse(r'0.5') == 0.5;
@@ -67,14 +52,46 @@ assert json.parse(r'[]', into: Tuple) is Tuple;
 assert json.parse(r'[]', into: Tuple) == {};
 assert json.parse(r'[10]', into: Tuple) is Tuple;
 assert json.parse(r'[10]', into: Tuple) == {10};
+assert json.parse(r'[10,20]') == {10,20};
+assert json.parse(r'[10,20]', into: List) == {10,20};
+assert json.parse(r'[10,20]', into: Tuple) == {10,20};
+assert json.parse(r'[10,20,30]') == {10,20,30};
+assert json.parse(r'[10,20,30]', into: List) == {10,20,30};
+assert json.parse(r'[10,20,30]', into: Tuple) == {10,20,30};
 assert json.parse(r'[0]') == {0};
 assert json.parse(r'{}', into: Mapping) == {};
 assert (try json.parse(r'[]', into: Mapping) catch (e...) e) is TypeError;
 assert (try json.parse(r'{}', into: Sequence) catch (e...) e) is TypeError;
 assert json.parse(r'{"foo": 10}') == { "foo": 10 };
+assert json.parse(r'{"foo": 10, "bar": 20}') == { "foo": 10, "bar": 20 };
 assert json.parse(r'{"foo": 10}', into: Mapping) == { "foo": 10 };
-assert json.parse(r'{"x":null}') == { "x": none };
-assert json.parse(r'{"x":null}', into: Mapping) == { "x": none };
+assert json.parse(r'{"foo": 10}', into: Dict) == { "foo": 10 };
+assert json.parse(r'{"foo": 10}', into: Dict.Frozen) == { "foo": 10 };
+assert json.parse(r'{"foo": 10, "bar": 20}', into: Mapping) == { "foo": 10, "bar": 20 };
+assert json.parse(r'{"foo": 10, "bar": 20}', into: Dict) == { "foo": 10, "bar": 20 };
+assert json.parse(r'{"foo": 10, "bar": 20}', into: Dict.Frozen) == { "foo": 10, "bar": 20 };
+assert json.parse(r'{"x": null}') == { "x": none };
+assert json.parse(r'{"x": null}', into: Mapping) == { "x": none };
+assert json.parse(r'{"x": null}', into: Dict) == { "x": none };
+assert json.parse(r'{"x": null}', into: Dict.Frozen) == { "x": none };
+
+
+class MyDTO2 {
+	this = default;
+	public member foo: {(int | string)...};
+}
+
+class MyDTO3 {
+	this = default;
+	public member foo: {bool...};
+}
+
+class MyDTO {
+	this = default;
+	public member x: int;
+	public member y: int;
+	public member z: MyDTO2 | MyDTO3;
+}
 
 /* Test that user-defined DTOs can be converted to JSON */
 local myDTOInstance = MyDTO(z: MyDTO2(foo: [42, "foo"]));
