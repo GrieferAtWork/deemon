@@ -1223,6 +1223,26 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+uset_asvector(USet *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	size_t result;
+	USet_LockRead(self);
+	result = self->us_used;
+	if likely(dst_length >= result) {
+		struct uset_item *iter, *end;
+		end = (iter = self->us_elem) + (self->us_mask + 1);
+		for (; iter < end; ++iter) {
+			DeeObject *key = iter->usi_key;
+			if (key == NULL || key == dummy)
+				continue;
+			Dee_Incref(key);
+			*dst++ = key;
+		}
+	}
+	USet_LockEndRead(self);
+	return result;
+}
+
 
 PRIVATE struct type_nsi tpconst uset_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SET,
@@ -1280,6 +1300,7 @@ PRIVATE struct type_seq uset_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&uset_asvector,
 };
 
 PRIVATE struct type_method tpconst uset_methods[] = {
@@ -1634,6 +1655,23 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+uroset_asvector(URoSet *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+	if likely(dst_length >= self->urs_size) {
+		struct uset_item *iter, *end;
+		end = (iter = self->urs_elem) + (self->urs_mask + 1);
+		for (; iter < end; ++iter) {
+			DeeObject *key = iter->usi_key;
+			if (key == NULL)
+				continue;
+			Dee_Incref(key);
+			*dst++ = key;
+		}
+	}
+	return self->urs_size;
+}
+
+
 PRIVATE struct type_seq uroset_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -1680,6 +1718,7 @@ PRIVATE struct type_seq uroset_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&uroset_asvector,
 };
 
 PRIVATE NONNULL((1, 2)) void DCALL
