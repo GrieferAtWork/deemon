@@ -5223,9 +5223,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              ""), /* TODO: Requirements|Implementation table */
 
 	/* Binary search API */
-	TYPE_KWMETHOD("bfind", &default_seq_bfind,
+	TYPE_KWMETHOD(STR_bfind, &default_seq_bfind,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N\n"
-	              "#pitem{The item to search for}"
+	              DOC_param_item
 	              DOC_param_key
 	              "Do a binary search (requiring @this to be sorted via @key) for @item\n"
 	              "In case multiple elements match @item, the returned index will be "
@@ -5234,43 +5234,44 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD("bcontains", &seq_bcontains,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
-	              "#pitem{The item to search for}"
+	              DOC_param_item
 	              DOC_param_key
 	              "Wrapper around ?#bfind that simply returns ${this.bfind(...) !is none}"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD("bindex", &seq_bindex,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
-	              "#pitem{The item to search for}"
+	              DOC_param_item
 	              DOC_param_key
 	              "#tValueError{The Sequence does not contain an item matching @item}"
 	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N."
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD("bposition", &default_seq_bposition,
+	TYPE_KWMETHOD(STR_bposition, &default_seq_bposition,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
-	              "#pitem{The item to search for}"
+	              DOC_param_item
 	              DOC_param_key
 	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
 	              /**/ "than ?N when @this doesn't contain any matching object"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD("brange", &default_seq_brange,
+	TYPE_KWMETHOD(STR_brange, &default_seq_brange,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint\n"
-	              "#pitem{The item to search for}"
+	              DOC_param_item
 	              DOC_param_key
 	              "Similar to ?#bfind, but return a tuple ${[begin,end)} of integers representing "
 	              /**/ "the lower and upper bound of indices for elements from @this matching @item.\n"
 	              "NOTE: The returned tuple is allowed to be an ASP, meaning that its elements may "
 	              /**/ "be calculated lazily, and are prone to change as the result of @this changing."
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD("blocate", &default_seq_blocate,
+	TYPE_KWMETHOD(STR_blocate, &default_seq_blocate,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N,defl?)->\n"
-	              "#pitem{The item to search for}"
+	              DOC_param_item
 	              DOC_param_key
 	              "#tValueError{The Sequence does not contain an item matching @item}"
 	              "Same as ?#bfind, but return the matching item, rather than its index"
 	              ""), /* TODO: Requirements|Implementation table */
+
 	TYPE_KWMETHOD("blocateall", &seq_blocateall,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?O\n"
-	              "#pitem{The item to search for}"
+	              DOC_param_item
 	              DOC_param_key
 	              "Return the sub-range from @this of elements matching @item, as returned by ?#brange\n"
 	              "${"
