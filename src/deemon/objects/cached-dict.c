@@ -688,7 +688,8 @@ err_r:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-cdict_getitemnr(DeeCachedDictObject *self, DeeObject *key) {
+cdict_getitemnr(DeeCachedDictObject *__restrict self,
+                /*string*/ DeeObject *__restrict key) {
 	size_t mask;
 	struct cached_dict_item *vector;
 	Dee_hash_t i, perturb;
@@ -784,7 +785,8 @@ cdict_getitemnr_string_len_hash(DeeCachedDictObject *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-cdict_trygetitemnr(DeeCachedDictObject *self, DeeObject *key) {
+cdict_trygetitemnr(DeeCachedDictObject *__restrict self,
+                   /*string*/ DeeObject *__restrict key) {
 	size_t mask;
 	struct cached_dict_item *vector;
 	Dee_hash_t i, perturb;
