@@ -454,7 +454,7 @@ do_move_source_oldrefi:
 
 	{
 		int temp;
-		void *_newstatebuf[memstate_sizeof(1) / sizeof(void *)];
+		void *_newstatebuf[memstate_sizeof_constexpr(1) / sizeof(void *)];
 		struct memstate *newstate = (struct memstate *)_newstatebuf;
 
 		/* #4: Construct a fake `memstate' for "newinfo" */

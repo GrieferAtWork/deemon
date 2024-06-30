@@ -1442,8 +1442,8 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 		}
 	}
 	ASSERT(utf8_length >= length);
-	result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
-	                                         (utf8_length + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_Mallocc(offsetof(String, s_str),
+	                                          utf8_length + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
@@ -1496,8 +1496,8 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 		}
 	}
 	ASSERT(utf8_length >= length);
-	result = (DREF String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-	                                            (utf8_length + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_TryMallocc(offsetof(String, s_str),
+	                                             utf8_length + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
@@ -1625,8 +1625,8 @@ read_text_i:
 	}
 	ASSERT(((size_t *)text)[-1] == length);
 	ASSERT(utf8_length >= length);
-	result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
-	                                         (utf8_length + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_Mallocc(offsetof(String, s_str),
+	                                          utf8_length + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
@@ -1781,8 +1781,8 @@ continue_at_i:
 	}
 	ASSERT(((size_t *)text)[-1] == length);
 	ASSERT(utf8_length >= length);
-	result = (DREF String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-	                                            (utf8_length + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_TryMallocc(offsetof(String, s_str),
+	                                             utf8_length + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
@@ -1913,8 +1913,8 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 		}
 	}
 	ASSERT(utf8_length >= length);
-	result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
-	                                         (utf8_length + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_Mallocc(offsetof(String, s_str),
+	                                          utf8_length + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
@@ -1976,8 +1976,8 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 		}
 	}
 	ASSERT(utf8_length >= length);
-	result = (DREF String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-	                                            (utf8_length + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_TryMallocc(offsetof(String, s_str),
+	                                             utf8_length + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
@@ -2144,8 +2144,8 @@ PUBLIC WUNUSED DREF DeeObject *
 	uint32_t *buffer32, *dst32;
 	size_t i, simple_length, utf_length;
 #ifdef NDEBUG
-	result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
-	                                         (length + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_Mallocc(offsetof(String, s_str),
+	                                          length + 1, sizeof(char));
 #else /* NDEBUG */
 	result = (DREF String *)DeeDbgObject_Malloc(offsetof(String, s_str) +
 	                                            (length + 1) * sizeof(char),
@@ -3315,11 +3315,8 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 			CASE_WIDTH_1BYTE:
 				if (width == STRING_WIDTH_1BYTE) {
 					DeeStringObject *new_string;
-					new_string = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(buffer.ptr,
-					                                                                           DeeStringObject,
-					                                                                           s_str),
-					                                                     offsetof(DeeStringObject, s_str) +
-					                                                     (required + 1) * sizeof(char));
+					new_string = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(buffer.ptr, DeeStringObject, s_str),
+					                                                      offsetof(DeeStringObject, s_str), required + 1, sizeof(char));
 					if unlikely(!new_string)
 						goto err;
 					new_string->s_len = required;
@@ -3552,13 +3549,14 @@ LOCAL WUNUSED NONNULL((1)) int
 			DeeStringObject *buffer;
 allocate_initial_normally:
 			ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-			buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-			                                                (UNICODE_PRINTER_INITIAL_BUFSIZE + 1) * sizeof(char));
+			buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+			                                                 UNICODE_PRINTER_INITIAL_BUFSIZE + 1,
+			                                                 sizeof(char));
 			if likely(buffer) {
 				buffer->s_len = UNICODE_PRINTER_INITIAL_BUFSIZE;
 			} else {
-				buffer = (DeeStringObject *)DeeObject_Malloc(offsetof(DeeStringObject, s_str) +
-				                                             (1 + 1) * sizeof(char));
+				buffer = (DeeStringObject *)DeeObject_Mallocc(offsetof(DeeStringObject, s_str),
+				                                              1 + 1, sizeof(char));
 				if unlikely(!buffer)
 					goto err;
 				buffer->s_len = 1;
@@ -3572,13 +3570,14 @@ allocate_initial_normally:
 		DeeStringObject *buffer;
 		ASSERT(!self->up_length);
 		ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-		buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-		                                                (UNICODE_PRINTER_INITIAL_BUFSIZE + 1) * sizeof(char));
+		buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+		                                                 UNICODE_PRINTER_INITIAL_BUFSIZE + 1,
+		                                                 sizeof(char));
 		if likely(buffer) {
 			buffer->s_len = UNICODE_PRINTER_INITIAL_BUFSIZE;
 		} else {
-			buffer = (DeeStringObject *)DeeObject_Malloc(offsetof(DeeStringObject, s_str) +
-			                                             (1 + 1) * sizeof(char));
+			buffer = (DeeStringObject *)DeeObject_Mallocc(offsetof(DeeStringObject, s_str),
+			                                              1 + 1, sizeof(char));
 			if unlikely(!buffer)
 				goto err;
 			buffer->s_len = 1;
@@ -4062,12 +4061,12 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
-		base_string = (String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-		                                            (initial_alloc + 1) * sizeof(char));
+		base_string = (String *)DeeObject_TryMallocc(offsetof(String, s_str),
+		                                             initial_alloc + 1, sizeof(char));
 		if unlikely(!base_string) {
 			initial_alloc = textlen;
-			base_string = (String *)DeeObject_Malloc(offsetof(String, s_str) +
-			                                         (initial_alloc + 1) * sizeof(char));
+			base_string = (String *)DeeObject_Mallocc(offsetof(String, s_str),
+			                                          initial_alloc + 1, sizeof(char));
 			if unlikely(!base_string)
 				goto err;
 		}
@@ -4089,14 +4088,12 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 			do {
 				new_alloc *= 2;
 			} while (new_alloc < self->up_length + textlen);
-			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
-			                                            offsetof(String, s_str) +
-			                                            (new_alloc + 1) * sizeof(char));
+			new_string = (String *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
+			                                             offsetof(String, s_str), new_alloc + 1, sizeof(char));
 			if unlikely(!new_string) {
 				new_alloc  = self->up_length + textlen;
-				new_string = (String *)DeeObject_Realloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
-				                                         offsetof(String, s_str) +
-				                                         (new_alloc + 1) * sizeof(char));
+				new_string = (String *)DeeObject_Reallocc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
+				                                          offsetof(String, s_str), new_alloc + 1, sizeof(char));
 				if unlikely(!new_string)
 					goto err;
 			}
@@ -4190,12 +4187,12 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
-		base_string = (String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-		                                            (initial_alloc + 1) * sizeof(char));
+		base_string = (String *)DeeObject_TryMallocc(offsetof(String, s_str),
+		                                             initial_alloc + 1, sizeof(char));
 		if unlikely(!base_string) {
 			initial_alloc = num_chars;
-			base_string = (String *)DeeObject_Malloc(offsetof(String, s_str) +
-			                                         (initial_alloc + 1) * sizeof(char));
+			base_string = (String *)DeeObject_Mallocc(offsetof(String, s_str),
+			                                          initial_alloc + 1, sizeof(char));
 			if unlikely(!base_string)
 				goto err;
 		}
@@ -4218,14 +4215,12 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 			do {
 				new_alloc *= 2;
 			} while (new_alloc < self->up_length + num_chars);
-			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
-			                                            offsetof(String, s_str) +
-			                                            (new_alloc + 1) * sizeof(char));
+			new_string = (String *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
+			                                             offsetof(String, s_str), new_alloc + 1, sizeof(char));
 			if unlikely(!new_string) {
 				new_alloc  = self->up_length + num_chars;
-				new_string = (String *)DeeObject_Realloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
-				                                         offsetof(String, s_str) +
-				                                         (new_alloc + 1) * sizeof(char));
+				new_string = (String *)DeeObject_Reallocc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
+				                                          offsetof(String, s_str), new_alloc + 1, sizeof(char));
 				if unlikely(!new_string)
 					goto err;
 			}
@@ -4686,12 +4681,12 @@ Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
-		init_buffer = (String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-		                                            (initial_alloc + 1) * sizeof(char));
+		init_buffer = (String *)DeeObject_TryMallocc(offsetof(String, s_str),
+		                                             initial_alloc + 1, sizeof(char));
 		if unlikely(!init_buffer) {
 			initial_alloc = num_chars;
-			init_buffer = (String *)DeeObject_Malloc(offsetof(String, s_str) +
-			                                         (initial_alloc + 1) * sizeof(char));
+			init_buffer = (String *)DeeObject_Mallocc(offsetof(String, s_str),
+			                                          initial_alloc + 1, sizeof(char));
 			if unlikely(!init_buffer)
 				goto err;
 		}
@@ -4832,12 +4827,12 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
-		base_string = (String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-		                                            (initial_alloc + 1) * sizeof(char));
+		base_string = (String *)DeeObject_TryMallocc(offsetof(String, s_str),
+		                                             initial_alloc + 1, sizeof(char));
 		if unlikely(!base_string) {
 			initial_alloc = length;
-			base_string = (String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-			                                            (initial_alloc + 1) * sizeof(char));
+			base_string = (String *)DeeObject_Mallocc(offsetof(String, s_str),
+			                                          initial_alloc + 1, sizeof(char));
 			if unlikely(!base_string)
 				goto err;
 		}
@@ -4864,14 +4859,12 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 			do {
 				new_alloc *= 2;
 			} while (new_alloc < self->up_length + length);
-			new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
-			                                            offsetof(String, s_str) +
-			                                            (new_alloc + 1) * sizeof(char));
+			new_string = (String *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
+			                                             offsetof(String, s_str), new_alloc + 1, sizeof(char));
 			if unlikely(!new_string) {
 				new_alloc  = self->up_length + length;
-				new_string = (String *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
-				                                            offsetof(String, s_str) +
-				                                            (new_alloc + 1) * sizeof(char));
+				new_string = (String *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF((char *)string, String, s_str),
+				                                             offsetof(String, s_str), new_alloc + 1, sizeof(char));
 				if unlikely(!new_string)
 					goto err;
 			}

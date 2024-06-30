@@ -2154,6 +2154,68 @@ PUBLIC ATTR_NORETURN void
 	_DeeAssert_XFailf(expr, file, line, NULL);
 }
 
+#if __SIZEOF_SIZE_T__ == 4
+#define PRFxSIZ_FULLWIDTH ".8" PRFxSIZ
+#elif __SIZEOF_SIZE_T__ == 8
+#define PRFxSIZ_FULLWIDTH ".16" PRFxSIZ
+#elif __SIZEOF_SIZE_T__ == 2
+#define PRFxSIZ_FULLWIDTH ".4" PRFxSIZ
+#elif __SIZEOF_SIZE_T__ == 1
+#define PRFxSIZ_FULLWIDTH ".2" PRFxSIZ
+#else /* __SIZEOF_SIZE_T__ == ... */
+#define PRFxSIZ_FULLWIDTH PRFxSIZ
+#endif /* __SIZEOF_SIZE_T__ != ... */
+
+/* Debug version of malloc buffer size calculation functions.
+ * These will trigger an assertion failure when an overflow *does* happen.
+ * As such, these functions should be used in debug builds to assert that
+ * no unexpected overflows happen. */
+PUBLIC ATTR_CONST WUNUSED size_t
+(DCALL _Dee_MalloccBufsizeDbg)(size_t elem_count, size_t elem_size,
+                               char const *file, int line) {
+	size_t result;
+	if (OVERFLOW_UMUL(elem_count, elem_size, &result)) {
+		_DeeAssert_Failf("_Dee_MalloccBufsizeDbg(...)", file, line,
+		                 "Unexpected overflow when multiplying elem_count * elem_size:\n"
+		                 "elem_count = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
+		                 "elem_size  = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")",
+		                 elem_count, elem_count,
+		                 elem_size, elem_size);
+		return (size_t)-1;
+	}
+	return result;
+}
+
+PUBLIC ATTR_CONST WUNUSED size_t
+(DCALL _Dee_MallococBufsizeDbg)(size_t base_offset, size_t elem_count, size_t elem_size,
+                                char const *file, int line) {
+	size_t result;
+	if (OVERFLOW_UMUL(elem_count, elem_size, &result)) {
+		_DeeAssert_Failf("_Dee_MallococBufsizeDbg(...)", file, line,
+		                 "Unexpected overflow when multiplying `elem_count * elem_size':\n"
+		                 "elem_count   = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
+		                 "elem_size    = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
+		                 "[base_offset = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")]",
+		                 elem_count, elem_count,
+		                 elem_size, elem_size,
+		                 base_offset, base_offset);
+		return (size_t)-1;
+	}
+	if (OVERFLOW_UADD(result, base_offset, &result)) {
+		_DeeAssert_Failf("_Dee_MallococBufsizeDbg(...)", file, line,
+		                 "Unexpected overflow when adding `base_offset' to `elem_count * elem_size':\n"
+		                 "base_offset            = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
+		                 "elem_count * elem_size = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")\n"
+		                 "[elem_count            = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")]\n"
+		                 "[elem_size             = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")]",
+		                 base_offset, base_offset, result, result,
+		                 elem_count, elem_count,
+		                 elem_size, elem_size);
+		return (size_t)-1;
+	}
+	return result;
+}
+
 
 
 DECL_END

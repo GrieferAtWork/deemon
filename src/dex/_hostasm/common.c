@@ -817,8 +817,8 @@ err:
 INTERN WUNUSED NONNULL((1)) struct memobjs *DCALL
 memobjs_new(size_t objc) {
 	struct memobjs *result;
-	size_t size = offsetof(struct memobjs, mos_objv) + (objc * sizeof(struct memobj));
-	result = (struct memobjs *)Dee_Malloc(size);
+	result = (struct memobjs *)Dee_Mallococ(offsetof(struct memobjs, mos_objv),
+	                                        objc, sizeof(struct memobj));
 	if likely(result) {
 		result->mos_refcnt = 1;
 		RINGQ_INIT(result, mos_copies);

@@ -306,15 +306,15 @@ PRIVATE NONNULL((1)) ptrdiff_t
 		while (alloc_size < bufsize)
 			alloc_size *= 2;
 alloc_again:
-		string = (struct TPPString *)Dee_TryMalloc(offsetof(struct TPPString, s_text) +
-		                                           (alloc_size + 1) * sizeof(char));
+		string = (struct TPPString *)Dee_TryMallococ(offsetof(struct TPPString, s_text),
+		                                             alloc_size + 1, sizeof(char));
 		if unlikely(!string) {
 			if (alloc_size != bufsize) {
 				alloc_size = bufsize;
 				goto alloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(struct TPPString, s_text) +
-			                      (alloc_size + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(struct TPPString, s_text),
+			                        alloc_size + 1, sizeof(char)))
 				goto alloc_again;
 			return -1;
 		}
@@ -331,17 +331,16 @@ alloc_again:
 		size_t min_alloc = self->sp_length + bufsize;
 		alloc_size       = (min_alloc + 63) & ~63;
 realloc_again:
-		string = (struct TPPString *)Dee_TryRealloc(string,
-		                                            offsetof(struct TPPString, s_text) +
-		                                            (alloc_size + 1) * sizeof(char));
+		string = (struct TPPString *)Dee_TryReallococ(string, offsetof(struct TPPString, s_text),
+		                                              alloc_size + 1, sizeof(char));
 		if unlikely(!string) {
 			string = self->sp_string;
 			if (alloc_size != min_alloc) {
 				alloc_size = min_alloc;
 				goto realloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(struct TPPString, s_text) +
-			                      (alloc_size + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(struct TPPString, s_text),
+			                        alloc_size + 1, sizeof(char)))
 				goto realloc_again;
 			return -1;
 		}
@@ -374,9 +373,8 @@ PRIVATE /*REF*/ struct TPPString *
 	/* Deallocate unused memory. */
 	if likely(self->sp_length != result->s_size) {
 		DREF struct TPPString *reloc;
-		reloc = (DREF struct TPPString *)Dee_TryRealloc(result,
-		                                                offsetof(struct TPPString, s_text) +
-		                                                (self->sp_length + 1) * sizeof(char));
+		reloc = (DREF struct TPPString *)Dee_TryReallococ(result, offsetof(struct TPPString, s_text),
+		                                                  self->sp_length + 1, sizeof(char));
 		if likely(reloc)
 			result         = reloc;
 		result->s_size = self->sp_length;

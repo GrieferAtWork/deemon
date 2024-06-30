@@ -5599,9 +5599,9 @@ err_custom_allocator:
 	result_class_offset &= ~(sizeof(void *) - 1);
 
 	/* Allocate the resulting class object. */
-	result = (DREF DeeTypeObject *)DeeGCObject_Calloc(result_class_offset +
-	                                                  offsetof(struct class_desc, cd_members) +
-	                                                  (desc->cd_cmemb_size * sizeof(DREF DeeObject *)));
+	result = (DREF DeeTypeObject *)DeeGCObject_Callocc(result_class_offset +
+	                                                   offsetof(struct class_desc, cd_members),
+	                                                   desc->cd_cmemb_size, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto err_cbases;
 

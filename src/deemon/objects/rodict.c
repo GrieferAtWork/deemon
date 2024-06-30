@@ -283,7 +283,7 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 
 
 #define RODICT_ALLOC(mask)  ((DREF RoDict *)DeeObject_Calloc(SIZEOF_RODICT(mask)))
-#define SIZEOF_RODICT(mask) (offsetof(RoDict, rd_elem) + (((mask) + 1) * sizeof(struct rodict_item)))
+#define SIZEOF_RODICT(mask) _Dee_MallococBufsize(offsetof(RoDict, rd_elem), (mask) + 1, sizeof(struct rodict_item))
 #define RODICT_INITIAL_MASK 0x03
 
 PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
@@ -1064,9 +1064,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_sizeof(RoDict *self) {
-	return DeeInt_NewSize(offsetof(RoDict, rd_elem) +
-	                      ((self->rd_mask + 1) *
-	                       sizeof(struct rodict_item)));
+	size_t result;
+	result = _Dee_MallococBufsize(offsetof(RoDict, rd_elem),
+	                              self->rd_mask + 1,
+	                              sizeof(struct rodict_item));
+	return DeeInt_NewSize(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

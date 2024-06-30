@@ -44,8 +44,8 @@ struct_type_rehash(DeeStructTypeObject *__restrict self) {
 	DREF DeeStructTypeObject *result;
 	size_t i, j, perturb, new_mask;
 	new_mask = (self->st_fmsk << 1) | 1;
-	result = (DREF DeeStructTypeObject *)DeeGCObject_Calloc(offsetof(DeeStructTypeObject, st_fvec) +
-	                                                        (new_mask + 1) * sizeof(struct struct_field));
+	result = (DREF DeeStructTypeObject *)DeeGCObject_Callocc(offsetof(DeeStructTypeObject, st_fvec),
+	                                                         new_mask + 1, sizeof(struct struct_field));
 	if unlikely(!result)
 		goto err;
 	result->st_fmsk = new_mask;
@@ -70,216 +70,126 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
-struct_type_alloc_iterator(DeeObject *__restrict iter,
-                           unsigned int flags) {
-	DREF DeeStructTypeObject *result;
-	size_t field_count = 0;
-	DREF DeeObject *elem;
-	DREF DeeObject *field_name_and_type[2];
-	size_t i, min_align = 1, instance_size = 0;
-	result = (DREF DeeStructTypeObject *)DeeGCObject_Calloc(offsetof(DeeStructTypeObject, st_fvec) +
-	                                                        (2 * sizeof(struct struct_field)));
-	if unlikely(!result)
+struct struct_type_alloc_foreach_data {
+	DREF DeeStructTypeObject *staf_result;
+	size_t                    staf_nfields;
+	size_t                    staf_alignof;
+	size_t                    staf_sizeof;
+	unsigned int              staf_flags;
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+struct_type_alloc_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
+	size_t i;
+	Dee_hash_t perturb, hash;
+	struct struct_type_alloc_foreach_data *data;
+	data = (struct struct_type_alloc_foreach_data *)arg;
+	if (data->staf_nfields >= data->staf_result->st_fmsk) {
+		/* Must allocate more fields. */
+		DREF DeeStructTypeObject *new_result;
+		new_result = struct_type_rehash(data->staf_result);
+		if unlikely(!new_result)
+			goto err;
+		DeeGCObject_Free(data->staf_result);
+		data->staf_result = new_result;
+	}
+	ASSERT(data->staf_nfields < data->staf_result->st_fmsk);
+
+	/* Validate that this is a string/struct_type-pair. */
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
-	result->st_fmsk = 1;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		int temp;
-		dhash_t perturb, hash;
-		if (field_count >= result->st_fmsk) {
-			/* Must allocate more fields. */
-			DREF DeeStructTypeObject *new_result;
-			new_result = struct_type_rehash(result);
-			if unlikely(!new_result)
-				goto err_r;
-			DeeGCObject_Free(result);
-			result = new_result;
-		}
-		ASSERT(field_count < result->st_fmsk);
-		temp = DeeObject_Unpack(elem, 2, field_name_and_type);
-		Dee_Decref(elem);
-		if unlikely(temp)
-			goto err_r;
-		/* Validate that this is a string/struct_type-pair. */
-		if (DeeObject_AssertTypeExact(field_name_and_type[0], &DeeString_Type) ||
-		    DeeObject_AssertType(field_name_and_type[1], &DeeSType_Type)) {
-			Dee_Decref(field_name_and_type[1]);
-			Dee_Decref(field_name_and_type[0]);
-			goto err_r;
-		}
-		hash = DeeString_Hash(field_name_and_type[0]);
-		i = perturb = STRUCT_TYPE_HASHST(result, hash);
-		for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
-			struct struct_field *field;
-			size_t align;
-			field = STRUCT_TYPE_HASHIT(result, i);
-			if (field->sf_name)
-				continue;
-			align = DeeSType_Alignof(field_name_and_type[1]);
-			if (!(flags & STRUCT_TYPE_FPACKED) && (min_align < align))
-				min_align = align;
-			if (flags & STRUCT_TYPE_FUNION) {
-				field->sf_offset = 0;
-				if (instance_size < DeeSType_Sizeof(field_name_and_type[1]))
-					instance_size = DeeSType_Sizeof(field_name_and_type[1]);
-			} else {
-				if (!(flags & STRUCT_TYPE_FPACKED)) {
-					instance_size += (align - 1);
-					instance_size &= ~(align - 1);
-				}
-				field->sf_offset = instance_size;
-				instance_size += DeeSType_Sizeof(field_name_and_type[1]);
-			}
-			field->sf_hash = DeeString_Hash(field_name_and_type[0]);
-			field->sf_name = (DREF struct string_object *)field_name_and_type[0];       /* Inherit reference. */
-			field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_name_and_type[1]); /* Inherit reference. */
-			Dee_Decref(field_name_and_type[1]);
-			if unlikely(!field->sf_type) {
-				Dee_Decref(field_name_and_type[0]);
-				field->sf_name = NULL;
-				goto err_r;
-			}
-			break;
-		}
-		++field_count;
-		if (DeeThread_CheckInterrupt())
-			goto err_r;
-	}
-	if unlikely(!elem)
-		goto err_r;
-	/* Fill in size & alignment info. */
-	result->st_base.st_sizeof = instance_size;
-	result->st_base.st_align  = min_align;
-	result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject) + instance_size;
-	return result;
-err_r:
-	for (i = 0; i <= result->st_fmsk; ++i) {
-		if (!result->st_fvec[i].sf_name)
+	if (DeeObject_AssertType(value, &DeeSType_Type))
+		goto err;
+
+	hash = DeeString_Hash(key);
+	i = perturb = STRUCT_TYPE_HASHST(data->staf_result, hash);
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
+		struct struct_field *field;
+		size_t align;
+		field = STRUCT_TYPE_HASHIT(data->staf_result, i);
+		if (field->sf_name)
 			continue;
-		Dee_Decref(result->st_fvec[i].sf_name);
-		Dee_Decref(DeeLValueType_AsObject(result->st_fvec[i].sf_type));
+		align = DeeSType_Alignof(value);
+		if (!(data->staf_flags & STRUCT_TYPE_FPACKED) && (data->staf_alignof < align))
+			data->staf_alignof = align;
+		if (data->staf_flags & STRUCT_TYPE_FUNION) {
+			field->sf_offset = 0;
+			if (data->staf_sizeof < DeeSType_Sizeof(value))
+				data->staf_sizeof = DeeSType_Sizeof(value);
+		} else {
+			if (!(data->staf_flags & STRUCT_TYPE_FPACKED)) {
+				data->staf_sizeof += (align - 1);
+				data->staf_sizeof &= ~(align - 1);
+			}
+			field->sf_offset = data->staf_sizeof;
+			data->staf_sizeof += DeeSType_Sizeof(value);
+		}
+		field->sf_hash = DeeString_Hash(key);
+		field->sf_name = (DREF DeeStringObject *)key;
+		field->sf_type = DeeSType_LValue((DeeSTypeObject *)value);
+		if unlikely(!field->sf_type) {
+			Dee_Decref(key);
+			field->sf_name = NULL;
+			goto err;
+		}
+		Dee_Incref(key);
+		break;
 	}
-	DeeGCObject_Free(result);
+	++data->staf_nfields;
+	return 0;
 err:
-	return NULL;
+	return -1;
 }
 
-
-INTERN WUNUSED DREF DeeStructTypeObject *DCALL
+/* Construct a new struct-type from `fields', which is a `{(string, StructuredType)...}' */
+INTERN WUNUSED NONNULL((2)) DREF DeeStructTypeObject *DCALL
 DeeStructType_FromSequence(DeeObject *name,
                            DeeObject *__restrict fields,
                            unsigned int flags) {
-	DREF DeeStructTypeObject *result;
-	size_t i, field_count;
+	struct struct_type_alloc_foreach_data data;
+	Dee_hash_t i;
+	data.staf_nfields = 0;
+	data.staf_flags   = flags;
+	data.staf_sizeof  = 0;
+	data.staf_alignof = 1;
+	data.staf_result = (DREF DeeStructTypeObject *)DeeGCObject_Callocc(offsetof(DeeStructTypeObject, st_fvec),
+	                                                                   2, sizeof(struct struct_field));
+	if unlikely(!data.staf_result)
+		goto err;
+	data.staf_result->st_fmsk = 1;
 
-	/* TODO: Use DeeObject_ForeachPair(), and get rid of DeeFastSeq_GetSize_deprecated() */
+	/* Enumerate key/value pairs of "fields" */
+	if unlikely(DeeObject_ForeachPair(fields, &struct_type_alloc_foreach_cb, &data) < 0)
+		goto err_r;
 
-	/* Optimization for fast sequence types. */
-	field_count = DeeFastSeq_GetSize_deprecated(fields);
-	if (field_count != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		size_t result_mask = 1;
-		size_t min_align = 1, instance_size = 0;
-		while (result_mask <= field_count)
-			result_mask = (result_mask << 1) | 1;
-		result = (DREF DeeStructTypeObject *)DeeGCObject_Calloc(offsetof(DeeStructTypeObject, st_fvec) +
-		                                                        (result_mask + 1) * sizeof(struct struct_field));
-		if unlikely(!result)
-			goto err;
-		result->st_fmsk = result_mask;
-		for (i = 0; i < field_count; ++i) {
-			DREF DeeObject *elem;
-			DREF DeeObject *field_name_and_type[2];
-			int temp;
-			dhash_t j, perturb, hash;
-			elem = DeeFastSeq_GetItem_deprecated(fields, i);
-			if unlikely(!elem)
-				goto err_r;
-			temp = DeeObject_Unpack(elem, 2, field_name_and_type);
-			Dee_Decref(elem);
-			if unlikely(temp)
-				goto err_r;
-
-			/* Validate that this is a string/struct_type-pair. */
-			if (DeeObject_AssertTypeExact(field_name_and_type[0], &DeeString_Type) ||
-			    DeeObject_AssertType(field_name_and_type[1], &DeeSType_Type)) {
-				Dee_Decref(field_name_and_type[1]);
-				Dee_Decref(field_name_and_type[0]);
-				goto err_r;
-			}
-			hash = DeeString_Hash(field_name_and_type[0]);
-			j = perturb = STRUCT_TYPE_HASHST(result, hash);
-			for (;; STRUCT_TYPE_HASHNX(j, perturb)) {
-				struct struct_field *field;
-				size_t align;
-				field = STRUCT_TYPE_HASHIT(result, j);
-				if (field->sf_name)
-					continue;
-				align = DeeSType_Alignof(field_name_and_type[1]);
-				if (!(flags & STRUCT_TYPE_FPACKED) && (min_align < align))
-					min_align = align;
-				if (flags & STRUCT_TYPE_FUNION) {
-					field->sf_offset = 0;
-					if (instance_size < DeeSType_Sizeof(field_name_and_type[1]))
-						instance_size = DeeSType_Sizeof(field_name_and_type[1]);
-				} else {
-					if (!(flags & STRUCT_TYPE_FPACKED)) {
-						instance_size += (align - 1);
-						instance_size &= ~(align - 1);
-					}
-					field->sf_offset = instance_size;
-					instance_size += DeeSType_Sizeof(field_name_and_type[1]);
-				}
-				field->sf_hash = DeeString_Hash(field_name_and_type[0]);
-				field->sf_name = (DREF struct string_object *)field_name_and_type[0];       /* Inherit reference. */
-				field->sf_type = DeeSType_LValue((DeeSTypeObject *)field_name_and_type[1]); /* Inherit reference. */
-				Dee_Decref(field_name_and_type[1]);
-				if unlikely(!field->sf_type) {
-					Dee_Decref(field_name_and_type[0]);
-					field->sf_name = NULL;
-					goto err_r;
-				}
-				break;
-			}
-		}
-
-		/* Fill in size & alignment info. */
-		result->st_base.st_sizeof = instance_size;
-		result->st_base.st_align  = min_align;
-		result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject) + instance_size;
-	} else {
-		/* Use iterators to construct the struct-type. */
-		fields = DeeObject_Iter(fields);
-		if unlikely(!fields)
-			goto err;
-		result = struct_type_alloc_iterator(fields, flags);
-		Dee_Decref(fields);
-		if unlikely(!result)
-			goto err;
-	}
+	/* Fill in size & alignment info. */
+	data.staf_result->st_base.st_sizeof = data.staf_sizeof;
+	data.staf_result->st_base.st_align  = data.staf_alignof;
+	data.staf_result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject) + data.staf_sizeof;
 
 	/* Fill in remaining fields and start tracking the new struct type. */
 	Dee_Incref(DeeStructType_AsObject(&DeeStruct_Type));
-	Dee_atomic_rwlock_cinit(&result->st_base.st_cachelock);
-	result->st_base.st_base.tp_base  = (DREF DeeTypeObject *)&DeeStruct_Type;
-	result->st_base.st_base.tp_name  = DeeStruct_Type.st_base.st_base.tp_name;
-	result->st_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
+	Dee_atomic_rwlock_cinit(&data.staf_result->st_base.st_cachelock);
+	data.staf_result->st_base.st_base.tp_base  = (DREF DeeTypeObject *)&DeeStruct_Type;
+	data.staf_result->st_base.st_base.tp_name  = DeeStruct_Type.st_base.st_base.tp_name;
+	data.staf_result->st_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
 
-	/* Set the name of the new struct-type. */
+	/* If given, set the name of the new struct-type. */
 	if (name) {
-		result->st_base.st_base.tp_name = DeeString_STR(name);
-		result->st_base.st_base.tp_flags |= TP_FNAMEOBJECT;
+		data.staf_result->st_base.st_base.tp_name = DeeString_STR(name);
+		data.staf_result->st_base.st_base.tp_flags |= TP_FNAMEOBJECT;
 		Dee_Incref(name);
 	}
-	DeeObject_Init((DeeObject *)result, &DeeStructType_Type);
-	return DeeType_AsStructType((DeeTypeObject *)DeeGC_Track(DeeStructType_AsObject(result)));
+	DeeObject_Init((DeeObject *)data.staf_result, &DeeStructType_Type);
+	return DeeType_AsStructType((DeeTypeObject *)DeeGC_Track(DeeStructType_AsObject(data.staf_result)));
 err_r:
-	for (i = 0; i <= result->st_fmsk; ++i) {
-		if (!result->st_fvec[i].sf_name)
+	for (i = 0; i <= data.staf_result->st_fmsk; ++i) {
+		if (!data.staf_result->st_fvec[i].sf_name)
 			continue;
-		Dee_Decref(result->st_fvec[i].sf_name);
-		Dee_Decref(DeeLValueType_AsObject(result->st_fvec[i].sf_type));
+		Dee_Decref(data.staf_result->st_fvec[i].sf_name);
+		Dee_Decref(DeeLValueType_AsObject(data.staf_result->st_fvec[i].sf_type));
 	}
-	DeeGCObject_Free(result);
+	DeeGCObject_Free(data.staf_result);
 err:
 	return NULL;
 }
@@ -328,7 +238,7 @@ struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:offsetof", &name))
 		goto err;
@@ -355,7 +265,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:offsetafter", &name))
 		goto err;
@@ -384,7 +294,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:typeof", &name))
 		goto err;
@@ -496,7 +406,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF struct lvalue_object *DCALL
 struct_getattr(DeeStructTypeObject *tp_self,
                void *self, DeeObject *name) {
 	DREF struct lvalue_object *result;
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
 	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
@@ -525,7 +435,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 struct_delattr(DeeStructTypeObject *tp_self,
                void *self, DeeObject *name) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
 	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
@@ -553,7 +463,7 @@ PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 struct_setattr(DeeStructTypeObject *tp_self,
                void *self, DeeObject *name,
                DeeObject *value) {
-	dhash_t i, perturb, hash;
+	Dee_hash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
 	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {

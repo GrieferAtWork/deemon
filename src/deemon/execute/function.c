@@ -294,11 +294,11 @@ DeeFunction_New(DeeObject *code_, size_t refc,
 	        DeeCode_NAME(code));
 	ASSERT(code->co_refstaticc >= refc);
 	if likely(code->co_refstaticc == refc) {
-		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv) +
-		                                             (refc * sizeof(DREF DeeObject *)));
+		result = (DREF Function *)DeeGCObject_Mallocc(offsetof(Function, fo_refv),
+		                                              refc, sizeof(DREF DeeObject *));
 	} else {
-		result = (DREF Function *)DeeGCObject_Calloc(offsetof(Function, fo_refv) +
-		                                             (code->co_refstaticc * sizeof(DREF DeeObject *)));
+		result = (DREF Function *)DeeGCObject_Callocc(offsetof(Function, fo_refv),
+		                                              code->co_refstaticc, sizeof(DREF DeeObject *));
 	}
 	if unlikely(!result)
 		goto done;
@@ -333,11 +333,11 @@ DeeFunction_NewInherited(DeeObject *code_, size_t refc,
 	        DeeCode_NAME(code));
 	ASSERT(code->co_refstaticc >= refc);
 	if likely(code->co_refstaticc == refc) {
-		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv) +
-		                                             (refc * sizeof(DREF DeeObject *)));
+		result = (DREF Function *)DeeGCObject_Mallocc(offsetof(Function, fo_refv),
+		                                              refc, sizeof(DREF DeeObject *));
 	} else {
-		result = (DREF Function *)DeeGCObject_Calloc(offsetof(Function, fo_refv) +
-		                                             (code->co_refstaticc * sizeof(DREF DeeObject *)));
+		result = (DREF Function *)DeeGCObject_Callocc(offsetof(Function, fo_refv),
+		                                              code->co_refstaticc, sizeof(DREF DeeObject *));
 	}
 	if unlikely(!result)
 		goto done;
@@ -366,8 +366,8 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code_) {
 	if likely(code->co_refstaticc == 0) {
 		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv));
 	} else {
-		result = (DREF Function *)DeeGCObject_Calloc(offsetof(Function, fo_refv) +
-		                                             (code->co_refstaticc * sizeof(DREF DeeObject *)));
+		result = (DREF Function *)DeeGCObject_Callocc(offsetof(Function, fo_refv),
+		                                              code->co_refstaticc, sizeof(DREF DeeObject *));
 	}
 	if unlikely(!result)
 		goto done;
@@ -398,11 +398,11 @@ function_init(size_t argc, DeeObject *const *argv) {
 		goto err;
 	ASSERT(code->co_refc <= code->co_refstaticc);
 	if likely(code->co_refc == code->co_refstaticc) {
-		result = (DREF Function *)DeeGCObject_Malloc(offsetof(Function, fo_refv) +
-		                                             (code->co_refc * sizeof(DREF DeeObject *)));
+		result = (DREF Function *)DeeGCObject_Mallocc(offsetof(Function, fo_refv),
+		                                              code->co_refc, sizeof(DREF DeeObject *));
 	} else {
-		result = (DREF Function *)DeeGCObject_Calloc(offsetof(Function, fo_refv) +
-		                                             (code->co_refstaticc * sizeof(DREF DeeObject *)));
+		result = (DREF Function *)DeeGCObject_Callocc(offsetof(Function, fo_refv),
+		                                              code->co_refstaticc, sizeof(DREF DeeObject *));
 	}
 	if unlikely(!result)
 		goto err;
@@ -1310,8 +1310,8 @@ yf_copy(YFunction *__restrict self) {
 		size_t count;
 		ASSERT(self->yf_func->fo_code->co_argc_max >= self->yf_pargc);
 		count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
-		kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds, fk_kargv) +
-		                                          (count * sizeof(DeeObject *)));
+		kw = (struct code_frame_kwds *)Dee_Mallococ(offsetof(struct code_frame_kwds, fk_kargv),
+		                                            count, sizeof(DeeObject *));
 		if unlikely(!kw)
 			goto err_r;
 		result->yf_kw = kw;
@@ -1361,8 +1361,8 @@ yf_deepcopy(YFunction *__restrict self) {
 		DeeCodeObject *code;
 		DeeObject *const *kw_argv;
 		count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
-		kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds, fk_kargv) +
-		                                          (count * sizeof(DeeObject *)));
+		kw = (struct code_frame_kwds *)Dee_Mallococ(offsetof(struct code_frame_kwds, fk_kargv),
+		                                            count, sizeof(DeeObject *));
 		if unlikely(!kw)
 			goto err_this_args_r;
 		result->yf_kw = kw;

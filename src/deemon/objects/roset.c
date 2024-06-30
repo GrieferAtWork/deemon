@@ -222,7 +222,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 
 
 #define ROSET_ALLOC(mask)  ((DREF RoSet *)DeeObject_Calloc(SIZEOF_ROSET(mask)))
-#define SIZEOF_ROSET(mask) (offsetof(RoSet, rs_elem) + (((mask) + 1) * sizeof(struct roset_item)))
+#define SIZEOF_ROSET(mask) _Dee_MallococBufsize(offsetof(RoSet, rs_elem), (mask) + 1, sizeof(struct roset_item))
 #define ROSET_INITIAL_MASK 0x03
 
 PRIVATE WUNUSED NONNULL((1)) DREF RoSet *DCALL
@@ -568,9 +568,11 @@ PRIVATE struct type_seq roset_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 roset_sizeof(RoSet *self) {
-	return DeeInt_NewSize(offsetof(RoSet, rs_elem) +
-	                      ((self->rs_mask + 1) *
-	                       sizeof(struct roset_item)));
+	size_t result;
+	result = _Dee_MallococBufsize(offsetof(RoSet, rs_elem),
+	                              self->rs_mask + 1,
+	                              sizeof(struct roset_item));
+	return DeeInt_NewSize(result);
 }
 
 PRIVATE struct type_method tpconst roset_methods[] = {

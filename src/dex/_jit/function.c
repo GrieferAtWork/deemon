@@ -694,8 +694,8 @@ jf_call_kw(JITFunction *self, size_t argc,
 	if ((self->jf_flags & (JIT_FUNCTION_FYIELDING | JIT_FUNCTION_FRETEXPR)) == JIT_FUNCTION_FYIELDING) {
 		DREF JITYieldFunctionObject *yfo;
 		/* Yield function support */
-		yfo = (DREF JITYieldFunctionObject *)DeeObject_Malloc(offsetof(JITYieldFunctionObject, jy_argv) +
-		                                                      (argc * sizeof(DREF DeeObject *)));
+		yfo = (DREF JITYieldFunctionObject *)DeeObject_Mallocc(offsetof(JITYieldFunctionObject, jy_argv),
+		                                                       argc, sizeof(DREF DeeObject *));
 		if unlikely(!yfo)
 			goto err;
 		yfo->jy_func = self;

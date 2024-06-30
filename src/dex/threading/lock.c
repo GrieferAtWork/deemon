@@ -2106,11 +2106,11 @@ typedef struct {
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, lu_elem); /* [1..1][const][lu_size] Managed locks. */
 } LockUnion;
 #define LockUnion_Alloc(size) \
-	(LockUnion *)DeeObject_Malloc(offsetof(LockUnion, lu_elem) + ((size) * sizeof(DREF DeeObject *)))
+	(LockUnion *)DeeObject_Mallocc(offsetof(LockUnion, lu_elem), size, sizeof(DREF DeeObject *))
 #define LockUnion_Realloc(ptr, size) \
-	(LockUnion *)DeeObject_Realloc(ptr, offsetof(LockUnion, lu_elem) + ((size) * sizeof(DREF DeeObject *)))
+	(LockUnion *)DeeObject_Reallocc(ptr, offsetof(LockUnion, lu_elem), size, sizeof(DREF DeeObject *))
 #define LockUnion_TryRealloc(ptr, size) \
-	(LockUnion *)DeeObject_TryRealloc(ptr, offsetof(LockUnion, lu_elem) + ((size) * sizeof(DREF DeeObject *)))
+	(LockUnion *)DeeObject_TryReallocc(ptr, offsetof(LockUnion, lu_elem), size, sizeof(DREF DeeObject *))
 #define LockUnion_Free(ptr) DeeObject_Free(ptr)
 
 struct lock_union_allocator {

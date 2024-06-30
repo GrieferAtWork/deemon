@@ -80,8 +80,8 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 	struct code_frame *dst, *src;
 	DREF DeeTracebackObject *result;
 	ASSERTF(thread == DeeThread_Self(), "Traceback for other threads must be created using `DeeThread_Trace()'");
-	result = (DREF DeeTracebackObject *)DeeGCObject_TryMalloc(offsetof(DeeTracebackObject, tb_frames) +
-	                                                          thread->t_execsz * sizeof(struct code_frame));
+	result = (DREF DeeTracebackObject *)DeeGCObject_TryMallocc(offsetof(DeeTracebackObject, tb_frames),
+	                                                           thread->t_execsz, sizeof(struct code_frame));
 	if unlikely(!result)
 		goto err;
 
@@ -741,8 +741,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 traceback_sizeof(DeeTracebackObject *self) {
 	size_t result;
 	uint16_t i;
-	result = offsetof(DeeTracebackObject, tb_frames) +
-	         (self->tb_numframes * sizeof(struct code_frame));
+	result = _Dee_MallococBufsize(offsetof(DeeTracebackObject, tb_frames),
+	                              self->tb_numframes,
+	                              sizeof(struct code_frame));
 	for (i = 0; i < self->tb_numframes; ++i) {
 		if (self->tb_frames[i].cf_frame)
 			result += self->tb_frames[i].cf_func->fo_code->co_framesize;

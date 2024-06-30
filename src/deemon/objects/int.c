@@ -176,8 +176,7 @@ Dee_intcache_clearall(size_t max_clear) {
 			SCHED_YIELD();
 		}
 #endif  /* !CONFIG_NO_THREADS */
-		total_free = set->fis_size * (offsetof(DeeIntObject, ob_digit) +
-		                              i * sizeof(digit));
+		total_free = set->fis_size * _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit), i, sizeof(digit));
 		chain      = set->fis_head;
 		if (max_clear >= result + total_free) {
 			result += total_free;
@@ -185,7 +184,7 @@ Dee_intcache_clearall(size_t max_clear) {
 			set->fis_head = NULL;
 		} else {
 			size_t single_item;
-			single_item = offsetof(DeeIntObject, ob_digit) + i * sizeof(digit);
+			single_item = _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit), i, sizeof(digit));
 			total_free  = max_clear - result;
 			total_free += single_item - 1;
 			total_free /= single_item;
@@ -283,13 +282,11 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 do_alloc:
 #endif /* !CONFIG_NO_THREADS */
 #ifdef NDEBUG
-	result = (DREF DeeIntObject *)DeeObject_Malloc(offsetof(DeeIntObject, ob_digit) +
-	                                               n_digits * sizeof(digit));
+	result = (DREF DeeIntObject *)DeeObject_Mallocc(offsetof(DeeIntObject, ob_digit),
+	                                                n_digits, sizeof(digit));
 #else /* NDEBUG */
-	result = (DREF DeeIntObject *)DeeDbgObject_Malloc(offsetof(DeeIntObject, ob_digit) +
-	                                                  n_digits * sizeof(digit),
-	                                                  file,
-	                                                  line);
+	result = (DREF DeeIntObject *)DeeDbgObject_Mallocc(offsetof(DeeIntObject, ob_digit),
+	                                                   n_digits, sizeof(digit), file, line);
 #endif /* !NDEBUG */
 	if unlikely(!result)
 		goto done;
@@ -317,13 +314,11 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 {
 	DREF DeeIntObject *result;
 #ifdef NDEBUG
-	result = (DREF DeeIntObject *)DeeObject_Malloc(offsetof(DeeIntObject, ob_digit) +
-	                                               n_digits * sizeof(digit));
+	result = (DREF DeeIntObject *)DeeObject_Mallocc(offsetof(DeeIntObject, ob_digit),
+	                                                n_digits, sizeof(digit));
 #else /* NDEBUG */
-	result = (DREF DeeIntObject *)DeeDbgObject_Malloc(offsetof(DeeIntObject, ob_digit) +
-	                                                  n_digits * sizeof(digit),
-	                                                  file,
-	                                                  line);
+	result = (DREF DeeIntObject *)DeeDbgObject_Mallocc(offsetof(DeeIntObject, ob_digit),
+	                                                   n_digits, sizeof(digit), file, line);
 #endif /* !NDEBUG */
 	if (result) {
 		DeeObject_Init(result, &DeeInt_Type);
@@ -4435,12 +4430,13 @@ PRIVATE struct type_method tpconst int_class_methods[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_sizeof(DeeIntObject *__restrict self) {
-	size_t int_size;
+	size_t int_size, result;
 	int_size = (size_t)self->ob_size;
 	if ((Dee_ssize_t)int_size < 0)
 		int_size = (size_t)(-(Dee_ssize_t)int_size);
-	return DeeInt_NewSize(offsetof(DeeIntObject, ob_digit) +
-	                      (int_size * sizeof(digit)));
+	result = _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit),
+	                              int_size, sizeof(digit));
+	return DeeInt_NewSize(result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL

@@ -1763,7 +1763,7 @@ STATIC_ASSERT(offsetof(URoDict, urd_size) == offsetof(UDict, ud_used));
 #define urodict_bool udict_bool
 
 #define URODICT_ALLOC(mask)  ((DREF URoDict *)DeeObject_Calloc(SIZEOF_URODICT(mask)))
-#define SIZEOF_URODICT(mask) (offsetof(URoDict, urd_elem) + (((mask) + 1) * sizeof(struct udict_item)))
+#define SIZEOF_URODICT(mask) _Dee_MallococBufsize(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item))
 #define URODICT_INITIAL_MASK 0x03
 
 INTERN WUNUSED DREF URoDict *DCALL URoDict_New(void) {
@@ -2277,9 +2277,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 urodict_sizeof(URoDict *self) {
-	return DeeInt_NewSize(offsetof(URoDict, urd_elem) +
-	                      ((self->urd_mask + 1) *
-	                       sizeof(struct udict_item)));
+	size_t result;
+	result = _Dee_MallococBufsize(offsetof(URoDict, urd_elem),
+	                              self->urd_mask + 1,
+	                              sizeof(struct udict_item));
+	return DeeInt_NewSize(result);
 }
 
 

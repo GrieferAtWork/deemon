@@ -1659,8 +1659,8 @@ INTERN WUNUSED instruction_t *(DFCALL asm_alloc)(size_t n_bytes) {
 				new_size = min_size;
 				goto realloc_instr;
 			}
-			if (Dee_CollectMemory(offsetof(DeeCodeObject, co_code) +
-			                      new_size * sizeof(instruction_t)))
+			if (Dee_CollectMemoryoc(offsetof(DeeCodeObject, co_code),
+			                        new_size, sizeof(instruction_t)))
 				goto realloc_instr;
 			return NULL;
 		}

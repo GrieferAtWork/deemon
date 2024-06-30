@@ -965,6 +965,7 @@ PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
                                     /*out*/ DREF DeeObject **__restrict objv) {
 	size_t i, size;
+	/* TODO: Try to use `DeeObject_EnumerateIndex()'; if that isn't available, use `DeeObject_Unpack()' */
 	size = DeeFastSeq_GetSize_deprecated(self);
 	if (size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (size != objc)

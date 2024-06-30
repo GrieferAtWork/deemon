@@ -934,7 +934,7 @@ typedef struct {
 	DWORD SubAuthority[256];
 } NT_SID;
 
-#define NT_SID_SIZEOF(SubAuthorityCount) (offsetof(NT_SID, SubAuthority) + (SubAuthorityCount) * sizeof(DWORD))
+#define NT_SID_SIZEOF(SubAuthorityCount) _Dee_MallococBufsize(offsetof(NT_SID, SubAuthority), SubAuthorityCount, sizeof(DWORD))
 #define NT_SID_GET_SIZEOF(self)          NT_SID_SIZEOF((self)->SubAuthorityCount)
 
 /* Encode an SID as a deemon integer */

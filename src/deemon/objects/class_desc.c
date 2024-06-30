@@ -1922,8 +1922,8 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 	iterator = DeeObject_Iter(iattr);
 	if unlikely(!iterator)
 		goto err;
-	result = (ClassDescriptor *)DeeObject_Calloc(offsetof(ClassDescriptor, cd_iattr_list) +
-	                                             (8 * sizeof(struct class_attribute)));
+	result = (ClassDescriptor *)DeeObject_Callocc(offsetof(ClassDescriptor, cd_iattr_list),
+	                                              8, sizeof(struct class_attribute));
 	if unlikely(!result)
 		goto err_iter;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1933,8 +1933,8 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 			ClassDescriptor *new_result;
 			size_t i, new_mask;
 			new_mask   = (imask << 1) | 1;
-			new_result = (ClassDescriptor *)DeeObject_Calloc(offsetof(ClassDescriptor, cd_iattr_list) +
-			                                                 ((new_mask + 1) * sizeof(struct class_attribute)));
+			new_result = (ClassDescriptor *)DeeObject_Callocc(offsetof(ClassDescriptor, cd_iattr_list),
+			                                                  new_mask + 1, sizeof(struct class_attribute));
 			if unlikely(!new_result)
 				goto err_iter_r_elem;
 			/* Rehash the already existing instance attribute table. */

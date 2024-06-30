@@ -137,11 +137,11 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	 * ones that are positional. */
 #if CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS)
 #if defined(Dee_Alloca) && !(CODE_FLAGS & CODE_FYIELDING)
-	frame.cf_kw = (struct code_frame_kwds *)Dee_Alloca(offsetof(struct code_frame_kwds, fk_kargv) +
-	                                                   (ex_argc * sizeof(DeeObject *)));
+	frame.cf_kw = (struct code_frame_kwds *)Dee_Allocaoc(offsetof(struct code_frame_kwds, fk_kargv),
+	                                                     ex_argc, sizeof(DeeObject *));
 #else /* Dee_Alloca && !(CODE_FLAGS & CODE_FYIELDING) */
-	frame.cf_kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds, fk_kargv) +
-	                                                   (ex_argc * sizeof(DeeObject *)));
+	frame.cf_kw = (struct code_frame_kwds *)Dee_Mallococ(offsetof(struct code_frame_kwds, fk_kargv),
+	                                                     ex_argc, sizeof(DeeObject *));
 	if unlikely(!frame.cf_kw)
 		goto err;
 #endif /* !Dee_Alloca || (CODE_FLAGS & CODE_FYIELDING) != 0 */

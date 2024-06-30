@@ -279,8 +279,9 @@ DeeKwds_NewWithHint(size_t num_items) {
 	size_t init_mask = 1;
 	while (init_mask <= num_items)
 		init_mask = (init_mask << 1) | 1;
-	result = (DREF Kwds *)DeeObject_Calloc(offsetof(Kwds, kw_map) +
-	                                       (init_mask + 1) * sizeof(struct kwds_entry));
+	result = (DREF Kwds *)DeeObject_Callocc(offsetof(Kwds, kw_map),
+	                                        init_mask + 1,
+	                                        sizeof(struct kwds_entry));
 	if unlikely(!result)
 		goto done;
 	result->kw_mask = init_mask;
@@ -294,8 +295,9 @@ kwds_rehash(DREF Kwds *__restrict self) {
 	DREF Kwds *result;
 	size_t i, j, perturb;
 	size_t new_mask = (self->kw_mask << 1) | 1;
-	result = (DREF Kwds *)DeeObject_Calloc(offsetof(Kwds, kw_map) +
-	                                       (new_mask + 1) * sizeof(struct kwds_entry));
+	result = (DREF Kwds *)DeeObject_Callocc(offsetof(Kwds, kw_map),
+	                                        new_mask + 1,
+	                                        sizeof(struct kwds_entry));
 	if unlikely(!result)
 		goto done;
 	result->kw_mask = new_mask;
@@ -409,8 +411,8 @@ DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index) {
 
 PRIVATE WUNUSED DREF Kwds *DCALL kwds_ctor(void) {
 	DREF Kwds *result;
-	result = (DREF Kwds *)DeeObject_Malloc(offsetof(Kwds, kw_map) +
-	                                       (2 * sizeof(struct kwds_entry)));
+	result = (DREF Kwds *)DeeObject_Mallocc(offsetof(Kwds, kw_map),
+	                                        2, sizeof(struct kwds_entry));
 	if unlikely(!result)
 		goto done;
 	result->kw_map[0].ke_name = NULL;
@@ -1083,8 +1085,8 @@ kmap_copy(KwdsMapping *__restrict self) {
 	DREF KwdsMapping *result;
 	size_t argc;
 	argc   = DeeKwds_SIZE(self->kmo_kwds);
-	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args) +
-	                                              (argc * sizeof(DREF DeeObject *)));
+	result = (DREF KwdsMapping *)DeeObject_Mallocc(offsetof(KwdsMapping, kmo_args),
+	                                               argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	DeeKwdsMapping_LockRead(self);
@@ -1104,8 +1106,8 @@ kmap_deep(KwdsMapping *__restrict self) {
 	DREF KwdsMapping *result;
 	size_t argc;
 	argc   = DeeKwds_SIZE(self->kmo_kwds);
-	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args) +
-	                                              (argc * sizeof(DREF DeeObject *)));
+	result = (DREF KwdsMapping *)DeeObject_Mallocc(offsetof(KwdsMapping, kmo_args),
+	                                               argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	DeeKwdsMapping_LockRead(self);
@@ -1144,8 +1146,8 @@ kmap_init(size_t argc, DeeObject *const *argv) {
 		err_keywords_bad_for_argc(DeeTuple_SIZE(args), kw_argc);
 		goto err;
 	}
-	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args) +
-	                                              (kw_argc * sizeof(DREF DeeObject *)));
+	result = (DREF KwdsMapping *)DeeObject_Mallocc(offsetof(KwdsMapping, kmo_args),
+	                                               kw_argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto err;
 	result->kmo_argv = Dee_Movrefv(result->kmo_args, DeeTuple_ELEM(args), kw_argc);
@@ -1606,8 +1608,8 @@ DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
 	size_t argc;
 	ASSERT_OBJECT_TYPE_EXACT(kwds, &DeeKwds_Type);
 	argc   = DeeKwds_SIZE(kwds);
-	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args) +
-	                                              (argc * sizeof(DREF DeeObject *)));
+	result = (DREF KwdsMapping *)DeeObject_Mallocc(offsetof(KwdsMapping, kmo_args),
+	                                               argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	Dee_atomic_rwlock_init(&result->kmo_lock);

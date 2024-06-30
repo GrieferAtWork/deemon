@@ -969,10 +969,8 @@ again:
 				}
 				result->s_hash = DEE_STRING_HASH_UNSET;
 				result->s_len  = me->w_printer.up_length;
-				result = (DREF DeeStringObject *)DeeObject_TryRealloc(result,
-				                                                      offsetof(DeeStringObject, s_str) +
-				                                                      (me->w_printer.up_length + 1) *
-				                                                      sizeof(char));
+				result = (DREF DeeStringObject *)DeeObject_TryReallocc(result, offsetof(DeeStringObject, s_str),
+				                                                       me->w_printer.up_length + 1, sizeof(char));
 				if unlikely(!result) {
 					result = COMPILER_CONTAINER_OF(me->w_printer.up_buffer,
 					                               DeeStringObject,
@@ -1183,12 +1181,12 @@ writer_tryappend8(Writer *__restrict self,
 		DeeStringObject *init_buffer;
 		if (init_size < UNICODE_PRINTER_INITIAL_BUFSIZE)
 			init_size = UNICODE_PRINTER_INITIAL_BUFSIZE;
-		init_buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-		                                                     (init_size + 1) * sizeof(char));
+		init_buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+		                                                      init_size + 1, sizeof(char));
 		if unlikely(!init_buffer) {
 			init_size   = bufsize;
-			init_buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-			                                                     (init_size + 1) * sizeof(char));
+			init_buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+			                                                      init_size + 1, sizeof(char));
 			if unlikely(!init_buffer)
 				goto err;
 		}
@@ -1214,18 +1212,12 @@ writer_tryappend8(Writer *__restrict self,
 			do {
 				new_size *= 2;
 			} while (new_size < written + bufsize);
-			new_buffer = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
-			                                                                           DeeStringObject,
-			                                                                           s_str),
-			                                                     offsetof(DeeStringObject, s_str) +
-			                                                     (new_size + 1) * sizeof(char));
+			new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer, DeeStringObject, s_str),
+			                                                      offsetof(DeeStringObject, s_str), new_size + 1, sizeof(char));
 			if unlikely(!new_buffer) {
 				new_size   = written + bufsize;
-				new_buffer = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
-				                                                                           DeeStringObject,
-				                                                                           s_str),
-				                                                     offsetof(DeeStringObject, s_str) +
-				                                                     (new_size + 1) * sizeof(char));
+				new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer, DeeStringObject, s_str),
+				                                                      offsetof(DeeStringObject, s_str), new_size + 1, sizeof(char));
 				if unlikely(!new_buffer)
 					goto err;
 			}
@@ -1300,12 +1292,12 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 		if (ch <= 0xff) {
 			size_t init_size = UNICODE_PRINTER_INITIAL_BUFSIZE;
 			DeeStringObject *init_buffer;
-			init_buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-			                                                     (init_size + 1) * sizeof(char));
+			init_buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+			                                                      init_size + 1, sizeof(char));
 			if unlikely(!init_buffer) {
 				init_size   = 1;
-				init_buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-				                                                     (init_size + 1) * sizeof(char));
+				init_buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+				                                                      init_size + 1, sizeof(char));
 				if unlikely(!init_buffer)
 					goto err;
 			}
@@ -1362,18 +1354,12 @@ writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 				do {
 					new_size *= 2;
 				} while (new_size <= written);
-				new_buffer = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
-				                                                                           DeeStringObject,
-				                                                                           s_str),
-				                                                     offsetof(DeeStringObject, s_str) +
-				                                                     (new_size + 1) * sizeof(char));
+				new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer, DeeStringObject, s_str),
+				                                                      offsetof(DeeStringObject, s_str), new_size + 1, sizeof(char));
 				if unlikely(!new_buffer) {
 					new_size   = written + 1;
-					new_buffer = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
-					                                                                           DeeStringObject,
-					                                                                           s_str),
-					                                                     offsetof(DeeStringObject, s_str) +
-					                                                     (new_size + 1) * sizeof(char));
+					new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer, DeeStringObject, s_str),
+					                                                      offsetof(DeeStringObject, s_str), new_size + 1, sizeof(char));
 					if unlikely(!new_buffer)
 						goto err;
 				}
@@ -1581,12 +1567,14 @@ again:
 			DeeStringObject *buffer_copy;
 			size_t buffer_length = self->w_printer.up_length;
 			ASSERT(buffer_length == DeeString_SIZE(written_buffer));
-			buffer_copy = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-			                                                     (buffer_length + bufsize + 1) * sizeof(char));
+			buffer_copy = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+			                                                      buffer_length + bufsize + 1,
+			                                                      sizeof(char));
 			if unlikely(!buffer_copy) {
 				DeeFileWriter_LockEndWrite(self);
-				if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
-				                      (buffer_length + bufsize + 1) * sizeof(char)))
+				if (Dee_CollectMemoryoc(offsetof(DeeStringObject, s_str),
+				                        buffer_length + bufsize + 1,
+				                        sizeof(char)))
 					goto again;
 				goto err;
 			}

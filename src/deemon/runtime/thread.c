@@ -5128,8 +5128,8 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 			DeeTracebackObject *result;
 			struct localheap heap;
 			traceback_size = atomic_read(&me->t_execsz);
-			result = (DeeTracebackObject *)DeeGCObject_Malloc(offsetof(DeeTracebackObject, tb_frames) +
-			                                                  traceback_size * sizeof(struct code_frame));
+			result = (DeeTracebackObject *)DeeGCObject_Mallocc(offsetof(DeeTracebackObject, tb_frames),
+			                                                   traceback_size, sizeof(struct code_frame));
 			if unlikely(!result)
 				goto err;
 
@@ -5170,8 +5170,8 @@ suspend_me:
 				COMPILER_BARRIER();
 
 				traceback_size = traceback_used;
-				new_result = (DeeTracebackObject *)DeeGCObject_Realloc(result, offsetof(DeeTracebackObject, tb_frames) +
-				                                                               traceback_size * sizeof(struct code_frame));
+				new_result = (DeeTracebackObject *)DeeGCObject_Reallocc(result, offsetof(DeeTracebackObject, tb_frames),
+				                                                        traceback_size, sizeof(struct code_frame));
 				if unlikely(!new_result)
 					goto err_free_result;
 				result = new_result;
@@ -5218,9 +5218,8 @@ suspend_me:
 done_traceback_with_heap:
 			if (traceback_size != traceback_used) {
 				DeeTracebackObject *new_result;
-				new_result = (DeeTracebackObject *)DeeGCObject_TryRealloc(result,
-				                                                          offsetof(DeeTracebackObject, tb_frames) +
-				                                                          traceback_used * sizeof(struct code_frame));
+				new_result = (DeeTracebackObject *)DeeGCObject_TryReallocc(result, offsetof(DeeTracebackObject, tb_frames),
+				                                                           traceback_used, sizeof(struct code_frame));
 				if likely(new_result)
 					result = new_result;
 			}

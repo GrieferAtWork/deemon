@@ -2728,8 +2728,8 @@ DeeSeqEach_CallAttr(DeeObject *__restrict self,
                     size_t argc,
                     DeeObject *const *argv) {
 	DREF SeqEachCallAttr *result;
-	result = (DREF SeqEachCallAttr *)DeeObject_Malloc(offsetof(SeqEachCallAttr, sg_argv) +
-	                                                  (argc * sizeof(DREF DeeObject *)));
+	result = (DREF SeqEachCallAttr *)DeeObject_Mallocc(offsetof(SeqEachCallAttr, sg_argv),
+	                                                   argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	result->se_seq  = self;
@@ -2752,8 +2752,8 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
 	DREF SeqEachCallAttrKw *result;
 	if (!kw)
 		return DeeSeqEach_CallAttr(self, attr, argc, argv);
-	result = (DREF SeqEachCallAttrKw *)DeeObject_Malloc(offsetof(SeqEachCallAttrKw, sg_argv) +
-	                                                    (argc * sizeof(DREF DeeObject *)));
+	result = (DREF SeqEachCallAttrKw *)DeeObject_Mallocc(offsetof(SeqEachCallAttrKw, sg_argv),
+	                                                     argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	result->se_seq  = self;

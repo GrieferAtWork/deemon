@@ -43,7 +43,7 @@ typedef struct deque_bucket {
 #define DEQUEBUCKET_HASNEXT(deq, x) ((x) != (deq)->d_tail)
 
 #define SIZEOF_BUCKET(bucket_size) \
-	(offsetof(DequeBucket, db_items) + (bucket_size) * sizeof(DREF DeeObject *))
+	_Dee_MallococBufsize(offsetof(DequeBucket, db_items), bucket_size, sizeof(DREF DeeObject *))
 #define NEW_BUCKET(bucket_size) \
 	((DequeBucket *)Dee_Malloc(SIZEOF_BUCKET(bucket_size)))
 #define TRY_NEW_BUCKET(bucket_size) \

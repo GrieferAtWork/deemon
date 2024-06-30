@@ -1733,8 +1733,8 @@ uroset_visit(URoSet *__restrict self, dvisit_t proc, void *arg) {
 
 INTERN WUNUSED DREF URoSet *DCALL URoSet_New(void) {
 	DREF URoSet *result;
-	result = (DREF URoSet *)DeeObject_Malloc(offsetof(URoSet, urs_elem) +
-	                                         1 * sizeof(struct uset_item));
+	result = (DREF URoSet *)DeeObject_Mallocc(offsetof(URoSet, urs_elem),
+	                                          1, sizeof(struct uset_item));
 	if likely(result) {
 		result->urs_mask           = 0;
 		result->urs_size           = 0;
@@ -1790,9 +1790,9 @@ URoSet_DoInsertOrRehash(URoSet *__restrict self,
 		size_t newmsk;
 		URoSet *newset;
 		newmsk = (self->urs_mask << 1) | 1;
-		newset = (URoSet *)DeeObject_Calloc(offsetof(URoSet, urs_elem) +
-		                                    (newmsk + 1) *
-		                                    sizeof(struct uset_item));
+		newset = (URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
+		                                     newmsk + 1,
+		                                     sizeof(struct uset_item));
 		if unlikely(!newset)
 			goto err_ob;
 		newset->urs_size = self->urs_size;
@@ -1832,8 +1832,8 @@ INTERN WUNUSED NONNULL((1)) DREF URoSet *DCALL
 URoSet_FromIterator(DeeObject *__restrict iterator) {
 	DREF DeeObject *elem;
 	DREF URoSet *result;
-	result = (DREF URoSet *)DeeObject_Malloc(offsetof(URoSet, urs_elem) +
-	                                         1 * sizeof(struct uset_item));
+	result = (DREF URoSet *)DeeObject_Mallocc(offsetof(URoSet, urs_elem),
+	                                          1, sizeof(struct uset_item));
 	if unlikely(!result)
 		goto err;
 	result->urs_mask            = 0;
@@ -1873,16 +1873,14 @@ again_lock_hashset_src:
 	mask = 1;
 	while ((self->us_used & mask) != self->us_used)
 		mask = (mask << 1) | 1;
-	result = (DREF URoSet *)DeeObject_TryCalloc(offsetof(URoSet, urs_elem) +
-	                                            (mask + 1) *
-	                                            sizeof(struct uset_item));
+	result = (DREF URoSet *)DeeObject_TryCallocc(offsetof(URoSet, urs_elem),
+	                                             mask + 1, sizeof(struct uset_item));
 	if unlikely(!result) {
 		size_t oldsize;
 		oldsize = self->us_used;
 		USet_LockEndRead(self);
-		result = (DREF URoSet *)DeeObject_Calloc(offsetof(URoSet, urs_elem) +
-		                                         (mask + 1) *
-		                                         sizeof(struct uset_item));
+		result = (DREF URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
+		                                          mask + 1, sizeof(struct uset_item));
 		if unlikely(!result)
 			goto done;
 		USet_LockRead(self);
@@ -1936,16 +1934,14 @@ again_lock_hashset_src:
 		mask = 1;
 		while ((src->hs_used & mask) != src->hs_used)
 			mask = (mask << 1) | 1;
-		result = (DREF URoSet *)DeeObject_TryCalloc(offsetof(URoSet, urs_elem) +
-		                                            (mask + 1) *
-		                                            sizeof(struct uset_item));
+		result = (DREF URoSet *)DeeObject_TryCallocc(offsetof(URoSet, urs_elem),
+		                                             mask + 1, sizeof(struct uset_item));
 		if unlikely(!result) {
 			size_t oldsize;
 			oldsize = src->hs_used;
 			DeeHashSet_LockEndRead(src);
-			result = (DREF URoSet *)DeeObject_Calloc(offsetof(URoSet, urs_elem) +
-			                                         (mask + 1) *
-			                                         sizeof(struct uset_item));
+			result = (DREF URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
+			                                          mask + 1, sizeof(struct uset_item));
 			if unlikely(!result)
 				goto err;
 			DeeHashSet_LockRead(src);
@@ -1974,9 +1970,9 @@ return_result:
 		size_t i;
 		DeeRoSetObject *src;
 		src    = (DeeRoSetObject *)sequence;
-		result = (DREF URoSet *)DeeObject_Calloc(offsetof(URoSet, urs_elem) +
-		                                         (src->rs_mask + 1) *
-		                                         sizeof(struct uset_item));
+		result = (DREF URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
+		                                          src->rs_mask + 1,
+		                                          sizeof(struct uset_item));
 		if unlikely(!result)
 			goto err;
 		result->urs_mask = src->rs_mask;
@@ -2002,9 +1998,9 @@ return_result:
 			/* Figure out how large the mask of the set is going to be. */
 			while ((fastsize & mask) != fastsize)
 				mask = (mask << 1) | 1;
-			result = (DREF URoSet *)DeeObject_Calloc(offsetof(URoSet, urs_elem) +
-			                                         (mask + 1) *
-			                                         sizeof(struct uset_item));
+			result = (DREF URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
+			                                          mask + 1,
+			                                          sizeof(struct uset_item));
 			if unlikely(!result)
 				goto err;
 			/* Without any dummy items, these are identical. */
@@ -2047,9 +2043,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF URoSet *DCALL
 uroset_deepcopy(URoSet *__restrict self) {
 	DREF URoSet *result;
 	size_t i;
-	result = (DREF URoSet *)DeeObject_Calloc(offsetof(URoSet, urs_elem) +
-	                                         (self->urs_mask + 1) *
-	                                         sizeof(struct uset_item));
+	result = (DREF URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
+	                                          self->urs_mask + 1,
+	                                          sizeof(struct uset_item));
 	if unlikely(!result)
 		goto err;
 	result->urs_mask = self->urs_mask;
@@ -2095,9 +2091,11 @@ uroset_fini(URoSet *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uroset_sizeof(URoSet *self) {
-	return DeeInt_NewSize(offsetof(URoSet, urs_elem) +
-	                      ((self->urs_mask + 1) *
-	                       sizeof(struct uset_item)));
+	size_t result;
+	result = _Dee_MallococBufsize(offsetof(URoSet, urs_elem),
+	                              self->urs_mask + 1,
+	                              sizeof(struct uset_item));
+	return DeeInt_NewSize(result);
 }
 
 PRIVATE struct type_getset tpconst uroset_getsets[] = {

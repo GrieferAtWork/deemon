@@ -73,11 +73,11 @@ DeeCell_New(DeeObject *__restrict item);
 #define DeeCell_NewEmpty() DeeObject_NewDefault(&DeeCell_Type)
 
 /* Get/Del/Set the value associated with a given Cell.
- * HINT:  These are the getset callbacks used for `Cell.item' (or its deprecated name `Cell.value').
- *        With that in mind, `DeeCell_Del()' and `DeeCell_Set()'
- *        always return `0' indicative of a successful callback.
- * NOTE: `DeeCell_Get' will return `NULL' and throw an `AttributeError' if the `self' is
- *        empty, whereas `DeeCell_TryGet()' will do the same, but never throw any error. */
+ * HINT: These are the getset callbacks used for `Cell.item' (or its deprecated name `Cell.value').
+ *       With that in mind, `DeeCell_Del()' and `DeeCell_Set()'
+ *       always return `0' indicative of a successful callback.
+ * NOTE: `DeeCell_Get' will return `NULL' and throw an `UnboundAttribute' if the `self' is
+ *       empty, whereas `DeeCell_TryGet()' will do the same, but never throw any error. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCell_TryGet(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCell_Get(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeCell_Del(DeeObject *__restrict self);

@@ -43,9 +43,8 @@ typedef struct {
 	                 (self)->rm_eo))
 
 INTDEF DeeTypeObject ReGroups_Type;
-#define ReGroups_Malloc(ngroups)                                  \
-	((ReGroups *)DeeObject_Malloc(offsetof(ReGroups, rg_groups) + \
-	                              (ngroups) * sizeof(struct DeeRegexMatch)))
+#define ReGroups_Malloc(ngroups) \
+	((ReGroups *)DeeObject_Mallocc(offsetof(ReGroups, rg_groups), ngroups, sizeof(struct DeeRegexMatch)))
 #define ReGroups_Free(self) DeeObject_Free(self)
 #define ReGroups_Init(self, ngroups)             \
 	(void)(DeeObject_Init(self, &ReGroups_Type), \
@@ -77,9 +76,8 @@ typedef struct {
 INTDEF DeeTypeObject ReSubStrings_Type;
 INTDEF DeeTypeObject ReSubBytes_Type;
 
-#define ReSubStrings_Malloc(ngroups)                                       \
-	((ReSubStrings *)DeeObject_Malloc(offsetof(ReSubStrings, rss_groups) + \
-	                                  (ngroups) * sizeof(struct DeeRegexMatch)))
+#define ReSubStrings_Malloc(ngroups) \
+	((ReSubStrings *)DeeObject_Mallocc(offsetof(ReSubStrings, rss_groups), ngroups, sizeof(struct DeeRegexMatch)))
 #define ReSubStrings_Free(self) DeeObject_Free(self)
 #define ReSubStrings_Init(self, baseown, baseptr, ngroups) \
 	(void)(DeeObject_Init(self, &ReSubStrings_Type),       \

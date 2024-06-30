@@ -299,12 +299,12 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	result_size = (current_assembler.a_sect[0].sec_iter -
 	               current_assembler.a_sect[0].sec_begin) *
 	              3;
-	result = (DeeDDIObject *)DeeObject_TryCalloc(offsetof(DeeDDIObject, d_ddi) +
-	                                             1 + result_size);
+	result = (DeeDDIObject *)DeeObject_TryCallocc(offsetof(DeeDDIObject, d_ddi),
+	                                              result_size + 1, sizeof(uint8_t));
 	if unlikely(!result) {
 		result_size = 0;
-		result = (DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject, d_ddi) +
-		                                          1 + result_size);
+		result = (DeeDDIObject *)DeeObject_Callocc(offsetof(DeeDDIObject, d_ddi),
+		                                           result_size + 1, sizeof(uint8_t));
 		if unlikely(!result)
 			goto err;
 	}
@@ -506,14 +506,16 @@ do_realloc_bind:
 						ASSERT(old_alloc != 0);
 						ASSERT(new_alloc != 0);
 						ASSERT(old_alloc != new_alloc);
-						new_result = (DeeDDIObject *)DeeObject_TryRealloc(result, offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc);
+						new_result = (DeeDDIObject *)DeeObject_TryReallocc(result, offsetof(DeeDDIObject, d_ddi),
+							                                               new_alloc + 1, sizeof(uint8_t));
 						if unlikely(!new_result) {
 							size_t min_alloc = bind_size + (size_t)(code_iter - result->d_ddi);
 							if (new_alloc != min_alloc) {
 								new_alloc = min_alloc;
 								goto do_realloc_bind;
 							}
-							if (Dee_CollectMemory(offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc))
+							if (Dee_CollectMemoryoc(offsetof(DeeDDIObject, d_ddi),
+								                    new_alloc + 1, sizeof(uint8_t)))
 								goto do_realloc_bind;
 							goto err_result_printer;
 						}
@@ -570,15 +572,16 @@ do_realloc:
 				ASSERT(old_alloc != 0);
 				ASSERT(new_alloc != 0);
 				ASSERT(old_alloc != new_alloc);
-				new_result = (DeeDDIObject *)DeeObject_TryRealloc(result,
-				                                                  offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc);
+				new_result = (DeeDDIObject *)DeeObject_TryReallocc(result, offsetof(DeeDDIObject, d_ddi),
+					                                               new_alloc + 1, sizeof(uint8_t));
 				if unlikely(!new_result) {
 					size_t min_alloc = text_size + (size_t)(code_iter - result->d_ddi);
 					if (new_alloc != min_alloc) {
 						new_alloc = min_alloc;
 						goto do_realloc;
 					}
-					if (Dee_CollectMemory(offsetof(DeeDDIObject, d_ddi) + 1 + new_alloc))
+					if (Dee_CollectMemoryoc(offsetof(DeeDDIObject, d_ddi),
+						                    new_alloc + 1, sizeof(uint8_t)))
 						goto do_realloc;
 					goto err_result_printer;
 				}

@@ -420,12 +420,12 @@ again:
 	DBG_ALIGNMENT_ENABLE();
 	if (ent && (name = ent->p_name) != NULL) {
 		name_length = strlen(name);
-		result = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-		                                                     (name_length + 1) * sizeof(char));
+		result = (DREF DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+		                                                      name_length + 1, sizeof(char));
 		if unlikely(!result) {
 			sysdb_lock_endwrite();
-			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
-			                      (name_length + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(DeeStringObject, s_str),
+			                        name_length + 1, sizeof(char)))
 				goto again;
 			return NULL;
 		}
@@ -778,12 +778,12 @@ restart:
 		goto nodns2;
 	name_length = strlen(hp->h_name);
 	/* Safely copy the host's name. */
-	result = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-	                                                (name_length + 1) * sizeof(char));
+	result = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+	                                                 name_length + 1, sizeof(char));
 	if unlikely(!result) {
 		sysdb_lock_endwrite();
-		if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) +
-		                      (name_length + 1) * sizeof(char)))
+		if (Dee_CollectMemoryoc(offsetof(DeeStringObject, s_str),
+		                        name_length + 1, sizeof(char)))
 			goto restart;
 		goto err;
 	}

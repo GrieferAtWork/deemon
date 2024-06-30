@@ -46,25 +46,20 @@ struct Dee_tuple_object {
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, t_elem); /* [1..1][const][t_size] Tuple elements. */
 };
 
-#define DeeTuple_SIZEOF(n_items) (COMPILER_OFFSETOF(DeeTupleObject, t_elem) + (n_items) * sizeof(DREF DeeObject *))
-#define DeeTuple_IsEmpty(ob)     ((DeeObject *)Dee_REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
-#define DeeTuple_SIZE(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_size
-#define DeeTuple_ELEM(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem
-#define DeeTuple_END(ob)         (((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem + ((DeeTupleObject *)(ob))->t_size)
-#define DeeTuple_GET(ob, i)      ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]
-#define DeeTuple_SET(ob, i, v)   (void)(((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (DeeObject *)Dee_REQUIRES_OBJECT(v))
+#define DeeTuple_SIZEOF(n_items)                                    \
+	_Dee_MallococBufsize(COMPILER_OFFSETOF(DeeTupleObject, t_elem), \
+	                     n_items, sizeof(DREF DeeObject *))
+#define DeeTuple_IsEmpty(ob)   ((DeeObject *)Dee_REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
+#define DeeTuple_SIZE(ob)      ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_size
+#define DeeTuple_ELEM(ob)      ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem
+#define DeeTuple_END(ob)       (((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem + ((DeeTupleObject *)(ob))->t_size)
+#define DeeTuple_GET(ob, i)    ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]
+#define DeeTuple_SET(ob, i, v) (void)(((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (DeeObject *)Dee_REQUIRES_OBJECT(v))
 
 /* Same as `DeeTuple_SIZEOF()', but makes sure that no overflow takes place. */
-#define DeeTuple_SIZEOF_SAFE(n_items) DeeTuple_SIZEOF_SAFE(n_items)
-LOCAL ATTR_CONST WUNUSED size_t
-(DCALL DeeTuple_SIZEOF_SAFE)(size_t n_items) {
-	size_t result;
-	if unlikely(__hybrid_overflow_umul(n_items, sizeof(DREF DeeObject *), &result))
-		result = (size_t)-1;
-	if unlikely(__hybrid_overflow_uadd(result, COMPILER_OFFSETOF(DeeTupleObject, t_elem), &result))
-		result = (size_t)-1;
-	return result;
-}
+#define DeeTuple_SIZEOF_SAFE(n_items)                                   \
+	_Dee_MallococBufsizeSafe(COMPILER_OFFSETOF(DeeTupleObject, t_elem), \
+	                         n_items, sizeof(DREF DeeObject *))
 
 
 /* Define a statically allocated tuple:

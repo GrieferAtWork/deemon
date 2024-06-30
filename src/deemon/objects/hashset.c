@@ -1014,11 +1014,12 @@ again:
 	}
 	if likely(!result) {
 		/* Create the actual string that's going to get stored. */
-		result = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-		                                                     (search_item_length + 1) * sizeof(char));
+		result = (DREF DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+		                                                      search_item_length + 1, sizeof(char));
 		if unlikely(!result) {
 			DeeHashSet_LockEndRead(me);
-			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) + (search_item_length + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(DeeStringObject, s_str),
+			                        search_item_length + 1, sizeof(char)))
 				goto again_lock;
 			return NULL;
 		}
@@ -1108,11 +1109,12 @@ again:
 	}
 	if likely(!new_item) {
 		/* Create the actual string that's going to get stored. */
-		new_item = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-		                                                       (search_item_length + 1) * sizeof(char));
+		new_item = (DREF DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+		                                                        search_item_length + 1, sizeof(char));
 		if unlikely(!new_item) {
 			DeeHashSet_LockEndRead(me);
-			if (Dee_CollectMemory(offsetof(DeeStringObject, s_str) + (search_item_length + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(DeeStringObject, s_str),
+			                        search_item_length + 1, sizeof(char)))
 				goto again_lock;
 			return -1;
 		}

@@ -38,6 +38,8 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/rlock.h>
 
+#include <hybrid/overflow.h>
+
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */
@@ -1271,48 +1273,64 @@ LOCAL void *gc_initob(void *ptr) {
  * includes some storage at negative offsets to hold a `struct gc_head',
  * as is required for objects that should later be tracked by the GC. */
 PUBLIC ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Malloc)(size_t n_bytes) {
-	return gc_initob((DeeObject_Malloc)(DEE_GC_HEAD_SIZE + n_bytes));
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
+	return gc_initob((DeeObject_Malloc)(whole_size));
 }
 
 PUBLIC ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Calloc)(size_t n_bytes) {
-	return gc_initob((DeeObject_Calloc)(DEE_GC_HEAD_SIZE + n_bytes));
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
+	return gc_initob((DeeObject_Calloc)(whole_size));
 }
 
 PUBLIC WUNUSED void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
 	if (p) {
 #ifdef GCHEAD_ISTRACKED
 		ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p)),
 		        "Object at %p was still being tracked", p);
 #endif /* GCHEAD_ISTRACKED */
-		p = (DeeObject_Realloc)(DeeGC_Head((DeeObject *)p),
-		                        DEE_GC_HEAD_SIZE + n_bytes);
+		p = (DeeObject_Realloc)(DeeGC_Head((DeeObject *)p), whole_size);
 	} else {
-		p = (DeeObject_Malloc)(DEE_GC_HEAD_SIZE + n_bytes);
+		p = (DeeObject_Malloc)(whole_size);
 	}
 	return gc_initob(p);
 }
 
 PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeGCObject_TryMalloc)(size_t n_bytes) {
-	return gc_initob((DeeObject_TryMalloc)(DEE_GC_HEAD_SIZE + n_bytes));
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
+	return gc_initob((DeeObject_TryMalloc)(whole_size));
 }
 
 PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeGCObject_TryCalloc)(size_t n_bytes) {
-	return gc_initob((DeeObject_TryCalloc)(DEE_GC_HEAD_SIZE + n_bytes));
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
+	return gc_initob((DeeObject_TryCalloc)(whole_size));
 }
 
 PUBLIC WUNUSED void *
 (DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes) {
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
 	if (p) {
 #ifdef GCHEAD_ISTRACKED
 		ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p)),
 		        "Object at %p was still being tracked", p);
 #endif /* GCHEAD_ISTRACKED */
-		p = (DeeObject_TryRealloc)(DeeGC_Head((DeeObject *)p),
-		                           DEE_GC_HEAD_SIZE + n_bytes);
+		p = (DeeObject_TryRealloc)(DeeGC_Head((DeeObject *)p), whole_size);
 	} else {
-		p = (DeeObject_TryMalloc)(DEE_GC_HEAD_SIZE + n_bytes);
+		p = (DeeObject_TryMalloc)(whole_size);
 	}
 	return gc_initob(p);
 }
@@ -1335,16 +1353,25 @@ PUBLIC void
 
 DFUNDEF ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_Malloc)(size_t n_bytes, char const *file, int line) {
-	return gc_initob((DeeDbgObject_Malloc)(DEE_GC_HEAD_SIZE + n_bytes, file, line));
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
+	return gc_initob((DeeDbgObject_Malloc)(whole_size, file, line));
 }
 
 DFUNDEF ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_Calloc)(size_t n_bytes, char const *file, int line) {
-	return gc_initob((DeeDbgObject_Calloc)(DEE_GC_HEAD_SIZE + n_bytes, file, line));
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
+	return gc_initob((DeeDbgObject_Calloc)(whole_size, file, line));
 }
 
 DFUNDEF WUNUSED void *
 (DCALL DeeDbgGCObject_Realloc)(void *p, size_t n_bytes, char const *file, int line) {
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
 	if (p) {
 #if defined(GCHEAD_ISTRACKED) && !defined(NDEBUG)
 		if (GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p))) {
@@ -1352,27 +1379,34 @@ DFUNDEF WUNUSED void *
 			                 "Object at %p was still being tracked", p);
 		}
 #endif /* GCHEAD_ISTRACKED && !NDEBUG */
-		p = (DeeDbgObject_Realloc)(DeeGC_Head((DeeObject *)p),
-		                           DEE_GC_HEAD_SIZE + n_bytes,
-		                           file, line);
+		p = (DeeDbgObject_Realloc)(DeeGC_Head((DeeObject *)p), whole_size, file, line);
 	} else {
-		p = (DeeDbgObject_Malloc)(DEE_GC_HEAD_SIZE + n_bytes, file, line);
+		p = (DeeDbgObject_Malloc)(whole_size, file, line);
 	}
 	return gc_initob(p);
 }
 
 DFUNDEF ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_TryMalloc)(size_t n_bytes, char const *file, int line) {
-	return gc_initob((DeeDbgObject_TryMalloc)(DEE_GC_HEAD_SIZE + n_bytes, file, line));
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
+	return gc_initob((DeeDbgObject_TryMalloc)(whole_size, file, line));
 }
 
 DFUNDEF ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_TryCalloc)(size_t n_bytes, char const *file, int line) {
-	return gc_initob((DeeDbgObject_TryCalloc)(DEE_GC_HEAD_SIZE + n_bytes, file, line));
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
+	return gc_initob((DeeDbgObject_TryCalloc)(whole_size, file, line));
 }
 
 DFUNDEF WUNUSED void *
 (DCALL DeeDbgGCObject_TryRealloc)(void *p, size_t n_bytes, char const *file, int line) {
+	size_t whole_size;
+	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+		whole_size = (size_t)-1;
 	if (p) {
 #if defined(GCHEAD_ISTRACKED) && !defined(NDEBUG)
 		if (GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p))) {
@@ -1380,11 +1414,9 @@ DFUNDEF WUNUSED void *
 			                 "Object at %p was still being tracked", p);
 		}
 #endif /* GCHEAD_ISTRACKED && !NDEBUG */
-		p = (DeeDbgObject_TryRealloc)(DeeGC_Head((DeeObject *)p),
-		                              DEE_GC_HEAD_SIZE + n_bytes,
-		                              file, line);
+		p = (DeeDbgObject_TryRealloc)(DeeGC_Head((DeeObject *)p), whole_size, file, line);
 	} else {
-		p = (DeeDbgObject_TryMalloc)(DEE_GC_HEAD_SIZE + n_bytes, file, line);
+		p = (DeeDbgObject_TryMalloc)(whole_size, file, line);
 	}
 	return gc_initob(p);
 }

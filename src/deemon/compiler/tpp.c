@@ -663,8 +663,8 @@ tpp_unknown_file(int mode, char *__restrict filename,
 
 	/* Try to pre-allocate a decently-sized buffer. */
 	buflen = 128 + filename_size;
-	buffer = (DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-	                                                (buflen + 1) * sizeof(char));
+	buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+	                                                 buflen + 1, sizeof(char));
 	if unlikely(!buffer) {
 		buflen = 0;
 	} else {
@@ -689,8 +689,8 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		              filename_size);                   /* baz.dee */
 		if unlikely(req_length > buflen) {
 			/* Need a larger buffer. */
-			new_buffer = (DeeStringObject *)DeeObject_Realloc(buffer, offsetof(DeeStringObject, s_str) +
-			                                                          (req_length + 1) * sizeof(char));
+			new_buffer = (DeeStringObject *)DeeObject_Reallocc(buffer, offsetof(DeeStringObject, s_str),
+			                                                   req_length + 1, sizeof(char));
 			if unlikely(!new_buffer)
 				goto err_path;
 			if (!buffer) {
@@ -760,8 +760,8 @@ tpp_unknown_file(int mode, char *__restrict filename,
 
 		/* Try to truncate the used portion of the buffer. */
 		if (buffer->s_len != buflen) {
-			new_buffer = (DeeStringObject *)DeeObject_TryRealloc(buffer, offsetof(DeeStringObject, s_str) +
-			                                                             (buffer->s_len + 1) * sizeof(char));
+			new_buffer = (DeeStringObject *)DeeObject_TryReallocc(buffer, offsetof(DeeStringObject, s_str),
+			                                                      buffer->s_len + 1, sizeof(char));
 			if likely(new_buffer) {
 				buffer = new_buffer;
 				buflen = buffer->s_len;

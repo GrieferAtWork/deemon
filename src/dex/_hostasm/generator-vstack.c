@@ -219,8 +219,8 @@ fg_vpush_rid(struct fungen *__restrict self, uint16_t rid) {
 		/* Special case: must access the "fo_refv" field of the runtime "func" parameter. */
 		DO(_fg_vpush_xlocal(self, NULL, MEMSTATE_XLOCAL_A_FUNC));
 		return fg_vind(self,
-		               offsetof(DeeFunctionObject, fo_refv) +
-		               rid * sizeof(DREF DeeObject *));
+		               _Dee_MallococBufsize(offsetof(DeeFunctionObject, fo_refv),
+		                                    rid, sizeof(DREF DeeObject *)));
 	}
 
 	/* Simple case: able to directly inline function references */
@@ -1921,8 +1921,8 @@ fg_vbound_cmember(struct fungen *__restrict self,
 	} else {
 		DO(fg_vind(self, offsetof(DeeTypeObject, tp_class))); /* type->tp_class */
 		DO(fg_vind(self,                                      /* type->tp_class->cd_members[addr] */
-		                               offsetof(struct Dee_class_desc, cd_members[0]) +
-		                               (addr * sizeof(DREF DeeObject *))));
+		           _Dee_MallococBufsize(offsetof(struct Dee_class_desc, cd_members[0]),
+		                                addr, sizeof(DREF DeeObject *))));
 		DO(fg_vreg(self, NULL)); /* reg:type->tp_class->cd_members[addr] */
 		vtop = fg_vtop(self);
 		ASSERT(memval_isdirect(vtop));
@@ -1975,8 +1975,8 @@ fg_vpop_cmember(struct fungen *__restrict self,
 					DO(fg_vind(self, offsetof(DeeTypeObject, tp_class))); /* type, value, type->tp_class */
 					DO(fg_vswap(self));                                   /* type, type->tp_class, value */
 					DO(fg_vpopind(self,                                   /* type, type->tp_class */
-					              offsetof(struct Dee_class_desc, cd_members[0]) +
-					              (addr * sizeof(DREF DeeObject *))));
+					              _Dee_MallococBufsize(offsetof(struct Dee_class_desc, cd_members[0]),
+					                                   addr, sizeof(DREF DeeObject *))));
 					return fg_vpopmany(self, 2); /* N/A */
 				}
 			}
@@ -2040,8 +2040,8 @@ fg_vpush_imember_unsafe_at_runtime(struct fungen *__restrict self,
 #ifndef CONFIG_NO_THREADS
 	lock_offset = desc->cd_offset + offsetof(struct instance_desc, id_lock);
 #endif /* !CONFIG_NO_THREADS */
-	slot_offset = desc->cd_offset + offsetof(struct instance_desc, id_vtab) +
-	              addr * sizeof(DREF DeeObject *);
+	slot_offset = _Dee_MallococBufsize(desc->cd_offset + offsetof(struct instance_desc, id_vtab),
+	                                   addr, sizeof(DREF DeeObject *));
 	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type' */
 
 	/* TODO: In case of reading members, if one of the next instructions also does a read,
@@ -2214,8 +2214,8 @@ fg_vdel_or_pop_imember_unsafe_at_runtime(struct fungen *__restrict self,
 #ifndef CONFIG_NO_THREADS
 	lock_offset = desc->cd_offset + offsetof(struct instance_desc, id_lock);
 #endif /* !CONFIG_NO_THREADS */
-	slot_offset = desc->cd_offset + offsetof(struct instance_desc, id_vtab) +
-	              addr * sizeof(DREF DeeObject *);
+	slot_offset = _Dee_MallococBufsize(desc->cd_offset + offsetof(struct instance_desc, id_vtab),
+	                                   addr, sizeof(DREF DeeObject *));
 	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type' */
 
 #ifndef CONFIG_NO_THREADS
@@ -3084,8 +3084,8 @@ push_list_mval_objc:
 			goto push_list_mval_objc;
 		if (ind_delta >= offsetof(DeeTupleObject, t_elem)) {
 			struct memobjs *objs = memval_getobjn(mval);
-			if ((size_t)ind_delta < ((size_t)offsetof(DeeTupleObject, t_elem) +
-			                         (size_t)(objs->mos_objc * sizeof(DREF DeeObject *)))) {
+			if ((size_t)ind_delta < _Dee_MallococBufsize(offsetof(DeeTupleObject, t_elem),
+			                                             objs->mos_objc, sizeof(DREF DeeObject *))) {
 				size_t index = (size_t)ind_delta - (size_t)offsetof(DeeTupleObject, t_elem);
 				if ((index % sizeof(DREF DeeObject *)) == 0) {
 					index /= sizeof(DREF DeeObject *);
@@ -4272,8 +4272,8 @@ PRIVATE DeeTypeObject DeeVectorDummy_Type = {
 PRIVATE WUNUSED DREF DummyVectorObject *DCALL
 DummyVector_New(size_t num_items) {
 	DREF DummyVectorObject *result;
-	result = (DREF DummyVectorObject *)DeeObject_Malloc(offsetof(DummyVectorObject, dvo_items) +
-	                                                    (num_items * sizeof(void *)));
+	result = (DREF DummyVectorObject *)DeeObject_Mallocc(offsetof(DummyVectorObject, dvo_items),
+	                                                     num_items, sizeof(void *));
 	if likely(result)
 		DeeObject_Init(result, &DeeVectorDummy_Type);
 	return result;

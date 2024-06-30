@@ -61,9 +61,8 @@ thread_tls_get(size_t index) {
 			goto err;
 		}
 		old_size = desc ? desc->td_size : 0;
-		desc = (struct tls_descriptor *)Dee_Realloc(desc,
-		                                            offsetof(struct tls_descriptor, td_elem) +
-		                                            (index + 1) * sizeof(DREF DeeObject *));
+		desc = (struct tls_descriptor *)Dee_Reallococ(desc, offsetof(struct tls_descriptor, td_elem),
+		                                              index + 1, sizeof(DREF DeeObject *));
 		if unlikely(!desc)
 			goto err;
 

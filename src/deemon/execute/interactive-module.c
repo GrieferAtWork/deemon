@@ -1253,8 +1253,9 @@ do_create_used_name:
 			used_name = TPPString_New(DeeString_STR(self->im_options.co_filename),
 			                          DeeString_SIZE(self->im_options.co_filename));
 			if unlikely(!used_name) {
-				if (Dee_CollectMemory(offsetof(struct TPPString, s_text) +
-				                      (DeeString_SIZE(self->im_options.co_filename) + 1) * sizeof(char)))
+				if (Dee_CollectMemoryoc(offsetof(struct TPPString, s_text),
+				                        DeeString_SIZE(self->im_options.co_filename) + 1,
+				                        sizeof(char)))
 					goto do_create_used_name;
 				goto err_basefile;
 			}
@@ -1273,8 +1274,9 @@ do_create_base_name:
 			module_base_scope->bs_name = TPPLexer_LookupKeyword(DeeString_STR(self->im_options.co_rootname),
 			                                                    DeeString_SIZE(self->im_options.co_rootname), 1);
 			if unlikely(!module_base_scope->bs_name) {
-				if (Dee_CollectMemory(offsetof(struct TPPKeyword, k_name) +
-				                      (DeeString_SIZE(self->im_options.co_rootname) + 1) * sizeof(char)))
+				if (Dee_CollectMemoryoc(offsetof(struct TPPKeyword, k_name),
+				                        DeeString_SIZE(self->im_options.co_rootname) + 1,
+				                        sizeof(char)))
 					goto do_create_base_name;
 				goto err_basefile;
 			}

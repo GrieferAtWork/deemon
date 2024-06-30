@@ -316,8 +316,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	if (bufsize != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (bufsize == 0)
 			return_empty_bytes;
-		result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
-		                                        bufsize);
+		result = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data), bufsize, sizeof(byte_t));
 		if unlikely(!result)
 			goto err;
 
@@ -339,10 +338,10 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 
 	/* Fallback: use an iterator. */
 	bufsize = 256;
-	result  = (DREF Bytes *)DeeObject_TryMalloc(offsetof(Bytes, b_data) + bufsize);
+	result  = (DREF Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data), bufsize, sizeof(byte_t));
 	if unlikely(!bufsize) {
 		bufsize = 1;
-		result  = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) + 1);
+		result  = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data), 1, sizeof(byte_t));
 		if unlikely(!result)
 			goto err;
 	}
@@ -357,14 +356,12 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 			size_t new_bufsize = bufsize * 2;
 
 			/* Must allocate more memory. */
-			new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
-			                                                offsetof(Bytes, b_data) +
-			                                                new_bufsize);
+			new_result = (DREF Bytes *)DeeObject_TryReallocc(result, offsetof(Bytes, b_data),
+			                                                 new_bufsize, sizeof(byte_t));
 			if unlikely(!new_result) {
 				new_bufsize = i + 1;
-				new_result = (DREF Bytes *)DeeObject_Realloc(result,
-				                                             offsetof(Bytes, b_data) +
-				                                             new_bufsize);
+				new_result = (DREF Bytes *)DeeObject_Reallocc(result, offsetof(Bytes, b_data),
+				                                              new_bufsize, sizeof(byte_t));
 				if unlikely(!new_result)
 					goto err_r_elem;
 			}
@@ -385,9 +382,8 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	/* Free unused buffer memory. */
 	if likely(i < bufsize) {
 		DREF Bytes *new_result;
-		new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
-		                                                offsetof(Bytes, b_data) +
-		                                                i);
+		new_result = (DREF Bytes *)DeeObject_TryReallocc(result, offsetof(Bytes, b_data),
+		                                                 i, sizeof(byte_t));
 		if likely(new_result)
 			result = new_result;
 	}
@@ -481,8 +477,8 @@ err_r:
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {
 	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
-	                                        num_bytes);
+	result = (DREF Bytes *)DeeObject_MalloccSafe(offsetof(Bytes, b_data),
+	                                             num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	memset(result->b_data, init, num_bytes);
@@ -503,8 +499,8 @@ done:
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBufferUninitialized(size_t num_bytes) {
 	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
-	                                        num_bytes);
+	result = (DREF Bytes *)DeeObject_MalloccSafe(offsetof(Bytes, b_data),
+	                                             num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	result->b_base           = result->b_data;
@@ -524,8 +520,8 @@ done:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
-	                                        num_bytes);
+	result = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data),
+	                                         num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	result->b_base  = (byte_t *)memcpy(result->b_data, data, num_bytes);
@@ -545,9 +541,12 @@ done:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                       size_t num_bytes) {
+	size_t total_bytes;
 	DREF Bytes *result, *new_result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeBytes_Type);
 	ASSERT(!DeeObject_IsShared(self));
+	if unlikely(OVERFLOW_UADD(offsetof(Bytes, b_data), num_bytes, &total_bytes))
+		total_bytes = (size_t)-1;
 	result = (DREF Bytes *)self;
 	ASSERT(result->b_base == result->b_data);
 	ASSERT(result->b_orig == (DREF DeeObject *)result);
@@ -555,15 +554,13 @@ DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 	ASSERT(result->b_buffer.bb_base == result->b_data);
 	ASSERT(result->b_buffer.bb_size == result->b_size);
 again:
-	new_result = (DREF Bytes *)DeeObject_TryRealloc(result,
-	                                                offsetof(Bytes, b_data) +
-	                                                num_bytes);
+	new_result = (DREF Bytes *)DeeObject_TryRealloc(result, total_bytes);
 	if unlikely(!new_result) {
 		if (num_bytes <= result->b_size) {
 			result->b_size = result->b_buffer.bb_size = num_bytes;
 			return (DREF DeeObject *)result;
 		}
-		if (Dee_CollectMemory(offsetof(Bytes, b_data) + num_bytes))
+		if (Dee_CollectMemory(total_bytes))
 			goto again;
 		return NULL;
 	}
@@ -587,9 +584,8 @@ DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 	ASSERT(result->b_buffer.bb_size == result->b_size);
 	ASSERT(num_bytes <= result->b_size);
 	if (num_bytes != result->b_size) {
-		result = (DREF Bytes *)DeeObject_TryRealloc(result,
-		                                            offsetof(Bytes, b_data) +
-		                                            num_bytes);
+		result = (DREF Bytes *)DeeObject_TryReallocc(result, offsetof(Bytes, b_data),
+		                                             num_bytes, sizeof(byte_t));
 		if unlikely(!result) {
 			result         = (DREF Bytes *)self;
 			result->b_size = result->b_buffer.bb_size = num_bytes;
@@ -2119,9 +2115,8 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
 	/* Deallocate unused memory. */
 	if likely(self->bp_length != result->b_size) {
 		DREF Bytes *reloc;
-		reloc = (DREF Bytes *)DeeObject_TryRealloc(result,
-		                                           offsetof(Bytes, b_data) +
-		                                           self->bp_length);
+		reloc = (DREF Bytes *)DeeObject_TryReallocc(result, offsetof(Bytes, b_data),
+		                                            self->bp_length, sizeof(byte_t));
 		if likely(reloc)
 			result         = reloc;
 		result->b_size = self->bp_length;
@@ -2163,13 +2158,14 @@ Dee_bytes_printer_append(struct bytes_printer *__restrict self,
 		while (alloc_size < datalen)
 			alloc_size *= 2;
 alloc_again:
-		bytes = (Bytes *)DeeObject_TryMalloc(offsetof(Bytes, b_data) + alloc_size);
+		bytes = (Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data),
+		                                      alloc_size, sizeof(byte_t));
 		if unlikely(!bytes) {
 			if (alloc_size != datalen) {
 				alloc_size = datalen;
 				goto alloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(Bytes, b_data) + alloc_size))
+			if (Dee_CollectMemoryoc(offsetof(Bytes, b_data), alloc_size, sizeof(byte_t)))
 				goto alloc_again;
 			return -1;
 		}
@@ -2186,14 +2182,15 @@ alloc_again:
 		size_t min_alloc = self->bp_length + datalen;
 		alloc_size       = (min_alloc + 63) & ~63;
 realloc_again:
-		bytes = (Bytes *)DeeObject_TryRealloc(bytes, offsetof(Bytes, b_data) + alloc_size);
+		bytes = (Bytes *)DeeObject_TryReallocc(bytes, offsetof(Bytes, b_data),
+		                                       alloc_size, sizeof(byte_t));
 		if unlikely(!bytes) {
 			bytes = self->bp_bytes;
 			if (alloc_size != min_alloc) {
 				alloc_size = min_alloc;
 				goto realloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(Bytes, b_data) + alloc_size))
+			if (Dee_CollectMemoryoc(offsetof(Bytes, b_data), alloc_size, sizeof(byte_t)))
 				goto realloc_again;
 			return -1;
 		}
@@ -2267,15 +2264,15 @@ PUBLIC WUNUSED NONNULL((1)) byte_t *
 		while (alloc_size < datalen)
 			alloc_size *= 2;
 alloc_again:
-		bytes = (Bytes *)DeeObject_TryMalloc(offsetof(Bytes, b_data) +
-		                                     (alloc_size + 1) * sizeof(char));
+		bytes = (Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data),
+		                                      alloc_size + 1, sizeof(byte_t));
 		if unlikely(!bytes) {
 			if (alloc_size != datalen) {
 				alloc_size = datalen;
 				goto alloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(Bytes, b_data) +
-			                      (alloc_size + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(Bytes, b_data),
+			                        alloc_size + 1, sizeof(byte_t)))
 				goto alloc_again;
 			return NULL;
 		}
@@ -2291,16 +2288,16 @@ alloc_again:
 		size_t min_alloc = self->bp_length + datalen;
 		alloc_size       = (min_alloc + 63) & ~63;
 realloc_again:
-		bytes = (Bytes *)DeeObject_TryRealloc(bytes, offsetof(Bytes, b_data) +
-		                                             (alloc_size + 1) * sizeof(char));
+		bytes = (Bytes *)DeeObject_TryReallocc(bytes, offsetof(Bytes, b_data),
+		                                       alloc_size + 1, sizeof(byte_t));
 		if unlikely(!bytes) {
 			bytes = self->bp_bytes;
 			if (alloc_size != min_alloc) {
 				alloc_size = min_alloc;
 				goto realloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(Bytes, b_data) +
-			                      (alloc_size + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(Bytes, b_data),
+			                        alloc_size + 1, sizeof(byte_t)))
 				goto realloc_again;
 			return NULL;
 		}

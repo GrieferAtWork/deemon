@@ -415,8 +415,8 @@ GCSetMaker_Rehash(GCSetMaker *__restrict self) {
 	} else {
 		new_mask = 31;
 	}
-	new_set = (GCSet *)DeeObject_TryCalloc(offsetof(GCSet, gs_elem) +
-	                                       (new_mask + 1) * sizeof(DREF DeeObject *));
+	new_set = (GCSet *)DeeObject_TryCallocc(offsetof(GCSet, gs_elem),
+	                                        new_mask + 1, sizeof(DREF DeeObject *));
 	if unlikely(!new_set)
 		return false;
 	new_set->gs_mask = new_mask;
@@ -484,9 +484,9 @@ GCSetMaker_RemoveNonGC(GCSetMaker *__restrict self) {
 	old_set = self->gs_set;
 	if (!old_set)
 		return 0;
-	new_set = (GCSet *)DeeObject_TryCalloc(offsetof(GCSet, gs_elem) +
-	                                       (old_set->gs_mask + 1) *
-	                                       sizeof(DREF DeeObject *));
+	new_set = (GCSet *)DeeObject_TryCallocc(offsetof(GCSet, gs_elem),
+	                                        old_set->gs_mask + 1,
+	                                        sizeof(DREF DeeObject *));
 	if unlikely(!new_set)
 		return false;
 	new_set->gs_mask = old_set->gs_mask;

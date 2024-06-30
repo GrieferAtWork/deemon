@@ -1467,8 +1467,8 @@ LOCAL void (DCALL _DeeString_FreeBuffer)(void *buffer) {
 LOCAL ATTR_MALLOC WUNUSED uint8_t *
 (DCALL DeeString_New1ByteBuffer)(size_t num_chars) {
 	DeeStringObject *result;
-	result = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                             (num_chars + 1) * sizeof(char));
+	result = (DeeStringObject *)DeeObject_Mallocc(COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                              num_chars + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = num_chars;
@@ -1480,8 +1480,8 @@ err:
 LOCAL ATTR_MALLOC WUNUSED uint8_t *
 (DCALL DeeString_TryNew1ByteBuffer)(size_t num_chars) {
 	DeeStringObject *result;
-	result = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                                (num_chars + 1) * sizeof(char));
+	result = (DeeStringObject *)DeeObject_TryMallocc(COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                                 num_chars + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = num_chars;
@@ -1494,9 +1494,8 @@ LOCAL WUNUSED uint8_t *
 (DCALL DeeString_Resize1ByteBuffer)(uint8_t *buffer, size_t num_chars) {
 	DeeStringObject *result;
 	result = buffer ? COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str) : NULL;
-	result = (DeeStringObject *)DeeObject_Realloc(result,
-	                                              COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                              (num_chars + 1) * sizeof(char));
+	result = (DeeStringObject *)DeeObject_Reallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                               num_chars + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = num_chars;
@@ -1509,9 +1508,8 @@ LOCAL WUNUSED uint8_t *
 (DCALL DeeString_TryResize1ByteBuffer)(uint8_t *buffer, size_t num_chars) {
 	DeeStringObject *result;
 	result = buffer ? COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str) : NULL;
-	result = (DeeStringObject *)DeeObject_TryRealloc(result,
-	                                                 COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                                 (num_chars + 1) * sizeof(char));
+	result = (DeeStringObject *)DeeObject_TryReallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                                  num_chars + 1, sizeof(char));
 	if unlikely(!result)
 		goto err;
 	result->s_len = num_chars;
@@ -1525,9 +1523,8 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *
 	DeeStringObject *result;
 	result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 	Dee_ASSERT(result->s_len >= num_chars);
-	result = (DeeStringObject *)DeeObject_TryRealloc(result,
-	                                                 COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                                 (num_chars + 1) * sizeof(char));
+	result = (DeeStringObject *)DeeObject_TryReallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                                  num_chars + 1, sizeof(char));
 	if unlikely(!result)
 		result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 	result->s_len = num_chars;
@@ -1699,9 +1696,8 @@ LOCAL void (DCALL _DeeDbgString_FreeBuffer)(void *buffer, char const *file, int 
 LOCAL ATTR_MALLOC WUNUSED uint8_t *
 (DCALL DeeDbgString_New1ByteBuffer)(size_t num_chars, char const *file, int line) {
 	DeeStringObject *result;
-	result = (DeeStringObject *)DeeDbgObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                                (num_chars + 1) * sizeof(char),
-	                                                file, line);
+	result = (DeeStringObject *)DeeDbgObject_Mallocc(COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                                 num_chars + 1, sizeof(char), file, line);
 	if unlikely(!result)
 		goto err;
 	result->s_len = num_chars;
@@ -1713,9 +1709,8 @@ err:
 LOCAL ATTR_MALLOC WUNUSED uint8_t *
 (DCALL DeeDbgString_TryNew1ByteBuffer)(size_t num_chars, char const *file, int line) {
 	DeeStringObject *result;
-	result = (DeeStringObject *)DeeDbgObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                                   (num_chars + 1) * sizeof(char),
-	                                                   file, line);
+	result = (DeeStringObject *)DeeDbgObject_TryMallocc(COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                                    num_chars + 1, sizeof(char), file, line);
 	if unlikely(!result)
 		goto err;
 	result->s_len = num_chars;
@@ -1729,10 +1724,8 @@ LOCAL WUNUSED uint8_t *
                                        char const *file, int line) {
 	DeeStringObject *result;
 	result = buffer ? COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str) : NULL;
-	result = (DeeStringObject *)DeeDbgObject_Realloc(result,
-	                                                 COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                                 (num_chars + 1) * sizeof(char),
-	                                                 file, line);
+	result = (DeeStringObject *)DeeDbgObject_Reallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                                  num_chars + 1, sizeof(char), file, line);
 	if unlikely(!result)
 		goto err;
 	result->s_len = num_chars;
@@ -1746,10 +1739,8 @@ LOCAL WUNUSED uint8_t *
                                           char const *file, int line) {
 	DeeStringObject *result;
 	result = buffer ? COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str) : NULL;
-	result = (DeeStringObject *)DeeDbgObject_TryRealloc(result,
-	                                                    COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                                    (num_chars + 1) * sizeof(char),
-	                                                    file, line);
+	result = (DeeStringObject *)DeeDbgObject_TryReallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                                     num_chars + 1, sizeof(char), file, line);
 	if unlikely(!result)
 		goto err;
 	result->s_len = num_chars;
@@ -1764,10 +1755,8 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) uint8_t *
 	DeeStringObject *result;
 	result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 	Dee_ASSERT(result->s_len >= num_chars);
-	result = (DeeStringObject *)DeeDbgObject_TryRealloc(result,
-	                                                    COMPILER_OFFSETOF(DeeStringObject, s_str) +
-	                                                    (num_chars + 1) * sizeof(char),
-	                                                    file, line);
+	result = (DeeStringObject *)DeeDbgObject_TryReallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+	                                                     num_chars + 1, sizeof(char), file, line);
 	if unlikely(!result)
 		result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 	result->s_len = num_chars;
@@ -1849,8 +1838,8 @@ LOCAL ATTR_MALLOC WUNUSED void *
 (DCALL DeeString_NewWidthBuffer)(size_t num_chars, unsigned int width) {
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
-		result = (DeeStringObject *)DeeObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                             (num_chars + 1) * sizeof(char));
+		result = (DeeStringObject *)DeeObject_Mallocc(COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                              num_chars + 1, sizeof(char));
 		if unlikely(!result)
 			goto err;
 		result->s_len = num_chars;
@@ -1870,8 +1859,8 @@ err:
 LOCAL ATTR_MALLOC WUNUSED void *(DCALL DeeString_TryNewWidthBuffer)(size_t num_chars, unsigned int width) {
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
-		result = (DeeStringObject *)DeeObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                                (num_chars + 1) * sizeof(char));
+		result = (DeeStringObject *)DeeObject_TryMallocc(COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                                 num_chars + 1, sizeof(char));
 		if unlikely(!result)
 			goto err;
 		result->s_len = num_chars;
@@ -1892,9 +1881,8 @@ LOCAL WUNUSED void *(DCALL DeeString_ResizeWidthBuffer)(void *buffer, size_t num
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
 		result = buffer ? COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str) : NULL;
-		result = (DeeStringObject *)DeeObject_Realloc(result,
-		                                              COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                              (num_chars + 1) * sizeof(char));
+		result = (DeeStringObject *)DeeObject_Reallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                               num_chars + 1, sizeof(char));
 		if unlikely(!result)
 			goto err;
 		result->s_len = num_chars;
@@ -1916,9 +1904,8 @@ LOCAL WUNUSED void *(DCALL DeeString_TryResizeWidthBuffer)(void *buffer, size_t 
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
 		result = buffer ? COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str) : NULL;
-		result = (DeeStringObject *)DeeObject_TryRealloc(result,
-		                                                 COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                                 (num_chars + 1) * sizeof(char));
+		result = (DeeStringObject *)DeeObject_TryReallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                                  num_chars + 1, sizeof(char));
 		if unlikely(!result)
 			goto err;
 		result->s_len = num_chars;
@@ -1941,9 +1928,9 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
 	Dee_ASSERT(*((size_t *)buffer - 1) >= num_chars);
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
-		result = (DeeStringObject *)DeeObject_TryRealloc(COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str),
-		                                                 COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                                 (num_chars + 1) * sizeof(char));
+		result = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str),
+		                                                  COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                                  num_chars + 1, sizeof(char));
 		if unlikely(!result)
 			result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 		result->s_len = num_chars;
@@ -1987,9 +1974,8 @@ LOCAL ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgString_NewWidthBuffer)(size_t num_chars, unsigned int width, char const *file, int line) {
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
-		result = (DeeStringObject *)DeeDbgObject_Malloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                                (num_chars + 1) * sizeof(char),
-		                                                file, line);
+		result = (DeeStringObject *)DeeDbgObject_Mallocc(COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                                 num_chars + 1, sizeof(char), file, line);
 		if unlikely(!result)
 			goto err;
 		result->s_len = num_chars;
@@ -2010,9 +1996,8 @@ LOCAL ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgString_TryNewWidthBuffer)(size_t num_chars, unsigned int width, char const *file, int line) {
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
-		result = (DeeStringObject *)DeeDbgObject_TryMalloc(COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                                   (num_chars + 1) * sizeof(char),
-		                                                   file, line);
+		result = (DeeStringObject *)DeeDbgObject_TryMallocc(COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                                    num_chars + 1, sizeof(char), file, line);
 		if unlikely(!result)
 			goto err;
 		result->s_len = num_chars;
@@ -2034,10 +2019,8 @@ LOCAL WUNUSED void *
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
 		result = buffer ? COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str) : NULL;
-		result = (DeeStringObject *)DeeDbgObject_Realloc(result,
-		                                                 COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                                 (num_chars + 1) * sizeof(char),
-		                                                 file, line);
+		result = (DeeStringObject *)DeeDbgObject_Reallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                                  num_chars + 1, sizeof(char), file, line);
 		if unlikely(!result)
 			goto err;
 		result->s_len = num_chars;
@@ -2060,10 +2043,8 @@ LOCAL WUNUSED void *
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
 		result = buffer ? COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str) : NULL;
-		result = (DeeStringObject *)DeeDbgObject_TryRealloc(result,
-		                                                    COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                                    (num_chars + 1) * sizeof(char),
-		                                                    file, line);
+		result = (DeeStringObject *)DeeDbgObject_TryReallocc(result, COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                                     num_chars + 1, sizeof(char), file, line);
 		if unlikely(!result)
 			goto err;
 		result->s_len = num_chars;
@@ -2087,10 +2068,9 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
 	Dee_ASSERT(*((size_t *)buffer - 1) >= num_chars);
 	if (width == Dee_STRING_WIDTH_1BYTE) {
 		DeeStringObject *result;
-		result = (DeeStringObject *)DeeDbgObject_TryRealloc(COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str),
-		                                                    COMPILER_OFFSETOF(DeeStringObject, s_str) +
-		                                                    (num_chars + 1) * sizeof(char),
-		                                                    file, line);
+		result = (DeeStringObject *)DeeDbgObject_TryReallocc(COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str),
+		                                                     COMPILER_OFFSETOF(DeeStringObject, s_str),
+		                                                     num_chars + 1, sizeof(char), file, line);
 		if unlikely(!result)
 			result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 		result->s_len = num_chars;

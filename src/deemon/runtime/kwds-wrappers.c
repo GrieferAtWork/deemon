@@ -897,8 +897,9 @@ blv_copy(DeeBlackListKwdsObject *__restrict self) {
 	size_t count = self->blkd_kwds->kw_size;
 	size_t sizeof_blkd_blck = ((self->blkd_mask + 1) * sizeof(DeeBlackListKwdsEntry));
 	DREF DeeBlackListKwdsObject *result;
-	result = (DREF DeeBlackListKwdsObject *)DeeObject_Malloc(offsetof(DeeBlackListKwdsObject, blkd_blck) +
-	                                                         sizeof_blkd_blck + (count * sizeof(DREF DeeObject *)));
+	result = (DREF DeeBlackListKwdsObject *)DeeObject_Mallocc(offsetof(DeeBlackListKwdsObject, blkd_blck) +
+	                                                          sizeof_blkd_blck,
+	                                                          count, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	result->blkd_argv = (DREF DeeObject **)((byte_t *)result->blkd_blck + sizeof_blkd_blck);
@@ -928,8 +929,9 @@ blv_deep(DeeBlackListKwdsObject *__restrict self) {
 	size_t count = self->blkd_kwds->kw_size;
 	size_t sizeof_blkd_blck = ((self->blkd_mask + 1) * sizeof(DeeBlackListKwdsEntry));
 	DREF DeeBlackListKwdsObject *result;
-	result = (DREF DeeBlackListKwdsObject *)DeeObject_Malloc(offsetof(DeeBlackListKwdsObject, blkd_blck) +
-	                                                         sizeof_blkd_blck + (count * sizeof(DREF DeeObject *)));
+	result = (DREF DeeBlackListKwdsObject *)DeeObject_Mallocc(offsetof(DeeBlackListKwdsObject, blkd_blck) +
+	                                                          sizeof_blkd_blck,
+	                                                          count, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	result->blkd_argv = (DREF DeeObject **)((byte_t *)result->blkd_blck + sizeof_blkd_blck);
@@ -1050,9 +1052,9 @@ DeeBlackListKwds_New(struct code_object *__restrict code,
 	/* Calculate an appropriate mask for the blacklist hash-set. */
 	for (mask = 3; mask <= argc; mask = (mask << 1) | 1)
 		;
-	result = (DREF DeeBlackListKwdsObject *)DeeObject_Calloc(offsetof(DeeBlackListKwdsObject, blkd_blck) +
-	                                                         ((mask + 1) * sizeof(DeeBlackListKwdsEntry)) +
-	                                                         (kwds->kw_size * sizeof(DREF DeeObject *)));
+	result = (DREF DeeBlackListKwdsObject *)DeeObject_Callocc(offsetof(DeeBlackListKwdsObject, blkd_blck) +
+	                                                          ((mask + 1) * sizeof(DeeBlackListKwdsEntry)),
+	                                                          kwds->kw_size, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	Dee_atomic_rwlock_cinit(&result->blkd_lock);
@@ -1873,9 +1875,8 @@ blkw_copy(DeeBlackListKwObject *__restrict self) {
 		return_reference_(self);
 	}
 
-	result = (DREF DeeBlackListKwObject *)DeeObject_Malloc(offsetof(DeeBlackListKwObject, blkw_blck) +
-	                                                       (self->blkw_mask + 1) *
-	                                                       sizeof(DeeBlackListKwdsEntry));
+	result = (DREF DeeBlackListKwObject *)DeeObject_Mallocc(offsetof(DeeBlackListKwObject, blkw_blck),
+	                                                        self->blkw_mask + 1, sizeof(DeeBlackListKwdsEntry));
 	if unlikely(!result)
 		goto err_result_kw;
 	result->blkw_kw = result_kw; /* Inherit reference */
@@ -1903,9 +1904,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeBlackListKwObject *DCALL
 blkw_deep(DeeBlackListKwObject *__restrict self) {
 	DREF DeeBlackListKwObject *result;
-	result = (DREF DeeBlackListKwObject *)DeeObject_Malloc(offsetof(DeeBlackListKwObject, blkw_blck) +
-	                                                       (self->blkw_mask + 1) *
-	                                                       sizeof(DeeBlackListKwdsEntry));
+	result = (DREF DeeBlackListKwObject *)DeeObject_Mallocc(offsetof(DeeBlackListKwObject, blkw_blck),
+	                                                        self->blkw_mask + 1, sizeof(DeeBlackListKwdsEntry));
 	if unlikely(!result)
 		goto done;
 	result->blkw_kw = DeeObject_DeepCopy(self->blkw_kw);
@@ -1945,9 +1945,8 @@ blkw_get_frozen(DeeBlackListKwObject *__restrict self) {
 		return_reference_(self);
 	}
 
-	result = (DREF DeeBlackListKwObject *)DeeObject_Malloc(offsetof(DeeBlackListKwObject, blkw_blck) +
-	                                                       (self->blkw_mask + 1) *
-	                                                       sizeof(DeeBlackListKwdsEntry));
+	result = (DREF DeeBlackListKwObject *)DeeObject_Mallocc(offsetof(DeeBlackListKwObject, blkw_blck),
+	                                                        self->blkw_mask + 1, sizeof(DeeBlackListKwdsEntry));
 	if unlikely(!result)
 		goto err_frozen_kw;
 
@@ -2070,8 +2069,8 @@ DeeBlackListKw_New(struct code_object *__restrict code,
 	/* Calculate an appropriate mask for the blacklist hash-set. */
 	for (mask = 3; mask <= argc; mask = (mask << 1) | 1)
 		;
-	result = (DREF DeeBlackListKwObject *)DeeObject_Calloc(offsetof(DeeBlackListKwObject, blkw_blck) +
-	                                                       (mask + 1) * sizeof(DeeBlackListKwdsEntry));
+	result = (DREF DeeBlackListKwObject *)DeeObject_Callocc(offsetof(DeeBlackListKwObject, blkw_blck),
+	                                                        mask + 1, sizeof(DeeBlackListKwdsEntry));
 	if unlikely(!result)
 		goto done;
 	Dee_atomic_rwlock_cinit(&result->blkw_lock);

@@ -151,9 +151,9 @@ again:
 
 
 /* Try to allocate a new member-cache table. */
-#define Dee_membercache_table_trycalloc(mask)                                                        \
-	(struct Dee_membercache_table *)Dee_TryCalloc(offsetof(struct Dee_membercache_table, mc_table) + \
-	                                              ((mask) + 1) * sizeof(struct Dee_membercache_slot))
+#define Dee_membercache_table_trycalloc(mask)                                                         \
+	(struct Dee_membercache_table *)Dee_TryCallococ(offsetof(struct Dee_membercache_table, mc_table), \
+	                                                (mask) + 1, sizeof(struct Dee_membercache_slot))
 STATIC_ASSERT(MEMBERCACHE_UNUSED == 0);
 
 PRIVATE NONNULL((1, 2)) void DCALL

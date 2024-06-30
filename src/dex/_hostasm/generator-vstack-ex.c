@@ -2695,9 +2695,9 @@ vopgetattr_constattr(struct fungen *__restrict self,
 				DO(fg_vdelta(self, desc->cd_offset)); /* this, ref:result, DeeInstance_DESC(desc, this) */
 				DO(fg_vrwlock_read_field(self, offsetof(struct Dee_instance_desc, id_lock))); /* this, ref:result, DeeInstance_DESC(desc, this) */
 				DO(fg_vdup(self));                    /* this, ref:result, DeeInstance_DESC(desc, this), DeeInstance_DESC(desc, this) */
-				DO(fg_vind(self, offsetof(struct Dee_instance_desc, id_vtab) +
-				                 (item->ca_addr + Dee_CLASS_GETSET_GET) *
-				                 sizeof(DREF DeeObject *))); /* this, ref:result, DeeInstance_DESC(desc, this), GETTER */
+				DO(fg_vind(self, _Dee_MallococBufsize(offsetof(struct Dee_instance_desc, id_vtab),
+				                                      item->ca_addr + Dee_CLASS_GETSET_GET,
+				                                      sizeof(DREF DeeObject *)))); /* this, ref:result, DeeInstance_DESC(desc, this), GETTER */
 				if (!(item->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
 					DO(fg_vdirect1(self));            /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER */
 					DO(fg_gxincref_loc(self, fg_vtopdloc(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER */
@@ -2705,17 +2705,17 @@ vopgetattr_constattr(struct fungen *__restrict self,
 					DO(fg_vswap(self));               /* this, ref:result, DeeInstance_DESC(desc, this), result, ref:GETTER */
 					DO(fg_vpopind(self, offsetof(DeePropertyObject, p_get))); /* this, ref:result, DeeInstance_DESC(desc, this), result */
 					DO(fg_vdup_at(self, 2));          /* this, ref:result, DeeInstance_DESC(desc, this), result, DeeInstance_DESC(desc, this) */
-					DO(fg_vind(self, offsetof(struct Dee_instance_desc, id_vtab) +
-					                 (item->ca_addr + Dee_CLASS_GETSET_DEL) *
-					                 sizeof(DREF DeeObject *)));     /* this, ref:result, DeeInstance_DESC(desc, this), result, DELETE */
+					DO(fg_vind(self, _Dee_MallococBufsize(offsetof(struct Dee_instance_desc, id_vtab),
+					                                      item->ca_addr + Dee_CLASS_GETSET_DEL,
+					                                      sizeof(DREF DeeObject *)))); /* this, ref:result, DeeInstance_DESC(desc, this), result, DELETE */
 					DO(fg_vdirect1(self));            /* this, ref:result, DeeInstance_DESC(desc, this), result, ref:DELETE */
 					DO(fg_gxincref_loc(self, fg_vtopdloc(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), result, ref:DELETE */
 					DO(fg_vpopind(self, offsetof(DeePropertyObject, p_del))); /* this, ref:result, DeeInstance_DESC(desc, this), result */
 					DO(fg_vpop(self));                /* this, ref:result, DeeInstance_DESC(desc, this) */
 					DO(fg_vdup(self));                /* this, ref:result, DeeInstance_DESC(desc, this), DeeInstance_DESC(desc, this) */
-					DO(fg_vind(self, offsetof(struct Dee_instance_desc, id_vtab) +
-					                 (item->ca_addr + Dee_CLASS_GETSET_SET) *
-					                 sizeof(DREF DeeObject *))); /* this, ref:result, DeeInstance_DESC(desc, this), SETTER */
+					DO(fg_vind(self, _Dee_MallococBufsize(offsetof(struct Dee_instance_desc, id_vtab),
+					                                      item->ca_addr + Dee_CLASS_GETSET_SET,
+					                                      sizeof(DREF DeeObject *)))); /* this, ref:result, DeeInstance_DESC(desc, this), SETTER */
 				}                                     /* this, ref:result, DeeInstance_DESC(desc, this), GETTER_OR_SETTER */
 				DO(fg_vdirect1(self));                /* this, ref:result, DeeInstance_DESC(desc, this), GETTER_OR_SETTER */
 				DO(fg_gxincref_loc(self, fg_vtopdloc(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER_OR_SETTER */
@@ -6351,10 +6351,10 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 						DO(fg_vlrot(self, n_pushed + 1)); /* [items...], seq */
 					}                                     /* [seq], [items...], seq */
 					DO(fg_vdup(self));                    /* [seq], [items...], seq, seq */
-					DO(fg_vind(self, offsetof(DeeTupleObject, t_elem) +
-					                 i * sizeof(DREF DeeObject *))); /* [seq], [items...], seq, elem */
-					DO(fg_vdep(self));                               /* [seq], [items...], seq, elem */
-					DO(fg_vpop_at(self, 2));                         /* [seq], [items...], elem */
+					DO(fg_vind(self, _Dee_MallococBufsize(offsetof(DeeTupleObject, t_elem),
+					                                      i, sizeof(DREF DeeObject *)))); /* [seq], [items...], seq, elem */
+					DO(fg_vdep(self));                    /* [seq], [items...], seq, elem */
+					DO(fg_vpop_at(self, 2));              /* [seq], [items...], elem */
 				}
 				if (n == 0)
 					return fg_vpop(self);

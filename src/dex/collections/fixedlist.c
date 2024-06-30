@@ -75,8 +75,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
 fl_copy(FixedList *__restrict self) {
 	DREF FixedList *result;
-	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-	                                              (self->fl_size * sizeof(DREF DeeObject *)));
+	result = (DREF FixedList *)DeeGCObject_Mallocc(offsetof(FixedList, fl_elem),
+	                                               self->fl_size, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto err;
 	Dee_atomic_rwlock_init(&result->fl_lock);
@@ -106,8 +106,8 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 	next = DeeObject_IterNext(iterator);
 	if (!ITER_ISOK(next)) {
 		if (next == ITER_DONE) {
-			result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-			                                              (1 * sizeof(DREF DeeObject *)));
+			result = (DREF FixedList *)DeeGCObject_Mallocc(offsetof(FixedList, fl_elem),
+			                                               1, sizeof(DREF DeeObject *));
 			if unlikely(!result)
 				goto err;
 			itemc              = 1;
@@ -117,12 +117,12 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 		goto err;
 	}
 	itemc = 2, itema = 4;
-	result = (DREF FixedList *)DeeGCObject_TryMalloc(offsetof(FixedList, fl_elem) +
-	                                                 (4 * sizeof(DREF DeeObject *)));
+	result = (DREF FixedList *)DeeGCObject_TryMallocc(offsetof(FixedList, fl_elem),
+	                                                  4, sizeof(DREF DeeObject *));
 	if unlikely(!result) {
 		itema  = 2;
-		result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-		                                              (2 * sizeof(DREF DeeObject *)));
+		result = (DREF FixedList *)DeeGCObject_Mallocc(offsetof(FixedList, fl_elem),
+		                                               2, sizeof(DREF DeeObject *));
 		if unlikely(!result)
 			goto err;
 	}
@@ -132,14 +132,12 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 		ASSERT(itemc <= itema);
 		if (itemc >= itema) {
 			itema *= 2;
-			new_result = (DREF FixedList *)DeeGCObject_TryRealloc(result,
-			                                                      offsetof(FixedList, fl_elem) +
-			                                                      (itema * sizeof(DREF DeeObject *)));
+			new_result = (DREF FixedList *)DeeGCObject_TryReallocc(result, offsetof(FixedList, fl_elem),
+			                                                       itema, sizeof(DREF DeeObject *));
 			if unlikely(!new_result) {
 				itema      = itemc + 1;
-				new_result = (DREF FixedList *)DeeGCObject_Realloc(result,
-				                                                   offsetof(FixedList, fl_elem) +
-				                                                   (itema * sizeof(DREF DeeObject *)));
+				new_result = (DREF FixedList *)DeeGCObject_Reallocc(result, offsetof(FixedList, fl_elem),
+				                                                    itema, sizeof(DREF DeeObject *));
 				if unlikely(!new_result)
 					goto err_r;
 			}
@@ -153,9 +151,8 @@ fl_init_iterator(DeeObject *__restrict iterator) {
 	if unlikely(!elem)
 		goto err_r;
 	if (itema > itemc) {
-		new_result = (DREF FixedList *)DeeGCObject_TryRealloc(result,
-		                                                      offsetof(FixedList, fl_elem) +
-		                                                      (itemc * sizeof(DREF DeeObject *)));
+		new_result = (DREF FixedList *)DeeGCObject_TryReallocc(result, offsetof(FixedList, fl_elem),
+		                                                       itemc, sizeof(DREF DeeObject *));
 		if likely(new_result)
 			result = new_result;
 	}
@@ -179,8 +176,8 @@ fl_init_getitem(DREF DeeObject *(DCALL *getitem)(DeeObject *__restrict self,
 	DREF FixedList *result;
 	size_t i;
 	DREF DeeObject *index_ob, *elem;
-	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-	                                              (length * sizeof(DREF DeeObject *)));
+	result = (DREF FixedList *)DeeGCObject_MalloccSafe(offsetof(FixedList, fl_elem),
+	                                                   length, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto err;
 	for (i = 0; i < length; ++i) {
@@ -218,8 +215,8 @@ fl_init(size_t argc, DeeObject *const *argv) {
 	if (init) {
 		if (DeeObject_AsSize(size_ob, &size))
 			goto err;
-		result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-		                                              (size * sizeof(DREF DeeObject *)));
+		result = (DREF FixedList *)DeeGCObject_MalloccSafe(offsetof(FixedList, fl_elem),
+		                                                   size, sizeof(DREF DeeObject *));
 		if unlikely(!result)
 			goto err;
 		Dee_atomic_rwlock_init(&result->fl_lock);
@@ -229,8 +226,8 @@ fl_init(size_t argc, DeeObject *const *argv) {
 	} else if (DeeInt_Check(size_ob)) {
 		if (DeeObject_AsSize(size_ob, &size))
 			goto err;
-		result = (DREF FixedList *)DeeGCObject_Calloc(offsetof(FixedList, fl_elem) +
-		                                              (size * sizeof(DREF DeeObject *)));
+		result = (DREF FixedList *)DeeGCObject_CalloccSafe(offsetof(FixedList, fl_elem),
+		                                                   size, sizeof(DREF DeeObject *));
 		if unlikely(!result)
 			goto err;
 		Dee_atomic_rwlock_cinit(&result->fl_lock);
@@ -283,8 +280,8 @@ init_from_iterator:
 			return result;
 		}
 		/* Initialize from a fast sequence */
-		result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-		                                              (size * sizeof(DREF DeeObject *)));
+		result = (DREF FixedList *)DeeGCObject_MalloccSafe(offsetof(FixedList, fl_elem),
+		                                                   size, sizeof(DREF DeeObject *));
 		if unlikely(!result)
 			goto err;
 		Dee_atomic_rwlock_init(&result->fl_lock);
@@ -630,8 +627,8 @@ fl_getrange_index(FixedList *__restrict self, Dee_ssize_t i_begin, Dee_ssize_t i
 	range_size = range.sr_end - range.sr_start;
 	if unlikely(range_size <= 0)
 		return_reference_(Dee_EmptySeq);
-	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-	                                              range_size * sizeof(DREF DeeObject *));
+	result = (DREF FixedList *)DeeGCObject_Mallocc(offsetof(FixedList, fl_elem),
+	                                               range_size, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto err;
 	Dee_atomic_rwlock_init(&result->fl_lock);
@@ -659,8 +656,8 @@ fl_getrange_index_n(FixedList *__restrict self, Dee_ssize_t i_begin) {
 	range_size = self->fl_size - start;
 	if unlikely(range_size <= 0)
 		return_reference_(Dee_EmptySeq);
-	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-	                                              range_size * sizeof(DREF DeeObject *));
+	result = (DREF FixedList *)DeeGCObject_Mallocc(offsetof(FixedList, fl_elem),
+	                                               range_size, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto err;
 	Dee_atomic_rwlock_init(&result->fl_lock);
@@ -1633,8 +1630,10 @@ PRIVATE struct type_seq fl_seq = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fl_sizeof(FixedList *self) {
-	return DeeInt_NewSize(offsetof(FixedList, fl_elem) +
-	                      (self->fl_size * sizeof(DREF DeeObject *)));
+	size_t result;
+	result = _Dee_MallococBufsize(offsetof(FixedList, fl_elem),
+	                              self->fl_size, sizeof(DREF DeeObject *));
+	return DeeInt_NewSize(result);
 }
 
 PRIVATE struct type_getset tpconst fl_getsets[] = {

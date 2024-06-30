@@ -93,15 +93,15 @@ PUBLIC WUNUSED NONNULL((1)) char *
 		while (alloc_size < datalen)
 			alloc_size *= 2;
 alloc_again:
-		string = (String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-		                                       (alloc_size + 1) * sizeof(char));
+		string = (String *)DeeObject_TryMallocc(offsetof(String, s_str),
+		                                        alloc_size + 1, sizeof(char));
 		if unlikely(!string) {
 			if (alloc_size != datalen) {
 				alloc_size = datalen;
 				goto alloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(String, s_str) +
-			                      (alloc_size + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(String, s_str),
+			                        alloc_size + 1, sizeof(char)))
 				goto alloc_again;
 			return NULL;
 		}
@@ -117,17 +117,15 @@ alloc_again:
 		size_t min_alloc = self->ap_length + datalen;
 		alloc_size       = (min_alloc + 63) & ~63;
 realloc_again:
-		string = (String *)DeeObject_TryRealloc(string,
-		                                        offsetof(String, s_str) +
-		                                        (alloc_size + 1) * sizeof(char));
+		string = (String *)DeeObject_TryReallocc(string, offsetof(String, s_str),
+		                                         alloc_size + 1, sizeof(char));
 		if unlikely(!string) {
 			string = self->ap_string;
 			if (alloc_size != min_alloc) {
 				alloc_size = min_alloc;
 				goto realloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(String, s_str) +
-			                      (alloc_size + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(String, s_str), alloc_size + 1, sizeof(char)))
 				goto realloc_again;
 			return NULL;
 		}
@@ -178,15 +176,15 @@ PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
 		while (alloc_size < datalen)
 			alloc_size *= 2;
 alloc_again:
-		string = (String *)DeeObject_TryMalloc(offsetof(String, s_str) +
-		                                       (alloc_size + 1) * sizeof(char));
+		string = (String *)DeeObject_TryMallocc(offsetof(String, s_str),
+		                                        alloc_size + 1, sizeof(char));
 		if unlikely(!string) {
 			if (alloc_size != datalen) {
 				alloc_size = datalen;
 				goto alloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(String, s_str) +
-			                      (alloc_size + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(String, s_str),
+			                        alloc_size + 1, sizeof(char)))
 				goto alloc_again;
 			return -1;
 		}
@@ -204,17 +202,16 @@ alloc_again:
 		size_t min_alloc = me->ap_length + datalen;
 		alloc_size       = (min_alloc + 63) & ~63;
 realloc_again:
-		string = (String *)DeeObject_TryRealloc(string,
-		                                        offsetof(String, s_str) +
-		                                        (alloc_size + 1) * sizeof(char));
+		string = (String *)DeeObject_TryReallocc(string, offsetof(String, s_str),
+		                                         alloc_size + 1, sizeof(char));
 		if unlikely(!string) {
 			string = me->ap_string;
 			if (alloc_size != min_alloc) {
 				alloc_size = min_alloc;
 				goto realloc_again;
 			}
-			if (Dee_CollectMemory(offsetof(String, s_str) +
-			                      (alloc_size + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(String, s_str),
+			                        alloc_size + 1, sizeof(char)))
 				goto realloc_again;
 			return -1;
 		}
@@ -240,9 +237,8 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	/* Deallocate unused memory. */
 	if likely(self->ap_length != result->s_len) {
 		DREF String *reloc;
-		reloc = (DREF String *)DeeObject_TryRealloc(result,
-		                                            offsetof(String, s_str) +
-		                                            (self->ap_length + 1) * sizeof(char));
+		reloc = (DREF String *)DeeObject_TryReallocc(result, offsetof(String, s_str),
+		                                             self->ap_length + 1, sizeof(char));
 		if likely(reloc)
 			result = reloc;
 		result->s_len = self->ap_length;
@@ -317,9 +313,8 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	}
 
 	/* Re-allocate the buffer. */
-	result = (DREF String *)DeeObject_Realloc(self,
-	                                          offsetof(String, s_str) +
-	                                          (num_bytes + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_Reallocc(self, offsetof(String, s_str),
+	                                           num_bytes + 1, sizeof(char));
 	if likely(result) {
 		if (!self) {
 			/* Do the initial init when `self' was `NULL'. */
@@ -327,7 +322,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 			result->s_data = NULL;
 			result->s_hash = (dhash_t)-1;
 		}
-		result->s_len            = num_bytes;
+		result->s_len = num_bytes;
 		result->s_str[num_bytes] = '\0';
 	}
 	return (DREF DeeObject *)result;
@@ -350,9 +345,8 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	}
 
 	/* Re-allocate the buffer. */
-	result = (DREF String *)DeeObject_TryRealloc(self,
-	                                             offsetof(String, s_str) +
-	                                             (num_bytes + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_TryReallocc(self, offsetof(String, s_str),
+	                                              num_bytes + 1, sizeof(char));
 	if likely(result) {
 		if (!self) {
 			/* Do the initial init when `self' was `NULL'. */
@@ -382,12 +376,12 @@ PUBLIC WUNUSED DREF DeeObject *
 		return Dee_EmptyString;
 	}
 #ifdef NDEBUG
-	result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
-	                                         (num_bytes + 1) * sizeof(char));
+	result = (DREF String *)DeeObject_Mallocc(offsetof(String, s_str),
+	                                          num_bytes + 1, sizeof(char));
 #else /* NDEBUG */
-	result = (DREF String *)DeeDbgObject_Malloc(offsetof(String, s_str) +
-	                                            (num_bytes + 1) * sizeof(char),
-	                                            file, line);
+	result = (DREF String *)DeeDbgObject_Mallocc(offsetof(String, s_str),
+	                                             num_bytes + 1, sizeof(char),
+	                                             file, line);
 #endif /* !NDEBUG */
 	if likely(result) {
 		DeeObject_Init(result, &DeeString_Type);

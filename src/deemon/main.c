@@ -2395,8 +2395,8 @@ dformat_source_files(char *filename,
 do_set_ddi_name:
 		used_name = TPPString_New(ddi_filename, ddi_length);
 		if unlikely(!used_name) {
-			if (Dee_CollectMemory(offsetof(struct TPPString, s_text) +
-			                      (ddi_length + 1) * sizeof(char)))
+			if (Dee_CollectMemoryoc(offsetof(struct TPPString, s_text),
+			                        ddi_length + 1, sizeof(char)))
 				goto do_set_ddi_name;
 			TPPFile_Decref(file);
 			goto err_stream;

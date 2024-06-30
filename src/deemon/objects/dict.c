@@ -1204,8 +1204,8 @@ again:
 		       first_dummy->di_key == dummy);
 
 		/* Write to the first dummy item. */
-		key_ob = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-		                                                     (key_len + 1) * sizeof(char));
+		key_ob = (DREF DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+		                                                      key_len + 1, sizeof(char));
 		if unlikely(!key_ob)
 			goto collect_memory;
 		DeeObject_Init(key_ob, &DeeString_Type);
@@ -1305,8 +1305,8 @@ again:
 		       first_dummy->di_key == dummy);
 
 		/* Write to the first dummy item. */
-		key_ob = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
-		                                                     (keylen + 1) * sizeof(char));
+		key_ob = (DREF DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
+		                                                      keylen + 1, sizeof(char));
 		if unlikely(!key_ob)
 			goto collect_memory;
 		DeeObject_Init(key_ob, &DeeString_Type);

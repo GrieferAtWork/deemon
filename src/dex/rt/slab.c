@@ -45,16 +45,16 @@ PRIVATE WUNUSED DREF SlabStatObject *DCALL ss_ctor(void) {
 	size_t reqsize;
 	DREF SlabStatObject *result;
 	DREF SlabStatObject *new_result;
-	result = (DREF SlabStatObject *)DeeObject_Malloc(offsetof(SlabStatObject, st_stat.st_slabs) +
-	                                                 Dee_SLAB_COUNT * sizeof(DeeSlabInfo));
+	result = (DREF SlabStatObject *)DeeObject_Mallocc(offsetof(SlabStatObject, st_stat.st_slabs),
+	                                                  Dee_SLAB_COUNT, sizeof(DeeSlabInfo));
 	if unlikely(!result)
 		goto done;
 	reqsize = DeeSlab_Stat(&result->st_stat,
-	                       offsetof(DeeSlabStat, st_slabs) +
-	                       (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)));
+	                       _Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs),
+	                                            Dee_SLAB_COUNT, sizeof(DeeSlabInfo)));
 	if unlikely(reqsize >
-	            offsetof(DeeSlabStat, st_slabs) +
-	            (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
+	            _Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs),
+	                                 Dee_SLAB_COUNT, sizeof(DeeSlabInfo))) {
 		size_t oldsize;
 do_realloc_result:
 		oldsize    = reqsize;
@@ -68,8 +68,8 @@ do_realloc_result:
 		if unlikely(reqsize > oldsize)
 			goto do_realloc_result;
 	} else if unlikely(reqsize <
-	                   offsetof(DeeSlabStat, st_slabs) +
-	                   (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
+	                   _Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs),
+	                                        Dee_SLAB_COUNT, sizeof(DeeSlabInfo))) {
 		new_result = (DREF SlabStatObject *)DeeObject_TryRealloc(result,
 		                                                         offsetof(SlabStatObject, st_stat) +
 		                                                         reqsize);
@@ -84,9 +84,8 @@ err_r:
 	return NULL;
 }
 
-#define SLABSTAT_DATASIZE(x)           \
-	(offsetof(DeeSlabStat, st_slabs) + \
-	 ((x)->st_stat.st_slabcount * sizeof(DeeSlabInfo)))
+#define SLABSTAT_DATASIZE(x) \
+	_Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs), (x)->st_stat.st_slabcount, sizeof(DeeSlabInfo))
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 ss_hash(SlabStatObject *__restrict self) {

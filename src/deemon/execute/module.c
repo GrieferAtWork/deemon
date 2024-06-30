@@ -151,8 +151,8 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 	if likely(code->co_refstaticc == 0) {
 		result = (DREF DeeFunctionObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
 	} else {
-		result = (DREF DeeFunctionObject *)DeeGCObject_Calloc(offsetof(DeeFunctionObject, fo_refv) +
-		                                                      (code->co_refstaticc * sizeof(DREF DeeObject *)));
+		result = (DREF DeeFunctionObject *)DeeGCObject_Callocc(offsetof(DeeFunctionObject, fo_refv),
+		                                                       code->co_refstaticc, sizeof(DREF DeeObject *));
 	}
 	if unlikely(!result)
 		goto err;

@@ -23,6 +23,7 @@
 #include "api.h"
 
 #ifdef __CC__
+#include <hybrid/__overflow.h>
 #include <hybrid/typecore.h>
 
 #include <stdbool.h>
@@ -192,18 +193,115 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
 #define Dee_UntrackAlloc(ptr)                       (ptr)
 #endif /* NDEBUG */
 
-#define Dee_Mallocc(elem_count, elem_size)                         Dee_Malloc((elem_count) * (elem_size))
-#define Dee_Callocc(elem_count, elem_size)                         Dee_Calloc((elem_count) * (elem_size))
-#define Dee_Reallocc(ptr, elem_count, elem_size)                   Dee_Realloc(ptr, (elem_count) * (elem_size))
-#define Dee_TryMallocc(elem_count, elem_size)                      Dee_TryMalloc((elem_count) * (elem_size))
-#define Dee_TryCallocc(elem_count, elem_size)                      Dee_TryCalloc((elem_count) * (elem_size))
-#define Dee_TryReallocc(ptr, elem_count, elem_size)                Dee_TryRealloc(ptr, (elem_count) * (elem_size))
-#define DeeDbg_Mallocc(elem_count, elem_size, file, line)          DeeDbg_Malloc((elem_count) * (elem_size), file, line)
-#define DeeDbg_Callocc(elem_count, elem_size, file, line)          DeeDbg_Calloc((elem_count) * (elem_size), file, line)
-#define DeeDbg_Reallocc(ptr, elem_count, elem_size, file, line)    DeeDbg_Realloc(ptr, (elem_count) * (elem_size), file, line)
-#define DeeDbg_TryMallocc(elem_count, elem_size, file, line)       DeeDbg_TryMalloc((elem_count) * (elem_size), file, line)
-#define DeeDbg_TryCallocc(elem_count, elem_size, file, line)       DeeDbg_TryCalloc((elem_count) * (elem_size), file, line)
-#define DeeDbg_TryReallocc(ptr, elem_count, elem_size, file, line) DeeDbg_TryRealloc(ptr, (elem_count) * (elem_size), file, line)
+/* Debug version of malloc buffer size calculation functions.
+ * These will trigger an assertion failure when an overflow *does* happen.
+ * As such, these functions should be used in debug builds to assert that
+ * no unexpected overflows happen. */
+DFUNDEF ATTR_CONST WUNUSED size_t (DCALL _Dee_MalloccBufsizeDbg)(size_t elem_count, size_t elem_size, char const *file, int line);
+DFUNDEF ATTR_CONST WUNUSED size_t (DCALL _Dee_MallococBufsizeDbg)(size_t base_offset, size_t elem_count, size_t elem_size, char const *file, int line);
+
+/* Mallocc buffer size calculation (w/ and w/o overflow handling) */
+#if defined(NDEBUG) || defined(__INTELLISENSE__)
+#define _Dee_MalloccBufsize(elem_count, elem_size)                              ((elem_count) * (elem_size))
+#define _Dee_MallococBufsize(base_offset, elem_count, elem_size)                ((base_offset) + ((elem_count) * (elem_size)))
+#define _Dee_MalloccBufsizeDbg(elem_count, elem_size, file, line)               _Dee_MalloccBufsize(elem_count, elem_size)
+#define _Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line) _Dee_MallococBufsize(base_offset, elem_count, elem_size)
+#else /* NDEBUG */
+#define _Dee_MalloccBufsize(elem_count, elem_size) \
+	_Dee_MalloccBufsizeDbg(elem_count, elem_size, __FILE__, __LINE__)
+#define _Dee_MallococBufsize(base_offset, elem_count, elem_size) \
+	_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#endif /* !NDEBUG */
+
+FORCELOCAL ATTR_CONST WUNUSED size_t DCALL
+_Dee_MalloccBufsizeSafe(size_t elem_count, size_t elem_size) {
+	size_t result;
+#ifndef __NO_builtin_constant_p
+	if (__builtin_constant_p(elem_size) && (elem_size == 1))
+		return elem_count;
+	if (__builtin_constant_p(elem_count) && (elem_count == 1))
+		return elem_size;
+#endif /* !__NO_builtin_constant_p */
+	if (__hybrid_overflow_umul(elem_count, elem_size, &result))
+		result = (size_t)-1;
+	return result;
+}
+
+FORCELOCAL ATTR_CONST WUNUSED size_t DCALL
+_Dee_MallococBufsizeSafe(size_t base_offset, size_t elem_count, size_t elem_size) {
+	size_t result;
+#ifndef __NO_builtin_constant_p
+	if (__builtin_constant_p(base_offset) && (base_offset == 0))
+		return _Dee_MalloccBufsizeSafe(elem_count, elem_size);
+	if (__builtin_constant_p(elem_size) && (elem_size == 1)) {
+		if (__hybrid_overflow_uadd(elem_count, base_offset, &result))
+			result = (size_t)-1;
+		return result;
+	}
+	if (__builtin_constant_p(elem_count) && (elem_count == 1)) {
+		if (__hybrid_overflow_uadd(elem_size, base_offset, &result))
+			result = (size_t)-1;
+		return result;
+	}
+#endif /* !__NO_builtin_constant_p */
+	if (__hybrid_overflow_umul(elem_count, elem_size, &result))
+		result = (size_t)-1;
+	if (__hybrid_overflow_uadd(result, base_offset, &result))
+		result = (size_t)-1;
+	return result;
+}
+
+#define Dee_Mallocc(elem_count, elem_size)                         Dee_Malloc(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_Callocc(elem_count, elem_size)                         Dee_Calloc(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_Reallocc(ptr, elem_count, elem_size)                   Dee_Realloc(ptr, _Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_TryMallocc(elem_count, elem_size)                      Dee_TryMalloc(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_TryCallocc(elem_count, elem_size)                      Dee_TryCalloc(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_TryReallocc(ptr, elem_count, elem_size)                Dee_TryRealloc(ptr, _Dee_MalloccBufsize(elem_count, elem_size))
+#define DeeDbg_Mallocc(elem_count, elem_size, file, line)          DeeDbg_Malloc(_Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbg_Callocc(elem_count, elem_size, file, line)          DeeDbg_Calloc(_Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbg_Reallocc(ptr, elem_count, elem_size, file, line)    DeeDbg_Realloc(ptr, _Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbg_TryMallocc(elem_count, elem_size, file, line)       DeeDbg_TryMalloc(_Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbg_TryCallocc(elem_count, elem_size, file, line)       DeeDbg_TryCalloc(_Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbg_TryReallocc(ptr, elem_count, elem_size, file, line) DeeDbg_TryRealloc(ptr, _Dee_MalloccBufsize(elem_count, elem_size), file, line)
+
+#define Dee_MalloccSafe(elem_count, elem_size)                         Dee_Malloc(_Dee_MalloccBufsizeSafe(elem_count, elem_size))
+#define Dee_CalloccSafe(elem_count, elem_size)                         Dee_Calloc(_Dee_MalloccBufsizeSafe(elem_count, elem_size))
+#define Dee_RealloccSafe(ptr, elem_count, elem_size)                   Dee_Realloc(ptr, _Dee_MalloccBufsizeSafe(elem_count, elem_size))
+#define Dee_TryMalloccSafe(elem_count, elem_size)                      Dee_TryMalloc(_Dee_MalloccBufsizeSafe(elem_count, elem_size))
+#define Dee_TryCalloccSafe(elem_count, elem_size)                      Dee_TryCalloc(_Dee_MalloccBufsizeSafe(elem_count, elem_size))
+#define Dee_TryRealloccSafe(ptr, elem_count, elem_size)                Dee_TryRealloc(ptr, _Dee_MalloccBufsizeSafe(elem_count, elem_size))
+#define DeeDbg_MalloccSafe(elem_count, elem_size, file, line)          DeeDbg_Malloc(_Dee_MalloccBufsizeSafe(elem_count, elem_size), file, line)
+#define DeeDbg_CalloccSafe(elem_count, elem_size, file, line)          DeeDbg_Calloc(_Dee_MalloccBufsizeSafe(elem_count, elem_size), file, line)
+#define DeeDbg_RealloccSafe(ptr, elem_count, elem_size, file, line)    DeeDbg_Realloc(ptr, _Dee_MalloccBufsizeSafe(elem_count, elem_size), file, line)
+#define DeeDbg_TryMalloccSafe(elem_count, elem_size, file, line)       DeeDbg_TryMalloc(_Dee_MalloccBufsizeSafe(elem_count, elem_size), file, line)
+#define DeeDbg_TryCalloccSafe(elem_count, elem_size, file, line)       DeeDbg_TryCalloc(_Dee_MalloccBufsizeSafe(elem_count, elem_size), file, line)
+#define DeeDbg_TryRealloccSafe(ptr, elem_count, elem_size, file, line) DeeDbg_TryRealloc(ptr, _Dee_MalloccBufsizeSafe(elem_count, elem_size), file, line)
+
+#define Dee_Mallococ(base_offset, elem_count, elem_size)                         Dee_Malloc(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_Callococ(base_offset, elem_count, elem_size)                         Dee_Calloc(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_Reallococ(ptr, base_offset, elem_count, elem_size)                   Dee_Realloc(ptr, _Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_TryMallococ(base_offset, elem_count, elem_size)                      Dee_TryMalloc(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_TryCallococ(base_offset, elem_count, elem_size)                      Dee_TryCalloc(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_TryReallococ(ptr, base_offset, elem_count, elem_size)                Dee_TryRealloc(ptr, _Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define DeeDbg_Mallococ(base_offset, elem_count, elem_size, file, line)          DeeDbg_Malloc(_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbg_Callococ(base_offset, elem_count, elem_size, file, line)          DeeDbg_Calloc(_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbg_Reallococ(ptr, base_offset, elem_count, elem_size, file, line)    DeeDbg_Realloc(ptr, _Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbg_TryMallococ(base_offset, elem_count, elem_size, file, line)       DeeDbg_TryMalloc(_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbg_TryCallococ(base_offset, elem_count, elem_size, file, line)       DeeDbg_TryCalloc(_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbg_TryReallococ(ptr, base_offset, elem_count, elem_size, file, line) DeeDbg_TryRealloc(ptr, _Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+
+#define Dee_MallococSafe(base_offset, elem_count, elem_size)                         Dee_Malloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define Dee_CallococSafe(base_offset, elem_count, elem_size)                         Dee_Calloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define Dee_ReallococSafe(ptr, base_offset, elem_count, elem_size)                   Dee_Realloc(ptr, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define Dee_TryMallococSafe(base_offset, elem_count, elem_size)                      Dee_TryMalloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define Dee_TryCallococSafe(base_offset, elem_count, elem_size)                      Dee_TryCalloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define Dee_TryReallococSafe(ptr, base_offset, elem_count, elem_size)                Dee_TryRealloc(ptr, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define DeeDbg_MallococSafe(base_offset, elem_count, elem_size, file, line)          DeeDbg_Malloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbg_CallococSafe(base_offset, elem_count, elem_size, file, line)          DeeDbg_Calloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbg_ReallococSafe(ptr, base_offset, elem_count, elem_size, file, line)    DeeDbg_Realloc(ptr, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbg_TryMallococSafe(base_offset, elem_count, elem_size, file, line)       DeeDbg_TryMalloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbg_TryCallococSafe(base_offset, elem_count, elem_size, file, line)       DeeDbg_TryCalloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbg_TryReallococSafe(ptr, base_offset, elem_count, elem_size, file, line) DeeDbg_TryRealloc(ptr, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
 
 /* Reclaim free memory by going through internal pre-allocation caches,
  * freeing up to (but potentially exceeding by a bit) `max_collect' bytes of memory.
@@ -219,7 +317,10 @@ DFUNDEF ATTR_COLD bool DCALL Dee_TryCollectMemory(size_t req_bytes);
 /* Same as `Dee_TryCollectMemory()', but raise an
 * `Error.NoMemory' if memory could not be collected. */
 DFUNDEF WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes);
-#define Dee_CollectMemoryc(elem_count, elem_size) Dee_CollectMemory((elem_count) * (elem_size))
+#define Dee_CollectMemoryc(elem_count, elem_size) \
+	Dee_CollectMemory(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_CollectMemoryoc(base_offset, elem_count, elem_size) \
+	Dee_CollectMemory(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
 
 /* Throw a bad-allocation error for `req_bytes' bytes.
  * @return: -1: Always returns -1. */
@@ -243,6 +344,32 @@ DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
 #define DeeDbgObject_TryMalloc  DeeDbg_TryMalloc
 #define DeeDbgObject_TryCalloc  DeeDbg_TryCalloc
 #define DeeDbgObject_TryRealloc DeeDbg_TryRealloc
+
+#define DeeObject_Mallocc        Dee_Mallococ
+#define DeeObject_Callocc        Dee_Callococ
+#define DeeObject_Reallocc       Dee_Reallococ
+#define DeeObject_TryMallocc     Dee_TryMallococ
+#define DeeObject_TryCallocc     Dee_TryCallococ
+#define DeeObject_TryReallocc    Dee_TryReallococ
+#define DeeDbgObject_Mallocc     DeeDbg_Mallococ
+#define DeeDbgObject_Callocc     DeeDbg_Callococ
+#define DeeDbgObject_Reallocc    DeeDbg_Reallococ
+#define DeeDbgObject_TryMallocc  DeeDbg_TryMallococ
+#define DeeDbgObject_TryCallocc  DeeDbg_TryCallococ
+#define DeeDbgObject_TryReallocc DeeDbg_TryReallococ
+
+#define DeeObject_MalloccSafe        Dee_MallococSafe
+#define DeeObject_CalloccSafe        Dee_CallococSafe
+#define DeeObject_RealloccSafe       Dee_ReallococSafe
+#define DeeObject_TryMalloccSafe     Dee_TryMallococSafe
+#define DeeObject_TryCalloccSafe     Dee_TryCallococSafe
+#define DeeObject_TryRealloccSafe    Dee_TryReallococSafe
+#define DeeDbgObject_MalloccSafe     DeeDbg_MallococSafe
+#define DeeDbgObject_CalloccSafe     DeeDbg_CallococSafe
+#define DeeDbgObject_RealloccSafe    DeeDbg_ReallococSafe
+#define DeeDbgObject_TryMalloccSafe  DeeDbg_TryMallococSafe
+#define DeeDbgObject_TryCalloccSafe  DeeDbg_TryCallococSafe
+#define DeeDbgObject_TryRealloccSafe DeeDbg_TryReallococSafe
 
 #ifdef __CC__
 #ifndef CONFIG_NO_OBJECT_SLABS
@@ -702,18 +829,18 @@ DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 #define DeeDbgSlab_FFree(ptr, size, file, line)  DeeSlab_Invoke(DeeDbgSlab_Free, size, (ptr, file, line), DeeDbg_Free(ptr, file, line))
 #define DeeDbgSlab_XFFree(ptr, size, file, line) ((ptr) ? DeeDbgSlab_FFree(ptr, size, file, line) : (void)0)
 
-#define DeeSlab_Mallocc(elem_count, elem_size)                     DeeSlab_Malloc((elem_count) * (elem_size))
-#define DeeSlab_Callocc(elem_count, elem_size)                     DeeSlab_Calloc((elem_count) * (elem_size))
-#define DeeSlab_TryMallocc(elem_count, elem_size)                  DeeSlab_TryMalloc((elem_count) * (elem_size))
-#define DeeSlab_TryCallocc(elem_count, elem_size)                  DeeSlab_TryCalloc((elem_count) * (elem_size))
-#define DeeSlab_FFreec(ptr, elem_count, elem_size)                 DeeSlab_FFree(ptr, (elem_count) * (elem_size))
-#define DeeSlab_XFFreec(ptr, elem_count, elem_size)                DeeSlab_XFFree(ptr, (elem_count) * (elem_size))
-#define DeeDbgSlab_Mallocc(elem_count, elem_size, file, line)      DeeDbgSlab_Malloc((elem_count) * (elem_size), file, line)
-#define DeeDbgSlab_Callocc(elem_count, elem_size, file, line)      DeeDbgSlab_Calloc((elem_count) * (elem_size), file, line)
-#define DeeDbgSlab_TryMallocc(elem_count, elem_size, file, line)   DeeDbgSlab_TryMalloc((elem_count) * (elem_size), file, line)
-#define DeeDbgSlab_TryCallocc(elem_count, elem_size, file, line)   DeeDbgSlab_TryCalloc((elem_count) * (elem_size), file, line)
-#define DeeDbgSlab_FFreec(ptr, elem_count, elem_size, file, line)  DeeDbgSlab_FFree(ptr, (elem_count) * (elem_size), file, line)
-#define DeeDbgSlab_XFFreec(ptr, elem_count, elem_size, file, line) DeeDbgSlab_XFFree(ptr, (elem_count) * (elem_size), file, line)
+#define DeeSlab_Mallocc(elem_count, elem_size)                     DeeSlab_Malloc(_Dee_MalloccBufsize(elem_count, elem_size))
+#define DeeSlab_Callocc(elem_count, elem_size)                     DeeSlab_Calloc(_Dee_MalloccBufsize(elem_count, elem_size))
+#define DeeSlab_TryMallocc(elem_count, elem_size)                  DeeSlab_TryMalloc(_Dee_MalloccBufsize(elem_count, elem_size))
+#define DeeSlab_TryCallocc(elem_count, elem_size)                  DeeSlab_TryCalloc(_Dee_MalloccBufsize(elem_count, elem_size))
+#define DeeSlab_FFreec(ptr, elem_count, elem_size)                 DeeSlab_FFree(ptr, _Dee_MalloccBufsize(elem_count, elem_size))
+#define DeeSlab_XFFreec(ptr, elem_count, elem_size)                DeeSlab_XFFree(ptr, _Dee_MalloccBufsize(elem_count, elem_size))
+#define DeeDbgSlab_Mallocc(elem_count, elem_size, file, line)      DeeDbgSlab_Malloc(_Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbgSlab_Callocc(elem_count, elem_size, file, line)      DeeDbgSlab_Calloc(_Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbgSlab_TryMallocc(elem_count, elem_size, file, line)   DeeDbgSlab_TryMalloc(_Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbgSlab_TryCallocc(elem_count, elem_size, file, line)   DeeDbgSlab_TryCalloc(_Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbgSlab_FFreec(ptr, elem_count, elem_size, file, line)  DeeDbgSlab_FFree(ptr, _Dee_MalloccBufsize(elem_count, elem_size), file, line)
+#define DeeDbgSlab_XFFreec(ptr, elem_count, elem_size, file, line) DeeDbgSlab_XFFree(ptr, _Dee_MalloccBufsize(elem_count, elem_size), file, line)
 #endif /* __CC__ */
 
 /* Free any kind of pointer allocated by the general-purpose slab allocators.
@@ -994,7 +1121,10 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 #endif /* !NO_DBG_ALIGNMENT */
 #endif /* !Dee_Alloca && CONFIG_HAVE_alloca */
 #if !defined(Dee_Allocac) && defined(Dee_Alloca)
-#define Dee_Allocac(elem_count, elem_size) Dee_Alloca((elem_count) * (elem_size))
+#define Dee_Allocac(elem_count, elem_size) \
+	Dee_Alloca(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_Allocaoc(base_offset, elem_count, elem_size) \
+	Dee_Alloca(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
 #endif /* !Dee_Allocac && Dee_Alloca */
 
 
@@ -1387,12 +1517,17 @@ LOCAL void (DCALL Dee_XFreea)(void *p) {
 #endif /* Dee_Alloca && NO_DBG_ALIGNMENT */
 
 #ifdef Dee_MallocaNoFail
-#define Dee_MallocaNoFailc(p, elem_count, elem_size) Dee_MallocaNoFail(p, (elem_count) * (elem_size))
+#define Dee_MallocaNoFailc(p, elem_count, elem_size)               Dee_MallocaNoFail(p, _Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_MallocaNoFailoc(p, base_offset, elem_count, elem_size) Dee_MallocaNoFail(p, _Dee_MallococBufsize(base_offset, elem_count, elem_size))
 #endif /* Dee_MallocaNoFail */
-#define Dee_Mallocac(elem_count, elem_size)    Dee_Malloca((elem_count) * (elem_size))
-#define Dee_Callocac(elem_count, elem_size)    Dee_Calloca((elem_count) * (elem_size))
-#define Dee_TryMallocac(elem_count, elem_size) Dee_TryMalloca((elem_count) * (elem_size))
-#define Dee_TryCallocac(elem_count, elem_size) Dee_TryCalloca((elem_count) * (elem_size))
+#define Dee_Mallocac(elem_count, elem_size)                  Dee_Malloca(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_Callocac(elem_count, elem_size)                  Dee_Calloca(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_TryMallocac(elem_count, elem_size)               Dee_TryMalloca(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_TryCallocac(elem_count, elem_size)               Dee_TryCalloca(_Dee_MalloccBufsize(elem_count, elem_size))
+#define Dee_Mallocaoc(base_offset, elem_count, elem_size)    Dee_Malloca(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_Callocaoc(base_offset, elem_count, elem_size)    Dee_Calloca(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_TryMallocaoc(base_offset, elem_count, elem_size) Dee_TryMalloca(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_TryCallocaoc(base_offset, elem_count, elem_size) Dee_TryCalloca(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
 
 #endif /* __CC__ */
 

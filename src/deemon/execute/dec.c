@@ -1362,11 +1362,11 @@ set_none_result:
 		refc = code->co_refc;
 		ASSERT(code->co_refstaticc >= refc);
 		if likely(code->co_refstaticc == refc) {
-			result = (DREF DeeObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv) +
-			                                              (refc * sizeof(DREF DeeObject *)));
+			result = (DREF DeeObject *)DeeGCObject_Mallocc(offsetof(DeeFunctionObject, fo_refv),
+			                                               refc, sizeof(DREF DeeObject *));
 		} else {
-			result = (DREF DeeObject *)DeeGCObject_Calloc(offsetof(DeeFunctionObject, fo_refv) +
-			                                              (code->co_refstaticc * sizeof(DREF DeeObject *)));
+			result = (DREF DeeObject *)DeeGCObject_Callocc(offsetof(DeeFunctionObject, fo_refv),
+			                                               code->co_refstaticc, sizeof(DREF DeeObject *));
 		}
 		if unlikely(!result) {
 err_function_code:
@@ -1495,8 +1495,8 @@ err_function_code:
 			while (iattr_count > (iattr_mask / 3) * 2)
 				iattr_mask = (iattr_mask << 1) | 1;
 		}
-		result = (DREF DeeObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
-		                                            (iattr_mask + 1) * sizeof(struct class_attribute));
+		result = (DREF DeeObject *)DeeObject_Callocc(offsetof(DeeClassDescriptorObject, cd_iattr_list),
+		                                             iattr_mask + 1, sizeof(struct class_attribute));
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(result, &DeeClassDescriptor_Type);
@@ -1873,8 +1873,8 @@ err_function_code:
 				while (iattr_count > (iattr_mask / 3) * 2)
 					iattr_mask = (iattr_mask << 1) | 1;
 			}
-			result = (DREF DeeObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
-			                                            (iattr_mask + 1) * sizeof(struct class_attribute));
+			result = (DREF DeeObject *)DeeObject_Callocc(offsetof(DeeClassDescriptorObject, cd_iattr_list),
+			                                             iattr_mask + 1, sizeof(struct class_attribute));
 			if unlikely(!result)
 				goto err;
 			DeeObject_Init(result, &DeeClassDescriptor_Type);
@@ -2266,8 +2266,9 @@ DecFile_LoadDDI(DecFile *__restrict self,
 	    ddi_ddisize != 0) {
 		GOTO_CORRUPTED(reader, err_currupted);
 	}
-	result = (DREF DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject, d_ddi) +
-	                                               ddi_ddisize + DDI_INSTRLEN_MAX);
+	result = (DREF DeeDDIObject *)DeeObject_Callocc(offsetof(DeeDDIObject, d_ddi),
+	                                                ddi_ddisize + DDI_INSTRLEN_MAX,
+	                                                sizeof(uint8_t));
 	if unlikely(!result)
 		goto err;
 
@@ -2311,8 +2312,8 @@ DecFile_LoadDDI(DecFile *__restrict self,
 				GOTO_CORRUPTED(xdat, err_currupted_r_maps);
 			if (xdat + xsiz >= self->df_base + self->df_size)
 				GOTO_CORRUPTED(xdat, err_currupted_r_maps);
-			xres = (struct Dee_ddi_exdat *)Dee_Malloc(offsetof(struct Dee_ddi_exdat, dx_data) +
-			                                          xsiz + DDI_EXDAT_MAXSIZE);
+			xres = (struct Dee_ddi_exdat *)Dee_MallococSafe(offsetof(struct Dee_ddi_exdat, dx_data),
+			                                                xsiz, DDI_EXDAT_MAXSIZE);
 			if unlikely(!xres)
 				goto err_r_maps;
 			xres->dx_size = xsiz;

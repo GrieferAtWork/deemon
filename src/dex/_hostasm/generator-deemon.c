@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/class.h>
@@ -1472,8 +1473,9 @@ do_jcc:
 			goto err;
 		}
 		calloc_used = false;
-		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
-		                  ((size_t)code->co_refstaticc * sizeof(DREF DeeObject *));
+		sizeof_function = _Dee_MallococBufsize(offsetof(DeeFunctionObject, fo_refv),
+			                                   (size_t)code->co_refstaticc,
+			                                   sizeof(DREF DeeObject *));
 		ASSERT(code->co_refstaticc >= refc);
 		if likely(code->co_refstaticc <= refc) {
 			DO(fg_vcall_DeeGCObject_Malloc(self, sizeof_function, false)); /* [refs...], ref:function */
@@ -1526,8 +1528,8 @@ do_jcc:
 			DO(fg_vswap(self));                           /* [refs...], ref:function, ref */
 			DO(fg_vref2(self, (vstackaddr_t)(refc + 2))); /* [refs...], ref:function, ref:ref */
 			DO(fg_vpopind(self,                           /* [refs...], ref:function */
-			              offsetof(DeeFunctionObject, fo_refv) +
-			              (refc * sizeof(DREF DeeObject *))));
+			              _Dee_MallococBufsize(offsetof(DeeFunctionObject, fo_refv),
+			                                   refc, sizeof(DREF DeeObject *))));
 		}
 		ASSERT(fg_vtop_direct_isref(self)); /* ref:function */
 		fg_vtop_direct_clearref(self);

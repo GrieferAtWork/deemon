@@ -217,8 +217,8 @@ rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 	if (new_mask <= 1)
 		new_mask = 7;
 #endif
-	new_descr = (DeeClassDescriptorObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
-	                                                         (new_mask + 1) * sizeof(struct class_attribute));
+	new_descr = (DeeClassDescriptorObject *)DeeObject_Callocc(offsetof(DeeClassDescriptorObject, cd_iattr_list),
+	                                                          new_mask + 1, sizeof(struct class_attribute));
 	if unlikely(!new_descr)
 		goto err;
 
@@ -984,9 +984,9 @@ class_maker_pack(struct class_maker *__restrict self) {
 	 *       we also don't have to both with relocating them! */
 	if (!self->cm_iattr_size) {
 		DeeClassDescriptorObject *new_desc;
-		new_desc = (DeeClassDescriptorObject *)DeeObject_TryRealloc(self->cm_desc,
-		                                                            offsetof(DeeClassDescriptorObject, cd_iattr_list) +
-		                                                            1 * sizeof(struct class_attribute));
+		new_desc = (DeeClassDescriptorObject *)DeeObject_TryReallocc(self->cm_desc,
+		                                                             offsetof(DeeClassDescriptorObject, cd_iattr_list),
+		                                                             1, sizeof(struct class_attribute));
 		if likely(new_desc)
 			self->cm_desc = new_desc;
 		self->cm_desc->cd_iattr_mask = 0;
@@ -1462,8 +1462,8 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 	unicode_printer_init(&current_tags.at_doc);
 
 	/* Allocate the initial descriptor for the class. */
-	maker.cm_desc = (DREF DeeClassDescriptorObject *)DeeObject_Calloc(offsetof(DeeClassDescriptorObject, cd_iattr_list) +
-	                                                                  (7 + 1) * sizeof(struct class_attribute));
+	maker.cm_desc = (DREF DeeClassDescriptorObject *)DeeObject_Callocc(offsetof(DeeClassDescriptorObject, cd_iattr_list),
+	                                                                   7 + 1, sizeof(struct class_attribute));
 	if unlikely(!maker.cm_desc)
 		goto err;
 	DeeObject_Init(maker.cm_desc, &DeeClassDescriptor_Type);

@@ -958,8 +958,8 @@ done:
 PRIVATE WUNUSED DREF STRUCT_TYPE *DCALL
 F(copy)(STRUCT_TYPE *__restrict other) {
 	DREF STRUCT_TYPE *result;
-	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(offsetof(STRUCT_TYPE, sg_argv) +
-	                                              (other->sg_argc * sizeof(DREF DeeObject *)));
+	result = (DREF STRUCT_TYPE *)DeeObject_Mallocc(offsetof(STRUCT_TYPE, sg_argv),
+	                                               other->sg_argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	result->se_seq  = other->se_seq;
@@ -981,8 +981,8 @@ PRIVATE WUNUSED DREF STRUCT_TYPE *DCALL
 F(deep)(STRUCT_TYPE *__restrict other) {
 	DREF STRUCT_TYPE *result;
 	size_t i;
-	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(offsetof(STRUCT_TYPE, sg_argv) +
-	                                              (other->sg_argc * sizeof(DREF DeeObject *)));
+	result = (DREF STRUCT_TYPE *)DeeObject_Mallocc(offsetof(STRUCT_TYPE, sg_argv),
+	                                               other->sg_argc, sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	result->se_seq = DeeObject_DeepCopy(other->se_seq);
@@ -1037,8 +1037,8 @@ F(init)(size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
-	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(offsetof(STRUCT_TYPE, sg_argv) +
-	                                              (DeeTuple_SIZE(args) * sizeof(DREF DeeObject *)));
+	result = (DREF STRUCT_TYPE *)DeeObject_Mallocc(offsetof(STRUCT_TYPE, sg_argv),
+	                                               DeeTuple_SIZE(args), sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto err;
 	result->sg_argc = DeeTuple_SIZE(args);

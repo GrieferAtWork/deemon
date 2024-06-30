@@ -15187,21 +15187,21 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq, unsi
 		seq_featureset_set(self, FEAT_tp_delitem_string_hash);
 	if (seq->tp_setitem_string_hash && !DeeType_IsDefaultSetItemStringHash(seq->tp_setitem_string_hash))
 		seq_featureset_set(self, FEAT_tp_setitem_string_hash);
-	if (Dee_type_seq_has_custom_tp_bounditem_string_hash(seq) && seq->tp_bounditem_string_hash && !DeeType_IsDefaultBoundItemStringHash(seq->tp_bounditem_string_hash))
+	if (Dee_type_seq_has_custom_tp_bounditem_string_hash(seq))
 		seq_featureset_set(self, FEAT_tp_bounditem_string_hash);
-	if (Dee_type_seq_has_custom_tp_hasitem_string_hash(seq) && seq->tp_hasitem_string_hash && !DeeType_IsDefaultHasItemStringHash(seq->tp_hasitem_string_hash))
+	if (Dee_type_seq_has_custom_tp_hasitem_string_hash(seq))
 		seq_featureset_set(self, FEAT_tp_hasitem_string_hash);
-	if (Dee_type_seq_has_custom_tp_trygetitem_string_len_hash(seq) && seq->tp_trygetitem_string_len_hash && !DeeType_IsDefaultTryGetItemStringLenHash(seq->tp_trygetitem_string_len_hash))
+	if (Dee_type_seq_has_custom_tp_trygetitem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_trygetitem_string_len_hash);
-	if (Dee_type_seq_has_custom_tp_getitem_string_len_hash(seq) && seq->tp_getitem_string_len_hash && !DeeType_IsDefaultGetItemStringLenHash(seq->tp_getitem_string_len_hash))
+	if (Dee_type_seq_has_custom_tp_getitem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_getitem_string_len_hash);
-	if (Dee_type_seq_has_custom_tp_delitem_string_len_hash(seq) && seq->tp_delitem_string_len_hash && !DeeType_IsDefaultDelItemStringLenHash(seq->tp_delitem_string_len_hash))
+	if (Dee_type_seq_has_custom_tp_delitem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_delitem_string_len_hash);
-	if (Dee_type_seq_has_custom_tp_setitem_string_len_hash(seq) && seq->tp_setitem_string_len_hash && !DeeType_IsDefaultSetItemStringLenHash(seq->tp_setitem_string_len_hash))
+	if (Dee_type_seq_has_custom_tp_setitem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_setitem_string_len_hash);
-	if (Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq) && seq->tp_bounditem_string_len_hash && !DeeType_IsDefaultBoundItemStringLenHash(seq->tp_bounditem_string_len_hash))
+	if (Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_bounditem_string_len_hash);
-	if (Dee_type_seq_has_custom_tp_hasitem_string_len_hash(seq) && seq->tp_hasitem_string_len_hash && !DeeType_IsDefaultHasItemStringLenHash(seq->tp_hasitem_string_len_hash))
+	if (Dee_type_seq_has_custom_tp_hasitem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_hasitem_string_len_hash);
 }
 

@@ -856,7 +856,7 @@ fg_gretNULL(struct fungen *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_assembler_compileexcept(struct function_assembler *__restrict self) {
-	void *_memstatebuf[memstate_sizeof(1) / sizeof(void *)];
+	void *_memstatebuf[memstate_sizeof_constexpr(1) / sizeof(void *)];
 	void *_exitidbuf[offsetof(struct except_exitinfo_id, exi_memrefv) / sizeof(void *)];
 	struct memstate *state = (struct memstate *)_memstatebuf;
 	struct except_exitinfo_id *exit_id = (struct except_exitinfo_id *)_exitidbuf;

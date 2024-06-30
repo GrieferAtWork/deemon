@@ -26,7 +26,16 @@
 
 #ifndef __INTELLISENSE__
 #include "alloc.h"
-#endif /* !__INTELLISENSE__ */
+#else /* !__INTELLISENSE__ */
+DECL_BEGIN
+#define _Dee_MalloccBufsize(elem_count, elem_size)                              ((elem_count) * (elem_size))
+#define _Dee_MallococBufsize(base_offset, elem_count, elem_size)                ((base_offset) + ((elem_count) * (elem_size)))
+#define _Dee_MalloccBufsizeDbg(elem_count, elem_size, file, line)               _Dee_MalloccBufsize(elem_count, elem_size)
+#define _Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line) _Dee_MallococBufsize(base_offset, elem_count, elem_size)
+LOCAL ATTR_CONST WUNUSED size_t DCALL _Dee_MalloccBufsizeSafe(size_t elem_count, size_t elem_size);
+LOCAL ATTR_CONST WUNUSED size_t DCALL _Dee_MallococBufsizeSafe(size_t base_offset, size_t elem_count, size_t elem_size);
+DECL_END
+#endif /* __INTELLISENSE__ */
 
 #include <stddef.h>
 #include <stdint.h>
@@ -116,22 +125,95 @@ DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeDbgGCObject_TryCalloc)(size_t n_byte
 DFUNDEF WUNUSED void *(DCALL DeeDbgGCObject_TryRealloc)(void *p, size_t n_bytes, char const *file, int line);
 DFUNDEF void (DCALL DeeDbgGCObject_Free)(void *p, char const *file, int line);
 
+#define DeeGCObject_Mallocc(base_offset, elem_count, elem_size)                           DeeGCObject_Malloc(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define DeeGCObject_Callocc(base_offset, elem_count, elem_size)                           DeeGCObject_Calloc(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define DeeGCObject_Reallocc(p, base_offset, elem_count, elem_size)                       DeeGCObject_Realloc(p, _Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define DeeGCObject_TryMallocc(base_offset, elem_count, elem_size)                        DeeGCObject_TryMalloc(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define DeeGCObject_TryCallocc(base_offset, elem_count, elem_size)                        DeeGCObject_TryCalloc(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define DeeGCObject_TryReallocc(p, base_offset, elem_count, elem_size)                    DeeGCObject_TryRealloc(p, _Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define DeeDbgGCObject_Mallocc(base_offset, elem_count, elem_size, file, line)            DeeDbgGCObject_Malloc(_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbgGCObject_Callocc(base_offset, elem_count, elem_size, file, line)            DeeDbgGCObject_Calloc(_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbgGCObject_Reallocc(p, base_offset, elem_count, elem_size, file, line)        DeeDbgGCObject_Realloc(p, _Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbgGCObject_TryMallocc(base_offset, elem_count, elem_size, file, line)         DeeDbgGCObject_TryMalloc(_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbgGCObject_TryCallocc(base_offset, elem_count, elem_size, file, line)         DeeDbgGCObject_TryCalloc(_Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeDbgGCObject_TryReallocc(p, base_offset, elem_count, elem_size, file, line)     DeeDbgGCObject_TryRealloc(p, _Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line), file, line)
+#define DeeGCObject_MalloccSafe(base_offset, elem_count, elem_size)                       DeeGCObject_Malloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define DeeGCObject_CalloccSafe(base_offset, elem_count, elem_size)                       DeeGCObject_Calloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define DeeGCObject_RealloccSafe(p, base_offset, elem_count, elem_size)                   DeeGCObject_Realloc(p, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define DeeGCObject_TryMalloccSafe(base_offset, elem_count, elem_size)                    DeeGCObject_TryMalloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define DeeGCObject_TryCalloccSafe(base_offset, elem_count, elem_size)                    DeeGCObject_TryCalloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define DeeGCObject_TryRealloccSafe(p, base_offset, elem_count, elem_size)                DeeGCObject_TryRealloc(p, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
+#define DeeDbgGCObject_MalloccSafe(base_offset, elem_count, elem_size, file, line)        DeeDbgGCObject_Malloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbgGCObject_CalloccSafe(base_offset, elem_count, elem_size, file, line)        DeeDbgGCObject_Calloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbgGCObject_RealloccSafe(p, base_offset, elem_count, elem_size, file, line)    DeeDbgGCObject_Realloc(p, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbgGCObject_TryMalloccSafe(base_offset, elem_count, elem_size, file, line)     DeeDbgGCObject_TryMalloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbgGCObject_TryCalloccSafe(base_offset, elem_count, elem_size, file, line)     DeeDbgGCObject_TryCalloc(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+#define DeeDbgGCObject_TryRealloccSafe(p, base_offset, elem_count, elem_size, file, line) DeeDbgGCObject_TryRealloc(p, _Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size), file, line)
+
 #ifndef NDEBUG
-#define DeeGCObject_Malloc(n_bytes)          DeeDbgGCObject_Malloc(n_bytes, __FILE__, __LINE__)
-#define DeeGCObject_Calloc(n_bytes)          DeeDbgGCObject_Calloc(n_bytes, __FILE__, __LINE__)
-#define DeeGCObject_Realloc(ptr, n_bytes)    DeeDbgGCObject_Realloc(ptr, n_bytes, __FILE__, __LINE__)
-#define DeeGCObject_TryMalloc(n_bytes)       DeeDbgGCObject_TryMalloc(n_bytes, __FILE__, __LINE__)
-#define DeeGCObject_TryCalloc(n_bytes)       DeeDbgGCObject_TryCalloc(n_bytes, __FILE__, __LINE__)
-#define DeeGCObject_TryRealloc(ptr, n_bytes) DeeDbgGCObject_TryRealloc(ptr, n_bytes, __FILE__, __LINE__)
-#define DeeGCObject_Free(ptr)                DeeDbgGCObject_Free(ptr, __FILE__, __LINE__)
+#undef DeeGCObject_Mallocc
+#undef DeeGCObject_Callocc
+#undef DeeGCObject_Reallocc
+#undef DeeGCObject_TryMallocc
+#undef DeeGCObject_TryCallocc
+#undef DeeGCObject_TryReallocc
+#undef DeeGCObject_MalloccSafe
+#undef DeeGCObject_CalloccSafe
+#undef DeeGCObject_RealloccSafe
+#undef DeeGCObject_TryMalloccSafe
+#undef DeeGCObject_TryCalloccSafe
+#undef DeeGCObject_TryRealloccSafe
+#define DeeGCObject_Malloc(n_bytes)                                          DeeDbgGCObject_Malloc(n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_Calloc(n_bytes)                                          DeeDbgGCObject_Calloc(n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_Realloc(ptr, n_bytes)                                    DeeDbgGCObject_Realloc(ptr, n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_TryMalloc(n_bytes)                                       DeeDbgGCObject_TryMalloc(n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_TryCalloc(n_bytes)                                       DeeDbgGCObject_TryCalloc(n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_TryRealloc(ptr, n_bytes)                                 DeeDbgGCObject_TryRealloc(ptr, n_bytes, __FILE__, __LINE__)
+#define DeeGCObject_Free(ptr)                                                DeeDbgGCObject_Free(ptr, __FILE__, __LINE__)
+#define DeeGCObject_Mallocc(base_offset, elem_count, elem_size)              DeeDbgGCObject_Mallocc(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_Callocc(base_offset, elem_count, elem_size)              DeeDbgGCObject_Callocc(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_Reallocc(ptr, base_offset, elem_count, elem_size)        DeeDbgGCObject_Reallocc(ptr, base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_TryMallocc(base_offset, elem_count, elem_size)           DeeDbgGCObject_TryMallocc(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_TryCallocc(base_offset, elem_count, elem_size)           DeeDbgGCObject_TryCallocc(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_TryReallocc(ptr, base_offset, elem_count, elem_size)     DeeDbgGCObject_TryReallocc(ptr, base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_MalloccSafe(base_offset, elem_count, elem_size)          DeeDbgGCObject_MalloccSafe(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_CalloccSafe(base_offset, elem_count, elem_size)          DeeDbgGCObject_CalloccSafe(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_RealloccSafe(ptr, base_offset, elem_count, elem_size)    DeeDbgGCObject_RealloccSafe(ptr, base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_TryMalloccSafe(base_offset, elem_count, elem_size)       DeeDbgGCObject_TryMalloccSafe(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_TryCalloccSafe(base_offset, elem_count, elem_size)       DeeDbgGCObject_TryCalloccSafe(base_offset, elem_count, elem_size, __FILE__, __LINE__)
+#define DeeGCObject_TryRealloccSafe(ptr, base_offset, elem_count, elem_size) DeeDbgGCObject_TryRealloccSafe(ptr, base_offset, elem_count, elem_size, __FILE__, __LINE__)
 #else /* !NDEBUG */
-#define DeeDbgGCObject_Malloc(n_bytes, file, line)          DeeGCObject_Malloc(n_bytes)
-#define DeeDbgGCObject_Calloc(n_bytes, file, line)          DeeGCObject_Calloc(n_bytes)
-#define DeeDbgGCObject_Realloc(ptr, n_bytes, file, line)    DeeGCObject_Realloc(ptr, n_bytes)
-#define DeeDbgGCObject_TryMalloc(n_bytes, file, line)       DeeGCObject_TryMalloc(n_bytes)
-#define DeeDbgGCObject_TryCalloc(n_bytes, file, line)       DeeGCObject_TryCalloc(n_bytes)
-#define DeeDbgGCObject_TryRealloc(ptr, n_bytes, file, line) DeeGCObject_TryRealloc(ptr, n_bytes)
-#define DeeDbgGCObject_Free(ptr, file, line)                DeeGCObject_Free(ptr)
+#undef DeeDbgGCObject_Mallocc
+#undef DeeDbgGCObject_Callocc
+#undef DeeDbgGCObject_Reallocc
+#undef DeeDbgGCObject_TryMallocc
+#undef DeeDbgGCObject_TryCallocc
+#undef DeeDbgGCObject_TryReallocc
+#undef DeeDbgGCObject_MalloccSafe
+#undef DeeDbgGCObject_CalloccSafe
+#undef DeeDbgGCObject_RealloccSafe
+#undef DeeDbgGCObject_TryMalloccSafe
+#undef DeeDbgGCObject_TryCalloccSafe
+#undef DeeDbgGCObject_TryRealloccSafe
+#define DeeDbgGCObject_Malloc(n_bytes, file, line)                                          DeeGCObject_Malloc(n_bytes)
+#define DeeDbgGCObject_Calloc(n_bytes, file, line)                                          DeeGCObject_Calloc(n_bytes)
+#define DeeDbgGCObject_Realloc(ptr, n_bytes, file, line)                                    DeeGCObject_Realloc(ptr, n_bytes)
+#define DeeDbgGCObject_TryMalloc(n_bytes, file, line)                                       DeeGCObject_TryMalloc(n_bytes)
+#define DeeDbgGCObject_TryCalloc(n_bytes, file, line)                                       DeeGCObject_TryCalloc(n_bytes)
+#define DeeDbgGCObject_TryRealloc(ptr, n_bytes, file, line)                                 DeeGCObject_TryRealloc(ptr, n_bytes)
+#define DeeDbgGCObject_Free(ptr, file, line)                                                DeeGCObject_Free(ptr)
+#define DeeDbgGCObject_Mallocc(base_offset, elem_count, elem_size, file, line)              DeeGCObject_Mallocc(base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_Callocc(base_offset, elem_count, elem_size, file, line)              DeeGCObject_Callocc(base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_Reallocc(ptr, base_offset, elem_count, elem_size, file, line)        DeeGCObject_Reallocc(ptr, base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_TryMallocc(base_offset, elem_count, elem_size, file, line)           DeeGCObject_TryMallocc(base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_TryCallocc(base_offset, elem_count, elem_size, file, line)           DeeGCObject_TryCallocc(base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_TryReallocc(ptr, base_offset, elem_count, elem_size, file, line)     DeeGCObject_TryReallocc(ptr, base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_MalloccSafe(base_offset, elem_count, elem_size, file, line)          DeeGCObject_MalloccSafe(base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_CalloccSafe(base_offset, elem_count, elem_size, file, line)          DeeGCObject_CalloccSafe(base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_RealloccSafe(ptr, base_offset, elem_count, elem_size, file, line)    DeeGCObject_RealloccSafe(ptr, base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_TryMalloccSafe(base_offset, elem_count, elem_size, file, line)       DeeGCObject_TryMalloccSafe(base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_TryCalloccSafe(base_offset, elem_count, elem_size, file, line)       DeeGCObject_TryCalloccSafe(base_offset, elem_count, elem_size)
+#define DeeDbgGCObject_TryRealloccSafe(ptr, base_offset, elem_count, elem_size, file, line) DeeGCObject_TryRealloccSafe(ptr, base_offset, elem_count, elem_size)
 #endif /* NDEBUG */
 
 

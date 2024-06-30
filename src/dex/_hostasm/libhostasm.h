@@ -1433,7 +1433,9 @@ struct memstate {
 	}	__WHILE0
 
 #define memstate_sizeof(localc) \
-	(offsetof(struct memstate, ms_localv) + (localc) * sizeof(struct memval))
+	_Dee_MallococBufsize(offsetof(struct memstate, ms_localv), localc, sizeof(struct memval))
+#define memstate_sizeof_constexpr(localc) \
+	(offsetof(struct memstate, ms_localv) + ((localc) * sizeof(struct memval)))
 #define memstate_alloc(localc) \
 	((struct memstate *)Dee_Malloc(memstate_sizeof(localc)))
 #define memstate_free(self) Dee_Free(self)

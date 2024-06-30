@@ -1073,9 +1073,8 @@ INTDEF struct empty_struct_type_object DeeStruct_Type;
 #define DeeStructType_Check(ob) \
 	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeStructType_Type) /* `struct_type' is final */
 
-/* Construct a new struct-type from `fields', which
- * is a `sequence<pair<string, structured_type>>' */
-INTDEF WUNUSED DREF DeeStructTypeObject *DCALL
+/* Construct a new struct-type from `fields', which is a `{(string, StructuredType)...}' */
+INTDEF WUNUSED NONNULL((2)) DREF DeeStructTypeObject *DCALL
 DeeStructType_FromSequence(DeeObject *name,
                            DeeObject *__restrict fields,
                            unsigned int flags);

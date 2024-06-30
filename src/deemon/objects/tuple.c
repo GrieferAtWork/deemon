@@ -126,8 +126,9 @@ Dee_tuplecache_clearall(size_t max_clear) {
 			SLIST_REMOVE_HEAD(&iter->tuc_list, tci_link);
 			ASSERT(iter->tuc_count != 0);
 			--iter->tuc_count;
-			result += (offsetof(Tuple, t_elem) +
-			           ((size_t)(iter - cache + 1) * sizeof(DeeObject *)));
+			result += _Dee_MallococBufsize(offsetof(Tuple, t_elem),
+			                               (size_t)(iter - cache + 1),
+			                               sizeof(DeeObject *));
 			DeeObject_Free(elem);
 		}
 		ASSERT(!!SLIST_EMPTY(&iter->tuc_list) == (iter->tuc_count == 0));

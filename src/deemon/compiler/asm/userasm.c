@@ -2214,10 +2214,8 @@ done_special:
 	}
 	result->s_refcnt = 1;
 	result->s_size = self->af_printer.ap_length;
-	result = (struct TPPString *)Dee_TryRealloc(result,
-	                                            offsetof(struct TPPString, s_text) +
-	                                            (self->af_printer.ap_length + 1) *
-	                                            sizeof(char));
+	result = (struct TPPString *)Dee_TryReallococ(result, offsetof(struct TPPString, s_text),
+	                                              self->af_printer.ap_length + 1, sizeof(char));
 	if unlikely(!result)
 		result = (struct TPPString *)self->af_printer.ap_string;
 	self->af_printer.ap_string = NULL;
