@@ -109,12 +109,11 @@ map_pop(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	result = DeeObject_TryGetItem(self, key);
 	if (result == ITER_DONE) {
 		/* Not present -> use default */
-		if (def) {
-			result = def;
-			Dee_Incref(def);
-		} else {
+		result = def;
+		if unlikely(!result) {
 			err_unknown_key((DeeObject *)self, key);
-			result = NULL;
+		} else {
+			Dee_Incref(result);
 		}
 	} else if (result != NULL) {
 		/* Remove `key' from `self' */

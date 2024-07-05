@@ -2740,8 +2740,11 @@ dict_pop(Dict *self, size_t argc, DeeObject *const *argv) {
 	result = dict_popitem(self, key);
 	if (result == ITER_DONE) {
 		result = def;
-		if unlikely(!result)
+		if unlikely(!result) {
 			err_unknown_key((DeeObject *)self, key);
+		} else {
+			Dee_Incref(result);
+		}
 	}
 	return result;
 err:
