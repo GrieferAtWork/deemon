@@ -176,7 +176,11 @@ function assertBitsetOkReadonly(b: Bitset | BitsetView | Bitset.Frozen) {
 		}
 	} else {
 		assert !b.any();
-		assert !b.all();
+		if (nbits) {
+			assert !b.all();
+		} else {
+			assert b.all();
+		}
 		assert {} == b;
 		assert (#b) == 0;
 		assert inv == [:nbits];
