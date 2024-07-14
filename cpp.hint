@@ -59,6 +59,7 @@
 #define __clrcall
 #define __ms_abi
 #define __sysv_abi
+#define register
 
 
 
@@ -92,6 +93,7 @@
 #define XRETURN
 #define __XRETURN
 
+#define __register
 #define __P(x) x
 #define __builtin_va_list va_list
 #define DFL(x) =x
