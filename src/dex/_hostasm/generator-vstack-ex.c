@@ -6155,9 +6155,9 @@ fg_voptuple(struct fungen *__restrict self,
 	DO(fg_vswap(self));                                    /* args, this */
 	DO(fg_vnotoneref_if_operator(self, operator_name, 1)); /* args, this */
 	DO(fg_vpush_imm16(self, operator_name));               /* args, this, operator_name */
-	DO(fg_vdup_at(self, 3));                                /* args, this, operator_name, args */
+	DO(fg_vdup_at(self, 3));                               /* args, this, operator_name, args */
 	DO(fg_vind(self, offsetof(DeeTupleObject, t_size)));   /* args, this, operator_name, argc */
-	DO(fg_vdup_at(self, 4));                                /* args, this, operator_name, argc, args */
+	DO(fg_vdup_at(self, 4));                               /* args, this, operator_name, argc, args */
 	DO(fg_vdelta(self, offsetof(DeeTupleObject, t_elem))); /* args, this, operator_name, argc, argv */
 	DO(fg_vcallapi_ex(self, &DeeObject_InvokeOperator, VCALL_CC_OBJECT, 4, 5)); /* result */
 	if (!(flags & VOP_F_PUSHRES))
@@ -6362,7 +6362,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 			}
 
 			if (seqtype == &DeeList_Type) {
-				/* TODO: Acquire a lock to he list (if the list isn't ONEREF) */
+				/* TODO: Acquire a lock to the list (if the list isn't ONEREF) */
 				/* TODO: Verify that the list has the correct size */
 				/* TODO: Push all of the list's elements (starting with the greatest index when `HOSTASM_STACK_GROWS_DOWN') */
 				/* TODO: Incref every element where the consumer needs it to be a reference */
@@ -6435,12 +6435,12 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 		DO(fg_vpush_hstackind(self, n_cfa_offset, 0));
 		ASSERT(!fg_vtop_direct_isref(self));
-	}                                                                  /* seq, [elems...] */
-	DO(fg_vlrot(self, n + 1));                                         /* [elems...], seq */
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1)); /* [elems...], seq */
-	DO(fg_vpush_immSIZ(self, n));                                      /* [elems...], seq, objc */
-	DO(fg_vpush_hstack(self, cfa_offset));                             /* [elems...], seq, objc, objv */
-	DO(fg_vcallapi(self, &DeeObject_Unpack, VCALL_CC_INT, 3));         /* [elems...] */
+	}                                                          /* seq, [elems...] */
+	DO(fg_vlrot(self, n + 1));                                 /* [elems...], seq */
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));  /* [elems...], seq */
+	DO(fg_vpush_immSIZ(self, n));                              /* [elems...], seq, objc */
+	DO(fg_vpush_hstack(self, cfa_offset));                     /* [elems...], seq, objc, objv */
+	DO(fg_vcallapi(self, &DeeObject_Unpack, VCALL_CC_INT, 3)); /* [elems...] */
 	for (i = 0; i < n; ++i) {
 		ASSERT(!memval_direct_isref(fg_vtop(self) - i));
 		memval_direct_setref(fg_vtop(self) - i);
@@ -6494,8 +6494,7 @@ err:
 
 /* seq, [elems...] -> seq */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopextend(struct fungen *__restrict self,
-                                 vstackaddr_t n) {
+fg_vopextend(struct fungen *__restrict self, vstackaddr_t n) {
 	vstackaddr_t i;
 	void const *extend_inherited_api_function;
 	DeeTypeObject *seq_type;
@@ -6567,7 +6566,7 @@ fg_vopextend(struct fungen *__restrict self,
 	DO(fg_vpop(self));             /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq */
 	fg_vtop_direct_clearref(self); /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] seq */
 	DO(fg_vpop(self));             /* [[valid_if(false)] elems...], ref:result */
-rotate_result_and_pop_elems:                           /* [[valid_if(false)] elems...], ref:result */
+rotate_result_and_pop_elems:       /* [[valid_if(false)] elems...], ref:result */
 	DO(fg_vrrot(self, n + 1));     /* ref:result, [[valid_if(false)] elems...] */
 	for (i = 0; i < n; ++i) {
 		/* In the success-case, references were inherited! */

@@ -933,6 +933,8 @@ func("pthread_getspecific", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthr
 func("pthread_setspecific", "defined(CONFIG_HAVE_PTHREAD_H)", test: "extern pthread_key_t key; extern void *val; return pthread_setspecific(key, val);");
 func("pthread_kill", "defined(CONFIG_HAVE_SIGNAL_H) && (defined(__USE_POSIX199506) || defined(__USE_UNIX98))", test: "extern pthread_t pt; pthread_kill(pt, 9);");
 func("pthread_sigqueue", "defined(CONFIG_HAVE_SIGNAL_H) && (defined(__USE_POSIX199506) || defined(__USE_UNIX98)) && defined(__USE_GNU)", test: "extern pthread_t pt; union sigval sv; return pthread_sigqueue(pt, 9, sv);");
+// TODO: prctl(PR_SET_NAME, name)
+// TODO: pthread_set_name
 feature("pthread_setname_2ARG", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: 'extern pthread_t pt; return pthread_setname(pt, "foo");');
 feature("pthread_setname_3ARG", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: 'extern pthread_t pt; return pthread_setname(pt, "foo", 3);');
 feature("pthread_setname_np_2ARG", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)", test: 'extern pthread_t pt; return pthread_setname_np(pt, "foo");');

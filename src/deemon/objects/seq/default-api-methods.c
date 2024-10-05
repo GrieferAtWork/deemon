@@ -5759,21 +5759,21 @@ PRIVATE struct type_getset tpconst default_seq_getsets[] = {
 };
 
 PRIVATE struct type_method tpconst default_seq_methods[] = {
-	TYPE_KWMETHOD(STR_any, &default_seq_enumerate, "(start=!0,:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?O\n"
-	                                               "(cb:?DCallable,start=!0,:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N"),
-	TYPE_KWMETHOD(STR_any, &default_seq_any, "(start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD(STR_all, &default_seq_all, "(start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD(STR_parity, &default_seq_parity, "(start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD(STR_reduce, &default_seq_reduce, "(combine:?DCallable,start=!0,:?Dint=!A!Dint!PSIZE_MAX,init?)->"),
-	TYPE_KWMETHOD(STR_min, &default_seq_min, "(start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N")
-	TYPE_KWMETHOD(STR_max, &default_seq_max, "(start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N"),
-	TYPE_KWMETHOD(STR_sum, &default_seq_sum, "(start=!0,:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N"),
-	TYPE_KWMETHOD(STR_count, &default_seq_count, "(item,start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
-	TYPE_KWMETHOD(STR_contains, &default_seq_contains, "(item,start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD(STR_locate, &default_seq_locate, "(item,start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"),
-	TYPE_KWMETHOD(STR_rlocate, &default_seq_rlocate, "(item,start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"),
-	TYPE_KWMETHOD(STR_startswith, &default_seq_startswith, "(item,start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD(STR_endswith, &default_seq_endswith, "(item,start=!0,:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD(STR_any, &default_seq_enumerate, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?O\n"
+	                                               "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N"),
+	TYPE_KWMETHOD(STR_any, &default_seq_any, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD(STR_all, &default_seq_all, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD(STR_parity, &default_seq_parity, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD(STR_reduce, &default_seq_reduce, "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->"),
+	TYPE_KWMETHOD(STR_min, &default_seq_min, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N")
+	TYPE_KWMETHOD(STR_max, &default_seq_max, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N"),
+	TYPE_KWMETHOD(STR_sum, &default_seq_sum, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N"),
+	TYPE_KWMETHOD(STR_count, &default_seq_count, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
+	TYPE_KWMETHOD(STR_contains, &default_seq_contains, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD(STR_locate, &default_seq_locate, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"),
+	TYPE_KWMETHOD(STR_rlocate, &default_seq_rlocate, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"),
+	TYPE_KWMETHOD(STR_startswith, &default_seq_startswith, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
+	TYPE_KWMETHOD(STR_endswith, &default_seq_endswith, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD(STR_find, &default_seq_find, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD(STR_rfind, &default_seq_rfind, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD(STR_index, &default_seq_index, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),

@@ -424,7 +424,7 @@ DDATDEF DeeTypeObject DeeThread_Type;
 #define DeeThread_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeThread_Type)
 
 /* Create a new thread that will invoke `main()' (without any arguments) once started.
- * @return: * :   The enw thread object.
+ * @return: * :   The new thread object.
  * @return: NULL: An error occurred. (Always returned for `CONFIG_NO_THREADS') */
 #define DeeThread_New(main) DeeObject_NewPack(&DeeThread_Type, 1, main)
 
@@ -458,7 +458,7 @@ DeeThread_Interrupt(/*Thread*/ DeeObject *self,
 
 /* Try to wake the thread. This will:
  * - Interrupt a currently running, blocking system call (unless
- *   that call is specifically being made as non-blocking)
+ *   that call is specifically being made as uninterruptible)
  * - Force the thread to return from a call to `DeeFutex_Wait*'
  * - Cause the thread to soon call `DeeThread_CheckInterrupt()' */
 DFUNDEF NONNULL((1)) void DCALL
@@ -570,7 +570,7 @@ DFUNDEF WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self
  * stack doesn't end with deemon's thread bootstrap stub), the caller
  * must eventually call `DeeThread_Secede()' in order to secede their
  * deemon thread context once they are done executing deemon code.
- * 
+ *
  * NOTE: When the caller's thread already has a deemon context, this
  *       function behaves the same as `DeeThread_Self()'
  *

@@ -187,13 +187,13 @@ DeeAsm_NextInstrSp(Dee_instruction_t const *__restrict pc,
 /* Same as `DeeAsm_NextInstr', but also returns the effective stack effect (sub/add) of the instruction.
  * This function is used by the peephole optimizer to trace usage of objects stored on the stack.
  * NOTES:
- *   - Because some instruction's stack effect depends on the current stack depth.
- *     That may sound weird, but think about how fixed-depth instructions behave,
+ *   - Because some instruction's stack effect depends on the current stack depth;
+ *     that may sound weird, but think about how fixed-depth instructions behave;
  *     this function also keeps track of the current stack depth. (e.g.: ASM_STACK)
- *   - Since some instructions exist who's stack-effect depends on parameters on
+ *   - Since some instructions exist who's stack-effect depends on parameters only
  *     known at runtime (e.g.: ASM_JMP_POP_POP), those instructions have an effective
  *     stack-effect of 0, which sub/add effect addends that maximize the potential
- *     influence (e.g.: `ASM_JMP_POP_POP': `*p_sp_sub = (*p_sp_sub = *p_stacksz)+2, *p_stacksz -= 2;')
+ *     influence (e.g.: `ASM_JMP_POP_POP': `*p_sp_add = (*p_sp_sub = *p_stacksz) + 2, *p_stacksz -= 2;')
  *   - Before returning, `*p_stacksz' will be adjusted to `(OLD(*p_stacksz) - *p_sp_sub) + *p_sp_add' */
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) Dee_instruction_t *DCALL
 DeeAsm_NextInstrEf(Dee_instruction_t const *__restrict pc,

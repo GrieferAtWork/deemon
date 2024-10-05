@@ -361,6 +361,22 @@ PRIVATE size_t /*              */ regex_cache_used = 0;
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_rwlock_t regex_cache_lock = DEE_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
+#define regex_cache_lock_reading()    Dee_atomic_rwlock_reading(&regex_cache_lock)
+#define regex_cache_lock_writing()    Dee_atomic_rwlock_writing(&regex_cache_lock)
+#define regex_cache_lock_tryread()    Dee_atomic_rwlock_tryread(&regex_cache_lock)
+#define regex_cache_lock_trywrite()   Dee_atomic_rwlock_trywrite(&regex_cache_lock)
+#define regex_cache_lock_canread()    Dee_atomic_rwlock_canread(&regex_cache_lock)
+#define regex_cache_lock_canwrite()   Dee_atomic_rwlock_canwrite(&regex_cache_lock)
+#define regex_cache_lock_waitread()   Dee_atomic_rwlock_waitread(&regex_cache_lock)
+#define regex_cache_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&regex_cache_lock)
+#define regex_cache_lock_read()       Dee_atomic_rwlock_read(&regex_cache_lock)
+#define regex_cache_lock_write()      Dee_atomic_rwlock_write(&regex_cache_lock)
+#define regex_cache_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&regex_cache_lock)
+#define regex_cache_lock_upgrade()    Dee_atomic_rwlock_upgrade(&regex_cache_lock)
+#define regex_cache_lock_downgrade()  Dee_atomic_rwlock_downgrade(&regex_cache_lock)
+#define regex_cache_lock_endwrite()   Dee_atomic_rwlock_endwrite(&regex_cache_lock)
+#define regex_cache_lock_endread()    Dee_atomic_rwlock_endread(&regex_cache_lock)
+#define regex_cache_lock_end()        Dee_atomic_rwlock_end(&regex_cache_lock)
 
 #define regex_cache_hashst(hash)        ((hash) & regex_cache_mask)
 #define regex_cache_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
@@ -433,7 +449,7 @@ DeeString_DestroyRegex(DeeStringObject *__restrict self) {
 	struct regex_cache_entry *item, old_item;
 	dhash_t i, perturb, hash;
 	hash = regex_cache_entry_hashstr(self);
-	Dee_atomic_rwlock_write(&regex_cache_lock);
+	regex_cache_lock_write();
 	perturb = i = regex_cache_hashst(hash);
 	for (;; regex_cache_hashnx(i, perturb)) {
 		item = regex_cache_hashit(i);
@@ -451,7 +467,7 @@ DeeString_DestroyRegex(DeeStringObject *__restrict self) {
 	memcpy(&old_item, item, sizeof(struct regex_cache_entry));
 	if (regex_cache_used <= regex_cache_size / 3)
 		regex_cache_rehash(-1);
-	Dee_atomic_rwlock_endwrite(&regex_cache_lock);
+	regex_cache_lock_endwrite();
 }
 
 
@@ -500,7 +516,7 @@ again_rules_iter:
 
 	/* Lookup regex in cache */
 	hash = regex_cache_entry_hashstr(self);
-	Dee_atomic_rwlock_read(&regex_cache_lock);
+	regex_cache_lock_read();
 	perturb = i = regex_cache_hashst(hash);
 	for (;; regex_cache_hashnx(i, perturb)) {
 		struct regex_cache_entry *item;
@@ -510,11 +526,11 @@ again_rules_iter:
 		if (item->rce_str == (DeeStringObject *)self &&
 		    item->rce_syntax == compile_flags) {
 			result = item->rce_regex;
-			Dee_atomic_rwlock_endread(&regex_cache_lock);
+			regex_cache_lock_endread();
 			return result;
 		}
 	}
-	Dee_atomic_rwlock_endread(&regex_cache_lock);
+	regex_cache_lock_endread();
 
 	/* Not found int cache -> create a new regex object. */
 	result = re_compile(self, compile_flags);
@@ -523,7 +539,7 @@ again_rules_iter:
 
 	/* Store produced regex object in cache. */
 again_lock_and_insert_result:
-	Dee_atomic_rwlock_write(&regex_cache_lock);
+	regex_cache_lock_write();
 again_insert_result:
 	hash = regex_cache_entry_hashstr(self);
 	first_dummy = NULL;
@@ -550,7 +566,7 @@ again_insert_result:
 			ASSERTF(((DeeStringObject *)self)->s_data->u_flags & STRING_UTF_FREGEX,
 			        "String is in regex cache, but doesn't have regex-flag set?");
 			existing_regex = item->rce_regex;
-			Dee_atomic_rwlock_endwrite(&regex_cache_lock);
+			regex_cache_lock_endwrite();
 			Dee_Free(result);
 			return existing_regex;
 		}
@@ -568,7 +584,7 @@ again_insert_result:
 			bool haslock = true;
 			utf = Dee_string_utf_tryalloc();
 			if unlikely(!utf) {
-				Dee_atomic_rwlock_endwrite(&regex_cache_lock);
+				regex_cache_lock_endwrite();
 				utf = Dee_string_utf_alloc();
 				haslock = false;
 			}
@@ -598,14 +614,14 @@ again_insert_result:
 			if (regex_cache_size * 2 > regex_cache_mask)
 				regex_cache_rehash(1);
 		}
-		Dee_atomic_rwlock_endwrite(&regex_cache_lock);
+		regex_cache_lock_endwrite();
 		return result;
 	}
 
 	/* Rehash and try again. */
 	if (regex_cache_rehash(1))
 		goto again_insert_result;
-	Dee_atomic_rwlock_endwrite(&regex_cache_lock);
+	regex_cache_lock_endwrite();
 	if (Dee_CollectMemory(1))
 		goto again_lock_and_insert_result;
 err:

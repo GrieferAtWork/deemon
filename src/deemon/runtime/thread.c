@@ -89,7 +89,7 @@
  * Thread #1: Leaves `DeeThread_SporadicInterruptHandler'
  * Thread #1: Calls `read(2)' (only from this point forth will `DeeThread_Wake()' interrupt the system call)
  * Thread #1: Starts blocking
- * Thread #2: After `THREAD_WAKE_DELAY', sending another wake to <Thread #1>
+ * Thread #2: After `THREAD_WAKE_DELAY', send another wake to <Thread #1>
  * Thread #1: Returns from `read(2)' with `errno=EINTR'
  * Thread #1: Finally checks for interrupts
  * Thread #1: Clears `Dee_THREAD_STATE_INTERRUPTED'
@@ -1767,6 +1767,7 @@ DeeThread_AllocateCurrentThread(void) {
 #ifdef DeeThread_HAVE_GetCurrentXThread
 #ifndef DeeThread_USE_CreateThread /* NOTE: `DeeThread_GetCurrentHThread()' returns a proper handle, so don't set this flag in that case! */
 	                                         Dee_THREAD_STATE_UNMANAGED | /* Don't allow deemon to detach the OS-handle of this thread */
+	/* FIXME: Setting `Dee_THREAD_STATE_UNMANAGED' here breaks a whole bunch of stuff (like `DeeThread_Suspend()') */
 #endif /* !DeeThread_USE_CreateThread */
 	                                         Dee_THREAD_STATE_HASTHREAD |
 #endif /* DeeThread_HAVE_GetCurrentXThread */
@@ -1808,7 +1809,7 @@ DeeThread_AllocateCurrentThread(void) {
  * stack doesn't end with deemon's thread bootstrap stub), the caller
  * must eventually call `DeeThread_Secede()' in order to secede their
  * deemon thread context once they are done executing deemon code.
- * 
+ *
  * NOTE: When the caller's thread already has a deemon context, this
  *       function behaves the same as `DeeThread_Self()'
  *
@@ -1917,7 +1918,9 @@ DeeThread_Secede(DREF DeeObject *thread_result) {
 	/* Assert that the thread is in a state where it can be detached from deemon. */
 	ASSERTF(Dee_TYPE(self) == &DeeThread_Type, "Custom thread types cannot be seceded");
 	ASSERTF(self != &DeeThread_Main.ot_thread, "The main thread cannot secede control");
+#if defined(DeeThread_HAVE_GetCurrentXThread) && !defined(DeeThread_USE_CreateThread)
 	ASSERTF(self->t_state & Dee_THREAD_STATE_UNMANAGED, "Calling thread was created by deemon");
+#endif /* DeeThread_HAVE_GetCurrentXThread && !DeeThread_USE_CreateThread */
 	ASSERTF(self->t_inout.io_result == NULL, "Calling thread was created by deemon");
 	ASSERTF(self->t_exec == NULL && self->t_execsz == 0, "Calling thread is still executing deemon code");
 	ASSERTF(self->t_str_curr == NULL, "Calling thread still has active calls to `DeeObject_Str'");
@@ -2829,7 +2832,7 @@ DeeFutex_WakeGlobal(DeeThreadObject *thread);
 
 /* Try to wake the thread. This will:
  * - Interrupt a currently running, blocking system call (unless
- *   that call is specifically being made as non-blocking)
+ *   that call is specifically being made as uninterruptible)
  * - Force the thread to return from a call to `DeeFutex_Wait*'
  * - Cause the thread to soon call `DeeThread_CheckInterrupt()' */
 PUBLIC NONNULL((1)) void DCALL
@@ -2875,7 +2878,7 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 		DBG_ALIGNMENT_DISABLE();
 		DeeSystemError_Push();
 		(void)QueueUserAPC(&dummy_apc_func, me->ot_hThread, 0);
-	
+
 		/* Also try to interrupt synchronous I/O, meaning calls like `ReadFile()'.
 		 * Sadly, we must manually check if that functionality is even available... */
 		if (ITER_ISOK(pCancelSynchronousIo)) {

@@ -474,7 +474,7 @@ PRIVATE LPHOSTASM_HOSTFUNC_DESTROY pdyn_hostasm_hostfunc_destroy = NULL;
 PRIVATE DEFINE_STRING(str__hostasm, "_hostasm");
 
 /* Load the _hostasm API
- * @return: 1 : Unable to load API . In this case, `DeeCode_OptimizeCallThreshold'
+ * @return: 1 : Unable to load API. In this case, `DeeCode_OptimizeCallThreshold'
  *              has automatically been set to `(size_t)-1'.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -545,6 +545,8 @@ Dee_hostasm_code_data_destroy(struct Dee_hostasm_code_data *__restrict self) {
 
 INTERN NONNULL((1)) void DCALL
 Dee_hostasm_function_data_destroy(struct Dee_hostasm_function_data *__restrict self) {
+	STATIC_ASSERT(COMPILER_LENOF(((struct Dee_hostasm_code_data *)0)->hcd_functions) ==
+	              COMPILER_LENOF(((struct Dee_hostasm_function_data *)0)->hfd_functions));
 	Dee_hostasm_code_data_destroy((struct Dee_hostasm_code_data *)self);
 }
 
@@ -573,6 +575,8 @@ DeeFunction_HostAsmRecompile(DeeFunctionObject *__restrict self,
 	if (cc & HOST_CC_F_FUNC) {
 		p_data = &code->co_hostasm.haco_data;
 	} else {
+		STATIC_ASSERT(sizeof(struct Dee_hostasm_code_data) ==
+		              sizeof(struct Dee_hostasm_function_data));
 		p_data = (struct Dee_hostasm_code_data **)&self->fo_hostasm.hafu_data;
 	}
 again_read_data:
@@ -1149,7 +1153,7 @@ code_fini(DeeCodeObject *__restrict self) {
 		Dee_XDecrefv(self->co_defaultv, count);
 	}
 
-	/* Clear static variables/constants. */
+	/* Clear constants. */
 	Dee_Decrefv(self->co_constv, self->co_constc);
 
 	/* Clear exception handlers. */
@@ -1191,7 +1195,7 @@ code_visit(DeeCodeObject *__restrict self,
 	/* Visit default variables. */
 	Dee_XVisitv(self->co_defaultv, (uint16_t)(self->co_argc_max - self->co_argc_min));
 
-	/* Visit static variables. */
+	/* Visit constants. */
 	Dee_Visitv(self->co_constv, self->co_constc);
 
 	/* Visit exception information. */

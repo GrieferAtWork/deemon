@@ -1223,7 +1223,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWit
 INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithError(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
 
-/* Generic sequence function hooks (used as function pointers of `type_method' / `type_getset' of Sequence/Set/Mapping) */
+/* Default sequence function hooks (used as function pointers of `type_method' / `type_getset' of Sequence/Set/Mapping) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_getfirst(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_boundfirst(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_delfirst(DeeObject *__restrict self);

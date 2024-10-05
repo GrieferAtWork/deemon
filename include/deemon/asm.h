@@ -1363,7 +1363,7 @@
                                       * >>     PUSH(false);
                                       * >> } else {
                                       * >>     if (PREFIX === lock) {
-                                      * >>         WHILE_WHILE(PREFIX === lock);
+                                      * >>         UNLOCK_AND_WAIT_WHILE(PREFIX === lock);
                                       * >>         goto again;
                                       * >>     }
                                       * >>     PREFIX = lock;
@@ -1373,9 +1373,9 @@
 #define ASM_CMPXCH_UB_POP     0xf09d /* [2][-2,+1]   `cmpxch top, none, pop'              - If SECOND === none, replace it with FIRST. FIRST is always popped.
                                       * [2][-1,+1]   `push  cmpxch PREFIX, unbound, pop'  - Atomically change PREFIX from "unbound" to "FIRST", and push true/false indicative of a change having happened. */
 #define ASM_CMPXCH_POP_UB     0xf09e /* [2][-2,+1]   `cmpxch top, pop, none'              - If SECOND === FIRST, replace it with none. FIRST is always popped.
-                                      * [2][-1,+1]   `push  cmpxch PREFIX, pop, unbound'  - Atomically change PREFIX from "SECOND" to "FIRST", and push true/false indicative of a change having happened (compare is done using `==='). */
-#define ASM_CMPXCH_POP_POP    0xf09f /* [2][-3,+1]   `cmpxch top, pop, pop'               - If THIRD === SECOND, replace it with FIRST. FIRST AND SECOND are always popped.
-                                      * [2][-2,+1]   `push  cmpxch PREFIX, pop, pop'      - Atomically change PREFIX from "FIRST" to "unbound", and push true/false indicative of a change having happened (compare is done using `==='). */
+                                      * [2][-1,+1]   `push  cmpxch PREFIX, pop, unbound'  - Atomically change PREFIX from "SECOND" to "FIRST", and push true/false indicative of a change having happened (compare is done using `===', aka. "ASM_CMP_SO"). */
+#define ASM_CMPXCH_POP_POP    0xf09f /* [2][-3,+1]   `cmpxch top, pop, pop'               - If THIRD === SECOND, replace it with FIRST. FIRST and SECOND are always popped.
+                                      * [2][-2,+1]   `push  cmpxch PREFIX, pop, pop'      - Atomically change PREFIX from "FIRST" to "SECOND", and push true/false indicative of a change having happened (compare is done using `===', aka. "ASM_CMP_SO"). */
 /*      ASM_                  0xf0a0  *               --------                            - ------------------ */
 #define ASM16_PRINT_C         0xf0a1 /* [4][-0,+0]   `print const <imm16>'                - Print a constant from `<imm16>' to stdout. */
 #define ASM16_PRINT_C_SP      0xf0a2 /* [4][-0,+0]   `print const <imm16>, sp'            - Same as `ASM_PRINT_C16', but follow up by printing a space character. */
@@ -1678,13 +1678,13 @@ DeeAsm_NextInstrSp(Dee_instruction_t const *__restrict pc,
 /* Same as `DeeAsm_NextInstr', but also returns the effective stack effect (sub/add) of the instruction.
  * This function is used by the peephole optimizer to trace usage of objects stored on the stack.
  * NOTES:
- *   - Because some instruction's stack effect depends on the current stack depth.
- *     That may sound weird, but think about how fixed-depth instructions behave,
+ *   - Because some instruction's stack effect depends on the current stack depth;
+ *     that may sound weird, but think about how fixed-depth instructions behave;
  *     this function also keeps track of the current stack depth. (e.g.: ASM_STACK)
- *   - Since some instructions exist who's stack-effect depends on parameters on
+ *   - Since some instructions exist who's stack-effect depends on parameters only
  *     known at runtime (e.g.: ASM_JMP_POP_POP), those instructions have an effective
  *     stack-effect of 0, which sub/add effect addends that maximize the potential
- *     influence (e.g.: `ASM_JMP_POP_POP': `*p_sp_sub = (*p_sp_sub = *p_stacksz)+2, *p_stacksz -= 2;')
+ *     influence (e.g.: `ASM_JMP_POP_POP': `*p_sp_add = (*p_sp_sub = *p_stacksz) + 2, *p_stacksz -= 2;')
  *   - Before returning, `*p_stacksz' will be adjusted to `(OLD(*p_stacksz) - *p_sp_sub) + *p_sp_add' */
 DFUNDEF ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) Dee_instruction_t *DCALL
 DeeAsm_NextInstrEf(Dee_instruction_t const *__restrict pc,

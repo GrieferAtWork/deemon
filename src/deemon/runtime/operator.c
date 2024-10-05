@@ -769,10 +769,10 @@ do_invoke_alloc_any_ctor_kw:
 				goto do_invoke_alloc_any_ctor;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
 				goto do_invoke_alloc_any_ctor_kw;
-			goto err_not_implemented_r;
+			goto err_object_type_r_not_implemented;
 		}
 		if unlikely(error)
-			goto err_r;
+			goto err_object_type_r;
 		/* Begin tracking the returned object. */
 		if (object_type->tp_flags & TP_FGC)
 			result = DeeGC_Track(result);
@@ -782,9 +782,9 @@ err_not_implemented:
 	err_unimplemented_constructor(object_type, 0, NULL);
 err:
 	return NULL;
-err_not_implemented_r:
+err_object_type_r_not_implemented:
 	err_unimplemented_constructor(object_type, 0, NULL);
-err_r:
+err_object_type_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(object_type, result);
 err_object_type:
@@ -18229,20 +18229,16 @@ err:
 #ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *, GetRangeBeginIndex,
                 (DeeObject *self, Dee_ssize_t start, DeeObject *end)) {
+	Dee_ssize_t end_index;
 	LOAD_TP_SELF;
-	ASSERT_OBJECT(end);
-	if (DeeNone_Check(end)) {
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index)) {
+		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index) ||
+		          unlikely(DeeType_InheritGetRange(tp_self)))
+			return DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start, end_index);
+	} else if (DeeNone_Check(end)) {
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index_n) ||
 		          unlikely(DeeType_InheritGetRange(tp_self)))
 			return DeeType_INVOKE_GETRANGEINDEXN(tp_self, self, start);
-	} else if (DeeInt_Check(end)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index) ||
-		          unlikely(DeeType_InheritGetRange(tp_self))) {
-			Dee_ssize_t end_index;
-			if (DeeInt_AsSSize(end, &end_index))
-				goto err;
-			return DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start, end_index);
-		}
 	} else {
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
 		          unlikely(DeeType_InheritGetRange(tp_self))) {
@@ -18262,17 +18258,19 @@ err:
 
 DEFINE_OPERATOR(DREF DeeObject *, GetRangeEndIndex,
                 (DeeObject *self, DeeObject *start, Dee_ssize_t end)) {
+	Dee_ssize_t start_index;
 	LOAD_TP_SELF;
-	ASSERT_OBJECT(start);
-	if (DeeInt_Check(start)) {
-		if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index) || DeeType_InheritGetRange(tp_self)) {
-			Dee_ssize_t start_index;
-			if (DeeInt_AsSSize(start, &start_index))
-				goto err;
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index)) {
+do_get_with_start_index:
+		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index) ||
+		          unlikely(DeeType_InheritGetRange(tp_self)))
 			return DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start_index, end);
-		}
+	} else if (DeeNone_Check(start)) {
+		start_index = 0;
+		goto do_get_with_start_index;
 	} else {
-		if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange) || DeeType_InheritGetRange(tp_self)) {
+		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
+		          unlikely(DeeType_InheritGetRange(tp_self))) {
 			DREF DeeObject *result;
 			DREF DeeObject *end_ob = DeeInt_NewSSize(end);
 			if unlikely(!end_ob)
@@ -18309,19 +18307,16 @@ DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndexN,
 
 DEFINE_OPERATOR(int, DelRangeBeginIndex,
                 (DeeObject *self, Dee_ssize_t start, DeeObject *end)) {
+	Dee_ssize_t end_index;
 	LOAD_TP_SELF;
-	if (DeeNone_Check(end)) {
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index)) {
+		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index) ||
+		          unlikely(DeeType_InheritDelRange(tp_self)))
+			return DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start, end_index);
+	} else if (DeeNone_Check(end)) {
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index_n) ||
 		          unlikely(DeeType_InheritDelRange(tp_self)))
 			return DeeType_INVOKE_DELRANGEINDEXN(tp_self, self, start);
-	} else if (DeeInt_Check(end)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index) ||
-		          unlikely(DeeType_InheritDelRange(tp_self))) {
-			Dee_ssize_t end_index;
-			if (DeeInt_AsSSize(end, &end_index))
-				goto err;
-			return DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start, end_index);
-		}
 	} else {
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
 		          unlikely(DeeType_InheritDelRange(tp_self))) {
@@ -18341,15 +18336,16 @@ err:
 
 DEFINE_OPERATOR(int, DelRangeEndIndex,
                 (DeeObject *self, DeeObject *start, Dee_ssize_t end)) {
+	Dee_ssize_t start_index;
 	LOAD_TP_SELF;
-	if (DeeInt_Check(start)) {
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index)) {
+do_del_with_start_index:
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index) ||
-		          unlikely(DeeType_InheritDelRange(tp_self))) {
-			Dee_ssize_t start_index;
-			if (DeeInt_AsSSize(start, &start_index))
-				goto err;
+		          unlikely(DeeType_InheritDelRange(tp_self)))
 			return DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start_index, end);
-		}
+	} else if (DeeNone_Check(start)) {
+		start_index = 0;
+		goto do_del_with_start_index;
 	} else {
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
 		          unlikely(DeeType_InheritDelRange(tp_self))) {
@@ -18387,19 +18383,16 @@ DEFINE_OPERATOR(int, DelRangeIndexN,
 
 DEFINE_OPERATOR(int, SetRangeBeginIndex,
                 (DeeObject *self, Dee_ssize_t start, DeeObject *end, DeeObject *values)) {
+	Dee_ssize_t end_index;
 	LOAD_TP_SELF;
-	if (DeeNone_Check(end)) {
+	if (DeeInt_Check(end) && DeeInt_TryAsSSize(end, &end_index)) {
+		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index) ||
+		          unlikely(DeeType_InheritSetRange(tp_self)))
+			return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start, end_index, values);
+	} else if (DeeNone_Check(end)) {
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index_n) ||
 		          unlikely(DeeType_InheritSetRange(tp_self)))
 			return DeeType_INVOKE_SETRANGEINDEXN(tp_self, self, start, values);
-	} else if (DeeInt_Check(end)) {
-		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index) ||
-		          unlikely(DeeType_InheritSetRange(tp_self))) {
-			Dee_ssize_t end_index;
-			if (DeeInt_AsSSize(end, &end_index))
-				goto err;
-			return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start, end_index, values);
-		}
 	} else {
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
 		          unlikely(DeeType_InheritSetRange(tp_self))) {
@@ -18419,15 +18412,16 @@ err:
 
 DEFINE_OPERATOR(int, SetRangeEndIndex,
                 (DeeObject *self, DeeObject *start, Dee_ssize_t end, DeeObject *values)) {
+	Dee_ssize_t start_index;
 	LOAD_TP_SELF;
-	if (DeeInt_Check(start)) {
+	if (DeeInt_Check(start) && DeeInt_TryAsSSize(start, &start_index)) {
+do_set_with_start_index:
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index) ||
-		          unlikely(DeeType_InheritSetRange(tp_self))) {
-			Dee_ssize_t start_index;
-			if (DeeInt_AsSSize(start, &start_index))
-				goto err;
+		          unlikely(DeeType_InheritSetRange(tp_self)))
 			return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start_index, end, values);
-		}
+	} else if (DeeNone_Check(start)) {
+		start_index = 0;
+		goto do_set_with_start_index;
 	} else {
 		if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
 		          unlikely(DeeType_InheritSetRange(tp_self))) {
@@ -18804,7 +18798,8 @@ DEFINE_OPERATOR(int, SetRange,
 
 
 #ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-DEFINE_OPERATOR(int, BoundItem, (DeeObject *self, DeeObject *index)) {
+DEFINE_OPERATOR(int, BoundItem,
+                (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_bounditem) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18821,7 +18816,8 @@ DEFINE_OPERATOR(int, BoundItemIndex,
 	return err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 }
 
-DEFINE_OPERATOR(int, BoundItemStringHash, (DeeObject *self, char const *__restrict key, dhash_t hash)) {
+DEFINE_OPERATOR(int, BoundItemStringHash,
+                (DeeObject *self, char const *__restrict key, dhash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_bounditem_string_hash) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18829,7 +18825,8 @@ DEFINE_OPERATOR(int, BoundItemStringHash, (DeeObject *self, char const *__restri
 	return err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 }
 
-DEFINE_OPERATOR(int, BoundItemStringLenHash, (DeeObject *self, char const *__restrict key, size_t keylen, dhash_t hash)) {
+DEFINE_OPERATOR(int, BoundItemStringLenHash,
+                (DeeObject *self, char const *__restrict key, size_t keylen, dhash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_bounditem_string_len_hash) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18838,10 +18835,11 @@ DEFINE_OPERATOR(int, BoundItemStringLenHash, (DeeObject *self, char const *__res
 }
 
 /* Check if a given item exists (`deemon.hasitem(self, index)')
- * @return: 1: Does exists
- * @return: 0:  Doesn't exist
- * @return: -1:     Error. */
-DEFINE_OPERATOR(int, HasItem, (DeeObject *self, DeeObject *index)) {
+ * @return: 0:  Doesn't exist;
+ * @return: 1:  Does exists;
+ * @return: -1: Error. */
+DEFINE_OPERATOR(int, HasItem,
+                (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_hasitem) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18858,7 +18856,8 @@ DEFINE_OPERATOR(int, HasItemIndex,
 	return err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 }
 
-DEFINE_OPERATOR(int, HasItemStringHash, (DeeObject *self, char const *__restrict key, dhash_t hash)) {
+DEFINE_OPERATOR(int, HasItemStringHash,
+                (DeeObject *self, char const *__restrict key, dhash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_hasitem_string_hash) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18866,7 +18865,8 @@ DEFINE_OPERATOR(int, HasItemStringHash, (DeeObject *self, char const *__restrict
 	return err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 }
 
-DEFINE_OPERATOR(int, HasItemStringLenHash, (DeeObject *self, char const *__restrict key, size_t keylen, dhash_t hash)) {
+DEFINE_OPERATOR(int, HasItemStringLenHash,
+                (DeeObject *self, char const *__restrict key, size_t keylen, dhash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_hasitem_string_len_hash) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18874,7 +18874,8 @@ DEFINE_OPERATOR(int, HasItemStringLenHash, (DeeObject *self, char const *__restr
 	return err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, TryGetItem, (DeeObject *self, DeeObject *index)) {
+DEFINE_OPERATOR(DREF DeeObject *, TryGetItem,
+                (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_trygetitem) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18893,7 +18894,8 @@ DEFINE_OPERATOR(DREF DeeObject *, TryGetItemIndex,
 	return NULL;
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, TryGetItemStringHash, (DeeObject *self, char const *__restrict key, Dee_hash_t hash)) {
+DEFINE_OPERATOR(DREF DeeObject *, TryGetItemStringHash,
+                (DeeObject *self, char const *__restrict key, Dee_hash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_trygetitem_string_hash) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18902,7 +18904,8 @@ DEFINE_OPERATOR(DREF DeeObject *, TryGetItemStringHash, (DeeObject *self, char c
 	return NULL;
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, TryGetItemStringLenHash, (DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash)) {
+DEFINE_OPERATOR(DREF DeeObject *, TryGetItemStringLenHash,
+                (DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_trygetitem_string_len_hash) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18930,7 +18933,8 @@ DEFINE_OPERATOR(int, DelItemIndex,
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 }
 
-DEFINE_OPERATOR(int, SetItemIndex, (DeeObject *self, size_t index, DeeObject *value)) {
+DEFINE_OPERATOR(int, SetItemIndex,
+                (DeeObject *self, size_t index, DeeObject *value)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setitem_index) ||
 	          unlikely(DeeType_InheritSetItem(tp_self)))
@@ -18938,7 +18942,8 @@ DEFINE_OPERATOR(int, SetItemIndex, (DeeObject *self, size_t index, DeeObject *va
 	return err_unimplemented_operator(tp_self, OPERATOR_SETITEM);
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, GetItemStringHash, (DeeObject *self, char const *__restrict key, Dee_hash_t hash)) {
+DEFINE_OPERATOR(DREF DeeObject *, GetItemStringHash,
+                (DeeObject *self, char const *__restrict key, Dee_hash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getitem_string_hash) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18947,7 +18952,8 @@ DEFINE_OPERATOR(DREF DeeObject *, GetItemStringHash, (DeeObject *self, char cons
 	return NULL;
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, GetItemStringLenHash, (DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash)) {
+DEFINE_OPERATOR(DREF DeeObject *, GetItemStringLenHash,
+                (DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_getitem_string_len_hash) ||
 	          unlikely(DeeType_InheritGetItem(tp_self)))
@@ -18956,7 +18962,8 @@ DEFINE_OPERATOR(DREF DeeObject *, GetItemStringLenHash, (DeeObject *self, char c
 	return NULL;
 }
 
-DEFINE_OPERATOR(int, DelItemStringHash, (DeeObject *self, char const *__restrict key, dhash_t hash)) {
+DEFINE_OPERATOR(int, DelItemStringHash,
+                (DeeObject *self, char const *__restrict key, dhash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delitem_string_hash) ||
 	          unlikely(DeeType_InheritDelItem(tp_self)))
@@ -18964,7 +18971,8 @@ DEFINE_OPERATOR(int, DelItemStringHash, (DeeObject *self, char const *__restrict
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 }
 
-DEFINE_OPERATOR(int, DelItemStringLenHash, (DeeObject *self, char const *__restrict key, size_t keylen, dhash_t hash)) {
+DEFINE_OPERATOR(int, DelItemStringLenHash,
+                (DeeObject *self, char const *__restrict key, size_t keylen, dhash_t hash)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_delitem_string_len_hash) ||
 	          unlikely(DeeType_InheritDelItem(tp_self)))
@@ -18972,7 +18980,8 @@ DEFINE_OPERATOR(int, DelItemStringLenHash, (DeeObject *self, char const *__restr
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 }
 
-DEFINE_OPERATOR(int, SetItemStringHash, (DeeObject *self, char const *__restrict key, dhash_t hash, DeeObject *value)) {
+DEFINE_OPERATOR(int, SetItemStringHash,
+                (DeeObject *self, char const *__restrict key, dhash_t hash, DeeObject *value)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setitem_string_hash) ||
 	          unlikely(DeeType_InheritSetItem(tp_self)))
@@ -18980,7 +18989,8 @@ DEFINE_OPERATOR(int, SetItemStringHash, (DeeObject *self, char const *__restrict
 	return err_unimplemented_operator(tp_self, OPERATOR_SETITEM);
 }
 
-DEFINE_OPERATOR(int, SetItemStringLenHash, (DeeObject *self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *value)) {
+DEFINE_OPERATOR(int, SetItemStringLenHash,
+                (DeeObject *self, char const *__restrict key, size_t keylen, dhash_t hash, DeeObject *value)) {
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_setitem_string_len_hash) ||
 	          unlikely(DeeType_InheritSetItem(tp_self)))
@@ -19799,7 +19809,7 @@ DEFINE_OPERATOR(Dee_ssize_t, Foreach,
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
 	          unlikely(DeeType_InheritIter(tp_self)))
-		return (*tp_self->tp_seq->tp_foreach)(self, proc, arg);
+		return DeeType_INVOKE_FOREACH(tp_self, self, proc, arg);
 	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
 }
 
@@ -19808,7 +19818,7 @@ DEFINE_OPERATOR(Dee_ssize_t, ForeachPair,
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach_pair) ||
 	          unlikely(DeeType_InheritIter(tp_self)))
-		return (*tp_self->tp_seq->tp_foreach_pair)(self, proc, arg);
+		return DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg);
 	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
 }
 
@@ -19820,7 +19830,7 @@ DEFINE_OPERATOR(Dee_ssize_t, Enumerate,
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_enumerate) ||
 	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_enumerate))
-		return (*tp_self->tp_seq->tp_enumerate)(self, proc, arg);
+		return DeeType_INVOKE_ENUMERATE(tp_self, self, proc, arg);
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Cannot enumerate keys of non-sequence type `%r'",
 	                       tp_self);
@@ -19834,7 +19844,7 @@ DEFINE_OPERATOR(DREF DeeObject *, IterKeys,
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_iterkeys) ||
 	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_iterkeys))
-		return (*tp_self->tp_seq->tp_iterkeys)(self);
+		return DeeType_INVOKE_ITERKEYS(tp_self, self);
 	DeeError_Throwf(&DeeError_NotImplemented,
 	                "Cannot enumerate keys of non-sequence type `%r'",
 	                tp_self);
@@ -19855,7 +19865,7 @@ DEFINE_OPERATOR(Dee_ssize_t, EnumerateIndex,
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_enumerate_index) ||
 	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_enumerate_index))
-		return (*tp_self->tp_seq->tp_enumerate_index)(self, proc, arg, start, end);
+		return DeeType_INVOKE_ENUMERATE_INDEX(tp_self, self, proc, arg, start, end);
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Cannot enumerate non-sequence type `%r'",
 	                       tp_self);

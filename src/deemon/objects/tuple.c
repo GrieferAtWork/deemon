@@ -1584,10 +1584,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 tuple_asvector(Tuple *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
-	if unlikely(dst_length < self->t_size)
-		return self->t_size;
-	Dee_Movrefv(dst, self->t_elem, self->t_size);
-	return self->t_size;
+	size_t result = self->t_size;
+	if likely(dst_length >= result)
+		Dee_Movrefv(dst, self->t_elem, result);
+	return result;
 }
 
 PRIVATE struct type_nsi tpconst tuple_nsi = {

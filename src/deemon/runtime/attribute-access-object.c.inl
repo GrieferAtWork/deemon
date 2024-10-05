@@ -82,9 +82,9 @@
 //#define DEFINE_DeeObject_TFindAttrInfoStringHash
 //#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
 //#define DEFINE_DeeObject_TFindPrivateAttrInfoStringHash
-#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
+//#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_FindAttr
-//#define DEFINE_DeeObject_EnumAttr
+#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeObject_GetAttr) +                           \
