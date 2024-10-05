@@ -1740,7 +1740,7 @@ find_origin_of_compare_default:
 			offsetof(struct type_with, tp_enter),
 			offsetof(struct type_with, tp_leave),
 		};
-		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_attr),
+		return DeeType_FindOperatorSubGroupOrigin(self, offsetof(DeeTypeObject, tp_with),
 		                                          with_group, COMPILER_LENOF(with_group));
 	}	break;
 
