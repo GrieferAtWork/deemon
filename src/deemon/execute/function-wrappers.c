@@ -80,7 +80,7 @@ INTDEF DeeTypeObject FunctionStatics_Type;
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcstaticsiter_nii_getseq(FunctionStaticsIterator *__restrict self) {
+funcstaticsiter_getseq(FunctionStaticsIterator *__restrict self) {
 	return DeeFunction_GetStaticsWrapper(self->fsi_func);
 }
 
@@ -217,7 +217,7 @@ PRIVATE struct type_nii tpconst funcstaticsiter_nii = {
 	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&funcstaticsiter_nii_getseq,
+			/* .nii_getseq   = */ (dfunptr_t)&funcstaticsiter_getseq,
 			/* .nii_getindex = */ (dfunptr_t)&funcstaticsiter_nii_getindex,
 			/* .nii_setindex = */ (dfunptr_t)&funcstaticsiter_nii_setindex,
 			/* .nii_rewind   = */ (dfunptr_t)&funcstaticsiter_nii_rewind,
@@ -246,7 +246,7 @@ PRIVATE struct type_cmp funcstaticsiter_cmp = {
 };
 
 PRIVATE struct type_getset tpconst funcstaticsiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &funcstaticsiter_nii_getseq, "->?Ert:FunctionStatics"),
+	TYPE_GETTER(STR_seq, &funcstaticsiter_getseq, "->?Ert:FunctionStatics"),
 	TYPE_GETSET_END
 };
 
