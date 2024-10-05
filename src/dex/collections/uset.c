@@ -1225,7 +1225,7 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-uset_asvector(USet *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+uset_asvector(USet *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t result;
 	USet_LockRead(self);
 	result = self->us_used;
@@ -1301,7 +1301,7 @@ PRIVATE struct type_seq uset_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&uset_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&uset_asvector,
 };
 
 PRIVATE struct type_method tpconst uset_methods[] = {
@@ -1659,7 +1659,7 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-uroset_asvector(URoSet *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+uroset_asvector(URoSet *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	if likely(dst_length >= self->urs_size) {
 		struct uset_item *iter, *end;
 		end = (iter = self->urs_elem) + (self->urs_mask + 1);
@@ -1721,7 +1721,7 @@ PRIVATE struct type_seq uroset_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&uroset_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&uroset_asvector,
 };
 
 PRIVATE NONNULL((1, 2)) void DCALL

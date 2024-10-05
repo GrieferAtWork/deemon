@@ -1606,7 +1606,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-string_asvector(String *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+string_asvector(String *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t result;
 	union dcharptr ptr, end;
 	DREF DeeObject **dst_iter = dst;
@@ -1731,7 +1731,7 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&string_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&string_asvector,
 };
 
 PRIVATE struct type_member tpconst string_class_members[] = {

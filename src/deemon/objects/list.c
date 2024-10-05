@@ -2106,7 +2106,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-list_asvector(List *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+list_asvector(List *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t realsize;
 	DeeList_LockRead(self);
 	realsize = self->l_list.ol_elemc;
@@ -2183,7 +2183,7 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&list_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&list_asvector,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

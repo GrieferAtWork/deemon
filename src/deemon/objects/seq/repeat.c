@@ -1017,7 +1017,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-repeatitem_asvector(RepeatItem *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+repeatitem_asvector(RepeatItem *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	if unlikely(self->rpit_num == (size_t)-1) {
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
 	} else {
@@ -1091,7 +1091,7 @@ PRIVATE struct type_seq repeatitem_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&repeatitem_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&repeatitem_asvector,
 };
 
 PRIVATE struct type_member tpconst repeatitem_members[] = {

@@ -1404,7 +1404,7 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-bytes_asvector(Bytes *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+bytes_asvector(Bytes *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t size = DeeBytes_SIZE(self);
 	if likely(dst_length >= size) {
 		size_t i;
@@ -1502,7 +1502,7 @@ PRIVATE struct type_seq bytes_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&bytes_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&bytes_asvector,
 };
 
 

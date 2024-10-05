@@ -194,7 +194,6 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4, 5)) int (DCALL DeeObject_TSetRangeBeginIndex)(
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeObject_TSetRangeEndIndex)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, Dee_ssize_t end, DeeObject *values);
 DFUNDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeObject_TSetRangeIndex)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end, DeeObject *values);
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_TSetRangeIndexN)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, DeeObject *values);
-
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TBoundItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
@@ -203,6 +202,8 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItem)(DeeTypeObject 
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_THasItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+DFUNDEF WUNUSED ATTR_OUTS(4, 3) NONNULL((1, 2)) int (DCALL DeeObject_TUnpack)(DeeTypeObject *tp_self, DeeObject *self, size_t objc, /*out*/ DREF DeeObject **__restrict objv);
+DFUNDEF WUNUSED ATTR_OUTS(4, 3) NONNULL((1, 2)) int (DCALL DeeObject_TUnpackWithUnbound)(DeeTypeObject *tp_self, DeeObject *self, size_t objc, /*out*/ DREF DeeObject **__restrict objv);
 
 /* Attribute operators */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);

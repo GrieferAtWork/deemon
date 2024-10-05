@@ -278,6 +278,12 @@ none_trygetitemnr_string_len_hash(DeeObject *__restrict UNUSED(self),
 	return ITER_DONE;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+none_unpack(DeeObject *UNUSED(self), size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	Dee_Setrefv(dst, Dee_None, dst_length);
+	return 0;
+}
+
 
 PRIVATE struct type_math none_math = {
 	/* .tp_int32       = */ &none_int32,
@@ -389,7 +395,9 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_setitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&none_i5,
 	/* .tp_bounditem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4_1,
 	/* .tp_hasitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4_1,
-	/* .tp_asvector                     = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&none_s3,
+	/* .tp_asvector                     = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_s3,
+	/* .tp_unpack                       = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_unpack,
+	/* .tp_unpack_ub                    = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_unpack,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&none_getitemnr,
 	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&none_getitemnr_string_hash,
 	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&none_getitemnr_string_len_hash,

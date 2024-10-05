@@ -51,6 +51,8 @@
 
 #include <hybrid/align.h>
 #include <hybrid/int128.h>
+#include <hybrid/minmax.h>
+#include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
 #include <stdarg.h>
@@ -415,6 +417,10 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_BOUNDITEMSTRINGLENHASH_NODEFAULT  DeeType_InvokeSeqBoundItemStringLenHash_NODEFAULT
 #define DeeType_INVOKE_HASITEMSTRINGLENHASH              DeeType_InvokeSeqHasItemStringLenHash
 #define DeeType_INVOKE_HASITEMSTRINGLENHASH_NODEFAULT    DeeType_InvokeSeqHasItemStringLenHash_NODEFAULT
+#define DeeType_INVOKE_UNPACK                            DeeType_InvokeSeqUnpack
+#define DeeType_INVOKE_UNPACK_NODEFAULT                  DeeType_InvokeSeqUnpack_NODEFAULT
+#define DeeType_INVOKE_UNPACK_UB                         DeeType_InvokeSeqUnpackUb
+#define DeeType_INVOKE_UNPACK_UB_NODEFAULT               DeeType_InvokeSeqUnpackUb_NODEFAULT
 #define DeeType_INVOKE_GETATTR                           DeeType_InvokeAttrGetAttr
 #define DeeType_INVOKE_GETATTR_NODEFAULT                 DeeType_InvokeAttrGetAttr_NODEFAULT
 #define DeeType_INVOKE_DELATTR                           DeeType_InvokeAttrDelAttr
@@ -524,6 +530,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_SETITEMSTRINGLENHASH(tp_self, self, key, keylen, hash, value) (*(tp_self)->tp_seq->tp_setitem_string_len_hash)(self, key, keylen, hash, value)
 #define DeeType_INVOKE_BOUNDITEMSTRINGLENHASH(tp_self, self, key, keylen, hash)      (*(tp_self)->tp_seq->tp_bounditem_string_len_hash)(self, key, keylen, hash)
 #define DeeType_INVOKE_HASITEMSTRINGLENHASH(tp_self, self, key, keylen, hash)        (*(tp_self)->tp_seq->tp_hasitem_string_len_hash)(self, key, keylen, hash)
+#define DeeType_INVOKE_UNPACK(tp_self, self, dst_length, dst)                        (*(tp_self)->tp_seq->tp_unpack)(self, dst_length, dst)
+#define DeeType_INVOKE_UNPACK_UB(tp_self, self, dst_length, dst)                     (*(tp_self)->tp_seq->tp_unpack_ub)(self, dst_length, dst)
 #define DeeType_INVOKE_GETATTR(tp_self, self, name)                                  (*(tp_self)->tp_attr->tp_getattr)(self, name)
 #define DeeType_INVOKE_DELATTR(tp_self, self, name)                                  (*(tp_self)->tp_attr->tp_delattr)(self, name)
 #define DeeType_INVOKE_SETATTR(tp_self, self, name, value)                           (*(tp_self)->tp_attr->tp_setattr)(self, name, value)
@@ -628,6 +636,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_SETITEMSTRINGLENHASH_NODEFAULT    DeeType_INVOKE_SETITEMSTRINGLENHASH
 #define DeeType_INVOKE_BOUNDITEMSTRINGLENHASH_NODEFAULT  DeeType_INVOKE_BOUNDITEMSTRINGLENHASH
 #define DeeType_INVOKE_HASITEMSTRINGLENHASH_NODEFAULT    DeeType_INVOKE_HASITEMSTRINGLENHASH
+#define DeeType_INVOKE_UNPACK_NODEFAULT                  DeeType_INVOKE_UNPACK
+#define DeeType_INVOKE_UNPACK_UB_NODEFAULT               DeeType_INVOKE_UNPACK_UB
 #define DeeType_INVOKE_GETATTR_NODEFAULT                 DeeType_INVOKE_GETATTR
 #define DeeType_INVOKE_DELATTR_NODEFAULT                 DeeType_INVOKE_DELATTR
 #define DeeType_INVOKE_SETATTR_NODEFAULT                 DeeType_INVOKE_SETATTR
@@ -13802,6 +13812,493 @@ err:
 	return -1;
 }
 
+
+
+
+/* tp_unpack / tp_unpack_ub */
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithAsVector,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t real_length;
+	LOAD_TP_SELF;
+	real_length = (*tp_self->tp_seq->tp_asvector)(self, dst_length, dst);
+	if likely(real_length == dst_length)
+		return 0;
+	err_invalid_unpack_size(self, dst_length, real_length);
+	if (real_length < dst_length)
+		Dee_Decrefv(dst, real_length);
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithSizeAndGetItemIndexFast,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size, count;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	for (i = count = 0; i < real_size; ++i) {
+		DREF DeeObject *elem;
+		elem = (*tp_self->tp_seq->tp_getitem_index_fast)(self, i);
+		if (!elem)
+			continue; /* Unbound element */
+		if likely(count < dst_length) {
+			dst[count] = elem; /* Inherit reference */
+		} else {
+			Dee_Decref(elem);
+		}
+		++count;
+	}
+	if likely(count == dst_length)
+		return 0;
+	{
+		size_t common = MIN(count, dst_length);
+		Dee_Decrefv(dst, common);
+	}
+	return err_invalid_unpack_size(self, dst_length, count);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithSizeAndTryGetItemIndex,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size, count;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	for (i = count = 0; i < real_size; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_TRYGETITEMINDEX_NODEFAULT(tp_self, self, i);
+		if (elem == ITER_DONE)
+			continue; /* Unbound element */
+		if unlikely(!elem)
+			goto err_dst_common;
+		if likely(count < dst_length) {
+			dst[count] = elem; /* Inherit reference */
+		} else {
+			Dee_Decref(elem);
+		}
+		++count;
+	}
+	if likely(count == dst_length)
+		return 0;
+	err_invalid_unpack_size(self, dst_length, count);
+	{
+		size_t common;
+err_dst_common:
+		common = MIN(count, dst_length);
+		Dee_Decrefv(dst, common);
+	}
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithSizeAndGetItemIndex,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size, count;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	for (i = count = 0; i < real_size; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break;
+			goto err_dst_common;
+		}
+		if likely(count < dst_length) {
+			dst[count] = elem; /* Inherit reference */
+		} else {
+			Dee_Decref(elem);
+		}
+		++count;
+	}
+	if likely(count == dst_length)
+		return 0;
+	err_invalid_unpack_size(self, dst_length, count);
+	{
+		size_t common;
+err_dst_common:
+		common = MIN(count, dst_length);
+		Dee_Decrefv(dst, common);
+	}
+err:
+	return -1;
+}
+
+#ifdef DEFINE_TYPED_OPERATORS
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithSizeDefaultAndTryGetItemIndexDefault,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size, count;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	for (i = count = 0; i < real_size; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_TRYGETITEMINDEX(tp_self, self, i);
+		if (elem == ITER_DONE)
+			continue; /* Unbound element */
+		if unlikely(!elem)
+			goto err_dst_common;
+		if likely(count < dst_length) {
+			dst[count] = elem; /* Inherit reference */
+		} else {
+			Dee_Decref(elem);
+		}
+		++count;
+	}
+	if likely(count == dst_length)
+		return 0;
+	err_invalid_unpack_size(self, dst_length, count);
+	{
+		size_t common;
+err_dst_common:
+		common = MIN(count, dst_length);
+		Dee_Decrefv(dst, common);
+	}
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithSizeDefaultAndGetItemIndexDefault,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size, count;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	for (i = count = 0; i < real_size; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_GETITEMINDEX(tp_self, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break;
+			goto err_dst_common;
+		}
+		if likely(count < dst_length) {
+			dst[count] = elem; /* Inherit reference */
+		} else {
+			Dee_Decref(elem);
+		}
+		++count;
+	}
+	if likely(count == dst_length)
+		return 0;
+	err_invalid_unpack_size(self, dst_length, count);
+	{
+		size_t common;
+err_dst_common:
+		common = MIN(count, dst_length);
+		Dee_Decrefv(dst, common);
+	}
+err:
+	return -1;
+}
+#endif /* DEFINE_TYPED_OPERATORS */
+
+struct default_unpack_with_foreach_data {
+	size_t           duqfd_dst_length; /* Remaining destination length */
+	DREF DeeObject **duqfd_dst;        /* [?..?][0..duqfd_dst_length] Pointer to next destination */
+};
+
+INTDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_unpack_with_foreach_cb(void *arg, DeeObject *elem);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_unpack_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_unpack_with_foreach_data *data;
+	data = (struct default_unpack_with_foreach_data *)arg;
+	if likely(data->duqfd_dst_length) {
+		Dee_Incref(elem);
+		*data->duqfd_dst = elem;
+		--data->duqfd_dst_length;
+		++data->duqfd_dst;
+	}
+	return 1;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithForeach,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	Dee_ssize_t status;
+	struct default_unpack_with_foreach_data data;
+	LOAD_TP_SELF;
+	data.duqfd_dst_length = dst_length;
+	data.duqfd_dst        = dst;
+	status = DeeType_INVOKE_FOREACH_NODEFAULT(tp_self, self, &default_unpack_with_foreach_cb, &data);
+	if unlikely(status < 0)
+		goto err;
+	ASSERT(((size_t)status == (size_t)(data.duqfd_dst - dst)) ||
+	       ((size_t)status > dst_length));
+	if likely((size_t)status == dst_length)
+		return 0;
+	Dee_Decrefv(dst, (size_t)(data.duqfd_dst - dst));
+	err_invalid_unpack_size(self, dst_length, (size_t)status);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithIter,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, remainder;
+	DREF DeeObject *iter, *elem;
+	LOAD_TP_SELF;
+	iter = DeeType_INVOKE_ITER_NODEFAULT(tp_self, self);
+	if unlikely(!iter)
+		goto err;
+	for (i = 0; i < dst_length; ++i) {
+		elem = DeeObject_IterNext(iter);
+		if unlikely(!ITER_ISOK(elem)) {
+			if (elem)
+				err_invalid_unpack_size(self, dst_length, i);
+			goto err_iter_dst_i;
+		}
+		dst[i] = elem; /* Inherit reference. */
+	}
+
+	/* Check to make sure that the iterator actually ends here. */
+	remainder = DeeObject_IterAdvance(iter, (size_t)-2);
+	if unlikely(remainder != 0) {
+		if unlikely(remainder == (size_t)-1)
+			goto err_iter_dst_i;
+		if (OVERFLOW_UADD(remainder, dst_length, &remainder))
+			remainder = (size_t)-1;
+		err_invalid_unpack_size(self, dst_length, remainder);
+		goto err_iter_dst_i;
+	}
+	Dee_Decref(iter);
+	return 0;
+err_iter_dst_i:
+	Dee_Decrefv(dst, i);
+/*err_iter:*/
+	Dee_Decref(iter);
+err:
+	return -1;
+}
+
+#ifdef DEFINE_TYPED_OPERATORS
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackWithForeachDefault,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	Dee_ssize_t status;
+	struct default_unpack_with_foreach_data data;
+	LOAD_TP_SELF;
+	data.duqfd_dst_length = dst_length;
+	data.duqfd_dst        = dst;
+	status = DeeType_INVOKE_FOREACH(tp_self, self, &default_unpack_with_foreach_cb, &data);
+	if unlikely(status < 0)
+		goto err;
+	ASSERT(((size_t)status == (size_t)(data.duqfd_dst - dst)) ||
+	       ((size_t)status > dst_length));
+	if likely((size_t)status == dst_length)
+		return 0;
+	Dee_Decrefv(dst, (size_t)(data.duqfd_dst - dst));
+	err_invalid_unpack_size(self, dst_length, (size_t)status);
+err:
+	return -1;
+}
+#endif /* DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackUbWithSizeAndGetItemIndexFast,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	if unlikely(real_size != dst_length)
+		return err_invalid_unpack_size(self, dst_length, real_size);
+	for (i = 0; i < dst_length; ++i) {
+		dst[i] = (*tp_self->tp_seq->tp_getitem_index_fast)(self, i);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackUbWithSizeAndTryGetItemIndex,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	if unlikely(real_size != dst_length)
+		return err_invalid_unpack_size(self, dst_length, real_size);
+	for (i = 0; i < dst_length; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_TRYGETITEMINDEX_NODEFAULT(tp_self, self, i);
+		if unlikely(!elem)
+			goto err_dst_i;
+		if (elem == ITER_DONE)
+			elem = NULL;
+		dst[i] = elem; /* Inherit reference */
+	}
+	return 0;
+err_dst_i:
+	Dee_Decrefv(dst, i);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackUbWithSizeAndGetItemIndex,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	if unlikely(real_size != dst_length)
+		return err_invalid_unpack_size(self, dst_length, real_size);
+	for (i = 0; i < dst_length; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Retain unbound items in "dst" */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break;
+			} else {
+				goto err_dst_i;
+			}
+		}
+		dst[i] = elem; /* Inherit reference */
+	}
+	return 0;
+err_dst_i:
+	Dee_Decrefv(dst, i);
+err:
+	return -1;
+}
+
+#ifdef DEFINE_TYPED_OPERATORS
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackUbWithSizeDefaultAndTryGetItemIndexDefault,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	if unlikely(real_size != dst_length)
+		return err_invalid_unpack_size(self, dst_length, real_size);
+	for (i = 0; i < dst_length; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_TRYGETITEMINDEX(tp_self, self, i);
+		if unlikely(!elem)
+			goto err_dst_i;
+		if (elem == ITER_DONE)
+			elem = NULL;
+		dst[i] = elem; /* Inherit reference */
+	}
+	return 0;
+err_dst_i:
+	Dee_Decrefv(dst, i);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackUbWithSizeDefaultAndGetItemIndexDefault,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	size_t i, real_size;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	if unlikely(real_size != dst_length)
+		return err_invalid_unpack_size(self, dst_length, real_size);
+	for (i = 0; i < dst_length; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_GETITEMINDEX(tp_self, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Retain unbound items in "dst" */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				break;
+			} else {
+				goto err_dst_i;
+			}
+		}
+		dst[i] = elem; /* Inherit reference */
+	}
+	return 0;
+err_dst_i:
+	Dee_Decrefv(dst, i);
+err:
+	return -1;
+}
+#endif /* DEFINE_TYPED_OPERATORS */
+
+
+INTDEF WUNUSED_T NONNULL_T((2)) Dee_ssize_t DCALL
+default_unpack_ub_with_size_and_enumerate_index_cb(void *arg, size_t index,
+                                                   /*nullable*/ DeeObject *value);
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED_T NONNULL_T((2)) Dee_ssize_t DCALL
+default_unpack_ub_with_size_and_enumerate_index_cb(void *arg, size_t index,
+                                                   /*nullable*/ DeeObject *value) {
+	DREF DeeObject **dst = (DREF DeeObject **)arg;
+	dst[index] = value;
+	Dee_Incref(value);
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackUbWithSizeDefaultAndEnumerateIndex,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	Dee_ssize_t status;
+	size_t real_size;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	if unlikely(real_size != dst_length)
+		return err_invalid_unpack_size(self, dst_length, real_size);
+	bzeroc(dst, real_size, sizeof(DREF DeeObject *));
+	status = DeeType_INVOKE_ENUMERATE_INDEX_NODEFAULT(tp_self, self,
+	                                                  &default_unpack_ub_with_size_and_enumerate_index_cb,
+	                                                  dst, 0, real_size);
+	if unlikely(status < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+#ifdef DEFINE_TYPED_OPERATORS
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault,
+                             (DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst)) {
+	Dee_ssize_t status;
+	size_t real_size;
+	LOAD_TP_SELF;
+	real_size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(real_size == (size_t)-1)
+		goto err;
+	if unlikely(real_size != dst_length)
+		return err_invalid_unpack_size(self, dst_length, real_size);
+	bzeroc(dst, real_size, sizeof(DREF DeeObject *));
+	status = DeeType_INVOKE_ENUMERATE_INDEX(tp_self, self,
+	                                        &default_unpack_ub_with_size_and_enumerate_index_cb,
+	                                        dst, 0, real_size);
+	if unlikely(status < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+#endif /* DEFINE_TYPED_OPERATORS */
+
+
+
+
+
 #ifndef DEFINE_TYPED_OPERATORS
 /* Extra map functions that are needed for implementing generic map operator. */
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithForeachPair,
@@ -15243,6 +15740,8 @@ enum seq_feature {
 	FEAT_tp_setitem_string_len_hash,
 	FEAT_tp_bounditem_string_len_hash,
 	FEAT_tp_hasitem_string_len_hash,
+	/*FEAT_tp_unpack,*/
+	/*FEAT_tp_unpack_ub,*/
 	FEAT_TP_COUNT
 };
 
@@ -15475,6 +15974,10 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq, unsi
 		seq_featureset_set(self, FEAT_tp_bounditem_string_len_hash);
 	if (Dee_type_seq_has_custom_tp_hasitem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_hasitem_string_len_hash);
+	/*if (seq->tp_unpack && !DeeType_IsDefaultUnpack(seq->tp_unpack))
+		seq_featureset_set(self, FEAT_tp_unpack);*/
+	/*if (seq->tp_unpack_ub && !DeeType_IsDefaultUnpackUb(seq->tp_unpack_ub))
+		seq_featureset_set(self, FEAT_tp_unpack_ub);*/
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -16624,6 +17127,58 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 	/* tp_size_fast (simply set to return `(size_t)-1') */
 	if (!seq->tp_size_fast)
 		seq->tp_size_fast = &DeeObject_DefaultSizeFastWithErrorNotFast;
+
+	/* tp_unpack */
+	if (!seq->tp_unpack) {
+		if (seq->tp_asvector) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithAsVector;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithSizeAndGetItemIndexFast;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_trygetitem_index)) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithSizeAndTryGetItemIndex;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_getitem_index)) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithSizeAndGetItemIndex;
+		} else if (seq->tp_size && seq_featureset_test(features, FEAT_tp_trygetitem)) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithSizeDefaultAndTryGetItemIndexDefault;
+		} else if (seq->tp_size && seq_featureset_test(features, FEAT_tp_getitem)) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithSizeDefaultAndGetItemIndexDefault;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach)) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithForeach;
+		} else if (seq_featureset_test(features, FEAT_tp_iter)) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithIter;
+		} else if (seq->tp_foreach) {
+			seq->tp_unpack = &DeeSeq_DefaultUnpackWithForeachDefault;
+		}
+	}
+
+	/* tp_unpack_ub */
+	if (!seq->tp_unpack_ub) {
+		if (seq->tp_unpack && !DeeType_IsDefaultUnpack(seq->tp_unpack)) {
+			seq->tp_unpack_ub = seq->tp_unpack;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithSizeAndGetItemIndexFast;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_trygetitem_index)) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithSizeAndTryGetItemIndex;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_getitem_index)) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithSizeAndGetItemIndex;
+		} else if (seq->tp_size && seq_featureset_test(features, FEAT_tp_trygetitem)) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithSizeDefaultAndTryGetItemIndexDefault;
+		} else if (seq->tp_size && seq_featureset_test(features, FEAT_tp_getitem)) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithSizeDefaultAndGetItemIndexDefault;
+		} else if (seq->tp_size && seq_featureset_test(features, FEAT_tp_enumerate_index) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndex;
+		} else if (seq->tp_size && seq_featureset_test(features, FEAT_tp_enumerate) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault;
+		} else if (seq->tp_asvector) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithAsVector;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach)) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithForeach;
+		} else if (seq_featureset_test(features, FEAT_tp_iter)) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithIter;
+		} else if (seq->tp_foreach) {
+			seq->tp_unpack_ub = &DeeSeq_DefaultUnpackUbWithForeachDefault;
+		}
+	}
 }
 
 INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeAndGetItemIndexFast = {
@@ -16790,6 +17345,8 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self, unsigned int seqclas
 			self->tp_seq->tp_bounditem_string_len_hash  = base_seq->tp_bounditem_string_len_hash;
 			self->tp_seq->tp_hasitem_string_len_hash    = base_seq->tp_hasitem_string_len_hash;
 			self->tp_seq->tp_asvector                   = base_seq->tp_asvector;
+			self->tp_seq->tp_unpack                     = base_seq->tp_unpack;
+			self->tp_seq->tp_unpack_ub                  = base_seq->tp_unpack_ub;
 		} else {
 			self->tp_seq = base_seq;
 		}
@@ -16819,15 +17376,27 @@ DeeType_InheritIter(DeeTypeObject *__restrict self) {
 				base_seq->tp_foreach = &DeeObject_DefaultForeachWithIter;
 			if (base_seq->tp_foreach_pair == NULL)
 				base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithIter;
+			if (base_seq->tp_unpack == NULL)
+				base_seq->tp_unpack = &DeeSeq_DefaultUnpackWithIter;
+			if (base_seq->tp_unpack_ub == NULL)
+				base_seq->tp_unpack_ub = base_seq->tp_unpack;
 			return true;
 		} else if (base_seq->tp_foreach) {
 			base_seq->tp_iter = &DeeObject_DefaultIterWithForeach;
 			if (base_seq->tp_foreach_pair == NULL)
 				base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithForeach;
+			if (base_seq->tp_unpack == NULL)
+				base_seq->tp_unpack = &DeeSeq_DefaultUnpackWithForeach;
+			if (base_seq->tp_unpack_ub == NULL)
+				base_seq->tp_unpack_ub = base_seq->tp_unpack;
 			return true;
 		} else if (base_seq->tp_foreach_pair) {
 			base_seq->tp_iter    = &DeeObject_DefaultIterWithForeachPair;
 			base_seq->tp_foreach = &DeeObject_DefaultForeachWithForeachPair;
+			if (base_seq->tp_unpack == NULL)
+				base_seq->tp_unpack = &DeeSeq_DefaultUnpackWithForeach;
+			if (base_seq->tp_unpack_ub == NULL)
+				base_seq->tp_unpack_ub = base_seq->tp_unpack;
 			return true;
 		} else if (base_seq->tp_enumerate) {
 			base_seq->tp_iter         = &DeeObject_DefaultIterWithEnumerate;
@@ -16863,6 +17432,8 @@ DeeType_InheritIter(DeeTypeObject *__restrict self) {
 			self->tp_seq->tp_foreach      = base_seq->tp_foreach;
 			self->tp_seq->tp_foreach_pair = base_seq->tp_foreach_pair;
 			self->tp_seq->tp_asvector     = base_seq->tp_asvector;
+			self->tp_seq->tp_unpack       = base_seq->tp_unpack;
+			self->tp_seq->tp_unpack_ub    = base_seq->tp_unpack_ub;
 		} else {
 			self->tp_seq = base_seq;
 		}
@@ -20153,67 +20724,43 @@ DEFINE_OPERATOR(Dee_ssize_t, EnumerateIndex,
 }
 
 
-#ifndef DEFINE_TYPED_OPERATORS
-PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
-(DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc,
-                         /*out*/ DREF DeeObject **__restrict objv) {
-	DREF DeeObject *iterator, *elem;
-	size_t fast_size, i;
+/* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector.
+ * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
+ * @return: 0 : Success (`objv' now contains exactly `objc' references to [1..1] objects)
+ * @return: -1: An error was thrown (`objv' may have been modified, but contains no references) */
+DEFINE_OPERATOR(int, Unpack,
+                (DeeObject *__restrict self, size_t objc,
+                 /*out*/ DREF DeeObject **__restrict objv)) {
+	LOAD_TP_SELF;
+	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_unpack) ||
+	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_unpack))
+		return DeeType_INVOKE_UNPACK(tp_self, self, objc, objv);
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Cannot unpack non-sequence type `%r'",
+	                       tp_self);
+}
 
-	/* TODO: Use DeeObject_Foreach() */
-
-	/* Try to make use of the fast-sequence API. */
-	fast_size = DeeFastSeq_GetSize_deprecated(self);
-	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (objc != fast_size) {
-			if (DeeNone_Check(self)) {
-				/* Special case: `none' can be unpacked into anything. */
-				memsetp(objv, Dee_None, objc);
-				Dee_Incref_n(Dee_None, objc);
-				return 0;
-			}
-			return err_invalid_unpack_size(self, objc, fast_size);
-		}
-		for (i = 0; i < objc; ++i) {
-			elem = DeeFastSeq_GetItem_deprecated(self, i);
-			if unlikely(!elem)
-				goto err_objv;
-			objv[i] = elem; /* Inherit reference. */
-		}
-		return 0;
-	}
-
-	/* Fallback: Use an iterator. */
-	if ((iterator = DeeObject_Iter(self)) == NULL)
-		goto err;
-	for (i = 0; i < objc; ++i) {
-		elem = DeeObject_IterNext(iterator);
-		if unlikely(!ITER_ISOK(elem)) {
-			if (elem)
-				err_invalid_unpack_size(self, objc, i);
-			goto err_iter_objv;
-		}
-		objv[i] = elem; /* Inherit reference. */
-	}
-
-	/* Check to make sure that the iterator actually ends here. */
-	elem = DeeObject_IterNext(iterator);
-	if unlikely(elem != ITER_DONE) {
-		if (elem)
-			err_invalid_unpack_iter_size(self, iterator, objc);
-		goto err_iter_objv;
-	}
-	Dee_Decref(iterator);
-	return 0;
-err_iter_objv:
-	Dee_Decref(iterator);
-err_objv:
-	Dee_Decrefv(objv, i);
-err:
-	return -1;
+/* Similar to `DeeObject_Unpack()', but does not skip unbound items. Instead,
+ * unbound items will appear as `NULL' in `objv' upon success (meaning you have
+ * to use `Dee_XDecrefv()' to drop references).
+ * This operator follows `DeeObject_Enumerate()' semantics, in that unbound items
+ * are NOT skipped.
+ * @return: 0 : Success (`objv' now contains exactly `objc' references to [0..1] objects)
+ * @return: -1: An error was thrown (`objv' may have been modified, but contains no references) */
+DEFINE_OPERATOR(int, UnpackWithUnbound,
+                (DeeObject *__restrict self, size_t objc,
+                 /*out*/ DREF DeeObject **__restrict objv)) {
+	LOAD_TP_SELF;
+	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_unpack_ub) ||
+	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_unpack_ub))
+		return DeeType_INVOKE_UNPACK_UB(tp_self, self, objc, objv);
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Cannot unpack non-sequence type `%r'",
+	                       tp_self);
 }
 
 
+#ifndef DEFINE_TYPED_OPERATORS
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given `key' function
  * @return: == -1: `lhs_keyed < key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'

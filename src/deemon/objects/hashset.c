@@ -1851,7 +1851,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-hashset_asvector(HashSet *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+hashset_asvector(HashSet *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t result;
 	DeeHashSet_LockRead(self);
 	result = self->hs_used;
@@ -1926,7 +1926,7 @@ PRIVATE struct type_seq hashset_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&hashset_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&hashset_asvector,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

@@ -365,6 +365,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\compiler-varying-functions.dee = ..\util\test\compiler-varying-functions.dee
 		..\util\test\ctypes-from-bytes.dee = ..\util\test\ctypes-from-bytes.dee
 		..\util\test\ctypes-futex.dee = ..\util\test\ctypes-futex.dee
+		..\util\test\ctypes-struct.dee = ..\util\test\ctypes-struct.dee
 		..\util\test\ctypes.dee = ..\util\test\ctypes.dee
 		..\util\test\deemon-class-inheritance.dee = ..\util\test\deemon-class-inheritance.dee
 		..\util\test\deemon-dict-frozen.dee = ..\util\test\deemon-dict-frozen.dee

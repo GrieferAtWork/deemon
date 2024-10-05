@@ -1255,7 +1255,6 @@ PRIVATE struct type_seq jseq_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ NULL,
 };
 
 PRIVATE struct type_seq jmap_seq = {
@@ -1304,7 +1303,6 @@ PRIVATE struct type_seq jmap_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ NULL,
 };
 
 PRIVATE NONNULL((1)) void DCALL

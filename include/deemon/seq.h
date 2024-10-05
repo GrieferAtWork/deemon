@@ -820,28 +820,6 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
                                          /*in*/ size_t offset);
 #endif /* Dee_MallocUsableSize */
 
-/* Same as `DeeObject_Unpack()', but handle `DeeError_UnboundItem'
- * by filling in the resp. element from `objv[*]' with `NULL'.
- * This function is implemented to try the following things with `self' (in order):
- *  - Use `DeeFastSeq_GetSize_deprecated()' + `DeeFastSeq_GetItemUnbound_deprecated()'
- *    Try next when `DeeFastSeq_GetSize_deprecated() == DEE_FASTSEQ_NOTFAST_DEPRECATED'
- *  - Use `DeeObject_Size()' + `DeeObject_GetItemIndex()'
- *    Try next when `DeeObject_Size()' throws `DeeError_NotImplemented', or
- *    `DeeObject_GetItemIndex()' (first call only) throws `DeeError_NotImplemented'
- *    or `DeeError_TypeError'.
- *  - Use `DeeObject_Unpack()' (meaning that all elements written to `objv' will be non-NULL)
- * @return: 0 : Success
- * @return: -1: Error */
-DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
-(DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
-                                    /*out*/ DREF DeeObject **__restrict objv);
-
-#ifndef __INTELLISENSE__
-#ifndef __NO_builtin_expect
-#define DeeObject_UnpackWithUnbound(self, objc, objv) __builtin_expect(DeeObject_UnpackWithUnbound(self, objc, objv), 0)
-#endif /* !__NO_builtin_expect */
-#endif /* !__INTELLISENSE__ */
-
 DECL_END
 
 #endif /* !GUARD_DEEMON_SEQ_H */

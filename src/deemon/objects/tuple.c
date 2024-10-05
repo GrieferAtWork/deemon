@@ -1584,11 +1584,19 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-tuple_asvector(Tuple *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+tuple_asvector(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t result = self->t_size;
 	if likely(dst_length >= result)
 		Dee_Movrefv(dst, self->t_elem, result);
 	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+tuple_unpack(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	if unlikely(self->t_size != dst_length)
+		return err_invalid_unpack_size((DeeObject *)self, dst_length, self->t_size);
+	Dee_Movrefv(dst, self->t_elem, dst_length);
+	return 0;
 }
 
 PRIVATE struct type_nsi tpconst tuple_nsi = {
@@ -1655,11 +1663,13 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&tuple_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_asvector,
+	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_unpack,
+	/* .tp_unpack_ub                  = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
-tuple_unpack(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
+tuple_unpack_method(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 	DREF Tuple *result;
 	size_t num_items;
 	DeeObject *init;
@@ -1678,7 +1688,7 @@ done:
 }
 
 PRIVATE struct type_method tpconst tuple_class_methods[] = {
-	TYPE_METHOD("unpack", &tuple_unpack,
+	TYPE_METHOD("unpack", &tuple_unpack_method,
 	            "(num:?Dint,seq:?S?O)->?.\n"
 	            "#tUnpackError{The given @seq doesn't contain exactly @num elements}"
 	            "Unpack the given sequence @seq into a Tuple consisting of @num elements"),
@@ -2574,6 +2584,14 @@ nullable_tuple_trygetitem_index(Tuple *__restrict self, size_t index) {
 	return_reference(self->t_elem[index]);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nullable_tuple_unpack_ub(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	if unlikely(self->t_size != dst_length)
+		return err_invalid_unpack_size((DeeObject *)self, dst_length, self->t_size);
+	Dee_XMovrefv(dst, self->t_elem, dst_length);
+	return 0;
+}
+
 
 PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_iter                       = */ NULL,
@@ -2621,6 +2639,9 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ NULL,
+	/* .tp_unpack                     = */ NULL,
+	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&nullable_tuple_unpack_ub,
 };
 
 PRIVATE struct type_method tpconst nullable_tuple_class_methods[] = {

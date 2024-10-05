@@ -776,6 +776,16 @@ super_hasitem_string_len_hash(Super *self, char const *key, size_t keylen, Dee_h
 	return DeeObject_THasItemStringLenHash(self->s_type, self->s_self, key, keylen, hash);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+super_unpack(Super *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	return DeeObject_TUnpack(self->s_type, self->s_self, dst_length, dst);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+super_unpack_ub(Super *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	return DeeObject_TUnpackWithUnbound(self->s_type, self->s_self, dst_length, dst);
+}
+
 
 PRIVATE struct type_seq super_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iter,
@@ -823,6 +833,9 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&super_setitem_string_len_hash,
 	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_bounditem_string_len_hash,
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_hasitem_string_len_hash,
+	/* .tp_asvector                   = */ NULL,
+	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&super_unpack,
+	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&super_unpack_ub,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

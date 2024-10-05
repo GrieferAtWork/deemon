@@ -2131,38 +2131,39 @@ struct Dee_type_seq {
 	 *                         but will not contain any object references. You must resize it until it is able
 	 *                         to hold at least "return" elements, and call this operator again.
 	 * @return: (size_t)-1:    Error. */
-	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector)(DeeObject *self, /*out*/ DREF DeeObject **dst, size_t dst_length);
+	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 
-	/* NOTE: `DeeObject_Unpack()' follow `DeeObject_Foreach()' semantics (unbound elements are skipped) */
-	/* NOTE: `DeeObject_UnpackWithUnbound()' follow `DeeObject_Enumerate()' semantics (unbound elements are included) */
-
-	/* TODO: tp_unpack     (Operator for `DeeObject_Unpack()') */
-	/* TODO: tp_unpack_ub  (Operator for `DeeObject_UnpackWithUnbound()') */
-	/* TODO: For tp_unpack, default impls using:
+	/* >> tp_unpack
+	 * Operator for `DeeObject_Unpack()', following
+	 * `DeeObject_Foreach()' semantics (unbound elements are skipped)
+	 * Default impls use:
 	 * - tp_asvector
 	 * - tp_size + tp_getitem_index_fast
-	 * - tp_size + tp_getitem_index
 	 * - tp_size + tp_trygetitem_index
-	 * - tp_sizeob + tp_getitem
+	 * - tp_size + tp_getitem_index
 	 * - tp_sizeob + tp_trygetitem
-	 * - tp_enumerate_index
-	 * - tp_enumerate
+	 * - tp_sizeob + tp_getitem
 	 * - tp_foreach
 	 * - tp_iter
-	 */
+	 * - tp_foreach (default impl) */
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_unpack)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 
-	/* TODO: For tp_unpack_ub, default impls using:
-	 * - tp_unpack   (direct alias if not a default impl)
-	 * - tp_asvector
+	/* >> tp_unpack_ub
+	 * Operator for `DeeObject_UnpackWithUnbound()', following
+	 * `DeeObject_Enumerate()' semantics (unbound elements are included)
+	 * Default impls use:
+	 * - tp_unpack
 	 * - tp_size + tp_getitem_index_fast
 	 * - tp_size + tp_trygetitem_index
 	 * - tp_size + tp_getitem_index
 	 * - tp_sizeob + tp_trygetitem
 	 * - tp_sizeob + tp_getitem
-	 * - tp_enumerate_index
-	 * - tp_enumerate
-	 * - tp_unpack   (direct alias, even if a default impl)
-	 */
+	 * - tp_size/tp_sizeob + tp_enumerate_index
+	 * - tp_size/tp_sizeob + tp_enumerate
+	 * - tp_asvector
+	 * - tp_foreach
+	 * - tp_iter */
+	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_unpack_ub)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 
 	/* All of the following are *always* and *unconditionally* implemented
 	 * when the associated type has the "tp_features & TF_KW" flag set,
@@ -2542,11 +2543,27 @@ myob_hasitem_string_len_hash(MyObject *self, char const *key, size_t keylen, Dee
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-myob_asvector(MyObject *self, /*out*/ DREF DeeObject **dst, size_t dst_length) {
+myob_asvector(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	(void)self;
 	(void)dst;
 	(void)dst_length;
 	return (size_t)DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+myob_unpack(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	(void)self;
+	(void)dst;
+	(void)dst_length;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+myob_unpack_ub(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	(void)self;
+	(void)dst;
+	(void)dst_length;
+	return DeeError_NOTIMPLEMENTED();
 }
 
 PRIVATE struct type_seq myob_seq = {
@@ -2595,7 +2612,9 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&myob_setitem_string_len_hash,
 	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_bounditem_string_len_hash,
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_hasitem_string_len_hash,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, DREF DeeObject **, size_t))&myob_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector,
+	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_unpack,
+	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_unpack_ub,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))NULL,
 	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))NULL,
 	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))NULL,
@@ -4182,7 +4201,7 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritXor(DeeTypeObject *__restrict self
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self);          /* tp_pow, tp_inplace_pow */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);      /* tp_hash, tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge, tp_compare_eq, tp_compare */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);     /* tp_iter_next, tp_iter */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);         /* tp_iter, tp_foreach, tp_foreach_pair */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);         /* tp_iter, tp_foreach, tp_foreach_pair, tp_unpack, tp_unpack_ub */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);         /* tp_sizeob, tp_size */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);     /* tp_contains */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);      /* tp_getitem, tp_getitem_index, tp_bounditem, tp_bounditem_index, tp_hasitem, tp_hasitem_index, tp_getitem_index_fast, tp_trygetitem, tp_trygetitem_string_hash, tp_getitem_string_hash, tp_bounditem_string_hash, tp_hasitem_string_hash, tp_trygetitem_string_len_hash, tp_getitem_string_len_hash, tp_bounditem_string_len_hash, tp_hasitem_string_len_hash */
@@ -5057,10 +5076,24 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
                                  void *arg, size_t start, size_t end);
 
 
-/* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */
+/* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector.
+ * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
+ * @return: 0 : Success (`objv' now contains exactly `objc' references to [1..1] objects)
+ * @return: -1: An error was thrown (`objv' may have been modified, but contains no references) */
 DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc,
                          /*out*/ DREF DeeObject **__restrict objv);
+
+/* Similar to `DeeObject_Unpack()', but does not skip unbound items. Instead,
+ * unbound items will appear as `NULL' in `objv' upon success (meaning you have
+ * to use `Dee_XDecrefv()' to drop references).
+ * This operator follows `DeeObject_Enumerate()' semantics, in that unbound items
+ * are NOT skipped.
+ * @return: 0 : Success (`objv' now contains exactly `objc' references to [0..1] objects)
+ * @return: -1: An error was thrown (`objv' may have been modified, but contains no references) */
+DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
+(DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
+                                    /*out*/ DREF DeeObject **__restrict objv);
 
 /* >> DeeObject_GetAttr() -- <self>.<attr>;
  * Retrieve a named attribute of an object
@@ -5271,6 +5304,7 @@ DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_PutBuf)(DeeObject *__restrict self
 #define DeeObject_SetRangeEndIndex(self, begin, end, value)            __builtin_expect(DeeObject_SetRangeEndIndex(self, begin, end, value), 0)
 #define DeeObject_SetRangeIndex(self, begin, end, value)               __builtin_expect(DeeObject_SetRangeIndex(self, begin, end, value), 0)
 #define DeeObject_Unpack(self, objc, objv)                             __builtin_expect(DeeObject_Unpack(self, objc, objv), 0)
+#define DeeObject_UnpackWithUnbound(self, objc, objv)                  __builtin_expect(DeeObject_UnpackWithUnbound(self, objc, objv), 0)
 #define DeeObject_DelAttr(self, attr)                                  __builtin_expect(DeeObject_DelAttr(self, attr), 0)
 #define DeeObject_SetAttr(self, attr, value)                           __builtin_expect(DeeObject_SetAttr(self, attr, value), 0)
 #ifndef DeeObject_DelAttrString

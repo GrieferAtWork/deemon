@@ -733,6 +733,9 @@ EXPORTS
 	DeeObject_IterAdvance@8=_DeeObject_IterAdvance@8
 	DeeObject_IterKeys@4=_DeeObject_IterKeys@4
 	DeeObject_IterNext@4=_DeeObject_IterNext@4
+	DeeObject_IterNextKey@4=_DeeObject_IterNextKey@4
+	DeeObject_IterNextPair@8=_DeeObject_IterNextPair@8
+	DeeObject_IterNextValue@4=_DeeObject_IterNextValue@4
 	DeeObject_Leave@4=_DeeObject_Leave@4
 	DeeObject_Mod@8=_DeeObject_Mod@8
 	DeeObject_ModInt8@8=_DeeObject_ModInt8@8
@@ -898,8 +901,12 @@ EXPORTS
 	DeeObject_TInv@8=_DeeObject_TInv@8
 	DeeObject_TInvokeOperator@20=_DeeObject_TInvokeOperator@20
 	DeeObject_TIter@8=_DeeObject_TIter@8
+	DeeObject_TIterAdvance@12=_DeeObject_TIterAdvance@12
 	DeeObject_TIterKeys@8=_DeeObject_TIterKeys@8
 	DeeObject_TIterNext@8=_DeeObject_TIterNext@8
+	DeeObject_TIterNextKey@8=_DeeObject_TIterNextKey@8
+	DeeObject_TIterNextPair@12=_DeeObject_TIterNextPair@12
+	DeeObject_TIterNextValue@8=_DeeObject_TIterNextValue@8
 	DeeObject_TLeave@8=_DeeObject_TLeave@8
 	DeeObject_TMod@12=_DeeObject_TMod@12
 	DeeObject_TMoveAssign@12=_DeeObject_TMoveAssign@12
@@ -938,6 +945,8 @@ EXPORTS
 	DeeObject_TTryGetItemIndex@12=_DeeObject_TTryGetItemIndex@12
 	DeeObject_TTryGetItemStringHash@16=_DeeObject_TTryGetItemStringHash@16
 	DeeObject_TTryGetItemStringLenHash@20=_DeeObject_TTryGetItemStringLenHash@20
+	DeeObject_TUnpack@16=_DeeObject_TUnpack@16
+	DeeObject_TUnpackWithUnbound@16=_DeeObject_TUnpackWithUnbound@16
 	DeeObject_TVCallAttrStringHashf@24=_DeeObject_TVCallAttrStringHashf@24
 	DeeObject_TVCallAttrf@20=_DeeObject_TVCallAttrf@20
 	DeeObject_TVisit@16=_DeeObject_TVisit@16
@@ -1355,6 +1364,8 @@ EXPORTS
 	Dee_weakref_support_fini@4=_Dee_weakref_support_fini@4
 	_DeeAssert_Fail@12=__DeeAssert_Fail@12
 	_DeeAssert_XFail@12=__DeeAssert_XFail@12
+	_Dee_MalloccBufsizeDbg@16=__Dee_MalloccBufsizeDbg@16
+	_Dee_MallococBufsizeDbg@20=__Dee_MallococBufsizeDbg@20
 	_Dee_dprint@4=__Dee_dprint@4
 	_Dee_dprinter@12=__Dee_dprinter@12
 	_Dee_vdprintf@8=__Dee_vdprintf@8

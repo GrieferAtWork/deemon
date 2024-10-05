@@ -316,7 +316,7 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 	if (tp_self->tp_seq->tp_asvector) {
 		DREF DeeObject **new_vector;
 again_asvector:
-		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_vector, data.sahvd_alloc);
+		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_alloc, data.sahvd_vector);
 		if likely(data.sahvd_size <= data.sahvd_alloc) {
 			if unlikely(data.sahvd_size < data.sahvd_alloc)
 				goto resize_data_and_done;
@@ -479,7 +479,7 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 	if (tp_self->tp_seq->tp_asvector) {
 		DREF DeeObject **new_vector;
 again_asvector:
-		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_vector, data.sahvd_alloc);
+		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_alloc, data.sahvd_vector);
 		if likely(data.sahvd_size <= data.sahvd_alloc)
 			goto done;
 		if unlikely(data.sahvd_size == (size_t)-1)
@@ -655,7 +655,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 	if (tp_self->tp_seq->tp_asvector) {
 		DREF DeeObject **new_vector;
 again_asvector:
-		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_vector, data.sahvd_alloc);
+		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_alloc, data.sahvd_vector);
 		if likely(data.sahvd_size <= data.sahvd_alloc)
 			goto done;
 		if unlikely(data.sahvd_size == (size_t)-1)
@@ -833,8 +833,8 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 		DREF DeeObject **new_vector;
 again_asvector:
 		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self,
-		                                                  data.sahvd_vector + offset,
-		                                                  data.sahvd_alloc - offset);
+		                                                  data.sahvd_alloc - offset,
+		                                                  data.sahvd_vector + offset);
 		if likely(data.sahvd_size <= (data.sahvd_alloc - offset)) {
 			data.sahvd_size += offset;
 			goto done;
@@ -947,71 +947,6 @@ err:
 	return (size_t)-1;
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
-
-
-/* Same as `DeeObject_Unpack()', but handle `DeeError_UnboundItem'
- * by filling in the resp. element from `objv[*]' with `NULL'.
- * This function is implemented to try the following things with `self' (in order):
- *  - Use `DeeFastSeq_GetSize_deprecated()' + `DeeFastSeq_GetItemUnbound_deprecated()'
- *    Try next when `DeeFastSeq_GetSize_deprecated() == DEE_FASTSEQ_NOTFAST_DEPRECATED'
- *  - Use `DeeObject_Size()' + `DeeObject_GetItemIndex()'
- *    Try next when `DeeObject_Size()' throws `DeeError_NotImplemented', or
- *    `DeeObject_GetItemIndex()' (first call only) throws `DeeError_NotImplemented'
- *    or `DeeError_TypeError'.
- *  - Use `DeeObject_Unpack()' (meaning that all elements written to `objv' will be non-NULL)
- * @return: 0 : Success
- * @return: -1: Error */
-PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
-(DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
-                                    /*out*/ DREF DeeObject **__restrict objv) {
-	size_t i, size;
-	/* TODO: Try to use `DeeObject_EnumerateIndex()'; if that isn't available, use `DeeObject_Unpack()' */
-	size = DeeFastSeq_GetSize_deprecated(self);
-	if (size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (size != objc)
-			goto err_badsize;
-		for (i = 0; i < objc; ++i) {
-			DREF DeeObject *elem;
-			elem = DeeFastSeq_GetItemUnbound_deprecated(self, i);
-			if unlikely(elem == ITER_DONE) {
-				Dee_XDecrefv(objv, i);
-				goto err;
-			}
-			objv[i] = elem; /* Inherit reference */
-		}
-		return 0;
-	}
-	size = DeeObject_Size(self);
-	if (size != (size_t)-1) {
-		if (size != objc)
-			goto err_badsize;
-		for (i = 0; i < objc; ++i) {
-			DREF DeeObject *elem;
-			elem = DeeObject_GetItemIndex(self, i);
-			if (!elem && !DeeError_Catch(&DeeError_UnboundItem)) {
-				/* The first time around, try to handle these errors
-				 * in which case we'll do the fallback method instead. */
-				if (i == 0 &&
-				    (DeeError_Catch(&DeeError_NotImplemented) ||
-				     DeeError_Catch(&DeeError_TypeError)))
-					goto fallback;
-				goto err;
-			}
-			objv[i] = elem; /* Inherit reference */
-		}
-		return 0;
-	}
-	if (!DeeError_Catch(&DeeError_NotImplemented))
-		goto err;
-fallback:
-	return DeeObject_Unpack(self, objc, objv);
-err_badsize:
-	return err_invalid_unpack_size(self, objc, size);
-err:
-	return -1;
-}
-
-
 
 DECL_END
 
