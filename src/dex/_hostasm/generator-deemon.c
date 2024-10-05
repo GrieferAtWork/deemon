@@ -717,6 +717,12 @@ matching_pop_requires_reference(Dee_instruction_t const *instr,
 		case ASM_JT16:
 		case ASM_FOREACH:
 		case ASM_FOREACH16:
+		case ASM_FOREACH_KEY:
+		case ASM_FOREACH_KEY16:
+		case ASM_FOREACH_VALUE:
+		case ASM_FOREACH_VALUE16:
+		case ASM_FOREACH_PAIR:
+		case ASM_FOREACH_PAIR16:
 		case ASM_JMP:
 		case ASM_JMP16:
 		case ASM32_JMP:
@@ -1024,6 +1030,12 @@ do_jcc:
 		return fg_vforeach(self, desc, false);
 	}	break;
 
+	//TODO: TARGET(ASM_FOREACH_KEY)
+	//TODO: TARGET(ASM_FOREACH_KEY16)
+	//TODO: TARGET(ASM_FOREACH_VALUE)
+	//TODO: TARGET(ASM_FOREACH_VALUE16)
+	//TODO: TARGET(ASM_FOREACH_PAIR)
+	//TODO: TARGET(ASM_FOREACH_PAIR16)
 	//TODO: TARGET(ASM_JMP_POP)
 	//TODO: TARGET(ASM_JMP_POP_POP)
 
@@ -2475,6 +2487,13 @@ do_jcc:
 			DO(fg_vpush_prefix(self, instr, prefix_type, id1, id2));
 			return fg_vforeach(self, desc, true);
 		}	break;
+
+		//TODO: TARGET(ASM_FOREACH_KEY)
+		//TODO: TARGET(ASM_FOREACH_KEY16)
+		//TODO: TARGET(ASM_FOREACH_VALUE)
+		//TODO: TARGET(ASM_FOREACH_VALUE16)
+		//TODO: TARGET(ASM_FOREACH_PAIR)
+		//TODO: TARGET(ASM_FOREACH_PAIR16)
 
 		case ASM_RET:          /* ret PREFIX */
 		case ASM_THROW:        /* throw PREFIX */

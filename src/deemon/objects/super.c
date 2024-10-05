@@ -830,6 +830,33 @@ super_iternext(Super *__restrict self) {
 	return DeeObject_TIterNext(self->s_type, self->s_self);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_nextpair(Super *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]) {
+	return DeeObject_TIterNextPair(self->s_type, self->s_self, key_and_value);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_nextkey(Super *__restrict self) {
+	return DeeObject_TIterNextKey(self->s_type, self->s_self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_nextvalue(Super *__restrict self) {
+	return DeeObject_TIterNextValue(self->s_type, self->s_self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+super_advance(Super *__restrict self, size_t step) {
+	return DeeObject_TIterAdvance(self->s_type, self->s_self, step);
+}
+
+PRIVATE struct type_iterator super_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&super_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&super_advance,
+};
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_getattr(Super *self, /*String*/ DeeObject *name) {
 	return DeeObject_TGetAttr(self->s_type, self->s_self, name);
@@ -1228,7 +1255,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_cmp           = */ &super_cmp,
 	/* .tp_seq           = */ &super_seq,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iternext,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ &super_iterator,
 	/* .tp_attr          = */ &super_attr,
 	/* .tp_with          = */ &super_with,
 	/* .tp_buffer        = */ &super_buffer,

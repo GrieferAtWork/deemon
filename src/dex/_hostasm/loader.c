@@ -117,6 +117,24 @@ scan_and_split_blocks(struct function_assembler *__restrict self,
 		case ASM_EXTENDED1:
 			switch (iter[1]) {
 
+			case ASM_FOREACH_KEY & 0xff:
+			case ASM_FOREACH_VALUE & 0xff:
+			case ASM_FOREACH_PAIR & 0xff: {
+				int8_t delta = *(int8_t const *)(iter + 2);
+				Dee_instruction_t const *to = iter + 3 + delta;
+				if unlikely(register_jump(self, iter, to))
+					goto err;
+			}	break;
+
+			case ASM_FOREACH_KEY16 & 0xff:
+			case ASM_FOREACH_VALUE16 & 0xff:
+			case ASM_FOREACH_PAIR16 & 0xff: {
+				int16_t delta = (int16_t)UNALIGNED_GETLE16(iter + 2);
+				Dee_instruction_t const *to = iter + 4 + delta;
+				if unlikely(register_jump(self, iter, to))
+					goto err;
+			}	break;
+
 			case ASM32_JMP & 0xff: {
 				int32_t delta = (int32_t)UNALIGNED_GETLE32(iter + 2);
 				Dee_instruction_t const *to = iter + 6 + delta;

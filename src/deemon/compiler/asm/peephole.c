@@ -40,17 +40,23 @@ DECL_BEGIN
 #define sc_main   current_assembler.a_sect[0]
 
 /* Given an instruction that is known to be a jump (`IP_ISJMP()'), check the operand size. */
-#define JMP_IS32(x)   ((x)[0] == ASM_EXTENDED1)
-#define JMP_IS16(x)   ((x)[0] & 1)
-#define JMP_IS8(x)  (!((x)[0] & 1))
+#define JMP_IS32(x)   ((x)[0] == ASM_EXTENDED1 && (x)[1] == (ASM32_JMP & 0xff))
+#define JMP_IS16(x)   (((x)[0] & 1) || ((x)[0] == ASM_EXTENDED1 && ((x)[1] & 1)))
+/*#define JMP_IS8(x)  (!((x)[0] & 1))*/
 STATIC_ASSERT(ASM_JF16 & 1);
 STATIC_ASSERT(ASM_JT16 & 1);
 STATIC_ASSERT(ASM_JMP16 & 1);
 STATIC_ASSERT(ASM_FOREACH16 & 1);
+STATIC_ASSERT(ASM_FOREACH_KEY16 & 1);
+STATIC_ASSERT(ASM_FOREACH_VALUE16 & 1);
+STATIC_ASSERT(ASM_FOREACH_PAIR16 & 1);
 STATIC_ASSERT(!(ASM_JF & 1));
 STATIC_ASSERT(!(ASM_JT & 1));
 STATIC_ASSERT(!(ASM_JMP & 1));
 STATIC_ASSERT(!(ASM_FOREACH & 1));
+STATIC_ASSERT(!(ASM_FOREACH_KEY & 1));
+STATIC_ASSERT(!(ASM_FOREACH_VALUE & 1));
+STATIC_ASSERT(!(ASM_FOREACH_PAIR & 1));
 
 #define IP_ISJMP(x)                              \
 	((x)[0] == ASM_JMP || (x)[0] == ASM_JMP16 || \
@@ -148,6 +154,8 @@ follow_jmp(instruction_t *__restrict jmp,
 	struct asm_rel *rel;
 	code_addr_t rel_addr;
 	code_addr_t result_addr;
+	if (*jmp == ASM_EXTENDED1)
+		++jmp;
 	if (JMP_IS32(jmp)) { /* 32-bit jump */
 		jmp += 2;
 		rel_addr    = (code_addr_t)(jmp - sc_main.sec_begin);
@@ -762,6 +770,14 @@ do_adjstack_optimization:
 			case ASM32_JMP & 0xff:
 				goto do_jmpf_unconditional;
 
+			case ASM_FOREACH_KEY & 0xff:
+			case ASM_FOREACH_KEY16 & 0xff:
+			case ASM_FOREACH_VALUE & 0xff:
+			case ASM_FOREACH_VALUE16 & 0xff:
+			case ASM_FOREACH_PAIR & 0xff:
+			case ASM_FOREACH_PAIR16 & 0xff:
+				goto do_jmpf_foreach;
+
 			case ASM_JMP_POP_POP & 0xff:
 			case ASM_ENDFINALLY_EXCEPT & 0xff:
 				goto do_noreturn_optimization;
@@ -820,6 +836,15 @@ do_basic_optimize_after_prefix:
 				break;
 			case ASM_THROW:
 				goto do_noreturn_optimization;
+			case ASM_EXTENDED1:
+				if (after_prefix[1] == (ASM_FOREACH_KEY & 0xff) ||
+				    after_prefix[1] == (ASM_FOREACH_KEY16 & 0xff) ||
+				    after_prefix[1] == (ASM_FOREACH_VALUE & 0xff) ||
+				    after_prefix[1] == (ASM_FOREACH_VALUE16 & 0xff) ||
+				    after_prefix[1] == (ASM_FOREACH_PAIR & 0xff) ||
+				    after_prefix[1] == (ASM_FOREACH_PAIR16 & 0xff))
+					goto do_jmpf_foreach;
+				break;
 			default: break;
 			}
 			break;
@@ -1609,7 +1634,7 @@ do_optimize_popmov_16bit:
 						uint16_t abs_sp;
 						abs_sp  = (stacksz + 1) - (UNALIGNED_GETLE16(next_instruction + 1) + 2);
 						temp[0] = (ASM16_STACK & 0xff00) >> 8;
-						temp[1] = ASM16_STACK && 0xff;
+						temp[1] = ASM16_STACK & 0xff;
 						temp[2] = abs_sp & 0xff;
 						temp[3] = (abs_sp & 0xff00) >> 8;
 						memcpyc(temp + 4, iter, next_instruction - iter, sizeof(instruction_t));

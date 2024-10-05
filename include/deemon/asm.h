@@ -1118,14 +1118,26 @@
 #define ASM16_PUSH_BND_STATIC 0xf00d /* [2][-0,+1]   `push bound static <imm16>'           - Check if the static variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_GLOBAL 0xf00e /* [4][-0,+1]   `push bound global <imm16>'          - Check if the global variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_LOCAL  0xf00f /* [4][-0,+1]   `push bound local <imm16>'           - Check if the local variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
-/*      ASM_                  0xf010  *               --------                            - ------------------ */
-/*      ASM_                  0xf011  *               --------                            - ------------------ */
-/*      ASM_                  0xf012  *               --------                            - ------------------ */
-/*      ASM_                  0xf013  *               --------                            - ------------------ */
+#define ASM_FOREACH_KEY       0xf010 /* [3][-1,+2|0] `foreach_key top, <Sdisp8>'
+                                      * [3][-0,+1|0] `foreach_key PREFIX, <Sdisp8>'           - `PREFIX: foreach_key <Sdisp8>'
+                                      * Same as `foreach top, <Sdisp8>; unpack pop, #2; pop' */
+#define ASM_FOREACH_KEY16     0xf011 /* [4][-1,+2|0] `foreach_key top, <Sdisp16>'
+                                      * [4][-0,+1|0] `foreach_key PREFIX, <Sdisp16>'          - `PREFIX: foreach_key <Sdisp16>'
+                                      * Same as `foreach top, <Sdisp16>; unpack pop, #2; pop' */
+#define ASM_FOREACH_VALUE     0xf012 /* [3][-1,+2|0] `foreach_value top, <Sdisp8>'
+                                      * [3][-0,+1|0] `foreach_value PREFIX, <Sdisp8>'           - `PREFIX: foreach_value <Sdisp8>'
+                                      * Same as `foreach top, <Sdisp8>; unpack pop, #2; pop #SP-2' */
+#define ASM_FOREACH_VALUE16   0xf013 /* [4][-1,+2|0] `foreach_value top, <Sdisp16>'
+                                      * [4][-0,+1|0] `foreach_value PREFIX, <Sdisp16>'          - `PREFIX: foreach_value <Sdisp16>'
+                                      * Same as `foreach top, <Sdisp16>; unpack pop, #2; pop #SP-2' */
 #define ASM32_JMP             0xf014 /* [6][-0,+0]   `jmp <Sdisp32>'                      - Unconditionally add `<Sdisp32>' (little endian) to the `REG_PC' of the next instruction. */
 /*      ASM_                  0xf015  *               --------                            - ------------------ */
-/*      ASM_                  0xf016  *               --------                            - ------------------ */
-/*      ASM_                  0xf017  *               --------                            - ------------------ */
+#define ASM_FOREACH_PAIR      0xf016 /* [3][-1,+3|0] `foreach_pair top, <Sdisp8>'
+                                      * [3][-0,+2|0] `foreach_pair PREFIX, <Sdisp8>'           - `PREFIX: foreach_pair <Sdisp8>'
+                                      * Same as `foreach top, <Sdisp8>; unpack pop, #2' */
+#define ASM_FOREACH_PAIR16    0xf017 /* [4][-1,+3|0] `foreach_pair top, <Sdisp16>'
+                                      * [4][-0,+2|0] `foreach_pair PREFIX, <Sdisp16>'          - `PREFIX: foreach_pair <Sdisp16>'
+                                      * Same as `foreach top, <Sdisp16>; unpack pop, #2' */
 #define ASM_JMP_POP_POP       0xf018 /* [2][-2,+0]   `jmp pop, #pop'                      - Similar to `ASM_JMP_POP', but pop a second integer that describes the absolute stack-depth that should be adjusted for before jumping.
                                       * >> int new_sp = int(POP());
                                       * >> int new_ip = int(POP());

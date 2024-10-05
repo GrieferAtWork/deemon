@@ -537,22 +537,23 @@ for (local prefix: prefixBytes) {
 #endif /* !F_PAD */
 /* Define control codes for negative/positive stack effects */
 #ifndef SP_ADD0
-#define SP_ADD_COUNT          14
+#define SP_ADD_COUNT          15
 #define SP_SUB_COUNT          27
 #define SP_ADD0               0
 #define SP_ADD1               1
 #define SP_ADD2               2
-#define SP_ADDADJSTACK1N8     3
-#define SP_ADDADJSTACK2N16    4
-#define SP_ADDIMM1N8          5
-#define SP_ADDIMM1N8_PLUS1    6
-#define SP_ADDIMM1N8_PLUS2    7
-#define SP_ADDIMM1N8_PLUS3    8
-#define SP_ADDIMM2N8          9
-#define SP_ADDIMM2N16         10
-#define SP_ADDIMM2N16_PLUS1   11
-#define SP_ADDIMM2N16_PLUS2   12
-#define SP_ADDIMM2N16_PLUS3   13
+#define SP_ADD3               3
+#define SP_ADDADJSTACK1N8     4
+#define SP_ADDADJSTACK2N16    5
+#define SP_ADDIMM1N8          6
+#define SP_ADDIMM1N8_PLUS1    7
+#define SP_ADDIMM1N8_PLUS2    8
+#define SP_ADDIMM1N8_PLUS3    9
+#define SP_ADDIMM2N8          10
+#define SP_ADDIMM2N16         11
+#define SP_ADDIMM2N16_PLUS1   12
+#define SP_ADDIMM2N16_PLUS2   13
+#define SP_ADDIMM2N16_PLUS3   14
 #define SP_SUB0               0
 #define SP_SUB1               1
 #define SP_SUB2               2
@@ -618,6 +619,7 @@ DEE_SP_SUB(SP_SUBIMM6N8, UNALIGNED_GETLE8(pc + 6))
 DEE_SP_ADD(SP_ADD0, 0)
 DEE_SP_ADD(SP_ADD1, 1)
 DEE_SP_ADD(SP_ADD2, 2)
+DEE_SP_ADD(SP_ADD3, 3)
 DEE_SP_ADD(SP_ADDADJSTACK1N8, (int8_t)UNALIGNED_GETLE8(pc + 1) <= 0 ? 0 : (int8_t)UNALIGNED_GETLE8(pc + 1))
 DEE_SP_ADD(SP_ADDADJSTACK2N16, (int16_t)UNALIGNED_GETLE16(pc + 2) <= 0 ? 0 : (int16_t)UNALIGNED_GETLE16(pc + 2))
 DEE_SP_ADD(SP_ADDIMM1N8, UNALIGNED_GETLE8(pc + 1))
@@ -910,14 +912,14 @@ DEE_ASM_OPCODE(0xf0, 0x0c, 6, 16_PUSH_BND_EXTERN, SP_SUB0, SP_ADD1, "push" F_PAD
 DEE_ASM_OPCODE(0xf0, 0x0d, 2, 16_PUSH_BND_STATIC, SP_SUB0, SP_ADD1, "push" F_PAD "bound " F_STATIC16)
 DEE_ASM_OPCODE(0xf0, 0x0e, 4, 16_PUSH_BND_GLOBAL, SP_SUB0, SP_ADD1, "push" F_PAD "bound " F_GLOBAL16)
 DEE_ASM_OPCODE(0xf0, 0x0f, 4, 16_PUSH_BND_LOCAL, SP_SUB0, SP_ADD1, "push" F_PAD "bound " F_LOCAL16)
-DEE_ASM_UNDEFINED(0xf0, 0x10, 2)
-DEE_ASM_UNDEFINED(0xf0, 0x11, 2)
-DEE_ASM_UNDEFINED(0xf0, 0x12, 2)
-DEE_ASM_UNDEFINED(0xf0, 0x13, 2)
+DEE_ASM_OPCODE_P(0xf0, 0x10, 3, _FOREACH_KEY, SP_SUB1, SP_ADD2, "foreach_key," F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD1, "foreach_key," F_PAD F_PREFIX ", " F_SDISP8)
+DEE_ASM_OPCODE_P(0xf0, 0x11, 4, _FOREACH_KEY16, SP_SUB1, SP_ADD2, "foreach_key," F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD1, "foreach_key," F_PAD F_PREFIX ", " F_SDISP16)
+DEE_ASM_OPCODE_P(0xf0, 0x12, 3, _FOREACH_VALUE, SP_SUB1, SP_ADD2, "foreach_value," F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD1, "foreach_value," F_PAD F_PREFIX ", " F_SDISP8)
+DEE_ASM_OPCODE_P(0xf0, 0x13, 4, _FOREACH_VALUE16, SP_SUB1, SP_ADD2, "foreach_value," F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD1, "foreach_value," F_PAD F_PREFIX ", " F_SDISP16)
 DEE_ASM_OPCODE(0xf0, 0x14, 6, 32_JMP, SP_SUB0, SP_ADD0, "jmp" F_PAD F_SDISP32)
 DEE_ASM_UNDEFINED(0xf0, 0x15, 2)
-DEE_ASM_UNDEFINED(0xf0, 0x16, 2)
-DEE_ASM_UNDEFINED(0xf0, 0x17, 2)
+DEE_ASM_OPCODE_P(0xf0, 0x16, 3, _FOREACH_PAIR, SP_SUB1, SP_ADD3, "foreach_pair," F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD2, "foreach_pair," F_PAD F_PREFIX ", " F_SDISP8)
+DEE_ASM_OPCODE_P(0xf0, 0x17, 4, _FOREACH_PAIR16, SP_SUB1, SP_ADD3, "foreach_pair," F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD2, "foreach_pair," F_PAD F_PREFIX ", " F_SDISP16)
 DEE_ASM_OPCODE(0xf0, 0x18, 2, _JMP_POP_POP, SP_SUB2, SP_ADD0, "jmp" F_PAD "pop, #pop")
 DEE_ASM_OPCODE_P(0xf0, 0x19, 5, 16_OPERATOR, SP_SUBIMM4N8_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", #" F_IMM8, SP_SUBIMM4N8, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", #" F_IMM8)
 DEE_ASM_OPCODE_P(0xf0, 0x1a, 4, 16_OPERATOR_TUPLE, SP_SUB2, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", pop...", SP_SUB1, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", pop...")

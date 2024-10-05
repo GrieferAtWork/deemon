@@ -1939,6 +1939,129 @@ target_foreach:
 
 
 
+target_foreach_key16:
+	lodsw
+	movswl %ax, %eax
+	jmp    1f
+target_foreach_key:
+	lodsb
+	movsbl %al, %eax
+1:	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_IterNextKey,4)
+	ADJUST_CFA_OFFSET(-4)
+	popl   %edx /* Jump-offset */
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     .except /* Check for exception */
+	cmpl   $(ITER_DONE), %eax
+	je     2f /* Check for iterator exhaustion */
+	/* Leave the iterator and push the element. */
+	sp_push %eax
+	jmp    .disp
+2:	cmpl   $0, %edx
+	jge    1f
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  SP_OFFSET(4) L_THIS_THREAD
+	ADJUST_CFA_OFFSET(4)
+	/* Check for interrupts when jumping back. */
+	call   fSYM(DeeThread_CheckInterruptSelf,4)
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jnz    .except_x4
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+1:	addl   %edx, PC /* ip += Simm8/16 */
+	sp_popref %eax
+	jmp    .disp_checkip
+
+
+
+target_foreach_value16:
+	lodsw
+	movswl %ax, %eax
+	jmp    1f
+target_foreach_value:
+	lodsb
+	movsbl %al, %eax
+1:	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_IterNextValue,4)
+	ADJUST_CFA_OFFSET(-4)
+	popl   %edx /* Jump-offset */
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     .except /* Check for exception */
+	cmpl   $(ITER_DONE), %eax
+	je     2f /* Check for iterator exhaustion */
+	/* Leave the iterator and push the element. */
+	sp_push %eax
+	jmp    .disp
+2:	cmpl   $0, %edx
+	jge    1f
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  SP_OFFSET(4) L_THIS_THREAD
+	ADJUST_CFA_OFFSET(4)
+	/* Check for interrupts when jumping back. */
+	call   fSYM(DeeThread_CheckInterruptSelf,4)
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jnz    .except_x4
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+1:	addl   %edx, PC /* ip += Simm8/16 */
+	sp_popref %eax
+	jmp    .disp_checkip
+
+
+
+target_foreach_pair16:
+	lodsw
+	movswl %ax, %eax
+	jmp    1f
+target_foreach_pair:
+	lodsb
+	movsbl %al, %eax
+1:	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl  SP
+	ADJUST_CFA_OFFSET(4)
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeObject_IterNextPair,8)
+	ADJUST_CFA_OFFSET(-8)
+	popl   %edx /* Jump-offset */
+	ADJUST_CFA_OFFSET(-4)
+	cmpl   $0, %eax
+	jl     .except /* Check for exception */
+	jg     2f /* Check for iterator exhaustion */
+	addl   $8, SP /* Adjust for the 2 objects pushed by `DeeObject_IterNextPair()'. */
+	jmp    .disp
+2:	cmpl   $0, %edx
+	jge    1f
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  SP_OFFSET(4) L_THIS_THREAD
+	ADJUST_CFA_OFFSET(4)
+	/* Check for interrupts when jumping back. */
+	call   fSYM(DeeThread_CheckInterruptSelf,4)
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jnz    .except_x4
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+1:	addl   %edx, PC /* ip += Simm8/16 */
+	sp_popref %eax
+	jmp    .disp_checkip
+
+
+
 target_jmp_pop:
 	subl   $4, %esp /* absip */
 	ADJUST_CFA_OFFSET(4)
@@ -9645,8 +9768,26 @@ prefix_target16_push_bnd_global = prefix_invop
 .ifndef prefix_target16_push_bnd_local
 prefix_target16_push_bnd_local = prefix_invop
 .endif
+.ifndef prefix_target_foreach_key
+prefix_target_foreach_key = prefix_invop
+.endif
+.ifndef prefix_target_foreach_key16
+prefix_target_foreach_key16 = prefix_invop
+.endif
+.ifndef prefix_target_foreach_value
+prefix_target_foreach_value = prefix_invop
+.endif
+.ifndef prefix_target_foreach_value16
+prefix_target_foreach_value16 = prefix_invop
+.endif
 .ifndef prefix_target32_jmp
 prefix_target32_jmp = prefix_invop
+.endif
+.ifndef prefix_target_foreach_pair
+prefix_target_foreach_pair = prefix_invop
+.endif
+.ifndef prefix_target_foreach_pair16
+prefix_target_foreach_pair16 = prefix_invop
 .endif
 .ifndef prefix_target_jmp_pop_pop
 prefix_target_jmp_pop_pop = prefix_invop
@@ -11003,14 +11144,14 @@ inst_table_f0:
 	.long target16_push_bnd_static       /* 0x0d : `push bound static <imm16>' */
 	.long target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
 	.long target16_push_bnd_local        /* 0x0f : `push bound local <imm16>' */
-	.long invop
-	.long invop
-	.long invop
-	.long invop
+	.long target_foreach_key             /* 0x10 : `foreach_key, top, <Sdisp8>' */
+	.long target_foreach_key16           /* 0x11 : `foreach_key, top, <Sdisp16>' */
+	.long target_foreach_value           /* 0x12 : `foreach_value, top, <Sdisp8>' */
+	.long target_foreach_value16         /* 0x13 : `foreach_value, top, <Sdisp16>' */
 	.long target32_jmp                   /* 0x14 : `jmp <Sdisp32>' */
 	.long invop
-	.long invop
-	.long invop
+	.long target_foreach_pair            /* 0x16 : `foreach_pair, top, <Sdisp8>' */
+	.long target_foreach_pair16          /* 0x17 : `foreach_pair, top, <Sdisp16>' */
 	.long target_jmp_pop_pop             /* 0x18 : `jmp pop, #pop' */
 	.long target16_operator              /* 0x19 : `op top, $<imm16>, #<imm8>' */
 	.long target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop...' */
@@ -11519,14 +11660,14 @@ prefix_inst_table_f0:
 	.long prefix_target16_push_bnd_static       /* 0x0d : `push bound static <imm16>' */
 	.long prefix_target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
 	.long prefix_target16_push_bnd_local        /* 0x0f : `push bound local <imm16>' */
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
+	.long prefix_target_foreach_key             /* 0x10 : `foreach_key, top, <Sdisp8>' */
+	.long prefix_target_foreach_key16           /* 0x11 : `foreach_key, top, <Sdisp16>' */
+	.long prefix_target_foreach_value           /* 0x12 : `foreach_value, top, <Sdisp8>' */
+	.long prefix_target_foreach_value16         /* 0x13 : `foreach_value, top, <Sdisp16>' */
 	.long prefix_target32_jmp                   /* 0x14 : `jmp <Sdisp32>' */
 	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
+	.long prefix_target_foreach_pair            /* 0x16 : `foreach_pair, top, <Sdisp8>' */
+	.long prefix_target_foreach_pair16          /* 0x17 : `foreach_pair, top, <Sdisp16>' */
 	.long prefix_target_jmp_pop_pop             /* 0x18 : `jmp pop, #pop' */
 	.long prefix_target16_operator              /* 0x19 : `op top, $<imm16>, #<imm8>' */
 	.long prefix_target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop...' */

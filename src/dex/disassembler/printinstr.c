@@ -613,6 +613,18 @@ libdisasm_printlabel(dformatprinter printer, void *arg,
 		op_name = "fe16_";
 		break;
 
+	case ASM_FOREACH_KEY16:
+		op_name = "fek16_";
+		break;
+
+	case ASM_FOREACH_VALUE16:
+		op_name = "fev16_";
+		break;
+
+	case ASM_FOREACH_PAIR16:
+		op_name = "fep16_";
+		break;
+
 	case ASM_JF:
 		op_name = "jf_";
 		break;
@@ -627,6 +639,18 @@ libdisasm_printlabel(dformatprinter printer, void *arg,
 
 	case ASM_FOREACH:
 		op_name = "fe_";
+		break;
+
+	case ASM_FOREACH_KEY:
+		op_name = "fek_";
+		break;
+
+	case ASM_FOREACH_VALUE:
+		op_name = "fev_";
+		break;
+
+	case ASM_FOREACH_PAIR:
+		op_name = "fep_";
 		break;
 
 	default: break;

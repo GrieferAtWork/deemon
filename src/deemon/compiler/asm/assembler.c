@@ -799,6 +799,9 @@ STATIC_ASSERT((ASM_JMP == ASM_JMP16 - 1) && (ASM_JMP16 & 1));
 STATIC_ASSERT((ASM_JT == ASM_JT16 - 1) && (ASM_JT16 & 1));
 STATIC_ASSERT((ASM_JF == ASM_JF16 - 1) && (ASM_JF16 & 1));
 STATIC_ASSERT((ASM_FOREACH == ASM_FOREACH16 - 1) && (ASM_FOREACH16 & 1));
+STATIC_ASSERT((ASM_FOREACH_KEY == ASM_FOREACH_KEY16 - 1) && (ASM_FOREACH_KEY16 & 1));
+STATIC_ASSERT((ASM_FOREACH_VALUE == ASM_FOREACH_VALUE16 - 1) && (ASM_FOREACH_VALUE16 & 1));
+STATIC_ASSERT((ASM_FOREACH_PAIR == ASM_FOREACH_PAIR16 - 1) && (ASM_FOREACH_PAIR16 & 1));
 STATIC_ASSERT((ASM32_JMP & 0xff00) >> 8 == ASM_EXTENDED1);
 
 /* Assert that our way of testing a conditional jump works.
@@ -842,7 +845,11 @@ asm_fix_jump_prefix(instruction_t *__restrict delop_instr) {
 	instruction_t *prefix_loc;
 	ASSERT(*(delop_instr + 0) == ASM_DELOP);
 	ASSERT(*(delop_instr + 1) == ASM_JF || *(delop_instr + 1) == ASM_JT ||
-	       *(delop_instr + 1) == ASM_JMP || *(delop_instr + 1) == ASM_FOREACH);
+	       *(delop_instr + 1) == ASM_JMP || *(delop_instr + 1) == ASM_FOREACH ||
+	       (*(delop_instr + 1) == ASM_EXTENDED1 &&
+	        (*(delop_instr + 2) == ASM_FOREACH_KEY || *(delop_instr + 2) == ASM_FOREACH_KEY16 ||
+	         *(delop_instr + 2) == ASM_FOREACH_VALUE || *(delop_instr + 2) == ASM_FOREACH_VALUE16 ||
+	         *(delop_instr + 2) == ASM_FOREACH_PAIR || *(delop_instr + 2) == ASM_FOREACH_PAIR16)));
 	prefix_loc = delop_instr - 2;
 	if (prefix_loc >= sc_main.sec_begin) {
 		/* ASM_LOCAL */
@@ -949,9 +956,18 @@ INTERN bool DCALL asm_minjmp(void) {
 				if (iter->ar_addr == 0)
 					break;
 				instr = (uint8_t *)(sc_main.sec_begin + iter->ar_addr - 1);
-				if (*instr != ASM_JMP16 && *instr != ASM_JT16 &&
-				    *instr != ASM_JF16 && *instr != ASM_FOREACH16)
-					break;
+				if (*instr == ASM_EXTENDED1) {
+					instr += 1;
+					if (*instr != (ASM_FOREACH_KEY16 & 0xff) &&
+					    *instr != (ASM_FOREACH_VALUE16 & 0xff) &&
+					    *instr != (ASM_FOREACH_PAIR16 & 0xff))
+						break;
+				} else {
+					if (*instr != ASM_JMP16 && *instr != ASM_JT16 &&
+					    *instr != ASM_JF16 && *instr != ASM_FOREACH16)
+						break;
+				}
+
 				/* Make sure that the upper 8 bits are truly sign-extensions. */
 				if (instr[2] != ((instr[1] & 0x80) ? 0xff : 0x00))
 					break;
@@ -2154,6 +2170,7 @@ asm_do_gjmp(instruction_t instr,
             struct asm_sym *__restrict target) {
 	instruction_t *data;
 	struct asm_rel *rel;
+	/* TODO: Support for ASM_FOREACH_KEY, ASM_FOREACH_VALUE, ASM_FOREACH_PAIR */
 	ASSERT(instr == ASM_JMP || instr == ASM_JT ||
 	       instr == ASM_JF || instr == ASM_FOREACH);
 	rel = asm_allocrel();
@@ -2505,6 +2522,7 @@ INTERN WUNUSED NONNULL((2)) int
 		++current_assembler.a_stackcur;
 	}	break;
 
+		/* TODO: Support for ASM_FOREACH_KEY, ASM_FOREACH_VALUE, ASM_FOREACH_PAIR */
 	case ASM_FOREACH: {
 		struct asm_sym *temp1;
 		struct asm_sym *temp2;

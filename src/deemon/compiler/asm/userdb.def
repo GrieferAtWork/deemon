@@ -300,6 +300,36 @@ INSTR("foreach", (
 	O1(ASM_FOREACH16, FPREFIX | FRELDSP | FPREFIX_RO, (SDISP16, -2))         /* `PREFIX: foreach <Sdisp16> + 2' */
 ))
 
+/* CONSTRAINTS: `foreach_pair <ps>, ...' */
+INSTR("foreach_pair", (
+	O2(ASM_FOREACH_PAIR,   FRELDSP,                        (TOP)(SDISP8, -2))     /* `foreach_pair top, <Sdisp8> + 2' */
+	O2(ASM_FOREACH_PAIR16, FRELDSP,                        (TOP)(SDISP16, -3))    /* `foreach_pair top, <Sdisp16> + 3' */
+	O2(ASM_FOREACH_PAIR,   FRELDSP | FPREFIX_RO,           (PREFIX)(SDISP8, -2))  /* `foreach_pair PREFIX, <Sdisp8> + 2' */
+	O2(ASM_FOREACH_PAIR16, FRELDSP | FPREFIX_RO,           (PREFIX)(SDISP16, -3)) /* `foreach_pair PREFIX, <Sdisp16> + 3' */
+	O1(ASM_FOREACH_PAIR,   FPREFIX | FRELDSP | FPREFIX_RO, (SDISP8, -2))          /* `PREFIX: foreach_pair <Sdisp8> + 2' */
+	O1(ASM_FOREACH_PAIR16, FPREFIX | FRELDSP | FPREFIX_RO, (SDISP16, -3))         /* `PREFIX: foreach_pair <Sdisp16> + 3' */
+))
+
+/* CONSTRAINTS: `foreach_key <ps>, ...' */
+INSTR("foreach_key", (
+	O2(ASM_FOREACH_KEY,   FRELDSP,                        (TOP)(SDISP8, -2))     /* `foreach_key top, <Sdisp8> + 2' */
+	O2(ASM_FOREACH_KEY16, FRELDSP,                        (TOP)(SDISP16, -3))    /* `foreach_key top, <Sdisp16> + 3' */
+	O2(ASM_FOREACH_KEY,   FRELDSP | FPREFIX_RO,           (PREFIX)(SDISP8, -2))  /* `foreach_key PREFIX, <Sdisp8> + 2' */
+	O2(ASM_FOREACH_KEY16, FRELDSP | FPREFIX_RO,           (PREFIX)(SDISP16, -3)) /* `foreach_key PREFIX, <Sdisp16> + 3' */
+	O1(ASM_FOREACH_KEY,   FPREFIX | FRELDSP | FPREFIX_RO, (SDISP8, -2))          /* `PREFIX: foreach_key <Sdisp8> + 2' */
+	O1(ASM_FOREACH_KEY16, FPREFIX | FRELDSP | FPREFIX_RO, (SDISP16, -3))         /* `PREFIX: foreach_key <Sdisp16> + 3' */
+))
+
+/* CONSTRAINTS: `foreach_value <ps>, ...' */
+INSTR("foreach_value", (
+	O2(ASM_FOREACH_VALUE,   FRELDSP,                        (TOP)(SDISP8, -2))     /* `foreach_value top, <Sdisp8> + 2' */
+	O2(ASM_FOREACH_VALUE16, FRELDSP,                        (TOP)(SDISP16, -3))    /* `foreach_value top, <Sdisp16> + 3' */
+	O2(ASM_FOREACH_VALUE,   FRELDSP | FPREFIX_RO,           (PREFIX)(SDISP8, -2))  /* `foreach_value PREFIX, <Sdisp8> + 2' */
+	O2(ASM_FOREACH_VALUE16, FRELDSP | FPREFIX_RO,           (PREFIX)(SDISP16, -3)) /* `foreach_value PREFIX, <Sdisp16> + 3' */
+	O1(ASM_FOREACH_VALUE,   FPREFIX | FRELDSP | FPREFIX_RO, (SDISP8, -2))          /* `PREFIX: foreach_value <Sdisp8> + 2' */
+	O1(ASM_FOREACH_VALUE16, FPREFIX | FRELDSP | FPREFIX_RO, (SDISP16, -3))         /* `PREFIX: foreach_value <Sdisp16> + 3' */
+))
+
 /* CONSTRAINTS: `call <egls>, ...' */
 /* CONSTRAINTS: `call <egls>, <QsQm>' */
 /* CONSTRAINTS: `call <s>, <a>, <a>' */

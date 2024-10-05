@@ -181,6 +181,13 @@ none_iternext(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
+PRIVATE struct type_iterator none_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&none_i2_1,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_iternext,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_iternext,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&none_i2,
+};
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 none_int(DeeObject *__restrict UNUSED(self)) {
 	return_reference_(DeeInt_Zero);
@@ -604,7 +611,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_cmp           = */ &none_cmp,
 	/* .tp_seq           = */ &none_seq,
 	/* .tp_iter_next     = */ &none_iternext,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ &none_iterator,
 	/* .tp_attr          = */ &none_attr,
 	/* .tp_with          = */ &none_with,
 	/* .tp_buffer        = */ &none_buffer,

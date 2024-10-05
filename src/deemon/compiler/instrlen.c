@@ -403,6 +403,12 @@ prefix_symbol_usage(instruction_t const *__restrict pc) {
 		case ASM16_POP_EXTERN & 0xff:
 		case ASM16_POP_GLOBAL & 0xff:
 		case ASM16_POP_LOCAL & 0xff:
+		case ASM_FOREACH_KEY & 0xff:
+		case ASM_FOREACH_KEY16 & 0xff:
+		case ASM_FOREACH_VALUE & 0xff:
+		case ASM_FOREACH_VALUE16 & 0xff:
+		case ASM_FOREACH_PAIR & 0xff:
+		case ASM_FOREACH_PAIR16 & 0xff:
 			result = ASM_USING_READ;
 			break;
 

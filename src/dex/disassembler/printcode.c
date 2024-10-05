@@ -250,6 +250,9 @@ do_switch_on_opcode:
 		case ASM_JT:
 		case ASM_JMP:
 		case ASM_FOREACH:
+		case ASM_FOREACH_KEY:
+		case ASM_FOREACH_VALUE:
+		case ASM_FOREACH_PAIR:
 			offset = (int8_t)UNALIGNED_GETLE8(iter + 1);
 do_relative_jump:
 			iter = DeeAsm_NextInstr(iter);
@@ -262,6 +265,9 @@ do_relative_jump:
 		case ASM_JT16:
 		case ASM_JMP16:
 		case ASM_FOREACH16:
+		case ASM_FOREACH_KEY16:
+		case ASM_FOREACH_VALUE16:
+		case ASM_FOREACH_PAIR16:
 			offset = (int16_t)UNALIGNED_GETLE16(iter + 1);
 			goto do_relative_jump;
 

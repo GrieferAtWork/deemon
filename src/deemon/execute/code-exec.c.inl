@@ -4171,6 +4171,36 @@ do_setattr_this_c:
 					goto do_push_bnd_local;
 				}
 
+				TARGETSimm16(ASM_FOREACH_KEY, -1, +3) {
+					DREF DeeObject *elem;
+					elem = DeeObject_IterNextKey(TOP);
+					if unlikely(!elem)
+						HANDLE_EXCEPT();
+					if (elem == ITER_DONE) {
+						/* Pop the iterator and Jump if it finished. */
+						POPREF();
+						goto jump_16;
+					}
+					/* Leave the iterator and push the element. */
+					PUSH(elem);
+					DISPATCH();
+				}
+
+				TARGETSimm16(ASM_FOREACH_VALUE, -1, +3) {
+					DREF DeeObject *elem;
+					elem = DeeObject_IterNextValue(TOP);
+					if unlikely(!elem)
+						HANDLE_EXCEPT();
+					if (elem == ITER_DONE) {
+						/* Pop the iterator and Jump if it finished. */
+						POPREF();
+						goto jump_16;
+					}
+					/* Leave the iterator and push the element. */
+					PUSH(elem);
+					DISPATCH();
+				}
+
 				RAW_TARGET(ASM32_JMP) {
 					int32_t disp32;
 					disp32 = READ_Simm32();
@@ -4186,6 +4216,20 @@ do_setattr_this_c:
 					ASSERT(ip.ptr < code->co_code + code->co_codebytes);
 					DISPATCH();
 #endif /* !EXEC_SAFE */
+				}
+
+				TARGETSimm16(ASM_FOREACH_PAIR, -1, +3) {
+					int error = DeeObject_IterNextPair(TOP, sp);
+					if unlikely(error < 0)
+						HANDLE_EXCEPT();
+					if (error > 0) {
+						/* Pop the iterator and Jump if it finished. */
+						POPREF();
+						goto jump_16;
+					}
+					/* Leave the iterator and adjust for the 2 returned objects. */
+					sp += 2;
+					DISPATCH();
 				}
 
 				TARGET(ASM_JMP_POP_POP, -2, +0) {
@@ -6642,6 +6686,81 @@ do_prefix_push_local:
 
 						PREFIX_RAW_TARGET(ASM16_NOP)
 						PREFIX_RAW_TARGET(ASM16_DELOP) {
+							DISPATCH();
+						}
+
+						PREFIX_RAW_TARGET(ASM_FOREACH_KEY16) {
+							imm_val = (uint16_t)READ_Simm16();
+							goto prefix_foreach_key_16;
+						}
+
+						PREFIX_RAW_TARGET(ASM_FOREACH_KEY) {
+							DREF DeeObject *elem;
+							USING_PREFIX_OBJECT
+							imm_val = (uint16_t)(int16_t)READ_Simm8();
+prefix_foreach_key_16:
+							ASSERT_USAGE(-0, +1);
+							prefix_ob = get_prefix_object();
+							if unlikely(!prefix_ob)
+								HANDLE_EXCEPT();
+							elem = DeeObject_IterNextKey(prefix_ob);
+							Dee_Decref(prefix_ob);
+							if unlikely(!elem)
+								HANDLE_EXCEPT();
+							if (elem == ITER_DONE)
+								goto jump_16;
+							/* Push the element. */
+							PUSH(elem);
+							DISPATCH();
+						}
+
+						PREFIX_RAW_TARGET(ASM_FOREACH_VALUE16) {
+							imm_val = (uint16_t)READ_Simm16();
+							goto prefix_foreach_value_16;
+						}
+
+						PREFIX_RAW_TARGET(ASM_FOREACH_VALUE) {
+							DREF DeeObject *elem;
+							USING_PREFIX_OBJECT
+							imm_val = (uint16_t)(int16_t)READ_Simm8();
+prefix_foreach_value_16:
+							ASSERT_USAGE(-0, +1);
+							prefix_ob = get_prefix_object();
+							if unlikely(!prefix_ob)
+								HANDLE_EXCEPT();
+							elem = DeeObject_IterNextValue(prefix_ob);
+							Dee_Decref(prefix_ob);
+							if unlikely(!elem)
+								HANDLE_EXCEPT();
+							if (elem == ITER_DONE)
+								goto jump_16;
+							/* Push the element. */
+							PUSH(elem);
+							DISPATCH();
+						}
+
+						PREFIX_RAW_TARGET(ASM_FOREACH_PAIR16) {
+							imm_val = (uint16_t)READ_Simm16();
+							goto prefix_foreach_pair_16;
+						}
+
+						PREFIX_RAW_TARGET(ASM_FOREACH_PAIR) {
+							int error;
+							USING_PREFIX_OBJECT
+							imm_val = (uint16_t)(int16_t)READ_Simm8();
+prefix_foreach_pair_16:
+							ASSERT_USAGE(-0, +1);
+							prefix_ob = get_prefix_object();
+							if unlikely(!prefix_ob)
+								HANDLE_EXCEPT();
+							error = DeeObject_IterNextPair(prefix_ob, sp);
+							Dee_Decref(prefix_ob);
+							if unlikely(error < 0)
+								HANDLE_EXCEPT();
+							if (error > 0)
+								goto jump_16;
+							/* Leave the 2 returned objects. */
+							sp += 2;
 							DISPATCH();
 						}
 

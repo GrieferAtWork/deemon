@@ -94,6 +94,8 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 			goto err;
 		if (asm_gjmp(ASM_FOREACH, loop_break))
 			goto err;
+		/* TODO: Support for ASM_FOREACH_KEY, ASM_FOREACH_VALUE, ASM_FOREACH_PAIR */
+
 		asm_diicsp(); /* -2, +1: loop-branch of a foreach instruction. */
 		/* HINT: Right now, the stack looks like this:
 		 *       ..., iterator, elem */

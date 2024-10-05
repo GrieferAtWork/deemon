@@ -260,25 +260,31 @@ scan_instr:
 		asm_get_locuse(self, instr, result);
 		switch (opcode) {
 
-		case ASM_JF:           /* jf PREFIX, <Sdisp8> */
-		case ASM_JF16:         /* jf PREFIX, <Sdisp16> */
-		case ASM_JT:           /* jt PREFIX, <Sdisp8> */
-		case ASM_JT16:         /* jt PREFIX, <Sdisp16> */
-		case ASM_FOREACH:      /* foreach PREFIX, <Sdisp8> */
-		case ASM_FOREACH16:    /* foreach PREFIX, <Sdisp16> */
-		case ASM_RET:          /* ret PREFIX */
-		case ASM_THROW:        /* throw PREFIX */
-		case ASM_SETRET:       /* setret PREFIX */
-		case ASM_POP_STATIC:   /* mov static <imm8>, PREFIX */
-		case ASM16_POP_STATIC: /* mov static <imm16>, PREFIX */
-		case ASM_POP_EXTERN:   /* mov extern <imm8>:<imm8>, PREFIX */
-		case ASM16_POP_EXTERN: /* mov extern <imm16>:<imm16>, PREFIX */
-		case ASM_POP_GLOBAL:   /* mov global <imm8>, PREFIX */
-		case ASM16_POP_GLOBAL: /* mov global <imm16>, PREFIX */
-		case ASM_POP_LOCAL:    /* mov local <imm8>, PREFIX */
-		case ASM16_POP_LOCAL:  /* mov local <imm16>, PREFIX */
-		case ASM_UNPACK:       /* unpack PREFIX, #<imm8> */
-		case ASM_POP_N:        /* mov #SP - <imm8> - 2, PREFIX */
+		case ASM_JF:              /* jf PREFIX, <Sdisp8> */
+		case ASM_JF16:            /* jf PREFIX, <Sdisp16> */
+		case ASM_JT:              /* jt PREFIX, <Sdisp8> */
+		case ASM_JT16:            /* jt PREFIX, <Sdisp16> */
+		case ASM_FOREACH:         /* foreach PREFIX, <Sdisp8> */
+		case ASM_FOREACH16:       /* foreach PREFIX, <Sdisp16> */
+		case ASM_FOREACH_KEY:     /* foreach_key PREFIX, <Sdisp8> */
+		case ASM_FOREACH_KEY16:   /* foreach_key PREFIX, <Sdisp16> */
+		case ASM_FOREACH_VALUE:   /* foreach_value PREFIX, <Sdisp8> */
+		case ASM_FOREACH_VALUE16: /* foreach_value PREFIX, <Sdisp16> */
+		case ASM_FOREACH_PAIR:    /* foreach_pair PREFIX, <Sdisp8> */
+		case ASM_FOREACH_PAIR16:  /* foreach_pair PREFIX, <Sdisp16> */
+		case ASM_RET:             /* ret PREFIX */
+		case ASM_THROW:           /* throw PREFIX */
+		case ASM_SETRET:          /* setret PREFIX */
+		case ASM_POP_STATIC:      /* mov static <imm8>, PREFIX */
+		case ASM16_POP_STATIC:    /* mov static <imm16>, PREFIX */
+		case ASM_POP_EXTERN:      /* mov extern <imm8>:<imm8>, PREFIX */
+		case ASM16_POP_EXTERN:    /* mov extern <imm16>:<imm16>, PREFIX */
+		case ASM_POP_GLOBAL:      /* mov global <imm8>, PREFIX */
+		case ASM16_POP_GLOBAL:    /* mov global <imm16>, PREFIX */
+		case ASM_POP_LOCAL:       /* mov local <imm8>, PREFIX */
+		case ASM16_POP_LOCAL:     /* mov local <imm16>, PREFIX */
+		case ASM_UNPACK:          /* unpack PREFIX, #<imm8> */
+		case ASM_POP_N:           /* mov #SP - <imm8> - 2, PREFIX */
 			/* Insert an extra read at the start */
 			memmoveupc(&result->alu_rd[1], &result->alu_rd[0], ASM_RDMAX - 1, sizeof(lid_t));
 			result->alu_rd[0] = prefix_lid;

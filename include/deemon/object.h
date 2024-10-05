@@ -2187,6 +2187,10 @@ struct Dee_type_seq {
 };
 
 #if 0
+typedef struct {
+	OBJECT_HEAD
+} MyObject;
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 myob_iter(MyObject *__restrict self) {
 	(void)self;
@@ -2623,6 +2627,54 @@ struct Dee_type_iterator {
 	 * @return: (size_t)-1: Error. */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_advance)(DeeObject *__restrict self, size_t step);
 };
+
+#if 0
+typedef struct {
+	OBJECT_HEAD
+} MyObject;
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+myob_iternext(MyObject *__restrict self) {
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+myob_nextpair(MyObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]) {
+	(void)self;
+	(void)key_and_value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+myob_nextkey(MyObject *__restrict self) {
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+myob_nextvalue(MyObject *__restrict self) {
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+myob_advance(MyObject *__restrict self, size_t step) {
+	(void)self;
+	(void)step;
+	return (size_t)DeeError_NOTIMPLEMENTED();
+}
+
+PRIVATE struct type_iterator myob_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&myob_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&myob_advance,
+};
+#endif
 
 struct Dee_type_attr {
 	/* Basic attribute operators. */
