@@ -377,7 +377,7 @@ again:
 
 
 PRIVATE NONNULL((1, 3)) void DCALL
-calls_desc_cache_operator(struct class_desc *__restrict self,
+class_desc_cache_operator(struct class_desc *__restrict self,
                           Dee_operator_t name, DeeObject *__restrict func) {
 	struct class_optable *table;
 	Dee_operator_t table_index;
@@ -453,7 +453,7 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 
 		/* Try to cache the associated operator (if possible) */
 		if (name < CLASS_OPERATOR_USERCOUNT)
-			calls_desc_cache_operator(self, name, result);
+			class_desc_cache_operator(self, name, result);
 		return result;
 	}
 }
@@ -487,7 +487,7 @@ DeeClass_GetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) 
 					Dee_class_desc_lock_endread(iter_class);
 					/* Inherit the base's operator locally, by caching it. */
 					if (iter != self && !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
-						calls_desc_cache_operator(DeeClass_DESC(self), name, result);
+						class_desc_cache_operator(DeeClass_DESC(self), name, result);
 					return result;
 				}
 				Dee_class_desc_lock_endread(iter_class);
@@ -521,7 +521,7 @@ DeeClass_GetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) 
 			 * NOTE: Make sure not to accidentally cache inherited constructors! */
 			if (name < CLASS_OPERATOR_USERCOUNT) {
 				if (iter == self || !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
-					calls_desc_cache_operator(DeeClass_DESC(self), name, result);
+					class_desc_cache_operator(DeeClass_DESC(self), name, result);
 			}
 			return result;
 		}
@@ -558,7 +558,7 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t nam
 					Dee_class_desc_lock_endread(iter_class);
 					/* Inherit the base's operator locally, by caching it. */
 					if (iter != self && !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
-						calls_desc_cache_operator(DeeClass_DESC(self), name, result);
+						class_desc_cache_operator(DeeClass_DESC(self), name, result);
 					return result;
 				}
 				Dee_class_desc_lock_endread(iter_class);
@@ -592,7 +592,7 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t nam
 			 * NOTE: Make sure not to accidentally cache inherited constructors! */
 			if (name < CLASS_OPERATOR_USERCOUNT) {
 				if (iter == self || !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
-					calls_desc_cache_operator(DeeClass_DESC(self), name, result);
+					class_desc_cache_operator(DeeClass_DESC(self), name, result);
 			}
 			return result;
 		}
@@ -666,14 +666,12 @@ DeeClass_CallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
 PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeClass_VCallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
                         Dee_operator_t name, char const *format, va_list args) {
-	DREF DeeObject *args_tuple, *result;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
+	DREF DeeObject *func, *result;
+	func = DeeClass_GetOperator(tp_self, name);
+	if unlikely(!func)
 		goto err;
-	result = DeeClass_CallOperator(tp_self, self, name,
-	                               DeeTuple_SIZE(args_tuple),
-	                               DeeTuple_ELEM(args_tuple));
-	Dee_Decref_likely(args_tuple);
+	result = DeeObject_VThisCallf(func, self, format, args);
+	Dee_Decref_unlikely(func);
 	return result;
 err:
 	return NULL;
@@ -5660,7 +5658,7 @@ err_custom_allocator:
 		result->tp_flags |= TP_FNAMEOBJECT;
 		Dee_Incref(desc->cd_name);
 	}
-	if likely(desc->cd_doc) {
+	if (desc->cd_doc) {
 		result->tp_doc = DeeString_STR(desc->cd_doc);
 		result->tp_flags |= TP_FDOCOBJECT;
 		Dee_Incref(desc->cd_doc);

@@ -70,22 +70,20 @@
  *                                         >>             this.bar = bar;
  *                                         >>     }
  *                                         >>     // NOTE: `operator repr' is only implemented if not otherwise defined by the user
- *                                         >>     operator repr(): string {
- *                                         >>         File.Writer fp;
- *                                         >>         fp << "MyClass(";
+ *                                         >>     operator repr(fp: File) {
+ *                                         >>         print fp: "MyClass(",;
  *                                         >>         local is_first = true;
  *                                         >>         if (foo is bound) {
- *                                         >>             if (!is_first) fp << ", ";
+ *                                         >>             if (!is_first) print fp: ", ",;
  *                                         >>             is_first = false;
- *                                         >>             fp << "foo: " << repr foo;
+ *                                         >>             print fp: ("foo: ", repr foo),;
  *                                         >>         }
  *                                         >>         if (bar is bound) {
- *                                         >>             if (!is_first) fp << ", ";
+ *                                         >>             if (!is_first) print fp: ", ",;
  *                                         >>             is_first = false;
- *                                         >>             fp << "bar: " << repr bar;
+ *                                         >>             print fp: ("bar: ", repr bar),;
  *                                         >>         }
- *                                         >>         fp << ")";
- *                                         >>         return fp.string;
+ *                                         >>         print fp: ")",;
  *                                         >>     }
  *                                         >>     ~this() {
  *                                         >>         del foo;
@@ -118,13 +116,13 @@
  *
  * OPERATORS:
  * >> class MyClass: Base {                >> class MyClass: Base {
- * >>     member foo;                      >>     member foo;   
- * >>     member bar;                      >>     member bar;   
+ * >>     member foo;                      >>     member foo;
+ * >>     member bar;                      >>     member bar;
  * >>     member foobar;                   >>     member foobar;
  * >> }                                    >>     this(): super() { }
  * Automatic operators are provided in     >>     ~this() {
- * groups, where the user explicitly       >>         del foo;   
- * implementing any of them will result    >>         del bar;   
+ * groups, where the user explicitly       >>         del foo;
+ * implementing any of them will result    >>         del bar;
  * in all other operators from that        >>         del foobar;
  * group to no longer be automatically     >>     }
  * generated.                              >>     operator copy(other) {
@@ -144,16 +142,19 @@
  * Note that attribute accesses made on    >>         if ((other as MyClass).foobar is bound) foobar = deepcopy((other as MyClass).foobar);
  * `other' in automatic operators will not >>     }
  * invoke a potential `operator getattr',  >>     operator hash() {
- * but will always access the native       >>         return (foo !is bound ? 0 : foo.operator hash()) ^
- * attribute.                              >>                (bar !is bound ? 0 : bar.operator hash()) ^
- *                                         >>                (foobar !is bound ? 0 : foobar.operator hash());
- * During member access, only `member'-    >>     }
- * like fields are accessed, meaning that  >>     operator == (other) {
- * instance-properties will not be invoked >>         if (other !is MyClass)
- *                                         >>             return false;
- * Fields are compared lexicographically,  >>         return foo == (other as MyClass).foo &&
- * following the same order in which they  >>                bar == (other as MyClass).bar &&
- * were orignally defined.                 >>                foobar == (other as MyClass).foobar;
+ * but will always access the native       >>         import hash from deemon;
+ * attribute.                              >>         local result = hash();
+ *                                         >>         if (foo is bound) result = hash(result, foo);
+ * During member access, only `member'-    >>         if (bar is bound) result = hash(result, bar);
+ * like fields are accessed, meaning that  >>         if (foobar is bound) result = hash(result, foobar);
+ * instance-properties will not be invoked >>         return result;
+ *                                         >>     }
+ * Fields are compared lexicographically,  >>     operator == (other) {
+ * following the same order in which they  >>         if (other !is MyClass)
+ * were orignally defined.                 >>             return false;
+ *                                         >>         return foo == (other as MyClass).foo &&
+ *                                         >>                bar == (other as MyClass).bar &&
+ *                                         >>                foobar == (other as MyClass).foobar;
  *                                         >>     }
  *                                         >>     operator != (other) {
  *                                         >>         if (other !is MyClass)
@@ -630,7 +631,7 @@ DeeInstance_VCallAttributef(struct Dee_class_desc *__restrict desc,
                             DeeObject *this_arg,
                             struct Dee_class_attribute const *__restrict attr,
                             char const *__restrict format, va_list args);
-PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeKw(struct Dee_class_desc *__restrict desc,
                             struct Dee_instance_desc *__restrict self,
                             DeeObject *this_arg,

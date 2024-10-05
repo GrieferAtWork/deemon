@@ -18,14 +18,14 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-/* Backwards-compatibility and helpers to
- * achieve this with previous version of deemon. */
+/* Backwards-compatibility and helpers to run
+ * code written for older versions of deemon. */
 
 import * from deemon;
 import * from errors;
 
 @@A class that may be specified as the base of other user-classes
-@@to achieve old-style member semanics, diverting lookup of member
+@@to achieve old-style member semantics, diverting lookup of member
 @@variables to be done at runtime:
 @@>class MyClass: OldUserClass from rt.d200 {
 @@>    this() {

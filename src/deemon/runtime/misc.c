@@ -115,10 +115,10 @@ STATIC_ASSERT(sizeof(Dee_int128_t) == 16);
 /* Combine 2 hash values into 1, while losing as little entropy
  * from either as possible. Note that this function tries to
  * include the order of arguments in the result, meaning that:
- * - Dee_HashCombine(a, b) != Dee_HashCombine(b, a) */
-PUBLIC ATTR_CONST WUNUSED dhash_t
-(DFCALL Dee_HashCombine)(dhash_t a, dhash_t b) {
-	/* Take from https://stackoverflow.com/a/27952689/3296587 */
+ * >> Dee_HashCombine(a, b) != Dee_HashCombine(b, a) */
+PUBLIC ATTR_CONST WUNUSED Dee_hash_t
+(DFCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b) {
+	/* Taken from https://stackoverflow.com/a/27952689/3296587 */
 #if __SIZEOF_POINTER__ >= 8
 	a ^= b + UINT64_C(0x517cc1b727220a95) + (a << 6) + (a >> 2);
 #else /* __SIZEOF_POINTER__ >= 8 */

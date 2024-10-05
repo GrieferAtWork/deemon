@@ -132,20 +132,20 @@ struct Dee_attribute_lookup_rules;
 struct Dee_attrinfo;
 
 
-typedef struct Dee_type_object DeeTypeObject;
-typedef struct Dee_object      DeeObject;
-typedef uintptr_t              Dee_refcnt_t;
-typedef __SSIZE_TYPE__         Dee_ssize_t;
-typedef __LONG64_TYPE__        Dee_off_t;
-typedef __ULONG64_TYPE__       Dee_pos_t;
-typedef uintptr_t              Dee_hash_t;
-typedef __hybrid_uint128_t     Dee_uint128_t;
-typedef __hybrid_int128_t      Dee_int128_t;
+typedef struct Dee_object      DeeObject;     /* Common base for all deemon objects */
+typedef struct Dee_type_object DeeTypeObject; /* Common base for all deemon type objects */
+typedef __SSIZE_TYPE__         Dee_ssize_t;   /* Signed size type (s.a. `size_t') */
+typedef __ULONG64_TYPE__       Dee_pos_t;     /* File position */
+typedef __LONG64_TYPE__        Dee_off_t;     /* Delta between 2 file positions */
+typedef uintptr_t              Dee_refcnt_t;  /* Object reference count type */
+typedef uintptr_t              Dee_hash_t;    /* Object hash data type */
+typedef __hybrid_uint128_t     Dee_uint128_t; /* unsigned, 128-bit integer */
+typedef __hybrid_int128_t      Dee_int128_t;  /* signed, 128-bit integer */
 
-#define Dee_SIZEOF_REFCNT_T __SIZEOF_POINTER__
-#define Dee_SIZEOF_POS_T    8
-#define Dee_SIZEOF_OFF_T    Dee_SIZEOF_POS_T
-#define Dee_SIZEOF_HASH_T   __SIZEOF_POINTER__
+#define Dee_SIZEOF_POS_T    8                  /* == sizeof(Dee_pos_t) */
+#define Dee_SIZEOF_OFF_T    Dee_SIZEOF_POS_T   /* == sizeof(Dee_off_t) */
+#define Dee_SIZEOF_REFCNT_T __SIZEOF_POINTER__ /* == sizeof(Dee_refcnt_t) */
+#define Dee_SIZEOF_HASH_T   __SIZEOF_POINTER__ /* == sizeof(Dee_hash_t) */
 
 /* Generic print receiver.
  * @param: arg:     [?..?] Caller-provided cookie
@@ -182,7 +182,7 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashCaseStr)(char con
 /* Combine 2 hash values into 1, while losing as little entropy
  * from either as possible. Note that this function tries to
  * include the order of arguments in the result, meaning that:
- * - Dee_HashCombine(a, b) != Dee_HashCombine(b, a) */
+ * >> Dee_HashCombine(a, b) != Dee_HashCombine(b, a) */
 DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
 (DFCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b);
 

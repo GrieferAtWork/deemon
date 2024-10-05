@@ -153,7 +153,7 @@ iter_exhausted:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rodictiterator_next_key(RoDictIterator *__restrict self) {
+rodictiterator_nextkey(RoDictIterator *__restrict self) {
 	struct rodict_item *item, *end;
 	end = self->rodi_dict->rd_elem + self->rodi_dict->rd_mask + 1;
 	for (;;) {
@@ -178,7 +178,7 @@ iter_exhausted:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rodictiterator_next_value(RoDictIterator *__restrict self) {
+rodictiterator_nextvalue(RoDictIterator *__restrict self) {
 	struct rodict_item *item, *end;
 	end = self->rodi_dict->rd_elem + self->rodi_dict->rd_mask + 1;
 	for (;;) {
@@ -990,8 +990,8 @@ PRIVATE struct type_nsi tpconst rodict_nsi = {
 	{
 		/* .nsi_maplike = */ {
 			/* .nsi_getsize    = */ (dfunptr_t)&rodict_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&rodictiterator_next_key,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&rodictiterator_next_value,
+			/* .nsi_nextkey    = */ (dfunptr_t)&rodictiterator_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&rodictiterator_nextvalue,
 			/* .nsi_getdefault = */ (dfunptr_t)&rodict_nsi_getdefault
 		}
 	}
