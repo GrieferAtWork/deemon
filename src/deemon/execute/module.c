@@ -1388,7 +1388,7 @@ module_findattr_info_string_len_hash(DeeTypeObject *tp_self, DeeModuleObject *se
 	return DeeModule_FindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo);
 }
 
-PRIVATE struct type_attr tpconst module_attr = {
+PRIVATE struct type_attr module_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&module_setattr,
@@ -1804,6 +1804,7 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 	/* .tp_cmp           = */ &module_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &module_attr,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

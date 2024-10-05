@@ -371,11 +371,12 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_trygetitemnr_string_len_hash = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&none_trygetitemnr_string_len_hash,
 };
 
-PRIVATE struct type_attr tpconst none_attr = {
+PRIVATE struct type_attr none_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_2,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_i2,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&none_i3,
-	/* .tp_enumattr = */ &none_enumattr
+	/* .tp_enumattr = */ &none_enumattr,
+	/* TODO: Also define all of the string-based accessors! */
 };
 
 PRIVATE struct type_with none_with = {
@@ -603,6 +604,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_cmp           = */ &none_cmp,
 	/* .tp_seq           = */ &none_seq,
 	/* .tp_iter_next     = */ &none_iternext,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &none_attr,
 	/* .tp_with          = */ &none_with,
 	/* .tp_buffer        = */ &none_buffer,

@@ -1936,6 +1936,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	/* .tp_cmp           = */ &sockaddr_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL, /* XXX: Buffer interface to access the raw sockaddr data? */

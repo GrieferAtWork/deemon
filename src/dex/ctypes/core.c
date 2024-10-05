@@ -517,6 +517,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ &stype_seq,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -598,6 +599,7 @@ INTERN DeeTypeObject DeePointerType_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -740,6 +742,7 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -1209,11 +1212,12 @@ PRIVATE struct type_seq struct_seq = {
 	/* .tp_setrange = */ &struct_setrange
 };
 
-PRIVATE struct type_attr tpconst struct_attr = {
+PRIVATE struct type_attr struct_attr = {
 	/* .tp_getattr  = */ &struct_getattr,
 	/* .tp_delattr  = */ &struct_delattr,
 	/* .tp_setattr  = */ &struct_setattr,
-	/* .tp_enumattr = */ &struct_enumattr
+	/* .tp_enumattr = */ &struct_enumattr,
+	/* TODO: Also define all of the string-based accessors! */
 };
 
 
@@ -1382,6 +1386,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 		/* .tp_cmp           = */ &struct_cmp,
 		/* .tp_seq           = */ &struct_seq,
 		/* .tp_iter_next     = */ NULL,
+		/* .tp_iterator      = */ NULL,
 		/* .tp_attr          = */ &struct_attr,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ &struct_buffer,
@@ -1996,6 +2001,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -2152,6 +2158,7 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

@@ -311,16 +311,17 @@ END(_impl_assert_failed)
 #define tp_cmp               108 /* struct Dee_type_cmp *tp_cmp; */
 #define tp_seq               112 /* struct Dee_type_seq *tp_seq; */
 #define tp_iter_next         116 /* DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self); */
-#define tp_attr              120 /* struct Dee_type_attr tpconst *tp_attr; */
-#define tp_with              124 /* struct Dee_type_with *tp_with; */
-#define tp_buffer            128 /* struct Dee_type_buffer *tp_buffer; */
-#define tp_methods           132 /* struct Dee_type_method tpconst *tp_methods; */
-#define tp_getsets           136 /* struct Dee_type_getset tpconst *tp_getsets; */
-#define tp_members           140 /* struct Dee_type_member tpconst *tp_members; */
-#define tp_class_methods     144 /* struct Dee_type_method tpconst *tp_class_methods; */
-#define tp_class_getsets     148 /* struct Dee_type_getset tpconst *tp_class_getsets; */
-#define tp_class_members     152 /* struct Dee_type_member tpconst *tp_class_members; */
-#define tp_call_kw           156 /* DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) */
+#define tp_iterator          120 /* struct Dee_type_iter *tp_iterator; */
+#define tp_attr              124 /* struct Dee_type_attr *tp_attr; */
+#define tp_with              128 /* struct Dee_type_with *tp_with; */
+#define tp_buffer            132 /* struct Dee_type_buffer *tp_buffer; */
+#define tp_methods           136 /* struct Dee_type_method tpconst *tp_methods; */
+#define tp_getsets           140 /* struct Dee_type_getset tpconst *tp_getsets; */
+#define tp_members           144 /* struct Dee_type_member tpconst *tp_members; */
+#define tp_class_methods     148 /* struct Dee_type_method tpconst *tp_class_methods; */
+#define tp_class_getsets     152 /* struct Dee_type_getset tpconst *tp_class_getsets; */
+#define tp_class_members     156 /* struct Dee_type_member tpconst *tp_class_members; */
+#define tp_call_kw           160 /* DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) */
 /* ... */
 /* }; */
 

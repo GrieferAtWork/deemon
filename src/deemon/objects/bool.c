@@ -464,6 +464,7 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_cmp           = */ &bool_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

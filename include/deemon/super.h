@@ -155,6 +155,10 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TEnumerateIndex)
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIterKeys)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIter)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIterNext)(DeeTypeObject *tp_self, DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TIterNextPair)(DeeTypeObject *tp_self, DeeObject *self, /*out*/ DREF DeeObject *key_and_value[2]);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIterNextKey)(DeeTypeObject *tp_self, DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIterNextValue)(DeeTypeObject *tp_self, DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t (DCALL DeeObject_TIterAdvance)(DeeTypeObject *tp_self, DeeObject *self, size_t step);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TSizeOb)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t (DCALL DeeObject_TSize)(DeeTypeObject *tp_self, DeeObject *self); /* @return: (size_t)-1: Error */
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t (DCALL DeeObject_TSizeFast)(DeeTypeObject *tp_self, DeeObject *self); /* @return: (size_t)-1: Fast size cannot be determined */

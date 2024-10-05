@@ -1210,6 +1210,10 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *t
 	((tp_iter_next) == &instance_next                                      \
 	 ? instance_tnext(tp_self, self)                                       \
 	 : (*(tp_iter_next))(self))
+#define DeeType_invoke_iterator_tp_nextpair_NODEFAULT(tp_self, tp_nextpair, self, key_and_value) (*(tp_nextpair))(self, key_and_value)
+#define DeeType_invoke_iterator_tp_nextkey_NODEFAULT(tp_self, tp_nextkey, self) (*(tp_nextkey))(self)
+#define DeeType_invoke_iterator_tp_nextvalue_NODEFAULT(tp_self, tp_nextvalue, self) (*(tp_nextvalue))(self)
+#define DeeType_invoke_iterator_tp_advance_NODEFAULT(tp_self, tp_advance, self, step) (*(tp_advance))(self, step)
 #define DeeType_invoke_tp_call_NODEFAULT(tp_self, tp_call, self, argc, argv) \
 	((tp_call) == &instance_call                                             \
 	 ? instance_tcall(tp_self, self, argc, argv)                             \
@@ -1692,6 +1696,20 @@ INTDEF struct type_cmp DeeSeq_DefaultCmpWithSizeObAndGetItem;
 INTDEF struct type_cmp DeeSeq_DefaultCmpWithForeachDefault;
 INTDEF struct type_cmp DeeSet_DefaultCmpWithForeachDefault;
 INTDEF struct type_cmp DeeMap_DefaultCmpWithForeachPairDefault;
+
+
+/* Default wrappers for implementing iterator operators. */
+INTDEF struct type_iterator DeeObject_DefaultIteratorWithIterNext;
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterNextWithIterNextPair(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultIterNextPairWithIterNext(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterNextKeyWithIterNext(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterNextKeyWithIterNextPair(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterNextValueWithIterNext(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterNextValueWithIterNextPair(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultIterAdvanceWithIterNext(DeeObject *__restrict self, size_t step);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultIterAdvanceWithIterNextPair(DeeObject *__restrict self, size_t step);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultIterAdvanceWithIterNextKey(DeeObject *__restrict self, size_t step);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultIterAdvanceWithIterNextValue(DeeObject *__restrict self, size_t step);
 
 
 /* Default wrappers for implementing sequence operators. */
@@ -2209,7 +2227,9 @@ for (local line: fileData.splitlines(false)) {
 	} catch (...) {
 		continue;
 	}
-	c = c.partition("/" "*").first.strip();
+	c = c.strip();
+	while (c.endswith("*" "/"))
+		c = c.rpartition("/" "*").first.rstrip();
 	decls.append((a, b, c));
 }
 for (local a, b, c: decls) {
@@ -2253,6 +2273,10 @@ function getTpName(groupName: string): string {
 	result = result.replace("size_ob", "sizeob");
 	result = result.replace("try_", "try");
 	result = result.replace("iter_keys", "iterkeys");
+	result = result.replace("iter_next_key", "nextkey");
+	result = result.replace("iter_next_value", "nextvalue");
+	result = result.replace("iter_next_pair", "nextpair");
+	result = result.replace("iter_advance", "advance");
 	return result;
 }
 
@@ -2327,6 +2351,12 @@ function getOperatorPackage(name: string): string {
 		"EnumerateIndex" : "seq",
 		"IterKeys" : "seq",
 		"Contains" : "seq",
+		"Contains" : "seq",
+		"IterNext" : "",
+		"IterNextPair" : "iterator",
+		"IterNextKey" : "iterator",
+		"IterNextValue" : "iterator",
+		"IterAdvance" : "iterator",
 	}.get(name, "math");
 }
 for (local name: groupNames) {
@@ -2336,7 +2366,7 @@ for (local name: groupNames) {
 	if (package)
 		package += "_";
 	local args = decls.filter(e -> e[1] == mems.first).first.last.rstrip(");");
-	local args = ", ".join(for (local a: args.split(",")) a.strip().rerpartition(r"[* ]").last);
+	local args = ", ".join(for (local a: args.split(",")) a.strip().rerpartition(r"[* ]").last.partition("[").first);
 	local mems = Tuple(for (local x: mems) if (hasTypedVariant(x)) x);
 	print("#define DeeType_invoke_", package, tp, "_DEFAULT(tp_self, ", tp, ", ", args, ", default) "),;
 	if (!mems) {
@@ -2360,7 +2390,7 @@ for (local name: groupNames) {
 	if (package)
 		package += "_";
 	local args = decls.filter(e -> e[1] == mems.first).first.last.rstrip(");");
-	local args = ", ".join(for (local a: args.split(",")) a.strip().rerpartition(r"[* ]").last);
+	local args = ", ".join(for (local a: args.split(",")) a.strip().rerpartition(r"[* ]").last.partition("[").first);
 	print("#define DeeType_invoke_", package, tp, "(tp_self, ", tp, ", ", args, ") \\");
 	print("	 DeeType_invoke_", package, tp, "_DEFAULT(tp_self, ", tp, ", ", args, ", DeeType_invoke_", package, tp, "_NODEFAULT(tp_self, ", tp, ", ", args, "))");
 }
@@ -2505,6 +2535,16 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultCompareWithSizeAndTry
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultCompareWithSizeAndGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultCompareWithSizeObAndGetItem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultCompareWithForeachDefault(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterNextWithIterNextPair(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultIterNextPairWithIterNext(DeeTypeObject *tp_self, DeeObject *self, /*out*/ DREF DeeObject *key_and_value[2]);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterNextKeyWithIterNext(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterNextKeyWithIterNextPair(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterNextValueWithIterNext(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterNextValueWithIterNextPair(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeObject_TDefaultIterAdvanceWithIterNext(DeeTypeObject *tp_self, DeeObject *self, size_t step);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeObject_TDefaultIterAdvanceWithIterNextPair(DeeTypeObject *tp_self, DeeObject *self, size_t step);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeObject_TDefaultIterAdvanceWithIterNextKey(DeeTypeObject *tp_self, DeeObject *self, size_t step);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeObject_TDefaultIterAdvanceWithIterNextValue(DeeTypeObject *tp_self, DeeObject *self, size_t step);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithForeach(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithForeachPair(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithEnumerate(DeeTypeObject *tp_self, DeeObject *self);
@@ -3074,6 +3114,21 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_compare) == &DeeSeq_DefaultCompareWithSizeAndGetItemIndex ? map(DeeSeq_TDefaultCompareWithSizeAndGetItemIndex) : \
 	 (tp_compare) == &DeeSeq_DefaultCompareWithSizeObAndGetItem ? map(DeeSeq_TDefaultCompareWithSizeObAndGetItem) : \
 	 (tp_compare) == &DeeSeq_DefaultCompareWithForeachDefault ? map(DeeSeq_TDefaultCompareWithForeachDefault) : default)
+#define DeeType_MapDefaultIterNext(tp_iter_next, map, default) \
+	((tp_iter_next) == &DeeObject_DefaultIterNextWithIterNextPair ? map(DeeObject_TDefaultIterNextWithIterNextPair) : default)
+#define DeeType_MapDefaultIterNextPair(tp_nextpair, map, default) \
+	((tp_nextpair) == &DeeObject_DefaultIterNextPairWithIterNext ? map(DeeObject_TDefaultIterNextPairWithIterNext) : default)
+#define DeeType_MapDefaultIterNextKey(tp_nextkey, map, default) \
+	((tp_nextkey) == &DeeObject_DefaultIterNextKeyWithIterNext ? map(DeeObject_TDefaultIterNextKeyWithIterNext) : \
+	 (tp_nextkey) == &DeeObject_DefaultIterNextKeyWithIterNextPair ? map(DeeObject_TDefaultIterNextKeyWithIterNextPair) : default)
+#define DeeType_MapDefaultIterNextValue(tp_nextvalue, map, default) \
+	((tp_nextvalue) == &DeeObject_DefaultIterNextValueWithIterNext ? map(DeeObject_TDefaultIterNextValueWithIterNext) : \
+	 (tp_nextvalue) == &DeeObject_DefaultIterNextValueWithIterNextPair ? map(DeeObject_TDefaultIterNextValueWithIterNextPair) : default)
+#define DeeType_MapDefaultIterAdvance(tp_advance, map, default) \
+	((tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNext ? map(DeeObject_TDefaultIterAdvanceWithIterNext) : \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextPair ? map(DeeObject_TDefaultIterAdvanceWithIterNextPair) : \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextKey ? map(DeeObject_TDefaultIterAdvanceWithIterNextKey) : \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextValue ? map(DeeObject_TDefaultIterAdvanceWithIterNextValue) : default)
 #define DeeType_MapDefaultIter(tp_iter, map, default) \
 	((tp_iter) == &DeeObject_DefaultIterWithForeach ? map(DeeObject_TDefaultIterWithForeach) : \
 	 (tp_iter) == &DeeObject_DefaultIterWithForeachPair ? map(DeeObject_TDefaultIterWithForeachPair) : \
@@ -3667,6 +3722,21 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_compare) == &DeeSeq_DefaultCompareWithSizeAndGetItemIndex || \
 	 (tp_compare) == &DeeSeq_DefaultCompareWithSizeObAndGetItem || \
 	 (tp_compare) == &DeeSeq_DefaultCompareWithForeachDefault)
+#define DeeType_IsDefaultIterNext(tp_iter_next) \
+	((tp_iter_next) == &DeeObject_DefaultIterNextWithIterNextPair)
+#define DeeType_IsDefaultIterNextPair(tp_nextpair) \
+	((tp_nextpair) == &DeeObject_DefaultIterNextPairWithIterNext)
+#define DeeType_IsDefaultIterNextKey(tp_nextkey) \
+	((tp_nextkey) == &DeeObject_DefaultIterNextKeyWithIterNext || \
+	 (tp_nextkey) == &DeeObject_DefaultIterNextKeyWithIterNextPair)
+#define DeeType_IsDefaultIterNextValue(tp_nextvalue) \
+	((tp_nextvalue) == &DeeObject_DefaultIterNextValueWithIterNext || \
+	 (tp_nextvalue) == &DeeObject_DefaultIterNextValueWithIterNextPair)
+#define DeeType_IsDefaultIterAdvance(tp_advance) \
+	((tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNext || \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextPair || \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextKey || \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextValue)
 #define DeeType_IsDefaultIter(tp_iter) \
 	((tp_iter) == &DeeObject_DefaultIterWithForeach || \
 	 (tp_iter) == &DeeObject_DefaultIterWithForeachPair || \
@@ -4324,6 +4394,26 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_compare) == &DeeSeq_DefaultCompareWithSizeObAndGetItem ? DeeSeq_TDefaultCompareWithSizeObAndGetItem(tp_self, self, other) : \
 	 (tp_compare) == &DeeSeq_DefaultCompareWithForeachDefault ? DeeSeq_TDefaultCompareWithForeachDefault(tp_self, self, other) : \
 	 default)
+#define DeeType_invoke_tp_iter_next_DEFAULT(tp_self, tp_iter_next, self, default) \
+	((tp_iter_next) == &DeeObject_DefaultIterNextWithIterNextPair ? DeeObject_TDefaultIterNextWithIterNextPair(tp_self, self) : \
+	 default)
+#define DeeType_invoke_iterator_tp_nextpair_DEFAULT(tp_self, tp_nextpair, self, key_and_value, default) \
+	((tp_nextpair) == &DeeObject_DefaultIterNextPairWithIterNext ? DeeObject_TDefaultIterNextPairWithIterNext(tp_self, self, key_and_value) : \
+	 default)
+#define DeeType_invoke_iterator_tp_nextkey_DEFAULT(tp_self, tp_nextkey, self, default) \
+	((tp_nextkey) == &DeeObject_DefaultIterNextKeyWithIterNext ? DeeObject_TDefaultIterNextKeyWithIterNext(tp_self, self) : \
+	 (tp_nextkey) == &DeeObject_DefaultIterNextKeyWithIterNextPair ? DeeObject_TDefaultIterNextKeyWithIterNextPair(tp_self, self) : \
+	 default)
+#define DeeType_invoke_iterator_tp_nextvalue_DEFAULT(tp_self, tp_nextvalue, self, default) \
+	((tp_nextvalue) == &DeeObject_DefaultIterNextValueWithIterNext ? DeeObject_TDefaultIterNextValueWithIterNext(tp_self, self) : \
+	 (tp_nextvalue) == &DeeObject_DefaultIterNextValueWithIterNextPair ? DeeObject_TDefaultIterNextValueWithIterNextPair(tp_self, self) : \
+	 default)
+#define DeeType_invoke_iterator_tp_advance_DEFAULT(tp_self, tp_advance, self, step, default) \
+	((tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNext ? DeeObject_TDefaultIterAdvanceWithIterNext(tp_self, self, step) : \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextPair ? DeeObject_TDefaultIterAdvanceWithIterNextPair(tp_self, self, step) : \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextKey ? DeeObject_TDefaultIterAdvanceWithIterNextKey(tp_self, self, step) : \
+	 (tp_advance) == &DeeObject_DefaultIterAdvanceWithIterNextValue ? DeeObject_TDefaultIterAdvanceWithIterNextValue(tp_self, self, step) : \
+	 default)
 #define DeeType_invoke_seq_tp_iter_DEFAULT(tp_self, tp_iter, self, default) \
 	((tp_iter) == &DeeObject_DefaultIterWithForeach ? DeeObject_TDefaultIterWithForeach(tp_self, self) : \
 	 (tp_iter) == &DeeObject_DefaultIterWithForeachPair ? DeeObject_TDefaultIterWithForeachPair(tp_self, self) : \
@@ -4864,6 +4954,16 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 DeeType_invoke_cmp_tp_trycompare_eq_DEFAULT(tp_self, tp_trycompare_eq, self, other, DeeType_invoke_cmp_tp_trycompare_eq_NODEFAULT(tp_self, tp_trycompare_eq, self, other))
 #define DeeType_invoke_cmp_tp_compare(tp_self, tp_compare, self, other) \
 	 DeeType_invoke_cmp_tp_compare_DEFAULT(tp_self, tp_compare, self, other, DeeType_invoke_cmp_tp_compare_NODEFAULT(tp_self, tp_compare, self, other))
+#define DeeType_invoke_tp_iter_next(tp_self, tp_iter_next, self) \
+	 DeeType_invoke_tp_iter_next_DEFAULT(tp_self, tp_iter_next, self, DeeType_invoke_tp_iter_next_NODEFAULT(tp_self, tp_iter_next, self))
+#define DeeType_invoke_iterator_tp_nextpair(tp_self, tp_nextpair, self, key_and_value) \
+	 DeeType_invoke_iterator_tp_nextpair_DEFAULT(tp_self, tp_nextpair, self, key_and_value, DeeType_invoke_iterator_tp_nextpair_NODEFAULT(tp_self, tp_nextpair, self, key_and_value))
+#define DeeType_invoke_iterator_tp_nextkey(tp_self, tp_nextkey, self) \
+	 DeeType_invoke_iterator_tp_nextkey_DEFAULT(tp_self, tp_nextkey, self, DeeType_invoke_iterator_tp_nextkey_NODEFAULT(tp_self, tp_nextkey, self))
+#define DeeType_invoke_iterator_tp_nextvalue(tp_self, tp_nextvalue, self) \
+	 DeeType_invoke_iterator_tp_nextvalue_DEFAULT(tp_self, tp_nextvalue, self, DeeType_invoke_iterator_tp_nextvalue_NODEFAULT(tp_self, tp_nextvalue, self))
+#define DeeType_invoke_iterator_tp_advance(tp_self, tp_advance, self, step) \
+	 DeeType_invoke_iterator_tp_advance_DEFAULT(tp_self, tp_advance, self, step, DeeType_invoke_iterator_tp_advance_NODEFAULT(tp_self, tp_advance, self, step))
 #define DeeType_invoke_seq_tp_iter(tp_self, tp_iter, self) \
 	 DeeType_invoke_seq_tp_iter_DEFAULT(tp_self, tp_iter, self, DeeType_invoke_seq_tp_iter_NODEFAULT(tp_self, tp_iter, self))
 #define DeeType_invoke_seq_tp_foreach(tp_self, tp_foreach, self, proc, arg) \
@@ -4960,9 +5060,6 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 #define DeeType_invoke_init_tp_move_assign_DEFAULT(tp_self, tp_move_assign, self, other, default) default
 #define DeeType_invoke_init_tp_move_assign(tp_self, tp_move_assign, self, other) \
 	DeeType_invoke_init_tp_move_assign_DEFAULT(tp_self, tp_move_assign, self, other, DeeType_invoke_init_tp_move_assign_NODEFAULT(tp_self, tp_move_assign, self, other))
-#define DeeType_invoke_tp_iter_next_NEFAULT(tp_self, tp_iter_next, self, default) default
-#define DeeType_invoke_tp_iter_next(tp_self, tp_iter_next, self) \
-	DeeType_invoke_tp_iter_next_NEFAULT(tp_self, tp_iter_next, self, DeeType_invoke_tp_iter_next_NODEFAULT(tp_self, tp_iter_next, self))
 #define DeeType_invoke_math_tp_inv_DEFAULT(tp_self, tp_inv, self, default) default
 #define DeeType_invoke_math_tp_inv(tp_self, tp_inv, self) \
 	DeeType_invoke_math_tp_inv_DEFAULT(tp_self, tp_inv, self, DeeType_invoke_math_tp_inv_NODEFAULT(tp_self, tp_inv, self))
@@ -5004,6 +5101,14 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 #define DeeType_InvokeCastBool_NODEFAULT(tp_self, self)                                          DeeType_invoke_cast_tp_bool_NODEFAULT(tp_self, (tp_self)->tp_cast.tp_bool, self)
 #define DeeType_InvokeIterNext(tp_self, self)                                                    DeeType_invoke_tp_iter_next(tp_self, (tp_self)->tp_iter_next, self)
 #define DeeType_InvokeIterNext_NODEFAULT(tp_self, self)                                          DeeType_invoke_tp_iter_next_NODEFAULT(tp_self, (tp_self)->tp_iter_next, self)
+#define DeeType_InvokeIterNextPair(tp_self, self, key_and_value)                                 DeeType_invoke_iterator_tp_nextpair(tp_self, (tp_self)->tp_iterator->tp_nextpair, self, key_and_value)
+#define DeeType_InvokeIterNextPair_NODEFAULT(tp_self, self, key_and_value)                       DeeType_invoke_iterator_tp_nextpair_NODEFAULT(tp_self, (tp_self)->tp_iterator->tp_nextpair, self, key_and_value)
+#define DeeType_InvokeIterNextKey(tp_self, self)                                                 DeeType_invoke_iterator_tp_nextkey(tp_self, (tp_self)->tp_iterator->tp_nextkey, self)
+#define DeeType_InvokeIterNextKey_NODEFAULT(tp_self, self)                                       DeeType_invoke_iterator_tp_nextkey_NODEFAULT(tp_self, (tp_self)->tp_iterator->tp_nextkey, self)
+#define DeeType_InvokeIterNextValue(tp_self, self)                                               DeeType_invoke_iterator_tp_nextvalue(tp_self, (tp_self)->tp_iterator->tp_nextvalue, self)
+#define DeeType_InvokeIterNextValue_NODEFAULT(tp_self, self)                                     DeeType_invoke_iterator_tp_nextvalue_NODEFAULT(tp_self, (tp_self)->tp_iterator->tp_nextvalue, self)
+#define DeeType_InvokeIterAdvance(tp_self, self, step)                                           DeeType_invoke_iterator_tp_advance(tp_self, (tp_self)->tp_iterator->tp_advance, self, step)
+#define DeeType_InvokeIterAdvance_NODEFAULT(tp_self, self, step)                                 DeeType_invoke_iterator_tp_advance_NODEFAULT(tp_self, (tp_self)->tp_iterator->tp_advance, self, step)
 #define DeeType_InvokeCall(tp_self, self, argc, argv)                                            DeeType_invoke_tp_call(tp_self, (tp_self)->tp_call, self, argc, argv)
 #define DeeType_InvokeCall_NODEFAULT(tp_self, self, argc, argv)                                  DeeType_invoke_tp_call_NODEFAULT(tp_self, (tp_self)->tp_call, self, argc, argv)
 #define DeeType_InvokeCallKw(tp_self, self, argc, argv, kw)                                      DeeType_invoke_tp_call_kw(tp_self, (tp_self)->tp_call_kw, self, argc, argv, kw)

@@ -204,7 +204,7 @@ byattr_boundattr_string_len_hash(MapByAttr *self, char const *attr,
 
 
 
-PRIVATE struct type_attr tpconst byattr_attr = {
+PRIVATE struct type_attr byattr_attr = {
 	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&byattr_getattr,
 	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_delattr,
 	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&byattr_setattr,
@@ -321,6 +321,7 @@ INTERN DeeTypeObject MapByAttr_Type = {
 	/* .tp_cmp           = */ &byattr_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &byattr_attr,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

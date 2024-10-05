@@ -1079,7 +1079,7 @@ F(call_kw)(STRUCT_TYPE *__restrict self, size_t argc,
 }
 #endif /* DEFINE_GETATTR */
 
-PRIVATE struct type_attr tpconst F(attr) = {
+PRIVATE struct type_attr F(attr) = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&F(delattr),
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&F(setattr),
@@ -1196,6 +1196,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 	/* .tp_cmp           = */ &sew_cmp,
 	/* .tp_seq           = */ &F(seq),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iter_next,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &F(attr),
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
@@ -1329,6 +1330,7 @@ INTERN DeeTypeObject ITERATOR_TYPE_OBJECT = {
 	/* .tp_cmp           = */ &sewi_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&Fi(next),
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

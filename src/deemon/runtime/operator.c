@@ -233,8 +233,16 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_PRINTREPR_NODEFAULT               DeeType_InvokeCastPrintRepr_NODEFAULT
 #define DeeType_INVOKE_BOOL                              DeeType_InvokeCastBool
 #define DeeType_INVOKE_BOOL_NODEFAULT                    DeeType_InvokeCastBool_NODEFAULT
-#define DeeType_INVOKE_NEXT                              DeeType_InvokeIterNext
-#define DeeType_INVOKE_NEXT_NODEFAULT                    DeeType_InvokeIterNext_NODEFAULT
+#define DeeType_INVOKE_ITERNEXT                          DeeType_InvokeIterNext
+#define DeeType_INVOKE_ITERNEXT_NODEFAULT                DeeType_InvokeIterNext_NODEFAULT
+#define DeeType_INVOKE_ITERNEXTPAIR                      DeeType_InvokeIterNextPair
+#define DeeType_INVOKE_ITERNEXTPAIR_NODEFAULT            DeeType_InvokeIterNextPair_NODEFAULT
+#define DeeType_INVOKE_ITERNEXTKEY                       DeeType_InvokeIterNextKey
+#define DeeType_INVOKE_ITERNEXTKEY_NODEFAULT             DeeType_InvokeIterNextKey_NODEFAULT
+#define DeeType_INVOKE_ITERNEXTVALUE                     DeeType_InvokeIterNextValue
+#define DeeType_INVOKE_ITERNEXTVALUE_NODEFAULT           DeeType_InvokeIterNextValue_NODEFAULT
+#define DeeType_INVOKE_ITERADVANCE                       DeeType_InvokeIterAdvance
+#define DeeType_INVOKE_ITERADVANCE_NODEFAULT             DeeType_InvokeIterAdvance_NODEFAULT
 #define DeeType_INVOKE_CALL                              DeeType_InvokeCall
 #define DeeType_INVOKE_CALL_NODEFAULT                    DeeType_InvokeCall_NODEFAULT
 #define DeeType_INVOKE_CALLKW                            DeeType_InvokeCallKw
@@ -425,7 +433,11 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)                            (*(tp_self)->tp_cast.tp_print)(self, printer, arg)
 #define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)                        (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg)
 #define DeeType_INVOKE_BOOL(tp_self, self)                                           (*(tp_self)->tp_cast.tp_bool)(self)
-#define DeeType_INVOKE_NEXT(tp_self, self)                                           (*(tp_self)->tp_iter_next)(self)
+#define DeeType_INVOKE_ITERNEXT(tp_self, self)                                       (*(tp_self)->tp_iter_next)(self)
+#define DeeType_INVOKE_ITERNEXTPAIR(tp_self, self, key_and_value)                    (*(tp_self)->tp_iterator->tp_nextpair)(self, key_and_value)
+#define DeeType_INVOKE_ITERNEXTKEY(tp_self, self)                                    (*(tp_self)->tp_iterator->tp_nextkey)(self)
+#define DeeType_INVOKE_ITERNEXTVALUE(tp_self, self)                                  (*(tp_self)->tp_iterator->tp_nextvalue)(self)
+#define DeeType_INVOKE_ITERADVANCE(tp_self, self, step)                              (*(tp_self)->tp_iterator->tp_advance)(self, step)
 #define DeeType_INVOKE_CALL(tp_self, self, argc, argv)                               (*(tp_self)->tp_call)(self, argc, argv)
 #define DeeType_INVOKE_CALLKW(tp_self, self, argc, argv, kw)                         (*(tp_self)->tp_call_kw)(self, argc, argv, kw)
 #define DeeType_INVOKE_INT32(tp_self, self, result)                                  (*(tp_self)->tp_math->tp_int32)(self, result)
@@ -481,7 +493,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_FOREACH(tp_self, self, proc, arg)                             (*(tp_self)->tp_seq->tp_foreach)(self, proc, arg)
 #define DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg)                        (*(tp_self)->tp_seq->tp_foreach_pair)(self, proc, arg)
 #define DeeType_INVOKE_ENUMERATE(tp_self, self, proc, arg)                           (*(tp_self)->tp_seq->tp_enumerate)(self, proc, arg)
-#define DeeType_INVOKE_ENUMERATE_INDEX(tp_self, self, proc, arg, start, end) (*(tp_self)->tp_seq->tp_enumerate_index)(self, proc, arg, start, end)
+#define DeeType_INVOKE_ENUMERATE_INDEX(tp_self, self, proc, arg, start, end)         (*(tp_self)->tp_seq->tp_enumerate_index)(self, proc, arg, start, end)
 #define DeeType_INVOKE_ITERKEYS(tp_self, self)                                       (*(tp_self)->tp_seq->tp_iterkeys)(self)
 #define DeeType_INVOKE_BOUNDITEM(tp_self, self, index)                               (*(tp_self)->tp_seq->tp_bounditem)(self, index)
 #define DeeType_INVOKE_HASITEM(tp_self, self, index)                                 (*(tp_self)->tp_seq->tp_hasitem)(self, index)
@@ -525,7 +537,11 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_PRINT_NODEFAULT                   DeeType_INVOKE_PRINT
 #define DeeType_INVOKE_PRINTREPR_NODEFAULT               DeeType_INVOKE_PRINTREPR
 #define DeeType_INVOKE_BOOL_NODEFAULT                    DeeType_INVOKE_BOOL
-#define DeeType_INVOKE_NEXT_NODEFAULT                    DeeType_INVOKE_NEXT
+#define DeeType_INVOKE_ITERNEXT_NODEFAULT                DeeType_INVOKE_ITERNEXT
+#define DeeType_INVOKE_ITERNEXTPAIR_NODEFAULT            DeeType_INVOKE_ITERNEXTPAIR
+#define DeeType_INVOKE_ITERNEXTKEY_NODEFAULT             DeeType_INVOKE_ITERNEXTKEY
+#define DeeType_INVOKE_ITERNEXTVALUE_NODEFAULT           DeeType_INVOKE_ITERNEXTVALUE
+#define DeeType_INVOKE_ITERADVANCE_NODEFAULT             DeeType_INVOKE_ITERADVANCE
 #define DeeType_INVOKE_CALL_NODEFAULT                    DeeType_INVOKE_CALL
 #define DeeType_INVOKE_CALLKW_NODEFAULT                  DeeType_INVOKE_CALLKW
 #define DeeType_INVOKE_INT32_NODEFAULT                   DeeType_INVOKE_INT32
@@ -14746,12 +14762,267 @@ DEFINE_OPERATOR(int, TryCompareEq, (DeeObject *self, DeeObject *rhs)) {
 
 
 
+
+
+/* Default iterator operators. */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterNextWithIterNextPair,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	int error;
+	DREF DeeObject *key_and_value[2];
+	LOAD_TP_SELF;
+	error = DeeType_INVOKE_ITERNEXTPAIR_NODEFAULT(tp_self, self, key_and_value);
+	if (error == 0) {
+		DREF DeeTupleObject *result;
+		result = DeeTuple_NewUninitialized(2);
+		if unlikely(!result)
+			goto err_key_and_value;
+		DeeTuple_SET(result, 0, key_and_value[0]); /* Inherit reference */
+		DeeTuple_SET(result, 1, key_and_value[1]); /* Inherit reference */
+		return (DREF DeeObject *)result;
+	}
+	if likely(error > 0)
+		return ITER_DONE;
+err:
+	return NULL;
+err_key_and_value:
+	Dee_Decref(key_and_value[1]);
+	Dee_Decref(key_and_value[0]);
+	goto err;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultIterNextPairWithIterNext,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, /*out*/ DREF DeeObject *key_and_value[2])) {
+	int result;
+	DREF DeeObject *item;
+	LOAD_TP_SELF;
+	item = DeeType_INVOKE_ITERNEXT_NODEFAULT(tp_self, self);
+	if (item == ITER_DONE)
+		return 1;
+	if unlikely(item == NULL)
+		goto err;
+	result = DeeObject_Unpack(item, 2, key_and_value);
+	Dee_Decref(item);
+	return result;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterNextKeyWithIterNext,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	int result;
+	DREF DeeObject *item;
+	DREF DeeObject *key_and_value[2];
+	LOAD_TP_SELF;
+	item = DeeType_INVOKE_ITERNEXT_NODEFAULT(tp_self, self);
+	if (!ITER_ISOK(item))
+		return item;
+	result = DeeObject_Unpack(item, 2, key_and_value);
+	Dee_Decref(item);
+	if unlikely(result)
+		goto err;
+	Dee_Decref(key_and_value[1]);
+	return key_and_value[0];
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterNextKeyWithIterNextPair,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	int result;
+	DREF DeeObject *key_and_value[2];
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_ITERNEXTPAIR_NODEFAULT(tp_self, self, key_and_value);
+	if (result != 0) {
+		if unlikely(result < 0)
+			goto err;
+		return ITER_DONE;
+	}
+	Dee_Decref(key_and_value[1]);
+	return key_and_value[0];
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterNextValueWithIterNext,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	int result;
+	DREF DeeObject *item;
+	DREF DeeObject *key_and_value[2];
+	LOAD_TP_SELF;
+	item = DeeType_INVOKE_ITERNEXT_NODEFAULT(tp_self, self);
+	if (!ITER_ISOK(item))
+		return item;
+	result = DeeObject_Unpack(item, 2, key_and_value);
+	Dee_Decref(item);
+	if unlikely(result)
+		goto err;
+	Dee_Decref(key_and_value[0]);
+	return key_and_value[1];
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterNextValueWithIterNextPair,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	int result;
+	DREF DeeObject *key_and_value[2];
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_ITERNEXTPAIR_NODEFAULT(tp_self, self, key_and_value);
+	if (result != 0) {
+		if unlikely(result < 0)
+			goto err;
+		return ITER_DONE;
+	}
+	Dee_Decref(key_and_value[0]);
+	return key_and_value[1];
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(size_t, DefaultIterAdvanceWithIterNext,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t step)) {
+	size_t result = 0;
+	LOAD_TP_SELF;
+	do {
+		DREF DeeObject *elem = DeeType_INVOKE_ITERNEXT_NODEFAULT(tp_self, self);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err;
+			break; /* Premature stop. */
+		}
+		Dee_Decref(elem);
+		++result;
+	} while (result < step);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+DEFINE_INTERNAL_OPERATOR(size_t, DefaultIterAdvanceWithIterNextPair,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t step)) {
+	size_t result = 0;
+	LOAD_TP_SELF;
+	do {
+		DREF DeeObject *key_and_value[2];
+		int error = DeeType_INVOKE_ITERNEXTPAIR_NODEFAULT(tp_self, self, key_and_value);
+		if unlikely(error != 0) {
+			if unlikely(error < 0)
+				goto err;
+			break; /* Premature stop. */
+		}
+		Dee_Decref(key_and_value[1]);
+		Dee_Decref(key_and_value[0]);
+		++result;
+	} while (result < step);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+DEFINE_INTERNAL_OPERATOR(size_t, DefaultIterAdvanceWithIterNextKey,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t step)) {
+	size_t result = 0;
+	LOAD_TP_SELF;
+	do {
+		DREF DeeObject *elem = DeeType_INVOKE_ITERNEXTKEY_NODEFAULT(tp_self, self);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err;
+			break; /* Premature stop. */
+		}
+		Dee_Decref(elem);
+		++result;
+	} while (result < step);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+DEFINE_INTERNAL_OPERATOR(size_t, DefaultIterAdvanceWithIterNextValue,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t step)) {
+	size_t result = 0;
+	LOAD_TP_SELF;
+	do {
+		DREF DeeObject *elem = DeeType_INVOKE_ITERNEXTVALUE_NODEFAULT(tp_self, self);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err;
+			break; /* Premature stop. */
+		}
+		Dee_Decref(elem);
+		++result;
+	} while (result < step);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+
 #ifndef DEFINE_TYPED_OPERATORS
+INTERN struct type_iterator DeeObject_DefaultIteratorWithIterNext = {
+	/* .tp_nextpair  = */ &DeeObject_DefaultIterNextPairWithIterNext,
+	/* .tp_nextkey   = */ &DeeObject_DefaultIterNextKeyWithIterNext,
+	/* .tp_nextvalue = */ &DeeObject_DefaultIterNextValueWithIterNext,
+	/* .tp_advance   = */ &DeeObject_DefaultIterAdvanceWithIterNext,
+};
 
 INTERN NONNULL((1)) bool DCALL
 DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 	DeeTypeMRO mro;
-	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
+	DeeTypeObject *base;
+	if (self->tp_iter_next) {
+		if (self->tp_iterator == NULL) {
+			self->tp_iterator = &DeeObject_DefaultIteratorWithIterNext;
+		} else {
+			struct type_iterator *iter = self->tp_iterator;
+			if (iter->tp_advance == NULL) {
+				if (iter->tp_nextkey && !DeeType_IsDefaultIterNextKey(iter->tp_nextkey)) {
+					iter->tp_advance = &DeeObject_DefaultIterAdvanceWithIterNextKey;
+				} else if (iter->tp_nextvalue && !DeeType_IsDefaultIterNextValue(iter->tp_nextvalue)) {
+					iter->tp_advance = &DeeObject_DefaultIterAdvanceWithIterNextValue;
+				} else if (iter->tp_nextpair && !DeeType_IsDefaultIterNextPair(iter->tp_nextpair)) {
+					iter->tp_advance = &DeeObject_DefaultIterAdvanceWithIterNextPair;
+				} else {
+					iter->tp_advance = &DeeObject_DefaultIterAdvanceWithIterNext;
+				}
+			}
+			if (iter->tp_nextpair && !DeeType_IsDefaultIterNextPair(iter->tp_nextpair)) {
+				if (iter->tp_nextkey == NULL)
+					iter->tp_nextkey = &DeeObject_DefaultIterNextKeyWithIterNextPair;
+				if (iter->tp_nextvalue == NULL)
+					iter->tp_nextvalue = &DeeObject_DefaultIterNextValueWithIterNextPair;
+			} else {
+				if (iter->tp_nextkey == NULL)
+					iter->tp_nextkey = &DeeObject_DefaultIterNextKeyWithIterNext;
+				if (iter->tp_nextvalue == NULL)
+					iter->tp_nextvalue = &DeeObject_DefaultIterNextValueWithIterNext;
+			}
+			if (iter->tp_nextpair == NULL)
+				iter->tp_nextpair = &DeeObject_DefaultIterNextPairWithIterNext;
+
+		}
+		return true;
+	} else if (self->tp_iterator) {
+		struct type_iterator *iter = self->tp_iterator;
+		if (iter->tp_nextpair) {
+			self->tp_iter_next = &DeeObject_DefaultIterNextWithIterNextPair;
+			if (iter->tp_advance == NULL) {
+				if (iter->tp_nextkey && !DeeType_IsDefaultIterNextKey(iter->tp_nextkey)) {
+					iter->tp_advance = &DeeObject_DefaultIterAdvanceWithIterNextKey;
+				} else if (iter->tp_nextvalue && !DeeType_IsDefaultIterNextValue(iter->tp_nextvalue)) {
+					iter->tp_advance = &DeeObject_DefaultIterAdvanceWithIterNextValue;
+				} else {
+					iter->tp_advance = &DeeObject_DefaultIterAdvanceWithIterNextPair;
+				}
+			}
+			if (iter->tp_nextkey == NULL)
+				iter->tp_nextkey = &DeeObject_DefaultIterNextKeyWithIterNextPair;
+			if (iter->tp_nextvalue == NULL)
+				iter->tp_nextvalue = &DeeObject_DefaultIterNextValueWithIterNextPair;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		if (!base->tp_iter_next) {
 			if (!DeeType_InheritIterNext(base))
@@ -14759,6 +15030,7 @@ DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 		}
 		LOG_INHERIT(base, self, "operator iternext");
 		self->tp_iter_next = base->tp_iter_next;
+		self->tp_iterator  = base->tp_iterator;
 		return true;
 	}
 	return false;
@@ -18018,47 +18290,56 @@ DEFINE_OPERATOR(DREF DeeObject *, IterNext, (DeeObject *RESTRICT_IF_NOTYPE self)
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_iter_next) ||
 	          unlikely(DeeType_InheritIterNext(tp_self)))
-		return DeeType_INVOKE_NEXT(tp_self, self);
+		return DeeType_INVOKE_ITERNEXT(tp_self, self);
 	err_unimplemented_operator(tp_self, OPERATOR_ITERNEXT);
 	return NULL;
 }
 
-#ifndef DEFINE_TYPED_OPERATORS
+/* Fast-pass for `DeeObject_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
+ * In the case of mapping iterators, these can be used to iterate only the
+ * key/value part of the map, without needing to construct a temporary tuple
+ * holding both values (as needs to be done by `DeeObject_IterNext'). */
+DEFINE_OPERATOR(int, IterNextPair, (DeeObject *RESTRICT_IF_NOTYPE self, /*out*/ DREF DeeObject *key_and_value[2])) {
+	LOAD_TP_SELF;
+	if likely(likely(tp_self->tp_iterator && tp_self->tp_iterator->tp_nextpair) ||
+	          unlikely(DeeType_InheritIterNext(tp_self)))
+		return DeeType_INVOKE_ITERNEXTPAIR(tp_self, self, key_and_value);
+	err_unimplemented_operator(tp_self, OPERATOR_ITERNEXT);
+	return -1;
+}
+
+DEFINE_OPERATOR(DREF DeeObject *, IterNextKey, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	if likely(likely(tp_self->tp_iterator && tp_self->tp_iterator->tp_nextkey) ||
+	          unlikely(DeeType_InheritIterNext(tp_self)))
+		return DeeType_INVOKE_ITERNEXTKEY(tp_self, self);
+	err_unimplemented_operator(tp_self, OPERATOR_ITERNEXT);
+	return NULL;
+}
+
+DEFINE_OPERATOR(DREF DeeObject *, IterNextValue, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	if likely(likely(tp_self->tp_iterator && tp_self->tp_iterator->tp_nextvalue) ||
+	          unlikely(DeeType_InheritIterNext(tp_self)))
+		return DeeType_INVOKE_ITERNEXTVALUE(tp_self, self);
+	err_unimplemented_operator(tp_self, OPERATOR_ITERNEXT);
+	return NULL;
+}
+
 /* Advance an iterator by "step" items.
  * @return: step:       Success.
  * @return: < step:     Success, but advancing was stopped prematurely because ITER_DONE
  *                      was encountered. Return value is the # of successfully skipped
  *                      entries before "ITER_DONE" was encountered.
  * @return: (size_t)-1: Error. */
-DEFINE_OPERATOR(size_t, IterAdvance, (DeeObject *__restrict self, size_t step)) {
-	size_t result = 0;
-	DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self);
+DEFINE_OPERATOR(size_t, IterAdvance, (DeeObject *RESTRICT_IF_NOTYPE self, size_t step)) {
 	LOAD_TP_SELF;
-	if unlikely(!step)
-		goto done;
-	if unlikely(!tp_self->tp_iter_next &&
-	            !DeeType_InheritIterNext(tp_self))
-		goto err_no_iter_next;
-	/* TODO: Type-specific optimizations */
-	tp_iter_next = tp_self->tp_iter_next;
-	do {
-		DREF DeeObject *elem = (*tp_iter_next)(self);
-		if unlikely(!ITER_ISOK(elem)) {
-			if unlikely(!elem)
-				goto err;
-			break; /* Premature stop. */
-		}
-		Dee_Decref(elem);
-		++result;
-	} while (result < step);
-done:
-	return result;
-err_no_iter_next:
+	if likely(likely(tp_self->tp_iterator && tp_self->tp_iterator->tp_advance) ||
+	          unlikely(DeeType_InheritIterNext(tp_self)))
+		return DeeType_INVOKE_ITERADVANCE(tp_self, self, step);
 	err_unimplemented_operator(tp_self, OPERATOR_ITERNEXT);
-err:
 	return (size_t)-1;
 }
-#endif /* !DEFINE_TYPED_OPERATORS */
 
 /* @return: (size_t)-1: Fast size cannot be determined */
 DEFINE_OPERATOR(size_t, SizeFast, (DeeObject *RESTRICT_IF_NOTYPE self)) {

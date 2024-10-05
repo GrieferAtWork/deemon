@@ -2717,6 +2717,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -4818,7 +4819,7 @@ type_callattr_tuple_kw(DeeTypeObject *self, /*String*/ DeeObject *name,
 }
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
-PRIVATE struct type_attr tpconst type_attr_data = {
+PRIVATE struct type_attr type_attr_data = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&type_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&type_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&type_setattr,
@@ -4900,6 +4901,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &type_attr_data,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

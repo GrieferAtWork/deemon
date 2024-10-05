@@ -1950,6 +1950,7 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ &imod_seq,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&imod_next,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

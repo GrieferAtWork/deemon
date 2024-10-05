@@ -305,7 +305,7 @@ PRIVATE struct type_seq shlib_seq = {
 	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_getitem
 };
 
-PRIVATE struct type_attr tpconst shlib_attr = {
+PRIVATE struct type_attr shlib_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&shlib_getattr,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))NULL,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))NULL,
@@ -383,6 +383,7 @@ INTERN DeeTypeObject DeeShlib_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ &shlib_seq,
 	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &shlib_attr,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

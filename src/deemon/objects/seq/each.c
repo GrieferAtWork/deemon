@@ -1149,7 +1149,7 @@ DEFINE_SEQ_EACH_BINARY(se_getattr, OPERATOR_GETATTR)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
 
-PRIVATE struct type_attr tpconst se_attr = {
+PRIVATE struct type_attr se_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&se_setattr,
@@ -1235,6 +1235,7 @@ INTERN DeeTypeObject SeqEach_Type = {
 	/* .tp_cmp           = */ &se_cmp,
 	/* .tp_seq           = */ &se_seq,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_iter_next,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &se_attr,
 	/* .tp_with          = */ &se_with,
 	/* .tp_buffer        = */ NULL,
@@ -2143,7 +2144,7 @@ done:
 DEFINE_SEW_BINARY(sew_getattr, OPERATOR_GETATTR)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
-PRIVATE struct type_attr tpconst seo_attr = {
+PRIVATE struct type_attr seo_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&seo_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&seo_setattr,
@@ -2454,6 +2455,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_cmp           = */ &sew_cmp,
 	/* .tp_seq           = */ &seo_seq,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iter_next,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &seo_attr,
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
@@ -2706,6 +2708,7 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 	/* .tp_cmp           = */ &sewi_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seoi_next,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

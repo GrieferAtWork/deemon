@@ -989,7 +989,7 @@ super_callattr_tuple_kw(Super *self, /*String*/ DeeObject *attr, DeeObject *args
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 
-PRIVATE struct type_attr tpconst super_attr = {
+PRIVATE struct type_attr super_attr = {
 	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_getattr,
 	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_delattr,
 	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&super_setattr,
@@ -1228,6 +1228,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_cmp           = */ &super_cmp,
 	/* .tp_seq           = */ &super_seq,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iternext,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ &super_attr,
 	/* .tp_with          = */ &super_with,
 	/* .tp_buffer        = */ &super_buffer,
