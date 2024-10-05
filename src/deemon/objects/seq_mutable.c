@@ -2979,8 +2979,7 @@ err_remove_argv:
 					Dee_Decref(remove_argv[2]);
 					if unlikely(!callback_result)
 						goto err_remove_argv;
-					error = DeeObject_Bool(callback_result);
-					Dee_Decref(callback_result);
+					error = DeeObject_BoolInherited(callback_result);
 					if (error <= 0) {
 						if unlikely(error < 0)
 							goto err_remove_argv;
@@ -3304,8 +3303,7 @@ DeeSeq_RemoveIf(DeeObject *self, size_t start,
 							callback_result = DeeObject_Call(should, 1, &item);
 							if unlikely(!callback_result)
 								goto err_item;
-							error = DeeObject_Bool(callback_result);
-							Dee_Decref(callback_result);
+							error = DeeObject_BoolInherited(callback_result);
 							Dee_Decref(item);
 							if (error != 0) {
 								if unlikely(error < 0)
@@ -3352,8 +3350,7 @@ err_remove_argv_wraper:
 					Dee_Decref(remove_argv[2]);
 					if unlikely(!callback_result)
 						goto err_remove_argv_wraper;
-					error = DeeObject_Bool(callback_result);
-					Dee_Decref(callback_result);
+					error = DeeObject_BoolInherited(callback_result);
 					if (error <= 0) {
 						if unlikely(error < 0)
 							goto err_remove_argv_wraper;
@@ -3397,8 +3394,7 @@ err_index_ob_del:
 						Dee_Decref(item);
 						goto err_index_ob_del;
 					}
-					error = DeeObject_Bool(callback_result);
-					Dee_Decref(callback_result);
+					error = DeeObject_BoolInherited(callback_result);
 					Dee_Decref(item);
 					if (error != 0) {
 						if unlikely(error < 0)
@@ -3446,8 +3442,7 @@ err_index_ob:
 						Dee_Decref(item);
 						goto err_index_ob;
 					}
-					error = DeeObject_Bool(callback_result);
-					Dee_Decref(callback_result);
+					error = DeeObject_BoolInherited(callback_result);
 					Dee_Decref(item);
 					if (error != 0) {
 						if unlikely(error < 0)
@@ -3494,8 +3489,7 @@ err_index_ob_delrange:
 						Dee_Decref(item);
 						goto err_index_ob_delrange;
 					}
-					error = DeeObject_Bool(callback_result);
-					Dee_Decref(callback_result);
+					error = DeeObject_BoolInherited(callback_result);
 					Dee_Decref(item);
 					if (error != 0) {
 						DREF DeeObject *index_plus1_ob;

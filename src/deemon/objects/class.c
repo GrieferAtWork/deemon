@@ -3929,8 +3929,7 @@ instance_builtin_teq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpEq(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (!temp)
@@ -3959,8 +3958,7 @@ instance_builtin_tne(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpNe(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (!temp)
@@ -3990,8 +3988,7 @@ instance_builtin_tlo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpLo(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (temp)
@@ -3999,8 +3996,7 @@ instance_builtin_tlo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpEq(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (!temp)
@@ -4030,8 +4026,7 @@ instance_builtin_tle(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpLo(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (temp)
@@ -4039,8 +4034,7 @@ instance_builtin_tle(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpEq(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (!temp)
@@ -4070,8 +4064,7 @@ instance_builtin_tgr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpGr(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (temp)
@@ -4079,8 +4072,7 @@ instance_builtin_tgr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpEq(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (!temp)
@@ -4110,8 +4102,7 @@ instance_builtin_tge(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpGr(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (temp)
@@ -4119,8 +4110,7 @@ instance_builtin_tge(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) 
 		result = DeeObject_TCmpEq(DeeType_Base(tp_self), self, other);
 		if unlikely(!result)
 			goto err;
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (!temp)

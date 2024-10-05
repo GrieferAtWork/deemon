@@ -152,8 +152,7 @@ catiterator_bool(CatIterator *__restrict self) {
 	CatIterator_LockEndRead(self);
 
 	/* Check if the current iterator has remaining elements. */
-	result = DeeObject_Bool(curr);
-	Dee_Decref(curr);
+	result = DeeObject_BoolInherited(curr);
 	if (result != 0)
 		goto done;
 	iterpos = atomic_read(&self->cti_pseq);
@@ -485,13 +484,12 @@ cat_contains(Cat *self, DeeObject *search_item) {
 		result = DeeObject_Contains(DeeTuple_GET(self, i), search_item);
 		if unlikely(!result)
 			goto err;
-		error = DeeObject_Bool(result);
+		error = DeeObject_BoolInherited(result);
 		if (error != 0) {
 			if unlikely(error < 0)
-				Dee_Clear(result);
-			return result;
+				goto err;
+			return_true;
 		}
-		Dee_Decref(result);
 	}
 	return_false;
 err:

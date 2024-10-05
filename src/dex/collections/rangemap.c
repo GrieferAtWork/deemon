@@ -1185,8 +1185,7 @@ proxy_asmap_nsi_updateold(RangeMapProxy *self, DeeObject *key,
 	Dee_Decref(val);
 	if unlikely(ok)
 		goto err;
-	ok = DeeObject_Bool(ok_and_oldvalue[0]);
-	Dee_Decref(ok_and_oldvalue[0]);
+	ok = DeeObject_BoolInherited(ok_and_oldvalue[0]);
 	if (ok > 0 && p_oldvalue) {
 		*p_oldvalue = ok_and_oldvalue[1]; /* Inherit reference */
 	} else {
@@ -1212,8 +1211,7 @@ proxy_asmap_nsi_insertnew(RangeMapProxy *self, DeeObject *key,
 	Dee_Decref(val);
 	if unlikely(ok)
 		goto err;
-	ok = DeeObject_Bool(ok_and_oldvalue[0]);
-	Dee_Decref(ok_and_oldvalue[0]);
+	ok = DeeObject_BoolInherited(ok_and_oldvalue[0]);
 	if (ok == 0 && p_oldvalue) {
 		*p_oldvalue = ok_and_oldvalue[1]; /* Inherit reference */
 		ok = 1;

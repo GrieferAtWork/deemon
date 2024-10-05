@@ -204,6 +204,7 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_Str, 4);
 	CASE(DeeObject_Repr, 4);
 	CASE(DeeObject_Bool, 4);
+	CASE(DeeObject_BoolInherited, 4);
 	CASE(DeeObject_IterNext, 4);
 	CASE(DeeObject_Call, 12);
 	CASE(DeeObject_CallKw, 16);

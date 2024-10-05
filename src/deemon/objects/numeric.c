@@ -552,14 +552,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeObject_IsFloat(DeeObject *__restrict self) {
-	int result = -1;
 	DREF DeeObject *attr;
 	attr = DeeObject_GetAttr(self, (DeeObject *)&str_isfloat);
-	if likely(attr) {
-		result = DeeObject_Bool(attr);
-		Dee_Decref(attr);
-	}
-	return result;
+	if unlikely(!attr)
+		goto err;
+	return DeeObject_BoolInherited(attr);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

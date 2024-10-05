@@ -1939,8 +1939,7 @@ default_seq_trygetfirst(DeeObject *self) {
 		sizeob = (*tp_self->tp_seq->tp_sizeob)(self);
 		if unlikely(sizeob == NULL)
 			goto err;
-		temp = DeeObject_Bool(sizeob);
-		Dee_Decref(sizeob);
+		temp = DeeObject_BoolInherited(sizeob);
 		if unlikely(temp < 0)
 			goto err;
 		if (!temp)

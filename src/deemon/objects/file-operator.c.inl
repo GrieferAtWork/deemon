@@ -634,8 +634,7 @@ do_handle_filetype:
 		Dee_DecrefNokill(result_ob);
 		return ch;
 	}
-	temp = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
+	temp = DeeObject_BoolInherited(result_ob);
 	if unlikely(temp < 0)
 		goto err;
 	return temp ? ch : GETC_EOF;
@@ -712,8 +711,7 @@ do_handle_filetype:
 		Dee_DecrefNokill(result_ob);
 		return ch;
 	}
-	temp = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
+	temp = DeeObject_BoolInherited(result_ob);
 	if unlikely(temp < 0)
 		goto err;
 	return temp ? ch : GETC_EOF;
@@ -790,8 +788,7 @@ do_handle_filetype:
 		Dee_DecrefNokill(result_ob);
 		return ch;
 	}
-	temp = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
+	temp = DeeObject_BoolInherited(result_ob);
 	if unlikely(temp < 0)
 		goto err;
 	return temp ? ch : GETC_EOF;

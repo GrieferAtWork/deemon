@@ -495,15 +495,12 @@ DeeFile_PWriteAll(DeeObject *self,
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_IsAtty(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
-	int result;
 
 	/* Very simply: Just lookup the `isatty' property. */
 	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_isatty);
 	if unlikely(!result_ob)
 		goto err_call;
-	result = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
-	return result;
+	return DeeObject_BoolInherited(result_ob);
 err_call:
 	/* Check if we can handle attribute/not-implement errors that
 	 * could be interpreted as indicative of this not being a tty.

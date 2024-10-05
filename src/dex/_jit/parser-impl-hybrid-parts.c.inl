@@ -598,8 +598,7 @@ do_normal_for_noinit:
 				if unlikely(!result)
 					goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
 				/* Perform the initial condition check. */
-				temp = DeeObject_Bool(result);
-				Dee_Decref(result);
+				temp = DeeObject_BoolInherited(result);
 				if unlikely(temp < 0)
 					goto err;
 				if (self->jl_tok == ';') {
@@ -689,8 +688,7 @@ do_continue_normal_forloop:
 					result = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
 					if unlikely(!result)
 						goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
-					temp = DeeObject_Bool(result);
-					Dee_Decref(result);
+					temp = DeeObject_BoolInherited(result);
 					if unlikely(temp < 0)
 						goto err_scope;
 					if (!temp) {
@@ -921,8 +919,7 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 			Dee_Decref(result);
 			goto err_scope;
 		}
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err_scope;
 		if (!temp) {
@@ -965,8 +962,7 @@ do_check_while_condition:
 		result = JITLexer_EvalRValue(self);
 		if unlikely(!result)
 			goto err_scope; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err_scope;
 		if (temp) {
@@ -1098,8 +1094,7 @@ continue_with_loop_cond:
 		result = JITLexer_EvalRValue(self);
 		if unlikely(!result)
 			goto err; /* XXX: Doesn't the real compiler allow `break/continue' in the cond-expression? */
-		temp = DeeObject_Bool(result);
-		Dee_Decref(result);
+		temp = DeeObject_BoolInherited(result);
 		if unlikely(temp < 0)
 			goto err;
 		if (temp) {

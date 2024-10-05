@@ -536,8 +536,7 @@ range_contains(Range *self, DeeObject *index) {
 			Dee_Decref(temp);
 			if unlikely(!temp2)
 				goto err;
-			error = DeeObject_Bool(temp2);
-			Dee_Decref(temp2);
+			error = DeeObject_BoolInherited(temp2);
 
 			/* >> if ((index - self->r_start) % self->r_step)
 			 * >>     return false; */
@@ -573,8 +572,7 @@ range_contains(Range *self, DeeObject *index) {
 		Dee_Decref(temp);
 		if unlikely(!temp2)
 			goto err;
-		error = DeeObject_Bool(temp2);
-		Dee_Decref(temp2);
+		error = DeeObject_BoolInherited(temp2);
 
 		/* >> if ((self->r_start - index) % -self->r_step)
 		 * >>     return false; */

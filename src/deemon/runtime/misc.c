@@ -2181,6 +2181,7 @@ PUBLIC ATTR_CONST WUNUSED size_t
 		                 "elem_size  = %#" PRFxSIZ_FULLWIDTH " (%" PRFuSIZ ")",
 		                 elem_count, elem_count,
 		                 elem_size, elem_size);
+		Dee_BREAKPOINT();
 		return (size_t)-1;
 	}
 	return result;
@@ -2199,6 +2200,7 @@ PUBLIC ATTR_CONST WUNUSED size_t
 		                 elem_count, elem_count,
 		                 elem_size, elem_size,
 		                 base_offset, base_offset);
+		Dee_BREAKPOINT();
 		return (size_t)-1;
 	}
 	if (OVERFLOW_UADD(result, base_offset, &result)) {
@@ -2211,6 +2213,7 @@ PUBLIC ATTR_CONST WUNUSED size_t
 		                 base_offset, base_offset, result, result,
 		                 elem_count, elem_count,
 		                 elem_size, elem_size);
+		Dee_BREAKPOINT();
 		return (size_t)-1;
 	}
 	return result;

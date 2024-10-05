@@ -740,8 +740,7 @@ again:
 		Dee_Decref(this_elem);
 		if unlikely(!callback_result)
 			goto err;
-		temp = DeeObject_Bool(callback_result);
-		Dee_Decref(callback_result);
+		temp = DeeObject_BoolInherited(callback_result);
 		if unlikely(temp < 0)
 			goto err;
 		if (temp) {

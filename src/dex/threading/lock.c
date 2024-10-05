@@ -475,7 +475,7 @@ lock_do_acquire(DeeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_release(DeeObject *__restrict self) {
-	DeeObject *result;
+	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_release, 0, NULL);
 	Dee_XDecref(result);
 	return likely(result) ? 0 : -1;
@@ -483,14 +483,11 @@ lock_do_release(DeeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_tryacquire(DeeObject *__restrict self) {
-	int result;
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_tryacquire, 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
-	result = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
-	return result;
+	return DeeObject_BoolInherited(result_ob);
 err:
 	return -1;
 }
@@ -565,14 +562,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_is_acquired(DeeObject *__restrict self) {
-	int result;
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_acquired);
 	if unlikely(!result_ob)
 		goto err;
-	result = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
-	return result;
+	return DeeObject_BoolInherited(result_ob);
 err:
 	return -1;
 }
@@ -740,49 +734,40 @@ INTERN DeeTypeObject DeeLock_Type = {
 #define rwlock_ctor lock_ctor
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_tryread(DeeObject *self) {
-	int result;
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_tryread, 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
-	result = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
-	return result;
+	return DeeObject_BoolInherited(result_ob);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_trywrite(DeeObject *self) {
-	int result;
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_trywrite, 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
-	result = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
-	return result;
+	return DeeObject_BoolInherited(result_ob);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_tryupgrade(DeeObject *self) {
-	int result;
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_tryupgrade, 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
-	result = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
-	return result;
+	return DeeObject_BoolInherited(result_ob);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_endread(DeeObject *self) {
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_endread, 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
@@ -794,7 +779,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_endwrite(DeeObject *self) {
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_CallAttr(self, (DeeObject *)&str_endwrite, 0, NULL);
 	if unlikely(!result_ob)
 		goto err;
@@ -806,28 +791,22 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_reading(DeeObject *self) {
-	int result;
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_reading);
 	if unlikely(!result_ob)
 		goto err;
-	result = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
-	return result;
+	return DeeObject_BoolInherited(result_ob);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_writing(DeeObject *self) {
-	int result;
-	DeeObject *result_ob;
+	DREF DeeObject *result_ob;
 	result_ob = DeeObject_GetAttr(self, (DeeObject *)&str_writing);
 	if unlikely(!result_ob)
 		goto err;
-	result = DeeObject_Bool(result_ob);
-	Dee_Decref(result_ob);
-	return result;
+	return DeeObject_BoolInherited(result_ob);
 err:
 	return -1;
 }
@@ -2503,8 +2482,7 @@ lock_union_do_available_or_acquired(LockUnion *__restrict self,
 		result = DeeObject_GetAttr(self->lu_elem[start_index], attr_name);
 		if unlikely(!result)
 			goto err;
-		status = DeeObject_Bool(result);
-		Dee_Decref(result);
+		status = DeeObject_BoolInherited(result);
 		if unlikely(status < 0)
 			goto err;
 		if (!status)
@@ -2524,8 +2502,7 @@ lock_do_timedacquire(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
 	                             PCKu64, timeout_nanoseconds);
 	if unlikely(result == NULL)
 		goto err;
-	status = DeeObject_Bool(result);
-	Dee_Decref(result);
+	status = DeeObject_BoolInherited(result);
 	if unlikely(status >= 0)
 		status = status ? 0 : 1;
 	return status;
@@ -2541,8 +2518,7 @@ lock_do_timedwaitfor(DeeObject *__restrict self, uint64_t timeout_nanoseconds) {
 	                             PCKu64, timeout_nanoseconds);
 	if unlikely(result == NULL)
 		goto err;
-	status = DeeObject_Bool(result);
-	Dee_Decref(result);
+	status = DeeObject_BoolInherited(result);
 	if unlikely(status >= 0)
 		status = status ? 0 : 1;
 	return status;

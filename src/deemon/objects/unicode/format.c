@@ -574,7 +574,7 @@ parse_second_argument:
 		goto next_suffix;
 	}	break;
 
-		case '?': {
+	case '?': {
 		DREF DeeObject *tt, *ff;
 		int is_true;
 		/* Conditional expression:

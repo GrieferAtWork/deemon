@@ -467,8 +467,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			value = JITLexer_EvalRValue(&self->ji_lex);
 			if unlikely(!value)
 				goto err;
-			temp = DeeObject_Bool(value);
-			Dee_Decref(value);
+			temp = DeeObject_BoolInherited(value);
 			if unlikely(temp < 0)
 				goto err;
 			if (!temp) {
@@ -505,8 +504,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 		if unlikely(!value)
 			goto err;
 		/* Check if loop iteration should continue. */
-		temp = DeeObject_Bool(value);
-		Dee_Decref(value);
+		temp = DeeObject_BoolInherited(value);
 		if unlikely(temp < 0)
 			goto err;
 		if (!temp) {
@@ -549,8 +547,7 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 			if unlikely(!value)
 				goto err;
 			/* Check if loop iteration should continue. */
-			temp = DeeObject_Bool(value);
-			Dee_Decref(value);
+			temp = DeeObject_BoolInherited(value);
 			if unlikely(temp < 0)
 				goto err;
 			if (!temp) {
@@ -758,8 +755,7 @@ do_break_dowhile_loop:
 					value = JITLexer_EvalRValue(&self->ji_lex);
 					if unlikely(!value)
 						goto err;
-					temp = DeeObject_Bool(value);
-					Dee_Decref(value);
+					temp = DeeObject_BoolInherited(value);
 					if unlikely(temp < 0)
 						goto err;
 					if (!temp)
@@ -784,8 +780,7 @@ do_break_dowhile_loop:
 					value = JITLexer_EvalRValueDecl(&self->ji_lex);
 					if unlikely(!value)
 						goto err;
-					temp = DeeObject_Bool(value);
-					Dee_Decref(value);
+					temp = DeeObject_BoolInherited(value);
 					if unlikely(temp < 0)
 						goto err;
 					if (!temp) {
@@ -825,8 +820,7 @@ do_break_dowhile_loop:
 						value = JITLexer_EvalRValue(&self->ji_lex);
 						if unlikely(!value)
 							goto err;
-						temp = DeeObject_Bool(value);
-						Dee_Decref(value);
+						temp = DeeObject_BoolInherited(value);
 						if unlikely(temp < 0)
 							goto err;
 						if (!temp) {
@@ -1027,8 +1021,7 @@ parse_again_same_statement:
 				value = JITLexer_EvalRValueDecl(&self->ji_lex);
 				if unlikely(!value)
 					goto err_scope;
-				temp = DeeObject_Bool(value);
-				Dee_Decref(value);
+				temp = DeeObject_BoolInherited(value);
 				if unlikely(temp < 0)
 					goto err_scope;
 				if likely(self->ji_lex.jl_tok == ')') {
@@ -1238,8 +1231,7 @@ do_normal_for_noinit:
 						value      = JITLexer_EvalRValue(&self->ji_lex);
 						if unlikely(!value)
 							goto err_scope;
-						temp = DeeObject_Bool(value);
-						Dee_Decref(value);
+						temp = DeeObject_BoolInherited(value);
 						if unlikely(temp < 0)
 							goto err_scope;
 						if (self->ji_lex.jl_tok == ';') {
@@ -1382,8 +1374,7 @@ err_obj_scope:
 					syn_while_expected_rparen_after_while(&self->ji_lex);
 					goto err_scope;
 				}
-				temp = DeeObject_Bool(value);
-				Dee_Decref(value);
+				temp = DeeObject_BoolInherited(value);
 				if unlikely(temp < 0)
 					goto err_scope;
 				if (!temp) {

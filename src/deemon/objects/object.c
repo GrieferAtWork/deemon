@@ -3869,8 +3869,7 @@ type_is_ctypes_class(DeeTypeObject *__restrict self,
 	temp = DeeObject_GetAttrString((DeeObject *)self, "isstructured");
 	if unlikely(!temp)
 		goto err;
-	error = DeeObject_Bool(temp);
-	Dee_Decref(temp);
+	error = DeeObject_BoolInherited(temp);
 	if unlikely(error < 0)
 		goto err;
 	if (!error)
@@ -3878,8 +3877,7 @@ type_is_ctypes_class(DeeTypeObject *__restrict self,
 	temp = DeeObject_GetAttrString((DeeObject *)self, name);
 	if unlikely(!temp)
 		goto err;
-	error = DeeObject_Bool(temp);
-	Dee_Decref(temp);
+	error = DeeObject_BoolInherited(temp);
 	if unlikely(error < 0)
 		goto err;
 	if (error)

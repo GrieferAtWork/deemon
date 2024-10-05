@@ -1300,8 +1300,7 @@ again_elem:
 			Dee_Decref(elem);
 			if unlikely(!bshould)
 				goto err;
-			error = DeeObject_Bool(bshould);
-			Dee_Decref(bshould);
+			error = DeeObject_BoolInherited(bshould);
 			if unlikely(error < 0)
 				goto err;
 			if (error) {
