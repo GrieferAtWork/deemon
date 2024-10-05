@@ -60,6 +60,21 @@ none_4(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+none_5(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e)) {
+	return_none;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+none_6(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e), void *UNUSED(f)) {
+	return_none;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+none_7(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e), void *UNUSED(f), void *UNUSED(g)) {
+	return_none;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_call0(size_t UNUSED(b), void *UNUSED(c)) {
 	return_none;
 }
@@ -112,6 +127,11 @@ none_i4_1(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
 
 INTERN int DCALL
 none_i5(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e)) {
+	return 0;
+}
+
+INTERN int DCALL
+none_i6(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e), void *UNUSED(f)) {
 	return 0;
 }
 
@@ -379,11 +399,36 @@ PRIVATE struct type_seq none_seq = {
 };
 
 PRIVATE struct type_attr none_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_2,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_i2,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&none_i3,
-	/* .tp_enumattr = */ &none_enumattr,
-	/* TODO: Also define all of the string-based accessors! */
+	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_2,
+	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_i2,
+	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&none_i3,
+	/* .tp_enumattr                      = */ &none_enumattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct Dee_attribute_info *__restrict, struct Dee_attribute_lookup_rules const *__restrict))&none_i4_1,
+	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_i2_1,
+	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&none_i2_1,
+	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *, size_t, DeeObject *const *))&none_4,
+	/* .tp_callattr_kw                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *, size_t, DeeObject *const *, DeeObject *))&none_5,
+	/* .tp_vcallattrf                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *, char const *, va_list))&none_4,
+	/* .tp_getattr_string_hash           = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_3,
+	/* .tp_delattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_i3,
+	/* .tp_setattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&none_i4,
+	/* .tp_hasattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_i3_1,
+	/* .tp_boundattr_string_hash         = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_i3_1,
+	/* .tp_callattr_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *))&none_5,
+	/* .tp_callattr_string_hash_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&none_6,
+	/* .tp_vcallattr_string_hashf        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, char const *, va_list))&none_5,
+	/* .tp_getattr_string_len_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_4,
+	/* .tp_delattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4,
+	/* .tp_setattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&none_i5,
+	/* .tp_hasattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4_1,
+	/* .tp_boundattr_string_len_hash     = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4_1,
+	/* .tp_callattr_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *))&none_6,
+	/* .tp_callattr_string_len_hash_kw   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&none_7,
+	/* .tp_findattr_info_string_len_hash = */ (bool (DCALL *)(DeeTypeObject *, DeeObject *, char const *__restrict, size_t, Dee_hash_t, struct Dee_attrinfo *__restrict))&none_i6,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_callattr_tuple                = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&none_3,
+	/* .tp_callattr_tuple_kw             = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *, DeeObject *))&none_4,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
 PRIVATE struct type_with none_with = {
