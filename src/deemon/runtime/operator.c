@@ -14237,16 +14237,16 @@ err:
 #endif /* DEFINE_TYPED_OPERATORS */
 
 
-INTDEF WUNUSED_T NONNULL_T((2)) Dee_ssize_t DCALL
+INTDEF WUNUSED_T Dee_ssize_t DCALL
 default_unpack_ub_with_size_and_enumerate_index_cb(void *arg, size_t index,
                                                    /*nullable*/ DeeObject *value);
 #ifndef DEFINE_TYPED_OPERATORS
-INTERN WUNUSED_T NONNULL_T((2)) Dee_ssize_t DCALL
+INTERN WUNUSED_T Dee_ssize_t DCALL
 default_unpack_ub_with_size_and_enumerate_index_cb(void *arg, size_t index,
                                                    /*nullable*/ DeeObject *value) {
 	DREF DeeObject **dst = (DREF DeeObject **)arg;
 	dst[index] = value;
-	Dee_Incref(value);
+	Dee_XIncref(value);
 	return 0;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
