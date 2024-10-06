@@ -148,53 +148,6 @@ DeeFastSeq_GetItemUnbound_deprecated(DeeObject *__restrict self, size_t index) {
 
 
 
-/* An alternative (and more restrictive) variant of the FastSeq-interface:
- *  - Semantically, these functions are used the same way as the regular interface
- *  - Unlike the functions above, these are guarantied to be non-blocking
- *    -> However, an atomic lock doesn't count as something that would block,
- *       yet because this means that `DeeFastSeq_GetItemNB_deprecated()' can never throw
- *       an exception, it also means that any sequence who's size could change
- *       at any time (such as `List') cannot be used here.
- * The following types function as fast-sequence-compatible-nb:
- *  - Tuple
- *  - _SharedVector   (If the sequence is cleared while being used here, `none' will be returned)
- *  - _SeqSubRange    (Only if the sub-ranged sequence is a fast-sequence-nb) */
-PUBLIC WUNUSED NONNULL((1)) size_t DCALL
-DeeFastSeq_GetSizeNB_deprecated(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
-	if (tp_self == &DeeTuple_Type)
-		return DeeTuple_SIZE(self);
-	if (tp_self == &DeeSharedVector_Type)
-		return ((SharedVector *)self)->sv_length;
-	return DEE_FASTSEQ_NOTFAST_DEPRECATED;
-}
-
-PUBLIC ATTR_RETNONNULL DREF DeeObject *DCALL
-DeeFastSeq_GetItemNB_deprecated(DeeObject *__restrict self, size_t index) {
-	DeeTypeObject *tp_self;
-	DREF DeeObject *result;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
-	if (tp_self == &DeeTuple_Type) {
-		result = DeeTuple_GET(self, index);
-		return_reference_(result);
-	}
-	ASSERT(tp_self == &DeeSharedVector_Type);
-	SharedVector_LockRead((SharedVector *)self);
-	if unlikely(index >= ((SharedVector *)self)->sv_length) {
-		SharedVector_LockEndRead((SharedVector *)self);
-		return_none;
-	}
-	result = ((SharedVector *)self)->sv_vector[index];
-	Dee_Incref(result);
-	SharedVector_LockEndRead((SharedVector *)self);
-	return result;
-}
-
-
-
 /* Try to load index-based fast sequence controls for "seq".
  * @return: true:  Success. You may use other `DeeFastSeq_*' to access sequence elements.
  * @return: false: Failure. Given `seq' does not implement `tp_getitem_index_fast' */

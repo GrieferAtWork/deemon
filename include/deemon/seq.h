@@ -706,22 +706,6 @@ DeeFastSeq_GetItem_deprecated(DeeObject *__restrict self, size_t index); /* Depr
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFastSeq_GetItemUnbound_deprecated(DeeObject *__restrict self, size_t index); /* Deprecated */
 
-/* An alternative (and more restrictive) variant of the FastSeq-interface:
- *  - Semantically, these functions are used the same way as the regular interface
- *  - Unlike the functions above, these are guarantied to be non-blocking
- *    -> However, an atomic lock doesn't count as something that would block,
- *       yet because this means that `DeeFastSeq_GetItemNB_deprecated()' can never throw
- *       an exception, it also means that any sequence who's size could change
- *       at any time (such as `List') cannot be used here.
- * The following types function as fast-sequence-compatible-nb:
- *  - Tuple
- *  - _SharedVector   (If the sequence is cleared while being used here, `none' will be returned)
- *  - _SeqSubRange    (Only if the sub-ranged sequence is a fast-sequence-nb) */
-DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
-DeeFastSeq_GetSizeNB_deprecated(DeeObject *__restrict self); /* Deprecated */
-DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL
-DeeFastSeq_GetItemNB_deprecated(DeeObject *__restrict self, size_t index); /* Deprecated */
-
 
 
 

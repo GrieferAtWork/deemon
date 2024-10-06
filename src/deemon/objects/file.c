@@ -1013,113 +1013,54 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeFile_PrintAll)(DeeObject *self,
-                         DeeObject *ob) {
+struct file_printall_foreach_data {
+	DeeObject *fpafd_file;  /* [1..1] The file to print into. */
+	bool       fpafd_first; /* True if this is the first element. */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+file_printall_foreach_cb(void *arg, DeeObject *elem) {
 	int result;
-	DREF DeeObject *elem;
-	bool is_first    = true;
-	size_t fast_size = DeeFastSeq_GetSize_deprecated(ob);
-	/* Optimization for fast-sequence objects. */
-	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		size_t i;
-		for (i = 0; i < fast_size; ++i) {
-			if (i != 0) {
-				result = print_sp(self);
-				if unlikely(result)
-					goto err;
-			}
-			elem = DeeFastSeq_GetItem_deprecated(ob, i);
-			if unlikely(!elem)
-				goto err_m1;
-			result = DeeFile_PrintObject(self, elem);
-			Dee_Decref(elem);
-			if unlikely(result)
-				goto err;
-		}
-		return 0;
-	}
-	if unlikely((ob = DeeObject_Iter(ob)) == NULL)
-		goto err_m1;
-	while (ITER_ISOK(elem = DeeObject_IterNext(ob))) {
-		if (!is_first) {
-			result = print_sp(self);
-			if unlikely(result)
-				goto err_elem;
-		}
-		result = DeeFile_PrintObject(self, elem);
+	struct file_printall_foreach_data *data;
+	data = (struct file_printall_foreach_data *)arg;
+	if (!data->fpafd_first) {
+		result = print_sp(data->fpafd_file);
 		if unlikely(result)
-			goto err_elem;
-		Dee_Decref(elem);
-		is_first = false;
-		if (DeeThread_CheckInterrupt())
-			goto err_ob;
+			return result;
 	}
-	Dee_Decref(ob);
-	if unlikely(!elem)
-		goto err_m1;
-	return 0;
-err_elem:
-	Dee_Decref(elem);
-err_ob:
-	Dee_Decref(ob);
-err:
-	return result;
-err_m1:
-	result = -1;
-	goto err;
+	data->fpafd_first = false;
+	return DeeFile_PrintObject(data->fpafd_file, elem);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeFile_PrintAllSp)(DeeObject *self,
-                           DeeObject *ob) {
-	int result;
-	DREF DeeObject *elem;
-	size_t fast_size = DeeFastSeq_GetSize_deprecated(ob);
-	/* Optimization for fast-sequence objects. */
-	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		size_t i;
-		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem_deprecated(ob, i);
-			if unlikely(!elem)
-				goto err;
-			result = DeeFile_PrintObjectSp(self, elem);
-			Dee_Decref(elem);
-			if unlikely(result)
-				goto err;
-		}
-		return 0;
-	}
-	if unlikely((ob = DeeObject_Iter(ob)) == NULL)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(ob))) {
-		result = DeeFile_PrintObjectSp(self, elem);
-		Dee_Decref(elem);
-		if unlikely(result) {
-			Dee_Decref(ob);
-			return result;
-		}
-		if (DeeThread_CheckInterrupt())
-			goto err_ob;
-	}
-	if unlikely(!elem)
-		goto err_ob;
-	Dee_Decref(ob);
-	return 0;
-err_ob:
-	Dee_Decref(ob);
-err:
-	return -1;
+(DCALL DeeFile_PrintAll)(DeeObject *self, DeeObject *ob) {
+	struct file_printall_foreach_data data;
+	data.fpafd_file  = self;
+	data.fpafd_first = true;
+	return (int)DeeObject_Foreach(ob, &file_printall_foreach_cb, &data);
+}
+
+#if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+#define file_printall_sp_foreach_cb (*(Dee_foreach_t)&DeeFile_PrintObjectSp)
+#else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+file_printall_sp_foreach_cb(void *arg, DeeObject *elem) {
+	return (Dee_ssize_t)DeeFile_PrintObjectSp((DeeObject *)arg, elem);
+}
+#endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintAllSp)(DeeObject *self, DeeObject *ob) {
+	return (int)DeeObject_Foreach(ob, &file_printall_sp_foreach_cb, self);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeFile_PrintAllNl)(DeeObject *self,
                            DeeObject *ob) {
-	if unlikely(DeeFile_PrintAll(self, ob))
-		goto err;
-	return DeeFile_PrintNl(self);
-err:
-	return -1;
+	int result = DeeFile_PrintAll(self, ob);
+	if likely(result == 0)
+		result = DeeFile_PrintNl(self);
+	return result;
 }
 
 

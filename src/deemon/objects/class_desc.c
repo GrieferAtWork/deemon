@@ -1774,7 +1774,7 @@ err:
 
 
 /* NOTE: This function only initializes `ca_doc', `ca_addr' and `ca_flag' */
-LOCAL int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 class_attribute_init(struct class_attribute *__restrict self,
                      DeeObject *__restrict data,
                      bool is_class_attribute) {

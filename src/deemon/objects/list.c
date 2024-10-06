@@ -451,21 +451,24 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeList_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self,
                         DeeObject *sequence) {
 	DREF DeeObject *result;
-	size_t fast_seqlen;
 	if (!DeeObject_IsShared(self)) {
 		/* Simple case: can append onto the original list. */
 		if unlikely(DeeList_AppendSequence(self, sequence))
 			goto err;
 		return self;
 	}
-	fast_seqlen = DeeFastSeq_GetSize_deprecated(sequence);
-	if (fast_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		/* TODO: Special optimization. */
-	}
 
-	/* Fallback: Copy the list and append an iterator. */
+	/* Fallback: Copy the list and append. */
+	/* XXX: We can do better here: by combining `DeeList_SIZE_ATOMIC(self)' and
+	 *      `DeeObject_SizeFast(sequence)', we can get a snapshot of what the final
+	 *      list's length will be, which can then safe us one realloc() that's
+	 *      needed in `DeeList_AppendSequence()' at the moment to resize the list
+	 *      before appending "sequence".
+	 * This doesn't even need to be complicated; we can just use the prealloc
+	 * mechanism and have `DeeList_Copy()' prealloc sufficient space for at least
+	 * `DeeObject_SizeFast(sequence)' trailing objects. */
 	result = DeeList_Copy(self);
-	Dee_Decref(self);
+	Dee_Decref_unlikely(self);
 	if unlikely(!result)
 		goto err;
 	if unlikely(DeeList_AppendSequence(result, sequence))

@@ -577,6 +577,8 @@ list_size_changed:
 		goto done;
 	}
 
+	/* TODO: Use DeeObject_Foreach(), with DeeObject_SizeFast() as hint. */
+
 	/* Optimization for fast-sequence compatible objects. */
 	seq_length = DeeFastSeq_GetSize_deprecated(self);
 	if (seq_length != DEE_FASTSEQ_NOTFAST_DEPRECATED) {

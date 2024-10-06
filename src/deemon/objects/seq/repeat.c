@@ -484,12 +484,12 @@ repeat_size(Repeat *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeat_size_fast(Repeat *__restrict self) {
-	size_t base_size;
-	size_t result;
-	base_size = DeeFastSeq_GetSize_deprecated(self->rp_seq);
-	if unlikely(base_size == (size_t)-1)
+	size_t result = DeeObject_SizeFast(self->rp_seq);
+#if 0 /* Not needed -> implicitly done by OVERFLOW_UMUL() below */
+	if (result == (size_t)-1)
 		return (size_t)-1;
-	if (OVERFLOW_UMUL(base_size, self->rp_num, &result))
+#endif
+	if (OVERFLOW_UMUL(result, self->rp_num, &result))
 		result = (size_t)-1;
 	return result;
 }
@@ -1172,7 +1172,7 @@ INTERN DeeTypeObject SeqItemRepeat_Type = {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Repeat(DeeObject *__restrict self, size_t count) {
 	DREF Repeat *result;
-	if (!count || DeeFastSeq_GetSize_deprecated(self) == 0)
+	if (!count || DeeObject_SizeFast(self) == 0)
 		return_reference_(Dee_EmptySeq);
 	result = DeeObject_MALLOC(Repeat);
 	if unlikely(!result)

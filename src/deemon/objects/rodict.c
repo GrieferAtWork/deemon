@@ -401,8 +401,8 @@ DeeRoDict_FromSequence(DeeObject *__restrict sequence) {
 
 	/* Construct a read-only RoDict from a generic sequence. */
 	mask        = RODICT_INITIAL_MASK;
-	length_hint = DeeFastSeq_GetSize_deprecated(sequence);
-	if (length_hint != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
+	length_hint = DeeObject_SizeFast(sequence);
+	if (length_hint != (size_t)-1) {
 		while (mask <= length_hint)
 			mask = (mask << 1) | 1;
 		mask = (mask << 1) | 1;

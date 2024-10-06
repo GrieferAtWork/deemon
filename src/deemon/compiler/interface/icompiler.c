@@ -786,34 +786,11 @@ unpack_catch_expressions(DeeObject *__restrict handlers,
                          size_t *__restrict p_catch_c,
                          DeeBaseScopeObject *__restrict base_scope) {
 	struct catch_expr *catch_v;
-	size_t catch_c, catch_a, i;
-	int error;
+	size_t catch_c, catch_a;
 	DREF DeeObject *iterator, *elem;
-	catch_c = DeeFastSeq_GetSize_deprecated(handlers);
-	/* Make use of fast-sequence optimizations. */
-	if (catch_c != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		catch_v = (struct catch_expr *)Dee_Mallocc(catch_c, sizeof(struct catch_expr));
-		if unlikely(!catch_v)
-			goto done;
-		for (i = 0; i < catch_c; ++i) {
-			elem = DeeFastSeq_GetItem_deprecated(handlers, i);
-			if unlikely(!elem)
-				goto err_fast;
-			error = unpack_catch_expression(elem, &catch_v[i], base_scope);
-			Dee_Decref(elem);
-			if unlikely(error)
-				goto err_fast;
-		}
-		goto done;
-err_fast:
-		while (i--) {
-			ast_xdecref(catch_v[i].ce_mask);
-			ast_decref(catch_v[i].ce_code);
-		}
-		Dee_Free(catch_v);
-		catch_v = NULL;
-		goto done;
-	}
+
+	/* TODO: use DeeObject_Foreach() */
+
 	/* Use an iterator. */
 	catch_v = NULL;
 	catch_c = catch_a = 0;
@@ -846,6 +823,7 @@ err_fast:
 	Dee_Decref(iterator);
 	if unlikely(!elem)
 		goto err_catch;
+
 	/* Release unused memory. */
 	if (catch_c != catch_a) {
 		struct catch_expr *new_catch_v;
@@ -861,8 +839,13 @@ err_catch_elem:
 	Dee_Decref(elem);
 	Dee_Decref(iterator);
 err_catch:
-	i = catch_c;
-	goto err_fast;
+	while (catch_c--) {
+		ast_xdecref(catch_v[catch_c].ce_mask);
+		ast_decref(catch_v[catch_c].ce_code);
+	}
+	Dee_Free(catch_v);
+	catch_v = NULL;
+	goto done;
 }
 
 
