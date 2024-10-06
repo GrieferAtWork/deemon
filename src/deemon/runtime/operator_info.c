@@ -1704,6 +1704,8 @@ find_origin_of_compare_default:
 		                                          setrange_group, COMPILER_LENOF(setrange_group));
 	}	break;
 
+		/* TODO: OPERATOR_ITERNEXT -- tp_iter_next and tp_nextpair form a group */
+
 	case OPERATOR_GETATTR: {
 		PRIVATE ptrdiff_t const getattr_group[] = {
 			offsetof(struct type_attr, tp_getattr),

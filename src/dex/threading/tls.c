@@ -259,7 +259,7 @@ tls_visit(TLS *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "The TLS variable has been unbound");
+	                       "TLS variable is unbound");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -376,7 +376,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_delvalue(TLS *__restrict self) {
 	int result = tls_dodelitem(self);
 	if (result > 0)
-		result = err_tls_unbound();
+		result = 0;
 	return result;
 }
 
@@ -571,7 +571,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_delvalue(TLS *__restrict self) {
 	int result = tls_dodelitem(self);
 	if (result > 0)
-		result = err_tls_unbound();
+		result = 0;
 	return result;
 }
 
@@ -641,11 +641,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
 
 PRIVATE struct type_getset tpconst tls_getsets[] = {
 	TYPE_GETSET_BOUND_F("value", &tls_getvalue, &tls_delvalue, &tls_setvalue, &tls_bool, METHOD_FNOREFESCAPE,
-	                    "#tAttributeError{The TLS variable isn't bound, or has already been unbound}"
+	                    "#tAttributeError{The TLS variable isn't bound}"
 	                    "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
 	                    "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
-	                    "If no factory has been defined, the TLS is initialized as unbound and any attempt "
-	                    /**/ "to read or delete it will cause an :AttributeError to be thrown"),
+	                    "If no factory has been defined, the TLS is initialized as unbound and attempting "
+	                    /**/ "to read it will cause an :AttributeError to be thrown"),
 	TYPE_GETSET_END
 };
 

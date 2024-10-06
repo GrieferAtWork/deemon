@@ -44,6 +44,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/byattr.h"
+#include "seq/default-iterators.h"
 #include "seq/each.h"
 #include "seq/hashfilter.h"
 
@@ -439,6 +440,7 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject        *mpi_iter; /* [1..1][const] The iterator for enumerating `mpi_map'. */
@@ -765,6 +767,7 @@ PRIVATE DeeTypeObject DeeMappingItemsIterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 
 
 
@@ -844,6 +847,58 @@ proxy_contains_key(MapProxy *self, DeeObject *key) {
 	return DeeObject_Contains(self->mp_map, key);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_iterkeys(DeeObject *__restrict self) {
+	if (DeeType_GetSeqClass(Dee_TYPE(self)) == Dee_SEQCLASS_MAP)
+		return DeeObject_IterKeys(self);
+	return DeeMap_DefaultIterKeysWithIter(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_itervalues(DeeObject *__restrict self) {
+	DREF DefaultIterator_PairSubItem *result;
+	DeeTypeObject *itertyp;
+	result = DeeObject_MALLOC(DefaultIterator_PairSubItem);
+	if unlikely(!result)
+		goto err;
+	result->dipsi_iter = DeeObject_Iter(self);
+	if unlikely(!result->dipsi_iter)
+		goto err_r;
+	itertyp = Dee_TYPE(result->dipsi_iter);
+	if unlikely((!itertyp->tp_iterator ||
+	             !itertyp->tp_iterator->tp_nextvalue) &&
+	            !DeeType_InheritIterNext(itertyp))
+		goto err_r_iter_no_next;
+	ASSERT(itertyp->tp_iterator);
+	ASSERT(itertyp->tp_iterator->tp_nextvalue);
+	result->dipsi_next = itertyp->tp_iterator->tp_nextvalue;
+	DeeObject_Init(result, &DefaultIterator_WithNextValue);
+	return (DREF DeeObject *)result;
+err_r_iter_no_next:
+	Dee_Decref(result->dipsi_iter);
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+proxy_iterself_keys(MapProxy *__restrict self) {
+	return map_iterkeys(self->mp_map);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+proxy_iterself_values(MapProxy *__restrict self) {
+	return map_itervalues(self->mp_map);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+proxy_iterself_items(MapProxy *__restrict self) {
+	return DeeObject_Iter(self->mp_map);
+}
+#else /* CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF MapProxyIterator *DCALL
 proxy_iterself(MapProxy *__restrict self, DeeTypeObject *__restrict result_type) {
 	DREF MapProxyIterator *result;
@@ -880,6 +935,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF MapProxyIterator *DCALL
 proxy_iterself_items(MapProxy *__restrict self) {
 	return proxy_iterself(self, &DeeMappingItemsIterator_Type);
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 
 
 PRIVATE struct type_seq proxykeys_seq = {
@@ -1026,6 +1082,17 @@ PRIVATE struct type_seq proxyitems_seq = {
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
+#ifdef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+PRIVATE struct type_member tpconst proxykeys_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextKey),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst proxyvalues_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextValue),
+	TYPE_MEMBER_END
+};
+#else /* CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 PRIVATE struct type_member tpconst proxykeys_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeMappingKeysIterator_Type),
 	TYPE_MEMBER_END
@@ -1045,6 +1112,7 @@ PRIVATE struct type_member tpconst proxy_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DeeMappingProxyIterator_Type),
 	TYPE_MEMBER_END
 };
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1203,7 +1271,11 @@ PRIVATE DeeTypeObject DeeMappingProxy_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ proxy_class_members
+#ifdef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+	/* .tp_class_members = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+	/* .tp_class_members = */ proxy_class_members,
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 };
 
 PRIVATE DeeTypeObject *tpconst mapping_keys_mro[] = {
@@ -1354,7 +1426,11 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ proxyitems_class_members
+#ifdef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+	/* .tp_class_members = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+	/* .tp_class_members = */ proxyitems_class_members,
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 };
 
 
@@ -2687,6 +2763,7 @@ done:
 	return result;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
 PRIVATE WUNUSED NONNULL((1, 2)) DREF MapProxyIterator *DCALL
 map_new_proxyiter(DeeObject *__restrict self, DeeTypeObject *__restrict result_type) {
 	DREF MapProxyIterator *result;
@@ -2711,6 +2788,7 @@ err_r:
 	DeeObject_FREE(result);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF MapProxy *DCALL
 map_keys(DeeObject *__restrict self) {
@@ -2727,6 +2805,9 @@ map_items(DeeObject *__restrict self) {
 	return map_new_proxy(self, &DeeMappingItems_Type);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+#define map_iteritems DeeObject_Iter
+#else /* CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 PRIVATE WUNUSED NONNULL((1)) DREF MapProxyIterator *DCALL
 map_iterkeys(DeeObject *__restrict self) {
 	return map_new_proxyiter(self, &DeeMappingKeysIterator_Type);
@@ -2741,41 +2822,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF MapProxyIterator *DCALL
 map_iteritems(DeeObject *__restrict self) {
 	return map_new_proxyiter(self, &DeeMappingItemsIterator_Type);
 }
-
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-mapiter_next_key(DeeObject *self,
-                 DeeObject *iter) {
-	DeeTypeObject *tp_self;
-	DREF DeeObject *result;
-	DREF DeeObject *content[2];
-	int error;
-	tp_self = Dee_TYPE(self);
-	do {
-		if (tp_self->tp_seq) {
-			struct type_nsi const *nsi;
-			nsi = tp_self->tp_seq->tp_nsi;
-			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP &&
-			    nsi->nsi_maplike.nsi_nextkey)
-				return (*nsi->nsi_maplike.nsi_nextkey)(iter);
-			break;
-		}
-	} while (DeeType_InheritNSI(tp_self));
-	result = DeeObject_IterNext(iter);
-	if (!ITER_ISOK(result)) {
-		if unlikely(!result)
-			goto err;
-		return ITER_DONE;
-	}
-	error = DeeObject_Unpack(result, 2, content);
-	Dee_Decref(result);
-	if unlikely(error)
-		goto err;
-	Dee_Decref(content[1]);
-	return content[0];
-err:
-	return NULL;
-}
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeMap_GetFirst(DeeObject *__restrict self) {
@@ -2801,7 +2848,7 @@ DeeMap_DelFirst(DeeObject *__restrict self) {
 	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
-	key = mapiter_next_key(self, iter);
+	key = DeeObject_IterNextKey(iter);
 	Dee_Decref(iter);
 	if (!ITER_ISOK(key)) {
 		if unlikely(!key)
@@ -2859,7 +2906,7 @@ DeeMap_DelLast(DeeObject *__restrict self) {
 	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
-	key = mapiter_next_key(self, iter);
+	key = DeeObject_IterNextKey(iter);
 	if (!ITER_ISOK(key)) {
 		Dee_Decref(iter);
 		if (key == ITER_DONE)
@@ -2867,7 +2914,7 @@ DeeMap_DelLast(DeeObject *__restrict self) {
 		goto err;
 	}
 	for (;;) {
-		next = mapiter_next_key(self, iter);
+		next = DeeObject_IterNextKey(iter);
 		if (!ITER_ISOK(next))
 			break;
 		Dee_Decref(key);

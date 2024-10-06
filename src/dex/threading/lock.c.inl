@@ -894,17 +894,17 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 #else /* CONFIG_NO_DOC */
 	/* .tp_doc      = */ ""
 #ifdef DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
-	                     "Atomic spin-lock using ?Ayield?DThread to block until the lock becomes available. "
-	                     /**/ "A recursive version of this lock is available as ?GRAtomicLock\n"
+	                     "Atomic (spin) lock using ?Ayield?DThread to block until the lock becomes available. "
+	                     /**/ "The recursive version of this lock is ?GRAtomicLock, and the preemptive version is ?GSharedLock.\n"
 #elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
 	                     "Shared (preemptive) lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
-	                     /**/ "A recursive version of this lock is available as ?GRSharedLock\n"
+	                     /**/ "The recursive version of this lock is ?GRSharedLock, and the atomic version is ?GAtomicLock.\n"
 #elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
-	                     "Recursive, Atomic spin-lock using ?Ayield?DThread to block until the lock becomes available. "
-	                     /**/ "A non-recursive version of this lock is available as ?GAtomicLock\n"
+	                     "Recursive, atomic (spin) lock using ?Ayield?DThread to block until the lock becomes available. "
+	                     /**/ "The non-recursive version of this lock is ?GAtomicLock, and the preemptive version is ?GRSharedLock.\n"
 #elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)
-	                     "Recursive, Shared (preemptive) lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
-	                     /**/ "A non-recursive version of this lock is available as ?GSharedLock\n"
+	                     "Recursive, shared (preemptive) lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
+	                     /**/ "The non-recursive version of this lock is ?GSharedLock, and the atomic version is ?GRAtomicLock.\n"
 #endif /* ... */
 	                     "\n"
 #ifdef LOCAL_lockapi_init_kw
@@ -1331,17 +1331,17 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 #else /* CONFIG_NO_DOC */
 	/* .tp_doc      = */ ""
 #ifdef DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
-	                     "Atomic read/write spin-lock using ?Ayield?DThread to block until the lock becomes available. "
-	                     /**/ "A recursive version of this lock is available as ?GRAtomicRWLock\n"
+	                     "Atomic (spin) read/write lock using ?Ayield?DThread to block until the lock becomes available. "
+	                     /**/ "The recursive version of this lock is ?GRAtomicRWLock, and the preemptive version is ?GSharedRWLock.\n"
 #elif defined(DEFINE_DeeSharedLock_Type__AND__DeeSharedRWLock_Type)
 	                     "Shared (preemptive) read/write lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
-	                     /**/ "A recursive version of this lock is available as ?GRSharedRWLock\n"
+	                     /**/ "The recursive version of this lock is ?GRSharedRWLock, and the atomic version is ?GAtomicRWLock.\n"
 #elif defined(DEFINE_RDeeAtomicLock_Type__AND__DeeRAtomicRWLock_Type)
-	                     "Recursive, Atomic read/write spin-lock using ?Ayield?DThread to block until the lock becomes available. "
-	                     /**/ "A non-recursive version of this lock is available as ?GAtomicRWLock\n"
+	                     "Recursive, Atomic (spin) read/write lock using ?Ayield?DThread to block until the lock becomes available. "
+	                     /**/ "The non-recursive version of this lock is ?GAtomicRWLock, and the preemptive version is ?GRSharedRWLock.\n"
 #elif defined(DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type)
 	                     "Recursive, Shared (preemptive) read/write lock using ?Ectypes:futex_wait and ?Ectypes:futex_timedwait to block until the lock becomes available. "
-	                     /**/ "A non-recursive version of this lock is available as ?GSharedRWLock\n"
+	                     /**/ "The non-recursive version of this lock is ?GSharedRWLock, and the atomic version is ?GRAtomicRWLock.\n"
 #endif /* ... */
 	                     "\n"
 #ifdef LOCAL_rwlockapi_init_kw

@@ -177,6 +177,8 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 print define_Dee_HashStr("__IterWithNextAndCounterPair__");
 print define_Dee_HashStr("__IterWithNextAndCounterAndLimitPair__");
 print define_Dee_HashStr("__IterWithNextAndUnpackFilter__");
+print define_Dee_HashStr("__IterWithNextKey__");
+print define_Dee_HashStr("__IterWithNextValue__");
 print define_Dee_HashStr("__SeqReversedWithGetItemIndex__");
 print define_Dee_HashStr("__SeqReversedWithGetItemIndexFast__");
 print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
@@ -269,6 +271,8 @@ print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
 #define Dee_HashStr____IterWithNextAndCounterPair__ _Dee_HashSelectC(0xe847502, 0x4c1b270a7a03a66)
 #define Dee_HashStr____IterWithNextAndCounterAndLimitPair__ _Dee_HashSelectC(0x39224947, 0x1ff9b5affcef7183)
 #define Dee_HashStr____IterWithNextAndUnpackFilter__ _Dee_HashSelectC(0x8a057e21, 0x9969f3c5cebf8b7)
+#define Dee_HashStr____IterWithNextKey__ _Dee_HashSelectC(0xf88fedb, 0xd455c722e08feca3)
+#define Dee_HashStr____IterWithNextValue__ _Dee_HashSelectC(0x215286ab, 0x60d012012101a07)
 #define Dee_HashStr____SeqReversedWithGetItemIndex__ _Dee_HashSelectC(0x7dfc3c38, 0x91802e721476e82b)
 #define Dee_HashStr____SeqReversedWithGetItemIndexFast__ _Dee_HashSelectC(0x8379a7f8, 0xc13488af177e13c0)
 #define Dee_HashStr____SeqReversedWithTryGetItemIndex__ _Dee_HashSelectC(0xd4188f23, 0xcf27233daa85e03c)
@@ -767,6 +771,7 @@ librt_get_MappingItems_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingItems_impl_f();
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingProxyIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingProxy_impl_f());
@@ -786,6 +791,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingItemsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingItems_impl_f());
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingHashFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
@@ -1410,6 +1416,16 @@ librt_get_IterWithNextAndCounterAndLimitPair_Type_f(size_t UNUSED(argc), DeeObje
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_IterWithNextAndUnpackFilter_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_default_sequence_type(__IterWithNextAndUnpackFilter__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithNextKey_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithNextKey__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_IterWithNextValue_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__IterWithNextValue__);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2259,6 +2275,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_IterWithEnumerateIndexMap, &librt_get_IterWithE
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextAndCounterPair, &librt_get_IterWithNextAndCounterPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextAndCounterAndLimitPair, &librt_get_IterWithNextAndCounterAndLimitPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextAndUnpackFilter, &librt_get_IterWithNextAndUnpackFilter_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextKey, &librt_get_IterWithNextKey_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextValue, &librt_get_IterWithNextValue_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithGetItemIndex, &librt_get_SeqReversedWithGetItemIndex_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithGetItemIndexFast, &librt_get_SeqReversedWithGetItemIndexFast_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithTryGetItemIndex, &librt_get_SeqReversedWithTryGetItemIndex_Type_f, METHOD_FCONSTCALL);
@@ -2310,13 +2328,15 @@ PRIVATE DEFINE_CMETHOD(librt_get_Module_empty, &librt_get_Module_empty_f, METHOD
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwds, &librt_get_DocKwds_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwdsIterator, &librt_get_DocKwdsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingProxy, &librt_get_MappingProxy_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_MappingProxyIterator, &librt_get_MappingProxyIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingKeys, &librt_get_MappingKeys_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_MappingKeysIterator, &librt_get_MappingKeysIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingValues, &librt_get_MappingValues_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_MappingValuesIterator, &librt_get_MappingValuesIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingItems, &librt_get_MappingItems_f, METHOD_FCONSTCALL);
+#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+PRIVATE DEFINE_CMETHOD(librt_get_MappingProxyIterator, &librt_get_MappingProxyIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MappingKeysIterator, &librt_get_MappingKeysIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MappingValuesIterator, &librt_get_MappingValuesIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingItemsIterator, &librt_get_MappingItemsIterator_f, METHOD_FCONSTCALL);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilter, &librt_get_MappingHashFilter_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilterIterator, &librt_get_MappingHashFilterIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingByAttr, &librt_get_MappingByAttr_f, METHOD_FCONSTCALL);
@@ -2596,6 +2616,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "IterWithNextAndCounterPair", (DeeObject *)&librt_get_IterWithNextAndCounterPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* DefaultIterator_WithNextAndCounterPair_Type */
 	{ "IterWithNextAndCounterAndLimitPair", (DeeObject *)&librt_get_IterWithNextAndCounterAndLimitPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* DefaultIterator_WithNextAndCounterAndLimitPair_Type */
 	{ "IterWithNextAndUnpackFilter", (DeeObject *)&librt_get_IterWithNextAndUnpackFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultIterator_WithNextAndUnpackFilter_Type */
+	{ "IterWithNextKey", (DeeObject *)&librt_get_IterWithNextKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* DefaultIterator_WithNextKey */
+	{ "IterWithNextValue", (DeeObject *)&librt_get_IterWithNextValue, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* DefaultIterator_WithNextValue */
 	{ "SeqReversedWithGetItemIndex", (DeeObject *)&librt_get_SeqReversedWithGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultReversed_WithGetItemIndex_Type */
 	{ "SeqReversedWithGetItemIndexFast", (DeeObject *)&librt_get_SeqReversedWithGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DefaultReversed_WithGetItemIndexFast_Type */
 	{ "SeqReversedWithTryGetItemIndex", (DeeObject *)&librt_get_SeqReversedWithTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DefaultReversed_WithTryGetItemIndex_Type */
@@ -2624,23 +2646,25 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Internal types used to drive mapping proxies */
 	{ "MappingProxy", (DeeObject *)&librt_get_MappingProxy, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Base class for ?GMappingKeys, ?GMappingValues and ?GMappingItems") }, /* DeeMappingProxy_Type */
-	{ "MappingProxyIterator", (DeeObject *)&librt_get_MappingProxyIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator class for ?GMappingProxy, and Base class for ?GMappingKeysIterator, ?GMappingValuesIterator and ?GMappingItemsIterator") }, /* DeeMappingProxyIterator_Type */
 	{ "MappingKeys", (DeeObject *)&librt_get_MappingKeys, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the keys of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
 	      /**/ "by :Mapping.keys") }, /* DeeMappingKeys_Type */
-	{ "MappingKeysIterator", (DeeObject *)&librt_get_MappingKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeMappingKeysIterator_Type */
 	{ "MappingValues", (DeeObject *)&librt_get_MappingValues, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the values of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
 	      /**/ "by :Mapping.values") }, /* DeeMappingValues_Type */
-	{ "MappingValuesIterator", (DeeObject *)&librt_get_MappingValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeMappingValuesIterator_Type */
 	{ "MappingItems", (DeeObject *)&librt_get_MappingItems, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the items (key-value pairs) of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
 	      /**/ "by :Mapping.items") }, /* DeeMappingItems_Type */
+#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+	{ "MappingProxyIterator", (DeeObject *)&librt_get_MappingProxyIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
+	  DOC("Iterator class for ?GMappingProxy, and Base class for ?GMappingKeysIterator, ?GMappingValuesIterator and ?GMappingItemsIterator") },  /* DeeMappingProxyIterator_Type */
+	{ "MappingKeysIterator", (DeeObject *)&librt_get_MappingKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DeeMappingKeysIterator_Type */
+	{ "MappingValuesIterator", (DeeObject *)&librt_get_MappingValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* DeeMappingValuesIterator_Type */
 	{ "MappingItemsIterator", (DeeObject *)&librt_get_MappingItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DeeMappingProxyIterator_Type */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 	{ "MappingHashFilter", (DeeObject *)&librt_get_MappingHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapHashFilter_Type */
 	{ "MappingHashFilterIterator", (DeeObject *)&librt_get_MappingHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilterIterator_Type */
 	{ "MappingByAttr", (DeeObject *)&librt_get_MappingByAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* MapByAttr_Type */

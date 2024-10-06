@@ -33,6 +33,9 @@ function outer() {
 local foo = outer()(7, 8);
 
 assert (foo.__symbols__.keys as Set) == { "static1", "arg1", "arg2", "outer" };
+assert (foo.__symbols__.items.each.first as Set) == { "arg1", "arg2", "outer" },
+	"Because 'static1' is unbound, it only appears as a valid key, but in 'items'";
+
 assert foo.__symbols__ == { "arg1": 7, "arg2": 8, "outer": outer };
 foo...;
 assert foo.__symbols__ == { "arg1": 7, "arg2": 8, "outer": outer, "static1": 8 };

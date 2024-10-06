@@ -5737,6 +5737,8 @@ PRIVATE struct type_member tpconst seq_class_members[] = {
 	TYPE_MEMBER_CONST("__IterWithNextAndCounterPair__", &DefaultIterator_WithNextAndCounterPair_Type),
 	TYPE_MEMBER_CONST("__IterWithNextAndCounterAndLimitPair__", &DefaultIterator_WithNextAndCounterAndLimitPair_Type),
 	TYPE_MEMBER_CONST("__IterWithNextAndUnpackFilter__", &DefaultIterator_WithNextAndUnpackFilter_Type),
+	TYPE_MEMBER_CONST("__IterWithNextKey__", &DefaultIterator_WithNextKey),
+	TYPE_MEMBER_CONST("__IterWithNextValue__", &DefaultIterator_WithNextValue),
 	TYPE_MEMBER_CONST("__SeqReversedWithGetItemIndex__", &DefaultReversed_WithGetItemIndex_Type),
 	TYPE_MEMBER_CONST("__SeqReversedWithGetItemIndexFast__", &DefaultReversed_WithGetItemIndexFast_Type),
 	TYPE_MEMBER_CONST("__SeqReversedWithTryGetItemIndex__", &DefaultReversed_WithTryGetItemIndex_Type),

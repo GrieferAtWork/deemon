@@ -209,6 +209,13 @@ typedef struct {
 	DREF DeeObject   *dinuf_iter;    /* [1..1][const] The underlying iterator */
 	/* [1..1][const] Callback to load the next element from `dinuf_iter'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dinuf_tp_next)(DeeObject *self);
+	/* [1..1][const] Extra iterator operators for `dinuf_iter'
+	 * It is assumed that the following operators are defined (all
+	 * of which have default impl when `tp_iter_next' is defined):
+	 * - tp_nextpair
+	 * - tp_nextkey
+	 */
+	struct type_iterator *dinuf_tp_iterator;
 	DREF DeeObject   *dinuf_start;   /* [1..1][const] Range start for unpack pair key. */
 	DREF DeeObject   *dinuf_end;     /* [1..1][const] Range end for unpack pair key. */
 } DefaultIterator_WithNextAndUnpackFilter;
@@ -216,6 +223,18 @@ typedef struct {
 INTDEF DeeTypeObject DefaultIterator_WithNextAndCounterPair_Type;         /* DefaultIterator_WithNextAndCounter */
 INTDEF DeeTypeObject DefaultIterator_WithNextAndCounterAndLimitPair_Type; /* DefaultIterator_WithNextAndCounterAndLimit */
 INTDEF DeeTypeObject DefaultIterator_WithNextAndUnpackFilter_Type;        /* DefaultIterator_WithNextAndUnpackFilter */
+
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *dipsi_iter; /* [1..1][const] The underlying iterator. */
+	/* [1..1] The get-next-item function to use on `dipsi_iter' in order to load the next item.
+	 *        This is usually the `tp_nextkey' or `tp_nextvalue' operator of `dipsi_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dipsi_next)(DeeObject *self);
+} DefaultIterator_PairSubItem;
+
+INTDEF DeeTypeObject DefaultIterator_WithNextKey;   /* DefaultIterator_PairSubItem */
+INTDEF DeeTypeObject DefaultIterator_WithNextValue; /* DefaultIterator_PairSubItem */
 
 DECL_END
 

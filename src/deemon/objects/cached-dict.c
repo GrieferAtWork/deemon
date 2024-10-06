@@ -59,238 +59,6 @@ typedef DeeCachedDictObject CachedDict;
 
 
 /************************************************************************/
-/* CACHED DICT ITEARTOR                                                 */
-/************************************************************************/
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *cdi_iter; /* [1..1][const] Underlying iterator. */
-	DREF DeeObject *cdi_map;  /* [1..1][const] Underlying mapping. */
-} CachedDictIterator;
-
-INTDEF DeeTypeObject CachedDictIterator_Type;
-
-PRIVATE NONNULL((1)) int DCALL
-cdictiterator_ctor(CachedDictIterator *__restrict self) {
-	self->cdi_map  = Dee_EmptyMapping;
-	self->cdi_iter = DeeObject_Iter(self->cdi_map);
-	if unlikely(!self->cdi_iter)
-		goto err;
-	Dee_Incref(self->cdi_map);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1)) void DCALL
-cdictiterator_fini(CachedDictIterator *__restrict self) {
-	Dee_Decref(self->cdi_iter);
-	Dee_Decref(self->cdi_map);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-cdictiterator_visit(CachedDictIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->cdi_iter);
-	Dee_Visit(self->cdi_map);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cdictiterator_copy(CachedDictIterator *__restrict self,
-                   CachedDictIterator *__restrict other) {
-	self->cdi_iter = DeeObject_Copy(other->cdi_iter);
-	if unlikely(!self->cdi_iter)
-		goto err;
-	self->cdi_map = other->cdi_map;
-	Dee_Incref(self->cdi_map);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cdictiterator_deep(CachedDictIterator *__restrict self,
-                   CachedDictIterator *__restrict other) {
-	self->cdi_iter = DeeObject_DeepCopy(other->cdi_iter);
-	if unlikely(!self->cdi_iter)
-		goto err;
-	self->cdi_map = DeeObject_DeepCopy(other->cdi_map);
-	if unlikely(!self->cdi_map)
-		goto err_iter;
-	return 0;
-err_iter:
-	Dee_Decref(self->cdi_iter);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-cdictiterator_init(CachedDictIterator *__restrict self,
-                   size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o|o:CachedDict.Iterator", &self->cdi_map))
-		goto err;
-	self->cdi_iter = DeeObject_Iter(self->cdi_map);
-	if unlikely(!self->cdi_iter)
-		goto err;
-	Dee_Incref(self->cdi_map);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-cdictiterator_bool(CachedDictIterator *__restrict self) {
-	return DeeObject_Bool(self->cdi_iter);
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-cdictiterator_hash(CachedDictIterator *self) {
-	return DeeObject_Hash(self->cdi_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cdictiterator_compare(CachedDictIterator *self, CachedDictIterator *other) {
-	if (DeeObject_AssertType(other, &CachedDictIterator_Type))
-		goto err;
-	return DeeObject_Compare(self->cdi_iter, other->cdi_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cdictiterator_compare_eq(CachedDictIterator *self, CachedDictIterator *other) {
-	if (DeeObject_AssertType(other, &CachedDictIterator_Type))
-		goto err;
-	return DeeObject_CompareEq(self->cdi_iter, other->cdi_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdictiterator_next_item(CachedDictIterator *__restrict self) {
-	return DeeObject_IterNext(self->cdi_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdictiterator_next_key(CachedDictIterator *__restrict self) {
-	int temp;
-	DREF DeeObject *item, *key_and_value[2];
-	struct type_nsi const *nsi = DeeType_NSI(Dee_TYPE(self->cdi_map));
-	if (nsi != NULL &&
-	    nsi->nsi_class == Dee_TYPE_SEQX_CLASS_MAP &&
-	    nsi->nsi_maplike.nsi_nextkey != NULL)
-		return (*nsi->nsi_maplike.nsi_nextkey)(self->cdi_iter);
-	item = DeeObject_IterNext(self->cdi_iter);
-	if unlikely(!item)
-		goto err;
-	temp = DeeObject_Unpack(item, 2, key_and_value);
-	Dee_Decref(item);
-	if unlikely(!temp)
-		goto err;
-	Dee_Decref(key_and_value[1]);
-	return key_and_value[0];
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdictiterator_next_value(CachedDictIterator *__restrict self) {
-	int temp;
-	DREF DeeObject *item, *key_and_value[2];
-	struct type_nsi const *nsi = DeeType_NSI(Dee_TYPE(self->cdi_map));
-	if (nsi != NULL &&
-	    nsi->nsi_class == Dee_TYPE_SEQX_CLASS_MAP &&
-	    nsi->nsi_maplike.nsi_nextvalue != NULL)
-		return (*nsi->nsi_maplike.nsi_nextvalue)(self->cdi_iter);
-	item = DeeObject_IterNext(self->cdi_iter);
-	if unlikely(!item)
-		goto err;
-	temp = DeeObject_Unpack(item, 2, key_and_value);
-	Dee_Decref(item);
-	if unlikely(!temp)
-		goto err;
-	Dee_Decref(key_and_value[0]);
-	return key_and_value[1];
-err:
-	return NULL;
-}
-
-
-
-PRIVATE struct type_cmp cdictiterator_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&cdictiterator_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdictiterator_compare_eq,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdictiterator_compare,
-};
-
-PRIVATE WUNUSED NONNULL((1)) DREF CachedDict *DCALL
-cdictiterator_getseq(CachedDictIterator *__restrict self) {
-	return (DREF CachedDict *)DeeCachedDict_New(self->cdi_map);
-}
-
-PRIVATE struct type_getset tpconst cdict_iterator_getsets[] = {
-	TYPE_GETTER(STR_seq, &cdictiterator_getseq, "->?DIterator"),
-	TYPE_GETSET_END
-};
-
-PRIVATE struct type_member tpconst cdict_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(CachedDictIterator, cdi_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(CachedDictIterator, cdi_map), "->?DMapping"),
-	TYPE_MEMBER_END
-};
-
-INTERN DeeTypeObject CachedDictIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_CachedDictIterator",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"),
-	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&cdictiterator_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&cdictiterator_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&cdictiterator_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&cdictiterator_init,
-				TYPE_FIXED_ALLOCATOR(CachedDictIterator)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cdictiterator_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cdictiterator_bool
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cdictiterator_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &cdictiterator_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdictiterator_next_item,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ cdict_iterator_getsets,
-	/* .tp_members       = */ cdict_iterator_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
-};
-
-
-
-
-
-/************************************************************************/
 /* CACHED DICT                                                          */
 /************************************************************************/
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1014,8 +782,8 @@ PRIVATE struct type_nsi tpconst cdict_nsi = {
 	{
 		/* .nsi_maplike = */ {
 			/* .nsi_getsize    = */ (dfunptr_t)&cdict_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&cdictiterator_next_key,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&cdictiterator_next_value,
+			/* .nsi_nextkey    = */ (dfunptr_t)NULL,
+			/* .nsi_nextvalue  = */ (dfunptr_t)NULL,
 			/* .nsi_getdefault = */ (dfunptr_t)&cdict_nsi_getdefault,
 			/* .nsi_setdefault = */ (dfunptr_t)NULL,
 			/* .nsi_updateold  = */ (dfunptr_t)NULL,
@@ -1080,25 +848,9 @@ cdict_ge(CachedDict *self, DeeObject *other) {
 	return DeeObject_CmpGe(self->cd_map, other);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF CachedDictIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_iter(CachedDict *__restrict self) {
-	DREF DeeObject *map_iter;
-	DREF CachedDictIterator *result;
-	result = DeeObject_MALLOC(CachedDictIterator);
-	if unlikely(!result)
-		goto err;
-	map_iter = DeeObject_Iter(self->cd_map);
-	if unlikely(!map_iter)
-		goto err_r;
-	result->cdi_iter = map_iter; /* Inherit */
-	result->cdi_map  = self->cd_map;
-	Dee_Incref(self->cd_map);
-	DeeObject_Init(result, &CachedDictIterator_Type);
-	return result;
-err_r:
-	Dee_Decref(result);
-err:
-	return NULL;
+	return DeeObject_Iter(self->cd_map);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1357,12 +1109,6 @@ PRIVATE struct type_method tpconst cdict_methods[] = {
 	TYPE_METHOD_END
 };
 
-
-PRIVATE struct type_member tpconst cdict_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &CachedDictIterator_Type),
-	TYPE_MEMBER_END
-};
-
 PRIVATE struct type_gc tpconst cdict_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&cdict_clear
 };
@@ -1423,7 +1169,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ cdict_class_members
+	/* .tp_class_members = */ NULL
 };
 
 

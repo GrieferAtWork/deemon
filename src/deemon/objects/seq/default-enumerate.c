@@ -1292,6 +1292,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithNextAndUnpackFilter *DCALL
 de_wiauaf_iter(DefaultEnumeration_WithRange *__restrict self) {
+	DeeTypeObject *itertyp;
 	DREF DefaultIterator_WithNextAndUnpackFilter *result;
 	result = DeeObject_MALLOC(DefaultIterator_WithNextAndUnpackFilter);
 	if unlikely(!result)
@@ -1299,12 +1300,20 @@ de_wiauaf_iter(DefaultEnumeration_WithRange *__restrict self) {
 	result->dinuf_iter = (*self->dewr_tp_seq->tp_iter)(self->dewr_seq);
 	if unlikely(!result->dinuf_iter)
 		goto err_r;
-	result->dinuf_tp_next = Dee_TYPE(result->dinuf_iter)->tp_iter_next;
-	if unlikely(!result->dinuf_tp_next) {
-		if (!DeeType_InheritIterNext(Dee_TYPE(result->dinuf_iter)))
+	itertyp = Dee_TYPE(result->dinuf_iter);
+	if unlikely(!itertyp->tp_iter_next ||
+	            !itertyp->tp_iterator ||
+	            !itertyp->tp_iterator->tp_nextpair ||
+	            !itertyp->tp_iterator->tp_nextkey) {
+		if (!DeeType_InheritIterNext(itertyp))
 			goto err_r_iter_no_next;
-		result->dinuf_tp_next = Dee_TYPE(result->dinuf_iter)->tp_iter_next;
 	}
+	ASSERT(itertyp->tp_iter_next);
+	ASSERT(itertyp->tp_iterator);
+	ASSERT(itertyp->tp_iterator->tp_nextpair);
+	ASSERT(itertyp->tp_iterator->tp_nextkey);
+	result->dinuf_tp_next     = itertyp->tp_iter_next;
+	result->dinuf_tp_iterator = itertyp->tp_iterator;
 	Dee_Incref(self->dewr_start);
 	result->dinuf_start = self->dewr_start;
 	Dee_Incref(self->dewr_end);

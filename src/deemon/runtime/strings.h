@@ -63,6 +63,7 @@ local STRINGS = {
 	"HashSet",
 	"InstanceMethod",
 	"Iterator",
+	"KeysIterator",
 	"Joined",
 	"List",
 	"Mapping",
@@ -314,6 +315,9 @@ DEF_STRING(str_InstanceMethod, "InstanceMethod", 0xa7929fea, 0x6aaa126ce9665d53)
 #define Dee_HashStr__Iterator _Dee_HashSelectC(0xfce46883, 0x3c33c9d5c64ebfff)
 DEF_STRING(str_Iterator, "Iterator", 0xfce46883, 0x3c33c9d5c64ebfff)
 #define STR_Iterator DeeString_STR(&str_Iterator)
+#define Dee_HashStr__KeysIterator _Dee_HashSelectC(0x4414d7ed, 0xb21fd2b052003297)
+DEF_STRING(str_KeysIterator, "KeysIterator", 0x4414d7ed, 0xb21fd2b052003297)
+#define STR_KeysIterator DeeString_STR(&str_KeysIterator)
 #define Dee_HashStr__Joined _Dee_HashSelectC(0x18f2ed, 0x97e484d348a54ca4)
 DEF_STRING(str_Joined, "Joined", 0x18f2ed, 0x97e484d348a54ca4)
 #define STR_Joined DeeString_STR(&str_Joined)

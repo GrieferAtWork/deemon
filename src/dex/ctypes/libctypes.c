@@ -627,7 +627,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	 * >> };
 	 * >> local x = (foo){ .u = 0x80000000 };
 	 * >> local p1 = x.s.ptr;
-	 * >> local p2 = (foo){ .u = 0x40000000 }.s.ptr;
+	 * >> local p2 = ((foo){ .u = 0x40000000 }).s.ptr;
 	 * >> print p1.ind.hex();
 	 * >> print p2.ind.hex();
 	 * Here, both `p1' and `p2' are RefPointer-objects, with `p1' holding a reference
@@ -698,8 +698,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "(ob:?GStructured)->?Dint\n"
 	      "#tTypeError{The given @tp or @ob are not recognized c-types, nor aliases}"
 	      "Returns the size of a given structured type or object in bytes\n"
-
 	      "\n"
+
 	      "(ob:?DBytes)->?Dint\n"
 	      "Returns the size of the given ?DBytes ob, which is the same as ${##ob}") },
 	{ "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FREADONLY,
@@ -893,7 +893,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "memchr", (DeeObject *)&ctypes_memchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Return a pointer to the first byte in the specified @haystack+@haystack_size "
-	      "that equals @needle, or return a NULL-pointer if not found") },
+	      /**/ "that equals @needle, or return a NULL-pointer if not found") },
 	{ "memrchr", (DeeObject *)&ctypes_memrchr, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as :memchr, but if @needle appears multiple times, return a pointer to the last instance") },
@@ -963,18 +963,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "memcmp", (DeeObject *)&ctypes_memcmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
 	      "Compare bytes from 2 buffers in @lhs and @rhs of equal @size, and "
-	      "search for the first non-matching byte, returning ${< 0} if that byte "
-	      "in @lhs is smaller than its counterpart in @rhs, ${> 0} if the opposite "
-	      "is true, and ${== 0} no such byte exists") },
+	      /**/ "search for the first non-matching byte, returning ${< 0} if that byte "
+	      /**/ "in @lhs is smaller than its counterpart in @rhs, ${> 0} if the opposite "
+	      /**/ "is true, and ${== 0} no such byte exists") },
 	{ "memcasecmp", (DeeObject *)&ctypes_memcasecmp, MODSYM_FREADONLY,
 	  DOC("(lhs:?Aptr?Gvoid,rhs:?Aptr?Gvoid,size:?Dint)->?Dint\n"
 	      "Same as ?Gmemcmp, but bytes are casted as ASCII characters "
-	      "into a common casing prior to comparison") },
+	      /**/ "into a common casing prior to comparison") },
 	{ "memmem", (DeeObject *)&ctypes_memmem, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
 	      "Search for the first memory block in @haystack+@haystack_size that is equal to @needle+@needle_size "
-	      "such that ${memcmp(candidate, needle, needle_size) == 0} and return a pointer to its starting "
-	      "location in @haystack\n"
+	      /**/ "such that ${memcmp(candidate, needle, needle_size) == 0} and return a pointer to its starting "
+	      /**/ "location in @haystack\n"
 	      "If no such memory block exists, or @needle_size is $0, return a NULL-pointer instead") },
 	{ "memcasemem", (DeeObject *)&ctypes_memcasemem, MODSYM_FREADONLY,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
@@ -990,10 +990,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "memrev", (DeeObject *)&ctypes_memrev, MODSYM_FREADONLY,
 	  DOC("(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "Reverse the order of bytes in the given @buf+@size, such that upon return its first "
-	      "byte contains the old value of the last byte, and the last byte the value of the first, "
-	      "and so on.") },
+	      /**/ "byte contains the old value of the last byte, and the last byte the value of the first, "
+	      /**/ "and so on.") },
 	{ "memfrob", (DeeObject *)&ctypes_memfrob, MODSYM_FREADONLY,
-	  DOC("(buf:?Aptr?Gchar,size:?Dint)->?Aptr?Gvoid\n"
+	  DOC("(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "xor all bytes within @buf with $42, implementing _very_ simplistic encryption") },
 
 	{ "strlen", (DeeObject *)&ctypes_strlen, MODSYM_FREADONLY,

@@ -122,26 +122,33 @@ coti_next_ent(ClassOperatorTableIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-coti_next(ClassOperatorTableIterator *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+coti_nextpair(ClassOperatorTableIterator *__restrict self, DREF DeeObject *key_and_value[2]) {
 	struct class_operator *ent;
 	struct opinfo const *info;
 	ent = coti_next_ent(self);
 	if (!ent)
-		return ITER_DONE;
+		return 1;
 	info = DeeTypeType_GetOperatorById(&DeeType_Type, ent->co_name);
 	if (info) {
-		return DeeTuple_Newf("s" PCKu16,
-		                     info->oi_sname,
-		                     ent->co_addr);
+		key_and_value[0] = DeeString_New(info->oi_sname);
+	} else {
+		key_and_value[0] = DeeInt_NewUInt16(ent->co_name);
 	}
-	return DeeTuple_Newf(PCKu16 PCKu16,
-	                     ent->co_name,
-	                     ent->co_addr);
+	if unlikely(!key_and_value[0])
+		goto err;
+	key_and_value[1] = DeeInt_NewUInt16(ent->co_addr);
+	if unlikely(!key_and_value[1])
+		goto err_key_and_value_0;
+	return 0;
+err_key_and_value_0:
+	Dee_Decref(key_and_value[0]);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-coti_next_key(ClassOperatorTableIterator *__restrict self) {
+coti_nextkey(ClassOperatorTableIterator *__restrict self) {
 	struct class_operator *ent;
 	struct opinfo const *info;
 	ent = coti_next_ent(self);
@@ -154,13 +161,28 @@ coti_next_key(ClassOperatorTableIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-coti_next_value(ClassOperatorTableIterator *__restrict self) {
+coti_nextvalue(ClassOperatorTableIterator *__restrict self) {
 	struct class_operator *ent;
 	ent = coti_next_ent(self);
 	if (!ent)
 		return ITER_DONE;
 	return DeeInt_NewUInt16(ent->co_addr);
 }
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+coti_advance(ClassOperatorTableIterator *__restrict self, size_t skip) {
+	size_t result = 0;
+	while (skip-- && coti_next_ent(self))
+		++result;
+	return result;
+}
+
+PRIVATE struct type_iterator coti_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&coti_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&coti_advance,
+};
 
 PRIVATE NONNULL((1)) void DCALL
 coti_fini(ClassOperatorTableIterator *__restrict self) {
@@ -261,8 +283,8 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &coti_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &coti_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -436,8 +458,8 @@ PRIVATE struct type_nsi tpconst cot_nsi = {
 	{
 		/* .nsi_maplike = */ {
 			/* .nsi_getsize    = */ (dfunptr_t)&cot_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&coti_next_key,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&coti_next_value,
+			/* .nsi_nextkey    = */ (dfunptr_t)&coti_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&coti_nextvalue,
 			/* .nsi_getdefault = */ (dfunptr_t)&cot_getitemdef,
 			/* .nsi_setdefault = */ (dfunptr_t)NULL,
 			/* .nsi_updateold  = */ (dfunptr_t)NULL,
@@ -649,26 +671,26 @@ cati_next_ent(ClassAttributeTableIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cati_next(ClassAttributeTableIterator *__restrict self) {
-	DREF DeeObject *result;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cati_nextpair(ClassAttributeTableIterator *__restrict self, DeeObject *key_and_value[2]) {
 	DREF ClassAttribute *attr;
 	struct class_attribute const *ent;
 	ent = cati_next_ent(self);
 	if (!ent)
-		return ITER_DONE;
+		return 1;
 	attr = cattr_new(self->ca_desc, ent);
 	if unlikely(!attr)
 		goto err;
-	result = DeeTuple_Pack(2, ent->ca_name, attr);
-	Dee_Decref(attr);
-	return result;
+	Dee_Incref(ent->ca_name);
+	key_and_value[0] = (DREF DeeObject *)ent->ca_name;
+	key_and_value[1] = (DREF DeeObject *)attr; /* Inherit reference */
+	return 0;
 err:
-	return NULL;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cati_next_key(ClassAttributeTableIterator *__restrict self) {
+cati_nextkey(ClassAttributeTableIterator *__restrict self) {
 	struct class_attribute const *ent;
 	ent = cati_next_ent(self);
 	if (!ent)
@@ -677,13 +699,29 @@ cati_next_key(ClassAttributeTableIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ClassAttribute *DCALL
-cati_next_value(ClassAttributeTableIterator *__restrict self) {
+cati_nextvalue(ClassAttributeTableIterator *__restrict self) {
 	struct class_attribute const *ent;
 	ent = cati_next_ent(self);
 	if (!ent)
 		return (DREF ClassAttribute *)ITER_DONE;
 	return cattr_new(self->ca_desc, ent);
 }
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+cati_advance(ClassAttributeTableIterator *__restrict self, size_t skip) {
+	size_t result = 0;
+	while (skip-- && cati_next_ent(self))
+		++result;
+	return result;
+}
+
+PRIVATE struct type_iterator cati_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&cati_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&cati_advance,
+};
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF ClassAttributeTableIterator *DCALL
 cat_iter(ClassAttributeTable *__restrict self) {
@@ -1061,8 +1099,8 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 	{
 		/* .nsi_maplike = */ {
 			/* .nsi_getsize    = */ (dfunptr_t)&cat_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&cati_next_key,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&cati_next_value,
+			/* .nsi_nextkey    = */ (dfunptr_t)&cati_nextkey,
+			/* .nsi_nextvalue  = */ (dfunptr_t)&cati_nextvalue,
 			/* .nsi_getdefault = */ (dfunptr_t)&cat_getitemdef,
 			/* .nsi_setdefault = */ (dfunptr_t)NULL,
 			/* .nsi_updateold  = */ (dfunptr_t)NULL,
@@ -1200,8 +1238,8 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &cati_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &cati_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

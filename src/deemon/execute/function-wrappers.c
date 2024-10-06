@@ -663,6 +663,7 @@ typedef struct {
 } FunctionSymbolsByNameIterator;
 
 INTDEF DeeTypeObject FunctionSymbolsByNameIterator_Type;
+INTDEF DeeTypeObject FunctionSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject FunctionSymbolsByName_Type;
 
 
@@ -779,12 +780,46 @@ Code_GetRefNameById(DeeCodeObject const *__restrict self, uint16_t rid) {
 	return DeeInt_NewUInt16(rid);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_next(FunctionSymbolsByNameIterator *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbynameiter_nextpair(FunctionSymbolsByNameIterator *__restrict self,
+                               DREF DeeObject *key_and_value[2]) {
 	uint16_t result_sid;
-	DREF DeeTupleObject *result;
-	DREF DeeObject *name;
-	DREF DeeObject *value;
+	DeeFunctionObject *func = self->fsbni_func;
+	for (;;) {
+		uint16_t old_sid, new_sid;
+		old_sid = atomic_read(&self->fsbni_rid);
+		new_sid = old_sid;
+		DeeFunction_RefLockRead(func);
+		for (;;) {
+			if (new_sid >= self->fsbni_end) {
+				DeeFunction_RefLockEndRead(func);
+				return 1;
+			}
+			key_and_value[1] = func->fo_refv[new_sid];
+			if (ITER_ISOK(key_and_value[1]))
+				break;
+			++new_sid;
+		}
+		Dee_Incref(key_and_value[1]);
+		DeeFunction_RefLockEndRead(func);
+		result_sid = new_sid;
+		++new_sid;
+		if (atomic_cmpxch_or_write(&self->fsbni_rid, old_sid, new_sid))
+			break;
+		Dee_Decref_unlikely(key_and_value[1]);
+	}
+	key_and_value[0] = Code_GetRefNameById(self->fsbni_func->fo_code, result_sid);
+	if unlikely(!key_and_value[0])
+		goto err_value;
+	return 0;
+err_value:
+	Dee_Decref_unlikely(key_and_value[1]);
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+funcsymbolsbynameiter_nextkey(FunctionSymbolsByNameIterator *__restrict self) {
+	uint16_t result_sid;
 	DeeFunctionObject *func = self->fsbni_func;
 	for (;;) {
 		uint16_t old_sid, new_sid;
@@ -796,37 +831,21 @@ funcsymbolsbynameiter_next(FunctionSymbolsByNameIterator *__restrict self) {
 				DeeFunction_RefLockEndRead(func);
 				return ITER_DONE;
 			}
-			value = func->fo_refv[new_sid];
-			if (ITER_ISOK(value))
+			if (ITER_ISOK(func->fo_refv[new_sid]))
 				break;
 			++new_sid;
 		}
-		Dee_Incref(value);
 		DeeFunction_RefLockEndRead(func);
 		result_sid = new_sid;
 		++new_sid;
 		if (atomic_cmpxch_or_write(&self->fsbni_rid, old_sid, new_sid))
 			break;
-		Dee_Decref_unlikely(value);
 	}
-	result = DeeTuple_NewUninitialized(2);
-	if unlikely(!result)
-		goto err_value;
-	name = Code_GetRefNameById(self->fsbni_func->fo_code, result_sid);
-	if unlikely(!name)
-		goto err_value_result;
-	DeeTuple_SET(result, 0, name);  /* Inherit reference */
-	DeeTuple_SET(result, 1, value); /* Inherit reference */
-	return (DREF DeeObject *)result;
-err_value_result:
-	DeeTuple_FreeUninitialized(result);
-err_value:
-	Dee_Decref_unlikely(value);
-	return NULL;
+	return Code_GetRefNameById(self->fsbni_func->fo_code, result_sid);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_next_key(FunctionSymbolsByNameIterator *__restrict self) {
+funcsymbolsbynameiter_nextkey_with_unbound(FunctionSymbolsByNameIterator *__restrict self) {
 	uint16_t result_sid;
 	for (;;) {
 		uint16_t old_sid, new_sid;
@@ -843,7 +862,7 @@ funcsymbolsbynameiter_next_key(FunctionSymbolsByNameIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_next_value(FunctionSymbolsByNameIterator *__restrict self) {
+funcsymbolsbynameiter_nextvalue(FunctionSymbolsByNameIterator *__restrict self) {
 	DREF DeeObject *result;
 	DeeFunctionObject *func = self->fsbni_func;
 	for (;;) {
@@ -870,6 +889,13 @@ funcsymbolsbynameiter_next_value(FunctionSymbolsByNameIterator *__restrict self)
 	}
 	return result;
 }
+
+PRIVATE struct type_iterator funcsymbolsbynameiter_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&funcsymbolsbynameiter_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_nextvalue,
+	/* .tp_advance   = */ NULL,
+};
 
 PRIVATE struct type_nii tpconst funcsymbolsbynameiter_nii = {
 	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
@@ -945,7 +971,53 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &funcsymbolsbynameiter_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_next,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &funcsymbolsbynameiter_iterator,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ funcsymbolsbynameiter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_FunctionSymbolsByNameKeysIterator",
+	/* .tp_doc      = */ DOC("next->?X2?Dstring?Dint"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&funcsymbolsbynameiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&funcsymbolsbynameiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&funcsymbolsbynameiter_init,
+				TYPE_FIXED_ALLOCATOR(FunctionSymbolsByNameIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&funcsymbolsbynameiter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &funcsymbolsbynameiter_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_nextkey_with_unbound,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
@@ -1215,8 +1287,8 @@ err:
 	return -1;
 }
 
-#define funcsymbolsbyname_nsi_nextkey   funcsymbolsbynameiter_next_key
-#define funcsymbolsbyname_nsi_nextvalue funcsymbolsbynameiter_next_value
+#define funcsymbolsbyname_nsi_nextkey   funcsymbolsbynameiter_nextkey_with_unbound
+#define funcsymbolsbyname_nsi_nextvalue funcsymbolsbynameiter_nextvalue
 
 PRIVATE WUNUSED NONNULL((1)) DREF FunctionSymbolsByNameIterator *DCALL
 funcsymbolsbyname_iter(FunctionSymbolsByName *__restrict self) {
@@ -1230,6 +1302,23 @@ funcsymbolsbyname_iter(FunctionSymbolsByName *__restrict self) {
 	result->fsbni_rid  = self->fsbn_rid_start;
 	result->fsbni_end  = self->fsbn_rid_end;
 	DeeObject_Init(result, &FunctionSymbolsByNameIterator_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF FunctionSymbolsByNameIterator *DCALL
+funcsymbolsbyname_keysiter(FunctionSymbolsByName *__restrict self) {
+	DREF FunctionSymbolsByNameIterator *result;
+	result = DeeObject_MALLOC(FunctionSymbolsByNameIterator);
+	if unlikely(!result)
+		goto err;
+	result->fsbni_seq = self;
+	Dee_Incref(self);
+	result->fsbni_func = self->fsbn_func;
+	result->fsbni_rid  = self->fsbn_rid_start;
+	result->fsbni_end  = self->fsbn_rid_end;
+	DeeObject_Init(result, &FunctionSymbolsByNameKeysIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -1425,7 +1514,7 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL, /* TODO */
 	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ NULL,
+	/* .tp_iterkeys           = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_keysiter,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_nsi_getsize,
@@ -1446,6 +1535,7 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 
 PRIVATE struct type_member tpconst funcsymbolsbyname_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &FunctionSymbolsByNameIterator_Type),
+	TYPE_MEMBER_CONST(STR_KeysIterator, &FunctionSymbolsByNameKeysIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1590,6 +1680,7 @@ typedef struct {
 } YieldFunctionSymbolsByNameIterator;
 
 INTDEF DeeTypeObject YieldFunctionSymbolsByNameIterator_Type;
+INTDEF DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject YieldFunctionSymbolsByName_Type;
 
 PRIVATE WUNUSED NONNULL((1)) DREF YieldFunctionSymbolsByName *DCALL
@@ -1640,7 +1731,7 @@ yfuncsymbolsbynameiter_compare(YieldFunctionSymbolsByNameIterator *lhs,
                                YieldFunctionSymbolsByNameIterator *rhs) {
 	YieldFunctionSymbolsByNameIteratorIndex lhs_idx;
 	YieldFunctionSymbolsByNameIteratorIndex rhs_idx;
-	if (DeeObject_AssertTypeExact(rhs, &YieldFunctionSymbolsByNameIterator_Type))
+	if (DeeObject_AssertTypeExact(rhs, Dee_TYPE(lhs)))
 		goto err;
 	Dee_return_compare_if_ne(lhs->yfsbni_seq, rhs->yfsbni_seq);
 	lhs_idx.yfsbnii_word = atomic_read(&lhs->yfsbni_idx.yfsbnii_word);
@@ -1727,11 +1818,10 @@ use_default:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_next(YieldFunctionSymbolsByNameIterator *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+yfuncsymbolsbynameiter_nextpair(YieldFunctionSymbolsByNameIterator *__restrict self,
+                                DREF DeeObject *key_and_value[2]) {
 	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
-	DREF DeeTupleObject *result;
-	DREF DeeObject *name, *value;
 	YieldFunctionSymbolsByNameIteratorIndex oldidx, newidx;
 	DeeCodeObject *code = sym->yfsbn_yfunc->yf_func->fo_code;
 again:
@@ -1739,8 +1829,72 @@ again:
 	newidx.yfsbnii_word = oldidx.yfsbnii_word;
 	for (;;) {
 		if (newidx.yfsbnii_idx.i_aid < sym->yfsbn_nargs) {
-			value = YieldFunction_GetArg(sym->yfsbn_yfunc, newidx.yfsbnii_idx.i_aid);
-			if (!value) {
+			key_and_value[1] = YieldFunction_GetArg(sym->yfsbn_yfunc, newidx.yfsbnii_idx.i_aid);
+			if (!key_and_value[1]) {
+				++newidx.yfsbnii_idx.i_aid;
+				continue;
+			}
+			/* Lookup name */
+			if (code->co_keywords) {
+				key_and_value[0] = (DREF DeeObject *)code->co_keywords[newidx.yfsbnii_idx.i_aid];
+				Dee_Incref(key_and_value[0]);
+			} else {
+				key_and_value[0] = DeeInt_NewUInt16(newidx.yfsbnii_idx.i_aid);
+				if unlikely(!key_and_value[0])
+					goto err;
+			}
+			Dee_Incref(key_and_value[1]);
+			++newidx.yfsbnii_idx.i_aid;
+			break;
+		}
+		if (newidx.yfsbnii_idx.i_rid < sym->yfsbn_rid_end) {
+			char const *refname;
+			DeeFunctionObject *func = sym->yfsbn_yfunc->yf_func;
+			DeeFunction_RefLockRead(func);
+			key_and_value[1] = func->fo_refv[newidx.yfsbnii_idx.i_rid];
+			if (!ITER_ISOK(key_and_value[1])) {
+				DeeFunction_RefLockEndRead(func);
+				++newidx.yfsbnii_idx.i_rid;
+				continue;
+			}
+			Dee_Incref(key_and_value[1]);
+			DeeFunction_RefLockEndRead(func);
+			refname = DeeCode_GetRSymbolName((DeeObject *)code, newidx.yfsbnii_idx.i_rid);
+			key_and_value[0] = refname ? DeeString_New(refname)
+			                           : DeeInt_NewUInt16(code->co_argc_max + newidx.yfsbnii_idx.i_rid);
+			if unlikely(!key_and_value[0])
+				goto err_value;
+			++newidx.yfsbnii_idx.i_rid;
+			break;
+		}
+		return 1;
+	}
+	if (!atomic_cmpxch_or_write(&self->yfsbni_idx.yfsbnii_word,
+	                            oldidx.yfsbnii_word,
+	                            newidx.yfsbnii_word)) {
+		Dee_Decref_unlikely(key_and_value[1]);
+		Dee_Decref_unlikely(key_and_value[0]);
+		goto again;
+	}
+	return 0;
+err_value:
+	Dee_Decref(key_and_value[1]);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfuncsymbolsbynameiter_nextkey(YieldFunctionSymbolsByNameIterator *__restrict self) {
+	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
+	YieldFunctionSymbolsByNameIteratorIndex oldidx, newidx;
+	DeeCodeObject *code = sym->yfsbn_yfunc->yf_func->fo_code;
+	DREF DeeObject *name;
+again:
+	oldidx.yfsbnii_word = atomic_read(&self->yfsbni_idx.yfsbnii_word);
+	newidx.yfsbnii_word = oldidx.yfsbnii_word;
+	for (;;) {
+		if (newidx.yfsbnii_idx.i_aid < sym->yfsbn_nargs) {
+			if (!YieldFunction_GetArg(sym->yfsbn_yfunc, newidx.yfsbnii_idx.i_aid)) {
 				++newidx.yfsbnii_idx.i_aid;
 				continue;
 			}
@@ -1753,27 +1907,23 @@ again:
 				if unlikely(!name)
 					goto err;
 			}
-			Dee_Incref(value);
 			++newidx.yfsbnii_idx.i_aid;
 			break;
 		}
 		if (newidx.yfsbnii_idx.i_rid < sym->yfsbn_rid_end) {
 			char const *refname;
 			DeeFunctionObject *func = sym->yfsbn_yfunc->yf_func;
-			DeeFunction_RefLockRead(func);
-			value = func->fo_refv[newidx.yfsbnii_idx.i_rid];
+			DeeObject *value;
+			value = atomic_read(&func->fo_refv[newidx.yfsbnii_idx.i_rid]);
 			if (!ITER_ISOK(value)) {
-				DeeFunction_RefLockEndRead(func);
 				++newidx.yfsbnii_idx.i_rid;
 				continue;
 			}
-			Dee_Incref(value);
-			DeeFunction_RefLockEndRead(func);
 			refname = DeeCode_GetRSymbolName((DeeObject *)code, newidx.yfsbnii_idx.i_rid);
 			name = refname ? DeeString_New(refname)
 			               : DeeInt_NewUInt16(code->co_argc_max + newidx.yfsbnii_idx.i_rid);
 			if unlikely(!name)
-				goto err_value;
+				goto err;
 			++newidx.yfsbnii_idx.i_rid;
 			break;
 		}
@@ -1782,26 +1932,16 @@ again:
 	if (!atomic_cmpxch_or_write(&self->yfsbni_idx.yfsbnii_word,
 	                            oldidx.yfsbnii_word,
 	                            newidx.yfsbnii_word)) {
-		Dee_Decref_unlikely(value);
 		Dee_Decref_unlikely(name);
 		goto again;
 	}
-	result = DeeTuple_NewUninitialized(2);
-	if unlikely(!result)
-		goto err_value_name;
-	DeeTuple_SET(result, 0, name);  /* Inherit reference */
-	DeeTuple_SET(result, 1, value); /* Inherit reference */
-	return (DREF DeeObject *)result;
-err_value_name:
-	Dee_Decref(name);
-err_value:
-	Dee_Decref(value);
+	return name;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_next_key(YieldFunctionSymbolsByNameIterator *__restrict self) {
+yfuncsymbolsbynameiter_nextkey_with_unbound(YieldFunctionSymbolsByNameIterator *__restrict self) {
 	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
 	DeeCodeObject *code = sym->yfsbn_yfunc->yf_func->fo_code;
 	DREF DeeObject *name;
@@ -1847,7 +1987,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_next_value(YieldFunctionSymbolsByNameIterator *__restrict self) {
+yfuncsymbolsbynameiter_nextvalue(YieldFunctionSymbolsByNameIterator *__restrict self) {
 	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
 	DREF DeeObject *value;
 	YieldFunctionSymbolsByNameIteratorIndex oldidx, newidx;
@@ -1892,6 +2032,13 @@ again:
 err:
 	return NULL;*/
 }
+
+PRIVATE struct type_iterator yfuncsymbolsbynameiter_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&yfuncsymbolsbynameiter_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_nextvalue,
+	/* .tp_advance   = */ NULL,
+};
 
 PRIVATE struct type_nii tpconst yfuncsymbolsbynameiter_nii = {
 	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
@@ -1972,7 +2119,54 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &yfuncsymbolsbynameiter_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_next,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &yfuncsymbolsbynameiter_iterator,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ yfuncsymbolsbynameiter_getsets,
+	/* .tp_members       = */ yfuncsymbolsbynameiter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
+INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_YieldFunctionSymbolsByNameKeysIterator",
+	/* .tp_doc      = */ DOC("next->?X2?Dstring?Dint"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&yfuncsymbolsbynameiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&yfuncsymbolsbynameiter_init,
+				TYPE_FIXED_ALLOCATOR(YieldFunctionSymbolsByNameIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&yfuncsymbolsbynameiter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &yfuncsymbolsbynameiter_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_nextkey_with_unbound,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
@@ -2225,8 +2419,8 @@ err:
 	return -1;
 }
 
-#define yfuncsymbolsbyname_nsi_nextkey   yfuncsymbolsbynameiter_next_key
-#define yfuncsymbolsbyname_nsi_nextvalue yfuncsymbolsbynameiter_next_value
+#define yfuncsymbolsbyname_nsi_nextkey   yfuncsymbolsbynameiter_nextkey_with_unbound
+#define yfuncsymbolsbyname_nsi_nextvalue yfuncsymbolsbynameiter_nextvalue
 
 PRIVATE WUNUSED NONNULL((1)) DREF YieldFunctionSymbolsByNameIterator *DCALL
 yfuncsymbolsbyname_iter(YieldFunctionSymbolsByName *__restrict self) {
@@ -2239,6 +2433,22 @@ yfuncsymbolsbyname_iter(YieldFunctionSymbolsByName *__restrict self) {
 	result->yfsbni_idx.yfsbnii_idx.i_aid = 0;
 	result->yfsbni_idx.yfsbnii_idx.i_rid = self->yfsbn_rid_start;
 	DeeObject_Init(result, &YieldFunctionSymbolsByNameIterator_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF YieldFunctionSymbolsByNameIterator *DCALL
+yfuncsymbolsbyname_iterkeys(YieldFunctionSymbolsByName *__restrict self) {
+	DREF YieldFunctionSymbolsByNameIterator *result;
+	result = DeeObject_MALLOC(YieldFunctionSymbolsByNameIterator);
+	if unlikely(!result)
+		goto err;
+	result->yfsbni_seq = self;
+	Dee_Incref(self);
+	result->yfsbni_idx.yfsbnii_idx.i_aid = 0;
+	result->yfsbni_idx.yfsbnii_idx.i_rid = self->yfsbn_rid_start;
+	DeeObject_Init(result, &YieldFunctionSymbolsByNameKeysIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -2414,7 +2624,7 @@ PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL, /* TODO */
 	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ NULL,
+	/* .tp_iterkeys           = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iterkeys,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_nsi_getsize,
@@ -2435,6 +2645,7 @@ PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
 
 PRIVATE struct type_member tpconst yfuncsymbolsbyname_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &YieldFunctionSymbolsByNameIterator_Type),
+	TYPE_MEMBER_CONST(STR_KeysIterator, &YieldFunctionSymbolsByNameKeysIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -3595,6 +3806,7 @@ typedef struct {
 #define FrameSymbolsByNameIterator_LockRelease(self)    Dee_atomic_lock_release(&(self)->frsbni_lock)
 
 INTDEF DeeTypeObject FrameSymbolsByNameIterator_Type;
+INTDEF DeeTypeObject FrameSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject FrameSymbolsByName_Type;
 
 PRIVATE WUNUSED NONNULL((1)) DREF FrameSymbolsByName *DCALL
@@ -4103,50 +4315,43 @@ FrameSymbolsByName_IdxInc(FrameSymbolsByName *__restrict self,
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framesymbolsbynameiter_next(FrameSymbolsByNameIterator *__restrict self) {
-	DREF DeeTupleObject *result;
-	DREF DeeObject *name, *value;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framesymbolsbynameiter_nextpair(FrameSymbolsByNameIterator *__restrict self,
+                                DREF DeeObject *key_and_value[2]) {
 	FrameSymbolsByNameIteratorIndex oldidx, newidx;
 again:
 	framesymbolsbynameiter_get_idx(self, &oldidx);
 	memcpy(&newidx, &oldidx, sizeof(newidx));
 	for (;;) {
 		canonical_lid_t clid;
-		clid  = FrameSymbolsByName_Idx2CLid(self->frsbni_seq, &newidx);
-		value = FrameSymbolsByName_GetCLidValue(self->frsbni_seq, clid);
-		if (ITER_ISOK(value)) {
-			name = FrameSymbolsByName_GetCLidName(self->frsbni_seq, clid);
-			if unlikely(!name)
+		clid             = FrameSymbolsByName_Idx2CLid(self->frsbni_seq, &newidx);
+		key_and_value[1] = FrameSymbolsByName_GetCLidValue(self->frsbni_seq, clid);
+		if (ITER_ISOK(key_and_value[1])) {
+			key_and_value[0] = FrameSymbolsByName_GetCLidName(self->frsbni_seq, clid);
+			if unlikely(!key_and_value[0])
 				goto err_value;
-			result = DeeTuple_NewUninitialized(2);
-			if unlikely(!result)
-				goto err_value_name;
-			DeeTuple_SET(result, 0, name);  /* Inherit reference */
-			DeeTuple_SET(result, 1, value); /* Inherit reference */
 			FrameSymbolsByName_IdxInc(self->frsbni_seq, &newidx);
 			break;
 		}
-		if unlikely(!value)
+		if unlikely(!key_and_value[1])
 			goto err;
 		if (!FrameSymbolsByName_IdxInc(self->frsbni_seq, &newidx))
-			return ITER_DONE;
+			return 1;
 	}
 	if (!framesymbolsbynameiter_cmpxch_idx(self, &oldidx, &newidx)) {
-		Dee_Decref(result);
+		Dee_Decref(key_and_value[1]);
+		Dee_Decref(key_and_value[0]);
 		goto again;
 	}
-	return (DREF DeeObject *)result;
-err_value_name:
-	Dee_Decref(name);
+	return 0;
 err_value:
-	Dee_Decref(value);
+	Dee_Decref(key_and_value[1]);
 err:
-	return NULL;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framesymbolsbynameiter_next_key(FrameSymbolsByNameIterator *__restrict self) {
+framesymbolsbynameiter_nextkey_with_unbound(FrameSymbolsByNameIterator *__restrict self) {
 	canonical_lid_t clid;
 	DREF DeeObject *name;
 	FrameSymbolsByNameIteratorIndex oldidx, newidx;
@@ -4170,7 +4375,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framesymbolsbynameiter_next_value(FrameSymbolsByNameIterator *__restrict self) {
+framesymbolsbynameiter_nextvalue(FrameSymbolsByNameIterator *__restrict self) {
 	DREF DeeObject *value;
 	FrameSymbolsByNameIteratorIndex oldidx, newidx;
 again:
@@ -4197,6 +4402,13 @@ again:
 err:
 	return NULL;
 }
+
+PRIVATE struct type_iterator framesymbolsbynameiter_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&framesymbolsbynameiter_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_nextvalue,
+	/* .tp_advance   = */ NULL
+};
 
 PRIVATE struct type_nii tpconst framesymbolsbynameiter_nii = {
 	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
@@ -4279,7 +4491,53 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &framesymbolsbynameiter_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_next,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &framesymbolsbynameiter_iterator,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ framesymbolsbynameiter_getsets,
+	/* .tp_members       = */ framesymbolsbynameiter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_FrameSymbolsByNameKeysIterator",
+	/* .tp_doc      = */ DOC("next->?X2?Dstring?Dint"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&framesymbolsbynameiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&framesymbolsbynameiter_init,
+				TYPE_FIXED_ALLOCATOR(FrameSymbolsByNameIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&framesymbolsbynameiter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &framesymbolsbynameiter_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_nextkey_with_unbound,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
@@ -4640,8 +4898,8 @@ err:
 	return -1;
 }
 
-#define framesymbolsbyname_nsi_nextkey   framesymbolsbynameiter_next_key
-#define framesymbolsbyname_nsi_nextvalue framesymbolsbynameiter_next_value
+#define framesymbolsbyname_nsi_nextkey   framesymbolsbynameiter_nextkey_with_unbound
+#define framesymbolsbyname_nsi_nextvalue framesymbolsbynameiter_nextvalue
 
 PRIVATE WUNUSED NONNULL((1)) DREF FrameSymbolsByNameIterator *DCALL
 framesymbolsbyname_iter(FrameSymbolsByName *__restrict self) {
@@ -4657,6 +4915,25 @@ framesymbolsbyname_iter(FrameSymbolsByName *__restrict self) {
 	result->frsbni_idx.frsbnii_lid = 0;
 	result->frsbni_idx.frsbnii_nsp = 0;
 	DeeObject_Init(result, &FrameSymbolsByNameIterator_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF FrameSymbolsByNameIterator *DCALL
+framesymbolsbyname_keysiter(FrameSymbolsByName *__restrict self) {
+	DREF FrameSymbolsByNameIterator *result;
+	result = DeeObject_MALLOC(FrameSymbolsByNameIterator);
+	if unlikely(!result)
+		goto err;
+	result->frsbni_seq = self;
+	Dee_Incref(self);
+	Dee_atomic_lock_init(&result->frsbni_lock);
+	result->frsbni_idx.frsbnii_aid = 0;
+	result->frsbni_idx.frsbnii_rid = self->frsbn_rid_start;
+	result->frsbni_idx.frsbnii_lid = 0;
+	result->frsbni_idx.frsbnii_nsp = 0;
+	DeeObject_Init(result, &FrameSymbolsByNameKeysIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -4812,7 +5089,7 @@ PRIVATE struct type_seq framesymbolsbyname_seq = {
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL, /* TODO */
 	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ NULL,
+	/* .tp_iterkeys           = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_keysiter,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
