@@ -56,7 +56,6 @@ DECL_BEGIN
 PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL USet_InitEmpty(USet *__restrict self);
 PRIVATE NONNULL((1)) void DCALL USet_Fini(USet *__restrict self);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitCopy(USet *__restrict self, USet *__restrict other);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitIterator(USet *__restrict self, DeeObject *__restrict iterator);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitSequence(USet *__restrict self, DeeObject *__restrict sequence);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_Insert(USet *__restrict self, DeeObject *__restrict ob);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_DoInsertNolock(USet *__restrict self, DeeObject *__restrict ob);
@@ -259,26 +258,6 @@ USet_InitEmpty(USet *__restrict self) {
 	Dee_atomic_rwlock_init(&self->us_lock);
 	weakref_support_init(self);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-USet_InitIterator(USet *__restrict self,
-                  DeeObject *__restrict iterator) {
-	DREF DeeObject *elem;
-	USet_InitEmpty(self);
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		int error;
-		error = USet_DoInsertNolock(self, elem);
-		Dee_Decref(elem);
-		if unlikely(error < 0)
-			goto err;
-	}
-	if unlikely(!elem)
-		goto err;
-	return 0;
-err:
-	USet_Fini(self);
-	return -1;
 }
 
 LOCAL void DCALL
@@ -555,6 +534,27 @@ again:
 }
 
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+USet_InitIterator(USet *__restrict self,
+                  DeeObject *__restrict iterator) {
+	DREF DeeObject *elem;
+	USet_InitEmpty(self);
+	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
+		int error;
+		error = USet_DoInsertNolock(self, elem);
+		Dee_Decref(elem);
+		if unlikely(error < 0)
+			goto err;
+	}
+	if unlikely(!elem)
+		goto err;
+	return 0;
+err:
+	USet_Fini(self);
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_InitSequence(USet *__restrict self,
                   DeeObject *__restrict sequence) {
@@ -640,6 +640,10 @@ again_hashset:
 		weakref_support_init(self);
 		return 0;
 	}
+
+	/* TODO: Use `DeeObject_SizeFast()' as hint for a pre-allocation */
+	/* TODO: Use `DeeObject_Foreach()' to enumerate elements */
+
 	{
 		/* Fallback: Try the fast-sequence interface. */
 		size_t i, fastsize = DeeFastSeq_GetSize_deprecated(sequence);

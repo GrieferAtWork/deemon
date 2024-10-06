@@ -1540,7 +1540,9 @@ err_cannot_inherit:
 }
 
 /* Same as `DeeSharedVector_Decref()', but should be used if the caller
- * does *not* want to gift the vector references to all of its items. */
+ * does *not* want to gift the vector references to all of its items.
+ * s.a.: the "maybe DREF" annotated on the `vector' arcument of
+ *       `DeeSharedVector_NewShared()' */
 PUBLIC NONNULL((1)) void DCALL
 DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
 	DREF DeeObject **vector_copy;

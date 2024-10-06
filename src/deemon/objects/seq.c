@@ -2263,9 +2263,9 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 }
 
 struct foreach_seq_printrepr_data {
-	dformatprinter fsprd_printer; /* [1..1] Underlying printer. */
-	void          *fsprd_arg;     /* [?..?] Cookie for `fsprd_printer' */
-	bool           fsprd_first;   /* Is this the first element? */
+	Dee_formatprinter_t fsprd_printer; /* [1..1] Underlying printer. */
+	void               *fsprd_arg;     /* [?..?] Cookie for `fsprd_printer' */
+	bool                fsprd_first;   /* Is this the first element? */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -2289,7 +2289,7 @@ foreach_seq_printrepr_cb(void *arg, DeeObject *elem) {
 
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
+default_seq_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
@@ -2304,15 +2304,9 @@ default_seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *
 	data.fsprd_printer = printer;
 	data.fsprd_arg     = arg;
 	data.fsprd_first   = true;
-	temp = DeeObject_Foreach(self, &foreach_seq_printrepr_cb, &data);
-	if unlikely(temp < 0)
-		goto err;
-	result += temp;
-	temp = data.fsprd_first ? DeeFormat_PRINT(printer, arg, "}")
-	                        : DeeFormat_PRINT(printer, arg, " }");
-	if unlikely(temp < 0)
-		goto err;
-	result += temp;
+	DO(err, DeeObject_Foreach(self, &foreach_seq_printrepr_cb, &data));
+	DO(err, data.fsprd_first ? DeeFormat_PRINT(printer, arg, "}")
+	                         : DeeFormat_PRINT(printer, arg, " }"));
 done:
 	return result;
 err:

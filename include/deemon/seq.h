@@ -665,7 +665,9 @@ DFUNDEF NONNULL((1)) void DCALL
 DeeSharedVector_Decref(DREF DeeObject *__restrict self);
 
 /* Same as `DeeSharedVector_Decref()', but should be used if the caller
- * does *not* want to gift the vector references to all of its items. */
+ * does *not* want to gift the vector references to all of its items.
+ * s.a.: the "maybe DREF" annotated on the `vector' arcument of
+ *       `DeeSharedVector_NewShared()' */
 DFUNDEF NONNULL((1)) void DCALL
 DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
 
