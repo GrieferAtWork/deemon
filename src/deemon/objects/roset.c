@@ -503,7 +503,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-roset_asvector(RoSet *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+roset_asvector_nothrow(RoSet *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	if likely(dst_length >= self->rs_size) {
 		struct roset_item *iter, *end;
 		end = (iter = self->rs_elem) + (self->rs_mask + 1);
@@ -564,7 +564,8 @@ PRIVATE struct type_seq roset_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&roset_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&roset_asvector_nothrow,
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&roset_asvector_nothrow,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

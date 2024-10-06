@@ -17384,6 +17384,7 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self, unsigned int seqclas
 			self->tp_seq->tp_bounditem_string_len_hash  = base_seq->tp_bounditem_string_len_hash;
 			self->tp_seq->tp_hasitem_string_len_hash    = base_seq->tp_hasitem_string_len_hash;
 			self->tp_seq->tp_asvector                   = base_seq->tp_asvector;
+			self->tp_seq->tp_asvector_nothrow           = base_seq->tp_asvector_nothrow;
 			self->tp_seq->tp_unpack                     = base_seq->tp_unpack;
 			self->tp_seq->tp_unpack_ub                  = base_seq->tp_unpack_ub;
 		} else {
@@ -17467,12 +17468,13 @@ DeeType_InheritIter(DeeTypeObject *__restrict self) {
 			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
 			if unlikely(origin)
 				return DeeType_InheritIter(origin);
-			self->tp_seq->tp_iter         = base_seq->tp_iter;
-			self->tp_seq->tp_foreach      = base_seq->tp_foreach;
-			self->tp_seq->tp_foreach_pair = base_seq->tp_foreach_pair;
-			self->tp_seq->tp_asvector     = base_seq->tp_asvector;
-			self->tp_seq->tp_unpack       = base_seq->tp_unpack;
-			self->tp_seq->tp_unpack_ub    = base_seq->tp_unpack_ub;
+			self->tp_seq->tp_iter             = base_seq->tp_iter;
+			self->tp_seq->tp_foreach          = base_seq->tp_foreach;
+			self->tp_seq->tp_foreach_pair     = base_seq->tp_foreach_pair;
+			self->tp_seq->tp_asvector         = base_seq->tp_asvector;
+			self->tp_seq->tp_asvector_nothrow = base_seq->tp_asvector_nothrow;
+			self->tp_seq->tp_unpack           = base_seq->tp_unpack;
+			self->tp_seq->tp_unpack_ub        = base_seq->tp_unpack_ub;
 		} else {
 			self->tp_seq = base_seq;
 		}

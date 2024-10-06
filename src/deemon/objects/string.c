@@ -1732,6 +1732,7 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&string_asvector,
+	/* .tp_asvector_nothrow           = */ NULL,
 };
 
 PRIVATE struct type_member tpconst string_class_members[] = {

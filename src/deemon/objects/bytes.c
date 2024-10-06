@@ -1403,6 +1403,9 @@ err_temp:
 	return temp;
 }
 
+#ifdef DeeInt_8bit
+#define bytes_asvector_nothrow bytes_asvector
+#endif /* DeeInt_8bit */
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 bytes_asvector(Bytes *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t size = DeeBytes_SIZE(self);
@@ -1503,6 +1506,11 @@ PRIVATE struct type_seq bytes_seq = {
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&bytes_asvector,
+#ifdef bytes_asvector_nothrow
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&bytes_asvector_nothrow,
+#else /* bytes_asvector_nothrow */
+	/* .tp_asvector_nothrow           = */ NULL,
+#endif /* !bytes_asvector_nothrow */
 };
 
 

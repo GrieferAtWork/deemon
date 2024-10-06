@@ -147,7 +147,7 @@ DeeSeqRange_DoClamp_n(Dee_ssize_t start, size_t size) {
 	}
 	return (size_t)start;
 empty_range:
-	return 0;
+	return size;
 }
 
 /* Lookup the closest NSI descriptor for `tp', or return `NULL'

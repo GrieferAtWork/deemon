@@ -164,13 +164,11 @@ DeeList_Resize(DeeObject *self, size_t newsize, DeeObject *filler);
 
 /* Append objects to a given list. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeList_Append(DeeObject *self, DeeObject *elem);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeList_AppendIterator(DeeObject *self, DeeObject *iterator);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeList_AppendSequence(DeeObject *self, DeeObject *sequence);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeList_AppendVector(DeeObject *self, size_t objc, DeeObject *const *objv);
 
 /* Insert objects into a given list. */
 DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeList_Insert(DeeObject *self, size_t index, DeeObject *elem);
-DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeList_InsertIterator(DeeObject *self, size_t index, DeeObject *iterator);
 DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeList_InsertSequence(DeeObject *self, size_t index, DeeObject *sequence);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeList_InsertVector(DeeObject *self, size_t index, size_t objc, DeeObject *const *objv);
 
@@ -178,11 +176,9 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeList_InsertVector(DeeObject *self, siz
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #define DeeList_Append(self, elem)                    __builtin_expect(DeeList_Append(self, elem), 0)
-#define DeeList_AppendIterator(self, iterator)        __builtin_expect(DeeList_AppendIterator(self, iterator), 0)
 #define DeeList_AppendSequence(self, sequence)        __builtin_expect(DeeList_AppendSequence(self, sequence), 0)
 #define DeeList_AppendVector(self, objc, objv)        __builtin_expect(DeeList_AppendVector(self, objc, objv), 0)
 #define DeeList_Insert(self, index, elem)             __builtin_expect(DeeList_Insert(self, index, elem), 0)
-#define DeeList_InsertIterator(self, index, iterator) __builtin_expect(DeeList_InsertIterator(self, index, iterator), 0)
 #define DeeList_InsertSequence(self, index, sequence) __builtin_expect(DeeList_InsertSequence(self, index, sequence), 0)
 #define DeeList_InsertVector(self, index, objc, objv) __builtin_expect(DeeList_InsertVector(self, index, objc, objv), 0)
 #endif /* !__NO_builtin_expect */

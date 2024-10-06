@@ -79,9 +79,6 @@ public:
 	void cappend(DeeObject *item) DEE_CXX_NOTHROW {
 		throw_if_nonzero(DeeList_Append(this, item));
 	}
-	void cappenditer(DeeObject *iter) DEE_CXX_NOTHROW {
-		throw_if_nonzero(DeeList_AppendIterator(this, iter));
-	}
 	void cextend(DeeObject *seq) DEE_CXX_NOTHROW {
 		throw_if_nonzero(DeeList_AppendSequence(this, seq));
 	}
@@ -90,9 +87,6 @@ public:
 	}
 	void cinsert(size_t index, DeeObject *item) DEE_CXX_NOTHROW {
 		throw_if_nonzero(DeeList_Insert(this, index, item));
-	}
-	void cinsertiter(size_t index, DeeObject *iter) DEE_CXX_NOTHROW {
-		throw_if_nonzero(DeeList_InsertIterator(this, index, iter));
 	}
 	void cinsertall(size_t index, DeeObject *seq) DEE_CXX_NOTHROW {
 		throw_if_nonzero(DeeList_InsertSequence(this, index, seq));

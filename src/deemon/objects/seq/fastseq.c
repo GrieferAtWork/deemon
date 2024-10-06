@@ -284,7 +284,7 @@ err:
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
-                    size_t *__restrict p_length) {
+                    /*[out]*/ size_t *__restrict p_length) {
 #ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	struct foreach_seq_as_heap_vector_data data;

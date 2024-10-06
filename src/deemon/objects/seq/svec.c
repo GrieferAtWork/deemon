@@ -1101,7 +1101,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-svec_asvector(SharedVector *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+svec_asvector_nothrow(SharedVector *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t realsize;
 	SharedVector_LockRead(self);
 	realsize = self->sv_length;
@@ -1336,7 +1336,8 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&svec_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&svec_asvector_nothrow,
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&svec_asvector_nothrow,
 };
 
 PRIVATE struct type_getset tpconst svec_getsets[] = {

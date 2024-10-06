@@ -1,0 +1,125 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+function testSetRange(before: List, assign: string, after: List) {
+	local list = before;
+	exec(f"list{assign}", globals: { .list = list });
+	assert list == after;
+}
+
+testSetRange([], r'[:] = list', []);
+testSetRange([], r'[1:] = list', []);
+testSetRange([], r'[1:2] = list', []);
+testSetRange([], r'[1:999] = list', []);
+testSetRange([], r'[:-1] = list', []);
+testSetRange([], r'[2:] = list', []);
+testSetRange([], r'[2:999] = list', []);
+testSetRange([], r'[3:] = list', []);
+testSetRange([], r'[999:] = list', []);
+testSetRange([], r'[:0] = list', []);
+testSetRange([], r'[0:0] = list', []);
+
+testSetRange([], r'[:] = ()', []);
+testSetRange([], r'[1:] = ()', []);
+testSetRange([], r'[1:2] = ()', []);
+testSetRange([], r'[1:999] = ()', []);
+testSetRange([], r'[:-1] = ()', []);
+testSetRange([], r'[2:] = ()', []);
+testSetRange([], r'[2:999] = ()', []);
+testSetRange([], r'[3:] = ()', []);
+testSetRange([], r'[999:] = ()', []);
+testSetRange([], r'[:0] = ()', []);
+testSetRange([], r'[0:0] = ()', []);
+
+testSetRange([], r'[:] = []', []);
+testSetRange([], r'[1:] = []', []);
+testSetRange([], r'[1:2] = []', []);
+testSetRange([], r'[1:999] = []', []);
+testSetRange([], r'[:-1] = []', []);
+testSetRange([], r'[2:] = []', []);
+testSetRange([], r'[2:999] = []', []);
+testSetRange([], r'[3:] = []', []);
+testSetRange([], r'[999:] = []', []);
+testSetRange([], r'[:0] = []', []);
+testSetRange([], r'[0:0] = []', []);
+
+testSetRange([10, 20], r'[:] = []', []);
+testSetRange([10, 20], r'[1:] = []', [10]);
+testSetRange([10, 20], r'[1:2] = []', [10]);
+testSetRange([10, 20], r'[1:999] = []', [10]);
+testSetRange([10, 20], r'[:-1] = []', [20]);
+testSetRange([10, 20], r'[2:] = []', [10, 20]);
+testSetRange([10, 20], r'[2:999] = []', [10, 20]);
+testSetRange([10, 20], r'[3:] = []', [10, 20]);
+testSetRange([10, 20], r'[999:] = []', [10, 20]);
+testSetRange([10, 20], r'[:0] = []', [10, 20]);
+testSetRange([10, 20], r'[0:0] = []', [10, 20]);
+
+testSetRange([10, 20], r'[:] = ()', []);
+testSetRange([10, 20], r'[1:] = ()', [10]);
+testSetRange([10, 20], r'[1:2] = ()', [10]);
+testSetRange([10, 20], r'[1:999] = ()', [10]);
+testSetRange([10, 20], r'[:-1] = ()', [20]);
+testSetRange([10, 20], r'[2:] = ()', [10, 20]);
+testSetRange([10, 20], r'[2:999] = ()', [10, 20]);
+testSetRange([10, 20], r'[3:] = ()', [10, 20]);
+testSetRange([10, 20], r'[999:] = ()', [10, 20]);
+testSetRange([10, 20], r'[:0] = ()', [10, 20]);
+testSetRange([10, 20], r'[0:0] = ()', [10, 20]);
+
+testSetRange([10, 20], r'[:] = ["foo"]', ["foo"]);
+testSetRange([10, 20], r'[1:] = ["foo"]', [10, "foo"]);
+testSetRange([10, 20], r'[1:2] = ["foo"]', [10, "foo"]);
+testSetRange([10, 20], r'[1:999] = ["foo"]', [10, "foo"]);
+testSetRange([10, 20], r'[:-1] = ["foo"]', ["foo", 20]);
+testSetRange([10, 20], r'[2:] = ["foo"]', [10, 20, "foo"]);
+testSetRange([10, 20], r'[2:999] = ["foo"]', [10, 20, "foo"]);
+testSetRange([10, 20], r'[3:] = ["foo"]', [10, 20, "foo"]);
+testSetRange([10, 20], r'[999:] = ["foo"]', [10, 20, "foo"]);
+testSetRange([10, 20], r'[:0] = ["foo"]', ["foo", 10, 20]);
+testSetRange([10, 20], r'[0:0] = ["foo"]', ["foo", 10, 20]);
+
+testSetRange([10, 20], r'[:] = "foo"', ["f", "o", "o"]);
+testSetRange([10, 20], r'[1:] = "foo"', [10, "f", "o", "o"]);
+testSetRange([10, 20], r'[1:2] = "foo"', [10, "f", "o", "o"]);
+testSetRange([10, 20], r'[1:999] = "foo"', [10, "f", "o", "o"]);
+testSetRange([10, 20], r'[:-1] = "foo"', ["f", "o", "o", 20]);
+testSetRange([10, 20], r'[2:] = "foo"', [10, 20, "f", "o", "o"]);
+testSetRange([10, 20], r'[2:999] = "foo"', [10, 20, "f", "o", "o"]);
+testSetRange([10, 20], r'[3:] = "foo"', [10, 20, "f", "o", "o"]);
+testSetRange([10, 20], r'[999:] = "foo"', [10, 20, "f", "o", "o"]);
+testSetRange([10, 20], r'[:0] = "foo"', ["f", "o", "o", 10, 20]);
+testSetRange([10, 20], r'[0:0] = "foo"', ["f", "o", "o", 10, 20]);
+
+testSetRange([10, 20], r'[:] = list', [10, 20]);
+testSetRange([10, 20], r'[1:] = list', [10, 10, 20]);
+testSetRange([10, 20], r'[1:2] = list', [10, 10, 20]);
+testSetRange([10, 20], r'[1:999] = list', [10, 10, 20]);
+testSetRange([10, 20], r'[:-1] = list', [10, 20, 20]);
+testSetRange([10, 20], r'[2:] = list', [10, 20, 10, 20]);
+testSetRange([10, 20], r'[2:999] = list', [10, 20, 10, 20]);
+testSetRange([10, 20], r'[3:] = list', [10, 20, 10, 20]);
+testSetRange([10, 20], r'[999:] = list', [10, 20, 10, 20]);
+testSetRange([10, 20], r'[:0] = list', [10, 20, 10, 20]);
+testSetRange([10, 20], r'[0:0] = list', [10, 20, 10, 20]);
+

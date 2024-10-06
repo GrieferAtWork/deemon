@@ -2113,7 +2113,7 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 
-	/* Optional helper to help implement `DeeSeq_AsHeapVector()' & friends.
+	/* [0..1] Optional helper to help implement `DeeSeq_AsHeapVector()' & friends.
 	 * NOTES:
 	 * - This operator is NOT used to implement stuff above, and will NOT
 	 *   be substituted using other operators. This operator gets inherited
@@ -2132,6 +2132,30 @@ struct Dee_type_seq {
 	 *                         to hold at least "return" elements, and call this operator again.
 	 * @return: (size_t)-1:    Error. */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+
+	/* [0..1] Same as `tp_asvector', but not allowed to throw exceptions or
+	 *        ever invoke user-code in any form, or for any reason, or acquire
+	 *        arbitrary object locks (other than immediately owned by `self').
+	 * This means:
+	 * - The caller is allowed to invoke this function while holding some kind
+	 *   of lock themselves (so-long as they the lock they're holding isn't
+	 *   owned by the given object "self")
+	 * - The caller can assume this function to be NOBLOCK, even while holding
+	 *   locks themselves (so-long as "self" can't access already-held locks)
+	 * Usage:
+	 * - This operator is used by `deemon.List' in order to in-place insert
+	 *   caller-given sequences into the list's internal vector buffer, without
+	 *   the need to transfer objects one-at-a-time, or via a temporary vector.
+	 *   Note that in this case, this operator is invoked WHILE the caller is
+	 *   HOLDING A LOCK to the list being modified!
+	 * NOTE: When defining this operator, you can usually assign the same function
+	 *       pointer to `tp_asvector' also. Please do so explicitly. Otherwise,
+	 *       the runtime may not be able to notice its availability.
+	 * @return: <= dst_length: Success: the first "return" elements of "dst" were filled with the items of this sequence.
+	 * @return: > dst_length:  The given "dst_length" is too short. In this case, "dst" may have been modified,
+	 *                         but will not contain any object references. You must resize it until it is able
+	 *                         to hold at least "return" elements, and call this operator again. */
+	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 
 	/* >> tp_unpack
 	 * Operator for `DeeObject_Unpack()', following

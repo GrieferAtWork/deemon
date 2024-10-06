@@ -396,6 +396,7 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_bounditem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4_1,
 	/* .tp_hasitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4_1,
 	/* .tp_asvector                     = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_s3,
+	/* .tp_asvector_nothrow             = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_s3,
 	/* .tp_unpack                       = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_unpack,
 	/* .tp_unpack_ub                    = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_unpack,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&none_getitemnr,

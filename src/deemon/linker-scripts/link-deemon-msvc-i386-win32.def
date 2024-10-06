@@ -444,7 +444,6 @@ EXPORTS
 	DeeKwds_IndexOfStringHash@12=_DeeKwds_IndexOfStringHash@12
 	DeeKwds_IndexOfStringLenHash@16=_DeeKwds_IndexOfStringLenHash@16
 	DeeList_Append@8=_DeeList_Append@8
-	DeeList_AppendIterator@8=_DeeList_AppendIterator@8
 	DeeList_AppendSequence@8=_DeeList_AppendSequence@8
 	DeeList_AppendVector@12=_DeeList_AppendVector@12
 	DeeList_Clear@4=_DeeList_Clear@4
@@ -456,7 +455,6 @@ EXPORTS
 	DeeList_FromSequenceInherited@4=_DeeList_FromSequenceInherited@4
 	DeeList_FromTuple@4=_DeeList_FromTuple@4
 	DeeList_Insert@12=_DeeList_Insert@12
-	DeeList_InsertIterator@12=_DeeList_InsertIterator@12
 	DeeList_InsertSequence@12=_DeeList_InsertSequence@12
 	DeeList_InsertVector@16=_DeeList_InsertVector@16
 	DeeList_NewUninitialized@4=_DeeList_NewUninitialized@4

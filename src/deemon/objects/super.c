@@ -834,6 +834,7 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_bounditem_string_len_hash,
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_hasitem_string_len_hash,
 	/* .tp_asvector                   = */ NULL,
+	/* .tp_asvector_nothrow           = */ NULL,
 	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&super_unpack,
 	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&super_unpack_ub,
 };

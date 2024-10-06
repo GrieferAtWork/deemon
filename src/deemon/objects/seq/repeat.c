@@ -1027,6 +1027,13 @@ repeatitem_asvector(RepeatItem *self, size_t dst_length, /*out*/ DREF DeeObject 
 	return self->rpit_num;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+repeatitem_asvector_nothrow(RepeatItem *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	if likely(dst_length >= self->rpit_num)
+		Dee_Setrefv(dst, self->rpit_obj, self->rpit_num);
+	return self->rpit_num;
+}
+
 
 PRIVATE struct type_nsi tpconst repeatitem_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -1092,6 +1099,7 @@ PRIVATE struct type_seq repeatitem_seq = {
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&repeatitem_asvector,
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&repeatitem_asvector_nothrow,
 };
 
 PRIVATE struct type_member tpconst repeatitem_members[] = {

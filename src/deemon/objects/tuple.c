@@ -1584,7 +1584,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-tuple_asvector(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+tuple_asvector_nothrow(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t result = self->t_size;
 	if likely(dst_length >= result)
 		Dee_Movrefv(dst, self->t_elem, result);
@@ -1663,7 +1663,8 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_asvector,
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_asvector_nothrow,
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_asvector_nothrow,
 	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_unpack,
 	/* .tp_unpack_ub                  = */ NULL,
 };
@@ -2639,7 +2640,8 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_setitem_string_len_hash    = */ NULL,
 	/* .tp_bounditem_string_len_hash  = */ NULL,
 	/* .tp_hasitem_string_len_hash    = */ NULL,
-	/* .tp_asvector                   = */ NULL,
+	/* .tp_asvector                   = */ NULL, /* TODO */
+	/* .tp_asvector_nothrow           = */ NULL, /* TODO */
 	/* .tp_unpack                     = */ NULL,
 	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&nullable_tuple_unpack_ub,
 };

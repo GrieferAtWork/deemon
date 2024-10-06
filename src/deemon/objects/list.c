@@ -53,6 +53,12 @@
 
 DECL_BEGIN
 
+/* Returns true if `tp_asvector_nothrow' of `ob' may
+ * attempt to acquire a lock to `DeeList_Lock*(list)'. */
+#define DeeObject_IsAsVectorNoThrowUsingLockOfList(ob, list) \
+	((DeeObject *)(list) == (DeeObject *)(ob))
+
+
 typedef DeeListObject List;
 
 typedef struct {
@@ -548,7 +554,7 @@ err:
 /* @return: * :   The popped element.
  * @return: NULL: The given index was out-of-bounds and an IndexError was thrown. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeList_Pop(DeeObject *__restrict self, dssize_t index) {
+DeeList_Pop(DeeObject *__restrict self, Dee_ssize_t index) {
 	List *me = (List *)self;
 	DREF DeeObject *delob;
 	size_t length;
@@ -875,52 +881,6 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeList_AppendIterator)(DeeObject *self,
-                               DeeObject *iterator) {
-	DREF DeeObject *elem;
-	int error;
-	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
-	ASSERT_OBJECT(iterator);
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		error = DeeList_Append(self, elem);
-		Dee_Decref(elem);
-		if unlikely(error)
-			return error;
-		if unlikely(DeeThread_CheckInterrupt())
-			goto err;
-	}
-	if likely(elem)
-		return 0;
-err:
-	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeList_AppendSequence)(DeeObject *self,
-                               DeeObject *sequence) {
-	int error;
-	size_t fast_seqlen;
-	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
-	ASSERT_OBJECT(sequence);
-	if (DeeTuple_CheckExact(sequence))
-		return DeeList_AppendVector(self, DeeTuple_SIZE(sequence), DeeTuple_ELEM(sequence));
-	fast_seqlen = DeeFastSeq_GetSize_deprecated(sequence);
-	if (fast_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		/* TODO: Special optimization. */
-	}
-
-	/* Fallback: Append elements from a general-purpose iterator. */
-	sequence = DeeObject_Iter(sequence);
-	if unlikely(!sequence)
-		goto err;
-	error = DeeList_AppendIterator(self, sequence);
-	Dee_Decref(sequence);
-	return error;
-err:
-	return -1;
-}
-
 /* Insert objects into a given list. */
 PUBLIC WUNUSED NONNULL((1, 3)) int
 (DCALL DeeList_Insert)(DeeObject *self, size_t index,
@@ -1021,54 +981,6 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) int
-(DCALL DeeList_InsertIterator)(DeeObject *self, size_t index,
-                               DeeObject *iterator) {
-	DeeObject *elem;
-	int error;
-	ASSERT_OBJECT(iterator);
-	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		error = DeeList_Insert(self, index, elem);
-		Dee_Decref(elem);
-		if unlikely(error)
-			return error;
-		++index;
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	}
-	if likely(elem)
-		return 0;
-err:
-	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1, 3)) int
-(DCALL DeeList_InsertSequence)(DeeObject *self, size_t index,
-                               DeeObject *sequence) {
-	DeeObject *iterator;
-	int result;
-	size_t fast_seqlen;
-	ASSERT_OBJECT(sequence);
-	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
-
-	/* Optimization for known types. */
-	if (DeeTuple_CheckExact(sequence))
-		return DeeList_InsertVector(self, index, DeeTuple_SIZE(sequence), DeeTuple_ELEM(sequence));
-	fast_seqlen = DeeFastSeq_GetSize_deprecated(sequence);
-	if (fast_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		/* TODO: Special optimization. */
-	}
-	iterator = DeeObject_Iter(sequence);
-	if unlikely(!iterator)
-		goto err;
-	result = DeeList_InsertIterator(self, index, iterator);
-	Dee_Decref(iterator);
-	return result;
-err:
-	return -1;
-}
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_init(List *__restrict self,
@@ -1132,12 +1044,12 @@ DeeList_Clear(DeeObject *__restrict self) {
 	return elemc != 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 list_printrepr(DeeObject *__restrict self,
                dformatprinter printer, void *arg) {
 	List *me = (List *)self;
 	size_t i;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	temp = (*printer)(arg, "[", 1);
 	if unlikely(temp < 0)
 		goto err;
@@ -1233,7 +1145,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_getrange_index(List *__restrict me, dssize_t i_begin, dssize_t i_end) {
+list_getrange_index(List *__restrict me, Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 	struct Dee_seq_range range;
 	size_t range_size;
 	DREF DeeObject **new_elemv;
@@ -1285,7 +1197,7 @@ err_elemv:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_getrange_index_n(List *__restrict me, dssize_t i_begin) {
+list_getrange_index_n(List *__restrict me, Dee_ssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
 	return list_getrange_index(me, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
@@ -1340,7 +1252,7 @@ err_elemv:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 list_getrange(List *me, DeeObject *begin, DeeObject *end) {
-	dssize_t i_begin, i_end;
+	Dee_ssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
@@ -1447,40 +1359,39 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_delrange_index(List *__restrict me, dssize_t i_begin, dssize_t i_end) {
-	DREF DeeObject **delobv;
+list_delrange_index(List *__restrict me, Dee_ssize_t start, Dee_ssize_t end) {
+	DREF DeeObject **delete_v;
 	struct Dee_seq_range range;
-	size_t range_size;
+	size_t delete_c;
 again:
 	DeeList_LockWrite(me);
-	DeeSeqRange_Clamp(&range, i_begin, i_end, DeeList_SIZE(me));
-	range_size = range.sr_end - range.sr_start;
-	if unlikely(range_size <= 0)
+	DeeSeqRange_Clamp(&range, start, end, DeeList_SIZE(me));
+	delete_c = range.sr_end - range.sr_start;
+	if unlikely(delete_c <= 0)
 		goto done_noop;
-	delobv = (DREF DeeObject **)Dee_TryMallocac(range_size,
-	                                            sizeof(DREF DeeObject *));
-	if unlikely(!delobv) {
+	delete_v = (DREF DeeObject **)Dee_TryMallocac(delete_c, sizeof(DREF DeeObject *));
+	if unlikely(!delete_v) {
 		DeeList_LockEndWrite(me);
-		if (Dee_CollectMemoryc(range_size, sizeof(DREF DeeObject *)))
+		if (Dee_CollectMemoryc(delete_c, sizeof(DREF DeeObject *)))
 			goto again;
 		goto err;
 	}
 
 	/* Move all items to-be deleted into the delete-vector. */
-	memcpyc(delobv, DeeList_ELEM(me) + range.sr_start,
-	        range_size, sizeof(DREF DeeObject *));
+	memcpyc(delete_v, DeeList_ELEM(me) + range.sr_start,
+	        delete_c, sizeof(DREF DeeObject *));
 	memmovedownc(DeeList_ELEM(me) + range.sr_start,
 	             DeeList_ELEM(me) + range.sr_end,
 	             DeeList_SIZE(me) - range.sr_end,
 	             sizeof(DREF DeeObject *));
-	me->l_list.ol_elemc -= range_size;
+	me->l_list.ol_elemc -= delete_c;
 	DeeList_LockEndWrite(me);
 
 	/* Drop object references. */
-	Dee_Decrefv(delobv, range_size);
+	Dee_Decrefv(delete_v, delete_c);
 
 	/* Free the temporary del-item vector. */
-	Dee_Freea(delobv);
+	Dee_Freea(delete_v);
 done:
 	return 0;
 err:
@@ -1491,37 +1402,37 @@ done_noop:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_delrange_index_n(List *__restrict me, dssize_t i_begin) {
+list_delrange_index_n(List *__restrict me, Dee_ssize_t start) {
 #ifdef __OPTIMIZE_SIZE__
-	return list_delrange_index(me, i_begin, SSIZE_MAX);
+	return list_delrange_index(me, start, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject **delobv;
-	size_t start, range_size;
+	DREF DeeObject **delete_v;
+	size_t start_index, delete_c;
 again:
 	DeeList_LockWrite(me);
-	start = DeeSeqRange_Clamp_n(i_begin, DeeList_SIZE(me));
-	range_size = DeeList_SIZE(me) - start;
-	if unlikely(range_size <= 0)
+	start_index = DeeSeqRange_Clamp_n(start, DeeList_SIZE(me));
+	delete_c = DeeList_SIZE(me) - start_index;
+	if unlikely(delete_c <= 0)
 		goto done_noop;
-	delobv = (DREF DeeObject **)Dee_TryMallocac(range_size, sizeof(DREF DeeObject *));
-	if unlikely(!delobv) {
+	delete_v = (DREF DeeObject **)Dee_TryMallocac(delete_c, sizeof(DREF DeeObject *));
+	if unlikely(!delete_v) {
 		DeeList_LockEndWrite(me);
-		if (Dee_CollectMemoryc(range_size, sizeof(DREF DeeObject *)))
+		if (Dee_CollectMemoryc(delete_c, sizeof(DREF DeeObject *)))
 			goto again;
 		goto err;
 	}
 
 	/* Move all items to-be deleted into the delete-vector. */
-	memcpyc(delobv, DeeList_ELEM(me) + start,
-	        range_size, sizeof(DREF DeeObject *));
-	me->l_list.ol_elemc -= range_size;
+	memcpyc(delete_v, DeeList_ELEM(me) + start_index,
+	        delete_c, sizeof(DREF DeeObject *));
+	me->l_list.ol_elemc -= delete_c;
 	DeeList_LockEndWrite(me);
 
 	/* Drop object references. */
-	Dee_Decrefv(delobv, range_size);
+	Dee_Decrefv(delete_v, delete_c);
 
 	/* Free the temporary del-item vector. */
-	Dee_Freea(delobv);
+	Dee_Freea(delete_v);
 done:
 	return 0;
 err:
@@ -1533,224 +1444,167 @@ done_noop:
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-list_setrange_fast(List *me, dssize_t i_begin, dssize_t i_end,
-                   DeeObject *items, size_t insert_count) {
-	DREF DeeObject **delobv;
-	struct Dee_seq_range range;
-	size_t range_size, i;
-	if unlikely(!insert_count)
-		return list_delrange_index(me, i_begin, i_end);
-again:
-	DeeList_LockWrite(me);
-	DeeSeqRange_Clamp(&range, i_begin, i_end, me->l_list.ol_elemc);
-	range_size = range.sr_end - range.sr_start;
-	ASSERT(range_size <= DeeList_SIZE(me));
-	if (insert_count > range_size) {
-		/* Make sure the list has enough available memory. */
-		size_t min_elema = (DeeList_SIZE(me) - range_size) + insert_count;
-		size_t old_elema = DeeList_GetAlloc(me);
-		if (min_elema > old_elema) {
-			size_t new_elema = old_elema;
-			DREF DeeObject **new_elemv;
-			if (new_elema < DEE_OBJECTLIST_MINALLOC)
-				new_elema = DEE_OBJECTLIST_MINALLOC;
-			do {
-				new_elema = DEE_OBJECTLIST_MOREALLOC(new_elema);
-			} while (new_elema < min_elema);
-			new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
-			if unlikely(!new_elemv) {
-				new_elema = min_elema;
-				new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
-				if unlikely(!new_elemv) {
-					DeeList_LockEndWrite(me);
-					/* Collect memory and try again. */
-					if (Dee_CollectMemoryc(new_elema, sizeof(DREF DeeObject *)))
-						goto again;
-					goto err;
-				}
-			}
-			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elema);
-		}
-	}
-	if (range_size <= 0) {
-		/* Move following items to their proper places. */
-		memmoveupc(DeeList_ELEM(me) + range.sr_start + insert_count,
-		           DeeList_ELEM(me) + range.sr_start,
-		           DeeList_SIZE(me) - range.sr_start,
-		           sizeof(DREF DeeObject *));
-
-		/* Fill in the new items. */
-		for (i = 0; i < insert_count; ++i)
-			DeeList_SET(me, range.sr_start + i, DeeFastSeq_GetItemNB_deprecated(items, i));
-		me->l_list.ol_elemc += insert_count;
-		DeeList_LockEndWrite(me);
-	} else {
-		delobv = (DREF DeeObject **)Dee_TryMallocac(range_size,
-		                                            sizeof(DREF DeeObject *));
-		if unlikely(!delobv) {
-			DeeList_LockEndWrite(me);
-			if (Dee_CollectMemoryc(range_size, sizeof(DREF DeeObject *)))
-				goto again;
-			goto err;
-		}
-
-		/* Move all items to-be deleted into the delete-vector. */
-		memcpyc(delobv, DeeList_ELEM(me) + range.sr_start,
-		        range_size, sizeof(DREF DeeObject *));
-
-		/* Move following items to their proper places. */
-		if (range.sr_start + insert_count != range.sr_end) {
-			memmovec(DeeList_ELEM(me) + range.sr_start + insert_count,
-			         DeeList_ELEM(me) + range.sr_end,
-			         DeeList_SIZE(me) - range.sr_end,
-			         sizeof(DREF DeeObject *));
-		}
-
-		/* Fill in the new items. */
-		for (i = 0; i < insert_count; ++i)
-			DeeList_SET(me, range.sr_start + i, DeeFastSeq_GetItemNB_deprecated(items, i));
-		me->l_list.ol_elemc -= range_size;
-		me->l_list.ol_elemc += insert_count;
-		DeeList_LockEndWrite(me);
-
-		/* Drop object references. */
-		Dee_Decrefv(delobv, range_size);
-
-		/* Free the temporary del-item vector. */
-		Dee_Freea(delobv);
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-list_setrange_fast_n(List *me, dssize_t i_begin,
-                     DeeObject *items, size_t insert_count) {
-#ifdef __OPTIMIZE_SIZE__
-	return list_setrange_fast(me, i_begin, SSIZE_MAX, items, insert_count);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject **delobv;
-	size_t range_size, i, start;
-again:
-	DeeList_LockWrite(me);
-	start = DeeSeqRange_Clamp_n(i_begin, me->l_list.ol_elemc);
-	range_size = me->l_list.ol_elemc - start;
-	ASSERT(range_size <= DeeList_SIZE(me));
-	if (insert_count > range_size) {
-		/* Make sure the list has enough available memory. */
-		size_t min_elema = (DeeList_SIZE(me) - range_size) + insert_count;
-		size_t old_elema = DeeList_GetAlloc(me);
-		if (min_elema > old_elema) {
-			size_t new_elema = old_elema;
-			DREF DeeObject **new_elemv;
-			if (new_elema < DEE_OBJECTLIST_MINALLOC)
-				new_elema = DEE_OBJECTLIST_MINALLOC;
-			do {
-				new_elema = DEE_OBJECTLIST_MOREALLOC(new_elema);
-			} while (new_elema < min_elema);
-			new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
-			if unlikely(!new_elemv) {
-				new_elema = min_elema;
-				new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
-				if unlikely(!new_elemv) {
-					DeeList_LockEndWrite(me);
-					/* Collect memory and try again. */
-					if (Dee_CollectMemoryc(new_elema, sizeof(DREF DeeObject *)))
-						goto again;
-					goto err;
-				}
-			}
-			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elema);
-		}
-	}
-	if (!range_size) {
-		/* Move following items to their proper places. */
-		memmoveupc(DeeList_ELEM(me) + start + insert_count,
-		           DeeList_ELEM(me) + start,
-		           DeeList_SIZE(me) - start,
-		           sizeof(DREF DeeObject *));
-
-		/* Fill in the new items. */
-		for (i = 0; i < insert_count; ++i)
-			DeeList_SET(me, start + i, DeeFastSeq_GetItemNB_deprecated(items, i));
-		me->l_list.ol_elemc += insert_count;
-		DeeList_LockEndWrite(me);
-	} else {
-		delobv = (DREF DeeObject **)Dee_TryMallocac(range_size, sizeof(DREF DeeObject *));
-		if unlikely(!delobv) {
-			DeeList_LockEndWrite(me);
-			if (Dee_CollectMemoryc(range_size, sizeof(DREF DeeObject *)))
-				goto again;
-			goto err;
-		}
-
-		/* Move all items to-be deleted into the delete-vector. */
-		memcpyc(delobv, DeeList_ELEM(me) + start,
-		        range_size, sizeof(DREF DeeObject *));
-
-		/* Fill in the new items. */
-		for (i = 0; i < insert_count; ++i)
-			DeeList_SET(me, start + i, DeeFastSeq_GetItemNB_deprecated(items, i));
-		me->l_list.ol_elemc -= range_size;
-		me->l_list.ol_elemc += insert_count;
-		DeeList_LockEndWrite(me);
-
-		/* Drop object references. */
-		Dee_Decrefv(delobv, range_size);
-
-		/* Free the temporary del-item vector. */
-		Dee_Freea(delobv);
-	}
-	return 0;
-err:
-	return -1;
-#endif /* !__OPTIMIZE_SIZE__ */
-}
-
-PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-list_setrange_index(List *me, dssize_t i_begin,
-                  dssize_t i_end, DeeObject *items) {
-	DREF DeeObject **delobv, **insertv;
-	size_t range_size, insert_count;
+list_setrange_index(List *me, Dee_ssize_t start,
+                    Dee_ssize_t end, DeeObject *items) {
+	DREF DeeObject **delete_v;
+	DREF DeeObject **insert_v;
+	size_t delete_c, insert_c;
 	struct Dee_seq_range range;
 
-	/* Check for special case: Fast-insert */
-	insert_count = DeeFastSeq_GetSizeNB_deprecated(items);
-	if (insert_count != DEE_FASTSEQ_NOTFAST_DEPRECATED)
-		return list_setrange_fast(me, i_begin, i_end, items, insert_count);
-	insertv = DeeSeq_AsHeapVector(items, &insert_count);
-	if unlikely(!insertv)
+	/* Check if "items" can be appended in-place. */
+	if (Dee_TYPE(items)->tp_seq || DeeType_InheritSize(Dee_TYPE(items))) {
+		size_t items_size_fast;
+		size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+		tp_asvector_nothrow = Dee_TYPE(items)->tp_seq->tp_asvector_nothrow;
+		if (tp_asvector_nothrow && (items_size_fast = DeeObject_SizeFast(items)) != (size_t)-1) {
+			if (items_size_fast == 0)
+				return list_delrange_index(me, start, end);
+
+			if (tp_asvector_nothrow != NULL && !DeeObject_IsAsVectorNoThrowUsingLockOfList(me, items)) {
+				/* Super-fast case: can transfer objects directly while holding a lock to "me" */
+				size_t items_size, num_trailing;
+				size_t cur_elema, min_elema;
+again_with_tp_asvector_nothrow:
+				DeeList_LockWrite(me);
+				DeeSeqRange_Clamp(&range, start, end, me->l_list.ol_elemc);
+				delete_c = range.sr_end - range.sr_start;
+				if (OVERFLOW_UADD(me->l_list.ol_elemc - delete_c, items_size_fast, &min_elema))
+					goto err_badalloc_overflow_unlock;
+				cur_elema = DeeList_GetAlloc(me);
+				if unlikely(min_elema > cur_elema) {
+					/* Need a larger list buffer. */
+					DREF DeeObject **new_listv;
+					size_t new_elema = cur_elema;
+					if (new_elema < DEE_OBJECTLIST_MINALLOC)
+						new_elema = DEE_OBJECTLIST_MINALLOC;
+					do {
+						new_elema = DEE_OBJECTLIST_MOREALLOC(new_elema);
+					} while (new_elema < min_elema);
+					new_listv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+					if unlikely(!new_listv) {
+						new_elema = min_elema;
+						new_listv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+						if unlikely(!new_listv) {
+							DREF DeeObject **old_listv;
+							DeeList_LockEndWrite(me);
+							new_listv = Dee_objectlist_elemv_malloc(new_elema);
+							if unlikely(!new_listv)
+								goto err;
+							DeeList_LockWrite(me);
+							cur_elema = DeeList_GetAlloc(me);
+							if likely(new_elema > cur_elema) {
+								old_listv = me->l_list.ol_elemv;
+								me->l_list.ol_elemv = (DREF DeeObject **)memcpyc(new_listv, old_listv,
+								                                                 me->l_list.ol_elemc,
+								                                                 sizeof(DREF DeeObject *));
+							} else {
+								old_listv = new_listv;
+							}
+							DeeList_LockEndWrite(me);
+							Dee_objectlist_elemv_free(old_listv);
+							goto again_with_tp_asvector_nothrow;
+						}
+					}
+					me->l_list.ol_elemv = new_listv;
+					_DeeList_SetAlloc(me, new_elema);
+				}
+	
+				/* If elements should be removed, remember their references now */
+				if (delete_c > 0) {
+					delete_v = (DREF DeeObject **)Dee_TryMallocac(delete_c, sizeof(DREF DeeObject *));
+					if unlikely(!delete_v) {
+						struct Dee_seq_range new_range;
+						DeeList_LockEndWrite(me);
+						delete_v = (DREF DeeObject **)Dee_Mallocac(delete_c, sizeof(DREF DeeObject *));
+						if unlikely(!delete_v)
+							goto err;
+						DeeList_LockWrite(me);
+						/* Validate that nothing about "me" changed. */
+						DeeSeqRange_Clamp(&new_range, start, end, me->l_list.ol_elemc);
+						if unlikely(range.sr_start != new_range.sr_start ||
+						            range.sr_end != new_range.sr_end ||
+						            cur_elema != DeeList_GetAlloc(me) ||
+						            delete_c != (range.sr_end - range.sr_start) ||
+						            min_elema != (me->l_list.ol_elemc - delete_c + items_size_fast)) {
+							DeeList_LockEndWrite(me);
+							Dee_Freea(delete_v);
+							goto again_with_tp_asvector_nothrow;
+						}
+					}
+					memcpyc(delete_v, me->l_list.ol_elemv + range.sr_start,
+					        delete_c, sizeof(DREF DeeObject *));
+				} else {
+					delete_v = NULL;
+				}
+
+				/* Shift trailing objects such that they appear at their final positions. */
+				num_trailing = me->l_list.ol_elemc - range.sr_end;
+				if (/*num_trailing &&*/ delete_c != items_size_fast) {
+					memmovec(me->l_list.ol_elemv + range.sr_start + items_size_fast,
+					         me->l_list.ol_elemv + range.sr_end,
+					         num_trailing, sizeof(DREF DeeObject *));
+				}
+	
+				/* Buffer should have sufficient size now. */
+				items_size = (*tp_asvector_nothrow)(items, items_size_fast,
+				                                    me->l_list.ol_elemv + range.sr_start);
+				if unlikely(items_size > items_size_fast) {
+					/* Buffer is too small, and we didn't get references :( */
+					if (/*num_trailing &&*/ delete_c != items_size_fast) {
+						/* Restore position of trailing objects (because we need to unlock) */
+						memmovec(me->l_list.ol_elemv + range.sr_end,
+						         me->l_list.ol_elemv + range.sr_start + items_size_fast,
+						         num_trailing, sizeof(DREF DeeObject *));
+					}
+					items_size_fast = items_size;
+					DeeList_LockEndWrite(me);
+					Dee_XFreea(delete_v);
+					goto again_with_tp_asvector_nothrow;
+				}
+				me->l_list.ol_elemc = range.sr_start + items_size + num_trailing;
+				DeeList_LockEndWrite(me);
+	
+				/* Drop references to deleted list items. */
+				if (delete_v) {
+					Dee_Decrefv(delete_v, delete_c);
+					Dee_Freea(delete_v);
+				}
+				return 0;
+			}
+		}
+	}
+
+	/* General case: load the elements of "items" into a temporary vector buffer. */
+	insert_v = DeeSeq_AsHeapVector(items, &insert_c);
+	if unlikely(!insert_v)
 		goto err;
-	if unlikely(!insert_count) {
-		Dee_objectlist_elemv_free(insertv);
-		return list_delrange_index(me, i_begin, i_end);
+	if unlikely(!insert_c) {
+		Dee_objectlist_elemv_free(insert_v);
+		return list_delrange_index(me, start, end);
 	}
 again:
 	DeeList_LockWrite(me);
-	DeeSeqRange_Clamp(&range, i_begin, i_end, me->l_list.ol_elemc);
-	range_size = range.sr_end - range.sr_start;
-	ASSERT(range_size <= DeeList_SIZE(me));
-	if (range_size == me->l_list.ol_elemc) {
+	DeeSeqRange_Clamp(&range, start, end, me->l_list.ol_elemc);
+	delete_c = range.sr_end - range.sr_start;
+	ASSERT(delete_c <= DeeList_SIZE(me));
+	if (delete_c == me->l_list.ol_elemc) {
 		/* Special case: assign to the entirety of the list
 		 * -> Here, we can simply swap vectors. */
 		DeeObject **old_elemv;
 		size_t old_elemc;
 		old_elemv = me->l_list.ol_elemv;
 		old_elemc = me->l_list.ol_elemc;
-		me->l_list.ol_elemv = insertv; /* Inherit */
-		me->l_list.ol_elemc = insert_count;
-		_DeeList_SetAlloc(me, insert_count);
+		me->l_list.ol_elemv = insert_v; /* Inherit */
+		me->l_list.ol_elemc = insert_c;
+		_DeeList_SetAlloc(me, insert_c);
 		DeeList_LockEndWrite(me);
 		old_elemv = Dee_Decrefv(old_elemv, old_elemc);
 		Dee_objectlist_elemv_free(old_elemv);
 		goto done;
 	}
-	if (insert_count > range_size) {
+	if (insert_c > delete_c) {
 		/* Make sure the list has enough available memory. */
-		size_t min_elema = (DeeList_SIZE(me) - range_size) + insert_count;
+		size_t min_elema = (DeeList_SIZE(me) - delete_c) + insert_c;
 		size_t old_elema = DeeList_GetAlloc(me);
 		if (min_elema > old_elema) {
 			size_t new_elema = old_elema;
@@ -1776,108 +1630,198 @@ again:
 			_DeeList_SetAlloc(me, new_elema);
 		}
 	}
-	if (!range_size) {
+	if (!delete_c) {
 		/* Move following items to their proper places. */
-		memmoveupc(DeeList_ELEM(me) + range.sr_start + insert_count,
+		memmoveupc(DeeList_ELEM(me) + range.sr_start + insert_c,
 		           DeeList_ELEM(me) + range.sr_start,
 		           DeeList_SIZE(me) - range.sr_start,
 		           sizeof(DREF DeeObject *));
 
 		/* Copy new items into the list. */
-		memcpyc(DeeList_ELEM(me) + range.sr_start, insertv,
-		        insert_count, sizeof(DREF DeeObject *));
-		me->l_list.ol_elemc += insert_count;
+		memcpyc(DeeList_ELEM(me) + range.sr_start, insert_v,
+		        insert_c, sizeof(DREF DeeObject *));
+		me->l_list.ol_elemc += insert_c;
 		DeeList_LockEndWrite(me);
-		Dee_objectlist_elemv_free(insertv);
+		Dee_objectlist_elemv_free(insert_v);
 	} else {
-		delobv = (DREF DeeObject **)Dee_TryMallocac(range_size, sizeof(DREF DeeObject *));
-		if unlikely(!delobv) {
+		delete_v = (DREF DeeObject **)Dee_TryMallocac(delete_c, sizeof(DREF DeeObject *));
+		if unlikely(!delete_v) {
 			DeeList_LockEndWrite(me);
-			if (Dee_CollectMemoryc(range_size, sizeof(DREF DeeObject *)))
+			if (Dee_CollectMemoryc(delete_c, sizeof(DREF DeeObject *)))
 				goto again;
 			goto err_insertv;
 		}
 
 		/* Move all items to-be deleted into the delete-vector. */
-		memcpyc(delobv, DeeList_ELEM(me) + range.sr_start,
-		        range_size, sizeof(DREF DeeObject *));
+		memcpyc(delete_v, DeeList_ELEM(me) + range.sr_start,
+		        delete_c, sizeof(DREF DeeObject *));
 
 		/* Move following items to their proper places. */
-		if (range.sr_start + insert_count != range.sr_end) {
-			memmovec(DeeList_ELEM(me) + range.sr_start + insert_count,
+		if (range.sr_start + insert_c != range.sr_end) {
+			memmovec(DeeList_ELEM(me) + range.sr_start + insert_c,
 			         DeeList_ELEM(me) + range.sr_end,
 			         DeeList_SIZE(me) - range.sr_end,
 			         sizeof(DREF DeeObject *));
 		}
 
 		/* Copy new items into the list. */
-		memcpyc(DeeList_ELEM(me) + range.sr_start, insertv,
-		        insert_count, sizeof(DREF DeeObject *));
-		me->l_list.ol_elemc -= range_size;
-		me->l_list.ol_elemc += insert_count;
+		memcpyc(DeeList_ELEM(me) + range.sr_start, insert_v,
+		        insert_c, sizeof(DREF DeeObject *));
+		me->l_list.ol_elemc -= delete_c;
+		me->l_list.ol_elemc += insert_c;
 		DeeList_LockEndWrite(me);
-		Dee_objectlist_elemv_free(insertv);
+		Dee_objectlist_elemv_free(insert_v);
 
 		/* Drop object references. */
-		Dee_Decrefv(delobv, range_size);
+		Dee_Decrefv(delete_v, delete_c);
 
 		/* Free the temporary del-item vector. */
-		Dee_Freea(delobv);
+		Dee_Freea(delete_v);
 	}
 done:
 	return 0;
+err_badalloc_overflow_unlock:
+	DeeList_LockEndWrite(me);
+	return Dee_BadAlloc((size_t)-1);
 err_insertv:
-	Dee_Decrefv(insertv, insert_count);
-	Dee_objectlist_elemv_free(insertv);
+	Dee_Decrefv(insert_v, insert_c);
+	Dee_objectlist_elemv_free(insert_v);
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-list_setrange_index_n(List *me, dssize_t i_begin, DeeObject *items) {
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeList_InsertSequence)(DeeObject *self, size_t index,
+                               DeeObject *items) {
 #ifdef __OPTIMIZE_SIZE__
-	return list_setrange_index(me, i_begin, SSIZE_MAX, items);
+	return list_setrange_index((List *)self,
+	                           (Dee_ssize_t)index,
+	                           (Dee_ssize_t)index,
+	                           items);
 #else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject **delobv, **insertv;
-	size_t range_size, insert_count, start;
+	List *me = (List *)self;
+	DREF DeeObject **insert_v;
+	size_t insert_c;
+	size_t used_index;
 
-	/* Check for special case: Fast-insert */
-	insert_count = DeeFastSeq_GetSizeNB_deprecated(items);
-	if (insert_count != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (!insert_count)
-			return list_delrange_index_n(me, i_begin);
-		return list_setrange_fast_n(me, i_begin, items, insert_count);
+	/* Check if "items" can be appended in-place. */
+	if (Dee_TYPE(items)->tp_seq || DeeType_InheritSize(Dee_TYPE(items))) {
+		size_t items_size_fast;
+		size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+		tp_asvector_nothrow = Dee_TYPE(items)->tp_seq->tp_asvector_nothrow;
+		if (tp_asvector_nothrow && (items_size_fast = DeeObject_SizeFast(items)) != (size_t)-1) {
+			if (items_size_fast == 0)
+				return 0;
+
+			if (tp_asvector_nothrow != NULL && !DeeObject_IsAsVectorNoThrowUsingLockOfList(me, items)) {
+				/* Super-fast case: can transfer objects directly while holding a lock to "me" */
+				size_t items_size, num_trailing;
+				size_t cur_elema, min_elema;
+again_with_tp_asvector_nothrow:
+				DeeList_LockWrite(me);
+				used_index = index;
+				if (used_index > me->l_list.ol_elemc)
+					used_index = me->l_list.ol_elemc;
+				if (OVERFLOW_UADD(me->l_list.ol_elemc, items_size_fast, &min_elema))
+					goto err_badalloc_overflow_unlock;
+				cur_elema = DeeList_GetAlloc(me);
+				if unlikely(min_elema > cur_elema) {
+					/* Need a larger list buffer. */
+					DREF DeeObject **new_listv;
+					size_t new_elema = cur_elema;
+					if (new_elema < DEE_OBJECTLIST_MINALLOC)
+						new_elema = DEE_OBJECTLIST_MINALLOC;
+					do {
+						new_elema = DEE_OBJECTLIST_MOREALLOC(new_elema);
+					} while (new_elema < min_elema);
+					new_listv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+					if unlikely(!new_listv) {
+						new_elema = min_elema;
+						new_listv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+						if unlikely(!new_listv) {
+							DREF DeeObject **old_listv;
+							DeeList_LockEndWrite(me);
+							new_listv = Dee_objectlist_elemv_malloc(new_elema);
+							if unlikely(!new_listv)
+								goto err;
+							DeeList_LockWrite(me);
+							cur_elema = DeeList_GetAlloc(me);
+							if likely(new_elema > cur_elema) {
+								old_listv = me->l_list.ol_elemv;
+								me->l_list.ol_elemv = (DREF DeeObject **)memcpyc(new_listv, old_listv,
+								                                                 me->l_list.ol_elemc,
+								                                                 sizeof(DREF DeeObject *));
+							} else {
+								old_listv = new_listv;
+							}
+							DeeList_LockEndWrite(me);
+							Dee_objectlist_elemv_free(old_listv);
+							goto again_with_tp_asvector_nothrow;
+						}
+					}
+					me->l_list.ol_elemv = new_listv;
+					_DeeList_SetAlloc(me, new_elema);
+				}
+	
+				/* Shift trailing objects such that they appear at their final positions. */
+				num_trailing = me->l_list.ol_elemc - used_index;
+				if (/*num_trailing &&*/ items_size_fast) {
+					memmoveupc(me->l_list.ol_elemv + used_index + items_size_fast,
+					           me->l_list.ol_elemv + used_index,
+					           num_trailing, sizeof(DREF DeeObject *));
+				}
+	
+				/* Buffer should have sufficient size now. */
+				items_size = (*tp_asvector_nothrow)(items, items_size_fast,
+				                                    me->l_list.ol_elemv + used_index);
+				if unlikely(items_size > items_size_fast) {
+					/* Buffer is too small, and we didn't get references :( */
+					if (/*num_trailing &&*/ items_size_fast) {
+						/* Restore position of trailing objects (because we need to unlock) */
+						memmovedownc(me->l_list.ol_elemv + used_index,
+						             me->l_list.ol_elemv + used_index + items_size_fast,
+						             num_trailing, sizeof(DREF DeeObject *));
+					}
+					items_size_fast = items_size;
+					DeeList_LockEndWrite(me);
+					goto again_with_tp_asvector_nothrow;
+				}
+				me->l_list.ol_elemc = used_index + items_size + num_trailing;
+				DeeList_LockEndWrite(me);
+				return 0;
+			}
+		}
 	}
-	insertv = DeeSeq_AsHeapVector(items, &insert_count);
-	if unlikely(!insertv)
+
+	/* General case: load the elements of "items" into a temporary vector buffer. */
+	insert_v = DeeSeq_AsHeapVector(items, &insert_c);
+	if unlikely(!insert_v)
 		goto err;
-	if unlikely(!insert_count) {
-		Dee_objectlist_elemv_free(insertv);
-		return list_delrange_index_n(me, i_begin);
+	if unlikely(!insert_c) {
+		Dee_objectlist_elemv_free(insert_v);
+		return 0;
 	}
 again:
 	DeeList_LockWrite(me);
-	start = DeeSeqRange_Clamp_n(i_begin, me->l_list.ol_elemc);
-	if (start == 0) {
+	used_index = index;
+	if (used_index > me->l_list.ol_elemc)
+		used_index = me->l_list.ol_elemc;
+	if (me->l_list.ol_elemc == 0) {
 		/* Special case: assign to the entirety of the list
 		 * -> Here, we can simply swap vectors. */
 		DeeObject **old_elemv;
-		size_t old_elemc;
 		old_elemv = me->l_list.ol_elemv;
-		old_elemc = me->l_list.ol_elemc;
-		me->l_list.ol_elemv = insertv; /* Inherit */
-		me->l_list.ol_elemc = insert_count;
-		_DeeList_SetAlloc(me, insert_count);
+		me->l_list.ol_elemv = insert_v; /* Inherit */
+		me->l_list.ol_elemc = insert_c;
+		_DeeList_SetAlloc(me, insert_c);
 		DeeList_LockEndWrite(me);
-		old_elemv = Dee_Decrefv(old_elemv, old_elemc);
 		Dee_objectlist_elemv_free(old_elemv);
 		goto done;
 	}
-	range_size = me->l_list.ol_elemc - start;
-	ASSERT(range_size <= DeeList_SIZE(me));
-	if (insert_count > range_size) {
-		/* Make sure the list has enough available memory. */
-		size_t min_elema = (DeeList_SIZE(me) - range_size) + insert_count;
+
+	/* Make sure the list has enough available memory. */
+	{
+		size_t min_elema = DeeList_SIZE(me) + insert_c;
 		size_t old_elema = DeeList_GetAlloc(me);
 		if (min_elema > old_elema) {
 			size_t new_elema = old_elema;
@@ -1903,61 +1847,421 @@ again:
 			_DeeList_SetAlloc(me, new_elema);
 		}
 	}
-	if (!range_size) {
-		/* Move following items to their proper places. */
-		memmoveupc(DeeList_ELEM(me) + start + insert_count,
-		           DeeList_ELEM(me) + start,
-		           DeeList_SIZE(me) - start,
-		           sizeof(DREF DeeObject *));
 
-		/* Copy new items into the list. */
-		memcpyc(DeeList_ELEM(me) + start, insertv,
-		        insert_count, sizeof(DREF DeeObject *));
-		me->l_list.ol_elemc += insert_count;
-		DeeList_LockEndWrite(me);
-		Dee_objectlist_elemv_free(insertv);
-	} else {
-		delobv = (DREF DeeObject **)Dee_TryMallocac(range_size, sizeof(DREF DeeObject *));
-		if unlikely(!delobv) {
-			DeeList_LockEndWrite(me);
-			if (Dee_CollectMemoryc(range_size, sizeof(DREF DeeObject *)))
-				goto again;
-			goto err_insertv;
-		}
+	/* Move following items to their proper places. */
+	memmoveupc(DeeList_ELEM(me) + used_index + insert_c,
+	           DeeList_ELEM(me) + used_index,
+	           DeeList_SIZE(me) - used_index,
+	           sizeof(DREF DeeObject *));
 
-		/* Move all items to-be deleted into the delete-vector. */
-		memcpyc(delobv, DeeList_ELEM(me) + start,
-		        range_size, sizeof(DREF DeeObject *));
-
-		/* Copy new items into the list. */
-		memcpyc(DeeList_ELEM(me) + start, insertv,
-		        insert_count, sizeof(DREF DeeObject *));
-		me->l_list.ol_elemc -= range_size;
-		me->l_list.ol_elemc += insert_count;
-		DeeList_LockEndWrite(me);
-		Dee_objectlist_elemv_free(insertv);
-
-		/* Drop object references. */
-		Dee_Decrefv(delobv, range_size);
-
-		/* Free the temporary del-item vector. */
-		Dee_Freea(delobv);
-	}
+	/* Copy new items into the list. */
+	memcpyc(DeeList_ELEM(me) + used_index, insert_v,
+	        insert_c, sizeof(DREF DeeObject *));
+	me->l_list.ol_elemc += insert_c;
+	DeeList_LockEndWrite(me);
+	Dee_objectlist_elemv_free(insert_v);
 done:
 	return 0;
+err_badalloc_overflow_unlock:
+	DeeList_LockEndWrite(me);
+	return Dee_BadAlloc((size_t)-1);
 err_insertv:
-	Dee_Decrefv(insertv, insert_count);
-	Dee_objectlist_elemv_free(insertv);
+	Dee_Decrefv(insert_v, insert_c);
+	Dee_objectlist_elemv_free(insert_v);
 err:
 	return -1;
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
+
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+list_setrange_index_n(List *me, Dee_ssize_t start, DeeObject *items) {
+#ifdef __OPTIMIZE_SIZE__
+	return list_setrange_index(me, start, SSIZE_MAX, items);
+#else /* __OPTIMIZE_SIZE__ */
+	DREF DeeObject **delete_v;
+	DREF DeeObject **insert_v;
+	size_t delete_c, insert_c;
+	size_t start_index;
+
+	/* Check if "items" can be appended in-place. */
+	if (Dee_TYPE(items)->tp_seq || DeeType_InheritSize(Dee_TYPE(items))) {
+		size_t items_size_fast;
+		size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+		tp_asvector_nothrow = Dee_TYPE(items)->tp_seq->tp_asvector_nothrow;
+		if (tp_asvector_nothrow && (items_size_fast = DeeObject_SizeFast(items)) != (size_t)-1) {
+			if (items_size_fast == 0)
+				return list_delrange_index_n(me, start);
+			if (tp_asvector_nothrow != NULL && !DeeObject_IsAsVectorNoThrowUsingLockOfList(me, items)) {
+				/* Super-fast case: can transfer objects directly while holding a lock to "me" */
+				size_t items_size;
+				size_t cur_elema, min_elema;
+again_with_tp_asvector_nothrow:
+				DeeList_LockWrite(me);
+				start_index = DeeSeqRange_Clamp_n(start, me->l_list.ol_elemc);
+				if (OVERFLOW_UADD(start_index, items_size_fast, &min_elema))
+					goto err_badalloc_overflow_unlock;
+				ASSERT(start_index <= me->l_list.ol_elemc);
+				cur_elema = DeeList_GetAlloc(me);
+				if unlikely(min_elema > cur_elema) {
+					/* Need a larger list buffer. */
+					DREF DeeObject **new_listv;
+					size_t new_elema = cur_elema;
+					if (new_elema < DEE_OBJECTLIST_MINALLOC)
+						new_elema = DEE_OBJECTLIST_MINALLOC;
+					do {
+						new_elema = DEE_OBJECTLIST_MOREALLOC(new_elema);
+					} while (new_elema < min_elema);
+					new_listv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+					if unlikely(!new_listv) {
+						new_elema = min_elema;
+						new_listv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+						if unlikely(!new_listv) {
+							DREF DeeObject **old_listv;
+							DeeList_LockEndWrite(me);
+							new_listv = Dee_objectlist_elemv_malloc(new_elema);
+							if unlikely(!new_listv)
+								goto err;
+							DeeList_LockWrite(me);
+							cur_elema = DeeList_GetAlloc(me);
+							if likely(new_elema > cur_elema) {
+								old_listv = me->l_list.ol_elemv;
+								me->l_list.ol_elemv = (DREF DeeObject **)memcpyc(new_listv, old_listv,
+								                                                 me->l_list.ol_elemc,
+								                                                 sizeof(DREF DeeObject *));
+							} else {
+								old_listv = new_listv;
+							}
+							DeeList_LockEndWrite(me);
+							Dee_objectlist_elemv_free(old_listv);
+							goto again_with_tp_asvector_nothrow;
+						}
+					}
+					me->l_list.ol_elemv = new_listv;
+					_DeeList_SetAlloc(me, new_elema);
+				}
+	
+				/* If trailing elements should be removed, remember their references now */
+				if (start_index < me->l_list.ol_elemc) {
+					delete_c = me->l_list.ol_elemc - start_index;
+					delete_v = (DREF DeeObject **)Dee_TryMallocac(delete_c, sizeof(DREF DeeObject *));
+					if unlikely(!delete_v) {
+						DeeList_LockEndWrite(me);
+						delete_v = (DREF DeeObject **)Dee_Mallocac(delete_c, sizeof(DREF DeeObject *));
+						if unlikely(!delete_v)
+							goto err;
+						DeeList_LockWrite(me);
+						/* Validate that nothing about "me" changed. */
+						if unlikely(start_index != DeeSeqRange_Clamp_n(start_index, me->l_list.ol_elemc) ||
+						            cur_elema != DeeList_GetAlloc(me) ||
+						            me->l_list.ol_elemc != (start_index + delete_c)) {
+							DeeList_LockEndWrite(me);
+							Dee_Freea(delete_v);
+							goto again_with_tp_asvector_nothrow;
+						}
+					}
+					memcpyc(delete_v, me->l_list.ol_elemv + start_index,
+					        delete_c, sizeof(DREF DeeObject *));
+				} else {
+					delete_c = 0;
+					delete_v = NULL;
+				}
+	
+				/* Buffer should have sufficient size now. */
+				items_size = (*tp_asvector_nothrow)(items, items_size_fast,
+				                                    me->l_list.ol_elemv + start_index);
+				if unlikely(items_size > items_size_fast) {
+					/* Buffer is too small, and we didn't get references :( */
+					items_size_fast = items_size;
+					DeeList_LockEndWrite(me);
+					Dee_XFreea(delete_v);
+					goto again_with_tp_asvector_nothrow;
+				}
+				me->l_list.ol_elemc = start_index + items_size;
+				DeeList_LockEndWrite(me);
+	
+				/* Drop references to deleted list items. */
+				if (delete_v) {
+					Dee_Decrefv(delete_v, delete_c);
+					Dee_Freea(delete_v);
+				}
+				return 0;
+			}
+		}
+	}
+
+	/* General case: load the elements of "items" into a temporary vector buffer. */
+	insert_v = DeeSeq_AsHeapVector(items, &insert_c);
+	if unlikely(!insert_v)
+		goto err;
+	if unlikely(!insert_c) {
+		Dee_objectlist_elemv_free(insert_v);
+		return list_delrange_index_n(me, start);
+	}
+again:
+	DeeList_LockWrite(me);
+	start_index = DeeSeqRange_Clamp_n(start, me->l_list.ol_elemc);
+	if (start_index == 0) {
+		/* Special case: assign to the entirety of the list
+		 * -> Here, we can simply swap vectors. */
+		DeeObject **old_elemv;
+		size_t old_elemc;
+		old_elemv = me->l_list.ol_elemv;
+		old_elemc = me->l_list.ol_elemc;
+		me->l_list.ol_elemv = insert_v; /* Inherit */
+		me->l_list.ol_elemc = insert_c;
+		_DeeList_SetAlloc(me, insert_c);
+		DeeList_LockEndWrite(me);
+		old_elemv = Dee_Decrefv(old_elemv, old_elemc);
+		Dee_objectlist_elemv_free(old_elemv);
+		goto done;
+	}
+	delete_c = me->l_list.ol_elemc - start_index;
+	ASSERT(delete_c <= DeeList_SIZE(me));
+	if (insert_c > delete_c) {
+		/* Make sure the list has enough available memory. */
+		size_t min_elema = (DeeList_SIZE(me) - delete_c) + insert_c;
+		size_t old_elema = DeeList_GetAlloc(me);
+		if (min_elema > old_elema) {
+			size_t new_elema = old_elema;
+			DREF DeeObject **new_elemv;
+			if (new_elema < DEE_OBJECTLIST_MINALLOC)
+				new_elema = DEE_OBJECTLIST_MINALLOC;
+			do {
+				new_elema = DEE_OBJECTLIST_MOREALLOC(new_elema);
+			} while (new_elema < min_elema);
+			new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+			if unlikely(!new_elemv) {
+				new_elema = min_elema;
+				new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+				if unlikely(!new_elemv) {
+					DeeList_LockEndWrite(me);
+					/* Collect memory and try again. */
+					if (Dee_CollectMemoryc(new_elema, sizeof(DREF DeeObject *)))
+						goto again;
+					goto err_insertv;
+				}
+			}
+			me->l_list.ol_elemv = new_elemv;
+			_DeeList_SetAlloc(me, new_elema);
+		}
+	}
+	if (!delete_c) {
+		/* Move following items to their proper places. */
+		memmoveupc(DeeList_ELEM(me) + start_index + insert_c,
+		           DeeList_ELEM(me) + start_index,
+		           DeeList_SIZE(me) - start_index,
+		           sizeof(DREF DeeObject *));
+
+		/* Copy new items into the list. */
+		memcpyc(DeeList_ELEM(me) + start_index, insert_v,
+		        insert_c, sizeof(DREF DeeObject *));
+		me->l_list.ol_elemc += insert_c;
+		DeeList_LockEndWrite(me);
+		Dee_objectlist_elemv_free(insert_v);
+	} else {
+		delete_v = (DREF DeeObject **)Dee_TryMallocac(delete_c, sizeof(DREF DeeObject *));
+		if unlikely(!delete_v) {
+			DeeList_LockEndWrite(me);
+			if (Dee_CollectMemoryc(delete_c, sizeof(DREF DeeObject *)))
+				goto again;
+			goto err_insertv;
+		}
+
+		/* Move all items to-be deleted into the delete-vector. */
+		memcpyc(delete_v, DeeList_ELEM(me) + start_index,
+		        delete_c, sizeof(DREF DeeObject *));
+
+		/* Copy new items into the list. */
+		memcpyc(DeeList_ELEM(me) + start_index, insert_v,
+		        insert_c, sizeof(DREF DeeObject *));
+		me->l_list.ol_elemc -= delete_c;
+		me->l_list.ol_elemc += insert_c;
+		DeeList_LockEndWrite(me);
+		Dee_objectlist_elemv_free(insert_v);
+
+		/* Drop object references. */
+		Dee_Decrefv(delete_v, delete_c);
+
+		/* Free the temporary del-item vector. */
+		Dee_Freea(delete_v);
+	}
+done:
+	return 0;
+err_badalloc_overflow_unlock:
+	DeeList_LockEndWrite(me);
+	return Dee_BadAlloc((size_t)-1);
+err_insertv:
+	Dee_Decrefv(insert_v, insert_c);
+	Dee_objectlist_elemv_free(insert_v);
+err:
+	return -1;
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeList_AppendSequence)(DeeObject *self, DeeObject *items) {
+#ifdef __OPTIMIZE_SIZE__
+#if 1
+	return list_setrange_index((List *)self, SSIZE_MAX, SSIZE_MAX, items);
+#else
+	return list_setrange_index_n((List *)self, SSIZE_MAX, items);
+#endif
+#else /* __OPTIMIZE_SIZE__ */
+	List *me = (List *)self;
+	DREF DeeObject **insert_v;
+	size_t old_size, insert_c;
+
+	/* Check if "items" can be appended in-place. */
+	if (Dee_TYPE(items)->tp_seq || DeeType_InheritSize(Dee_TYPE(items))) {
+		size_t items_size_fast;
+		size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+		tp_asvector_nothrow = Dee_TYPE(items)->tp_seq->tp_asvector_nothrow;
+		if (tp_asvector_nothrow && (items_size_fast = DeeObject_SizeFast(items)) != (size_t)-1) {
+			if (items_size_fast == 0)
+				return 0;
+			if (tp_asvector_nothrow != NULL && !DeeObject_IsAsVectorNoThrowUsingLockOfList(me, items)) {
+				/* Super-fast case: can transfer objects directly while holding a lock to "me" */
+				size_t items_size;
+				size_t cur_elema, min_elema;
+again_with_tp_asvector_nothrow:
+				DeeList_LockWrite(me);
+				old_size = me->l_list.ol_elemc;
+				if (OVERFLOW_UADD(old_size, items_size_fast, &min_elema))
+					goto err_badalloc_overflow_unlock;
+				cur_elema = DeeList_GetAlloc(me);
+				if unlikely(min_elema > cur_elema) {
+					/* Need a larger list buffer. */
+					DREF DeeObject **new_listv;
+					size_t new_elema = cur_elema;
+					if (new_elema < DEE_OBJECTLIST_MINALLOC)
+						new_elema = DEE_OBJECTLIST_MINALLOC;
+					do {
+						new_elema = DEE_OBJECTLIST_MOREALLOC(new_elema);
+					} while (new_elema < min_elema);
+					new_listv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+					if unlikely(!new_listv) {
+						new_elema = min_elema;
+						new_listv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+						if unlikely(!new_listv) {
+							DREF DeeObject **old_listv;
+							DeeList_LockEndWrite(me);
+							new_listv = Dee_objectlist_elemv_malloc(new_elema);
+							if unlikely(!new_listv)
+								goto err;
+							DeeList_LockWrite(me);
+							cur_elema = DeeList_GetAlloc(me);
+							if likely(new_elema > cur_elema) {
+								old_listv = me->l_list.ol_elemv;
+								me->l_list.ol_elemv = (DREF DeeObject **)memcpyc(new_listv, old_listv,
+								                                                 me->l_list.ol_elemc,
+								                                                 sizeof(DREF DeeObject *));
+							} else {
+								old_listv = new_listv;
+							}
+							DeeList_LockEndWrite(me);
+							Dee_objectlist_elemv_free(old_listv);
+							goto again_with_tp_asvector_nothrow;
+						}
+					}
+					me->l_list.ol_elemv = new_listv;
+					_DeeList_SetAlloc(me, new_elema);
+				}
+	
+				/* Buffer should have sufficient size now. */
+				items_size = (*tp_asvector_nothrow)(items, items_size_fast,
+				                                    me->l_list.ol_elemv + old_size);
+				if unlikely(items_size > items_size_fast) {
+					/* Buffer is too small, and we didn't get references :( */
+					items_size_fast = items_size;
+					DeeList_LockEndWrite(me);
+					goto again_with_tp_asvector_nothrow;
+				}
+				me->l_list.ol_elemc = old_size + items_size;
+				DeeList_LockEndWrite(me);
+				return 0;
+			}
+		}
+	}
+
+	/* General case: load the elements of "items" into a temporary vector buffer. */
+	insert_v = DeeSeq_AsHeapVector(items, &insert_c);
+	if unlikely(!insert_v)
+		goto err;
+	if unlikely(!insert_c) {
+		Dee_objectlist_elemv_free(insert_v);
+		return 0;
+	}
+again:
+	DeeList_LockWrite(me);
+	old_size = me->l_list.ol_elemc;
+	if (old_size == 0) {
+		/* Special case: assign to the entirety of the list
+		 * -> Here, we can simply swap vectors. */
+		DeeObject **old_elemv;
+		old_elemv = me->l_list.ol_elemv;
+		me->l_list.ol_elemv = insert_v; /* Inherit */
+		me->l_list.ol_elemc = insert_c;
+		_DeeList_SetAlloc(me, insert_c);
+		DeeList_LockEndWrite(me);
+		Dee_objectlist_elemv_free(old_elemv);
+		goto done;
+	}
+
+	{
+		/* Make sure the list has enough available memory. */
+		size_t min_elema = old_size + insert_c;
+		size_t old_elema = DeeList_GetAlloc(me);
+		if (min_elema > old_elema) {
+			size_t new_elema = old_elema;
+			DREF DeeObject **new_elemv;
+			if (new_elema < DEE_OBJECTLIST_MINALLOC)
+				new_elema = DEE_OBJECTLIST_MINALLOC;
+			do {
+				new_elema = DEE_OBJECTLIST_MOREALLOC(new_elema);
+			} while (new_elema < min_elema);
+			new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+			if unlikely(!new_elemv) {
+				new_elema = min_elema;
+				new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+				if unlikely(!new_elemv) {
+					DeeList_LockEndWrite(me);
+					/* Collect memory and try again. */
+					if (Dee_CollectMemoryc(new_elema, sizeof(DREF DeeObject *)))
+						goto again;
+					goto err_insertv;
+				}
+			}
+			me->l_list.ol_elemv = new_elemv;
+			_DeeList_SetAlloc(me, new_elema);
+		}
+	}
+
+	/* Copy new items into the list. */
+	memcpyc(DeeList_ELEM(me) + old_size, insert_v,
+	        insert_c, sizeof(DREF DeeObject *));
+	me->l_list.ol_elemc += insert_c;
+	DeeList_LockEndWrite(me);
+	Dee_objectlist_elemv_free(insert_v);
+done:
+	return 0;
+err_badalloc_overflow_unlock:
+	DeeList_LockEndWrite(me);
+	return Dee_BadAlloc((size_t)-1);
+err_insertv:
+	Dee_Decrefv(insert_v, insert_c);
+	Dee_objectlist_elemv_free(insert_v);
+err:
+	return -1;
+#endif /* !__OPTIMIZE_SIZE__ */
+}
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 list_delrange(List *me, DeeObject *begin, DeeObject *end) {
-	dssize_t i_begin, i_end;
+	Dee_ssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
@@ -1972,7 +2276,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 list_setrange(List *me, DeeObject *begin,
               DeeObject *end, DeeObject *items) {
-	dssize_t i_begin, i_end;
+	Dee_ssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
@@ -2997,7 +3301,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_pop(List *me, size_t argc,
          DeeObject *const *argv, DeeObject *kw) {
-	dssize_t index = -1;
+	Dee_ssize_t index = -1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
 	                    "|" UNPdSIZ ":pop", &index))
 		goto err;
@@ -3540,13 +3844,22 @@ err:
 
 
 /* Deprecated functions. */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+IteratorFuture_For(DeeObject *__restrict self); /* From "./iterator.c" */
 PRIVATE WUNUSED DREF DeeObject *DCALL
 list_insertiter_deprecated(List *me, size_t argc, DeeObject *const *argv) {
+	int temp;
 	size_t index;
 	DeeObject *iter;
+	DREF DeeObject *future;
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:insert_iter", &index, &iter))
 		goto err;
-	if (DeeList_InsertIterator((DeeObject *)me, index, iter))
+	future = IteratorFuture_For(iter);
+	if unlikely(!future)
+		goto err;
+	temp = DeeList_InsertSequence((DeeObject *)me, index, future);
+	Dee_Decref(future);
+	if unlikely(temp)
 		goto err;
 	return_none;
 err:
