@@ -7852,35 +7852,66 @@ err:
 
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterKeysWithIter,
                              (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	/* NOTE: This only works when the mapping can't have unbound keys! */
+	DREF DefaultIterator_PairSubItem *result;
+	DeeTypeObject *itertyp;
 	LOAD_TP_SELF;
-	/* TODO: Custom iterator type for:
-	 * >> local it = self.operator iter();
-	 * >> return (() -> {
-	 * >>      foreach (local x, none: it) 
-	 * >>          yield x;
-	 * >> })().operator iter();
-	 */
-	(void)tp_self;
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	result = DeeObject_MALLOC(DefaultIterator_PairSubItem);
+	if unlikely(!result)
+		goto err;
+	result->dipsi_iter = DeeType_INVOKE_ITER_NODEFAULT(tp_self, self);
+	if unlikely(!result->dipsi_iter)
+		goto err_r;
+	itertyp = Dee_TYPE(result->dipsi_iter);
+	if unlikely((!itertyp->tp_iterator ||
+	             !itertyp->tp_iterator->tp_nextkey) &&
+	            !DeeType_InheritIterNext(itertyp))
+		goto err_r_iter_no_next;
+	ASSERT(itertyp->tp_iterator);
+	ASSERT(itertyp->tp_iterator->tp_nextkey);
+	result->dipsi_next = itertyp->tp_iterator->tp_nextkey;
+	DeeObject_Init(result, &DefaultIterator_WithNextKey);
+	return (DREF DeeObject *)result;
+err_r_iter_no_next:
+	Dee_Decref(result->dipsi_iter);
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
 
+#ifdef DEFINE_TYPED_OPERATORS
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultIterKeysWithIterDefault,
                              (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	DREF DefaultIterator_PairSubItem *result;
+	DeeTypeObject *itertyp;
 	LOAD_TP_SELF;
-	/* TODO: Custom iterator type for:
-	 * >> local it = self.operator iter();
-	 * >> return (() -> {
-	 * >>      foreach (local x, none: it) 
-	 * >>          yield x;
-	 * >> })().operator iter();
-	 */
-	(void)tp_self;
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	result = DeeObject_MALLOC(DefaultIterator_PairSubItem);
+	if unlikely(!result)
+		goto err;
+	result->dipsi_iter = DeeType_INVOKE_ITER(tp_self, self);
+	if unlikely(!result->dipsi_iter)
+		goto err_r;
+	itertyp = Dee_TYPE(result->dipsi_iter);
+	if unlikely((!itertyp->tp_iterator ||
+	             !itertyp->tp_iterator->tp_nextkey) &&
+	            !DeeType_InheritIterNext(itertyp))
+		goto err_r_iter_no_next;
+	ASSERT(itertyp->tp_iterator);
+	ASSERT(itertyp->tp_iterator->tp_nextkey);
+	result->dipsi_next = itertyp->tp_iterator->tp_nextkey;
+	DeeObject_Init(result, &DefaultIterator_WithNextKey);
+	return (DREF DeeObject *)result;
+err_r_iter_no_next:
+	Dee_Decref(result->dipsi_iter);
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
+#endif /* DEFINE_TYPED_OPERATORS */
 
 
 
@@ -15496,7 +15527,6 @@ DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 			}
 			if (iter->tp_nextpair == NULL)
 				iter->tp_nextpair = &DeeObject_DefaultIterNextPairWithIterNext;
-
 		}
 		return true;
 	} else if (self->tp_iterator) {
@@ -16781,7 +16811,14 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 
 	/* tp_iterkeys */
 	if (!seq->tp_iterkeys) {
-		if (seq_featureset_test(features, FEAT_tp_enumerate)) {
+		if (seq_featureset_test(features, FEAT_tp_enumerate) &&
+		    seq->tp_enumerate != seq->tp_foreach_pair) {
+			/* This type of iterator is expensive, so if "tp_enumerate" is the same as "tp_foreach_pair",
+			 * that means that the mapping doesn't have unbound keys, also meaning that tp_iterkeys can
+			 * be implemented as a proxy for the normal iterator (in case it's a map).
+			 *
+			 * As such, try not to make use of `tp_enumerate' unless we have to (s.a. the
+			 * second case that assigns `DeeObject_DefaultIterKeysWithEnumerate' below). */
 			seq->tp_iterkeys = &DeeObject_DefaultIterKeysWithEnumerate;
 		} else if (seq_featureset_test(features, FEAT_tp_enumerate_index)) {
 			seq->tp_iterkeys = &DeeObject_DefaultIterKeysWithEnumerateIndex;
@@ -16797,6 +16834,8 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			/* TODO: if (has_private_attr("keys")) tp_iterkeys = () -> self.keys.operator iter(); */
 		} else if (seq->tp_iter && seqclass == Dee_SEQCLASS_MAP) {
 			seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIterDefault;
+		} else if (seq_featureset_test(features, FEAT_tp_enumerate)) {
+			seq->tp_iterkeys = &DeeObject_DefaultIterKeysWithEnumerate;
 		}
 	}
 
