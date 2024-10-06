@@ -47,6 +47,24 @@ DECL_BEGIN
 #define objectlist_setallocated  Dee_objectlist_setallocated
 #endif /* DEE_SOURCE */
 
+/* Helpers to alloc/realloc object vectors. */
+#define Dee_objectlist_elemv_trymalloc(elemc)              ((DREF DeeObject **)Dee_TryMallocc(elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_trycalloc(elemc)              ((DREF DeeObject **)Dee_TryCallocc(elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_tryrealloc(elemv, elemc)      ((DREF DeeObject **)Dee_TryReallocc(elemv, elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_malloc(elemc)                 ((DREF DeeObject **)Dee_Mallocc(elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_calloc(elemc)                 ((DREF DeeObject **)Dee_Callocc(elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_realloc(elemv, elemc)         ((DREF DeeObject **)Dee_Reallocc(elemv, elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_trymalloc_safe(elemc)         ((DREF DeeObject **)Dee_TryMalloccSafe(elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_trycalloc_safe(elemc)         ((DREF DeeObject **)Dee_TryCalloccSafe(elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_tryrealloc_safe(elemv, elemc) ((DREF DeeObject **)Dee_TryRealloccSafe(elemv, elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_malloc_safe(elemc)            ((DREF DeeObject **)Dee_MalloccSafe(elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_calloc_safe(elemc)            ((DREF DeeObject **)Dee_CalloccSafe(elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_realloc_safe(elemv, elemc)    ((DREF DeeObject **)Dee_RealloccSafe(elemv, elemc, sizeof(DREF DeeObject *)))
+#define Dee_objectlist_elemv_free(elemv)                   Dee_Free(elemv)
+#ifdef Dee_MallocUsableSize
+#define Dee_objectlist_elemv_usable_size(elemv) (Dee_MallocUsableSize(elemv) / sizeof(DREF DeeObject *))
+#endif /* Dee_MallocUsableSize */
+
 #define DEE_OBJECTLIST_MINALLOC             8
 #define DEE_OBJECTLIST_MOREALLOC(old_alloc) ((old_alloc) * 2)
 
@@ -59,10 +77,11 @@ struct Dee_objectlist {
 #define Dee_objectlist_getalloc(self)     ((self)->ol_elema)
 #define _Dee_objectlist_setalloc(self, v) (void)((self)->ol_elema = (v))
 #else /* !Dee_MallocUsableSize */
-#define Dee_objectlist_getalloc(self)     (Dee_MallocUsableSize((self)->ol_elemv) / sizeof(DREF DeeObject *))
+#define Dee_objectlist_getalloc(self)     (Dee_objectlist_elemv_usable_size((self)->ol_elemv))
 #define _Dee_objectlist_setalloc(self, v) (void)0
 #endif /* Dee_MallocUsableSize */
 };
+
 
 #ifdef DEE_OBJECTLIST_HAVE_ELEMA
 #define DEE_OBJECTLIST_INIT { NULL, 0, 0 }
@@ -94,11 +113,11 @@ struct Dee_objectlist {
 /* Finalize the given object list. */
 #define Dee_objectlist_fini(self)                     \
 	(Dee_Decrefv((self)->ol_elemv, (self)->ol_elemc), \
-	 Dee_Free((self)->ol_elemv))
+	 Dee_objectlist_elemv_free((self)->ol_elemv))
 
 /* Finalize the given object list, but don't drop references. */
 #define Dee_objectlist_fini_nodecref(self) \
-	Dee_Free((self)->ol_elemv)
+	Dee_objectlist_elemv_free((self)->ol_elemv)
 
 /* Initialize a given object-self `self' with the elements of `sequence'
  * @return: * :         The number of items appended.
@@ -135,14 +154,10 @@ Dee_objectlist_alloc(struct Dee_objectlist *__restrict self,
 		while (new_alloc < min_alloc)
 			new_alloc = DEE_OBJECTLIST_MOREALLOC(new_alloc);
 		Dee_ASSERT(new_alloc > self->ol_elemc);
-		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_elemv,
-		                                              new_alloc,
-		                                              sizeof(DREF DeeObject *));
+		new_list = Dee_objectlist_elemv_tryrealloc(self->ol_elemv, new_alloc);
 		if unlikely(!new_list) {
 			new_alloc = min_alloc;
-			new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_elemv,
-			                                           new_alloc,
-			                                           sizeof(DREF DeeObject *));
+			new_list = Dee_objectlist_elemv_realloc(self->ol_elemv, new_alloc);
 			if unlikely(!new_list)
 				goto err;
 		}
@@ -168,14 +183,10 @@ Dee_objectlist_append(struct Dee_objectlist *__restrict self,
 		if (new_elema < DEE_OBJECTLIST_MINALLOC)
 			new_elema = DEE_OBJECTLIST_MINALLOC;
 		Dee_ASSERT(new_elema > self->ol_elemc);
-		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_elemv,
-		                                              new_elema,
-		                                              sizeof(DREF DeeObject *));
+		new_list = Dee_objectlist_elemv_tryrealloc(self->ol_elemv, new_elema);
 		if unlikely(!new_list) {
 			new_elema = self->ol_elemc + 1;
-			new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_elemv,
-			                                           new_elema,
-			                                           sizeof(DREF DeeObject *));
+			new_list = Dee_objectlist_elemv_realloc(self->ol_elemv, new_elema);
 			if unlikely(!new_list)
 				goto err;
 		}
@@ -234,7 +245,7 @@ Dee_objectlist_packtuple(struct objectlist *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeTuple_NewVectorSymbolic(self->ol_elemc, self->ol_elemv);
 	if likely(result)
-		Dee_Free(self->ol_elemv);
+		Dee_objectlist_elemv_free(self->ol_elemv);
 	return result;
 }
 
@@ -262,16 +273,14 @@ LOCAL WUNUSED NONNULL((1)) int
 	Dee_ASSERT(num_objects >= self->ol_elemc);
 	if (num_objects > avail) {
 		DREF DeeObject **new_list;
-		new_list = (DREF DeeObject **)Dee_Reallocc(self->ol_elemv, num_objects,
-		                                           sizeof(DREF DeeObject *));
+		new_list = Dee_objectlist_elemv_realloc(self->ol_elemv, num_objects);
 		if unlikely(!new_list)
 			goto err;
 		self->ol_elemv = new_list;
 		_Dee_objectlist_setalloc(self, num_objects);
 	} else if (num_objects < avail) {
 		DREF DeeObject **new_list;
-		new_list = (DREF DeeObject **)Dee_TryReallocc(self->ol_elemv, num_objects,
-		                                              sizeof(DREF DeeObject *));
+		new_list = Dee_objectlist_elemv_tryrealloc(self->ol_elemv, num_objects);
 		if likely(new_list) {
 			self->ol_elemv = new_list;
 			_Dee_objectlist_setalloc(self, num_objects);
