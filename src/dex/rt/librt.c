@@ -680,13 +680,6 @@ librt_get_BlackListKwIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(ar
 	                         (DeeObject *)&str_Iterator);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_CachedDictIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return DeeObject_GetAttr((DeeObject *)&DeeCachedDict_Type,
-	                         (DeeObject *)&str_Iterator);
-}
-
-
 
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -2321,7 +2314,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_GCSet_empty, &librt_get_GCSet_empty_f, METHOD_F
 PRIVATE DEFINE_CMETHOD(librt_get_Code_empty, &librt_get_Code_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListKwdsIterator, &librt_get_BlackListKwdsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_BlackListKwIterator, &librt_get_BlackListKwIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_CachedDictIterator, &librt_get_CachedDictIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_GCEnum, &librt_get_GCEnum_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_Traceback_empty, &librt_get_Traceback_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_Module_empty, &librt_get_Module_empty_f, METHOD_FCONSTCALL);
@@ -2768,9 +2760,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	  (DeeObject *)&librt_get_BlackListKwIterator,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
 	{ "CachedDict", (DeeObject *)&DeeCachedDict_Type, MODSYM_FREADONLY },
-	{ "CachedDictIterator", /* CachedDictIterator_Type */
-	  (DeeObject *)&librt_get_CachedDictIterator,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
 	{ "kw", (DeeObject *)&librt_kw, MODSYM_FNORMAL, /* varying */
 	  DOC("(map:?DMapping)->?DMapping\n"
 	      "Ensure that @map can be used as a keywords argument in the C API (s.a. ?A__iskw__?DType)\n"
