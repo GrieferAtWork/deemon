@@ -1073,13 +1073,14 @@ DeeInt_NewUInt8(uint8_t val) {
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
 DeeInt_NewUInt16(uint16_t val) {
 	DREF DeeIntObject *result;
+#if DIGIT_BITS >= 16
 #ifdef DeeInt_8bit
 	if (val <= 0xff)
 		return_reference(DeeInt_8bit + val);
-#endif /* DeeInt_8bit */
-#if DIGIT_BITS >= 16
+#else /* DeeInt_8bit */
 	if (!val)
 		return_reference_(DeeInt_Zero);
+#endif /* !DeeInt_8bit */
 	result = DeeInt_Alloc(1);
 	if likely(result) {
 		result->ob_size     = 1;
@@ -1087,8 +1088,13 @@ DeeInt_NewUInt16(uint16_t val) {
 	}
 #elif DIGIT_BITS >= 8
 	if (!(val >> DIGIT_BITS)) {
+#ifdef DeeInt_8bit
+		if (val <= 0xff)
+			return_reference(DeeInt_8bit + val);
+#else /* DeeInt_8bit */
 		if (!val)
 			return_reference_(DeeInt_Zero);
+#endif /* !DeeInt_8bit */
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -1114,13 +1120,18 @@ DeeInt_NewUInt32(uint32_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
 	uint32_t iter;
-#ifdef DeeInt_8bit
+#if defined(DeeInt_8bit) && DIGIT_BITS < 8
 	if (val <= 0xff)
 		return_reference(DeeInt_8bit + val);
-#endif /* DeeInt_8bit */
+#endif /* DeeInt_8bit && DIGIT_BITS < 8 */
 	if (!(val >> DIGIT_BITS)) {
+#if defined(DeeInt_8bit) && DIGIT_BITS >= 8
+		if (val <= 0xff)
+			return_reference(DeeInt_8bit + val);
+#else /* DeeInt_8bit && DIGIT_BITS >= 8 */
 		if (!val)
 			return_reference_(DeeInt_Zero);
+#endif /* !DeeInt_8bit || DIGIT_BITS < 8 */
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
@@ -1217,8 +1228,10 @@ DeeInt_NewInt16(int16_t val) {
 		abs_val = (uint16_t)0 - (uint16_t)val;
 	}
 	if (!(abs_val >> DIGIT_BITS)) {
+#ifndef DeeInt_8bit
 		if (!val)
 			return_reference_(DeeInt_Zero);
+#endif /* !DeeInt_8bit */
 		/* Fast-path: The integer fits into a single digit. */
 		result = DeeInt_Alloc(1);
 		if likely(result) {
