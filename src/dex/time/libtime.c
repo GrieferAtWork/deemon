@@ -297,7 +297,7 @@ time_now_utc(Dee_int128_t *__restrict p_result) {
 	{
 		time_t t = time(NULL);
 		__hybrid_int128_set(*p_result, t);
-			__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
+		__hybrid_uint128_add64(*(Dee_uint128_t *)p_result, SECONDS_01_01_1970);
 		__hybrid_uint128_mul32(*(Dee_uint128_t *)p_result, NANOSECONDS_PER_SECOND);
 		return;
 	}

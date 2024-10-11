@@ -949,7 +949,7 @@ PRIVATE struct type_seq proxykeys_seq = {
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_nsi                        = */ NULL,
-	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach                    = */ NULL, /* TODO: implement using DeeObject_Enumerate() */
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ NULL,
@@ -1279,8 +1279,8 @@ PRIVATE DeeTypeObject DeeMappingProxy_Type = {
 };
 
 PRIVATE DeeTypeObject *tpconst mapping_keys_mro[] = {
-	&DeeMappingProxy_Type,
 	&DeeSet_Type,
+	&DeeMappingProxy_Type,
 	&DeeSeq_Type,
 	&DeeObject_Type,
 	NULL

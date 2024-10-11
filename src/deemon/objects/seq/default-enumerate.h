@@ -73,8 +73,8 @@ typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject  *dewr_seq;    /* [1..1][const] The sequence being iterated. */
 	struct type_seq *dewr_tp_seq; /* [1..1][const] Sequence operators of `dewr_seq' (always has `tp_size' and one of `tp_getitem_index_fast', `tp_trygetitem_index', `tp_getitem_index') */
-	DREF DeeObject  *dewr_start; /* [1..1][const] Enumeration range start. */
-	DREF DeeObject  *dewr_end;   /* [1..1][const] Enumeration range end. */
+	DREF DeeObject  *dewr_start;  /* [1..1][const] Enumeration range start. */
+	DREF DeeObject  *dewr_end;    /* [1..1][const] Enumeration range end. */
 } DefaultEnumeration_WithRange;
 
 INTDEF DeeTypeObject DefaultEnumeration_WithSizeAndGetItemIndexFast_Type;          /* DefaultEnumeration_FullRange:    de_wsagiif_ */

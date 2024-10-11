@@ -2450,9 +2450,8 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
 			if (!DeeNone_Check(argv[1]))
 				DO(err, DeeFormat_PrintObjectRepr(printer, arg, argv[1]));
 			DO(err, DeeFormat_PRINT(printer, arg, "]"));
-			if (name == OPERATOR_SETRANGE) {
+			if (name == OPERATOR_SETRANGE)
 				DO(err, DeeFormat_Printf(printer, arg, " = %r", argv[2]));
-			}
 			goto done;
 		}
 		break;

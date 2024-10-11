@@ -1926,6 +1926,12 @@ struct Dee_type_math {
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_xor)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_pow)(DeeObject *self, DeeObject *some_object);
 
+	/* TODO: Change the prototypes of all the following to:
+	 * >> DREF DeeObject *(DCALL *tp_inc)(DREF DeeObject *__restrict self);
+	 *
+	 * Also change the prototypes of:
+	 * >> DREF DeeObject *DeeObject_Inc(DREF DeeObject *__restrict self); */
+
 	/* Inplace operators (Optional; Implemented using functions above when not available) */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_inc)(DREF DeeObject **__restrict p_self);
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_dec)(DREF DeeObject **__restrict p_self);
@@ -2023,7 +2029,7 @@ struct Dee_type_seq {
 	 *       Instead, everything related to NSI operators must go into `Dee_type_seq', and
 	 *       the operator inheritance system must provide defaults for linking NSI variants
 	 *       of operators with the primary operators above. */
-	struct Dee_type_nsi Dee_tpconst *tp_nsi;
+	struct Dee_type_nsi Dee_tpconst *tp_nsi; /* TODO: Deprecated */
 
 	/* Alternate forms for `tp_iter' (these are inherited by `DeeType_InheritIter()').
 	 * Instead of defining `tp_iter', you can just define one of these and have the runtime
@@ -2043,7 +2049,7 @@ struct Dee_type_seq {
 	 * for them (though it may still return "UnboundItem" if a key exists but doesn't have
 	 * any value assigned to it).
 	 * The keys enumerated by the returned iterator as the same as also yielded by `tp_enumerate' */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_iterkeys)(DeeObject *__restrict self); /* TODO */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_iterkeys)(DeeObject *__restrict self);
 
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
@@ -2098,20 +2104,20 @@ struct Dee_type_seq {
 	/* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
 	 * `KeyError' or `IndexError' (or `UnboundItem', which is a given
 	 * since that one's a sub-class of `IndexError') */
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_trygetitem)(DeeObject *self, DeeObject *index);
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_trygetitem_index)(DeeObject *self, size_t index);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_trygetitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_getitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_delitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2, 4)) int (DCALL *tp_setitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_trygetitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_getitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_delitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *tp_setitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_trygetitem)(DeeObject *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1))       DREF DeeObject *(DCALL *tp_trygetitem_index)(DeeObject *self, size_t index);
+	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_trygetitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_delitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2, 4)) int             (DCALL *tp_setitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_bounditem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_hasitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_trygetitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_delitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2, 5)) int             (DCALL *tp_setitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_bounditem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_hasitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 
 	/* [0..1] Optional helper to help implement `DeeSeq_AsHeapVector()' & friends.
 	 * NOTES:
