@@ -469,8 +469,9 @@ err_unknown_env_var(DeeObject *__restrict name) {
 	                       name);
 }
 
+/* Caller must call: `err_unknown_env_var((DeeObject *)name);'  */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_environ_getenv(DeeStringObject *name, DeeObject *defl) {
+posix_environ_trygetenv(DeeStringObject *name) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
 	LPWSTR buffer, new_buffer;
 	DWORD bufsize = 256, error;
@@ -490,13 +491,7 @@ posix_environ_getenv(DeeStringObject *name, DeeObject *defl) {
 		if (!error) {
 			/* Error. */
 			DeeString_FreeWideBuffer(buffer);
-			if (defl) {
-				if (defl != ITER_DONE)
-					Dee_Incref(defl);
-				return defl;
-			}
-			err_unknown_env_var((DeeObject *)name);
-			goto err;
+			return ITER_DONE;
 		}
 		if (error <= bufsize)
 			break;
@@ -548,13 +543,7 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endread();
 		DeeString_FreeWideBuffer(buffer);
-		if (defl) {
-			if (defl != ITER_DONE)
-				Dee_Incref(defl);
-			return defl;
-		}
-		err_unknown_env_var((DeeObject *)name);
-		return NULL;
+		return ITER_DONE;
 	}
 	reqlen     = wcslen(wenvstr);
 	new_buffer = DeeString_TryResizeWideBuffer(buffer, reqlen);
@@ -611,13 +600,7 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endread();
 		DeeString_Free1ByteBuffer((uint8_t *)buffer);
-		if (defl) {
-			if (defl != ITER_DONE)
-				Dee_Incref(defl);
-			return defl;
-		}
-		err_unknown_env_var((DeeObject *)name);
-		return NULL;
+		return ITER_DONE;
 	}
 	reqlen     = strlen(envstr);
 	new_buffer = (char *)DeeString_TryResize1ByteBuffer((uint8_t *)buffer, reqlen);
@@ -642,13 +625,8 @@ err:
 #endif /* posix_getenv_USE_getenv || posix_getenv_USE_environ */
 
 #ifdef posix_getenv_USE_STUB
-	if (defl) {
-		if (defl != ITER_DONE)
-			Dee_Incref(defl);
-		return defl;
-	}
-	err_unknown_env_var((DeeObject *)name);
-	return NULL;
+	(void)name;
+	return ITER_DONE;
 #endif /* posix_getenv_USE_STUB */
 }
 
@@ -1501,11 +1479,13 @@ posix_environ_getcount(void) {
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
 	size_t result = 0;
 	LPWCH strings = GetEnvironmentStringsW();
-	dwchar_t *iter;
-	for (iter = strings; *iter != (dwchar_t)'\0';
-	     iter = wcsend(iter) + 1)
-		++result;
-	FreeEnvironmentStringsW(strings);
+	if (strings != NULL) {
+		dwchar_t *iter;
+		for (iter = strings; *iter != (dwchar_t)'\0';
+		     iter = wcsend(iter) + 1)
+			++result;
+		FreeEnvironmentStringsW(strings);
+	}
 	return result;
 #endif /* posix_enumenv_USE_GetEnvironmentStringsW */
 
@@ -1692,11 +1672,11 @@ INTERN ATTR_COLD NONNULL((1)) int
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
 
 
-PRIVATE WUNUSED DREF DeeTupleObject *DCALL
-environ_iterator_next(EnvironIterator *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+environ_iterator_nextpair(EnvironIterator *__restrict self,
+                          DREF DeeObject *key_and_value[2]) {
 #if (defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      (defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)))
-	DREF DeeTupleObject *result;
 	DREF DeeObject *key, *value;
 	size_t key_len, value_len;
 	ENVIRON_ITERATOR_tchar *key_buf, *value_buf;
@@ -1704,9 +1684,6 @@ environ_iterator_next(EnvironIterator *__restrict self) {
 #ifndef posix_enumenv_USE_GetEnvironmentStringsW
 	size_t line_index;
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */
-	result = DeeTuple_NewUninitialized(2);
-	if unlikely(!result)
-		goto err;
 again:
 	environ_lock_read();
 
@@ -1715,7 +1692,7 @@ again:
 	if (self->ei_environ_version != dee_environ_version) {
 		environ_lock_endread();
 		err_changed_sequence((DeeObject *)self);
-		goto err_r;
+		goto err;
 	}
 #endif /* posix_enumenv_USE_environ || posix_enumenv_USE_wenviron */
 
@@ -1730,8 +1707,7 @@ again:
 #endif /* !posix_enumenv_USE_GetEnvironmentStringsW */
 	{
 		environ_lock_endread();
-		DeeTuple_FreeUninitialized(result);
-		return (DREF DeeTupleObject *)ITER_DONE;
+		return 1;
 	}
 	
 	/* Split the environ line */
@@ -1751,7 +1727,7 @@ again:
 		environ_lock_endread();
 		if (Dee_CollectMemory(1))
 			goto again;
-		goto err_r;
+		goto err;
 	}
 	value_buf = ENVIRON_ITERATOR_DeeString_TryNewBuffer(value_len);
 	if unlikely(!value_buf) {
@@ -1759,7 +1735,7 @@ again:
 		ENVIRON_ITERATOR_DeeString_FreeBuffer(key_buf);
 		if (Dee_CollectMemory(1))
 			goto again;
-		goto err_r;
+		goto err;
 	}
 
 	/* Advance iterator */
@@ -1791,34 +1767,32 @@ again:
 	/* Pack environ string buffers */
 	key = ENVIRON_ITERATOR_DeeString_PackBuffer(key_buf, STRING_ERROR_FREPLAC);
 	if unlikely(!key)
-		goto err_r_value;
+		goto err_value;
 	value = ENVIRON_ITERATOR_DeeString_PackBuffer(value_buf, STRING_ERROR_FREPLAC);
 	if unlikely(!key) {
 		Dee_Decref(key);
-		goto err_r;
+		goto err;
 	}
 
 	/* Pack everything together */
-	DeeTuple_SET(result, 0, key);
-	DeeTuple_SET(result, 1, value);
-	return result;
-err_r_value:
+	key_and_value[0] = key;
+	key_and_value[1] = value;
+	return 0;
+err_value:
 	ENVIRON_ITERATOR_DeeString_FreeBuffer(value_buf);
-err_r:
-	DeeTuple_FreeUninitialized(result);
 err:
-	return NULL;
+	return -1;
 #endif /* ... */
 
 #ifdef posix_enumenv_USE_STUB
 	(void)self;
 	err_environ_enum_not_supported();
-	return NULL;
+	return -1;
 #endif /* posix_enumenv_USE_STUB */
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-environ_iterator_next_key(EnvironIterator *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+environ_iterator_nextkey(EnvironIterator *__restrict self) {
 #if (defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      (defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)))
 	size_t key_len;
@@ -1914,8 +1888,8 @@ err:
 #endif /* posix_enumenv_USE_STUB */
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-environ_iterator_next_value(EnvironIterator *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+environ_iterator_nextvalue(EnvironIterator *__restrict self) {
 #if (defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      (defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)))
 	size_t key_len, value_len;
@@ -2006,8 +1980,15 @@ err:
 #endif /* posix_enumenv_USE_STUB */
 }
 
+PRIVATE struct type_iterator environ_iterator_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&environ_iterator_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&environ_iterator_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&environ_iterator_nextvalue,
+	/* .tp_advance   = */ NULL,
+};
 
-PRIVATE int DCALL
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 environ_iterator_bool(EnvironIterator *__restrict self) {
 #if (defined(posix_enumenv_USE_GetEnvironmentStringsW) || \
      (defined(posix_enumenv_USE_environ) || defined(posix_enumenv_USE_wenviron)))
@@ -2099,8 +2080,8 @@ INTERN DeeTypeObject DeeEnvironIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&environ_iterator_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &environ_iterator_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -2134,9 +2115,24 @@ environ_iter(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 environ_getitem(DeeObject *UNUSED(self), DeeObject *key) {
+	DREF DeeObject *result;
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
-	return posix_environ_getenv((DeeStringObject *)key, NULL);
+	result = posix_environ_trygetenv((DeeStringObject *)key);
+	if unlikely(result == ITER_DONE)
+		goto err_not_found;
+	return result;
+err_not_found:
+	err_unknown_env_var(key);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+environ_trygetitem(DeeObject *UNUSED(self), DeeObject *key) {
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
+		goto err;
+	return posix_environ_trygetenv((DeeStringObject *)key);
 err:
 	return NULL;
 }
@@ -2182,50 +2178,59 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-environ_nsi_getsize(DeeObject *__restrict UNUSED(self)) {
+environ_size(DeeObject *__restrict UNUSED(self)) {
 	return posix_environ_getcount();
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-environ_nsi_getdefault(DeeObject *UNUSED(self),
-                       DeeObject *key,
-                       DeeObject *defl) {
-	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
-		goto err;
-	return posix_environ_getenv((DeeStringObject *)key, defl);
-err:
-	return NULL;
-}
-
-
-
-PRIVATE struct type_nsi tpconst environ_nsi = {
-	/* .nsi_class = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&environ_nsi_getsize, /* Must be defined because this one's mandatory... */
-			/* .nsi_nextkey    = */ (dfunptr_t)&environ_iterator_next_key,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&environ_iterator_next_value,
-			/* .nsi_getdefault = */ (dfunptr_t)&environ_nsi_getdefault,
-			/* .nsi_setdefault = */ (dfunptr_t)NULL,
-			/* .nsi_updateold  = */ (dfunptr_t)NULL,
-			/* .nsi_insertnew  = */ (dfunptr_t)NULL
-		}
-	}
-};
 
 PRIVATE struct type_seq environ_seq = {
-	/* .tp_iter     = */ &environ_iter,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ &environ_contains,
-	/* .tp_getitem  = */ &environ_getitem,
-	/* .tp_delitem  = */ &environ_delitem,
-	/* .tp_setitem  = */ &environ_setitem,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &environ_nsi
+	/* .tp_iter                       = */ &environ_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ &environ_contains,
+	/* .tp_getitem                    = */ &environ_getitem,
+	/* .tp_delitem                    = */ &environ_delitem,
+	/* .tp_setitem                    = */ &environ_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&environ_foreach_pair,
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&environ_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&environ_trygetitem,
+#if 0
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&environ_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&environ_getitem_string_hash,
+	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&environ_delitem_string_hash,
+	/* .tp_setitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&environ_setitem_string_hash,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&environ_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&environ_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&environ_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&environ_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+#endif
 };
 
 PRIVATE struct type_member tpconst environ_class_members[] = {
@@ -2307,9 +2312,19 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getenv_f_impl(DeeObject *varname, DeeObject *defl)
 /*[[[end]]]*/
 {
+	DREF DeeObject *result;
 	if (DeeObject_AssertTypeExact(varname, &DeeString_Type))
 		goto err;
-	return posix_environ_getenv((DeeStringObject *)varname, defl);
+	result = posix_environ_trygetenv((DeeStringObject *)varname);
+	if (result == ITER_DONE) {
+		result = defl;
+		if (result) {
+			Dee_Incref(result);
+		} else {
+			err_unknown_env_var(varname);
+		}
+	}
+	return result;
 err:
 	return NULL;
 }
@@ -2343,8 +2358,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_setenv_f_impl(DeeObject *varname,
 	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
 	if unlikely(posix_environ_setenv((DeeStringObject *)varname,
-	                           (DeeStringObject *)value,
-	                           replace))
+	                                 (DeeStringObject *)value,
+	                                 replace))
 		goto err;
 	return_none;
 err:

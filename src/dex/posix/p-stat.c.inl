@@ -2290,10 +2290,13 @@ stat_is_nt_exe_filename(DeeObject *__restrict path) {
 	ext_size = (size_t)(ext_end - ext_begin);
 
 	/* Got the file path. */
-	pathext_ob = posix_environ_getenv((DeeStringObject *)&str_PATHEXT,
-	                                  (DeeObject *)&str_PATHEXT_default);
+	pathext_ob = posix_environ_trygetenv((DeeStringObject *)&str_PATHEXT);
 	if unlikely(!pathext_ob)
 		goto err;
+	if (pathext_ob == ITER_DONE) {
+		pathext_ob = (DeeObject *)&str_PATHEXT_default;
+		Dee_Incref(pathext_ob);
+	}
 	pathext = DeeString_AsUtf8(pathext_ob);
 	if unlikely(!pathext)
 		goto err_pathext_ob;

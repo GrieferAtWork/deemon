@@ -611,8 +611,9 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 posix_environ_hasenv(DeeStringObject *__restrict name);
 
+/* Caller must call: `err_unknown_env_var((DeeObject *)name);'  */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_environ_getenv(DeeStringObject *name, DeeObject *defl);
+posix_environ_trygetenv(DeeStringObject *name);
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 posix_environ_setenv(DeeStringObject *name, DeeStringObject *value, bool replace);

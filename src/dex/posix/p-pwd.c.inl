@@ -200,10 +200,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void)
 		size_t i;
 		for (i = 0; i < COMPILER_LENOF(posix_tmpdir_varnames); ++i) {
 			DREF DeeObject *result;
-			result = posix_environ_getenv(posix_tmpdir_varnames[i], Dee_None);
-			if (result != Dee_None)
+			result = posix_environ_trygetenv(posix_tmpdir_varnames[i]);
+			if (result != ITER_DONE)
 				return result;
-			Dee_DecrefNokill(Dee_None);
 		}
 	}
 #endif /* !posix_getenv_USE_STUB */
