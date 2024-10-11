@@ -182,7 +182,6 @@ EXPORTS
 	DeeExec_RunStream@40=_DeeExec_RunStream@40
 	DeeExec_RunStreamString@48=_DeeExec_RunStreamString@48
 	DeeExec_SetHome@4=_DeeExec_SetHome@4
-	DeeFastSeq_GetItemUnbound_deprecated@8=_DeeFastSeq_GetItemUnbound_deprecated@8
 	DeeFastSeq_GetItem_deprecated@8=_DeeFastSeq_GetItem_deprecated@8
 	DeeFastSeq_GetSize_deprecated@4=_DeeFastSeq_GetSize_deprecated@4
 	DeeFastSeq_Init@8=_DeeFastSeq_Init@8

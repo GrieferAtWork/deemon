@@ -701,11 +701,6 @@ DeeFastSeq_GetSize_deprecated(DeeObject *__restrict self); /* Deprecated */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFastSeq_GetItem_deprecated(DeeObject *__restrict self, size_t index); /* Deprecated */
 
-/* Same as `DeeFastSeq_GetItem_deprecated()', but returns ITER_DONE if an error
- * occurred, and `NULL' if the item has been marked as unbound. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFastSeq_GetItemUnbound_deprecated(DeeObject *__restrict self, size_t index); /* Deprecated */
-
 
 
 

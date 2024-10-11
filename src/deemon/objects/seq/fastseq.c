@@ -117,36 +117,6 @@ DeeFastSeq_GetItem_deprecated(DeeObject *__restrict self, size_t index) {
 	return (*nsi->nsi_seqlike.nsi_getitem)(self, index);
 }
 
-/* Same as `DeeFastSeq_GetItem_deprecated()', but returns ITER_DONE if an error
- * occurred, and `NULL' if the item has been marked as unbound. */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFastSeq_GetItemUnbound_deprecated(DeeObject *__restrict self, size_t index) {
-	DREF DeeObject *result;
-	DeeTypeObject *tp_self;
-	struct type_seq *seq;
-	struct type_nsi const *nsi;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
-	seq     = tp_self->tp_seq;
-	ASSERT(seq != NULL);
-	nsi = seq->tp_nsi;
-	ASSERT(nsi != NULL);
-	ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
-	if (nsi->nsi_seqlike.nsi_getitem_fast) {
-		result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, index);
-		ASSERT(result != ITER_DONE);
-		return result;
-	}
-	ASSERT(nsi->nsi_seqlike.nsi_getitem);
-	result = (*nsi->nsi_seqlike.nsi_getitem)(self, index);
-	if unlikely(!result) {
-		if (!DeeError_Catch(&DeeError_UnboundItem))
-			result = ITER_DONE;
-	}
-	return result;
-}
-
-
 
 /* Try to load index-based fast sequence controls for "seq".
  * @return: true:  Success. You may use other `DeeFastSeq_*' to access sequence elements.
