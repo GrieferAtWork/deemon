@@ -30,51 +30,13 @@
 
 DECL_BEGIN
 
-PRIVATE WUNUSED NONNULL((1, 3, 4)) int
-(DCALL ast_genasm_yieldall_fastseq)(DeeObject *__restrict seqexpr, size_t seqlen,
-                                    struct ast *__restrict seqexpr_ddi,
-                                    struct ast *__restrict ddi) {
-	size_t i;
-	/* Now to push individual elements. */
-	for (i = 0; i < seqlen; ++i) {
-		DREF DeeObject *elem;
-		elem = DeeFastSeq_GetItem_deprecated(seqexpr, i);
-		if (asm_allowconst(elem)) {
-			/* Use a constant prefix. */
-			if (asm_putddi(ddi))
-				goto err_elem;
-			if (asm_gpush_constexpr(elem))
-				goto err_elem;
-			Dee_Decref(elem);
-			if (asm_gyield())
-				goto err;
-			continue;
-		}
-		/* Must explicitly push+yield the constant. */
-		if (asm_putddi(seqexpr_ddi)) {
-err_elem:
-			Dee_Decref(elem);
-			goto err;
-		}
-		if unlikely(asm_gpush_constexpr(elem))
-			goto err_elem;
-		Dee_Decref(elem);
-		if (asm_putddi(ddi))
-			goto err;
-		if (asm_gyield())
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-
 /* Yield the given `yieldexpr'. (keeps the stack-pointer unmodified) */
 PRIVATE WUNUSED NONNULL((1, 2)) int
 (DCALL ast_genasm_yield)(struct ast *__restrict yieldexpr,
                          struct ast *__restrict ddi) {
 	if (yieldexpr->a_type == AST_EXPAND) {
 		struct ast *expandexpr;
+
 		/* By default, the compiler will encode a regular, old `yield foo;' as `yield (foo,)...;',
 		 * so without special handling here, that would always be assembled as:
 		 * >> push   @foo
@@ -93,6 +55,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 				goto done;
 			}
 		}
+
 		if (expandexpr->a_type == AST_CONSTEXPR) {
 			/* Yielding a constant expression via expand can happen when the ast-optimizer
 			 * has optimized the contained expression into a sequence (such as a tuple).
@@ -111,33 +74,48 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 			 * However, also respect `ASM_FOPTIMIZE_SIZE', and only perform this optimization
 			 * for sequences of at most 1 element, as required assembly for anything larger
 			 * would result is more bytecode. */
-			size_t fastlen;
-			DeeObject *seqexpr;
+			size_t i, seqsize;
+			DREF DeeObject *seqexpr;
 			seqexpr = expandexpr->a_constexpr;
-			fastlen = DeeFastSeq_GetSize_deprecated(seqexpr);
-			if (fastlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-				if (fastlen > 8)
-					goto after_constexpr_expand;
-				if ((current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) && fastlen > 1)
-					goto after_constexpr_expand;
-				if unlikely(ast_genasm_yieldall_fastseq(seqexpr, fastlen, expandexpr, ddi))
-					goto err;
-			} else {
-				seqexpr = DeeTuple_FromSequence(seqexpr);
-				if unlikely(!seqexpr)
-					goto err;
-				fastlen = DeeTuple_SIZE(seqexpr);
-				if (fastlen > 8 ||
-				    ((current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) && fastlen > 1)) {
-					Dee_Decref(seqexpr);
-					goto after_constexpr_expand;
-				}
-				if unlikely(ast_genasm_yieldall_fastseq(seqexpr, fastlen, expandexpr, ddi)) {
-					Dee_Decref(seqexpr);
-					goto err;
-				}
+			/* Always cast to tuple, so we know that the sequence won't change while we do stuff. */
+			seqexpr = DeeTuple_FromSequence(seqexpr);
+			if unlikely(!seqexpr)
+				goto err;
+			seqsize = DeeTuple_SIZE(seqexpr);
+			if (seqsize > 8 ||
+			    ((current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) && seqsize > 1)) {
 				Dee_Decref(seqexpr);
+				goto after_constexpr_expand;
 			}
+
+			/* Now to push individual elements. */
+			for (i = 0; i < seqsize; ++i) {
+				DeeObject *elem = DeeTuple_GET(seqexpr, i);
+				if (asm_allowconst(elem)) {
+					/* Use a constant prefix. */
+					if (asm_putddi(ddi)) {
+err_seqexpr:
+						Dee_Decref(seqexpr);
+						goto err;
+					}
+					if (asm_gpush_constexpr(elem))
+						goto err_seqexpr;
+					if (asm_gyield())
+						goto err_seqexpr;
+					continue;
+				}
+
+				/* Must explicitly push+yield the constant. */
+				if (asm_putddi(expandexpr))
+					goto err_seqexpr;
+				if unlikely(asm_gpush_constexpr(elem))
+					goto err_seqexpr;
+				if (asm_putddi(ddi))
+					goto err_seqexpr;
+				if (asm_gyield())
+					goto err_seqexpr;
+			}
+			Dee_Decref(seqexpr);
 			goto done;
 		}
 after_constexpr_expand:
@@ -153,6 +131,7 @@ after_constexpr_expand:
 			goto err;
 		goto done;
 	}
+
 	/* Check if this yield can be encoded via instruction prefix. */
 	if (yieldexpr->a_type == AST_SYM) {
 		struct symbol *sym = yieldexpr->a_sym;
@@ -166,6 +145,7 @@ after_constexpr_expand:
 			goto done;
 		}
 	}
+
 	/* Fallback: Yield the raw expression AST */
 	if (ast_genasm(yieldexpr, ASM_G_FPUSHRES))
 		goto err;
