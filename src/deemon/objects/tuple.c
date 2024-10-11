@@ -51,6 +51,12 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
+#undef SSIZE_MIN
+#undef SSIZE_MAX
+#include <hybrid/limitcore.h>
+#define SSIZE_MIN __SSIZE_MIN__
+#define SSIZE_MAX __SSIZE_MAX__
+
 #if defined(CONFIG_NO_CACHES) || defined(CONFIG_NO_TUPLE_CACHES)
 #undef CONFIG_TUPLE_CACHE_MAXSIZE
 #define CONFIG_TUPLE_CACHE_MAXSIZE  0
@@ -2087,21 +2093,105 @@ PRIVATE struct type_getset tpconst tuple_getsets[] = {
 	TYPE_GETSET_END
 };
 
+struct tuple_compare_foreach_data {
+	Tuple *tcfd_tuple; /* [1..1] The tuple being compared on the left side */
+	size_t tcfd_index; /* Next object index to compare against on the left size.  */
+};
+
+#define TUPLE_COMPARE_FOREACH_ISLESS        (SSIZE_MIN)
+#define TUPLE_COMPARE_FOREACH_ISEQUAL       0
+#define TUPLE_COMPARE_FOREACH_ISGREATER     (SSIZE_MIN + 2)
+#define TUPLE_COMPARE_FOREACH_NOTEQUAL(how) ((SSIZE_MIN + 1) + (how))
+STATIC_ASSERT(TUPLE_COMPARE_FOREACH_NOTEQUAL(-1) == TUPLE_COMPARE_FOREACH_ISLESS);
+STATIC_ASSERT(TUPLE_COMPARE_FOREACH_NOTEQUAL(1) == TUPLE_COMPARE_FOREACH_ISGREATER);
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+tuple_compare_foreach_cb(void *arg, DeeObject *elem) {
+	int temp;
+	struct tuple_compare_foreach_data *data;
+	data = (struct tuple_compare_foreach_data *)arg;
+	if (data->tcfd_index >= data->tcfd_tuple->t_size)
+		return TUPLE_COMPARE_FOREACH_ISLESS;
+	temp = DeeObject_Compare(data->tcfd_tuple->t_elem[data->tcfd_index], elem);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0) {
+		++data->tcfd_index;
+		return TUPLE_COMPARE_FOREACH_ISEQUAL;
+	}
+	ASSERT(temp == -1 || temp == 1);
+	return TUPLE_COMPARE_FOREACH_NOTEQUAL(temp);
+err:
+	return -1;
+}
+
+#define TUPLE_COMPARE_FOREACH_EQ_ISEQUAL  0
+#define TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL (SSIZE_MIN)
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+tuple_compare_foreach_eq_cb(void *arg, DeeObject *elem) {
+	int temp;
+	struct tuple_compare_foreach_data *data;
+	data = (struct tuple_compare_foreach_data *)arg;
+	if (data->tcfd_index >= data->tcfd_tuple->t_size)
+		return TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL;
+	temp = DeeObject_CompareEq(data->tcfd_tuple->t_elem[data->tcfd_index], elem);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0) {
+		++data->tcfd_index;
+		return TUPLE_COMPARE_FOREACH_ISEQUAL;
+	}
+	return TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 tuple_compare(Tuple *self, DeeObject *other) {
-	return DeeSeq_CompareVS(DeeTuple_ELEM(self),
-	                        DeeTuple_SIZE(self),
-	                        other);
+	Dee_ssize_t status;
+	struct tuple_compare_foreach_data data;
+	data.tcfd_index = 0;
+	data.tcfd_tuple = self;
+	status = DeeObject_Foreach(other, &tuple_compare_foreach_cb, &data);
+	ASSERT(status == -1 ||
+	       status == TUPLE_COMPARE_FOREACH_ISLESS ||
+	       status == TUPLE_COMPARE_FOREACH_ISEQUAL ||
+	       status == TUPLE_COMPARE_FOREACH_ISGREATER);
+	ASSERT(data.tcfd_index <= data.tcfd_tuple->t_size);
+	if (status == TUPLE_COMPARE_FOREACH_ISEQUAL) {
+		if (data.tcfd_index >= data.tcfd_tuple->t_size)
+			return 0;
+		return 1;
+	}
+	if (status == TUPLE_COMPARE_FOREACH_ISLESS)
+		return -1;
+	if (status == TUPLE_COMPARE_FOREACH_ISGREATER)
+		return 1;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 tuple_compare_eq(Tuple *self, DeeObject *other) {
-	int result = DeeSeq_EqVS(DeeTuple_ELEM(self),
-	                         DeeTuple_SIZE(self),
-	                         other);
-	if (result >= 0)
-		result = !result;
-	return result;
+	Dee_ssize_t status;
+	struct tuple_compare_foreach_data data;
+	size_t sizehint = DeeObject_SizeFast(other);
+	if (sizehint != self->t_size && sizehint != (size_t)-1)
+		return 1; /* Known not-equal */
+	data.tcfd_index = 0;
+	data.tcfd_tuple = self;
+	status = DeeObject_Foreach(other, &tuple_compare_foreach_eq_cb, &data);
+	ASSERT(status == -1 ||
+	       status == TUPLE_COMPARE_FOREACH_EQ_ISEQUAL ||
+	       status == TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL);
+	ASSERT(data.tcfd_index <= data.tcfd_tuple->t_size);
+	if (status == TUPLE_COMPARE_FOREACH_EQ_ISEQUAL) {
+		if (data.tcfd_index >= data.tcfd_tuple->t_size)
+			return 0;
+		return 1;
+	}
+	if (status == TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL)
+		return 1;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL

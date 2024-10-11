@@ -549,40 +549,20 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 
 /* @return: == -2: An error occurred.
  * @return: == -1: `self < some_object'
  * @return: == 0:  Objects compare as equal
  * @return: == 1:  `self > some_object' */
-INTDEF WUNUSED                 int DCALL DeeSeq_CompareVV(DeeObject *const *lhsv, size_t lhsc, DeeObject *const *rhsv, size_t rhsc); /* VECTOR <=> VECTOR */
-INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_CompareVF(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);         /* VECTOR <=> DeeFastSeq */
-INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_CompareVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR <=> ITERATOR */
-INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_CompareVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR <=> SEQUENCE */
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_CompareFV(DeeObject *lhs, size_t lhsc, DeeObject *const *rhsv, size_t rhsc);         /* DeeFastSeq <=> VECTOR */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_CompareFF(DeeObject *lhs, size_t lhsc, DeeObject *rhs, size_t rhsc);                 /* DeeFastSeq <=> DeeFastSeq */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_CompareFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs);                              /* DeeFastSeq <=> ITERATOR */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_CompareFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs);                              /* DeeFastSeq <=> SEQUENCE */
 INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_CompareIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);                      /* ITERATOR <=> VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);                              /* ITERATOR <=> DeeFastSeq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareII(DeeObject *lhs, DeeObject *rhs);                                           /* ITERATOR <=> ITERATOR */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareIS(DeeObject *lhs, DeeObject *rhs);                                           /* ITERATOR <=> SEQUENCE */
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 /* @return: == -1: An error occurred.
  * @return: == 0:  Sequences differ
  * @return: == 1:  Sequences are equal */
-INTDEF WUNUSED                 int DCALL DeeSeq_EqVV(DeeObject *const *lhsv, DeeObject *const *rhsv, size_t elemc); /* VECTOR == VECTOR */
-INTDEF WUNUSED NONNULL((2))    int DCALL DeeSeq_EqVF(DeeObject *const *lhsv, DeeObject *rhs, size_t elemc);         /* VECTOR == DeeFastSeq */
-INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_EqVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);          /* VECTOR == ITERATOR */
-INTDEF WUNUSED NONNULL((3))    int DCALL DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);          /* VECTOR == SEQUENCE */
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqFV(DeeObject *lhs, DeeObject *const *rhsv, size_t elemc);         /* DeeFastSeq == VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqFF(DeeObject *lhs, DeeObject *rhs, size_t elemc);                 /* DeeFastSeq == DeeFastSeq */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_EqFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs);                  /* DeeFastSeq == ITERATOR */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_EqFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs);                  /* DeeFastSeq == SEQUENCE */
 INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);          /* ITERATOR == VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);                  /* ITERATOR == DeeFastSeq */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqII(DeeObject *lhs, DeeObject *rhs);                               /* ITERATOR == ITERATOR */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIS(DeeObject *lhs, DeeObject *rhs);                               /* ITERATOR == SEQUENCE */
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
