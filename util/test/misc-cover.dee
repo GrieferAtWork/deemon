@@ -141,8 +141,14 @@ import * from collections;
 		check_iterators(HashSet(x).frozen);
 		check_iterators(Deque(x));
 		check_iterators(Deque(x).frozen);
-		check_iterators(FixedList(x));
-		check_iterators(FixedList(x).frozen);
+		if (x is Mapping) {
+			/* Special case: FixedList() interprets mappings by using keys as indices. */
+			check_iterators(FixedList(x.items));
+			check_iterators(FixedList(x.items).frozen);
+		} else {
+			check_iterators(FixedList(x));
+			check_iterators(FixedList(x).frozen);
+		}
 		check_iterators(UniqueSet(x));
 		check_iterators(UniqueSet(x).frozen);
 	}
