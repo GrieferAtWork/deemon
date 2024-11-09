@@ -760,6 +760,11 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 	 sizeof(T) <= 2 ? Dee_Atoi16(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)) : \
 	 sizeof(T) <= 4 ? Dee_Atoi32(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int32_t *)(value)) : \
 	                  Dee_Atoi64(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int64_t *)(value)))
+#define Dee_TAtoiu(str, len, radix_and_flags, value)                                \
+	(sizeof(T) <= 1 ? Dee_Atoi8(str, len, (radix_and_flags), (int8_t *)(value)) :   \
+	 sizeof(T) <= 2 ? Dee_Atoi16(str, len, (radix_and_flags), (int16_t *)(value)) : \
+	 sizeof(T) <= 4 ? Dee_Atoi32(str, len, (radix_and_flags), (int32_t *)(value)) : \
+	                  Dee_Atoi64(str, len, (radix_and_flags), (int64_t *)(value)))
 #else /* __NO_builtin_choose_expr */
 #define DEE_PRIVATE_ATOI_FLAGS(T, flags) \
 	__builtin_choose_expr(((T)-1) < (T)0, (flags) | DEEATOI_STRING_FSIGNED, (flags))
@@ -768,7 +773,14 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 	__builtin_choose_expr(sizeof(T) <= 2, Dee_Atoi16(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)),  \
 	__builtin_choose_expr(sizeof(T) <= 4, Dee_Atoi32(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int32_t *)(value)),  \
 	                                      Dee_Atoi64(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int64_t *)(value)))))
+#define Dee_TAtoiu(str, len, radix_and_flags, value)                                                           \
+	__builtin_choose_expr(sizeof(*(value)) <= 1, Dee_Atoi8(str, len, (radix_and_flags), (int8_t *)(value)),    \
+	__builtin_choose_expr(sizeof(*(value)) <= 2, Dee_Atoi16(str, len, (radix_and_flags), (int16_t *)(value)),  \
+	__builtin_choose_expr(sizeof(*(value)) <= 4, Dee_Atoi32(str, len, (radix_and_flags), (int32_t *)(value)),  \
+	                                             Dee_Atoi64(str, len, (radix_and_flags), (int64_t *)(value)))))
 #endif /* !__NO_builtin_choose_expr */
+#define Dee_TAtois(str, len, radix_and_flags, value)                                                                                    \
+	Dee_TAtoiu(str, len, (radix_and_flags) | DEEATOI_STRING_FSIGNED, value)
 
 
 /* Print an integer to a given format-printer.

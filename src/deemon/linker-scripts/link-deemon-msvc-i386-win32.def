@@ -1052,6 +1052,7 @@ EXPORTS
 	DeeString_Chr32@4=_DeeString_Chr32@4
 	DeeString_Chr8@4=_DeeString_Chr8@4
 	DeeString_DecodeBackslashEscaped@16=_DeeString_DecodeBackslashEscaped@16
+	DeeString_FormatPrinter@24=_DeeString_FormatPrinter@24
 	DeeString_FreeWidth@4=_DeeString_FreeWidth@4
 	DeeString_FromBackslashEscaped@12=_DeeString_FromBackslashEscaped@12
 	DeeString_GetChar@8=_DeeString_GetChar@8

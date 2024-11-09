@@ -281,6 +281,8 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_split.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\codec.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\finder.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\unicode\format-expr.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\unicode\format-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\ordinals.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\regroups.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\reproxy.c.inl" />

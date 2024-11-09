@@ -406,6 +406,15 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NEW_MAPPING_OPERATORS */
 
+#if (!defined(CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_NEW_STRING_FORMAT))
+#if 1 /* Not ready, yet */
+#define CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT
+#else
+#define CONFIG_NO_EXPERIMENTAL_NEW_STRING_FORMAT
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_NEW_STRING_FORMAT */
+
 
 
 #ifdef CONFIG_HOST_WINDOWS

@@ -2153,6 +2153,26 @@ DeeString_NewWithWidth(void const *__restrict str,
 
 
 
+/* Generic format printer function (can be used to implement
+ * both string (unicode), as well as Bytes formatting)
+ * @param: pattern_printer: Printer used to emit data from `pattern' (i.e. static data)
+ *                          Note that this is a distinct argument so-as to allow `pattern'
+ *                          to be an ASCII string, rather than it needing to be utf-8.
+ * @param: data_printer:    Printer used to emit data from `args' (i.e. dynamic data) */
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeString_FormatPrinter(char const *pattern, size_t pattern_length, DeeObject *args,
+                        Dee_formatprinter_t pattern_printer,
+                        Dee_formatprinter_t data_printer, void *arg);
+
+/* API functions for `string.format'. */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
+DeeString_FormatWStr(/*utf-8*/ char const *pattern_wstr, DeeObject *args);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DFCALL
+DeeString_Format(DeeObject *pattern, DeeObject *args);
+
+
+
+
 /* Return a string containing a single character. */
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 extern "C++" {

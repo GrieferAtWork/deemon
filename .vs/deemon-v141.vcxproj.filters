@@ -816,6 +816,12 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\finder.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\format-expr.c.inl">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\format-impl.c.inl">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\ordinals.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>

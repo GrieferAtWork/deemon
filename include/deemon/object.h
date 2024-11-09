@@ -2008,6 +2008,48 @@ typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
 typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
 
+#if 0
+struct my_foreach_data {
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+my_foreach_cb(void *arg, DeeObject *elem) {
+	struct my_foreach_data *data;
+	data = (struct my_foreach_data *)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+struct my_foreach_pair_data {
+};
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+my_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct my_foreach_pair_data *data;
+	data = (struct my_foreach_pair_data *)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+struct my_enumerate_data {
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+my_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+	struct my_enumerate_data *data;
+	data = (struct my_enumerate_data *)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+struct my_enumerate_index_data {
+};
+
+PRIVATE WUNUSED Dee_ssize_t DCALL
+my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	struct my_enumerate_index_data *data;
+	data = (struct my_enumerate_index_data *)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+#endif
+
 struct Dee_type_nsi;
 struct Dee_type_seq_cache;
 struct Dee_type_seq {

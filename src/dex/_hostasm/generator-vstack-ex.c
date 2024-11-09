@@ -3489,7 +3489,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 			 * >> push  arg @a
 			 * >> push  arg @b
 			 * >> push  arg @c
-			 * >> callattr top, @"format", [#2]
+			 * >> callattr top, @"format", [#3]
 			 * >> ret   pop
 			 *
 			 * Since we know that "String.format" never incref's its args-sequence

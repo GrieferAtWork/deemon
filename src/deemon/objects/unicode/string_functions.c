@@ -7408,10 +7408,21 @@ err:
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT
+INTERN WUNUSED NONNULL((1)) DREF String *DCALL
+string_format(String *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *args;
+	if (DeeArg_Unpack(argc, argv, "o:format", &args))
+		goto err;
+	return (DREF String *)DeeString_Format((DeeObject *)self, args);
+err:
+	return NULL;
+}
+#else /* CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT */
 INTDEF WUNUSED NONNULL((1, 3, 5)) dssize_t DCALL
-DeeString_Format(dformatprinter printer, void *arg,
-                 /*utf-8*/ char const *__restrict format,
-                 size_t format_len, DeeObject *__restrict args);
+DeeString_Format_old(dformatprinter printer, void *arg,
+                     /*utf-8*/ char const *__restrict format,
+                     size_t format_len, DeeObject *__restrict args);
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_format(String *self, size_t argc, DeeObject *const *argv) {
@@ -7424,7 +7435,7 @@ string_format(String *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
-		if unlikely(DeeString_Format(&unicode_printer_print,
+		if unlikely(DeeString_Format_old(&unicode_printer_print,
 		                             &printer,
 		                             utf8_repr,
 		                             WSTR_LENGTH(utf8_repr),
@@ -7437,6 +7448,7 @@ err_printer:
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT */
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_Scanf(DeeObject *self, DeeObject *format);
