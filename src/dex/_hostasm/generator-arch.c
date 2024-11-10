@@ -3999,7 +3999,7 @@ _fungen_gjcc_regindCreg(struct fungen *__restrict self,
 			ptrdiff_t adj_delta;
 			not_these[0] = rhs_regno;
 			not_these[1] = HOST_REGNO_COUNT;
-			lhs_regno = fg_gallocreg(self, NULL);
+			lhs_regno = fg_gallocreg(self, not_these);
 			if unlikely(lhs_regno >= HOST_REGNO_COUNT)
 				goto err;
 			adj_delta = lhs_ind_delta;
@@ -4154,7 +4154,7 @@ _fungen_gjcc_regindAreg(struct fungen *__restrict self,
 			ptrdiff_t adj_delta;
 			not_these[0] = rhs_regno;
 			not_these[1] = HOST_REGNO_COUNT;
-			lhs_regno = fg_gallocreg(self, NULL);
+			lhs_regno = fg_gallocreg(self, not_these);
 			if unlikely(lhs_regno >= HOST_REGNO_COUNT)
 				goto err;
 			adj_delta = lhs_ind_delta;
@@ -4390,13 +4390,13 @@ _fungen_gbitop_regregind2reg(struct fungen *__restrict self, host_bitop_t op,
 #ifndef fit32_IS_1
 	if (!fit32(src2_ind_delta)) {
 		if (src1_regno == src2_regno) {
-			host_regno_t not_these[2];
 			ptrdiff_t adj_delta;
 			src1_regno = dst_regno;
 			if (src1_regno == src2_regno) {
+				host_regno_t not_these[2];
 				not_these[0] = src2_regno;
 				not_these[1] = HOST_REGNO_COUNT;
-				src1_regno = fg_gallocreg(self, NULL);
+				src1_regno = fg_gallocreg(self, not_these);
 				if unlikely(src1_regno >= HOST_REGNO_COUNT)
 					goto err;
 			}
@@ -4671,13 +4671,13 @@ _fungen_gjarith_regregind2reg(struct fungen *__restrict self, host_arithop_t op,
 #ifndef fit32_IS_1
 	if (!fit32(src2_ind_delta)) {
 		if (src1_regno == src2_regno) {
-			host_regno_t not_these[2];
 			ptrdiff_t adj_delta;
 			src1_regno = dst_regno;
 			if (src1_regno == src2_regno) {
+				host_regno_t not_these[2];
 				not_these[0] = src2_regno;
 				not_these[1] = HOST_REGNO_COUNT;
-				src1_regno = fg_gallocreg(self, NULL);
+				src1_regno = fg_gallocreg(self, not_these);
 				if unlikely(src1_regno >= HOST_REGNO_COUNT)
 					goto err;
 			}
