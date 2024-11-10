@@ -331,7 +331,8 @@ DFUNDEF ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes);
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 #endif /* __CC__ */
 
-/* Default malloc/free functions used for object allocation. */
+/* Default malloc/free functions used for object allocation.
+ * !!! Even though these are aliased to regular malloc, don't mix-and-match !!! */
 #define DeeObject_Malloc        Dee_Malloc
 #define DeeObject_Calloc        Dee_Calloc
 #define DeeObject_Realloc       Dee_Realloc

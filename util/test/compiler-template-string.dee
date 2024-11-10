@@ -43,7 +43,7 @@ assert f'\}' == '}';
 /* Just like in python, braces can also be escaped by writing them twice.
  * WARNING: The notepad++ stylesheet fails to render this correctly, but
  *          our compiler understands it like it should! */
-assert f'{{' == '{';
+assert f'{{' == '{';            //'
 assert f'}}' == '}';
 
 /* Another thing that the notepad++ stylesheet fails to render correct (ugh...) */

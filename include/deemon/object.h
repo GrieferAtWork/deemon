@@ -3902,7 +3902,7 @@ struct Dee_type_operator {
 
 
 
-
+/* Type flags for `DeeTypeObject::tp_flags' */
 #define Dee_TP_FNORMAL          0x0000 /* Normal type flags. */
 #define Dee_TP_FFINAL           0x0001 /* The class cannot be sub-classed again. */
 #define Dee_TP_FTRUNCATE        0x0002 /* Truncate values during integer conversion, rather than throwing an `OverflowError'. */
@@ -4546,18 +4546,21 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObje
 DFUNDEF WUNUSED ATTR_RETNONNULL NONNULL((1)) DeeTypeObject *DCALL
 DeeObject_Class(DeeObject *__restrict self);
 
-/* Object inheritance checking. */
+/* Object inheritance checking:
+ * - DeeObject_Implements:      Check if part of MRO
+ * - DeeObject_InstanceOf:      Check if part of base-chain (implies MRO; required for non-TP_FABSTRACT types)
+ * - DeeObject_InstanceOfExact: Check if type matches exactly (fastest check; enough for TP_FFINAL/TP_FVARIABLE types) */
 #define DeeObject_Implements(self, super_type)       DeeType_Implements(Dee_TYPE(self), super_type)
 #define DeeObject_InstanceOf(self, super_type)       DeeType_Extends(Dee_TYPE(self), super_type)
 #define DeeObject_InstanceOfExact(self, object_type) (Dee_TYPE(self) == (object_type))
 
 /* Return true if `test_type' is equal to, or extends `extended_type'
  * NOTE: When `extended_type' is not a type, this function simply returns `false'
- * >> return test_type.derivedfrom(extended_type);
+ * >> return test_type.extends(extended_type);
  *
  * HINT: Always returns either `0' or `1'!
- * @return: 0 : "test_type" does not inherit from "extended_type"
- * @return: 1 : "test_type" does inherit from "extended_type" */
+ * @return: 0 : "test_type" does not inherit from `extended_type', or `extended_type' isn't a type
+ * @return: 1 : "test_type" does inherit from `extended_type' */
 DFUNDEF WUNUSED NONNULL((1)) unsigned int DCALL
 DeeType_Extends(DeeTypeObject const *test_type,
                 DeeTypeObject const *extended_type);

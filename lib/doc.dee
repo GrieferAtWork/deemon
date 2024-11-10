@@ -2338,9 +2338,7 @@ class Parameter: WeakRefAble {
 	public final property typ: TypeExpr = {
 		get(): TypeExpr {
 			if (m_typ !is bound) {
-				local typstr = typstring;
-				if (typstr is none)
-					typstr = "?O";
+				local typstr = typstring ?? "?O";
 				m_typ = TypeExpr(docdecl, typstr);
 			}
 			return m_typ;
@@ -3163,7 +3161,7 @@ class Doc: WeakRefAble {
 			local result = none;
 			if (istype && object is bound)
 				result = try Type.__name__(object) catch (UnboundAttribute) none;
-			return result is none ? name : result;
+			return result ?? name;
 		}
 	}
 
@@ -3352,9 +3350,7 @@ load_type_input:
 					goto load_type_input;
 				}
 				name = try docParentOrPath.__name__ catch (UnboundAttribute) none;
-				local ds = docParentOrPath.__doc__;
-				if (ds is none)
-					ds = "";
+				local ds = docParentOrPath.__doc__ ?? "";
 				docstring = ds.rstrip();
 				object = docParentOrPath;
 				try {

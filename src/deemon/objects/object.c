@@ -134,11 +134,11 @@ DeeObject_Class(DeeObject *__restrict self) {
 
 /* Return true if `test_type' is equal to, or extends `extended_type'
  * NOTE: When `extended_type' is not a type, this function simply returns `false'
- * >> return test_type.derivedfrom(extended_type);
+ * >> return test_type.extends(extended_type);
  *
  * HINT: Always returns either `0' or `1'!
- * @return: 0 : "test_type" does not inherit from "extended_type"
- * @return: 1 : "test_type" does inherit from "extended_type" */
+ * @return: 0 : "test_type" does not inherit from `extended_type', or `extended_type' isn't a type
+ * @return: 1 : "test_type" does inherit from `extended_type' */
 PUBLIC WUNUSED NONNULL((1)) unsigned int DCALL
 DeeType_Extends(DeeTypeObject const *test_type,
                 DeeTypeObject const *extended_type) {
@@ -2913,10 +2913,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_derivedfrom(DeeTypeObject *self, size_t argc,
+type_extends(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *other;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:derivedfrom", &other))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__other, "o:extends", &other))
 		goto err;
 	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Extends(self, other)]);
 err:
@@ -3781,7 +3781,7 @@ err:
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_derivedfrom_not_same(DeeTypeObject *self, size_t argc,
+type_extends_not_same(DeeTypeObject *self, size_t argc,
                           DeeObject *const *argv) {
 	DeeTypeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:derived_from", &other))
@@ -3974,7 +3974,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                "${"
 	                /**/ "print y.baseof(type(x)); /* aka: `print x is y;' */"
 	                "}"),
-	TYPE_KWMETHOD_F("derivedfrom", &type_derivedfrom, METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("extends", &type_extends, METHOD_FNOREFESCAPE,
 	                "(other:?.)->?Dbool\n"
 	                "Returns ?t if @this ?. is equal to, or has been derived from @other.\n"
 	                "If @other isn't a ?., ?f is returned."),
@@ -4175,10 +4175,14 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_KWMETHOD(STR_delinstanceattr, &type_delinstanceattr, "(name:?Dstring)\ns.a. ?#getinstanceattr"),
 	TYPE_KWMETHOD(STR_setinstanceattr, &type_setinstanceattr, "(name:?Dstring,value)->\ns.a. ?#getinstanceattr"),
 
+	TYPE_KWMETHOD_F("derivedfrom", &type_extends, METHOD_FNOREFESCAPE,
+	                "(other:?.)->?Dbool\n"
+	                "Deprecated alias for ?#extends"),
+
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	TYPE_KWMETHOD_F("same_or_derived_from", &type_derivedfrom, METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ?#derivedfrom"),
-	TYPE_METHOD_F("derived_from", &type_derivedfrom_not_same, METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
+	TYPE_KWMETHOD_F("same_or_derived_from", &type_extends, METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ?#derivedfrom"),
+	TYPE_METHOD_F("derived_from", &type_extends_not_same, METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
 	TYPE_METHOD_F("is_vartype", &type_is_vartype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isvariable__"),
 	TYPE_METHOD_F("is_heaptype", &type_is_heaptype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__iscustom__"),
 	TYPE_METHOD_F("is_gctype", &type_is_gctype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isgc__"),

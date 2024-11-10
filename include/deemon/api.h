@@ -408,7 +408,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 
 #if (!defined(CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT) && \
      !defined(CONFIG_NO_EXPERIMENTAL_NEW_STRING_FORMAT))
-#if 1 /* Not ready, yet */
+#if 1 /* Will become mandatory soon; but requires more testing in external projects */
 #define CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT
 #else
 #define CONFIG_NO_EXPERIMENTAL_NEW_STRING_FORMAT
@@ -545,7 +545,7 @@ DECL_END
 #endif /* !__i386__ || __x86_64__ */
 #endif /* !DFCALL */
 
-/* Calling convention for `dformatprinter' */
+/* Calling convention for `Dee_formatprinter_t' */
 #ifndef DPRINTER_CC
 #if defined(__KOS__) && __KOS_VERSION__ >= 400
 /* We want to be ABI-compatible with KOS's native `pformatprinter' system. */

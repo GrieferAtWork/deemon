@@ -367,7 +367,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 	char *config;
 	memcpy(sizes, default_slab_sizes,
 	       sizeof(default_slab_sizes));
-	config = getenv("DEEMON_SLABS");
+	config = getenv("DEEMON_SLABS"); /* FIXME: system-features check for CONFIG_HAVE_getenv */
 	if (config && *config) {
 		/* Load slab sizes from the configuration string, which is
 		 * a comma-separated list of the slab sizes that should be
