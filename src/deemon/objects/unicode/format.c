@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -52,19 +53,19 @@ DECL_BEGIN
 /*
  * =========================== Format strings ===========================
  *
- * These format patterns are used to drive template strings, as well as
- * provide for more advanced patterns. They come in 2 variants:
+ * These format patterns are used to drive template strings, as well
+ * as provide for more advanced patterns. They come in 2 variants:
  * - Simple
  * - Advanced
- * - These patterns are mutually exclusive, allowing detection of which
- *   one we're dealing with. Additionally, even though you might think
- *   that you're allowed to mix these 2 variants, you can't. You must
- *   always use either one, or the other for the *entire* format pattern.
+ *
+ * These patterns are mutually exclusive, allowing detection of which
+ * one we're dealing with. Additionally, even though you might think
+ * that you're allowed to mix these 2 variants, you can't. You must
+ * always use either one, or the other for the *entire* format pattern.
  *
  *
  * Examples:
  * - Simple:
- *   >> print r"\{foo = {}, bar = {}\}".format({ 10, 20 }); // "{foo = 10, bar = 20}"
  *   >> print r"{{foo = {}, bar = {}}}".format({ 10, 20 }); // "{foo = 10, bar = 20}"
  * - Advanced:
  *   >> // "Hello Mr Simpson\nWe are contacting you regarding your INSURANCE"
@@ -100,7 +101,7 @@ DECL_BEGIN
  * >> ADVANCED_TEMPLATE ::= [TEXT...]
  * >>                       [   // Start of template argument
  * >>                           '{'
- * >>                           // NOTE: Contents of "ARGUMENT_EXPR" here are always interpreted as utf-8,
+ * >>                           // NOTE: Text making up "ARGUMENT_EXPR" here are always interpreted as utf-8,
  * >>                           //       even when the rest of the template string originates from Bytes.
  * >>                           ARGUMENT_EXPR
  * >>                           [
@@ -153,12 +154,12 @@ DECL_BEGIN
  * >>                           | ('(' ARGUMENT_EXPR_CALL_ARGS ')')         // Modify `arg = arg.operator () (ARGUMENT_EXPR_CALL_ARGS)'      // Call operation
  * >>                         )...];
  * >>
- * >> ARGUMENT_EXPR_CALL_ARGS ::= [',' ~~ (ARGUMENT_EXPR_EXP...)] [
+ * >> ARGUMENT_EXPR_CALL_ARGS ::= [',' ~~ (ARGUMENT_EXPR_EXP...)] [(
  * >>                                 [',']  // If unlabelled arguments were also used
  * >>                                 (',' ~~ (
  * >>                                     SYMBOL ':' ARGUMENT_EXPR
  * >>                                 )...)
- * >>                             ];
+ * >>                             ) | ('**' ARGUMENT_EXPR)];
  * >>
  * >> ARGUMENT_EXPR_PROD ::= ARGUMENT_EXPR_UNARY [(
  * >>                            ('*' ARGUMENT_EXPR_UNARY)
@@ -353,6 +354,7 @@ sfa_yield(struct string_format_advanced *__restrict self) {
 #define RETURN1(x) do{ result = (x); goto done1; }__WHILE0
 #define RETURN2(x) do{ result = (x); goto done2; }__WHILE0
 #define RETURN3(x) do{ result = (x); goto done3; }__WHILE0
+#define RETURN4(x) do{ result = (x); goto done4; }__WHILE0
 #define RETURN5(x) do{ result = (x); goto done5; }__WHILE0
 #define RETURN6(x) do{ result = (x); goto done6; }__WHILE0
 #define RETURN9(x) do{ result = (x); goto done9; }__WHILE0
@@ -429,7 +431,7 @@ again:
 					RETURN2(SFA_TOK_POW);
 				break;
 			case '?':
-				if (nextch == '*')
+				if (nextch == '?')
 					RETURN2(SFA_TOK_QMARK_QMARK);
 				break;
 			default: __builtin_unreachable();
@@ -474,7 +476,7 @@ again:
 			case 'f':
 				if (kwd_len == 5) {
 					if (nextch2 == 'a' && ptr[3] == 'l' && ptr[4] == 's' && ptr[5] == 'e')
-						RETURN5(SFA_TOK_D_FALSE);
+						RETURN6(SFA_TOK_D_FALSE);
 				}
 				break;
 
@@ -488,7 +490,7 @@ again:
 			case 's':
 				if (kwd_len == 3) {
 					if (nextch2 == 't' && ptr[3] == 'r')
-						RETURN5(SFA_TOK_D_STR);
+						RETURN4(SFA_TOK_D_STR);
 				}
 				break;
 
@@ -588,7 +590,9 @@ done9:
 done6:
 	++ptr;
 done5:
-	ptr += 2;
+	++ptr;
+done4:
+	++ptr;
 done3:
 	++ptr;
 done2:
@@ -598,9 +602,31 @@ done2:
 #undef RETURN1
 #undef RETURN2
 #undef RETURN3
+#undef RETURN4
 #undef RETURN5
 #undef RETURN6
 #undef RETURN9
+}
+
+PRIVATE NONNULL((1)) size_t DFCALL
+sfa_tok_string_getlen(struct string_format_advanced *__restrict self) {
+	char const *iter = self->sfa_parser.sfp_iter;
+	char quote = iter[-1];
+	ASSERT(quote == '"' || quote == '\'');
+	while (iter < self->sfa_parser.sfp_wend) {
+		char ch = *iter;
+		if (ch == '\\') {
+			++iter;
+			if (iter >= self->sfa_parser.sfp_wend)
+				break;
+			++iter;
+		} else if (ch == quote) {
+			break;
+		} else {
+			++iter;
+		}
+	}
+	return (size_t)(iter - self->sfa_parser.sfp_iter);
 }
 
 PRIVATE NONNULL((1)) size_t DFCALL
@@ -624,13 +650,11 @@ sfa_tok_keyword_getlen(struct string_format_advanced *__restrict self) {
 	return (size_t)(kwd_end - self->sfa_parser.sfp_iter);
 }
 
-PRIVATE ATTR_COLD NONNULL((1)) size_t DFCALL
+PRIVATE NONNULL((1)) size_t DFCALL
 sfa_tok_getlen_for_rewind(struct string_format_advanced *__restrict self) {
 	size_t result = 1;
 	switch (self->sfa_exprtok) {
 	case SFA_TOK_KEYWORD:
-	case SFA_TOK_CHAR:
-	case SFA_TOK_STRING:
 	case SFA_TOK_INT:
 	case SFA_TOK_D_INT:
 		result = 0;
@@ -676,40 +700,60 @@ sfa_tok_getlen_for_rewind(struct string_format_advanced *__restrict self) {
 	return result;
 }
 
-PRIVATE ATTR_COLD NONNULL((1)) int DFCALL
-sfa_err_bad_token(struct string_format_advanced *__restrict self,
-                  char const *expected_token) {
-	char const *actual_token_repr = NULL;
-	size_t actual_token_length = 0;
+PRIVATE NONNULL((1)) char const *DFCALL
+sfa_tok_getbounds(struct string_format_advanced *__restrict self,
+                  size_t *__restrict p_token_length) {
+	char const *result;
+	size_t length;
 	switch (self->sfa_exprtok) {
 	case SFA_TOK_KEYWORD:
-		actual_token_length = sfa_tok_keyword_getlen(self);
+		length = sfa_tok_keyword_getlen(self);
+		result = self->sfa_parser.sfp_iter;
 		break;
 	case SFA_TOK_CHAR:
 	case SFA_TOK_STRING:
-		actual_token_repr = "<string>";
+		result = self->sfa_parser.sfp_iter - 1;
+		length = sfa_tok_string_getlen(self) + 2;
 		break;
 	case SFA_TOK_INT:
-		actual_token_repr = "<int>";
+		result = self->sfa_parser.sfp_iter;
+		length = sfa_tok_int_getlen(self);
 		break;
 	case SFA_TOK_D_INT:
-		actual_token_repr = "<$int>";
+		result = self->sfa_parser.sfp_iter - 1;
+		length = sfa_tok_int_getlen(self) + 1;
 		break;
 	default:
-		actual_token_length = sfa_tok_getlen_for_rewind(self);
+		length = sfa_tok_getlen_for_rewind(self);
+		result = self->sfa_parser.sfp_iter - length;
 		break;
 	}
-	if (actual_token_repr) {
-		actual_token_length = strlen(actual_token_repr);
-	} else {
-		actual_token_repr = self->sfa_parser.sfp_iter;
-	}
+	if ((result + length) > self->sfa_parser.sfp_wend)
+		length = (size_t)(self->sfa_parser.sfp_wend - result);
+	*p_token_length = length;
+	return result;
+}
+
+PRIVATE ATTR_COLD NONNULL((1)) int DFCALL
+sfa_err_bad_token(struct string_format_advanced *__restrict self,
+                  char const *expected_token) {
+	size_t len;
+	char const *tok = sfa_tok_getbounds(self, &len);
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       *expected_token == '<'
 	                       ? "Unexpected token %.?q in advanced format pattern expression when %s was expected"
 	                       : "Unexpected token %.?q in advanced format pattern expression when %q was expected",
-	                       actual_token_length, actual_token_repr, expected_token);
+	                       len, tok, expected_token);
 }
+
+/* Parse arguments for a function call.
+ * PATTERN: "foo = {foo.upper($2, end: $5).length} after"
+ * IN: -----------------------^           ^
+ * OUT: ----------------------------------+ */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DFCALL
+sfa_evalcallargs(struct string_format_advanced *__restrict self, /*out*/ DREF DeeObject **p_kw);
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+sfa_skipcallargs(struct string_format_advanced *__restrict self);
 
 
 PRIVATE WUNUSED NONNULL((1)) int DFCALL sfa_skipunary_base(struct string_format_advanced *__restrict self);
@@ -888,13 +932,10 @@ string_format_advanced_do1(struct string_format_advanced *__restrict self) {
 	DREF DeeObject *value;
 
 	/* Evaluate expression */
+	self->sfa_inparen = false;
 	value = sfa_evalcond(self);
 	if unlikely(!value)
 		goto err;
-	if unlikely(self->sfa_parser.sfp_iter >= self->sfa_parser.sfp_wend) {
-		err_unmatched_lbrace_in_advanced();
-		goto err_value;
-	}
 
 	/* Check what sort of object representation mode is being used. */
 	switch (__builtin_expect(self->sfa_exprtok, '}')) {
@@ -960,7 +1001,12 @@ err:
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DFCALL
 string_format_advanced_skip1(struct string_format_advanced *__restrict self) {
-	if unlikely(sfa_skipcond(self))
+	int temp;
+	bool saved_sfa_inparen;
+	saved_sfa_inparen = self->sfa_inparen;
+	temp = sfa_skipcond(self);
+	self->sfa_inparen = saved_sfa_inparen;
+	if unlikely(temp)
 		goto err;
 	if unlikely(self->sfa_parser.sfp_iter >= self->sfa_parser.sfp_wend)
 		return err_unmatched_lbrace_in_advanced();
@@ -1012,16 +1058,19 @@ PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 string_format_advanced_do1_intostr(struct string_format_advanced *__restrict self) {
 	Dee_formatprinter_t saved_sfa_printer;
 	void *saved_sfa_arg;
+	bool saved_sfa_inparen;
 	struct unicode_printer printer;
 	Dee_ssize_t temp;
 	unicode_printer_init(&printer);
 	saved_sfa_printer = self->sfa_printer;
 	saved_sfa_arg     = self->sfa_arg;
+	saved_sfa_inparen = self->sfa_inparen;
 	self->sfa_printer = &unicode_printer_print;
 	self->sfa_arg     = &printer;
 	temp = string_format_advanced_do1(self);
 	self->sfa_printer = saved_sfa_printer;
 	self->sfa_arg     = saved_sfa_arg;
+	self->sfa_inparen = saved_sfa_inparen;
 	if unlikely(temp < 0)
 		goto err_printer;
 	return unicode_printer_pack(&printer);

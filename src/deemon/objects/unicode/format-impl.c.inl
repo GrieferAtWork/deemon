@@ -249,8 +249,15 @@ LOCAL_parse_format_template_for_object_format(struct LOCAL_string_format_data *d
 	if unlikely(!next_brace)
 		return err_unmatched_lbrace_in_simple();
 	/* Check for {{ or }}-escape */
+#ifdef DEFINE_DeeString_FormatPrinter
+	if unlikely((next_brace + 1) < data->sfd_parser.sfp_wend &&
+	            (next_brace[0] == next_brace[1]))
+#else /* DEFINE_DeeString_FormatPrinter */
 	if unlikely(next_brace[0] == next_brace[1])
+#endif /* !DEFINE_DeeString_FormatPrinter */
+	{
 		return LOCAL_parse_format_template_for_object_format_ex(data, next_brace + 1, elem);
+	}
 	if unlikely(next_brace[0] == '{')
 		return err_lbrace_in_format_in_simple();
 	ASSERT(next_brace[0] == '}');

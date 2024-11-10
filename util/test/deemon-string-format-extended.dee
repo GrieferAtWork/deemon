@@ -1,0 +1,135 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+/******************************************************************************
+ *
+ * Syntax rules for advanced template strings are defined in:
+ *     /src/deemon/objects/unicode/format.c
+ *
+ ******************************************************************************/
+
+
+/* Test the canonical examples from the documentation */
+assert "{foo = 10, bar = 20}" == r"{{foo = {}, bar = {}}}".format({ 10, 20 });
+assert "Hello Mr Simpson\nWe are contacting you regarding your INSURANCE" ==
+	"Hello {salutation} {surname}\nWe are contacting you regarding your {subject.upper()}"
+		.format({ "salutation": "Mr", "surname": "Simpson", "subject": "Insurance" });
+
+assert "x = 10"    == "x = {x}".format({ "x": 10 });
+assert "x = 12"    == "x = {$2+x}".format({ "x": 10 });
+assert "x = 12"    == "x = {$2 + x}".format({ "x": 10 });
+assert "x = 12"    == "x = {x+$2}".format({ "x": 10 });
+assert "x = 12"    == "x = {x + $2}".format({ "x": 10 });
+assert "x = foo10" == "x = {'foo'+x}".format({ "x": 10 });
+assert "x = foo10" == "x = {'foo' + x}".format({ "x": 10 });
+assert "x = 10foo" == "x = {$str(x)+'foo'}".format({ "x": 10 });
+assert "x = 10foo" == "x = {$str(x) + 'foo'}".format({ "x": 10 });
+assert "x = int"   == "x = {$type(x)}".format({ "x": 10 });
+assert "x = 42"    == "x = {0}".format({ 42 });
+assert "x = none"  == "x = {0}".format(([none] * 10) + { 42 });
+assert "x = 42"    == "x = {10}".format(([none] * 10) + { 42 });
+assert "x = 42"    == "x = {17}".format(([none] * 17) + { 42 });
+assert "x = 42"    == "x = {x!r}".format({ "x": 42 });
+assert "x = \"42\""== "x = {$str(x)!r}".format({ "x": 42 });
+assert "x = true"  == "x = {(x $in($10,$20))}".format({ "x": 10 });
+assert "x = true"  == "x = {(x $in($10,$20,))}".format({ "x": 10 });
+assert "x = true"  == "x = {(x $in[$10,$20])}".format({ "x": 10 });
+assert "x = true"  == "x = {(x $in[$10,$20,])}".format({ "x": 10 });
+assert "x = true"  == "x = { ( x $in ( $10 , $20 ) ) }".format({ "x": 10 });
+assert "x = true"  == "x = { ( x $in ( $10 , $20 , ) ) }".format({ "x": 10 });
+assert "x = true"  == "x = { ( x $in [ $10 , $20 ] ) }".format({ "x": 10 });
+assert "x = true"  == "x = { ( x $in [ $10 , $20 , ] ) }".format({ "x": 10 });
+assert "x = false" == "x = {(x!$in($10,$20))}".format({ "x": 10 });
+assert "x = false" == "x = {(x!$in($10,$20,))}".format({ "x": 10 });
+assert "x = false" == "x = {(x!$in[$10,$20])}".format({ "x": 10 });
+assert "x = false" == "x = {(x!$in[$10,$20,])}".format({ "x": 10 });
+assert "x = false" == "x = { ( x ! $in ( $10 , $20 ) ) }".format({ "x": 10 });
+assert "x = false" == "x = { ( x ! $in ( $10 , $20 , ) ) }".format({ "x": 10 });
+assert "x = false" == "x = { ( x ! $in [ $10 , $20 ] ) }".format({ "x": 10 });
+assert "x = false" == "x = { ( x ! $in [ $10 , $20 , ] ) }".format({ "x": 10 });
+assert "x = false" == "x = {(x $in($30,$40))}".format({ "x": 10 });
+assert "x = false" == "x = {(x $in($30,$40,))}".format({ "x": 10 });
+assert "x = false" == "x = {(x $in[$30,$40])}".format({ "x": 10 });
+assert "x = false" == "x = {(x $in[$30,$40,])}".format({ "x": 10 });
+assert "x = false" == "x = { ( x $in ( $30 , $40 ) ) }".format({ "x": 10 });
+assert "x = false" == "x = { ( x $in ( $30 , $40 , ) ) }".format({ "x": 10 });
+assert "x = false" == "x = { ( x $in [ $30 , $40 ] ) }".format({ "x": 10 });
+assert "x = false" == "x = { ( x $in [ $30 , $40 , ] ) }".format({ "x": 10 });
+assert "x = true"  == "x = {(x!$in($30,$40))}".format({ "x": 10 });
+assert "x = true"  == "x = {(x!$in($30,$40,))}".format({ "x": 10 });
+assert "x = true"  == "x = {(x!$in[$30,$40])}".format({ "x": 10 });
+assert "x = true"  == "x = {(x!$in[$30,$40,])}".format({ "x": 10 });
+assert "x = true"  == "x = { ( x ! $in ( $30 , $40 ) ) }".format({ "x": 10 });
+assert "x = true"  == "x = { ( x ! $in ( $30 , $40 , ) ) }".format({ "x": 10 });
+assert "x = true"  == "x = { ( x ! $in [ $30 , $40 ] ) }".format({ "x": 10 });
+assert "x = true"  == "x = { ( x ! $in [ $30 , $40 , ] ) }".format({ "x": 10 });
+
+assert "x = true"  == "x = {x === x}".format({ "x": 10 });
+assert "x = true"  == "x = {(x === x)}".format({ "x": 10 });
+assert "x = false" == "x = {(x !== x)}".format({ "x": 10 }); /* This one requires parens */
+
+assert "x = \"true\""  == "x = {$str(x!$in[$30,$40,])!r}".format({ "x": 10 });
+assert "x = \"true\""  == "x = {$repr($str(x!$in[$30,$40,]))}".format({ "x": 10 });
+
+/* Test conditional expressions and assert that ff-branches aren't executed */
+assert "x = 42"    == "x = {c ? tt : ff}".format({ "c": true, "tt": 42 });
+assert "x = 43"    == "x = {c ? tt : ff}".format({ "c": false, "ff": 43 });
+assert "x = false" == "x = {c && missing}".format({ "c": false });
+assert "x = true"  == "x = {c || missing}".format({ "c": true });
+assert "x = 42"    == "x = {c ?? missing}".format({ "c": 42 });
+assert "x = yes"   == "x = {c ?? present}".format({ "c": none, "present": "yes" });
+
+/* Ensure that builtin constants can be accessed */
+assert "x = true"  == "x = {$true}".format({});
+assert "x = false" == "x = {$false}".format({});
+assert "x = none"  == "x = {$none}".format({});
+
+/* Ensure sequence elements can be accessed */
+assert "x = 10" == "x = {seq[$0]!r}".format({ "seq": [10, 20, 30] });
+assert "x = 20" == "x = {seq[$1]!r}".format({ "seq": [10, 20, 30] });
+assert "x = 30" == "x = {seq[$2]!r}".format({ "seq": [10, 20, 30] });
+assert "x = [30]" == "x = {seq[$2:]!r}".format({ "seq": [10, 20, 30] });
+assert "x = [20, 30]" == "x = {seq[$1:]!r}".format({ "seq": [10, 20, 30] });
+assert "x = [10, 20, 30]" == "x = {seq[$0:]!r}".format({ "seq": [10, 20, 30] });
+assert "x = [10, 20, 30]" == "x = {seq[:]!r}".format({ "seq": [10, 20, 30] });
+assert "x = [10, 20, 30]" == "x = {seq[$none:]!r}".format({ "seq": [10, 20, 30] });
+assert "x = [10, 20, 30]" == "x = {seq[:$none]!r}".format({ "seq": [10, 20, 30] });
+assert "x = [10, 20, 30]" == "x = {seq[$none:$none]!r}".format({ "seq": [10, 20, 30] });
+assert "x = [10, 20]" == "x = {seq[:-$1]!r}".format({ "seq": [10, 20, 30] });
+assert "x = 3" == "x = {#seq}".format({ "seq": [10, 20, 30] });
+
+/* Ensure that "$" can appear in caller-given arguments,
+ * so-long as it isn't the first character. */
+assert "x = 10" == "x = {val$1}".format({ "val$1": 10 });
+assert "x = 10" == "x = {_$1}".format({ "_$1": 10 });
+assert "x = -10" == "x = {-_$1}".format({ "_$1": 10 });
+assert "x = 11" == "x = {_$1 + $1}".format({ "_$1": 10 });
+
+/* Do some more tests on function calls done from within template strings. */
+function func(a = 30, b = 40) -> a + b;
+assert "x = 50" == "x = {func($10)}".format({ "func": func });
+assert "x = 30" == "x = {func($10, $20)}".format({ "func": func });
+assert "x = 30" == "x = {func($10, b: $20)}".format({ "func": func });
+assert "x = 30" == "x = {func(a: $10, b: $20)}".format({ "func": func });
+assert "x = 37" == "x = {func(b: $7)}".format({ "func": func });
+
+/* TODO: Write tests for expand expressions ("...") once those are supported */
+

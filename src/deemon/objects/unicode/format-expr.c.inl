@@ -28,9 +28,10 @@
 #endif /* DEFINE_sfa_... */
 
 #ifdef DEFINE_sfa_skipexpr
-#define LOCAL_ERRVAL                   (-1)
+#define LOCAL_IFEVAL(x)             /* nothing */
+#define LOCAL_ERRVAL                (-1)
 #define LOCAL_return_type           int
-#define LOCAL_OK__or__lhs             0
+#define LOCAL_OK__or__lhs           0
 #define LOCAL_ISOK(x)               ((x) == 0)
 #define LOCAL__param_lhs            /* nothing */
 #define LOCAL__arg_lhs(x)           /* nothing */
@@ -62,10 +63,11 @@
 #define LOCAL_sfa_evallor_operand   sfa_skiplor_operand
 #define LOCAL_sfa_evalcond_operand  sfa_skipcond_operand
 #else /* DEFINE_sfa_skipexpr */
-#define LOCAL_ERRVAL                   NULL
-#define LOCAL_OK__or__lhs             lhs
-#define LOCAL_ISOK(x)               ((x) != NULL)
+#define LOCAL_IFEVAL(x)             x
+#define LOCAL_ERRVAL                NULL
 #define LOCAL_return_type           DREF DeeObject *
+#define LOCAL_OK__or__lhs           lhs
+#define LOCAL_ISOK(x)               ((x) != NULL)
 #define LOCAL__param_lhs            , /*inherit(always)*/ DREF DeeObject *__restrict lhs
 #define LOCAL__arg_lhs(x)           , x
 #define LOCAL_sfa_evalunary_base    sfa_evalunary_base
@@ -99,6 +101,196 @@
 
 DECL_BEGIN
 
+/* Parse arguments for a function call.
+ * PATTERN: "foo = {foo.upper($2, end: $5).length} after"
+ * IN: -----------------------^           ^
+ * OUT: ----------------------------------+ */
+#ifdef DEFINE_sfa_skipexpr
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+sfa_skipcallargs(struct string_format_advanced *__restrict self)
+#else /* DEFINE_sfa_skipexpr */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DFCALL
+sfa_evalcallargs(struct string_format_advanced *__restrict self, /*out*/ DREF DeeObject **p_kw)
+#endif /* !DEFINE_sfa_skipexpr */
+{
+	size_t kwd_label_len;
+	char const *kwd_label;
+#ifndef DEFINE_sfa_skipexpr
+	DREF DeeObject *kw;
+	DREF DeeTupleObject *argv;
+	size_t argc;
+#endif /* !DEFINE_sfa_skipexpr */
+
+	/* Check for simple case: no arguments */
+	if (self->sfa_exprtok == ')') {
+		sfa_yield(self);
+#ifdef DEFINE_sfa_skipexpr
+		return 0;
+#else /* DEFINE_sfa_skipexpr */
+		*p_kw = NULL;
+		return_reference_((DeeTupleObject *)Dee_EmptyTuple);
+#endif /* !DEFINE_sfa_skipexpr */
+	}
+
+#ifndef DEFINE_sfa_skipexpr
+	argv = DeeTuple_TryNewUninitialized(4);
+	if unlikely(!argv) {
+		argv = DeeTuple_NewUninitialized(1);
+		if unlikely(!argv)
+			goto err;
+	}
+	argc = 0;
+#endif /* !DEFINE_sfa_skipexpr */
+	do {
+		LOCAL_return_type arg;
+
+		/* Check for keyword label */
+		if (self->sfa_exprtok == SFA_TOK_KEYWORD) {
+			kwd_label = self->sfa_parser.sfp_iter;
+			kwd_label_len = sfa_tok_keyword_getlen(self);
+			self->sfa_parser.sfp_iter += kwd_label_len;
+			if (sfa_yield(self) == ':')
+				goto parse_kwd_labels; /* Found a keyword label */
+			self->sfa_parser.sfp_iter = kwd_label;
+		} else if (self->sfa_exprtok == SFA_TOK_POW) {
+			/* flexible keyword arguments */
+			sfa_yield(self);
+			arg = LOCAL_sfa_evalcond(self);
+			if unlikely(!LOCAL_ISOK(arg))
+				goto err_r;
+			if unlikely(self->sfa_exprtok != ')') {
+				if (self->sfa_exprtok == ',')
+					sfa_yield(self);
+				if unlikely(self->sfa_exprtok != ')') {
+					sfa_err_bad_token(self, ")");
+#ifndef DEFINE_sfa_skipexpr
+					Dee_Decref(arg);
+#endif /* !DEFINE_sfa_skipexpr */
+					goto err_r;
+				}
+			}
+			sfa_yield(self);
+#ifdef DEFINE_sfa_skipexpr
+			return 0;
+#else /* DEFINE_sfa_skipexpr */
+			kw = arg; /* Inherit reference */
+			goto wrap_and_return_kw;
+#endif /* !DEFINE_sfa_skipexpr */
+		}
+		arg = LOCAL_sfa_evalcond(self);
+		if unlikely(!LOCAL_ISOK(arg))
+			goto err_r;
+		if (self->sfa_exprtok == SFA_TOK_DOTS) {
+			/* TODO: expand elements */
+		}
+
+#ifndef DEFINE_sfa_skipexpr
+		if unlikely(argc >= DeeTuple_SIZE(argv)) {
+			DREF DeeTupleObject *new_argv;
+			size_t new_alloc = DeeTuple_SIZE(argv) * 2;
+			new_argv = DeeTuple_TryResizeUninitialized(argv, new_alloc);
+			if unlikely(!new_argv) {
+				new_alloc = argc + 1;
+				new_argv = DeeTuple_ResizeUninitialized(argv, new_alloc);
+				if unlikely(!new_argv) {
+					Dee_Decref(arg);
+					goto err_r;
+				}
+			}
+			argv = new_argv;
+		}
+		DeeTuple_SET(argv, argc, arg); /* Inherit reference */
+		++argc;
+#endif /* !DEFINE_sfa_skipexpr */
+
+		if (self->sfa_exprtok != ',')
+			break;
+		sfa_yield(self);
+	} while (self->sfa_exprtok != ')');
+
+	if unlikely(self->sfa_exprtok != ')') {
+		sfa_err_bad_token(self, ")");
+		goto err_r;
+	}
+	sfa_yield(self);
+#ifdef DEFINE_sfa_skipexpr
+	return 0;
+#else /* DEFINE_sfa_skipexpr */
+	*p_kw = NULL;
+	return DeeTuple_TruncateUninitialized(argv, argc);
+#endif /* !DEFINE_sfa_skipexpr */
+
+parse_kwd_labels:
+#ifndef DEFINE_sfa_skipexpr
+	kw = DeeDict_New();
+	if unlikely(!kw)
+		goto err_r;
+#endif /* !DEFINE_sfa_skipexpr */
+	for (;;) {
+		LOCAL_return_type arg;
+		sfa_yield(self); /* Skip over the ':' token */
+
+		arg = LOCAL_sfa_evalcond(self);
+		if unlikely(!LOCAL_ISOK(arg))
+			goto err_r_kw;
+
+		/* Store keyword argument */
+#ifndef DEFINE_sfa_skipexpr
+		{
+			int temp;
+			temp = DeeDict_SetItemStringLen(kw, kwd_label, kwd_label_len, arg);
+			Dee_Decref(arg);
+			if unlikely(temp)
+				goto err_r_kw;
+		}
+#endif /* !DEFINE_sfa_skipexpr */
+
+		if (self->sfa_exprtok != ',')
+			break;
+		sfa_yield(self);
+		if (self->sfa_exprtok == ')')
+			break;
+		if (self->sfa_exprtok != SFA_TOK_KEYWORD) {
+			sfa_err_bad_token(self, "<keyword-label>");
+			goto err_r_kw;
+		}
+		LOCAL_IFEVAL(kwd_label = self->sfa_parser.sfp_iter);
+		kwd_label_len = sfa_tok_keyword_getlen(self);
+		self->sfa_parser.sfp_iter += kwd_label_len;
+		if unlikely(sfa_yield(self) != ':') {
+			sfa_err_bad_token(self, ":");
+			goto err_r_kw;
+		}
+	}
+	if unlikely(self->sfa_exprtok != ')') {
+		sfa_err_bad_token(self, ")");
+		goto err_r;
+	}
+	sfa_yield(self);
+#ifdef DEFINE_sfa_skipexpr
+	return 0;
+#else /* DEFINE_sfa_skipexpr */
+wrap_and_return_kw:
+	if unlikely((*p_kw = DeeKw_ForceWrap(kw)) == NULL)
+		goto err_r_kw;
+	Dee_DecrefNokill(kw); /* NoKill because referenced by kwds-wrapper */
+	return DeeTuple_TruncateUninitialized(argv, argc);
+#endif /* !DEFINE_sfa_skipexpr */
+
+err_r_kw:
+#ifndef DEFINE_sfa_skipexpr
+	Dee_DecrefDokill(kw);
+#endif /* !DEFINE_sfa_skipexpr */
+err_r:
+#ifndef DEFINE_sfa_skipexpr
+	Dee_Decrefv(DeeTuple_ELEM(argv), argc);
+	DeeTuple_FreeUninitialized(argv);
+err:
+#endif /* !DEFINE_sfa_skipexpr */
+	return LOCAL_ERRVAL;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) LOCAL_return_type DFCALL
 LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 #ifdef DEFINE_sfa_skipexpr
@@ -114,8 +306,8 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 		char const *kwd = self->sfa_parser.sfp_iter;
 		result = DeeObject_GetItemStringLenHash(self->sfa_args, kwd, kwdlen,
 		                                        Dee_HashUtf8(kwd, kwdlen));
-		if unlikely(!result)
-			goto err;
+		/*if unlikely(!result)
+			goto err;*/
 #endif /* !DEFINE_sfa_skipexpr */
 		self->sfa_parser.sfp_iter += kwdlen;
 		sfa_yield(self);
@@ -140,40 +332,41 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 		} else {
 			result = DeeObject_GetItemIndex(self->sfa_args, index);
 		}
-		if unlikely(!result)
-			goto err;
+		/*if unlikely(!result)
+			goto err;*/
 #endif /* !DEFINE_sfa_skipexpr */
 		self->sfa_parser.sfp_iter += intlen;
 		sfa_yield(self);
 	}	break;
 
 	case SFA_TOK_CHAR:
-	case SFA_TOK_STRING:
-		/* TODO */
-		DeeError_NOTIMPLEMENTED();
-		goto err;
+	case SFA_TOK_STRING: {
+		size_t len = sfa_tok_string_getlen(self);
+#ifndef DEFINE_sfa_skipexpr
+		result = DeeString_FromBackslashEscaped(self->sfa_parser.sfp_iter,
+		                                        len, STRING_ERROR_FSTRICT);
+		/*if unlikely(!result)
+			goto err;*/
+#endif /* !DEFINE_sfa_skipexpr */
+		self->sfa_parser.sfp_iter += len + 1; /* +1 for the trailing ' or " */
+		sfa_yield(self);
+	}	break;
 
 	case SFA_TOK_D_TRUE:
-#ifndef DEFINE_sfa_skipexpr
-		result = Dee_True;
-		Dee_Incref(result);
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(result = Dee_True);
+		LOCAL_IFEVAL(Dee_Incref(result));
 		sfa_yield(self);
 		break;
 
 	case SFA_TOK_D_FALSE:
-#ifndef DEFINE_sfa_skipexpr
-		result = Dee_False;
-		Dee_Incref(result);
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(result = Dee_False);
+		LOCAL_IFEVAL(Dee_Incref(result));
 		sfa_yield(self);
 		break;
 
 	case SFA_TOK_D_NONE:
-#ifndef DEFINE_sfa_skipexpr
-		result = Dee_None;
-		Dee_Incref(result);
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(result = Dee_None);
+		LOCAL_IFEVAL(Dee_Incref(result));
 		sfa_yield(self);
 		break;
 
@@ -182,10 +375,8 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 	case SFA_TOK_D_COPY:
 	case SFA_TOK_D_DEEPCOPY:
 	case SFA_TOK_D_TYPE: {
-#ifndef DEFINE_sfa_skipexpr
-		unsigned int tok = self->sfa_exprtok;
-#endif /* !DEFINE_sfa_skipexpr */
 		bool saved_sfa_inparen;
+		LOCAL_IFEVAL(unsigned int tok = self->sfa_exprtok);
 		sfa_yield(self);
 		if unlikely(self->sfa_exprtok != '(') {
 			sfa_err_bad_token(self, "(");
@@ -199,9 +390,7 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 		if unlikely(!LOCAL_ISOK(result))
 			goto err;
 		if unlikely(self->sfa_exprtok != ')') {
-#ifndef DEFINE_sfa_skipexpr
-			Dee_Decref(result);
-#endif /* !DEFINE_sfa_skipexpr */
+			LOCAL_IFEVAL(Dee_Decref(result));
 			sfa_err_bad_token(self, ")");
 			goto err;
 		}
@@ -238,9 +427,15 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 
 	case SFA_TOK_D_INT: {
 		size_t intlen = sfa_tok_int_getlen(self);
+#ifndef CONFIG_NO_FPU
+		if ((self->sfa_parser.sfp_iter + intlen + 1) < self->sfa_parser.sfp_wend &&
+		    (self->sfa_parser.sfp_iter[intlen] == '.')) {
+			/* TODO: float */
+		}
+#endif /* !CONFIG_NO_FPU */
 #ifndef DEFINE_sfa_skipexpr
-		char const *intrepr = self->sfa_parser.sfp_iter;
-		result = DeeInt_FromString(intrepr, intlen, DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
+		result = DeeInt_FromString(self->sfa_parser.sfp_iter, intlen,
+		                           DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
 		/*if unlikely(!result)
 			goto err;*/
 #endif /* !DEFINE_sfa_skipexpr */
@@ -269,9 +464,7 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 	case '+':
 	case '-':
 	case '~': {
-#ifndef DEFINE_sfa_skipexpr
-		unsigned int tok = self->sfa_exprtok;
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(unsigned int tok = self->sfa_exprtok);
 		sfa_yield(self);
 		result = LOCAL_sfa_evalunary(self);
 		if unlikely(!LOCAL_ISOK(result))
@@ -299,10 +492,8 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 		sfa_yield(self);
 		if (self->sfa_exprtok == ')') {
 			sfa_yield(self);
-#ifndef DEFINE_sfa_skipexpr
-			result = Dee_EmptyTuple;
-			Dee_Incref(result);
-#endif /* !DEFINE_sfa_skipexpr */
+			LOCAL_IFEVAL(result = Dee_EmptyTuple);
+			LOCAL_IFEVAL(Dee_Incref(result));
 			break;
 		}
 		saved_sfa_inparen = self->sfa_inparen;
@@ -350,6 +541,9 @@ err_tuple_items_count:
 #endif /* !DEFINE_sfa_skipexpr */
 						goto err;
 					}
+					if (self->sfa_exprtok == SFA_TOK_DOTS) {
+						/* TODO: expand elements */
+					}
 #ifndef DEFINE_sfa_skipexpr
 					if unlikely(count >= DeeTuple_SIZE(items)) {
 						size_t new_size = DeeTuple_SIZE(items) * 2;
@@ -375,14 +569,20 @@ err_tuple_items_count:
 #ifndef DEFINE_sfa_skipexpr
 				result = (LOCAL_return_type)DeeTuple_TruncateUninitialized(items, count);
 #endif /* !DEFINE_sfa_skipexpr */
-				if (self->sfa_exprtok != ')') {
-#ifndef DEFINE_sfa_skipexpr
-					Dee_Decref(result);
-#endif /* !DEFINE_sfa_skipexpr */
+				if unlikely(self->sfa_exprtok != ')') {
+					LOCAL_IFEVAL(Dee_Decref(result));
 					sfa_err_bad_token(self, ")");
 					goto err;
 				}
+				sfa_yield(self);
 			}
+		} else {
+			if unlikely(self->sfa_exprtok != ')') {
+				LOCAL_IFEVAL(Dee_Decref(result));
+				sfa_err_bad_token(self, ")");
+				goto err;
+			}
+			sfa_yield(self);
 		}
 		self->sfa_inparen = saved_sfa_inparen;
 	}	break;
@@ -397,10 +597,8 @@ err_tuple_items_count:
 		sfa_yield(self);
 		if (self->sfa_exprtok == ']') {
 			sfa_yield(self);
-#ifndef DEFINE_sfa_skipexpr
-			result = Dee_EmptyTuple;
-			Dee_Incref(result);
-#endif /* !DEFINE_sfa_skipexpr */
+			LOCAL_IFEVAL(result = Dee_EmptyTuple);
+			LOCAL_IFEVAL(Dee_Incref(result));
 			break;
 		}
 #ifndef DEFINE_sfa_skipexpr
@@ -424,6 +622,9 @@ err_list_items_count:
 				DeeTuple_FreeUninitialized(items);
 #endif /* !DEFINE_sfa_skipexpr */
 				goto err;
+			}
+			if (self->sfa_exprtok == SFA_TOK_DOTS) {
+				/* TODO: expand elements */
 			}
 #ifndef DEFINE_sfa_skipexpr
 			if unlikely(count >= DeeTuple_SIZE(items)) {
@@ -450,13 +651,12 @@ err_list_items_count:
 #ifndef DEFINE_sfa_skipexpr
 		result = (LOCAL_return_type)DeeTuple_TruncateUninitialized(items, count);
 #endif /* !DEFINE_sfa_skipexpr */
-		if (self->sfa_exprtok != ']') {
-#ifndef DEFINE_sfa_skipexpr
-			Dee_Decref(result);
-#endif /* !DEFINE_sfa_skipexpr */
+		if unlikely(self->sfa_exprtok != ']') {
+			LOCAL_IFEVAL(Dee_Decref(result));
 			sfa_err_bad_token(self, "]");
 			goto err;
 		}
+		sfa_yield(self);
 		self->sfa_inparen = saved_sfa_inparen;
 	}	break;
 
@@ -498,10 +698,8 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 		case '.': {
 			sfa_yield(self);
 			if (self->sfa_exprtok == '{') {
-#ifndef DEFINE_sfa_skipexpr
-				DREF DeeObject *attrname;
-				LOCAL_return_type result;
-#endif /* !DEFINE_sfa_skipexpr */
+				LOCAL_IFEVAL(DREF DeeObject *attrname);
+				LOCAL_IFEVAL(LOCAL_return_type result);
 				sfa_yield(self);
 #ifdef DEFINE_sfa_skipexpr
 				if unlikely(string_format_advanced_skip1(self))
@@ -510,7 +708,29 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 				attrname = string_format_advanced_do1_intostr(self);
 				if unlikely(!attrname)
 					goto err_lhs;
-				result = DeeObject_GetAttr(lhs, attrname);
+#ifndef __OPTIMIZE_SIZE__
+				if (self->sfa_exprtok == '(') {
+					/* Fast-pass for callattr expressions */
+					DREF DeeTupleObject *call_args;
+					DREF DeeObject *call_kw;
+					bool saved_sfa_inparen;
+					saved_sfa_inparen = self->sfa_inparen;
+					self->sfa_inparen = true;
+					sfa_yield(self);
+					call_args = sfa_evalcallargs(self, &call_kw);
+					self->sfa_inparen = saved_sfa_inparen;
+					if unlikely(!call_args)
+						goto err_lhs;
+					result = DeeObject_CallAttrTupleKw(lhs, attrname,
+					                                   (DeeObject *)call_args,
+					                                   call_kw);
+					Dee_XDecref(call_kw);
+					Dee_Decref(call_args);
+				} else
+#endif /* !__OPTIMIZE_SIZE__ */
+				{
+					result = DeeObject_GetAttr(lhs, attrname);
+				}
 				Dee_Decref(attrname);
 				Dee_Decref(lhs);
 				if unlikely(!result)
@@ -522,24 +742,47 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 #ifndef DEFINE_sfa_skipexpr
 				LOCAL_return_type result;
 				char const *kwd = self->sfa_parser.sfp_iter;
-				result = DeeObject_GetAttrStringLenHash(lhs, kwd, kwdlen, Dee_HashUtf8(kwd, kwdlen));
+				Dee_hash_t hash = Dee_HashUtf8(kwd, kwdlen);
+#endif /* !DEFINE_sfa_skipexpr */
+				self->sfa_parser.sfp_iter += kwdlen;
+				sfa_yield(self);
+#ifndef DEFINE_sfa_skipexpr
+#ifndef __OPTIMIZE_SIZE__
+				if (self->sfa_exprtok == '(') {
+					/* Fast-pass for callattr expressions */
+					DREF DeeTupleObject *call_args;
+					DREF DeeObject *call_kw;
+					bool saved_sfa_inparen;
+					saved_sfa_inparen = self->sfa_inparen;
+					self->sfa_inparen = true;
+					sfa_yield(self);
+					call_args = sfa_evalcallargs(self, &call_kw);
+					self->sfa_inparen = saved_sfa_inparen;
+					if unlikely(!call_args)
+						goto err_lhs;
+					result = DeeObject_CallAttrStringLenHashTupleKw(lhs, kwd, kwdlen, hash,
+					                                                (DeeObject *)call_args,
+					                                                call_kw);
+					Dee_XDecref(call_kw);
+					Dee_Decref(call_args);
+				} else
+#endif /* !__OPTIMIZE_SIZE__ */
+				{
+					result = DeeObject_GetAttrStringLenHash(lhs, kwd, kwdlen, hash);
+				}
 				Dee_Decref(lhs);
 				if unlikely(!result)
 					goto err;
 				lhs = result;
 #endif /* !DEFINE_sfa_skipexpr */
-				self->sfa_parser.sfp_iter += kwdlen;
-				sfa_yield(self);
 			} else {
 				sfa_err_bad_token(self, "<keyword>");
 			}
 		}	break;
 
 		case '[': {
-#ifndef DEFINE_sfa_skipexpr
-			LOCAL_return_type result;
-#endif /* !DEFINE_sfa_skipexpr */
 			bool saved_sfa_inparen;
+			LOCAL_IFEVAL(LOCAL_return_type result);
 			saved_sfa_inparen = self->sfa_inparen;
 			self->sfa_inparen = true;
 			sfa_yield(self);
@@ -547,26 +790,20 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 				sfa_yield(self);
 				if (self->sfa_exprtok == ']') {
 					sfa_yield(self);
-#ifndef DEFINE_sfa_skipexpr
-					result = DeeObject_GetRange(lhs, Dee_None, Dee_None);
-#endif /* !DEFINE_sfa_skipexpr */
+					LOCAL_IFEVAL(result = DeeObject_GetRange(lhs, Dee_None, Dee_None));
 				} else {
 					LOCAL_return_type end_index;
 					end_index = LOCAL_sfa_evalcond(self);
 					if unlikely(!LOCAL_ISOK(end_index))
 						goto err_lhs;
 					if unlikely(self->sfa_exprtok != ']') {
-#ifndef DEFINE_sfa_skipexpr
-						Dee_Decref(end_index);
-#endif /* !DEFINE_sfa_skipexpr */
+						LOCAL_IFEVAL(Dee_Decref(end_index));
 						sfa_err_bad_token(self, "]");
 						goto err_lhs;
 					}
 					sfa_yield(self);
-#ifndef DEFINE_sfa_skipexpr
-					result = DeeObject_GetRange(lhs, Dee_None, end_index);
-					Dee_Decref(end_index);
-#endif /* !DEFINE_sfa_skipexpr */
+					LOCAL_IFEVAL(result = DeeObject_GetRange(lhs, Dee_None, end_index));
+					LOCAL_IFEVAL(Dee_Decref(end_index));
 				}
 			} else {
 				LOCAL_return_type index;
@@ -577,31 +814,23 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 					sfa_yield(self);
 					if (self->sfa_exprtok == ']') {
 						sfa_yield(self);
-#ifndef DEFINE_sfa_skipexpr
-						result = DeeObject_GetRange(lhs, index, Dee_None);
-#endif /* !DEFINE_sfa_skipexpr */
+						LOCAL_IFEVAL(result = DeeObject_GetRange(lhs, index, Dee_None));
 					} else {
 						LOCAL_return_type end_index;
 						end_index = LOCAL_sfa_evalcond(self);
 						if unlikely(!LOCAL_ISOK(end_index)) {
-#ifndef DEFINE_sfa_skipexpr
-							Dee_Decref(index);
-#endif /* !DEFINE_sfa_skipexpr */
+							LOCAL_IFEVAL(Dee_Decref(index));
 							goto err_lhs;
 						}
 						if unlikely(self->sfa_exprtok != ']') {
-#ifndef DEFINE_sfa_skipexpr
-							Dee_Decref(end_index);
-							Dee_Decref(index);
-#endif /* !DEFINE_sfa_skipexpr */
+							LOCAL_IFEVAL(Dee_Decref(end_index));
+							LOCAL_IFEVAL(Dee_Decref(index));
 							sfa_err_bad_token(self, "]");
 							goto err_lhs;
 						}
 						sfa_yield(self);
-#ifndef DEFINE_sfa_skipexpr
-						result = DeeObject_GetRange(lhs, index, end_index);
-						Dee_Decref(end_index);
-#endif /* !DEFINE_sfa_skipexpr */
+						LOCAL_IFEVAL(result = DeeObject_GetRange(lhs, index, end_index));
+						LOCAL_IFEVAL(Dee_Decref(end_index));
 					}
 				} else {
 					if unlikely(self->sfa_exprtok != ']') {
@@ -609,13 +838,9 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 						goto err_lhs;
 					}
 					sfa_yield(self);
-#ifndef DEFINE_sfa_skipexpr
-					result = DeeObject_GetItem(lhs, index);
-#endif /* !DEFINE_sfa_skipexpr */
+					LOCAL_IFEVAL(result = DeeObject_GetItem(lhs, index));
 				}
-#ifndef DEFINE_sfa_skipexpr
-				Dee_Decref(index);
-#endif /* !DEFINE_sfa_skipexpr */
+				LOCAL_IFEVAL(Dee_Decref(index));
 			}
 			self->sfa_inparen = saved_sfa_inparen;
 #ifndef DEFINE_sfa_skipexpr
@@ -627,13 +852,30 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 		}	break;
 
 		case '(': {
+#ifndef DEFINE_sfa_skipexpr
+			DREF DeeTupleObject *call_args;
+			DREF DeeObject *call_kw, *result;
+#endif /* !DEFINE_sfa_skipexpr */
 			bool saved_sfa_inparen;
 			saved_sfa_inparen = self->sfa_inparen;
 			self->sfa_inparen = true;
-			/* TODO */
-			DeeError_NOTIMPLEMENTED();
+			sfa_yield(self);
+#ifdef DEFINE_sfa_skipexpr
+			if unlikely(sfa_skipcallargs(self))
+				goto err_lhs;
+#else /* DEFINE_sfa_skipexpr */
+			call_args = sfa_evalcallargs(self, &call_kw);
+			if unlikely(!call_args)
+				goto err_lhs;
+			result = DeeObject_CallTupleKw(lhs, (DeeObject *)call_args, call_kw);
+			Dee_XDecref(call_kw);
+			Dee_Decref(call_args);
+			Dee_Decref(lhs);
+			lhs = result;
+			if unlikely(!lhs)
+				goto err;
+#endif /* !DEFINE_sfa_skipexpr */
 			self->sfa_inparen = saved_sfa_inparen;
-			goto err_lhs;
 		}	break;
 
 		default: __builtin_unreachable();
@@ -658,9 +900,7 @@ LOCAL_sfa_evalprod_operand(struct string_format_advanced *__restrict self LOCAL_
 	       self->sfa_exprtok == '%' ||
 	       self->sfa_exprtok == SFA_TOK_POW);
 	do {
-#ifndef DEFINE_sfa_skipexpr
-		unsigned int tok = self->sfa_exprtok;
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(unsigned int tok = self->sfa_exprtok);
 		sfa_yield(self);
 		rhs = LOCAL_sfa_evalunary(self);
 		if unlikely(!LOCAL_ISOK(rhs))
@@ -709,9 +949,7 @@ LOCAL_sfa_evalsum_operand(struct string_format_advanced *__restrict self LOCAL__
 	ASSERT(self->sfa_exprtok == '+' ||
 	       self->sfa_exprtok == '-');
 	do {
-#ifndef DEFINE_sfa_skipexpr
-		unsigned int tok = self->sfa_exprtok;
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(unsigned int tok = self->sfa_exprtok);
 		sfa_yield(self);
 		rhs = LOCAL_sfa_evalprod(self);
 		if unlikely(!LOCAL_ISOK(rhs))
@@ -752,9 +990,7 @@ LOCAL_sfa_evalshift_operand(struct string_format_advanced *__restrict self LOCAL
 	ASSERT(self->sfa_exprtok == SFA_TOK_SHL ||
 	       self->sfa_exprtok == SFA_TOK_SHR);
 	do {
-#ifndef DEFINE_sfa_skipexpr
-		unsigned int tok = self->sfa_exprtok;
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(unsigned int tok = self->sfa_exprtok);
 		sfa_yield(self);
 		rhs = LOCAL_sfa_evalsum(self);
 		if unlikely(!LOCAL_ISOK(rhs))
@@ -797,9 +1033,7 @@ LOCAL_sfa_evalcmp_operand(struct string_format_advanced *__restrict self LOCAL__
 	       self->sfa_exprtok == SFA_TOK_LOWER_EQUAL ||
 	       self->sfa_exprtok == SFA_TOK_GREATER_EQUAL);
 	do {
-#ifndef DEFINE_sfa_skipexpr
-		unsigned int tok = self->sfa_exprtok;
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(unsigned int tok = self->sfa_exprtok);
 		sfa_yield(self);
 		rhs = LOCAL_sfa_evalshift(self);
 		if unlikely(!LOCAL_ISOK(rhs))
@@ -854,21 +1088,22 @@ LOCAL_sfa_evalcmpeq_operand(struct string_format_advanced *__restrict self LOCAL
 	                              self->sfa_exprtok == SFA_TOK_NOT_EQUAL3)));
 	do {
 		tok = self->sfa_exprtok;
-		sfa_yield(self);
 		if (tok == '!') {
-			/* Special case: multiple tokens */
-#ifndef DEFINE_sfa_skipexpr
-			bool invert = true;
-#endif /* !DEFINE_sfa_skipexpr */
+			/* Special case: multiple tokens make up the operator:
+			 * >> '!' '$in'
+			 * >> '!' '$is' */
 			char const *orig = self->sfa_parser.sfp_iter;
+			LOCAL_IFEVAL(bool invert = true);
 			ASSERT(self->sfa_inparen);
+			sfa_yield(self);
 			while unlikely(self->sfa_exprtok == '!') {
-#ifndef DEFINE_sfa_skipexpr
-				invert = !invert;
-#endif /* !DEFINE_sfa_skipexpr */
+				LOCAL_IFEVAL(invert = !invert);
 				sfa_yield(self);
 			}
-			switch (self->sfa_exprtok) {
+			tok = self->sfa_exprtok;
+			sfa_yield(self);
+			switch (tok) {
+
 			case SFA_TOK_D_IS:
 			case SFA_TOK_D_IN:
 #ifdef DEFINE_sfa_skipexpr
@@ -905,70 +1140,74 @@ LOCAL_sfa_evalcmpeq_operand(struct string_format_advanced *__restrict self LOCAL
 				}
 				break;
 #endif /* !DEFINE_sfa_skipexpr */
+
 			default:
 				self->sfa_parser.sfp_iter = orig;
 				goto done;
 			}
-
-#ifndef DEFINE_sfa_skipexpr
-		} else if (tok == SFA_TOK_QMARK_QMARK) {
-			if (DeeNone_Check(lhs)) {
-				Dee_Decref(lhs);
-				lhs = LOCAL_sfa_evalcmp(self);
-				if unlikely(!lhs)
-					goto err;
-			} else {
-				if unlikely(sfa_skipcmp(self))
-					goto err_lhs;
-			}
-#endif /* !DEFINE_sfa_skipexpr */
 		} else {
-do_sfa_evalcmp:
-			rhs = LOCAL_sfa_evalcmp(self);
-			if unlikely(!LOCAL_ISOK(rhs))
-				goto err_lhs;
+			sfa_yield(self);
 #ifndef DEFINE_sfa_skipexpr
-			{
-				LOCAL_return_type result;
-				switch (tok) {
-				case SFA_TOK_NOT_EQUAL:
-					result = DeeObject_CmpNe(lhs, rhs);
-					break;
-				case SFA_TOK_EQUAL:
-					result = DeeObject_CmpEq(lhs, rhs);
-					break;
-				case SFA_TOK_NOT_EQUAL3:
-				case SFA_TOK_EQUAL3: {
-					bool is_same = lhs == rhs;
-					if (tok == SFA_TOK_NOT_EQUAL3)
-						is_same = !is_same;
-					result = DeeBool_For(is_same);
-					Dee_Incref(result);
-				}	break;
-				case SFA_TOK_D_IS: {
-					unsigned int is_instance;
-					if (DeeNone_Check(rhs)) {
-						is_instance = DeeNone_Check(lhs);
-					} else if (DeeSuper_Check(lhs)) {
-						is_instance = DeeType_Extends(DeeSuper_TYPE(lhs), (DeeTypeObject *)rhs);
-					} else {
-						is_instance = DeeObject_InstanceOf(lhs, (DeeTypeObject *)rhs);
-					}
-					result = DeeBool_For(is_instance);
-					Dee_Incref(result);
-				}	break;
-				case SFA_TOK_D_IN:
-					result = DeeObject_Contains(rhs, lhs);
-					break;
-				default: __builtin_unreachable();
+			if (tok == SFA_TOK_QMARK_QMARK) {
+				if (DeeNone_Check(lhs)) {
+					Dee_Decref(lhs);
+					lhs = LOCAL_sfa_evalcmp(self);
+					if unlikely(!lhs)
+						goto err;
+				} else {
+					if unlikely(sfa_skipcmp(self))
+						goto err_lhs;
 				}
-				Dee_Decref(rhs);
-				Dee_Decref(lhs);
-				lhs = result;
-				if unlikely(!result)
-					goto err;
-			}
+			} else
 #endif /* !DEFINE_sfa_skipexpr */
+			{
+do_sfa_evalcmp:
+				rhs = LOCAL_sfa_evalcmp(self);
+				if unlikely(!LOCAL_ISOK(rhs))
+					goto err_lhs;
+#ifndef DEFINE_sfa_skipexpr
+				{
+					LOCAL_return_type result;
+					switch (tok) {
+					case SFA_TOK_NOT_EQUAL:
+						result = DeeObject_CmpNe(lhs, rhs);
+						break;
+					case SFA_TOK_EQUAL:
+						result = DeeObject_CmpEq(lhs, rhs);
+						break;
+					case SFA_TOK_NOT_EQUAL3:
+					case SFA_TOK_EQUAL3: {
+						bool is_same = lhs == rhs;
+						if (tok == SFA_TOK_NOT_EQUAL3)
+							is_same = !is_same;
+						result = DeeBool_For(is_same);
+						Dee_Incref(result);
+					}	break;
+					case SFA_TOK_D_IS: {
+						unsigned int is_instance;
+						if (DeeNone_Check(rhs)) {
+							is_instance = DeeNone_Check(lhs);
+						} else if (DeeSuper_Check(lhs)) {
+							is_instance = DeeType_Extends(DeeSuper_TYPE(lhs), (DeeTypeObject *)rhs);
+						} else {
+							is_instance = DeeObject_InstanceOf(lhs, (DeeTypeObject *)rhs);
+						}
+						result = DeeBool_For(is_instance);
+						Dee_Incref(result);
+					}	break;
+					case SFA_TOK_D_IN:
+						result = DeeObject_Contains(rhs, lhs);
+						break;
+					default: __builtin_unreachable();
+					}
+					Dee_Decref(rhs);
+					Dee_Decref(lhs);
+					lhs = result;
+					if unlikely(!result)
+						goto err;
+				}
+#endif /* !DEFINE_sfa_skipexpr */
+			}
 		}
 	} while (self->sfa_exprtok == SFA_TOK_EQUAL || self->sfa_exprtok == SFA_TOK_EQUAL3 ||
 	         self->sfa_exprtok == SFA_TOK_QMARK_QMARK ||
@@ -1110,9 +1349,7 @@ PRIVATE WUNUSED NONNULL((1)) LOCAL_return_type DFCALL
 LOCAL_sfa_evalland_operand(struct string_format_advanced *__restrict self LOCAL__param_lhs) {
 	ASSERT(self->sfa_exprtok == SFA_TOK_LAND);
 	do {
-#ifndef DEFINE_sfa_skipexpr
-		int lhs_bool;
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(int lhs_bool);
 		sfa_yield(self);
 #ifdef DEFINE_sfa_skipexpr
 		if unlikely(sfa_skipor(self))
@@ -1146,9 +1383,7 @@ PRIVATE WUNUSED NONNULL((1)) LOCAL_return_type DFCALL
 LOCAL_sfa_evallor_operand(struct string_format_advanced *__restrict self LOCAL__param_lhs) {
 	ASSERT(self->sfa_exprtok == SFA_TOK_LOR);
 	do {
-#ifndef DEFINE_sfa_skipexpr
-		int lhs_bool;
-#endif /* !DEFINE_sfa_skipexpr */
+		LOCAL_IFEVAL(int lhs_bool);
 		sfa_yield(self);
 #ifdef DEFINE_sfa_skipexpr
 		if unlikely(sfa_skiplor(self))
@@ -1180,10 +1415,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) LOCAL_return_type DFCALL
 LOCAL_sfa_evalcond_operand(struct string_format_advanced *__restrict self LOCAL__param_lhs) {
-#ifndef DEFINE_sfa_skipexpr
-	int lhs_bool;
-#endif /* !DEFINE_sfa_skipexpr */
 	LOCAL_return_type result;
+	LOCAL_IFEVAL(int lhs_bool);
 	ASSERT(self->sfa_exprtok == '?');
 #ifndef DEFINE_sfa_skipexpr
 	lhs_bool = DeeObject_BoolInherited(lhs);
@@ -1489,6 +1722,7 @@ DECL_END
 #undef DEFINE_sfa_skipexpr
 #undef DEFINE_sfa_evalexpr
 
+#undef LOCAL_IFEVAL
 #undef LOCAL_ERRVAL
 #undef LOCAL_OK__or__lhs
 #undef LOCAL_ISOK
