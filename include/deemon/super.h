@@ -202,7 +202,8 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItem)(DeeTypeObject 
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_THasItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-DFUNDEF WUNUSED ATTR_OUTS(4, 3) NONNULL((1, 2)) int (DCALL DeeObject_TUnpack)(DeeTypeObject *tp_self, DeeObject *self, size_t objc, /*out*/ DREF DeeObject **__restrict objv);
+DFUNDEF WUNUSED ATTR_OUTS(4, 3) NONNULL((1, 2)) int (DCALL DeeObject_TUnpack)(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **__restrict objv);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t (DCALL DeeObject_TUnpackEx)(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **__restrict objv);
 DFUNDEF WUNUSED ATTR_OUTS(4, 3) NONNULL((1, 2)) int (DCALL DeeObject_TUnpackWithUnbound)(DeeTypeObject *tp_self, DeeObject *self, size_t objc, /*out*/ DREF DeeObject **__restrict objv);
 
 /* Attribute operators */

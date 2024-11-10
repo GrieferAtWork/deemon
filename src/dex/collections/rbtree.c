@@ -2857,84 +2857,6 @@ err:
 }
 
 
-PRIVATE ATTR_COLD int
-(DCALL err_bad_unpack_size_not_2or3)(size_t real_size) {
-	return (size_t)DeeError_Throwf(&DeeError_UnpackError,
-	                               "Expected 2 or 3 objects when %" PRFuSIZ " w%s given",
-	                               real_size, real_size == 1 ? "as" : "ere");
-
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) size_t
-(DCALL DeeObject_Unpack_2or3)(DeeObject *__restrict self,
-                              /*out*/ DREF DeeObject *objv[3]) {
-	DREF DeeObject *iterator, *elem;
-	size_t fast_size, i;
-
-	/* Try to make use of the fast-sequence API. */
-	fast_size = DeeFastSeq_GetSize_deprecated(self);
-	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (fast_size != 2 && fast_size != 3)
-			return (size_t)err_bad_unpack_size_not_2or3(fast_size);
-		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem_deprecated(self, i);
-			if unlikely(!elem)
-				goto err_objv;
-			objv[i] = elem; /* Inherit reference. */
-		}
-		return fast_size;
-	}
-	if (DeeNone_Check(self)) {
-		/* Special case: `none' can be unpacked into anything. */
-		memsetp(objv, Dee_None, 3);
-		Dee_Incref_n(Dee_None, 3);
-		return 3;
-	}
-
-	/* Fallback: Use an iterator. */
-	if ((iterator = DeeObject_Iter(self)) == NULL)
-		goto err;
-	for (i = 0; i < 2; ++i) {
-		elem = DeeObject_IterNext(iterator);
-		if unlikely(!ITER_ISOK(elem)) {
-			if (elem)
-				err_bad_unpack_size_not_2or3(i);
-			goto err_iter_objv;
-		}
-		objv[i] = elem; /* Inherit reference. */
-	}
-
-	/* Check to make sure that the iterator actually ends here. */
-	elem = DeeObject_IterNext(iterator);
-	if unlikely(!elem)
-		goto err_iter_objv;
-	if unlikely(elem == ITER_DONE) {
-		Dee_Decref(iterator);
-		return 2;
-	}
-	objv[2] = elem;
-	++i;
-	ASSERT(i == 3);
-
-	/* Check to make sure that the iterator actually ends here. */
-	elem = DeeObject_IterNext(iterator);
-	if unlikely(elem != ITER_DONE) {
-		if (elem) {
-			DeeError_Throwf(&DeeError_UnpackError,
-			                "Expected 2 or 3 objects when at least 4 were given");
-		}
-		goto err_iter_objv;
-	}
-	Dee_Decref(iterator);
-	return 3;
-err_iter_objv:
-	Dee_Decref(iterator);
-err_objv:
-	Dee_Decrefv(objv, i);
-err:
-	return (size_t)-1;
-}
-
 /*[[[deemon
 (PRIVATE_DEFINE_STRING from rt.gen.string)("str___start__", "__start__");
 (PRIVATE_DEFINE_STRING from rt.gen.string)("str___end__", "__end__");
@@ -2966,7 +2888,7 @@ rbtree_insert_iterator(RBTree *self, DeeObject *iter) {
 		int temp;
 		size_t count;
 		DREF DeeObject *items[3];
-		count = DeeObject_Unpack_2or3(elem, items);
+		count = DeeObject_UnpackEx(elem, 2, 3, items);
 		Dee_Decref(elem);
 		if unlikely(count == (size_t)-1)
 			goto err;

@@ -1452,6 +1452,7 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *t
 #define DeeType_invoke_seq_tp_delrange_index_n_NODEFAULT(tp_self, tp_delrange_index_n, self, start)                                  (*tp_delrange_index_n)(self, start)
 #define DeeType_invoke_seq_tp_setrange_index_n_NODEFAULT(tp_self, tp_setrange_index_n, self, start, value)                           (*tp_setrange_index_n)(self, start, value)
 #define DeeType_invoke_seq_tp_unpack_NODEFAULT(tp_self, tp_unpack, self, dst_length, dst)                                            (*tp_unpack)(self, dst_length, dst)
+#define DeeType_invoke_seq_tp_unpack_ex_NODEFAULT(tp_self, tp_unpack_ex, self, dst_length_min, dst_length_max, dst)                  (*tp_unpack_ex)(self, dst_length_min, dst_length_max, dst)
 #define DeeType_invoke_seq_tp_unpack_ub_NODEFAULT(tp_self, tp_unpack_ub, self, dst_length, dst)                                      (*tp_unpack_ub)(self, dst_length, dst)
 #define DeeType_invoke_seq_tp_trygetitem_NODEFAULT(tp_self, tp_trygetitem, self, index)                                              (*tp_trygetitem)(self, index)
 #define DeeType_invoke_seq_tp_trygetitem_index_NODEFAULT(tp_self, tp_trygetitem_index, self, index)                                  (*tp_trygetitem_index)(self, index)
@@ -2193,6 +2194,7 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeDef
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault(DeeObject *self, Dee_ssize_t start, DeeObject *value); /* May call other DEFAULT operators */
 
 /* tp_unpack / tp_unpack_ub */
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackWithUnpackEx(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackWithAsVector(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackWithSizeAndGetItemIndexFast(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackWithSizeAndTryGetItemIndex(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
@@ -2216,11 +2218,14 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackUbWithSizeDefaultAndEn
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 #define DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndex
 #if 0
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackUbWithUnpackEx(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackUbWithAsVector(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackUbWithForeach(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackUbWithIter(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackUbWithForeachDefault(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 #endif
+#define DeeSeq_DefaultUnpackUbWithUnpackEx        DeeSeq_DefaultUnpackWithUnpackEx
+#define DeeSeq_TDefaultUnpackUbWithUnpackEx       DeeSeq_TDefaultUnpackWithUnpackEx
 #define DeeSeq_DefaultUnpackUbWithAsVector        DeeSeq_DefaultUnpackWithAsVector
 #define DeeSeq_TDefaultUnpackUbWithAsVector       DeeSeq_TDefaultUnpackWithAsVector
 #define DeeSeq_DefaultUnpackUbWithForeach         DeeSeq_DefaultUnpackWithForeach
@@ -2229,6 +2234,20 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultUnpackUbWithForeachDefault(D
 #define DeeSeq_TDefaultUnpackUbWithIter           DeeSeq_TDefaultUnpackWithIter
 #define DeeSeq_DefaultUnpackUbWithForeachDefault  DeeSeq_DefaultUnpackWithForeachDefault
 #define DeeSeq_TDefaultUnpackUbWithForeachDefault DeeSeq_TDefaultUnpackWithForeachDefault
+
+/* tp_unpack_ex */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithAsVector(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithSizeAndGetItemIndexFast(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithSizeAndTryGetItemIndex(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithSizeAndGetItemIndex(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithSizeDefaultAndTryGetItemIndexDefault(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+#define DeeSeq_DefaultUnpackExWithSizeDefaultAndTryGetItemIndexDefault DeeSeq_DefaultUnpackExWithSizeAndTryGetItemIndex
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithSizeDefaultAndGetItemIndexDefault(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+#define DeeSeq_DefaultUnpackExWithSizeDefaultAndGetItemIndexDefault DeeSeq_DefaultUnpackExWithSizeAndGetItemIndex
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithForeach(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithIter(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultUnpackExWithForeachDefault(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+#define DeeSeq_DefaultUnpackExWithForeachDefault DeeSeq_DefaultUnpackExWithForeach
 
 /*[[[end:DEFAULT_OPERATORS]]]*/
 
@@ -2396,6 +2415,7 @@ function getOperatorPackage(name: string): string {
 		"Contains" : "seq",
 		"Contains" : "seq",
 		"Unpack" : "seq",
+		"UnpackEx" : "seq",
 		"UnpackUb" : "seq",
 		"IterNext" : "",
 		"IterNextPair" : "iterator",
@@ -2974,6 +2994,7 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeObject_TDefaultSetRangeIndexNWith
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeAndSetRangeIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackWithUnpackEx(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackWithAsVector(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackWithSizeAndGetItemIndexFast(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackWithSizeAndTryGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
@@ -2990,10 +3011,20 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithSizeDefaultA
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithSizeDefaultAndGetItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithSizeDefaultAndEnumerateIndex(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithUnpackEx(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithAsVector(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeach(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithIter(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefault(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithAsVector(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithSizeAndGetItemIndexFast(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithSizeAndTryGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithSizeAndGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithSizeDefaultAndTryGetItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithSizeDefaultAndGetItemIndexDefault(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithForeach(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithIter(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultUnpackExWithForeachDefault(DeeTypeObject *tp_self, DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
 #define DeeType_MapDefaultStr(tp_str, map, default) \
 	((tp_str) == &DeeObject_DefaultStrWithPrint ? map(DeeObject_TDefaultStrWithPrint) : default)
 #define DeeType_MapDefaultRepr(tp_repr, map, default) \
@@ -3603,7 +3634,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefau
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex) : \
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault ? map(DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault) : default)
 #define DeeType_MapDefaultUnpack(tp_unpack, map, default) \
-	((tp_unpack) == &DeeSeq_DefaultUnpackWithAsVector ? map(DeeSeq_TDefaultUnpackWithAsVector) : \
+	((tp_unpack) == &DeeSeq_DefaultUnpackWithUnpackEx ? map(DeeSeq_TDefaultUnpackWithUnpackEx) : \
+	 (tp_unpack) == &DeeSeq_DefaultUnpackWithAsVector ? map(DeeSeq_TDefaultUnpackWithAsVector) : \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndGetItemIndexFast ? map(DeeSeq_TDefaultUnpackWithSizeAndGetItemIndexFast) : \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndTryGetItemIndex ? map(DeeSeq_TDefaultUnpackWithSizeAndTryGetItemIndex) : \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndGetItemIndex ? map(DeeSeq_TDefaultUnpackWithSizeAndGetItemIndex) : \
@@ -3620,10 +3652,21 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefau
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndGetItemIndexDefault ? map(DeeSeq_TDefaultUnpackUbWithSizeDefaultAndGetItemIndexDefault) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndex ? map(DeeSeq_TDefaultUnpackUbWithSizeDefaultAndEnumerateIndex) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault ? map(DeeSeq_TDefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault) : \
+	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithUnpackEx ? map(DeeSeq_TDefaultUnpackUbWithUnpackEx) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithAsVector ? map(DeeSeq_TDefaultUnpackUbWithAsVector) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithForeach ? map(DeeSeq_TDefaultUnpackUbWithForeach) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithIter ? map(DeeSeq_TDefaultUnpackUbWithIter) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithForeachDefault ? map(DeeSeq_TDefaultUnpackUbWithForeachDefault) : default)
+#define DeeType_MapDefaultUnpackEx(tp_unpack_ex, map, default) \
+	((tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithAsVector ? map(DeeSeq_TDefaultUnpackExWithAsVector) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndGetItemIndexFast ? map(DeeSeq_TDefaultUnpackExWithSizeAndGetItemIndexFast) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndTryGetItemIndex ? map(DeeSeq_TDefaultUnpackExWithSizeAndTryGetItemIndex) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndGetItemIndex ? map(DeeSeq_TDefaultUnpackExWithSizeAndGetItemIndex) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeDefaultAndTryGetItemIndexDefault ? map(DeeSeq_TDefaultUnpackExWithSizeDefaultAndTryGetItemIndexDefault) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeDefaultAndGetItemIndexDefault ? map(DeeSeq_TDefaultUnpackExWithSizeDefaultAndGetItemIndexDefault) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithForeach ? map(DeeSeq_TDefaultUnpackExWithForeach) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithIter ? map(DeeSeq_TDefaultUnpackExWithIter) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithForeachDefault ? map(DeeSeq_TDefaultUnpackExWithForeachDefault) : default)
 #define DeeType_IsDefaultStr(tp_str) \
 	((tp_str) == &DeeObject_DefaultStrWithPrint)
 #define DeeType_IsDefaultRepr(tp_repr) \
@@ -4252,7 +4295,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefau
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndex || \
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault)
 #define DeeType_IsDefaultUnpack(tp_unpack) \
-	((tp_unpack) == &DeeSeq_DefaultUnpackWithAsVector || \
+	((tp_unpack) == &DeeSeq_DefaultUnpackWithUnpackEx || \
+	 (tp_unpack) == &DeeSeq_DefaultUnpackWithAsVector || \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndGetItemIndexFast || \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndTryGetItemIndex || \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndGetItemIndex || \
@@ -4269,10 +4313,21 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefau
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndGetItemIndexDefault || \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndex || \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault || \
+	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithUnpackEx || \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithAsVector || \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithForeach || \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithIter || \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithForeachDefault)
+#define DeeType_IsDefaultUnpackEx(tp_unpack_ex) \
+	((tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithAsVector || \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndGetItemIndexFast || \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndTryGetItemIndex || \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndGetItemIndex || \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeDefaultAndTryGetItemIndexDefault || \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeDefaultAndGetItemIndexDefault || \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithForeach || \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithIter || \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithForeachDefault)
 #define DeeType_invoke_cast_tp_str_DEFAULT(tp_self, tp_str, self, default) \
 	((tp_str) == &DeeObject_DefaultStrWithPrint ? DeeObject_TDefaultStrWithPrint(tp_self, self) : \
 	 default)
@@ -4974,7 +5029,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefau
 	 (tp_setrange_index_n) == &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault ? DeeSeq_TDefaultSetRangeIndexNWithSizeDefaultAndSetRangeIndexDefault(tp_self, self, start, value) : \
 	 default)
 #define DeeType_invoke_seq_tp_unpack_DEFAULT(tp_self, tp_unpack, self, dst_length, dst, default) \
-	((tp_unpack) == &DeeSeq_DefaultUnpackWithAsVector ? DeeSeq_TDefaultUnpackWithAsVector(tp_self, self, dst_length, dst) : \
+	((tp_unpack) == &DeeSeq_DefaultUnpackWithUnpackEx ? DeeSeq_TDefaultUnpackWithUnpackEx(tp_self, self, dst_length, dst) : \
+	 (tp_unpack) == &DeeSeq_DefaultUnpackWithAsVector ? DeeSeq_TDefaultUnpackWithAsVector(tp_self, self, dst_length, dst) : \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndGetItemIndexFast ? DeeSeq_TDefaultUnpackWithSizeAndGetItemIndexFast(tp_self, self, dst_length, dst) : \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndTryGetItemIndex ? DeeSeq_TDefaultUnpackWithSizeAndTryGetItemIndex(tp_self, self, dst_length, dst) : \
 	 (tp_unpack) == &DeeSeq_DefaultUnpackWithSizeAndGetItemIndex ? DeeSeq_TDefaultUnpackWithSizeAndGetItemIndex(tp_self, self, dst_length, dst) : \
@@ -4992,10 +5048,22 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefau
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndGetItemIndexDefault ? DeeSeq_TDefaultUnpackUbWithSizeDefaultAndGetItemIndexDefault(tp_self, self, dst_length, dst) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndex ? DeeSeq_TDefaultUnpackUbWithSizeDefaultAndEnumerateIndex(tp_self, self, dst_length, dst) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault ? DeeSeq_TDefaultUnpackUbWithSizeDefaultAndEnumerateIndexDefault(tp_self, self, dst_length, dst) : \
+	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithUnpackEx ? DeeSeq_TDefaultUnpackUbWithUnpackEx(tp_self, self, dst_length, dst) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithAsVector ? DeeSeq_TDefaultUnpackUbWithAsVector(tp_self, self, dst_length, dst) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithForeach ? DeeSeq_TDefaultUnpackUbWithForeach(tp_self, self, dst_length, dst) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithIter ? DeeSeq_TDefaultUnpackUbWithIter(tp_self, self, dst_length, dst) : \
 	 (tp_unpack_ub) == &DeeSeq_DefaultUnpackUbWithForeachDefault ? DeeSeq_TDefaultUnpackUbWithForeachDefault(tp_self, self, dst_length, dst) : \
+	 default)
+#define DeeType_invoke_seq_tp_unpack_ex_DEFAULT(tp_self, tp_unpack_ex, self, dst_length_min, dst_length_max, dst, default) \
+	((tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithAsVector ? DeeSeq_TDefaultUnpackExWithAsVector(tp_self, self, dst_length_min, dst_length_max, dst) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndGetItemIndexFast ? DeeSeq_TDefaultUnpackExWithSizeAndGetItemIndexFast(tp_self, self, dst_length_min, dst_length_max, dst) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndTryGetItemIndex ? DeeSeq_TDefaultUnpackExWithSizeAndTryGetItemIndex(tp_self, self, dst_length_min, dst_length_max, dst) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeAndGetItemIndex ? DeeSeq_TDefaultUnpackExWithSizeAndGetItemIndex(tp_self, self, dst_length_min, dst_length_max, dst) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeDefaultAndTryGetItemIndexDefault ? DeeSeq_TDefaultUnpackExWithSizeDefaultAndTryGetItemIndexDefault(tp_self, self, dst_length_min, dst_length_max, dst) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithSizeDefaultAndGetItemIndexDefault ? DeeSeq_TDefaultUnpackExWithSizeDefaultAndGetItemIndexDefault(tp_self, self, dst_length_min, dst_length_max, dst) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithForeach ? DeeSeq_TDefaultUnpackExWithForeach(tp_self, self, dst_length_min, dst_length_max, dst) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithIter ? DeeSeq_TDefaultUnpackExWithIter(tp_self, self, dst_length_min, dst_length_max, dst) : \
+	 (tp_unpack_ex) == &DeeSeq_DefaultUnpackExWithForeachDefault ? DeeSeq_TDefaultUnpackExWithForeachDefault(tp_self, self, dst_length_min, dst_length_max, dst) : \
 	 default)
 #define DeeType_invoke_cast_tp_str(tp_self, tp_str, self) \
 	 DeeType_invoke_cast_tp_str_DEFAULT(tp_self, tp_str, self, DeeType_invoke_cast_tp_str_NODEFAULT(tp_self, tp_str, self))
@@ -5187,6 +5255,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefau
 	 DeeType_invoke_seq_tp_unpack_DEFAULT(tp_self, tp_unpack, self, dst_length, dst, DeeType_invoke_seq_tp_unpack_NODEFAULT(tp_self, tp_unpack, self, dst_length, dst))
 #define DeeType_invoke_seq_tp_unpack_ub(tp_self, tp_unpack_ub, self, dst_length, dst) \
 	 DeeType_invoke_seq_tp_unpack_ub_DEFAULT(tp_self, tp_unpack_ub, self, dst_length, dst, DeeType_invoke_seq_tp_unpack_ub_NODEFAULT(tp_self, tp_unpack_ub, self, dst_length, dst))
+#define DeeType_invoke_seq_tp_unpack_ex(tp_self, tp_unpack_ex, self, dst_length_min, dst_length_max, dst) \
+	 DeeType_invoke_seq_tp_unpack_ex_DEFAULT(tp_self, tp_unpack_ex, self, dst_length_min, dst_length_max, dst, DeeType_invoke_seq_tp_unpack_ex_NODEFAULT(tp_self, tp_unpack_ex, self, dst_length_min, dst_length_max, dst))
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -5420,8 +5490,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_TDefaultUnpackUbWithForeachDefau
 #define DeeType_InvokeSeqHasItemStringLenHash_NODEFAULT(tp_self, self, key, keylen, hash)        DeeType_invoke_seq_tp_hasitem_string_len_hash_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_hasitem_string_len_hash, self, key, keylen, hash)
 #define DeeType_InvokeSeqUnpack(tp_self, self, dst_length, dst)                                  DeeType_invoke_seq_tp_unpack(tp_self, (tp_self)->tp_seq->tp_unpack, self, dst_length, dst)
 #define DeeType_InvokeSeqUnpack_NODEFAULT(tp_self, self, dst_length, dst)                        DeeType_invoke_seq_tp_unpack_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_unpack, self, dst_length, dst)
-#define DeeType_InvokeSeqUnpackUb(tp_self, self, dst_length, dst)                                DeeType_invoke_seq_tp_unpack_ub(tp_self, (tp_self)->tp_seq->tp_unpack, self, dst_length, dst)
-#define DeeType_InvokeSeqUnpackUb_NODEFAULT(tp_self, self, dst_length, dst)                      DeeType_invoke_seq_tp_unpack_ub_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_unpack, self, dst_length, dst)
+#define DeeType_InvokeSeqUnpackEx(tp_self, self, dst_length_min, dst_length_max, dst)            DeeType_invoke_seq_tp_unpack_ex(tp_self, (tp_self)->tp_seq->tp_unpack_ex, self, dst_length_min, dst_length_max, dst)
+#define DeeType_InvokeSeqUnpackEx_NODEFAULT(tp_self, self, dst_length_min, dst_length_max, dst)  DeeType_invoke_seq_tp_unpack_ex_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_unpack_ex, self, dst_length_min, dst_length_max, dst)
+#define DeeType_InvokeSeqUnpackUb(tp_self, self, dst_length, dst)                                DeeType_invoke_seq_tp_unpack_ub(tp_self, (tp_self)->tp_seq->tp_unpack_ub, self, dst_length, dst)
+#define DeeType_InvokeSeqUnpackUb_NODEFAULT(tp_self, self, dst_length, dst)                      DeeType_invoke_seq_tp_unpack_ub_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_unpack_ub, self, dst_length, dst)
 #define DeeType_InvokeAttrGetAttr(tp_self, self, name)                                           DeeType_invoke_attr_tp_getattr(tp_self, (tp_self)->tp_attr->tp_getattr, self, name)
 #define DeeType_InvokeAttrGetAttr_NODEFAULT(tp_self, self, name)                                 DeeType_invoke_attr_tp_getattr_NODEFAULT(tp_self, (tp_self)->tp_attr->tp_getattr, self, name)
 #define DeeType_InvokeAttrDelAttr(tp_self, self, name)                                           DeeType_invoke_attr_tp_delattr(tp_self, (tp_self)->tp_attr->tp_delattr, self, name)

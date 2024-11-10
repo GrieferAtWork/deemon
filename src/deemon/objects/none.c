@@ -284,6 +284,15 @@ none_unpack(DeeObject *UNUSED(self), size_t dst_length, /*out*/ DREF DeeObject *
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+none_unpack_ex(DeeObject *UNUSED(self), size_t dst_length_min,
+               size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
+	(void)dst_length_min;
+	/* "none" always turns everything into more "none", so unpack to the max # of objects. */
+	Dee_Setrefv(dst, Dee_None, dst_length_max);
+	return dst_length_max;
+}
+
 
 PRIVATE struct type_math none_math = {
 	/* .tp_int32       = */ &none_int32,
@@ -398,6 +407,7 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_asvector                     = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_s3,
 	/* .tp_asvector_nothrow             = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_s3,
 	/* .tp_unpack                       = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_unpack,
+	/* .tp_unpack_ex                    = */ (size_t (DCALL *)(DeeObject *, size_t, size_t, DREF DeeObject **))&none_unpack_ex,
 	/* .tp_unpack_ub                    = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&none_unpack,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&none_getitemnr,
 	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&none_getitemnr_string_hash,

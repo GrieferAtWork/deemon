@@ -317,7 +317,8 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	if (bufsize != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (bufsize == 0)
 			return_empty_bytes;
-		result = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data), bufsize, sizeof(byte_t));
+		result = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data),
+		                                         bufsize, sizeof(byte_t));
 		if unlikely(!result)
 			goto err;
 

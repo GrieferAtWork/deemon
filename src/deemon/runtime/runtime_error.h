@@ -89,7 +89,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_unpack_size(DeeObject *__res
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_unpack_size_minmax(DeeObject *__restrict unpack_object, size_t need_size_min, size_t need_size_max, size_t real_size);
 INTDEF ATTR_COLD int DCALL err_invalid_va_unpack_size(size_t need_size, size_t real_size);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_unpack_iter_size(DeeObject *unpack_object, DeeObject *unpack_iterator, size_t need_size);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_unpack_iter_size_minmax(DeeObject *unpack_object, DeeObject *unpack_iterator, size_t need_size_min, size_t need_size_max);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unbound_global(struct module_object *__restrict module, uint16_t global_index);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_local(struct code_object *code, void *ip, uint16_t local_index);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_static(struct code_object *code, void *ip, uint16_t static_index);
@@ -208,7 +207,6 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_invalid_unpack_size_minmax(unpack_object, need_size_min, need_size_max, real_size)            Dee_ASSUMED_VALUE(err_invalid_unpack_size_minmax(unpack_object, need_size_min, need_size_max, real_size), -1)
 #define err_invalid_va_unpack_size(need_size, real_size)                                                  Dee_ASSUMED_VALUE(err_invalid_va_unpack_size(need_size, real_size), -1)
 #define err_invalid_unpack_iter_size(unpack_object, unpack_iterator, need_size)                           Dee_ASSUMED_VALUE(err_invalid_unpack_iter_size(unpack_object, unpack_iterator, need_size), -1)
-#define err_invalid_unpack_iter_size_minmax(unpack_object, unpack_iterator, need_size_min, need_size_max) Dee_ASSUMED_VALUE(err_invalid_unpack_iter_size_minmax(unpack_object, unpack_iterator, need_size_min, need_size_max), -1)
 #define err_unbound_global(module, global_index)                                                          Dee_ASSUMED_VALUE(err_unbound_global(module, global_index), -1)
 #define err_unbound_local(code, ip, local_index)                                                          Dee_ASSUMED_VALUE(err_unbound_local(code, ip, local_index), -1)
 #define err_unbound_static(code, ip, static_index)                                                        Dee_ASSUMED_VALUE(err_unbound_static(code, ip, static_index), -1)

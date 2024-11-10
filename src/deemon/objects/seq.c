@@ -4185,6 +4185,59 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_unpack(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	size_t size_or_minsize;
+	DeeObject *maxsize_ob = NULL;
+	DREF DeeTupleObject *result;
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|o:unpack", &size_or_minsize, &maxsize_ob))
+		goto err;
+	if (maxsize_ob == NULL) {
+#ifndef __OPTIMIZE_SIZE__
+		if (DeeTuple_Check(self)) {
+			size_t real_size = DeeTuple_SIZE(self);
+			if unlikely(real_size != size_or_minsize) {
+				err_invalid_unpack_size(self, size_or_minsize, real_size);
+				goto err;
+			}
+			return_reference_(self);
+		}
+#endif /* !__OPTIMIZE_SIZE__ */
+		result = DeeTuple_NewUninitialized(size_or_minsize);
+		if unlikely(!result)
+			goto err;
+		if unlikely(DeeObject_Unpack(self, size_or_minsize, DeeTuple_ELEM(result)))
+			goto err_r;
+	} else {
+		size_t maxsize, realsize;
+		if unlikely(DeeObject_AsSize(maxsize_ob, &maxsize))
+			goto err;
+#ifndef __OPTIMIZE_SIZE__
+		if (DeeTuple_Check(self)) {
+			size_t real_size = DeeTuple_SIZE(self);
+			if unlikely(real_size < size_or_minsize || real_size > maxsize) {
+				err_invalid_unpack_size_minmax(self, size_or_minsize, maxsize, real_size);
+				goto err;
+			}
+			return_reference_(self);
+		}
+#endif /* !__OPTIMIZE_SIZE__ */
+		result = DeeTuple_NewUninitialized(maxsize);
+		if unlikely(!result)
+			goto err;
+		realsize = DeeObject_UnpackEx(self, size_or_minsize, maxsize,
+		                              DeeTuple_ELEM(result));
+		if unlikely(realsize == (size_t)-1)
+			goto err_r;
+		result = DeeTuple_TruncateUninitialized(result, realsize);
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_bcontains(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -5048,6 +5101,13 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "#A{itertools.permutations|https://docs.python.org/3/library/itertools.html##itertools.permutations}"),
 
 	TYPE_KWMETHOD("byhash", &seq_byhash, DOC_GET(seq_byhash_doc)),
+
+	TYPE_METHOD("unpack", &seq_unpack,
+	            "(size:?Dint)->?S?O\n"
+	            "(minsize:?Dint,maxsize:?Dint)->?S?O\n"
+	            "Unpack elements of this sequence (skipping over unbound items), whilst asserting "
+	            /**/ "that the resulting sequence's size is either equal to @size, or lies within "
+	            /**/ "the (inclusive) bounds ${[minsize, maxsize]}"),
 
 	/* TODO: unique(key:?DCallable=!N)->?DSequence
 	 * Returns a generic Sequence proxy that contains all of the elements from @this Sequence,

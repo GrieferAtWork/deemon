@@ -514,28 +514,22 @@ PRIVATE struct stype_attr struct_attr = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-struct_setpair(DeeStructTypeObject *tp_self,
-               void *self, DeeObject *pair) {
-	DREF DeeObject *key_and_value[2];
-	int result;
-	if unlikely(DeeObject_Unpack(pair, 2, key_and_value))
-		goto err;
-	result = struct_setattr(tp_self, self,
-	                        key_and_value[0],
-	                        key_and_value[1]);
-	Dee_Decref(key_and_value[1]);
-	Dee_Decref(key_and_value[0]);
-	return result;
-err:
-	return -1;
+struct struct_assign_foreach_data {
+	DeeStructTypeObject *safd_tp_self; /* [1..1] Struct type of `safd_self' */
+	void                *safd_self;    /* [?..?] Instance pointer. */
+};
+
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+struct_assign_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct struct_assign_foreach_data *data;
+	data = (struct struct_assign_foreach_data *)arg;
+	return struct_setattr(data->safd_tp_self, data->safd_self, key, value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 struct_assign(DeeStructTypeObject *tp_self,
               void *self, DeeObject *value) {
-	size_t fast_size;
-	DREF DeeObject *elem;
+	struct struct_assign_foreach_data data;
 	if (DeeObject_InstanceOfExact(value, DeeStructType_AsType(tp_self))) {
 		uint8_t *dst, *src;
 		size_t size; /* Copy-assign. */
@@ -554,8 +548,6 @@ struct_assign(DeeStructTypeObject *tp_self,
 		return 0;
 	}
 
-	/* TODO: Use DeeObject_ForeachPair(), and get rid of DeeFastSeq_GetSize_deprecated() */
-
 	/* Fallback: assign a sequence:
 	 * >> struct_type point = {
 	 * >>     ("x", int),
@@ -567,43 +559,9 @@ struct_assign(DeeStructTypeObject *tp_self,
 	 * >> };
 	 * >> print repr p;
 	 */
-	fast_size = DeeFastSeq_GetSize_deprecated(value);
-	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		size_t i;
-		for (i = 0; i < fast_size; ++i) {
-			int temp;
-			elem = DeeFastSeq_GetItem_deprecated(value, i);
-			if unlikely(!elem)
-				goto err;
-			temp = struct_setpair(tp_self, self, elem);
-			Dee_Decref(elem);
-			if unlikely(temp)
-				goto err;
-		}
-		return 0;
-	}
-
-	/* Use iterators. */
-	value = DeeObject_Iter(value);
-	if unlikely(!value)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(value))) {
-		int temp;
-		temp = struct_setpair(tp_self, self, elem);
-		Dee_Decref(elem);
-		if unlikely(temp)
-			goto err_value;
-		if (DeeThread_CheckInterrupt())
-			goto err_value;
-	}
-	if unlikely(!elem)
-		goto err_value;
-	Dee_Decref(value);
-	return 0;
-err_value:
-	Dee_Decref(value);
-err:
-	return -1;
+	data.safd_tp_self = tp_self;
+	data.safd_self    = self;
+	return (int)DeeObject_ForeachPair(value, &struct_assign_foreach_cb, &data);
 }
 
 PRIVATE NONNULL((1)) int DCALL

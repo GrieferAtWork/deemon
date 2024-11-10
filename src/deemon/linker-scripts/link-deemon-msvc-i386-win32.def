@@ -941,6 +941,7 @@ EXPORTS
 	DeeObject_TTryGetItemStringHash@16=_DeeObject_TTryGetItemStringHash@16
 	DeeObject_TTryGetItemStringLenHash@20=_DeeObject_TTryGetItemStringLenHash@20
 	DeeObject_TUnpack@16=_DeeObject_TUnpack@16
+	DeeObject_TUnpackEx@20=_DeeObject_TUnpackEx@20
 	DeeObject_TUnpackWithUnbound@16=_DeeObject_TUnpackWithUnbound@16
 	DeeObject_TVCallAttrStringHashf@24=_DeeObject_TVCallAttrStringHashf@24
 	DeeObject_TVCallAttrf@20=_DeeObject_TVCallAttrf@20
@@ -961,6 +962,7 @@ EXPORTS
 	DeeObject_TypeAssertFailed@8=_DeeObject_TypeAssertFailed@8
 	DeeObject_UndoConstruction@8=_DeeObject_UndoConstruction@8
 	DeeObject_Unpack@12=_DeeObject_Unpack@12
+	DeeObject_UnpackEx@16=_DeeObject_UnpackEx@16
 	DeeObject_UnpackWithUnbound@12=_DeeObject_UnpackWithUnbound@12
 	DeeObject_VCallAttrPack@16=_DeeObject_VCallAttrPack@16
 	DeeObject_VCallAttrStringHashPack@20=_DeeObject_VCallAttrStringHashPack@20

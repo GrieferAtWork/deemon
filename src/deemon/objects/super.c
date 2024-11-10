@@ -781,6 +781,11 @@ super_unpack(Super *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	return DeeObject_TUnpack(self->s_type, self->s_self, dst_length, dst);
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+super_unpack_ex(Super *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
+	return DeeObject_TUnpackEx(self->s_type, self->s_self, dst_length_min, dst_length_max, dst);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_unpack_ub(Super *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	return DeeObject_TUnpackWithUnbound(self->s_type, self->s_self, dst_length, dst);
@@ -836,6 +841,7 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_asvector                   = */ NULL,
 	/* .tp_asvector_nothrow           = */ NULL,
 	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&super_unpack,
+	/* .tp_unpack_ex                  = */ (size_t (DCALL *)(DeeObject *, size_t, size_t, DREF DeeObject **))&super_unpack_ex,
 	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&super_unpack_ub,
 };
 

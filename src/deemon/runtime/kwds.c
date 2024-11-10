@@ -1534,6 +1534,7 @@ PRIVATE struct type_seq kmap_seq = {
 	/* .tp_asvector                     = */ NULL,
 	/* .tp_asvector_nothrow             = */ NULL,
 	/* .tp_unpack                       = */ NULL,
+	/* .tp_unpack_ex                    = */ NULL,
 	/* .tp_unpack_ub                    = */ NULL,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&kmap_getitemnr,
 	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&kmap_getitemnr_string_hash,

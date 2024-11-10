@@ -2143,14 +2143,14 @@ lock_union_allocator_pack(struct lock_union_allocator *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 lock_union_allocator_append(struct lock_union_allocator *__restrict self,
                             DeeObject *__restrict lock);
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 lock_union_allocator_append_vector(struct lock_union_allocator *__restrict self,
                                    size_t lock_c, DeeObject *const *lock_v);
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 lock_union_allocator_append(struct lock_union_allocator *__restrict self,
                             DeeObject *__restrict lock) {
 	/* Special case for recursive lock unions (which aren't allowed and are inlined) */
@@ -2182,7 +2182,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 lock_union_allocator_append_vector(struct lock_union_allocator *__restrict self,
                                    size_t lock_c, DeeObject *const *lock_v) {
 	size_t i;
@@ -2224,74 +2224,31 @@ INTDEF DeeCMethodObject libthreading_lockunion_all;
 INTERN DEFINE_CMETHOD(libthreading_lockunion_all, &libthreading_lockunion_all_f, METHOD_FCONSTCALL);
 
 PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
-LockUnion_FromIterator(DeeObject *__restrict iter) {
-	DREF DeeObject *elem;
-	struct lock_union_allocator alloc;
-	if unlikely(lock_union_allocator_init(&alloc, 8))
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		if unlikely(lock_union_allocator_append(&alloc, elem))
-			goto err_alloc_elem;
-	}
-	if unlikely(!elem)
-		goto err_alloc;
-	if unlikely(alloc.lua_union->lu_size == 0) {
-		err_empty_lock_union();
-		goto err_alloc;
-	}
-	return lock_union_allocator_pack(&alloc);
-err_alloc_elem:
-	Dee_Decref(elem);
-err_alloc:
-	lock_union_allocator_fini(&alloc);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
-LockUnion_FromFastSequence(DeeObject *__restrict seq, size_t size) {
-	size_t i;
-	struct lock_union_allocator alloc;
-	if unlikely(size == 0) {
-		err_empty_lock_union();
-		goto err;
-	}
-	if unlikely(lock_union_allocator_init(&alloc, size))
-		goto err;
-	for (i = 0; i < size; ++i) {
-		int temp;
-		DREF DeeObject *lock;
-		lock = DeeFastSeq_GetItem_deprecated(seq, i);
-		if unlikely(!lock)
-			goto err_alloc;
-		temp = lock_union_allocator_append(&alloc, lock);
-		Dee_Decref(lock);
-		if unlikely(temp)
-			goto err_alloc;
-	}
-	return lock_union_allocator_pack(&alloc);
-err_alloc:
-	lock_union_allocator_fini(&alloc);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
 LockUnion_FromSequence(DeeObject *__restrict seq) {
-	DREF LockUnion *result;
-	DREF DeeObject *iter;
-	size_t fast_size;
+	size_t size_hint;
+	struct lock_union_allocator alloc;
+#ifndef __OPTIMIZE_SIZE__
 	if (DeeTuple_Check(seq))
 		return LockUnion_FromVector(DeeTuple_SIZE(seq), DeeTuple_ELEM(seq));
-	fast_size = DeeFastSeq_GetSize_deprecated(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED)
-		return LockUnion_FromFastSequence(seq, fast_size);
-	iter = DeeObject_Iter(seq);
-	if unlikely(!iter)
+#endif /* !__OPTIMIZE_SIZE__ */
+	size_hint = DeeObject_SizeFast(seq);
+	if (size_hint == (size_t)-1) {
+		size_hint = 4;
+	} else if unlikely(size_hint == 0) {
+		err_empty_lock_union();
 		goto err;
-	result = LockUnion_FromIterator(iter);
-	Dee_Decref(iter);
-	return result;
+	}
+	if unlikely(lock_union_allocator_init(&alloc, size_hint))
+		goto err;
+	if unlikely(DeeObject_Foreach(seq, (Dee_foreach_t)&lock_union_allocator_append, &alloc))
+		goto err_alloc;
+	if unlikely(alloc.lua_union->lu_size == 0)
+		goto err_alloc_empty;
+	return lock_union_allocator_pack(&alloc);
+err_alloc_empty:
+	err_empty_lock_union();
+err_alloc:
+	lock_union_allocator_fini(&alloc);
 err:
 	return NULL;
 }

@@ -1778,9 +1778,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 class_attribute_init(struct class_attribute *__restrict self,
                      DeeObject *__restrict data,
                      bool is_class_attribute) {
-	DREF DeeObject *iter;
-	DREF DeeObject *addr, *flags, *doc;
-	size_t fast_size;
+	DREF DeeObject *addr_flags_doc[3];
+	size_t nargs;
 	/* ?Dint */
 	/* ?T2?Dint?Dstring */
 	/* ?T2?Dint?Dint */
@@ -1793,66 +1792,25 @@ class_attribute_init(struct class_attribute *__restrict self,
 		self->ca_flag = CLASS_ATTRIBUTE_FPUBLIC;
 		return 0;
 	}
-	doc       = NULL;
-	fast_size = DeeFastSeq_GetSize_deprecated(data);
-	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (fast_size != 2 && fast_size != 3) {
-			err_invalid_unpack_size_minmax(data, 2, 3, fast_size);
-			goto err;
-		}
-		addr = DeeFastSeq_GetItem_deprecated(data, 0);
-		if unlikely(!addr)
-			goto err;
-		flags = DeeFastSeq_GetItem_deprecated(data, 1);
-		if unlikely(!addr)
-			goto err_addr;
-		if (fast_size >= 3) {
-			doc = DeeFastSeq_GetItem_deprecated(data, 2);
-			if unlikely(!addr)
-				goto err_addr_flags;
-		}
+	nargs = DeeObject_UnpackEx(data, 2, 3, addr_flags_doc);
+	if unlikely(nargs == (size_t)-1)
+		goto err;
+#define LOCAL_addr  addr_flags_doc[0]
+#define LOCAL_flags addr_flags_doc[1]
+#define LOCAL_doc   addr_flags_doc[2]
+	if (nargs <= 2) {
+		LOCAL_doc = NULL;
 	} else {
-		iter = DeeObject_Iter(data);
-		if unlikely(!iter)
-			goto err;
-		addr = DeeObject_IterNext(iter);
-		if unlikely(!ITER_ISOK(addr)) {
-			if (addr == ITER_DONE)
-				err_invalid_unpack_size_minmax(data, 2, 3, 0);
-			goto err_iter;
-		}
-		flags = DeeObject_IterNext(iter);
-		if unlikely(!ITER_ISOK(flags)) {
-			if (flags == ITER_DONE)
-				err_invalid_unpack_size_minmax(data, 2, 3, 1);
-			goto err_iter_addr;
-		}
-		doc = DeeObject_IterNext(iter);
-		if (doc == ITER_DONE) {
-			doc = NULL;
-		} else {
-			DREF DeeObject *tail;
-			if unlikely(!doc)
-				goto err_iter_addr_flags;
-			tail = DeeObject_IterNext(iter);
-			if unlikely(tail != ITER_DONE) {
-				if (tail) {
-					Dee_Decref(tail);
-					err_invalid_unpack_iter_size_minmax(data, iter, 2, 3);
-				}
-				goto err_iter_addr_flags_doc;
-			}
-		}
-		Dee_Decref(iter);
+		if (DeeObject_AssertTypeExact(LOCAL_doc, &DeeString_Type))
+			goto err_addr_flags_doc;
 	}
-	if (doc && DeeObject_AssertTypeExact(doc, &DeeString_Type))
+
+	if (DeeObject_AsUInt16(LOCAL_addr, &self->ca_addr))
 		goto err_addr_flags_doc;
-	if (DeeObject_AsUInt16(addr, &self->ca_addr))
-		goto err_addr_flags_doc;
-	if (DeeString_Check(flags)) {
+	if (DeeString_Check(LOCAL_flags)) {
 		char *pos;
 		self->ca_flag = 0;
-		pos = DeeString_STR(flags);
+		pos = DeeString_STR(LOCAL_flags);
 		if (*pos) {
 			for (;;) {
 				char *next;
@@ -1883,7 +1841,7 @@ got_flag:
 			}
 		}
 	} else {
-		if (DeeObject_AsUInt16(addr, &self->ca_flag))
+		if (DeeObject_AsUInt16(LOCAL_flags, &self->ca_flag))
 			goto err_addr_flags_doc;
 		if (self->ca_flag & ~CLASS_ATTRIBUTE_FMASK) {
 			DeeError_Throwf(&DeeError_ValueError,
@@ -1893,27 +1851,19 @@ got_flag:
 			goto err_addr_flags_doc;
 		}
 	}
-	self->ca_doc = (DREF struct string_object *)doc; /* Inherit reference. */
-	Dee_Decref(flags);
-	Dee_Decref(addr);
+	self->ca_doc = (DREF struct string_object *)LOCAL_doc; /* Inherit reference. */
+	Dee_Decref(LOCAL_flags);
+	Dee_Decref(LOCAL_addr);
 	return 0;
-err_iter_addr_flags_doc:
-	Dee_Decref(doc);
-err_iter_addr_flags:
-	Dee_Decref(flags);
-err_iter_addr:
-	Dee_Decref(addr);
-err_iter:
-	Dee_Decref(iter);
-	goto err;
 err_addr_flags_doc:
-	Dee_XDecref(doc);
-err_addr_flags:
-	Dee_Decref(flags);
-err_addr:
-	Dee_Decref(addr);
+	Dee_XDecref(LOCAL_doc);
+	Dee_Decref(LOCAL_flags);
+	Dee_Decref(LOCAL_addr);
 err:
 	return -1;
+#undef LOCAL_addr
+#undef LOCAL_flags
+#undef LOCAL_doc
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

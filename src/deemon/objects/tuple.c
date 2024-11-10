@@ -1607,6 +1607,14 @@ tuple_unpack(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+tuple_unpack_ex(Tuple *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst) {
+	if unlikely(self->t_size < dst_length_min || self->t_size > dst_length_max)
+		return (size_t)err_invalid_unpack_size_minmax((DeeObject *)self, dst_length_min, dst_length_max, self->t_size);
+	Dee_Movrefv(dst, self->t_elem, self->t_size);
+	return self->t_size;
+}
+
 PRIVATE struct type_nsi tpconst tuple_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -1674,6 +1682,7 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_asvector_nothrow,
 	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_asvector_nothrow,
 	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&tuple_unpack,
+	/* .tp_unpack_ex                  = */ (size_t (DCALL *)(DeeObject *, size_t, size_t, DREF DeeObject **))&tuple_unpack_ex,
 	/* .tp_unpack_ub                  = */ NULL,
 };
 
@@ -1681,13 +1690,13 @@ PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
 tuple_unpack_method(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 	DREF Tuple *result;
 	size_t num_items;
-	DeeObject *init;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:unpack", &num_items, &init))
+	DeeObject *seq;
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:unpack", &num_items, &seq))
 		goto err;
 	result = DeeTuple_NewUninitialized(num_items);
 	if unlikely(!result)
 		goto done;
-	if unlikely(DeeObject_Unpack(init, num_items, DeeTuple_ELEM(result))) {
+	if unlikely(DeeObject_Unpack(seq, num_items, DeeTuple_ELEM(result))) {
 		DeeTuple_FreeUninitialized(result);
 err:
 		result = NULL;
@@ -1700,7 +1709,8 @@ PRIVATE struct type_method tpconst tuple_class_methods[] = {
 	TYPE_METHOD("unpack", &tuple_unpack_method,
 	            "(num:?Dint,seq:?S?O)->?.\n"
 	            "#tUnpackError{The given @seq doesn't contain exactly @num elements}"
-	            "Unpack the given sequence @seq into a Tuple consisting of @num elements"),
+	            "Unpack the given sequence @seq into a Tuple consisting of @num elements\n"
+	            "Deprecated alias for ${Tuple((seq as Sequence).unpack(num))}"),
 	TYPE_METHOD_END
 };
 
@@ -2735,6 +2745,7 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_asvector                   = */ NULL, /* TODO */
 	/* .tp_asvector_nothrow           = */ NULL, /* TODO */
 	/* .tp_unpack                     = */ NULL,
+	/* .tp_unpack_ex                  = */ NULL,
 	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&nullable_tuple_unpack_ub,
 };
 

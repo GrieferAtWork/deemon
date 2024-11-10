@@ -1097,10 +1097,8 @@ struct formatter {
 	char           *f_iter;        /* [1..1] Current format string position. */
 	char           *f_end;         /* [1..1] Format string end. */
 	char           *f_flush_start; /* [1..1] Address where string flushing should start. */
-	DREF DeeObject *f_seqiter;     /* [null_if(f_seqsize != DEE_FASTSEQ_NOTFAST_DEPRECATED)][0..1] The iterator used to get sequence-elements from `f_args' */
+	DREF DeeObject *f_seqiter;     /* [0..1] The iterator used to get sequence-elements from `f_args' */
 	DeeObject      *f_args;        /* [1..1][const] A user-given sequence object used to index format arguments. */
-	size_t          f_seqsize;     /* [const] Fast sequence size of `f_args'. */
-	size_t          f_seqindex;    /* [valid_if(f_seqsize != DEE_FASTSEQ_NOTFAST_DEPRECATED)] Fast sequence  */
 };
 
 PRIVATE NONNULL((1, 2)) int DCALL
@@ -1204,25 +1202,14 @@ do_variable_length_index:
 		result = Dee_None;
 		Dee_Incref(result);
 	} else {
-		/* Support for fast-sequence index access (primarily for Tuple and SharedVector,
-		 * which are the most likely types of argument sequences used in format strings,
-		 * including the case of template strings) */
-		if (self->f_seqsize != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-			ASSERT(!self->f_seqiter);
-			if unlikely(self->f_seqindex >= self->f_seqsize)
-				goto err_not_enough_args;
-			result = DeeFastSeq_GetItem_deprecated(self->f_args, self->f_seqindex);
-			++self->f_seqindex;
-		} else {
-			/* Fallback: No key or index -> Yield the next iterator-item. */
-			if (!self->f_seqiter &&
-			    (self->f_seqiter = DeeObject_Iter(self->f_args)) == NULL)
-				goto err;
-			result = DeeObject_IterNext(self->f_seqiter);
-			/* Check for iter-done */
-			if unlikely(result == ITER_DONE)
-				goto err_not_enough_args;
-		}
+		/* Fallback: No key or index -> Yield the next iterator-item. */
+		if (!self->f_seqiter &&
+		    (self->f_seqiter = DeeObject_Iter(self->f_args)) == NULL)
+			goto err;
+		result = DeeObject_IterNext(self->f_seqiter);
+		/* Check for iter-done */
+		if unlikely(result == ITER_DONE)
+			goto err_not_enough_args;
 	}
 	*p_fmt_start = fmt_start;
 	return result;
@@ -1777,16 +1764,13 @@ format_impl(struct formatter *__restrict self,
 					inner_formatter.f_flush_start = content_start;
 					inner_formatter.f_seqiter     = self->f_seqiter;
 					inner_formatter.f_args        = self->f_args;
-					inner_formatter.f_seqsize     = self->f_seqsize;
-					inner_formatter.f_seqindex    = self->f_seqindex;
 
 					/* Format the format string, thus allowing it
 					 * to contain text from input arguments. */
 					print_error = format_impl(&inner_formatter,
 					                          &unicode_printer_print,
 					                          &format_string_printer);
-					self->f_seqiter  = inner_formatter.f_seqiter;
-					self->f_seqindex = inner_formatter.f_seqindex;
+					self->f_seqiter = inner_formatter.f_seqiter;
 					if unlikely(print_error < 0) {
 						unicode_printer_fini(&format_string_printer);
 						goto err_arg;
@@ -1849,8 +1833,6 @@ DeeString_Format_old(dformatprinter printer, void *arg,
 	self.f_end         = (char *)format + format_len;
 	self.f_seqiter     = NULL;
 	self.f_args        = args;
-	self.f_seqsize     = DeeFastSeq_GetSize_deprecated(args);
-	self.f_seqindex    = 0;
 	result             = format_impl(&self, printer, arg);
 	Dee_XDecref(self.f_seqiter);
 	return result;
@@ -1948,8 +1930,6 @@ format_bytes_impl(struct formatter *__restrict self,
 					inner_formatter.f_flush_start = content_start;
 					inner_formatter.f_seqiter     = self->f_seqiter;
 					inner_formatter.f_args        = self->f_args;
-					inner_formatter.f_seqindex    = self->f_seqindex;
-					inner_formatter.f_seqsize     = self->f_seqsize;
 
 					/* Format the format string, thus allowing it
 					 * to contain text from input arguments. */
@@ -1957,8 +1937,7 @@ format_bytes_impl(struct formatter *__restrict self,
 					                                &unicode_printer_print,
 					                                &unicode_printer_print,
 					                                &format_string_printer);
-					self->f_seqiter  = inner_formatter.f_seqiter;
-					self->f_seqindex = inner_formatter.f_seqindex;
+					self->f_seqiter = inner_formatter.f_seqiter;
 					if unlikely(print_error < 0) {
 						unicode_printer_fini(&format_string_printer);
 						goto err_arg;
@@ -2017,8 +1996,6 @@ DeeBytes_Format_old(dformatprinter printer,
 	self.f_end         = (char *)format + format_len;
 	self.f_seqiter     = NULL;
 	self.f_args        = args;
-	self.f_seqsize     = DeeFastSeq_GetSize_deprecated(args);
-	self.f_seqindex    = 0;
 	result             = format_bytes_impl(&self, printer, format_printer, arg);
 	Dee_XDecref(self.f_seqiter);
 	return result;

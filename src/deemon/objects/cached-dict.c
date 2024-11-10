@@ -1059,6 +1059,7 @@ PRIVATE struct type_seq cdict_seq = {
 	/* .tp_asvector                     = */ NULL,
 	/* .tp_asvector_nothrow             = */ NULL,
 	/* .tp_unpack                       = */ NULL,
+	/* .tp_unpack_ex                    = */ NULL,
 	/* .tp_unpack_ub                    = */ NULL,
 	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&cdict_getitemnr,
 	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&cdict_getitemnr_string_hash,

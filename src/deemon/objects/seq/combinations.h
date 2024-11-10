@@ -25,6 +25,8 @@
 
 DECL_BEGIN
 
+/* TODO: Completely re-write this stuff to make use of new sequence APIs */
+
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject  *c_seq;        /* [1..1][const] The underlying sequence that is being combined. */
