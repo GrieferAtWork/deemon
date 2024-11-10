@@ -2092,12 +2092,12 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 
 	/* Parse the integer starting with the least significant bits. */
 	result = 0;
-	iter   = end;
-	while (iter > start) {
+	iter   = start;
+	while (iter < end) {
 		uint32_t ch;
 		uint8_t dig;
 		struct unitraits *traits;
-		ch  = unicode_readutf8_rev_n(&iter, start);
+		ch  = unicode_readutf8_n(&iter, end);
 		traits = DeeUni_Descriptor(ch);
 		if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
 			dig = traits->ut_digit_idx;
@@ -2135,7 +2135,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 	if (negative) {
 		if (result > INT64_MAX)
 			goto err_overflow;
-		result = (uint64_t) - (int64_t)result;
+		result = (uint64_t)(-(int64_t)result);
 	}
 	*value = result;
 	return 0;
