@@ -170,10 +170,115 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_makeenumeration
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_makeenumeration_with_int_range_t)(DeeObject *self, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *Dee_tsc_makeenumeration_with_range_t)(DeeObject *self, DeeObject *start, DeeObject *end);
 
+
+
+
+
+
+
+/************************************************************************/
+/* For `deemon.Set'                                                     */
+/************************************************************************/
+/* Insert a key into a set
+ * @return: 1 : Given `key' was inserted and wasn't already present
+ * @return: 0 : Given `key' was already present
+ * @return: -1: Error */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_set_insert_t)(DeeObject *self, DeeObject *key);
+
+/* Remove a key from a set
+ * @return: 1 : Given `key' was removed
+ * @return: 0 : Given `key' was wasn't present
+ * @return: -1: Error */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_set_remove_t)(DeeObject *self, DeeObject *key);
+
+/* Insert `key' if not already present and re-return `key'.
+ * If already present, return the pre-existing (and equal) instance instead.
+ * @return: NULL: Error */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_set_unify_t)(DeeObject *self, DeeObject *key);
+
+/* @return: 0 : Success
+ * @return: -1: Error  */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_set_insertall_t)(DeeObject *self, DeeObject *keys);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_set_removeall_t)(DeeObject *self, DeeObject *keys);
+
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_set_pop_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_set_pop_with_default_t)(DeeObject *self, DeeObject *default_);
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* For `deemon.Mapping'                                                 */
+/************************************************************************/
+
+/* Override the value of a pre-existing key
+ * @param: value: The value to overwrite that of `key' with (so-long as `key' already exists)
+ * @return: 1 :   The value of `key' was set to `value'
+ * @return: 0 :   The given `key' doesn't exist (nothing was updated)
+ * @return: -1:   Error */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *Dee_tsc_map_setold_t)(DeeObject *self, DeeObject *key, DeeObject *value);
+/* @return: * :        The value of `key' was set to `value' (returned object is the old value)
+ * @return: ITER_DONE: The given `key' doesn't exist (nothing was updated)
+ * @return: NULL:      Error */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *Dee_tsc_map_setold_ex_t)(DeeObject *self, DeeObject *key, DeeObject *value);
+
+/* Insert a new key whilst making sure that the key doesn't already exist
+ * @param: value: The value to overwrite that of `key' with (so-long as `key' already exists)
+ * @return: 1 :   The value of `key' was set to `value' (the key didn't exist or used to be unbound)
+ * @return: 0 :   The given `key' already exists (nothing was inserted)
+ * @return: -1:   Error */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *Dee_tsc_map_setnew_t)(DeeObject *self, DeeObject *key, DeeObject *value);
+/* @return: ITER_DONE: The value of `key' was set to `value' (the key didn't exist or used to be unbound)
+ * @return: * :        The given `key' already exists (nothing was inserted; returned object is the already-present value)
+ * @return: -1:        Error */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *Dee_tsc_map_setnew_ex_t)(DeeObject *self, DeeObject *key, DeeObject *value);
+
+/* Same semantic functionality as `Dee_tsc_map_setnew_ex_t': insert if not already present
+ * @return: * : The value associated with key after the call:
+ *              - if already present and nothing was inserted, its old value
+ *              - if used-to-be absent/unbound and was assigned/inserted, `value'
+ * @return: NULL: Error */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *Dee_tsc_map_setdefault_t)(DeeObject *self, DeeObject *key, DeeObject *value);
+
+/* Copy all key-value pairs from `items' and assign them to `self'.
+ * Same as `for (local key, value: items) self[key] = value;'
+ * @return: 0 : Success
+ * @return: -1: Error */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_map_update_t)(DeeObject *self, DeeObject *items);
+
+/* Delete all keys that appear in `keys'.
+ * Same as `for (local key: keys) del self[key];'
+ * @return: 0 : Success
+ * @return: -1: Error */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_map_removekeys_t)(DeeObject *self, DeeObject *keys);
+
+/* Remove/unbind `key' and return whatever used to be assigned to it.
+ * When the key was already absent/unbound, return `default_' or throw a `KeyError'
+ * @return: * :   The old value of `key'
+ * @return: NULL: Error */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_map_pop_t)(DeeObject *self, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *Dee_tsc_map_pop_with_default_t)(DeeObject *self, DeeObject *key, DeeObject *default_);
+
+/* Remove a random key/value pair from `self' and store it in `key_and_value' (returns "none" if nothing found) */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_map_popitem_t)(DeeObject *self);
+
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_map_keys_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_map_values_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_map_iterkeys_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_map_itervalues_t)(DeeObject *self);
+
+
+
+
+
 union Dee_tsc_uslot {
-	DREF DeeObject   *d_function;  /* [1..1][valid_if(tsc_erase == ...)] Thiscall function. */
-	Dee_objmethod_t   d_method;    /* [1..1][valid_if(tsc_erase == ...)] Method callback. */
-	Dee_kwobjmethod_t d_kwmethod;  /* [1..1][valid_if(tsc_erase == ...)] Method callback. */
+	DREF DeeObject   *d_function;  /* [1..1][valid_if(:tsc_* == ...)] Thiscall function. */
+	Dee_objmethod_t   d_method;    /* [1..1][valid_if(:tsc_* == ...)] Method callback. */
+	Dee_kwobjmethod_t d_kwmethod;  /* [1..1][valid_if(:tsc_* == ...)] Method callback. */
 };
 
 struct Dee_type_seq_cache {
@@ -333,15 +438,52 @@ struct Dee_type_seq_cache {
 	union Dee_tsc_uslot          tsc_blocate_data;
 
 	/************************************************************************/
-	/* For `deemon.Set' (only allocated if derived from "Set")              */
+	/* For `deemon.Set'                                                     */
 	/************************************************************************/
-	/* TODO */
+	Dee_tsc_set_insert_t           tsc_set_insert;
+	union Dee_tsc_uslot            tsc_set_insert_data;
+	Dee_tsc_set_remove_t           tsc_set_remove;
+	union Dee_tsc_uslot            tsc_set_remove_data;
+	Dee_tsc_set_unify_t            tsc_set_unify;
+	union Dee_tsc_uslot            tsc_set_unify_data;
+	Dee_tsc_set_insertall_t        tsc_set_insertall;
+	union Dee_tsc_uslot            tsc_set_insertall_data;
+	Dee_tsc_set_removeall_t        tsc_set_removeall;
+	union Dee_tsc_uslot            tsc_set_removeall_data;
+	Dee_tsc_set_pop_t              tsc_set_pop;
+	Dee_tsc_set_pop_with_default_t tsc_set_pop_with_default;
+	union Dee_tsc_uslot            tsc_set_pop_data;
 
-
 	/************************************************************************/
-	/* For `deemon.Mapping' (only allocated if derived from "Mapping")      */
+	/* For `deemon.Mapping'                                                 */
 	/************************************************************************/
-	/* TODO */
+	Dee_tsc_map_setold_t           tsc_map_setold;
+	union Dee_tsc_uslot            tsc_map_setold_data;
+	Dee_tsc_map_setold_ex_t        tsc_map_setold_ex;
+	union Dee_tsc_uslot            tsc_map_setold_ex_data;
+	Dee_tsc_map_setnew_t           tsc_map_setnew;
+	union Dee_tsc_uslot            tsc_map_setnew_data;
+	Dee_tsc_map_setnew_ex_t        tsc_map_setnew_ex;
+	union Dee_tsc_uslot            tsc_map_setnew_ex_data;
+	Dee_tsc_map_setdefault_t       tsc_map_setdefault;
+	union Dee_tsc_uslot            tsc_map_setdefault_data;
+	Dee_tsc_map_update_t           tsc_map_update;
+	union Dee_tsc_uslot            tsc_map_update_data;
+	Dee_tsc_map_removekeys_t       tsc_map_removekeys;
+	union Dee_tsc_uslot            tsc_map_removekeys_data;
+	Dee_tsc_map_pop_t              tsc_map_pop;
+	Dee_tsc_map_pop_with_default_t tsc_map_pop_with_default;
+	union Dee_tsc_uslot            tsc_map_pop_data;
+	Dee_tsc_map_popitem_t          tsc_map_popitem;
+	union Dee_tsc_uslot            tsc_map_popitem_data;
+	Dee_tsc_map_keys_t             tsc_map_keys;
+	union Dee_tsc_uslot            tsc_map_keys_data;
+	Dee_tsc_map_values_t           tsc_map_values;
+	union Dee_tsc_uslot            tsc_map_values_data;
+	Dee_tsc_map_iterkeys_t         tsc_map_iterkeys;
+	union Dee_tsc_uslot            tsc_map_iterkeys_data;
+	Dee_tsc_map_itervalues_t       tsc_map_itervalues;
+	union Dee_tsc_uslot            tsc_map_itervalues_data;
 };
 
 /* Destroy a lazily allocated sequence operator cache table. */
@@ -459,6 +601,32 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_brange_t DCALL DeeType_SeqCa
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_brange_with_key_t DCALL DeeType_SeqCache_RequireBRangeWithKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_blocate_t DCALL DeeType_SeqCache_RequireBLocate(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_blocate_with_key_t DCALL DeeType_SeqCache_RequireBLocateWithKey(DeeTypeObject *__restrict self);
+
+/* Set functions */
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_insert_t DCALL DeeType_SeqCache_RequireSetInsert(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_remove_t DCALL DeeType_SeqCache_RequireSetRemove(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_unify_t DCALL DeeType_SeqCache_RequireSetUnify(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_insertall_t DCALL DeeType_SeqCache_RequireSetInsertAll(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_removeall_t DCALL DeeType_SeqCache_RequireSetRemoveAll(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_pop_t DCALL DeeType_SeqCache_RequireSetPop(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_pop_with_default_t DCALL DeeType_SeqCache_RequireSetPopWithDefault(DeeTypeObject *__restrict self);
+
+/* Map functions */
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setold_t DCALL DeeType_SeqCache_RequireMapSetOld(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setold_ex_t DCALL DeeType_SeqCache_RequireMapSetOldEx(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setnew_t DCALL DeeType_SeqCache_RequireMapSetNew(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setnew_ex_t DCALL DeeType_SeqCache_RequireMapSetNewEx(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setdefault_t DCALL DeeType_SeqCache_RequireMapSetDefault(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_update_t DCALL DeeType_SeqCache_RequireMapUpdate(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_removekeys_t DCALL DeeType_SeqCache_RequireMapRemoveKeys(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_pop_t DCALL DeeType_SeqCache_RequireMapPop(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_pop_with_default_t DCALL DeeType_SeqCache_RequireMapPopWithDefault(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_popitem_t DCALL DeeType_SeqCache_RequireMapPopItem(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_keys_t DCALL DeeType_SeqCache_RequireMapKeys(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_values_t DCALL DeeType_SeqCache_RequireMapValues(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_iterkeys_t DCALL DeeType_SeqCache_RequireMapIterKeys(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_itervalues_t DCALL DeeType_SeqCache_RequireMapIterValues(DeeTypeObject *__restrict self);
+
 
 /* Same as `DeeObject_EnumerateIndex()', but also works for treats `self' as `self as Sequence' */
 #define DeeSeq_EnumerateIndex(self, proc, arg, start, end) \
@@ -579,6 +747,30 @@ INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeSeq_EnumerateWithRange(Dee
 #define new_DeeSeq_BLocate(self, item, start, end)                          (*DeeType_SeqCache_RequireBLocate(Dee_TYPE(self)))(self, item, start, end)
 #define new_DeeSeq_BLocateWithKey(self, item, start, end, key)              (*DeeType_SeqCache_RequireBLocateWithKey(Dee_TYPE(self)))(self, item, start, end, key)
 
+/* Set functions */
+#define new_DeeSet_Insert(self, key)              (*DeeType_SeqCache_RequireSetInsert(Dee_TYPE(self)))(self, key)
+#define new_DeeSet_Remove(self, key)              (*DeeType_SeqCache_RequireSetRemove(Dee_TYPE(self)))(self, key)
+#define new_DeeSet_Unify(self, key)               (*DeeType_SeqCache_RequireSetUnify(Dee_TYPE(self)))(self, key)
+#define new_DeeSet_InsertAll(self, keys)          (*DeeType_SeqCache_RequireSetInsertAll(Dee_TYPE(self)))(self, keys)
+#define new_DeeSet_RemoveAll(self, keys)          (*DeeType_SeqCache_RequireSetRemoveAll(Dee_TYPE(self)))(self, keys)
+#define new_DeeSet_Pop(self)                      (*DeeType_SeqCache_RequireSetPop(Dee_TYPE(self)))(self)
+#define new_DeeSet_PopWithDefault(self, default_) (*DeeType_SeqCache_RequireSetPopWithDefault(Dee_TYPE(self)))(self, default_)
+
+/* Map functions */
+#define new_DeeMap_SetOld(self, key, value)            (*DeeType_SeqCache_RequireMapSetOld(Dee_TYPE(self)))(self, key, value)
+#define new_DeeMap_SetOldEx(self, key, value)          (*DeeType_SeqCache_RequireMapSetOldEx(Dee_TYPE(self)))(self, key, value)
+#define new_DeeMap_SetNew(self, key, value)            (*DeeType_SeqCache_RequireMapSetNew(Dee_TYPE(self)))(self, key, value)
+#define new_DeeMap_SetNewEx(self, key, value)          (*DeeType_SeqCache_RequireMapSetNewEx(Dee_TYPE(self)))(self, key, value)
+#define new_DeeMap_SetDefault(self, key, value)        (*DeeType_SeqCache_RequireMapSetDefault(Dee_TYPE(self)))(self, key, value)
+#define new_DeeMap_Update(self, items)                 (*DeeType_SeqCache_RequireMapUpdate(Dee_TYPE(self)))(self, items)
+#define new_DeeMap_RemoveKeys(self, keys)              (*DeeType_SeqCache_RequireMapRemoveKeys(Dee_TYPE(self)))(self, keys)
+#define new_DeeMap_Pop(self, key)                      (*DeeType_SeqCache_RequireMapPop(Dee_TYPE(self)))(self, key)
+#define new_DeeMap_PopWithDefault(self, key, default_) (*DeeType_SeqCache_RequireMapPopWithDefault(Dee_TYPE(self)))(self, key, default_)
+#define new_DeeMap_PopItem(self)                       (*DeeType_SeqCache_RequireMapPopItem(Dee_TYPE(self)))(self)
+#define new_DeeMap_Keys(self)                          (*DeeType_SeqCache_RequireMapKeys(Dee_TYPE(self)))(self)
+#define new_DeeMap_Values(self)                        (*DeeType_SeqCache_RequireMapValues(Dee_TYPE(self)))(self)
+#define new_DeeMap_IterKeys(self)                      (*DeeType_SeqCache_RequireMapIterKeys(Dee_TYPE(self)))(self)
+#define new_DeeMap_IterValues(self)                    (*DeeType_SeqCache_RequireMapIterValues(Dee_TYPE(self)))(self)
 
 /* Possible implementations for sequence cache functions. */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
@@ -602,11 +794,14 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithForeachDefault
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelAttr(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelItem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithTSCRemoveForSet(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelItemForMap(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithError(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithSetAttr(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithSetItem(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithSetItemIndex(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithError(DeeObject *self, DeeObject *value);
+
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithGetAttr(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithSizeObAndGetItem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithSizeAndGetItemIndex(DeeObject *__restrict self);
@@ -618,12 +813,14 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithSizeAndBoundIte
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithSizeAndGetItemIndexFast(DeeObject *__restrict self);
 #define DeeSeq_DefaultBoundLastWithForeachDefault DeeSeq_DefaultBoundFirstWithForeachDefault
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithDelAttr(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithDelItem(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithDelItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithSizeAndDelItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithSizeObAndDelItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithTSCRemoveForSet(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithDelItemForMap(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithError(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSetAttr(DeeObject *self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSetItem(DeeObject *self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSetItemIndex(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSizeAndSetItemIndex(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSizeObAndSetItem(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithError(DeeObject *self, DeeObject *value);
 
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultNonEmptyWithError(DeeObject *__restrict self);
@@ -1020,6 +1217,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultClearWithCallClearDataKwMeth
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultClearWithDelRangeIndexN(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultClearWithSetRangeIndexN(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultClearWithTSCErase(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultClearWithTSCRemoveAllForSet(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultClearWithTSCRemoveKeysForMap(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultClearWithError(DeeObject *self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultPopWithCallAttrPop(DeeObject *self, Dee_ssize_t index);
@@ -1223,6 +1422,184 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWit
 INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithError(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
 
+
+/************************************************************************/
+/* For `deemon.Set'                                                     */
+/************************************************************************/
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertWithCallAttrInsert(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertWithCallInsertDataFunction(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertWithCallInsertDataMethod(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertWithCallInsertDataKwMethod(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertWithError(DeeObject *self, DeeObject *key);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveWithCallAttrRemove(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveWithCallRemoveDataFunction(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveWithCallRemoveDataMethod(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveWithCallRemoveDataKwMethod(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveWithError(DeeObject *self, DeeObject *key);
+
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithCallAttrUnify(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithCallUnifyDataFunction(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithCallUnifyDataMethod(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithCallUnifyDataKwMethod(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithTSCInsertAndForeach(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithError(DeeObject *self, DeeObject *key);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertAllWithCallAttrInsertAll(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertAllWithCallInsertAllDataFunction(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertAllWithCallInsertAllDataMethod(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertAllWithCallInsertAllDataKwMethod(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertAllWithTSCInsert(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertAllWithError(DeeObject *self, DeeObject *keys);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveAllWithCallAttrRemoveAll(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveAllWithCallRemoveAllDataFunction(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveAllWithCallRemoveAllDataMethod(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveAllWithCallRemoveAllDataKwMethod(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveAllWithTSCRemove(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultRemoveAllWithError(DeeObject *self, DeeObject *keys);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultPopWithCallAttrPop(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultPopWithCallPopDataFunction(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultPopWithCallPopDataMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultPopWithCallPopDataKwMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultPopWithTSCFirstAndTSCRemove(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultPopWithError(DeeObject *self);
+
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultPopWithDefaultWithCallAttrPop(DeeObject *self, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultPopWithDefaultWithCallPopDataFunction(DeeObject *self, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultPopWithDefaultWithCallPopDataMethod(DeeObject *self, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultPopWithDefaultWithCallPopDataKwMethod(DeeObject *self, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultPopWithDefaultWithTSCFirstAndTSCRemove(DeeObject *self, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultPopWithDefaultWithError(DeeObject *self, DeeObject *default_);
+
+
+
+/************************************************************************/
+/* For `deemon.Mapping'                                                 */
+/************************************************************************/
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithCallAttrSetOld(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithCallSetOldDataFunction(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithCallSetOldDataMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithCallSetOldDataKwMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithTSCSetOldEx(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithBoundItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetOldWithError(DeeObject *self, DeeObject *key, DeeObject *value);
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetOldExWithCallAttrSetOldEx(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetOldExWithCallSetOldExDataFunction(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetOldExWithCallSetOldExDataMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetOldExWithCallSetOldExDataKwMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetOldExWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetOldExWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetOldExWithError(DeeObject *self, DeeObject *key, DeeObject *value);
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithCallAttrSetNew(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithCallSetNewDataFunction(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithCallSetNewDataMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithCallSetNewDataKwMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithTSCSetNewEx(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithBoundItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithBoundItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithTryGetItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithGetItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_DefaultSetNewWithError(DeeObject *self, DeeObject *key, DeeObject *value);
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithCallAttrSetNewEx(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithCallSetNewExDataFunction(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithCallSetNewExDataMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithCallSetNewExDataKwMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithTryGetItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithGetItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetNewExWithError(DeeObject *self, DeeObject *key, DeeObject *value);
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithCallAttrSetDefault(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithCallSetDefaultDataFunction(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithCallSetDefaultDataMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithCallSetDefaultDataKwMethod(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithTSCSetNewEx(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithTSCSetNewAndGetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultSetDefaultWithError(DeeObject *self, DeeObject *key, DeeObject *value);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultUpdateWithCallAttrUpdate(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultUpdateWithCallUpdateDataFunction(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultUpdateWithCallUpdateDataMethod(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultUpdateWithCallUpdateDataKwMethod(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultUpdateWithInplaceAdd(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultUpdateWithInplaceOr(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultUpdateWithSetItem(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultUpdateWithError(DeeObject *self, DeeObject *items);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultRemoveKeysWithCallAttrRemoveKeys(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultRemoveKeysWithCallRemoveKeysDataFunction(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultRemoveKeysWithCallRemoveKeysDataMethod(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultRemoveKeysWithCallRemoveKeysDataKwMethod(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultRemoveKeysWithDelItem(DeeObject *self, DeeObject *keys);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultRemoveKeysWithError(DeeObject *self, DeeObject *keys);
+
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultPopWithCallAttrPop(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultPopWithCallPopDataFunction(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultPopWithCallPopDataMethod(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultPopWithCallPopDataKwMethod(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultPopWithGetItemAndDelItem(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultPopWithError(DeeObject *self, DeeObject *key);
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultPopWithDefaultWithCallAttrPop(DeeObject *self, DeeObject *key, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultPopWithDefaultWithCallPopDataFunction(DeeObject *self, DeeObject *key, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultPopWithDefaultWithCallPopDataMethod(DeeObject *self, DeeObject *key, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultPopWithDefaultWithCallPopDataKwMethod(DeeObject *self, DeeObject *key, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultPopWithDefaultWithTryGetItemAndDelItem(DeeObject *self, DeeObject *key, DeeObject *default_);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_DefaultPopWithDefaultWithError(DeeObject *self, DeeObject *key, DeeObject *default_);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultPopItemWithCallAttrPopItem(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultPopItemWithCallPopItemDataFunction(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultPopItemWithCallPopItemDataMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultPopItemWithCallPopItemDataKwMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultPopItemWithTSCFirstAndDelItem(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultPopItemWithError(DeeObject *self);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithCallAttrKeys(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithCallKeysDataFunction(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithCallKeysDataMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithCallKeysDataKwMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithTSCIterKeys(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithIter(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithError(DeeObject *self);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithCallAttrValues(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithCallValuesDataFunction(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithCallValuesDataMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithCallValuesDataKwMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithTSCIterValues(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithIter(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithError(DeeObject *self);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithCallAttrIterKeys(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithCallIterKeysDataFunction(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithCallIterKeysDataMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithCallIterKeysDataKwMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithTSCKeys(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithError(DeeObject *self);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithCallIterValuesDataFunction(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithCallIterValuesDataMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithCallIterValuesDataKwMethod(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithTSCValues(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithError(DeeObject *self);
+
+
+
+
+
 /* Default sequence function hooks (used as function pointers of `type_method' / `type_getset' of Sequence/Set/Mapping) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_getfirst(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_boundfirst(DeeObject *__restrict self);
@@ -1236,7 +1613,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_bool(DeeObject *__restrict sel
 
 
 /* Default sequence function pointers (including ones for mutable sequences). */
-/* Functions that need additional variants for sequence sub-types that don't have indices (sets, maps) */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_any(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_all(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -1278,6 +1654,33 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_bfind(DeeObject *s
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_bposition(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_brange(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_blocate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+
+
+/* Default set function pointers (including ones for mutable sets). */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set_insert(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set_remove(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set_insertall(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set_removeall(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set_unify(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set_pop(DeeObject *self, size_t argc, DeeObject *const *argv);
+
+
+/* Default map function pointers (including ones for mutable maps). */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_get(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_setold(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_setold_ex(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_setnew(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_setnew_ex(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_setdefault(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_update(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_removekeys(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_pop(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_popitem(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_keys(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_values(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_iterkeys(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map_itervalues(DeeObject *self);
+
 
 DECL_END
 

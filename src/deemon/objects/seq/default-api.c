@@ -242,6 +242,47 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 	if (self->tsc_sorted == &DeeSeq_DefaultSortedWithCallSortedDataFunction ||
 	    self->tsc_sorted_with_key == &DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_set_insert == &DeeSet_DefaultInsertWithCallInsertDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_set_remove == &DeeSet_DefaultRemoveWithCallRemoveDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_set_unify == &DeeSet_DefaultUnifyWithCallUnifyDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_set_insertall == &DeeSet_DefaultInsertAllWithCallInsertAllDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_set_removeall == &DeeSet_DefaultRemoveAllWithCallRemoveAllDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_set_pop == &DeeSet_DefaultPopWithCallPopDataFunction ||
+	    self->tsc_set_pop_with_default == &DeeSet_DefaultPopWithDefaultWithCallPopDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_set_pop_data);
+	if (self->tsc_map_setold == &DeeMap_DefaultSetOldWithCallSetOldDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_setold_ex == &DeeMap_DefaultSetOldExWithCallSetOldExDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_setnew == &DeeMap_DefaultSetNewWithCallSetNewDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_setnew_ex == &DeeMap_DefaultSetNewExWithCallSetNewExDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_setdefault == &DeeMap_DefaultSetDefaultWithCallSetDefaultDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_update == &DeeMap_DefaultUpdateWithCallUpdateDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_removekeys == &DeeMap_DefaultRemoveKeysWithCallRemoveKeysDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_pop == &DeeMap_DefaultPopWithCallPopDataFunction ||
+	    self->tsc_map_pop_with_default == &DeeMap_DefaultPopWithDefaultWithCallPopDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_map_pop_data);
+	if (self->tsc_map_popitem == &DeeMap_DefaultPopItemWithCallPopItemDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_keys == &DeeMap_DefaultKeysWithCallKeysDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_values == &DeeMap_DefaultValuesWithCallValuesDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_iterkeys == &DeeMap_DefaultIterKeysWithCallIterKeysDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_map_itervalues == &DeeMap_DefaultIterValuesWithCallIterValuesDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+
 	Dee_Free(self);
 }
 
@@ -1000,6 +1041,41 @@ DeeSeq_DefaultDelFirstWithDelItemIndex(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultDelFirstWithTSCRemoveForSet(DeeObject *__restrict self) {
+	int result;
+	DREF DeeObject *key = DeeSeq_GetFirst(self);
+	if unlikely(!key)
+		goto err;
+	result = new_DeeSet_Remove(self, key);
+	Dee_Decref(key);
+	if (result > 0)
+		result = 0;
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultDelFirstWithDelItemForMap(DeeObject *__restrict self) {
+	int result;
+	DREF DeeObject *key_and_value[2];
+	DREF DeeObject *item = DeeSeq_GetFirst(self);
+	if unlikely(!item)
+		goto err;
+	if unlikely(DeeObject_Unpack(item, 2, key_and_value))
+		goto err_item;
+	Dee_Decref(item);
+	Dee_Decref(key_and_value[1]);
+	result = DeeObject_DelItem(self, key_and_value[0]);
+	Dee_Decref(key_and_value[0]);
+	return result;
+err_item:
+	Dee_Decref(item);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DefaultDelFirstWithError(DeeObject *__restrict self) {
 	return err_cant_access_attribute(Dee_TYPE(self), &str_first, ATTR_ACCESS_DEL);
 }
@@ -1229,6 +1305,41 @@ err_sizeob_isempty:
 	err_empty_sequence(self);
 err_sizeob:
 	Dee_Decref(sizeob);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultDelLastWithTSCRemoveForSet(DeeObject *__restrict self) {
+	int result;
+	DREF DeeObject *key = DeeSeq_GetLast(self);
+	if unlikely(!key)
+		goto err;
+	result = new_DeeSet_Remove(self, key);
+	Dee_Decref(key);
+	if (result > 0)
+		result = 0;
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultDelLastWithDelItemForMap(DeeObject *__restrict self) {
+	int result;
+	DREF DeeObject *key_and_value[2];
+	DREF DeeObject *item = DeeSeq_GetLast(self);
+	if unlikely(!item)
+		goto err;
+	if unlikely(DeeObject_Unpack(item, 2, key_and_value))
+		goto err_item;
+	Dee_Decref(item);
+	Dee_Decref(key_and_value[1]);
+	result = DeeObject_DelItem(self, key_and_value[0]);
+	Dee_Decref(key_and_value[0]);
+	return result;
+err_item:
+	Dee_Decref(item);
 err:
 	return -1;
 }

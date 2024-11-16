@@ -61,6 +61,12 @@
 #define SSIZE_MIN __SSIZE_MIN__
 #define SSIZE_MAX __SSIZE_MAX__
 
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
+
 DECL_BEGIN
 
 #define DeeType_RequireBool(tp_self)           (((tp_self)->tp_cast.tp_bool) || DeeType_InheritBool(tp_self))
@@ -158,6 +164,27 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_brange_t DCALL DeeType_SeqCache_RequireB
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_brange_with_key_t DCALL DeeType_SeqCache_RequireBRangeWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_blocate_t DCALL DeeType_SeqCache_RequireBLocate_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_blocate_with_key_t DCALL DeeType_SeqCache_RequireBLocateWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_set_insert_t DCALL DeeType_SeqCache_RequireSetInsert_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_set_remove_t DCALL DeeType_SeqCache_RequireSetRemove_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_set_unify_t DCALL DeeType_SeqCache_RequireSetUnify_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_set_insertall_t DCALL DeeType_SeqCache_RequireSetInsertAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_set_removeall_t DCALL DeeType_SeqCache_RequireSetRemoveAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_set_pop_t DCALL DeeType_SeqCache_RequireSetPop_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_set_pop_with_default_t DCALL DeeType_SeqCache_RequireSetPopWithDefault_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_setold_t DCALL DeeType_SeqCache_RequireMapSetOld_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_setold_ex_t DCALL DeeType_SeqCache_RequireMapSetOldEx_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_setnew_t DCALL DeeType_SeqCache_RequireMapSetNew_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_setnew_ex_t DCALL DeeType_SeqCache_RequireMapSetNewEx_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_setdefault_t DCALL DeeType_SeqCache_RequireMapSetDefault_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_update_t DCALL DeeType_SeqCache_RequireMapUpdate_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_removekeys_t DCALL DeeType_SeqCache_RequireMapRemoveKeys_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_pop_t DCALL DeeType_SeqCache_RequireMapPop_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_pop_with_default_t DCALL DeeType_SeqCache_RequireMapPopWithDefault_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_popitem_t DCALL DeeType_SeqCache_RequireMapPopItem_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_keys_t DCALL DeeType_SeqCache_RequireMapKeys_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_values_t DCALL DeeType_SeqCache_RequireMapValues_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_iterkeys_t DCALL DeeType_SeqCache_RequireMapIterKeys_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_map_itervalues_t DCALL DeeType_SeqCache_RequireMapIterValues_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_t DCALL DeeType_SeqCache_RequireAny_uncached(DeeTypeObject *__restrict self);
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_with_key_t DCALL DeeType_SeqCache_RequireAnyWithKey_uncached(DeeTypeObject *__restrict self);
@@ -241,15 +268,37 @@ PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_brange_t DCALL DeeType_SeqC
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_brange_with_key_t DCALL DeeType_SeqCache_RequireBRangeWithKey_uncached(DeeTypeObject *__restrict self);
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_blocate_t DCALL DeeType_SeqCache_RequireBLocate_uncached(DeeTypeObject *__restrict self);
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_blocate_with_key_t DCALL DeeType_SeqCache_RequireBLocateWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_insert_t DCALL DeeType_SeqCache_RequireSetInsert_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_remove_t DCALL DeeType_SeqCache_RequireSetRemove_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_unify_t DCALL DeeType_SeqCache_RequireSetUnify_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_insertall_t DCALL DeeType_SeqCache_RequireSetInsertAll_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_removeall_t DCALL DeeType_SeqCache_RequireSetRemoveAll_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_pop_t DCALL DeeType_SeqCache_RequireSetPop_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_pop_with_default_t DCALL DeeType_SeqCache_RequireSetPopWithDefault_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setold_t DCALL DeeType_SeqCache_RequireMapSetOld_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setold_ex_t DCALL DeeType_SeqCache_RequireMapSetOldEx_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setnew_t DCALL DeeType_SeqCache_RequireMapSetNew_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setnew_ex_t DCALL DeeType_SeqCache_RequireMapSetNewEx_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_setdefault_t DCALL DeeType_SeqCache_RequireMapSetDefault_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_update_t DCALL DeeType_SeqCache_RequireMapUpdate_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_removekeys_t DCALL DeeType_SeqCache_RequireMapRemoveKeys_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_pop_t DCALL DeeType_SeqCache_RequireMapPop_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_pop_with_default_t DCALL DeeType_SeqCache_RequireMapPopWithDefault_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_popitem_t DCALL DeeType_SeqCache_RequireMapPopItem_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_keys_t DCALL DeeType_SeqCache_RequireMapKeys_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_values_t DCALL DeeType_SeqCache_RequireMapValues_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_iterkeys_t DCALL DeeType_SeqCache_RequireMapIterKeys_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_map_itervalues_t DCALL DeeType_SeqCache_RequireMapIterValues_uncached(DeeTypeObject *__restrict self);
+
 
 
 /* Mutable sequence functions */
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
-err_seq_vunsupportedf(DeeObject *self, char const *method_format, va_list args) {
+err_api_vunsupportedf(char const *api, DeeObject *self, char const *method_format, va_list args) {
 	int result;
 	DREF DeeObject *message, *error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(unicode_printer_printf(&printer, "Sequence type %k is does not support call: ", Dee_TYPE(self)) < 0)
+	if unlikely(unicode_printer_printf(&printer, "%s type %k does not support call: ", api, Dee_TYPE(self)) < 0)
 		goto err_printer;
 	if unlikely(unicode_printer_vprintf(&printer, method_format, args) < 0)
 		goto err_printer;
@@ -274,7 +323,27 @@ err_seq_unsupportedf(DeeObject *self, char const *method_format, ...) {
 	int result;
 	va_list args;
 	va_start(args, method_format);
-	result = err_seq_vunsupportedf(self, method_format, args);
+	result = err_api_vunsupportedf("Sequence", self, method_format, args);
+	va_end(args);
+	return result;
+}
+
+PRIVATE ATTR_COLD NONNULL((1)) int
+err_set_unsupportedf(DeeObject *self, char const *method_format, ...) {
+	int result;
+	va_list args;
+	va_start(args, method_format);
+	result = err_api_vunsupportedf("Set", self, method_format, args);
+	va_end(args);
+	return result;
+}
+
+PRIVATE ATTR_COLD NONNULL((1)) int
+err_map_unsupportedf(DeeObject *self, char const *method_format, ...) {
+	int result;
+	va_list args;
+	va_start(args, method_format);
+	result = err_api_vunsupportedf("Mapping", self, method_format, args);
 	va_end(args);
 	return result;
 }
@@ -2767,6 +2836,26 @@ DeeSeq_DefaultClearWithTSCErase(DeeObject *self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultClearWithTSCRemoveAllForSet(DeeObject *self) {
+	return new_DeeSet_RemoveAll(self, self);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultClearWithTSCRemoveKeysForMap(DeeObject *self) {
+	int result;
+	DREF DeeObject *keys;
+	keys = DeeObject_GetAttrString(self, "keys"); /* TODO: new_DeeMap_GetKeys */
+	if unlikely(!keys)
+		goto err;
+	result = new_DeeMap_RemoveKeys(self, keys);
+	Dee_Decref(keys);
+	return result;
+err:
+	return -1;
+}
+
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DefaultClearWithError(DeeObject *self) {
 	return err_seq_unsupportedf(self, "clear()");
 }
@@ -4802,6 +4891,985 @@ DeeSeq_DefaultBLocateWithKeyWithError(DeeObject *self, DeeObject *item,
 
 
 /************************************************************************/
+/* For `deemon.Set'                                                     */
+/************************************************************************/
+
+
+
+
+
+
+/************************************************************************/
+/* Set.insert()                                                         */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultInsertWithError(DeeObject *self, DeeObject *key) {
+	return err_set_unsupportedf(self, "insert(%r)", key);
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Set.remove()                                                         */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultRemoveWithError(DeeObject *self, DeeObject *key) {
+	return err_set_unsupportedf(self, "remove(%r)", key);
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Set.unify()                                                         */
+/************************************************************************/
+struct set_unify_foreach_data {
+	DeeObject      *sufd_key;    /* [1..1] Key to find */
+	DREF DeeObject *sufd_result; /* [?..1] Matching duplicate */
+};
+
+#define SET_UNIFY_FOREACH_FOUND ((Dee_ssize_t)-2)
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+set_unify_foreach_cb(void *arg, DeeObject *key) {
+	int temp;
+	struct set_unify_foreach_data *data;
+	data = (struct set_unify_foreach_data *)arg;
+	temp = DeeObject_TryCompareEq(data->sufd_key, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0) {
+		Dee_Incref(key);
+		data->sufd_result = key;
+		return SET_UNIFY_FOREACH_FOUND;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultUnifyWithTSCInsertAndForeach(DeeObject *self, DeeObject *key) {
+	int status = new_DeeSet_Insert(self, key);
+	if unlikely(status < 0)
+		goto err;
+	if (!status) {
+		struct set_unify_foreach_data data;
+		Dee_ssize_t fe_status;
+		data.sufd_key = key;
+		DBG_memset(&data.sufd_result, 0xcc, sizeof(data.sufd_result));
+		fe_status = DeeObject_Foreach(self, &set_unify_foreach_cb, &data);
+		if likely(fe_status == SET_UNIFY_FOREACH_FOUND) {
+			ASSERT(DeeObject_Check(data.sufd_result));
+			return data.sufd_result; /* Inherit reference */
+		}
+		if unlikely(fe_status < 0)
+			goto err;
+	}
+	return_reference_(key);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultUnifyWithError(DeeObject *self, DeeObject *key) {
+	err_set_unsupportedf(self, "unify(%r)", key);
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Set.insertall()                                                      */
+/************************************************************************/
+#if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
+#define set_insertall_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)DeeType_SeqCache_RequireSetInsert(Dee_TYPE(self)))
+#else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+set_insertall_foreach_cb(void *arg, DeeObject *elem) {
+	return (Dee_ssize_t)new_DeeSet_Insert((DeeObject *)arg, elem);
+}
+#endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultInsertAllWithTSCInsert(DeeObject *self, DeeObject *keys) {
+	Dee_ssize_t status = DeeObject_Foreach(keys, &set_insertall_foreach_cb, self);
+	return likely(status >= 0) ? 0 : -1;
+}
+#undef set_insertall_foreach_cb
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultInsertAllWithError(DeeObject *self, DeeObject *keys) {
+	return err_set_unsupportedf(self, "insertall(%r)", keys);
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Set.removeall()                                                      */
+/************************************************************************/
+#if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
+#define set_removeall_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)DeeType_SeqCache_RequireSetRemove(Dee_TYPE(self)))
+#else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+set_removeall_foreach_cb(void *arg, DeeObject *elem) {
+	return (Dee_ssize_t)new_DeeSet_Remove((DeeObject *)arg, elem);
+}
+#endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultRemoveAllWithTSCRemove(DeeObject *self, DeeObject *keys) {
+	Dee_ssize_t status = DeeObject_Foreach(keys, &set_removeall_foreach_cb, self);
+	return likely(status >= 0) ? 0 : -1;
+}
+#undef set_removeall_foreach_cb
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultRemoveAllWithError(DeeObject *self, DeeObject *keys) {
+	return err_set_unsupportedf(self, "removeall(%r)", keys);
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Set.pop()                                                            */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultPopWithTSCFirstAndTSCRemove(DeeObject *self) {
+	DREF DeeObject *result = DeeSeq_GetFirst(self);
+	if unlikely(!result)
+		goto err;
+	if unlikely(new_DeeSet_Remove(self, result) < 0)
+		goto err_r;
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultPopWithError(DeeObject *self) {
+	err_set_unsupportedf(self, "pop()");
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Set.pop() (with default)                                             */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultPopWithDefaultWithTSCFirstAndTSCRemove(DeeObject *self, DeeObject *default_) {
+	DREF DeeObject *result = default_seq_trygetfirst(self);
+	if (result == ITER_DONE)
+		return_reference_(default_);
+	if unlikely(!result)
+		goto err;
+	if unlikely(new_DeeSet_Remove(self, result) < 0)
+		goto err_r;
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultPopWithDefaultWithError(DeeObject *self, DeeObject *default_) {
+	err_set_unsupportedf(self, "pop(%r)", default_);
+	return NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* For `deemon.Mapping'                                                 */
+/************************************************************************/
+
+
+
+
+
+
+/************************************************************************/
+/* Map.setold()                                                         */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetOldWithTSCSetOldEx(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value;
+	old_value = new_DeeMap_SetOldEx(self, key, value);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value == ITER_DONE)
+		return 0;
+	Dee_Decref(old_value);
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetOldWithBoundItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	int bound = DeeObject_BoundItem(self, key);
+	if (bound <= 0) {
+		if unlikely(bound == -1)
+			goto err;
+		return 0; /* Key doesn't exist */
+	}
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetOldWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value;
+	old_value = DeeObject_TryGetItem(self, key);
+	if (!ITER_ISOK(old_value)) {
+		if unlikely(!old_value)
+			goto err;
+		return 0; /* Key doesn't exist */
+	}
+	Dee_Decref(old_value);
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetOldWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value;
+	old_value = DeeObject_GetItem(self, key);
+	if (!old_value) {
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_UnboundItem))
+			return 0; /* Key doesn't exist */
+		goto err;
+	}
+	Dee_Decref(old_value);
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetOldWithError(DeeObject *self, DeeObject *key, DeeObject *value) {
+	return err_map_unsupportedf(self, "setold(%r, %r)", key, value);
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.setold_ex()                                                      */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetOldExWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value = DeeObject_TryGetItem(self, key);
+	if (ITER_ISOK(old_value)) {
+		if unlikely(DeeObject_SetItem(self, key, value))
+			goto err_old_value;
+	}
+	return old_value;
+err_old_value:
+	Dee_Decref(old_value);
+/*err:*/
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetOldExWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value = DeeObject_GetItem(self, key);
+	if unlikely(!old_value) {
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_UnboundItem))
+			return ITER_DONE; /* Key doesn't exist */
+		goto err;
+	}
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err_old_value;
+	return old_value;
+err_old_value:
+	Dee_Decref(old_value);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetOldExWithError(DeeObject *self, DeeObject *key, DeeObject *value) {
+	err_map_unsupportedf(self, "setold_ex(%r, %r)", key, value);
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.setnew()                                                         */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetNewWithTSCSetNewEx(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value;
+	old_value = new_DeeMap_SetNewEx(self, key, value);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value == ITER_DONE)
+		return 1;
+	Dee_Decref(old_value);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetNewWithBoundItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *temp;
+	int bound = DeeObject_BoundItem(self, key);
+	if unlikely(bound == -1)
+		goto err;
+	if (bound > 0)
+		return 0; /* Key already exists */
+	temp = new_DeeMap_SetDefault(self, key, value);
+	if unlikely(!temp)
+		goto err;
+	Dee_Decref(temp);
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetNewWithBoundItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	int bound = DeeObject_BoundItem(self, key);
+	if unlikely(bound == -1)
+		goto err;
+	if (bound > 0)
+		return 0; /* Key already exists */
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetNewWithTryGetItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *temp;
+	DREF DeeObject *bound = DeeObject_TryGetItem(self, key);
+	if (bound != ITER_DONE) {
+		if unlikely(!bound)
+			goto err;
+		Dee_Decref(bound);
+		return 0; /* Key already exists */
+	}
+	temp = new_DeeMap_SetDefault(self, key, value);
+	if unlikely(!temp)
+		goto err;
+	Dee_Decref(temp);
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetNewWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *bound = DeeObject_TryGetItem(self, key);
+	if (bound != ITER_DONE) {
+		if unlikely(!bound)
+			goto err;
+		Dee_Decref(bound);
+		return 0; /* Key already exists */
+	}
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetNewWithGetItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *temp;
+	DREF DeeObject *bound = DeeObject_GetItem(self, key);
+	if (bound) {
+		Dee_Decref(bound);
+		return 0; /* Key already exists */
+	} else {
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_UnboundItem)) {
+			/* Key doesn't exist */
+		} else {
+			goto err;
+		}
+	}
+	temp = new_DeeMap_SetDefault(self, key, value);
+	if unlikely(!temp)
+		goto err;
+	Dee_Decref(temp);
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetNewWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *bound = DeeObject_GetItem(self, key);
+	if (bound) {
+		Dee_Decref(bound);
+		return 0; /* Key already exists */
+	} else {
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_UnboundItem)) {
+			/* Key doesn't exist */
+		} else {
+			goto err;
+		}
+	}
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultSetNewWithError(DeeObject *self, DeeObject *key, DeeObject *value) {
+	return err_map_unsupportedf(self, "setnew(%r, %r)", key, value);
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.setnew_ex()                                                      */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetNewExWithTryGetItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *temp;
+	DREF DeeObject *old_value = DeeObject_TryGetItem(self, key);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value != ITER_DONE)
+		return old_value;
+	temp = new_DeeMap_SetDefault(self, key, value);
+	if unlikely(!temp)
+		goto err;
+	Dee_Decref(temp);
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetNewExWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value = DeeObject_TryGetItem(self, key);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value != ITER_DONE)
+		return old_value;
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetNewExWithGetItemAndTSCSetDefault(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *temp;
+	DREF DeeObject *old_value = DeeObject_GetItem(self, key);
+	if (old_value) {
+		return old_value;
+	} else {
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_UnboundItem)) {
+			/* Key doesn't exist */
+		} else {
+			goto err;
+		}
+	}
+	temp = new_DeeMap_SetDefault(self, key, value);
+	if unlikely(!temp)
+		goto err;
+	Dee_Decref(temp);
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetNewExWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value = DeeObject_GetItem(self, key);
+	if (old_value) {
+		return old_value;
+	} else {
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_UnboundItem)) {
+			/* Key doesn't exist */
+		} else {
+			goto err;
+		}
+	}
+	if unlikely(DeeObject_SetItem(self, key, value))
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetNewExWithError(DeeObject *self, DeeObject *key, DeeObject *value) {
+	err_map_unsupportedf(self, "setnew_ex(%r, %r)", key, value);
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.setdefault()                                                     */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetDefaultWithTSCSetNewEx(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value;
+	old_value = new_DeeMap_SetNewEx(self, key, value);
+	if (old_value == ITER_DONE) {
+		/* Value was just inserted */
+		old_value = value;
+		Dee_Incref(value);
+	}
+	return old_value;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetDefaultWithTSCSetNewAndGetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	int temp = new_DeeMap_SetNew(self, key, value);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp > 0)
+		return_reference_(value);
+	return DeeObject_GetItem(self, key);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetDefaultWithTryGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *result = DeeObject_TryGetItem(self, key);
+	if (result == ITER_DONE) {
+		int temp = new_DeeMap_SetNew(self, key, value);
+		if unlikely(temp < 0)
+			goto err;
+		if likely(temp) {
+			result = value;
+			Dee_Incref(value);
+		} else {
+			result = DeeObject_TryGetItem(self, key);
+			if unlikely(result == ITER_DONE) {
+				result = value;
+				Dee_Incref(value);
+			}
+		}
+	}
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetDefaultWithGetItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *result = DeeObject_GetItem(self, key);
+	if (!result) {
+		int temp;
+		if (!DeeError_Catch(&DeeError_KeyError) &&
+		    !DeeError_Catch(&DeeError_UnboundItem))
+			goto err;
+		temp = new_DeeMap_SetNew(self, key, value);
+		if unlikely(temp < 0)
+			goto err;
+		if likely(temp) {
+			result = value;
+			Dee_Incref(value);
+		} else {
+			result = DeeObject_TryGetItem(self, key);
+			if unlikely(result == ITER_DONE) {
+				result = value;
+				Dee_Incref(value);
+			}
+		}
+	}
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultSetDefaultWithError(DeeObject *self, DeeObject *key, DeeObject *value) {
+	err_map_unsupportedf(self, "setdefault(%r, %r)", key, value);
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.update()                                                         */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultUpdateWithInplaceAdd(DeeObject *self, DeeObject *items) {
+	int result;
+	Dee_Incref(self);
+	result = DeeObject_InplaceAdd(&self, items);
+	Dee_Decref(self);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultUpdateWithInplaceOr(DeeObject *self, DeeObject *items) {
+	int result;
+	Dee_Incref(self);
+	result = DeeObject_InplaceOr(&self, items);
+	Dee_Decref(self);
+	return result;
+}
+
+#if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
+#define map_update_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *, DeeObject *))(Dee_funptr_t)&DeeObject_SetItem)
+#else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+map_update_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
+	return (Dee_ssize_t)DeeObject_SetItem((DeeObject *)arg, key, value);
+}
+#endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultUpdateWithSetItem(DeeObject *self, DeeObject *items) {
+	return (int)DeeObject_ForeachPair(items, &map_update_foreach_cb, self);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultUpdateWithError(DeeObject *self, DeeObject *items) {
+	return err_map_unsupportedf(self, "update(%r)", items);
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.removekeys()                                                     */
+/************************************************************************/
+#if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
+#define map_removekeys_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)&DeeObject_DelItem)
+#else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+map_removekeys_foreach_cb(void *arg, DeeObject *key) {
+	return (Dee_ssize_t)DeeObject_DelItem((DeeObject *)arg, key);
+}
+#endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultRemoveKeysWithDelItem(DeeObject *self, DeeObject *keys) {
+	return (int)DeeObject_Foreach(keys, &map_removekeys_foreach_cb, self);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultRemoveKeysWithError(DeeObject *self, DeeObject *keys) {
+	return err_map_unsupportedf(self, "removekeys(%r)", keys);
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.pop()                                                            */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultPopWithGetItemAndDelItem(DeeObject *self, DeeObject *key) {
+	DREF DeeObject *result = DeeObject_GetItem(self, key);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeObject_DelItem(self, key))
+		goto err_r;
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultPopWithError(DeeObject *self, DeeObject *key) {
+	err_map_unsupportedf(self, "pop(%r)", key);
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.pop() (with default)                                             */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultPopWithDefaultWithTryGetItemAndDelItem(DeeObject *self, DeeObject *key, DeeObject *default_) {
+	DREF DeeObject *result;
+	result = DeeObject_TryGetItem(self, key);
+	if unlikely(!result)
+		goto err;
+	if (result == ITER_DONE)
+		return_reference_(default_);
+	if unlikely(DeeObject_DelItem(self, key))
+		goto err_r;
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeMap_DefaultPopWithDefaultWithError(DeeObject *self, DeeObject *key, DeeObject *default_) {
+	err_map_unsupportedf(self, "pop(%r, %r)", key, default_);
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.popitem()                                                        */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultPopItemWithTSCFirstAndDelItem(DeeObject *self) {
+	int temp;
+	DREF DeeObject *key_and_value[2];
+	DREF DeeObject *result = default_seq_trygetfirst(self);
+	if (result == ITER_DONE)
+		return_none;
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeObject_Unpack(result, 2, key_and_value))
+		goto err_r;
+	Dee_Decref(key_and_value[1]);
+	temp = DeeObject_DelItem(self, key_and_value[0]);
+	Dee_Decref(key_and_value[0]);
+	if unlikely(temp)
+		goto err_r;
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultPopItemWithError(DeeObject *self) {
+	err_map_unsupportedf(self, "popitem()");
+	return NULL;
+}
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.keys                                                             */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultKeysWithTSCIterKeys(DeeObject *self) {
+	/* TODO: Custom sequence type that invokes "Mapping.iterkeys(self)" to produce iterators */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultKeysWithIter(DeeObject *self) {
+	/* TODO: Custom sequence type akin to "map(e -> { local key, value = e...; return key; })" */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultKeysWithError(DeeObject *self) {
+	err_map_unsupportedf(self, "keys");
+	return NULL;
+}
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.values                                                           */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultValuesWithTSCIterValues(DeeObject *self) {
+	/* TODO: Custom sequence type that invokes "Mapping.itervalues(self)" to produce iterators */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultValuesWithIter(DeeObject *self) {
+	/* TODO: Custom sequence type akin to "map(e -> { local key, value = e...; return value; })" */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultValuesWithError(DeeObject *self) {
+	err_map_unsupportedf(self, "values");
+	return NULL;
+}
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.iterkeys                                                         */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultIterKeysWithTSCKeys(DeeObject *self) {
+	DREF DeeObject *result;
+	DREF DeeObject *keys = new_DeeMap_Keys(self);
+	if unlikely(!keys)
+		goto err;
+	result = DeeObject_Iter(keys);
+	Dee_Decref(keys);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultIterKeysWithError(DeeObject *self) {
+	err_map_unsupportedf(self, "iterkeys");
+	return NULL;
+}
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* Map.itervalues                                                       */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultIterValuesWithTSCValues(DeeObject *self) {
+	DREF DeeObject *result;
+	DREF DeeObject *values = new_DeeMap_Values(self);
+	if unlikely(!values)
+		goto err;
+	result = DeeObject_Iter(values);
+	Dee_Decref(values);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultIterValuesWithError(DeeObject *self) {
+	err_map_unsupportedf(self, "itervalues");
+	return NULL;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
 /* Deemon user-code wrappers                                            */
 /************************************************************************/
 
@@ -5753,6 +6821,258 @@ err:
 }
 
 
+/* Default set function pointers (including ones for mutable sets). */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set_insert(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int result;
+	DeeObject *key = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o:insert", &key))
+		goto err;
+	result = new_DeeSet_Insert(self, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set_remove(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int result;
+	DeeObject *key = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o:remove", &key))
+		goto err;
+	result = new_DeeSet_Remove(self, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set_insertall(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *keys = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o:insertall", &keys))
+		goto err;
+	if unlikely(new_DeeSet_InsertAll(self, keys))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set_removeall(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *keys = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o:removeall", &keys))
+		goto err;
+	if unlikely(new_DeeSet_RemoveAll(self, keys))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set_unify(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *key = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o:unify", &key))
+		goto err;
+	return new_DeeSet_Unify(self, key);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set_pop(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *def = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:pop", &def))
+		goto err;
+	return def ? new_DeeSet_PopWithDefault(self, def)
+	           : new_DeeSet_Pop(self);
+err:
+	return NULL;
+}
+
+
+
+/* Default map function pointers (including ones for mutable maps). */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+	DeeObject *key, *def = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
+		goto err;
+	result = DeeObject_TryGetItem(self, key);
+	if (result == ITER_DONE) {
+		Dee_Incref(def);
+		result = def;
+	}
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_setold(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int result;
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:setold", &key, &value))
+		goto err;
+	result = new_DeeMap_SetOld(self, key, value);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_setold_ex(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *key, *value;
+	DREF DeeObject *old_value;
+	DREF DeeTupleObject *result;
+	if (DeeArg_Unpack(argc, argv, "oo:setold_ex", &key, &value))
+		goto err;
+	old_value = new_DeeMap_SetOldEx(self, key, value);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value == ITER_DONE)
+		return_reference_((DeeObject *)&setold_failed_result);
+	result = DeeTuple_NewUninitialized(2);
+	if unlikely(!result)
+		goto err_old_value;
+	Dee_Incref(Dee_True);
+	DeeTuple_SET(result, 0, Dee_True);
+	DeeTuple_SET(result, 1, old_value); /* Inherit reference */
+	return (DREF DeeObject *)result;
+err_old_value:
+	Dee_Decref(old_value);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_setnew(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int result;
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:setnew", &key, &value))
+		goto err;
+	result = new_DeeMap_SetNew(self, key, value);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_setnew_ex(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *key, *value;
+	DREF DeeObject *old_value;
+	DREF DeeTupleObject *result;
+	if (DeeArg_Unpack(argc, argv, "oo:setnew_ex", &key, &value))
+		goto err;
+	old_value = new_DeeMap_SetNewEx(self, key, value);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value == ITER_DONE)
+		return_reference_((DeeObject *)&setnew_success_result);
+	result = DeeTuple_NewUninitialized(2);
+	if unlikely(!result)
+		goto err_old_value;
+	Dee_Incref(Dee_False);
+	DeeTuple_SET(result, 0, Dee_False);
+	DeeTuple_SET(result, 1, old_value); /* Inherit reference */
+	return (DREF DeeObject *)result;
+err_old_value:
+	Dee_Decref(old_value);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_setdefault(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:setdefault", &key, &value))
+		goto err;
+	return new_DeeMap_SetDefault(self, key, value);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_update(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *items;
+	if (DeeArg_Unpack(argc, argv, "o:update", &items))
+		goto err;
+	if unlikely(new_DeeMap_Update(self, items))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_removekeys(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *keys = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o:removekeys", &keys))
+		goto err;
+	if unlikely(new_DeeMap_RemoveKeys(self, keys))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_pop(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *key, *def = NULL;
+	if (DeeArg_Unpack(argc, argv, "o|o:pop", &key, &def))
+		goto err;
+	return likely(def) ? new_DeeMap_PopWithDefault(self, key, def)
+	                   : new_DeeMap_Pop(self, key);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_popitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":popitem"))
+		goto err;
+	return new_DeeMap_PopItem(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_keys(DeeObject *self) {
+	return new_DeeMap_Keys(self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_values(DeeObject *self) {
+	return new_DeeMap_Values(self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_iterkeys(DeeObject *self) {
+	return new_DeeMap_IterKeys(self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map_itervalues(DeeObject *self) {
+	return new_DeeMap_IterValues(self);
+}
+
+
+
+
 
 #if 0
 PRIVATE struct type_getset tpconst default_seq_getsets[] = {
@@ -5808,7 +7128,33 @@ PRIVATE struct type_method tpconst default_seq_methods[] = {
 	TYPE_KWMETHOD(STR_blocate, &default_seq_blocate, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"),
 	TYPE_METHOD_END
 };
+
+PRIVATE struct type_method tpconst default_set_methods[] = {
+	TYPE_METHOD(STR_insert, &default_set_insert, "(key)->?Dbool"),
+	TYPE_METHOD(STR_remove, &default_set_remove, "(key)->?Dbool"),
+	TYPE_METHOD(STR_insertall, &default_set_insertall, "(keys:?S?O)"),
+	TYPE_METHOD(STR_removeall, &default_set_removeall, "(keys:?S?O)"),
+	TYPE_METHOD(STR_unify, &default_set_unify, "(key)->"),
+	TYPE_METHOD(STR_pop, &default_set_pop, "(def?)->"),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method tpconst default_map_methods[] = {
+	TYPE_METHOD(STR_get, &default_map_get, "(key,def)->"),
+	TYPE_METHOD(STR_setold, &default_map_setold, "(key,value)->?Dbool"),
+	TYPE_METHOD(STR_setold_ex, &default_map_setold_ex, "(key,value)->?T2?Dbool?X2?O?N"),
+	TYPE_METHOD(STR_setnew, &default_map_setnew, "(key,value)->?Dbool"),
+	TYPE_METHOD(STR_setnew_ex, &default_map_setnew_ex, "(key,value)->?T2?Dbool?X2?O?N"),
+	TYPE_METHOD(STR_setdefault, &default_map_setdefault, "(key,value)->"),
+	TYPE_METHOD(STR_update, &default_map_update, "(items:?M?O?O)"),
+	TYPE_METHOD(STR_removekeys, &default_map_removekeys, "(keys:?S?O)"),
+	TYPE_METHOD(STR_pop, &default_map_pop, "(key,def?)->"),
+	TYPE_METHOD(STR_popitem, &default_map_popitem, "->?X2?T2?O?O?N"),
+	TYPE_METHOD_END
+};
 #endif
+
+
 
 DECL_END
 
@@ -5981,6 +7327,48 @@ DECL_END
 #define DEFINE_DeeType_SeqCache_RequireBLocate
 #include "default-api-methods-require-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBLocateWithKey
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireSetInsert
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireSetRemove
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireSetUnify
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireSetInsertAll
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireSetRemoveAll
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireSetPop
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireSetPopWithDefault
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapSetOld
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapSetOldEx
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapSetNew
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapSetNewEx
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapSetDefault
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapUpdate
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapRemoveKeys
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapPop
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapPopWithDefault
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapPopItem
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapKeys
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapValues
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapIterKeys
+#include "default-api-methods-require-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireMapIterValues
 #include "default-api-methods-require-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 

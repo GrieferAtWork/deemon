@@ -158,6 +158,20 @@ local STRINGS = {
 	"brange",
 	"blocate",
 
+	"unify",
+	"setold",
+	"setold_ex",
+	"setnew",
+	"setnew_ex",
+	"setdefault",
+	"update",
+	"removekeys",
+	"popitem",
+	"keys",
+	"values",
+	"iterkeys",
+	"itervalues",
+
 	"revert",
 	"advance",
 	"prev",
@@ -588,6 +602,45 @@ DEF_STRING(str_brange, "brange", 0xb132222e, 0xfed8bb16d0ac0dd2)
 #define Dee_HashStr__blocate _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e)
 DEF_STRING(str_blocate, "blocate", 0x7aa979d3, 0xbda91c237d69489e)
 #define STR_blocate DeeString_STR(&str_blocate)
+#define Dee_HashStr__unify _Dee_HashSelectC(0x3cce686e, 0x4c0c9bdcc8d95cc7)
+DEF_STRING(str_unify, "unify", 0x3cce686e, 0x4c0c9bdcc8d95cc7)
+#define STR_unify DeeString_STR(&str_unify)
+#define Dee_HashStr__setold _Dee_HashSelectC(0xb02a28d9, 0xe69353d27a45da0c)
+DEF_STRING(str_setold, "setold", 0xb02a28d9, 0xe69353d27a45da0c)
+#define STR_setold DeeString_STR(&str_setold)
+#define Dee_HashStr__setold_ex _Dee_HashSelectC(0xf8b4d68b, 0x73d8fdc770be1ae)
+DEF_STRING(str_setold_ex, "setold_ex", 0xf8b4d68b, 0x73d8fdc770be1ae)
+#define STR_setold_ex DeeString_STR(&str_setold_ex)
+#define Dee_HashStr__setnew _Dee_HashSelectC(0xb6040b2, 0xde8a8697e7aca93d)
+DEF_STRING(str_setnew, "setnew", 0xb6040b2, 0xde8a8697e7aca93d)
+#define STR_setnew DeeString_STR(&str_setnew)
+#define Dee_HashStr__setnew_ex _Dee_HashSelectC(0x3f694391, 0x104d84a2d9986bc5)
+DEF_STRING(str_setnew_ex, "setnew_ex", 0x3f694391, 0x104d84a2d9986bc5)
+#define STR_setnew_ex DeeString_STR(&str_setnew_ex)
+#define Dee_HashStr__setdefault _Dee_HashSelectC(0x947d5cce, 0x7cbcb4f64ace9cbc)
+DEF_STRING(str_setdefault, "setdefault", 0x947d5cce, 0x7cbcb4f64ace9cbc)
+#define STR_setdefault DeeString_STR(&str_setdefault)
+#define Dee_HashStr__update _Dee_HashSelectC(0xdf8e9237, 0x41c79529f2460018)
+DEF_STRING(str_update, "update", 0xdf8e9237, 0x41c79529f2460018)
+#define STR_update DeeString_STR(&str_update)
+#define Dee_HashStr__removekeys _Dee_HashSelectC(0x85b72988, 0xb92131e1a60492b4)
+DEF_STRING(str_removekeys, "removekeys", 0x85b72988, 0xb92131e1a60492b4)
+#define STR_removekeys DeeString_STR(&str_removekeys)
+#define Dee_HashStr__popitem _Dee_HashSelectC(0x40b249f3, 0x131a404a88439bc0)
+DEF_STRING(str_popitem, "popitem", 0x40b249f3, 0x131a404a88439bc0)
+#define STR_popitem DeeString_STR(&str_popitem)
+#define Dee_HashStr__keys _Dee_HashSelectC(0x97e36be1, 0x654d31bc4825131c)
+DEF_STRING(str_keys, "keys", 0x97e36be1, 0x654d31bc4825131c)
+#define STR_keys DeeString_STR(&str_keys)
+#define Dee_HashStr__values _Dee_HashSelectC(0x33b551c8, 0xf6e3e991b86d1574)
+DEF_STRING(str_values, "values", 0x33b551c8, 0xf6e3e991b86d1574)
+#define STR_values DeeString_STR(&str_values)
+#define Dee_HashStr__iterkeys _Dee_HashSelectC(0x62bd6adc, 0x535ac8ab28094ab3)
+DEF_STRING(str_iterkeys, "iterkeys", 0x62bd6adc, 0x535ac8ab28094ab3)
+#define STR_iterkeys DeeString_STR(&str_iterkeys)
+#define Dee_HashStr__itervalues _Dee_HashSelectC(0xcb00bab3, 0xe9a89082a994930a)
+DEF_STRING(str_itervalues, "itervalues", 0xcb00bab3, 0xe9a89082a994930a)
+#define STR_itervalues DeeString_STR(&str_itervalues)
 #define Dee_HashStr__revert _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2)
 DEF_STRING(str_revert, "revert", 0x98ca826, 0x626b4fca0d39dcf2)
 #define STR_revert DeeString_STR(&str_revert)

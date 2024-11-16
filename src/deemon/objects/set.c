@@ -39,6 +39,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/default-api.h"
 
 DECL_BEGIN
 
@@ -753,6 +754,29 @@ INTERN_TPCONST struct type_method tpconst set_methods[] = {
 	TYPE_METHOD("issuperset", &set_issuperset,
 	            "(of:?.)->?Dbool\n"
 	            "Same as ${this.operator >= (of)}"),
+
+	/* Default functions for mutable sets */
+	TYPE_METHOD(STR_insert, &default_set_insert,
+	            "(key)->?Dbool\n"
+	            "Insert @key into @this set, returning !t if it was inserted and !f if it was already present"),
+	TYPE_METHOD(STR_remove, &default_set_remove,
+	            "(key)->?Dbool\n"
+	            "Remove @key from @this set, returning !t if it was removed and !f if it wasn't present"),
+	TYPE_METHOD(STR_insertall, &default_set_insertall,
+	            "(keys:?S?O)\n"
+	            "Insert all elements from @keys into @this set"),
+	TYPE_METHOD(STR_removeall, &default_set_removeall,
+	            "(keys:?S?O)\n"
+	            "Remove all elements from @keys from @this set"),
+	TYPE_METHOD(STR_unify, &default_set_unify,
+	            "(key)->\n"
+	            "Insert @key into @this set if it wasn't contained already, and "
+	            /**/ "return the (potential) copy of @key that is part of the set"),
+	TYPE_METHOD(STR_pop, &default_set_pop,
+	            "(def?)->\n"
+	            "#tValueError{Set is empty and no @def was given}\n"
+	            "Remove and return some random key from @this set. "
+	            /**/ "If the set is empty, return @def or throw :ValueError"),
 	TYPE_METHOD_END
 };
 
@@ -764,13 +788,7 @@ INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
 	            /**/ "constructing a snapshot of the set's current elements. - The actual type of "
 	            /**/ "set returned is implementation- and type- specific, and copying itself may "
 	            /**/ "either be done immediately, or as copy-on-write"),
-	/* TODO: "asseq->?DSequence"
-	 * Returns a wrapper for @this ?. that behaves just like a regular sequence,
-	 * supporting index-based item lookup and the like (though this sort of lookup
-	 * will be rather slow, as it will enumerate elements of @this underlying ?.
-	 * every time an item is accessed). Note however that the resulting ?DSequence's
-	 * ${operator iter} simply produces an iterator that wraps around @this ?.'s, so
-	 * enumeration is just as fast as enumeration on the actual ?.. */
+	/* TODO: "asseq->?DSequence"  -- alias for `this as Sequence' */
 	TYPE_GETSET_END
 };
 

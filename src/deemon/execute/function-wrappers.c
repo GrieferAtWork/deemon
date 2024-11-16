@@ -1170,11 +1170,10 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 funcsymbolsbyname_nsi_setdefault(FunctionSymbolsByName *self,
                                  DeeObject *key, DeeObject *defl) {
 	DREF DeeObject *result;
-	DeeFunctionObject *func;
+	DeeFunctionObject *func = self->fsbn_func;
 	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
 	if unlikely(rid == (uint16_t)-1)
 		goto err;
-	func = self->fsbn_func;
 	DeeFunction_RefLockRead(func);
 	result = func->fo_refv[rid];
 	if (ITER_ISOK(result)) {
@@ -1258,9 +1257,8 @@ funcsymbolsbyname_nsi_insertnew(FunctionSymbolsByName *self,
                                 DeeObject *key, DeeObject *value,
                                 DREF DeeObject **p_oldvalue) {
 	DREF DeeObject *oldvalue;
-	DeeFunctionObject *func;
+	DeeFunctionObject *func = self->fsbn_func;
 	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	func = self->fsbn_func;
 	if unlikely(rid == (uint16_t)-1)
 		goto err;
 	DeeFunction_RefLockWrite(func);
@@ -1352,9 +1350,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 funcsymbolsbyname_getitem(FunctionSymbolsByName *self,
                           DeeObject *key) {
 	DREF DeeObject *result;
-	DeeFunctionObject *func;
+	DeeFunctionObject *func = self->fsbn_func;
 	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	func = self->fsbn_func;
 	if unlikely(rid == (uint16_t)-1)
 		goto err;
 	DeeFunction_RefLockRead(func);
@@ -1375,9 +1372,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 funcsymbolsbyname_delitem(FunctionSymbolsByName *self,
                           DeeObject *key) {
 	DREF DeeObject *oldvalue;
-	DeeFunctionObject *func;
+	DeeFunctionObject *func = self->fsbn_func;
 	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	func = self->fsbn_func;
 	if unlikely(rid == (uint16_t)-1)
 		goto err;
 	if unlikely(rid < func->fo_code->co_refc)
@@ -1402,9 +1398,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 funcsymbolsbyname_setitem(FunctionSymbolsByName *self,
                           DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
-	DeeFunctionObject *func;
+	DeeFunctionObject *func = self->fsbn_func;
 	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	func = self->fsbn_func;
 	if unlikely(rid == (uint16_t)-1)
 		goto err;
 	if unlikely(rid < func->fo_code->co_refc)

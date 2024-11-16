@@ -35,20 +35,27 @@ DECL_BEGIN
 #endif /* DEFINE_DeeSeq_Default... */
 
 #ifdef DEFINE_DeeSeq_DefaultFooWithCallAttrFoo
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar)     PP_CAT4(DeeSeq_Default, Foo, WithCallAttr, Bar)
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(Foo, Bar, x) PP_CAT5(DeeSeq_Default, Foo, WithCallAttr, Bar, x)
+#define LOCAL_DeeApi_DefaultFooWithCallAttrBar(DeeApi_Default, Foo, Bar)     PP_CAT4(DeeApi_Default, Foo, WithCallAttr, Bar)
+#define LOCAL_DeeApi_DefaultFooWithCallAttrBar_(DeeApi_Default, Foo, Bar, x) PP_CAT5(DeeApi_Default, Foo, WithCallAttr, Bar, x)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataFunction)
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar)     PP_CAT5(DeeSeq_Default, Foo, WithCall, Bar, DataFunction)
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(Foo, Bar, x) PP_CAT6(DeeSeq_Default, Foo, WithCall, Bar, DataFunction, x)
+#define LOCAL_DeeApi_DefaultFooWithCallAttrBar(DeeApi_Default, Foo, Bar)     PP_CAT5(DeeApi_Default, Foo, WithCall, Bar, DataFunction)
+#define LOCAL_DeeApi_DefaultFooWithCallAttrBar_(DeeApi_Default, Foo, Bar, x) PP_CAT6(DeeApi_Default, Foo, WithCall, Bar, DataFunction, x)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataMethod)
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar)     PP_CAT5(DeeSeq_Default, Foo, WithCall, Bar, DataMethod)
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(Foo, Bar, x) PP_CAT6(DeeSeq_Default, Foo, WithCall, Bar, DataMethod, x)
+#define LOCAL_DeeApi_DefaultFooWithCallAttrBar(DeeApi_Default, Foo, Bar)     PP_CAT5(DeeApi_Default, Foo, WithCall, Bar, DataMethod)
+#define LOCAL_DeeApi_DefaultFooWithCallAttrBar_(DeeApi_Default, Foo, Bar, x) PP_CAT6(DeeApi_Default, Foo, WithCall, Bar, DataMethod, x)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataKwMethod)
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar)     PP_CAT5(DeeSeq_Default, Foo, WithCall, Bar, DataKwMethod)
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(Foo, Bar, x) PP_CAT6(DeeSeq_Default, Foo, WithCall, Bar, DataKwMethod, x)
+#define LOCAL_DeeApi_DefaultFooWithCallAttrBar(DeeApi_Default, Foo, Bar)     PP_CAT5(DeeApi_Default, Foo, WithCall, Bar, DataKwMethod)
+#define LOCAL_DeeApi_DefaultFooWithCallAttrBar_(DeeApi_Default, Foo, Bar, x) PP_CAT6(DeeApi_Default, Foo, WithCall, Bar, DataKwMethod, x)
 #else /* DEFINE_DeeSeq_Default... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeSeq_Default... */
+
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Foo, Bar)     LOCAL_DeeApi_DefaultFooWithCallAttrBar(DeeSeq_Default, Foo, Bar)
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(Foo, Bar, x) LOCAL_DeeApi_DefaultFooWithCallAttrBar_(DeeSeq_Default, Foo, Bar, x)
+#define LOCAL_DeeSet_DefaultFooWithCallAttrBar(Foo, Bar)     LOCAL_DeeApi_DefaultFooWithCallAttrBar(DeeSet_Default, Foo, Bar)
+#define LOCAL_DeeSet_DefaultFooWithCallAttrBar_(Foo, Bar, x) LOCAL_DeeApi_DefaultFooWithCallAttrBar_(DeeSet_Default, Foo, Bar, x)
+#define LOCAL_DeeMap_DefaultFooWithCallAttrBar(Foo, Bar)     LOCAL_DeeApi_DefaultFooWithCallAttrBar(DeeMap_Default, Foo, Bar)
+#define LOCAL_DeeMap_DefaultFooWithCallAttrBar_(Foo, Bar, x) LOCAL_DeeApi_DefaultFooWithCallAttrBar_(DeeMap_Default, Foo, Bar, x)
 
 #define LOCAL_DeeSeq_DefaultAnyWithCallAttrAny                                 LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Any, Any)
 #define LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSeq                    LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(AnyWithKey, Any, ForSeq)
@@ -146,6 +153,27 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultBRangeWithKeyWithCallAttrBRange                    LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BRangeWithKey, BRange)
 #define LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate                         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BLocate, BLocate)
 #define LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate                  LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BLocateWithKey, BLocate)
+#define LOCAL_DeeSet_DefaultInsertWithCallAttrInsert                           LOCAL_DeeSet_DefaultFooWithCallAttrBar(Insert, Insert)
+#define LOCAL_DeeSet_DefaultRemoveWithCallAttrRemove                           LOCAL_DeeSet_DefaultFooWithCallAttrBar(Remove, Remove)
+#define LOCAL_DeeSet_DefaultUnifyWithCallAttrUnify                             LOCAL_DeeSet_DefaultFooWithCallAttrBar(Unify, Unify)
+#define LOCAL_DeeSet_DefaultInsertAllWithCallAttrInsertAll                     LOCAL_DeeSet_DefaultFooWithCallAttrBar(InsertAll, InsertAll)
+#define LOCAL_DeeSet_DefaultRemoveAllWithCallAttrRemoveAll                     LOCAL_DeeSet_DefaultFooWithCallAttrBar(RemoveAll, RemoveAll)
+#define LOCAL_DeeSet_DefaultPopWithCallAttrPop                                 LOCAL_DeeSet_DefaultFooWithCallAttrBar(Pop, Pop)
+#define LOCAL_DeeSet_DefaultPopWithDefaultWithCallAttrPop                      LOCAL_DeeSet_DefaultFooWithCallAttrBar(PopWithDefault, Pop)
+#define LOCAL_DeeMap_DefaultSetOldWithCallAttrSetOld                           LOCAL_DeeMap_DefaultFooWithCallAttrBar(SetOld, SetOld)
+#define LOCAL_DeeMap_DefaultSetOldExWithCallAttrSetOldEx                       LOCAL_DeeMap_DefaultFooWithCallAttrBar(SetOldEx, SetOldEx)
+#define LOCAL_DeeMap_DefaultSetNewWithCallAttrSetNew                           LOCAL_DeeMap_DefaultFooWithCallAttrBar(SetNew, SetNew)
+#define LOCAL_DeeMap_DefaultSetNewExWithCallAttrSetNewEx                       LOCAL_DeeMap_DefaultFooWithCallAttrBar(SetNewEx, SetNewEx)
+#define LOCAL_DeeMap_DefaultSetDefaultWithCallAttrSetDefault                   LOCAL_DeeMap_DefaultFooWithCallAttrBar(SetDefault, SetDefault)
+#define LOCAL_DeeMap_DefaultUpdateWithCallAttrUpdate                           LOCAL_DeeMap_DefaultFooWithCallAttrBar(Update, Update)
+#define LOCAL_DeeMap_DefaultRemoveKeysWithCallAttrRemoveKeys                   LOCAL_DeeMap_DefaultFooWithCallAttrBar(RemoveKeys, RemoveKeys)
+#define LOCAL_DeeMap_DefaultPopWithCallAttrPop                                 LOCAL_DeeMap_DefaultFooWithCallAttrBar(Pop, Pop)
+#define LOCAL_DeeMap_DefaultPopWithDefaultWithCallAttrPop                      LOCAL_DeeMap_DefaultFooWithCallAttrBar(PopWithDefault, Pop)
+#define LOCAL_DeeMap_DefaultPopItemWithCallAttrPopItem                         LOCAL_DeeMap_DefaultFooWithCallAttrBar(PopItem, PopItem)
+#define LOCAL_DeeMap_DefaultKeysWithCallAttrKeys                               LOCAL_DeeMap_DefaultFooWithCallAttrBar(Keys, Keys)
+#define LOCAL_DeeMap_DefaultValuesWithCallAttrValues                           LOCAL_DeeMap_DefaultFooWithCallAttrBar(Values, Values)
+#define LOCAL_DeeMap_DefaultIterKeysWithCallAttrIterKeys                       LOCAL_DeeMap_DefaultFooWithCallAttrBar(IterKeys, IterKeys)
+#define LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues                   LOCAL_DeeMap_DefaultFooWithCallAttrBar(IterValues, IterValues)
 
 
 
@@ -1284,6 +1312,229 @@ LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate(DeeObject *self, DeeObject
 }
 
 
+
+/************************************************************************/
+/* For `deemon.Set'                                                     */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeSet_DefaultInsertWithCallAttrInsert(DeeObject *self, DeeObject *key) {
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_set_insert_data, &str_insert, 1, &key);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeSet_DefaultRemoveWithCallAttrRemove(DeeObject *self, DeeObject *key) {
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_set_remove_data, &str_remove, 1, &key);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_DeeSet_DefaultUnifyWithCallAttrUnify(DeeObject *self, DeeObject *key) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_set_unify_data, &str_unify, 1, &key);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeSet_DefaultInsertAllWithCallAttrInsertAll(DeeObject *self, DeeObject *keys) {
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_set_insertall_data, &str_insertall, 1, &keys);
+	if unlikely(!result)
+		goto err;
+	Dee_Decref(result);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeSet_DefaultRemoveAllWithCallAttrRemoveAll(DeeObject *self, DeeObject *keys) {
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_set_removeall_data, &str_removeall, 1, &keys);
+	if unlikely(!result)
+		goto err;
+	Dee_Decref(result);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeSet_DefaultPopWithCallAttrPop(DeeObject *self) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_set_pop_data, &str_pop, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_DeeSet_DefaultPopWithDefaultWithCallAttrPop(DeeObject *self, DeeObject *default_) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_set_pop_data, &str_pop, 1, &default_);
+}
+
+
+
+/************************************************************************/
+/* For `deemon.Mapping'                                                 */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+LOCAL_DeeMap_DefaultSetOldWithCallAttrSetOld(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *result;
+	DeeObject *args[2];
+	args[0] = key;
+	args[1] = value;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_map_setold_data, &str_setold, 2, args);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultSetOldExWithCallAttrSetOldEx(DeeObject *self, DeeObject *key, DeeObject *value) {
+	int temp;
+	DeeObject *args[2];
+	DREF DeeObject *result, *status[2];
+	args[0] = key;
+	args[1] = value;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_map_setold_ex_data, &str_setold_ex, 2, args);
+	if unlikely(!result)
+		goto err;
+	temp = DeeObject_Unpack(result, 2, status);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto err;
+	temp = DeeObject_BoolInherited(status[0]);
+	if unlikely(temp < 0)
+		goto err_status1;
+	if (temp)
+		return status[1];
+	Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+	return ITER_DONE;
+err_status1:
+	Dee_Decref(status[1]);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+LOCAL_DeeMap_DefaultSetNewWithCallAttrSetNew(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *result;
+	DeeObject *args[2];
+	args[0] = key;
+	args[1] = value;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_map_setnew_data, &str_setnew, 2, args);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultSetNewExWithCallAttrSetNewEx(DeeObject *self, DeeObject *key, DeeObject *value) {
+	int temp;
+	DeeObject *args[2];
+	DREF DeeObject *result, *status[2];
+	args[0] = key;
+	args[1] = value;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_map_setnew_ex_data, &str_setnew_ex, 2, args);
+	if unlikely(!result)
+		goto err;
+	temp = DeeObject_Unpack(result, 2, status);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto err;
+	temp = DeeObject_BoolInherited(status[0]);
+	if unlikely(temp < 0)
+		goto err_status1;
+	if (temp) {
+		Dee_Decref_unlikely(status[1]); /* Should always be `Dee_None' */
+		return ITER_DONE;
+	}
+	return status[1];
+err_status1:
+	Dee_Decref(status[1]);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultSetDefaultWithCallAttrSetDefault(DeeObject *self, DeeObject *key, DeeObject *value) {
+	DeeObject *args[2];
+	args[0] = key;
+	args[1] = value;
+	return LOCAL_DeeObject_CallAttr(self, tsc_map_setdefault_data, &str_setdefault, 2, args);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeMap_DefaultUpdateWithCallAttrUpdate(DeeObject *self, DeeObject *items) {
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_map_update_data, &str_update, 1, &items);
+	if unlikely(!result)
+		goto err;
+	Dee_Decref(result);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeMap_DefaultRemoveKeysWithCallAttrRemoveKeys(DeeObject *self, DeeObject *keys) {
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_map_removekeys_data, &str_removekeys, 1, &keys);
+	if unlikely(!result)
+		goto err;
+	Dee_Decref(result);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultPopWithCallAttrPop(DeeObject *self, DeeObject *key) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_map_pop_data, &str_pop, 1, &key);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultPopWithDefaultWithCallAttrPop(DeeObject *self, DeeObject *key, DeeObject *default_) {
+	DeeObject *args[2];
+	args[0] = key;
+	args[1] = default_;
+	return LOCAL_DeeObject_CallAttr(self, tsc_map_pop_data, &str_pop, 2, args);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultPopItemWithCallAttrPopItem(DeeObject *self) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_map_popitem_data, &str_popitem, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultKeysWithCallAttrKeys(DeeObject *self) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_map_keys_data, &str_keys, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultValuesWithCallAttrValues(DeeObject *self) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_map_values_data, &str_values, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultIterKeysWithCallAttrIterKeys(DeeObject *self) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_map_iterkeys_data, &str_iterkeys, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self) {
+	return LOCAL_DeeObject_CallAttr(self, tsc_map_itervalues_data, &str_itervalues, 0, NULL);
+}
+
 #undef LOCAL_DeeObject_CallAttr
 #undef LOCAL_DeeObject_CallAttrf
 
@@ -1382,9 +1633,36 @@ LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate(DeeObject *self, DeeObject
 #undef LOCAL_DeeSeq_DefaultBRangeWithKeyWithCallAttrBRange
 #undef LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate
 #undef LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate
+#undef LOCAL_DeeSet_DefaultInsertWithCallAttrInsert
+#undef LOCAL_DeeSet_DefaultRemoveWithCallAttrRemove
+#undef LOCAL_DeeSet_DefaultUnifyWithCallAttrUnify
+#undef LOCAL_DeeSet_DefaultInsertAllWithCallAttrInsertAll
+#undef LOCAL_DeeSet_DefaultRemoveAllWithCallAttrRemoveAll
+#undef LOCAL_DeeSet_DefaultPopWithCallAttrPop
+#undef LOCAL_DeeSet_DefaultPopWithDefaultWithCallAttrPop
+#undef LOCAL_DeeMap_DefaultSetOldWithCallAttrSetOld
+#undef LOCAL_DeeMap_DefaultSetOldExWithCallAttrSetOldEx
+#undef LOCAL_DeeMap_DefaultSetNewWithCallAttrSetNew
+#undef LOCAL_DeeMap_DefaultSetNewExWithCallAttrSetNewEx
+#undef LOCAL_DeeMap_DefaultSetDefaultWithCallAttrSetDefault
+#undef LOCAL_DeeMap_DefaultUpdateWithCallAttrUpdate
+#undef LOCAL_DeeMap_DefaultRemoveKeysWithCallAttrRemoveKeys
+#undef LOCAL_DeeMap_DefaultPopWithCallAttrPop
+#undef LOCAL_DeeMap_DefaultPopWithDefaultWithCallAttrPop
+#undef LOCAL_DeeMap_DefaultPopItemWithCallAttrPopItem
+#undef LOCAL_DeeMap_DefaultKeysWithCallAttrKeys
+#undef LOCAL_DeeMap_DefaultValuesWithCallAttrValues
+#undef LOCAL_DeeMap_DefaultIterKeysWithCallAttrIterKeys
+#undef LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues
 
+#undef LOCAL_DeeApi_DefaultFooWithCallAttrBar
+#undef LOCAL_DeeApi_DefaultFooWithCallAttrBar_
 #undef LOCAL_DeeSeq_DefaultFooWithCallAttrBar
 #undef LOCAL_DeeSeq_DefaultFooWithCallAttrBar_
+#undef LOCAL_DeeSet_DefaultFooWithCallAttrBar
+#undef LOCAL_DeeSet_DefaultFooWithCallAttrBar_
+#undef LOCAL_DeeMap_DefaultFooWithCallAttrBar
+#undef LOCAL_DeeMap_DefaultFooWithCallAttrBar_
 
 DECL_END
 

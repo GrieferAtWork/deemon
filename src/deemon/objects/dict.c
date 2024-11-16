@@ -2789,9 +2789,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_setdefault(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value = Dee_None, *old_value;
+	DeeObject *key, *value, *old_value;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "o|o:setdefault", &key, &value))
+	if (DeeArg_Unpack(argc, argv, "oo:setdefault", &key, &value))
 		goto err;
 	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, &old_value);
 	if unlikely(error < 0)
@@ -2915,7 +2915,6 @@ err:
 
 DOC_REF(map_get_doc);
 DOC_REF(map_pop_doc);
-DOC_REF(map_clear_doc);
 DOC_REF(map_popitem_doc);
 DOC_REF(map_setdefault_doc);
 DOC_REF(map_setold_doc);
@@ -2928,7 +2927,9 @@ DOC_REF(map_byhash_doc);
 PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD_F(STR_get, &dict_get, METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
 	TYPE_METHOD_F(STR_pop, &dict_pop, METHOD_FNOREFESCAPE, DOC_GET(map_pop_doc)),
-	TYPE_METHOD_F(STR_clear, &dict_doclear, METHOD_FNOREFESCAPE, DOC_GET(map_clear_doc)),
+	TYPE_METHOD_F(STR_clear, &dict_doclear, METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Clear all values from @this ?."),
 	TYPE_METHOD_F("popitem", &dict_popsomething, METHOD_FNOREFESCAPE, DOC_GET(map_popitem_doc)),
 	TYPE_METHOD_F("setdefault", &dict_setdefault, METHOD_FNOREFESCAPE, DOC_GET(map_setdefault_doc)),
 	TYPE_METHOD_F("setold", &dict_setold, METHOD_FNOREFESCAPE, DOC_GET(map_setold_doc)),

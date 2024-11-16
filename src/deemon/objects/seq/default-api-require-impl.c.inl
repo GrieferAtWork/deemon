@@ -19,9 +19,9 @@
  */
 #ifdef __INTELLISENSE__
 #include "default-api.c"
-#define DEFINE_DeeType_SeqCache_RequireGetX
+//#define DEFINE_DeeType_SeqCache_RequireGetX
 //#define DEFINE_DeeType_SeqCache_RequireBoundX
-//#define DEFINE_DeeType_SeqCache_RequireDelX
+#define DEFINE_DeeType_SeqCache_RequireDelX
 //#define DEFINE_DeeType_SeqCache_RequireSetX
 #endif /* __INTELLISENSE__ */
 
@@ -141,7 +141,9 @@ LOCAL_DeeType_SeqCache_RequireXFirst(DeeTypeObject *__restrict self) {
 		if likely(sc && sc->LOCAL_tsc_Xfirst)
 			return sc->LOCAL_tsc_Xfirst;
 	}
-	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
+	switch (DeeType_GetSeqClass(self)) {
+
+	case Dee_SEQCLASS_SEQ: {
 		struct Dee_type_seq_cache *sc;
 		LOCAL_Dee_tsc_Xfirst_t result = &LOCAL_DeeSeq_DefaultXFirstWithForeachDefault;
 		struct Dee_attrinfo attr;
@@ -172,6 +174,21 @@ detect_for_sequence_type:
 		if likely(sc)
 			atomic_write(&sc->LOCAL_tsc_Xfirst, result);
 		return result;
+	}	break;
+
+#ifdef DEFINE_DeeType_SeqCache_RequireDelX
+	case Dee_SEQCLASS_SET:
+		if (DeeType_SeqCache_RequireSetRemove(self) != &DeeSet_DefaultRemoveWithError)
+			return &DeeSeq_DefaultDelFirstWithTSCRemoveForSet;
+		break;
+
+	case Dee_SEQCLASS_MAP:
+		if (DeeType_HasOperator(self, OPERATOR_DELITEM))
+			return &DeeSeq_DefaultDelFirstWithDelItemForMap;
+		break;
+#endif /* DEFINE_DeeType_SeqCache_RequireDelX */
+
+	default: break;
 	}
 	return &LOCAL_DeeSeq_DefaultXFirstWithForeachDefault;
 }
@@ -185,7 +202,9 @@ LOCAL_DeeType_SeqCache_RequireXLast(DeeTypeObject *__restrict self) {
 		if likely(sc && sc->LOCAL_tsc_Xlast)
 			return sc->LOCAL_tsc_Xlast;
 	}
-	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
+	switch (DeeType_GetSeqClass(self)) {
+
+	case Dee_SEQCLASS_SEQ: {
 		struct Dee_type_seq_cache *sc;
 		LOCAL_Dee_tsc_Xlast_t result = &LOCAL_DeeSeq_DefaultXLastWithForeachDefault;
 		struct Dee_attrinfo attr;
@@ -226,6 +245,21 @@ detect_for_sequence_type:
 		if likely(sc)
 			atomic_write(&sc->LOCAL_tsc_Xlast, result);
 		return result;
+	}	break;
+
+#ifdef DEFINE_DeeType_SeqCache_RequireDelX
+	case Dee_SEQCLASS_SET:
+		if (DeeType_SeqCache_RequireSetRemove(self) != &DeeSet_DefaultRemoveWithError)
+			return &DeeSeq_DefaultDelLastWithTSCRemoveForSet;
+		break;
+
+	case Dee_SEQCLASS_MAP:
+		if (DeeType_HasOperator(self, OPERATOR_DELITEM))
+			return &DeeSeq_DefaultDelLastWithDelItemForMap;
+		break;
+#endif /* DEFINE_DeeType_SeqCache_RequireDelX */
+
+	default: break;
 	}
 	return &LOCAL_DeeSeq_DefaultXLastWithForeachDefault;
 }
