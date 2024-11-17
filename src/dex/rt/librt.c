@@ -91,11 +91,14 @@ DECL_BEGIN
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("Attribute");
 print define_Dee_HashStr("AttributeTable");
-print define_Dee_HashStr("Items");
 print define_Dee_HashStr("ObjectTable");
 print define_Dee_HashStr("OperatorTable");
+print "#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS";
 print define_Dee_HashStr("Proxy");
+print define_Dee_HashStr("Keys");
+print define_Dee_HashStr("Items");
 print define_Dee_HashStr("Values");
+print "#endif /" "* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS *" "/";
 print define_Dee_HashStr("__args__");
 print define_Dee_HashStr("__bases__");
 print define_Dee_HashStr("__exports__");
@@ -146,7 +149,8 @@ print define_Dee_HashStr("__SeqWithSizeAndTryGetItemIndex__");
 print define_Dee_HashStr("__SeqWithSizeAndGetItem__");
 print define_Dee_HashStr("__SeqWithTSizeAndGetItem__");
 print define_Dee_HashStr("__SeqWithIter__");
-print define_Dee_HashStr("__SeqWithTIter__");
+print define_Dee_HashStr("__SeqWithIterAndLimit__");
+print define_Dee_HashStr("__SeqWithTIterAndLimit__");
 print define_Dee_HashStr("__IterWithGetItemIndex__");
 print define_Dee_HashStr("__IterWithGetItemIndexPair__");
 print define_Dee_HashStr("__IterWithSizeAndGetItemIndex__");
@@ -185,11 +189,14 @@ print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
 ]]]*/
 #define Dee_HashStr__Attribute _Dee_HashSelectC(0xa08b731, 0x2e763a5308721ff3)
 #define Dee_HashStr__AttributeTable _Dee_HashSelectC(0xb3fdb6eb, 0x2abf3f78af71dee0)
-#define Dee_HashStr__Items _Dee_HashSelectC(0x58117411, 0x947064e89df3b8bd)
 #define Dee_HashStr__ObjectTable _Dee_HashSelectC(0xc5d943d2, 0x8cda148232a1cdb2)
 #define Dee_HashStr__OperatorTable _Dee_HashSelectC(0xee6c4bef, 0x7987fd5ae34b3d62)
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 #define Dee_HashStr__Proxy _Dee_HashSelectC(0x1e08cc78, 0x57cf9ad5a4dae6)
+#define Dee_HashStr__Keys _Dee_HashSelectC(0x276b259c, 0xaec3c5ef66bfaf3f)
+#define Dee_HashStr__Items _Dee_HashSelectC(0x58117411, 0x947064e89df3b8bd)
 #define Dee_HashStr__Values _Dee_HashSelectC(0x47fcf975, 0x323bdee84d34e652)
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 #define Dee_HashStr____args__ _Dee_HashSelectC(0x938e1f4c, 0x78969e2a67f8471d)
 #define Dee_HashStr____bases__ _Dee_HashSelectC(0xff4ac0d2, 0x56bdc053fa64e4c9)
 #define Dee_HashStr____exports__ _Dee_HashSelectC(0x1d7df2db, 0x304ed10433cd0d26)
@@ -240,7 +247,8 @@ print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
 #define Dee_HashStr____SeqWithSizeAndGetItem__ _Dee_HashSelectC(0xfa49fc79, 0x6e354bcc18f1e0cd)
 #define Dee_HashStr____SeqWithTSizeAndGetItem__ _Dee_HashSelectC(0x60d118f1, 0xb02ea1d8f0b56f81)
 #define Dee_HashStr____SeqWithIter__ _Dee_HashSelectC(0x337ea2df, 0xb25329aebe2c9945)
-#define Dee_HashStr____SeqWithTIter__ _Dee_HashSelectC(0xdca105d2, 0x4d0ba4e75bfbeab6)
+#define Dee_HashStr____SeqWithIterAndLimit__ _Dee_HashSelectC(0x119eb154, 0xfd304a9c1f089e34)
+#define Dee_HashStr____SeqWithTIterAndLimit__ _Dee_HashSelectC(0xb107c576, 0x5d108ae2404083dc)
 #define Dee_HashStr____IterWithGetItemIndex__ _Dee_HashSelectC(0x559cb3c7, 0x3fe88840c3037835)
 #define Dee_HashStr____IterWithGetItemIndexPair__ _Dee_HashSelectC(0x1c8026f5, 0xaa83c1108d104707)
 #define Dee_HashStr____IterWithSizeAndGetItemIndex__ _Dee_HashSelectC(0xffbfe311, 0x2a69983a21e6e8ee)
@@ -713,6 +721,7 @@ librt_get_DocKwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingProxy_impl_f(void) {
 	return DeeObject_GetAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(Proxy));
@@ -720,7 +729,7 @@ librt_get_MappingProxy_impl_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingKeys_impl_f(void) {
-	return DeeObject_GetAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(Proxy));
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(Keys));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -732,6 +741,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingItems_impl_f(void) {
 	return DeeObject_GetAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(Items));
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingHashFilter_impl_f(void) {
@@ -744,6 +754,7 @@ librt_get_MappingByAttr_impl_f(void) {
 	return get_type_of(DeeObject_GetAttrStringHash(Dee_EmptyMapping, STR_AND_HASH(byattr)));
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingProxy_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingProxy_impl_f();
@@ -764,7 +775,6 @@ librt_get_MappingItems_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingItems_impl_f();
 }
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingProxyIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingProxy_impl_f());
@@ -784,7 +794,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingItemsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingItems_impl_f());
 }
-#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingHashFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
@@ -1257,8 +1267,13 @@ librt_get_SeqWithIter_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqWithTIter_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_default_sequence_type(__SeqWithTIter__);
+librt_get_SeqWithIterAndLimit_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__SeqWithIterAndLimit__);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqWithTIterAndLimit_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_default_sequence_type(__SeqWithTIterAndLimit__);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2237,7 +2252,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqWithSizeAndTryGetItemIndex, &librt_get_SeqWi
 PRIVATE DEFINE_CMETHOD(librt_get_SeqWithSizeAndGetItem, &librt_get_SeqWithSizeAndGetItem_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqWithTSizeAndGetItem, &librt_get_SeqWithTSizeAndGetItem_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqWithIter, &librt_get_SeqWithIter_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqWithTIter, &librt_get_SeqWithTIter_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqWithIterAndLimit, &librt_get_SeqWithIterAndLimit_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqWithTIterAndLimit, &librt_get_SeqWithTIterAndLimit_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithGetItemIndex, &librt_get_IterWithGetItemIndex_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithGetItemIndexPair, &librt_get_IterWithGetItemIndexPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IterWithSizeAndGetItemIndex, &librt_get_IterWithSizeAndGetItemIndex_Type_f, METHOD_FCONSTCALL);
@@ -2319,16 +2335,16 @@ PRIVATE DEFINE_CMETHOD(librt_get_Traceback_empty, &librt_get_Traceback_empty_f, 
 PRIVATE DEFINE_CMETHOD(librt_get_Module_empty, &librt_get_Module_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwds, &librt_get_DocKwds_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_DocKwdsIterator, &librt_get_DocKwdsIterator_f, METHOD_FCONSTCALL);
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE DEFINE_CMETHOD(librt_get_MappingProxy, &librt_get_MappingProxy_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingKeys, &librt_get_MappingKeys_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingValues, &librt_get_MappingValues_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingItems, &librt_get_MappingItems_f, METHOD_FCONSTCALL);
-#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
 PRIVATE DEFINE_CMETHOD(librt_get_MappingProxyIterator, &librt_get_MappingProxyIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingKeysIterator, &librt_get_MappingKeysIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingValuesIterator, &librt_get_MappingValuesIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingItemsIterator, &librt_get_MappingItemsIterator_f, METHOD_FCONSTCALL);
-#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilter, &librt_get_MappingHashFilter_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilterIterator, &librt_get_MappingHashFilterIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingByAttr, &librt_get_MappingByAttr_f, METHOD_FCONSTCALL);
@@ -2577,7 +2593,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqWithSizeAndGetItem", (DeeObject *)&librt_get_SeqWithSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* DefaultSequence_WithSizeAndGetItem_Type */
 	{ "SeqWithTSizeAndGetItem", (DeeObject *)&librt_get_SeqWithTSizeAndGetItem, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* DefaultSequence_WithTSizeAndGetItem_Type */
 	{ "SeqWithIter", (DeeObject *)&librt_get_SeqWithIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                   /* DefaultSequence_WithIter_Type */
-	{ "SeqWithTIter", (DeeObject *)&librt_get_SeqWithTIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* DefaultSequence_WithTIter_Type */
+	{ "SeqWithIterAndLimit", (DeeObject *)&librt_get_SeqWithIterAndLimit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* DefaultSequence_WithIterAndLimit_Type */
+	{ "SeqWithTIterAndLimit", (DeeObject *)&librt_get_SeqWithTIterAndLimit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultSequence_WithTIterAndLimit_Type */
 	{ "IterWithGetItemIndex", (DeeObject *)&librt_get_IterWithGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* DefaultIterator_WithGetItemIndex_Type */
 	{ "IterWithGetItemIndexPair", (DeeObject *)&librt_get_IterWithGetItemIndexPair, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* DefaultIterator_WithGetItemIndexPair_Type */
 	{ "IterWithSizeAndGetItemIndex", (DeeObject *)&librt_get_IterWithSizeAndGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* DefaultIterator_WithSizeAndGetItemIndex_Type */
@@ -2636,6 +2653,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SetInversion", (DeeObject *)&DeeSetInversion_Type, MODSYM_FREADONLY },
 
 	/* Internal types used to drive mapping proxies */
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	{ "MappingProxy", (DeeObject *)&librt_get_MappingProxy, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Base class for ?GMappingKeys, ?GMappingValues and ?GMappingItems") }, /* DeeMappingProxy_Type */
 	{ "MappingKeys", (DeeObject *)&librt_get_MappingKeys, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
@@ -2650,13 +2668,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("General purpose, sequence proxy type for viewing the items (key-value pairs) of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
 	      /**/ "by :Mapping.items") }, /* DeeMappingItems_Type */
-#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
 	{ "MappingProxyIterator", (DeeObject *)&librt_get_MappingProxyIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Iterator class for ?GMappingProxy, and Base class for ?GMappingKeysIterator, ?GMappingValuesIterator and ?GMappingItemsIterator") },  /* DeeMappingProxyIterator_Type */
 	{ "MappingKeysIterator", (DeeObject *)&librt_get_MappingKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DeeMappingKeysIterator_Type */
 	{ "MappingValuesIterator", (DeeObject *)&librt_get_MappingValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* DeeMappingValuesIterator_Type */
 	{ "MappingItemsIterator", (DeeObject *)&librt_get_MappingItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DeeMappingProxyIterator_Type */
-#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	{ "MappingHashFilter", (DeeObject *)&librt_get_MappingHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapHashFilter_Type */
 	{ "MappingHashFilterIterator", (DeeObject *)&librt_get_MappingHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilterIterator_Type */
 	{ "MappingByAttr", (DeeObject *)&librt_get_MappingByAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* MapByAttr_Type */

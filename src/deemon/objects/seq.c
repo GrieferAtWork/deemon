@@ -2773,7 +2773,7 @@ generic_seq_getrange_index(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) 
 		return (*tp_self->tp_seq->tp_getrange_index)(self, start, end);
 	}
 	if (DeeType_RequireIter(tp_self)) {
-		DREF DefaultSequence_WithIter *result;
+		DREF DefaultSequence_WithIterAndLimit *result;
 		struct Dee_seq_range range;
 		if (tp_self->tp_seq->tp_iter == &generic_seq_iter)
 			goto handle_empty;
@@ -2788,15 +2788,15 @@ generic_seq_getrange_index(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) 
 		}
 		if (range.sr_start >= range.sr_end)
 			goto handle_empty;
-		result = DeeObject_MALLOC(DefaultSequence_WithIter);
+		result = DeeObject_MALLOC(DefaultSequence_WithIterAndLimit);
 		if unlikely(!result)
 			goto err;
 		Dee_Incref(self);
-		result->dsi_seq     = self;
-		result->dsi_start   = range.sr_start;
-		result->dsi_limit   = range.sr_end - range.sr_start;
-		result->dsi_tp_iter = tp_self->tp_seq->tp_iter;
-		DeeObject_Init(result, &DefaultSequence_WithIter_Type);
+		result->dsial_seq     = self;
+		result->dsial_start   = range.sr_start;
+		result->dsial_limit   = range.sr_end - range.sr_start;
+		result->dsial_tp_iter = tp_self->tp_seq->tp_iter;
+		DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 		return (DREF DeeObject *)result;
 	}
 	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
@@ -2815,7 +2815,7 @@ generic_seq_getrange_index_n(DeeObject *self, Dee_ssize_t start) {
 		return (*tp_self->tp_seq->tp_getrange_index_n)(self, start);
 	}
 	if (DeeType_RequireIter(tp_self)) {
-		DREF DefaultSequence_WithIter *result;
+		DREF DefaultSequence_WithIterAndLimit *result;
 		size_t used_start;
 		if (tp_self->tp_seq->tp_iter == &generic_seq_iter)
 			goto handle_empty;
@@ -2827,15 +2827,15 @@ generic_seq_getrange_index_n(DeeObject *self, Dee_ssize_t start) {
 				goto err;
 			used_start = DeeSeqRange_Clamp_n(start, size);
 		}
-		result = DeeObject_MALLOC(DefaultSequence_WithIter);
+		result = DeeObject_MALLOC(DefaultSequence_WithIterAndLimit);
 		if unlikely(!result)
 			goto err;
 		Dee_Incref(self);
-		result->dsi_seq     = self;
-		result->dsi_start   = used_start;
-		result->dsi_limit   = (size_t)-1;
-		result->dsi_tp_iter = tp_self->tp_seq->tp_iter;
-		DeeObject_Init(result, &DefaultSequence_WithIter_Type);
+		result->dsial_seq     = self;
+		result->dsial_start   = used_start;
+		result->dsial_limit   = (size_t)-1;
+		result->dsial_tp_iter = tp_self->tp_seq->tp_iter;
+		DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 		return (DREF DeeObject *)result;
 	}
 	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
@@ -5760,7 +5760,8 @@ PRIVATE struct type_member tpconst seq_class_members[] = {
 	TYPE_MEMBER_CONST("__SeqWithSizeAndGetItem__", &DefaultSequence_WithSizeAndGetItem_Type),
 	TYPE_MEMBER_CONST("__SeqWithTSizeAndGetItem__", &DefaultSequence_WithTSizeAndGetItem_Type),
 	TYPE_MEMBER_CONST("__SeqWithIter__", &DefaultSequence_WithIter_Type),
-	TYPE_MEMBER_CONST("__SeqWithTIter__", &DefaultSequence_WithTIter_Type),
+	TYPE_MEMBER_CONST("__SeqWithIterAndLimit__", &DefaultSequence_WithIterAndLimit_Type),
+	TYPE_MEMBER_CONST("__SeqWithTIterAndLimit__", &DefaultSequence_WithTIterAndLimit_Type),
 	TYPE_MEMBER_CONST("__IterWithGetItemIndex__", &DefaultIterator_WithGetItemIndex_Type),
 	TYPE_MEMBER_CONST("__IterWithGetItemIndexPair__", &DefaultIterator_WithGetItemIndexPair_Type),
 	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndex__", &DefaultIterator_WithSizeAndGetItemIndex_Type),

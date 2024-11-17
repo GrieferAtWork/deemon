@@ -732,6 +732,9 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-iterators.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\default-map-proxy.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-reversed.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
@@ -1284,6 +1287,9 @@
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\default-iterators.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\default-map-proxy.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\default-reversed.c">

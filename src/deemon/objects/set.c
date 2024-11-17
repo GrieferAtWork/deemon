@@ -793,14 +793,6 @@ INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-set_Iterator_get(DeeTypeObject *__restrict self) {
-	if (self == &DeeSet_Type)
-		return_reference_(&DeeIterator_Type);
-	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
-	return NULL;
-}
-
 /*[[[deemon
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("Frozen");
@@ -849,10 +841,6 @@ err:
 
 
 PRIVATE struct type_getset tpconst set_class_getsets[] = {
-	TYPE_GETTER(STR_Iterator, &set_Iterator_get,
-	            "->?DType\n"
-	            "Returns the iterator class used by instances of @this ?. type\n"
-	            "This member must be overwritten by sub-classes of ?."),
 	TYPE_GETTER("Frozen", &set_frozen_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the ?#frozen property"),

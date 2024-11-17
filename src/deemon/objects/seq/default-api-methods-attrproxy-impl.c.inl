@@ -166,6 +166,7 @@ DECL_BEGIN
 #define LOCAL_DeeMap_DefaultSetNewExWithCallAttrSetNewEx                       LOCAL_DeeMap_DefaultFooWithCallAttrBar(SetNewEx, SetNewEx)
 #define LOCAL_DeeMap_DefaultSetDefaultWithCallAttrSetDefault                   LOCAL_DeeMap_DefaultFooWithCallAttrBar(SetDefault, SetDefault)
 #define LOCAL_DeeMap_DefaultUpdateWithCallAttrUpdate                           LOCAL_DeeMap_DefaultFooWithCallAttrBar(Update, Update)
+#define LOCAL_DeeMap_DefaultRemoveWithCallAttrRemove                           LOCAL_DeeMap_DefaultFooWithCallAttrBar(Remove, Remove)
 #define LOCAL_DeeMap_DefaultRemoveKeysWithCallAttrRemoveKeys                   LOCAL_DeeMap_DefaultFooWithCallAttrBar(RemoveKeys, RemoveKeys)
 #define LOCAL_DeeMap_DefaultPopWithCallAttrPop                                 LOCAL_DeeMap_DefaultFooWithCallAttrBar(Pop, Pop)
 #define LOCAL_DeeMap_DefaultPopWithDefaultWithCallAttrPop                      LOCAL_DeeMap_DefaultFooWithCallAttrBar(PopWithDefault, Pop)
@@ -178,16 +179,22 @@ DECL_BEGIN
 
 
 #ifdef DEFINE_DeeSeq_DefaultFooWithCallAttrFoo
+#define LOCAL_DeeObject_GetAttr(self, tsc_foo_data, attr) \
+	DeeObject_GetAttr(self, (DeeObject *)(attr))
 #define LOCAL_DeeObject_CallAttr(self, tsc_foo_data, attr, argc, argv) \
 	DeeObject_CallAttr(self, (DeeObject *)(attr), argc, argv)
 #define LOCAL_DeeObject_CallAttrf(self, tsc_foo_data, attr, ...) \
 	DeeObject_CallAttrf(self, (DeeObject *)(attr), __VA_ARGS__)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataFunction)
+#define LOCAL_DeeObject_GetAttr(self, tsc_foo_data, attr) \
+	DeeObject_ThisCall(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self, 0, NULL)
 #define LOCAL_DeeObject_CallAttr(self, tsc_foo_data, attr, argc, argv) \
 	DeeObject_ThisCall(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self, argc, argv)
 #define LOCAL_DeeObject_CallAttrf(self, tsc_foo_data, attr, ...) \
 	DeeObject_ThisCallf(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self, __VA_ARGS__)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataMethod)
+#define LOCAL_DeeObject_GetAttr(self, tsc_foo_data, attr) \
+	(*Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_getter)(self)
 #define LOCAL_DeeObject_CallAttr(self, tsc_foo_data, attr, argc, argv) \
 	(*Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_method)(self, argc, argv)
 #define LOCAL_DeeObject_CallAttrf(self, tsc_foo_data, attr, ...) \
@@ -1486,6 +1493,17 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeMap_DefaultRemoveWithCallAttrRemove(DeeObject *self, DeeObject *key) {
+	DREF DeeObject *result;
+	result = LOCAL_DeeObject_CallAttr(self, tsc_map_remove_data, &str_remove, 1, &key);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeMap_DefaultRemoveKeysWithCallAttrRemoveKeys(DeeObject *self, DeeObject *keys) {
 	DREF DeeObject *result;
 	result = LOCAL_DeeObject_CallAttr(self, tsc_map_removekeys_data, &str_removekeys, 1, &keys);
@@ -1515,26 +1533,29 @@ LOCAL_DeeMap_DefaultPopItemWithCallAttrPopItem(DeeObject *self) {
 	return LOCAL_DeeObject_CallAttr(self, tsc_map_popitem_data, &str_popitem, 0, NULL);
 }
 
+#ifdef LOCAL_DeeObject_GetAttr
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeMap_DefaultKeysWithCallAttrKeys(DeeObject *self) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_map_keys_data, &str_keys, 0, NULL);
+	return LOCAL_DeeObject_GetAttr(self, tsc_map_keys_data, &str_keys);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeMap_DefaultValuesWithCallAttrValues(DeeObject *self) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_map_values_data, &str_values, 0, NULL);
+	return LOCAL_DeeObject_GetAttr(self, tsc_map_values_data, &str_values);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeMap_DefaultIterKeysWithCallAttrIterKeys(DeeObject *self) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_map_iterkeys_data, &str_iterkeys, 0, NULL);
+	return LOCAL_DeeObject_GetAttr(self, tsc_map_iterkeys_data, &str_iterkeys);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_map_itervalues_data, &str_itervalues, 0, NULL);
+	return LOCAL_DeeObject_GetAttr(self, tsc_map_itervalues_data, &str_itervalues);
 }
+#endif /* LOCAL_DeeObject_GetAttr */
 
+#undef LOCAL_DeeObject_GetAttr
 #undef LOCAL_DeeObject_CallAttr
 #undef LOCAL_DeeObject_CallAttrf
 
@@ -1646,6 +1667,7 @@ LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self) {
 #undef LOCAL_DeeMap_DefaultSetNewExWithCallAttrSetNewEx
 #undef LOCAL_DeeMap_DefaultSetDefaultWithCallAttrSetDefault
 #undef LOCAL_DeeMap_DefaultUpdateWithCallAttrUpdate
+#undef LOCAL_DeeMap_DefaultRemoveWithCallAttrRemove
 #undef LOCAL_DeeMap_DefaultRemoveKeysWithCallAttrRemoveKeys
 #undef LOCAL_DeeMap_DefaultPopWithCallAttrPop
 #undef LOCAL_DeeMap_DefaultPopWithDefaultWithCallAttrPop

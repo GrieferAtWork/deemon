@@ -52,10 +52,10 @@ function testByHashMapping(map) {
 	assert map.values.byhash("foo".operator hash()) == { };
 	assert map.values.byhash("bar") == { "bar" };
 	assert map.values.byhash("bar".operator hash()) == { "bar" };
-	assert map.items.byhash("foo") == { ("foo", "bar") };
-	assert map.items.byhash("foo".operator hash()) == { ("foo", "bar") };
-	assert map.items.byhash("bar") == { };
-	assert map.items.byhash("bar".operator hash()) == { };
+	assert map.items.byhash(("foo", "bar")) == { ("foo", "bar") };
+	assert map.items.byhash(("foo", "bar").operator hash()) == { ("foo", "bar") };
+	assert map.items.byhash(("bar", "foo")) == { };
+	assert map.items.byhash(("bar", "foo").operator hash()) == { };
 }
 
 testByHashMapping({ "foo" : "bar" });

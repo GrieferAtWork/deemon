@@ -46,8 +46,10 @@
 #include "seq/byattr.h"
 #include "seq/default-api.h"
 #include "seq/default-iterators.h"
+#include "seq/default-map-proxy.h"
 #include "seq/each.h"
 #include "seq/hashfilter.h"
+#include "seq/range.h"
 
 DECL_BEGIN
 
@@ -62,7 +64,7 @@ err:
 	return NULL;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
@@ -363,7 +365,7 @@ map_insert_all(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	return DeeObject_CallAttrString(self, "update", argc, argv);
 }
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 
@@ -414,7 +416,7 @@ DOC_DEF(map_setnew_ex_doc,
 
 INTDEF struct type_method tpconst map_methods[];
 INTERN_TPCONST struct type_method tpconst map_methods[] = {
-#ifdef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	/* Default operations for all mappings. */
 	TYPE_METHOD(STR_get, &default_map_get, DOC_GET(map_get_doc)),
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
@@ -426,6 +428,7 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 	TYPE_METHOD(STR_setnew_ex, &default_map_setnew_ex, DOC_GET(map_setnew_ex_doc)),
 	TYPE_METHOD(STR_setdefault, &default_map_setdefault, DOC_GET(map_setdefault_doc)),
 	TYPE_METHOD(STR_update, &default_map_update, DOC_GET(map_update_doc)),
+	TYPE_METHOD(STR_remove, &default_map_remove, "(key)->?Dbool"),
 	TYPE_METHOD(STR_removekeys, &default_map_removekeys, "(keys:?S?O)"),
 	TYPE_METHOD(STR_pop, &default_map_pop, DOC_GET(map_pop_doc)),
 	TYPE_METHOD(STR_popitem, &default_map_popitem, DOC_GET(map_popitem_doc)),
@@ -436,7 +439,7 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 	            "(items:?S?T2?O?O)\n"
 	            "A deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-#else /* CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	/* Default operations for all mappings. */
 	TYPE_METHOD(STR_get, &map_get, DOC_GET(map_get_doc)),
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
@@ -460,13 +463,13 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 	            "(items:?S?T2?O?O)\n"
 	            "A deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	TYPE_METHOD_END
 };
 
 
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject        *mpi_iter; /* [1..1][const] The iterator for enumerating `mpi_map'. */
@@ -1384,7 +1387,7 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ proxyitems_class_members,
 };
-#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 
@@ -1737,6 +1740,7 @@ generic_map_delitem(DeeObject *self, DeeObject *key) {
 			goto handle_empty;
 		return (*tp_self->tp_seq->tp_delitem)(self, key);
 	}
+	/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 handle_empty:
 	return 0;
@@ -1750,6 +1754,7 @@ generic_map_delitem_index(DeeObject *self, size_t key) {
 			goto handle_empty;
 		return (*tp_self->tp_seq->tp_delitem_index)(self, key);
 	}
+	/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 handle_empty:
 	return 0;
@@ -1763,6 +1768,7 @@ generic_map_delitem_string_hash(DeeObject *self, char const *key, Dee_hash_t has
 			goto handle_empty;
 		return (*tp_self->tp_seq->tp_delitem_string_hash)(self, key, hash);
 	}
+	/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 handle_empty:
 	return 0;
@@ -1776,6 +1782,7 @@ generic_map_delitem_string_len_hash(DeeObject *self, char const *key, size_t key
 			goto handle_empty;
 		return (*tp_self->tp_seq->tp_delitem_string_len_hash)(self, key, keylen, hash);
 	}
+	/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 handle_empty:
 	return 0;
@@ -1789,6 +1796,7 @@ generic_map_setitem(DeeObject *self, DeeObject *key, DeeObject *value) {
 			goto handle_empty;
 		return (*tp_self->tp_seq->tp_setitem)(self, key, value);
 	}
+	/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	return err_unimplemented_operator(tp_self, OPERATOR_SETITEM);
 handle_empty:
 	return 0;
@@ -1802,6 +1810,7 @@ generic_map_setitem_index(DeeObject *self, size_t key, DeeObject *value) {
 			goto handle_empty;
 		return (*tp_self->tp_seq->tp_setitem_index)(self, key, value);
 	}
+	/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	return err_unimplemented_operator(tp_self, OPERATOR_SETITEM);
 handle_empty:
 	return 0;
@@ -1815,6 +1824,7 @@ generic_map_setitem_string_hash(DeeObject *self, char const *key, Dee_hash_t has
 			goto handle_empty;
 		return (*tp_self->tp_seq->tp_setitem_string_hash)(self, key, hash, value);
 	}
+	/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	return err_unimplemented_operator(tp_self, OPERATOR_SETITEM);
 handle_empty:
 	return 0;
@@ -1828,6 +1838,7 @@ generic_map_setitem_string_len_hash(DeeObject *self, char const *key, size_t key
 			goto handle_empty;
 		return (*tp_self->tp_seq->tp_setitem_string_len_hash)(self, key, keylen, hash, value);
 	}
+	/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	return err_unimplemented_operator(tp_self, OPERATOR_SETITEM);
 handle_empty:
 	return 0;
@@ -2703,7 +2714,7 @@ err_m1:
 	goto err;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1, 2)) DREF MapProxy *DCALL
 map_new_proxy(DeeObject *__restrict self, DeeTypeObject *__restrict result_type) {
 	DREF MapProxy *result;
@@ -2881,10 +2892,17 @@ err_empty:
 err:
 	return -1;
 }
-#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_items(DeeObject *self) {
+	return DeeSuper_New(&DeeSeq_Type, self);
+}
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE struct type_getset tpconst map_getsets[] = {
-#ifdef CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	TYPE_GETTER("keys", &default_map_keys,
 	            "->?#Keys\n"
 	            "Returns a ?DSequence that can be enumerated to view only the keys of @this ?."),
@@ -2905,8 +2923,8 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "Returns an iterator for ?#{values}. Same as ${this.values.operator iter()}"),
 	TYPE_GETTER("iteritems", &DeeObject_Iter,
 	            "->?DIterator\n"
-	            "Returns an iterator for ?#{items}. Same as ${this.items.operator iter()}"),
-#else /* CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+	            "Returns an iterator for ?#{items}. Same as ${this.operator iter()}"),
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	TYPE_GETTER("keys", &map_keys,
 	            "->?#Keys\n"
 	            "Returns a ?DSequence that can be enumerated to view only the keys of @this ?."),
@@ -2933,7 +2951,7 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "Returns an iterator for ?#{items}. Same as ${this.items.operator iter()}"),
 	TYPE_GETSET_NODOC(STR_first, &DeeMap_GetFirst, &DeeMap_DelFirst, NULL),
 	TYPE_GETSET_NODOC(STR_last, &DeeMap_GetLast, &DeeMap_DelLast, NULL),
-#endif /* !CONFIG_EXPERIMENTAL_NEW_MAPPING_OPERATORS */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	TYPE_GETTER("byattr", &MapByAttr_New,
 	            "->?Ert:MappingByAttr\n"
 	            "Construct a wrapper for @this mapping that behaves like a generic class object, "
@@ -2959,12 +2977,64 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-map_iterator_get(DeeTypeObject *__restrict self) {
+map_Iterator_get(DeeTypeObject *__restrict self) {
 	if (self == &DeeMapping_Type)
 		return_reference_(&DeeIterator_Type);
+	/* TODO: Determine based on linked `tp_iter' */
 	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
+
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_Keys_get(DeeTypeObject *__restrict self) {
+	DREF DeeTypeObject *result = &DeeSet_Type;
+	Dee_tsc_map_keys_t tsc_map_keys = DeeType_SeqCache_RequireMapKeys(self);
+	if (tsc_map_keys == &DeeMap_DefaultKeysWithTSCIterKeys)
+		result = &DefaultSequence_MapKeys_Type;
+	return_reference_(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_Values_get(DeeTypeObject *__restrict self) {
+	DREF DeeTypeObject *result = &DeeSeq_Type;
+	Dee_tsc_map_values_t tsc_map_values = DeeType_SeqCache_RequireMapValues(self);
+	if (tsc_map_values == &DeeMap_DefaultValuesWithTSCIterValues)
+		result = &DefaultSequence_MapValues_Type;
+	return_reference_(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_IterKeys_get(DeeTypeObject *__restrict self) {
+	DREF DeeTypeObject *result = &DeeIterator_Type;
+	Dee_tsc_map_iterkeys_t tsc_map_iterkeys = DeeType_SeqCache_RequireMapIterKeys(self);
+	if (tsc_map_iterkeys == &DeeObject_DefaultIterKeysWithEnumerate) {
+		/* TODO: Custom iterator type that uses "tp_enumerate" */
+	} else if (tsc_map_iterkeys == &DeeObject_DefaultIterKeysWithEnumerateIndex) {
+		/* TODO: Custom iterator type that uses "tp_enumerate_index" */
+	} else if (tsc_map_iterkeys == &DeeSeq_DefaultIterKeysWithSize ||
+	           tsc_map_iterkeys == &DeeSeq_DefaultIterKeysWithSizeDefault) {
+		result = &SeqIntRangeIterator_Type;
+	} else if (tsc_map_iterkeys == &DeeSeq_DefaultIterKeysWithSizeOb) {
+		result = &SeqRangeIterator_Type;
+	} else if (tsc_map_iterkeys == &DeeMap_DefaultIterKeysWithIter) {
+		result = &DefaultIterator_WithNextKey;
+	}
+	return_reference_(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_IterValues_get(DeeTypeObject *__restrict self) {
+	DREF DeeTypeObject *result = &DeeIterator_Type;
+	Dee_tsc_map_itervalues_t tsc_map_itervalues = DeeType_SeqCache_RequireMapIterValues(self);
+	if (tsc_map_itervalues == &DeeMap_DefaultIterValuesWithIter) {
+		result = &DefaultIterator_WithNextValue;
+	}
+	return_reference_(result);
+}
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+
 
 /*[[[deemon
 import define_Dee_HashStr from rt.gen.hash;
@@ -2974,7 +3044,7 @@ print define_Dee_HashStr("Frozen");
 /*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-map_frozen_get(DeeTypeObject *__restrict self) {
+map_Frozen_get(DeeTypeObject *__restrict self) {
 	int error;
 	DREF DeeTypeObject *result;
 	struct attribute_info info;
@@ -3014,16 +3084,31 @@ err:
 
 
 PRIVATE struct type_getset tpconst map_class_getsets[] = {
-	TYPE_GETTER(STR_Iterator, &map_iterator_get,
+	TYPE_GETTER(STR_Iterator, &map_Iterator_get,
 	            "->?DType\n"
 	            "Returns the iterator class used by instances of @this ?. type\n"
 	            "This member must be overwritten by sub-classes of ?."),
-	TYPE_GETTER("Frozen", &map_frozen_get,
+	TYPE_GETTER("Frozen", &map_Frozen_get,
 	            "->?DType\n"
 	            "Returns the type of sequence returned by the #i:frozen property"),
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	TYPE_GETTER("Keys", &map_Keys_get,
+	            "->?DType\n"
+	            "Returns the type of sequence returned by the #i:keys property"),
+	TYPE_GETTER("Values", &map_Values_get,
+	            "->?DType\n"
+	            "Returns the type of sequence returned by the #i:values property"),
+	TYPE_GETTER("IterKeys", &map_IterKeys_get,
+	            "->?DType\n"
+	            "Returns the type of sequence returned by the #i:iterkeys property"),
+	TYPE_GETTER("IterValues", &map_IterValues_get,
+	            "->?DType\n"
+	            "Returns the type of sequence returned by the #i:itervalues property"),
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	TYPE_GETSET_END
 };
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE struct type_member tpconst map_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("Proxy", &DeeMappingProxy_Type,
 	                      "->?DType\n"
@@ -3037,6 +3122,7 @@ PRIVATE struct type_member tpconst map_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("Items", &DeeMappingItems_Type,
 	                      "->?DType\n"
 	                      "The return type of the ?#items member function"),
+
 	/* TODO: KeyType->?DType
 	 *       When this type of ?. only allows key of a certain ?DType,
 	 *       this class attribute is overwritten with that ?DType. Else,
@@ -3047,6 +3133,7 @@ PRIVATE struct type_member tpconst map_class_members[] = {
 	 *       it simply evaluates to ?O */
 	TYPE_MEMBER_END
 };
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
@@ -3136,7 +3223,11 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ map_class_getsets,
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	/* .tp_class_members = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	/* .tp_class_members = */ map_class_members,
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ map_operators,

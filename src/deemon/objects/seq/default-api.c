@@ -243,45 +243,47 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 	    self->tsc_sorted_with_key == &DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
 	if (self->tsc_set_insert == &DeeSet_DefaultInsertWithCallInsertDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_set_insert_data);
 	if (self->tsc_set_remove == &DeeSet_DefaultRemoveWithCallRemoveDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_set_remove_data);
 	if (self->tsc_set_unify == &DeeSet_DefaultUnifyWithCallUnifyDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_set_unify_data);
 	if (self->tsc_set_insertall == &DeeSet_DefaultInsertAllWithCallInsertAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_set_insertall_data);
 	if (self->tsc_set_removeall == &DeeSet_DefaultRemoveAllWithCallRemoveAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_set_removeall_data);
 	if (self->tsc_set_pop == &DeeSet_DefaultPopWithCallPopDataFunction ||
 	    self->tsc_set_pop_with_default == &DeeSet_DefaultPopWithDefaultWithCallPopDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_set_pop_data);
 	if (self->tsc_map_setold == &DeeMap_DefaultSetOldWithCallSetOldDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_setold_data);
 	if (self->tsc_map_setold_ex == &DeeMap_DefaultSetOldExWithCallSetOldExDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_setold_ex_data);
 	if (self->tsc_map_setnew == &DeeMap_DefaultSetNewWithCallSetNewDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_setnew_data);
 	if (self->tsc_map_setnew_ex == &DeeMap_DefaultSetNewExWithCallSetNewExDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_setnew_ex_data);
 	if (self->tsc_map_setdefault == &DeeMap_DefaultSetDefaultWithCallSetDefaultDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_setdefault_data);
 	if (self->tsc_map_update == &DeeMap_DefaultUpdateWithCallUpdateDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_update_data);
+	if (self->tsc_map_remove == &DeeMap_DefaultRemoveWithCallRemoveDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_map_remove_data);
 	if (self->tsc_map_removekeys == &DeeMap_DefaultRemoveKeysWithCallRemoveKeysDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_removekeys_data);
 	if (self->tsc_map_pop == &DeeMap_DefaultPopWithCallPopDataFunction ||
 	    self->tsc_map_pop_with_default == &DeeMap_DefaultPopWithDefaultWithCallPopDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_map_pop_data);
 	if (self->tsc_map_popitem == &DeeMap_DefaultPopItemWithCallPopItemDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_popitem_data);
 	if (self->tsc_map_keys == &DeeMap_DefaultKeysWithCallKeysDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_keys_data);
 	if (self->tsc_map_values == &DeeMap_DefaultValuesWithCallValuesDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_values_data);
 	if (self->tsc_map_iterkeys == &DeeMap_DefaultIterKeysWithCallIterKeysDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_iterkeys_data);
 	if (self->tsc_map_itervalues == &DeeMap_DefaultIterValuesWithCallIterValuesDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+		Dee_tsc_uslot_fini_function(&self->tsc_map_itervalues_data);
 
 	Dee_Free(self);
 }

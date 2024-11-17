@@ -7836,7 +7836,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterKeysWithSizeOb,
 	Dee_atomic_rwlock_init(&result->ri_lock);
 	result->ri_first = true;
 	result->ri_rev   = false;
-	DeeObject_Init(result, &SeqIntRangeIterator_Type);
+	DeeObject_Init(result, &SeqRangeIterator_Type);
 	return DeeGC_Track((DREF DeeObject *)result);
 err_sizeob:
 	Dee_Decref(sizeob);
@@ -13022,7 +13022,7 @@ err:
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefaultAndIter,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
-	DREF DefaultSequence_WithIter *result;
+	DREF DefaultSequence_WithIterAndLimit *result;
 	struct Dee_seq_range range;
 	LOAD_TP_SELF;
 	if (start >= 0 && end >= 0) {
@@ -13037,15 +13037,15 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefau
 	}
 	if (range.sr_start >= range.sr_end)
 		goto empty_seq;
-	result = DeeObject_MALLOC(DefaultSequence_WithIter);
+	result = DeeObject_MALLOC(DefaultSequence_WithIterAndLimit);
 	if unlikely(!result)
 		goto err;
 	Dee_Incref(self);
-	result->dsi_seq     = self;
-	result->dsi_start   = range.sr_start;
-	result->dsi_limit   = range.sr_end - range.sr_start;
-	result->dsi_tp_iter = tp_self->tp_seq->tp_iter;
-	DeeObject_Init(result, &DefaultSequence_WithIter_Type);
+	result->dsial_seq     = self;
+	result->dsial_start   = range.sr_start;
+	result->dsial_limit   = range.sr_end - range.sr_start;
+	result->dsial_tp_iter = tp_self->tp_seq->tp_iter;
+	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 	return (DREF DeeObject *)result;
 empty_seq:
 	return_empty_seq;
@@ -13077,32 +13077,32 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefau
 		           ? &instance_titer
 		           : DeeType_MapDefaultIter(tp_self->tp_seq->tp_iter, &, NULL);
 		if (tp_titer) {
-			DREF DefaultSequence_WithTIter *tresult;
-			tresult = DeeObject_MALLOC(DefaultSequence_WithTIter);
+			DREF DefaultSequence_WithTIterAndLimit *tresult;
+			tresult = DeeObject_MALLOC(DefaultSequence_WithTIterAndLimit);
 			if unlikely(!tresult)
 				goto err;
 			Dee_Incref(self);
 			tresult->dsti_seq      = self;
 			tresult->dsti_tp_titer = tp_titer;
 			tresult->dsti_start    = range.sr_start;
-			tresult->dsti_limit     = range.sr_end - range.sr_start;
+			tresult->dsti_limit    = range.sr_end - range.sr_start;
 			tresult->dsti_tp_seq   = tp_self;
-			DeeObject_Init(tresult, &DefaultSequence_WithTIter_Type);
+			DeeObject_Init(tresult, &DefaultSequence_WithTIterAndLimit_Type);
 			return (DREF DeeObject *)tresult;
 		}
 	}
 #endif /* DEFINE_TYPED_OPERATORS */
 	{
-		DREF DefaultSequence_WithIter *result;
-		result = DeeObject_MALLOC(DefaultSequence_WithIter);
+		DREF DefaultSequence_WithIterAndLimit *result;
+		result = DeeObject_MALLOC(DefaultSequence_WithIterAndLimit);
 		if unlikely(!result)
 			goto err;
 		Dee_Incref(self);
-		result->dsi_seq     = self;
-		result->dsi_start   = range.sr_start;
-		result->dsi_limit   = range.sr_end - range.sr_start;
-		result->dsi_tp_iter = tp_self->tp_seq->tp_iter;
-		DeeObject_Init(result, &DefaultSequence_WithIter_Type);
+		result->dsial_seq     = self;
+		result->dsial_start   = range.sr_start;
+		result->dsial_limit   = range.sr_end - range.sr_start;
+		result->dsial_tp_iter = tp_self->tp_seq->tp_iter;
+		DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 		return (DREF DeeObject *)result;
 	}
 	__builtin_unreachable();
@@ -13367,7 +13367,7 @@ err:
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndIter,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
-	DREF DefaultSequence_WithIter *result;
+	DREF DefaultSequence_WithIterAndLimit *result;
 	size_t used_start;
 	LOAD_TP_SELF;
 	if (start >= 0) {
@@ -13379,15 +13379,15 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefa
 			goto err;
 		used_start = DeeSeqRange_Clamp_n(start, size);
 	}
-	result = DeeObject_MALLOC(DefaultSequence_WithIter);
+	result = DeeObject_MALLOC(DefaultSequence_WithIterAndLimit);
 	if unlikely(!result)
 		goto err;
 	Dee_Incref(self);
-	result->dsi_seq     = self;
-	result->dsi_start   = used_start;
-	result->dsi_limit   = (size_t)-1;
-	result->dsi_tp_iter = tp_self->tp_seq->tp_iter;
-	DeeObject_Init(result, &DefaultSequence_WithIter_Type);
+	result->dsial_seq     = self;
+	result->dsial_start   = used_start;
+	result->dsial_limit   = (size_t)-1;
+	result->dsial_tp_iter = tp_self->tp_seq->tp_iter;
+	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 	return (DREF DeeObject *)result;
 err:
 	return NULL;
@@ -13414,8 +13414,8 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefa
 		           ? &instance_titer
 		           : DeeType_MapDefaultIter(tp_self->tp_seq->tp_iter, &, NULL);
 		if (tp_titer) {
-			DREF DefaultSequence_WithTIter *tresult;
-			tresult = DeeObject_MALLOC(DefaultSequence_WithTIter);
+			DREF DefaultSequence_WithTIterAndLimit *tresult;
+			tresult = DeeObject_MALLOC(DefaultSequence_WithTIterAndLimit);
 			if unlikely(!tresult)
 				goto err;
 			Dee_Incref(self);
@@ -13424,22 +13424,22 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefa
 			tresult->dsti_start    = used_start;
 			tresult->dsti_limit     = (size_t)-1;
 			tresult->dsti_tp_seq   = tp_self;
-			DeeObject_Init(tresult, &DefaultSequence_WithTIter_Type);
+			DeeObject_Init(tresult, &DefaultSequence_WithTIterAndLimit_Type);
 			return (DREF DeeObject *)tresult;
 		}
 	}
 #endif /* DEFINE_TYPED_OPERATORS */
 	{
-		DREF DefaultSequence_WithIter *result;
-		result = DeeObject_MALLOC(DefaultSequence_WithIter);
+		DREF DefaultSequence_WithIterAndLimit *result;
+		result = DeeObject_MALLOC(DefaultSequence_WithIterAndLimit);
 		if unlikely(!result)
 			goto err;
 		Dee_Incref(self);
-		result->dsi_seq     = self;
-		result->dsi_start   = used_start;
-		result->dsi_limit   = (size_t)-1;
-		result->dsi_tp_iter = tp_self->tp_seq->tp_iter;
-		DeeObject_Init(result, &DefaultSequence_WithIter_Type);
+		result->dsial_seq     = self;
+		result->dsial_start   = used_start;
+		result->dsial_limit   = (size_t)-1;
+		result->dsial_tp_iter = tp_self->tp_seq->tp_iter;
+		DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 		return (DREF DeeObject *)result;
 	}
 	__builtin_unreachable();
@@ -16212,8 +16212,9 @@ Dee_type_seq_has_custom_tp_setitem_string_len_hash(struct type_seq const *__rest
 
 
 /* Initialize "self" from features of "seq" */
-PRIVATE NONNULL((1, 2)) void DCALL
-seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq, unsigned int seqclass) {
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq,
+                    DeeTypeObject *__restrict tp_self, unsigned int seqclass) {
 	seq_featureset_clear(self);
 	/* Figure out what the type can do natively. */
 	if (seq->tp_iter && !DeeType_IsDefaultIter(seq->tp_iter))
@@ -16238,8 +16239,21 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq, unsi
 		seq_featureset_set(self, FEAT_tp_foreach);
 	if (seq->tp_foreach_pair && !DeeType_IsDefaultForeachPair(seq->tp_foreach_pair))
 		seq_featureset_set(self, FEAT_tp_foreach_pair);
-	if (seq->tp_iterkeys && !DeeType_IsDefaultIterKeys(seq->tp_iterkeys))
-		seq_featureset_set(self, FEAT_tp_iterkeys);
+	if (seq->tp_iterkeys) {
+		if (!DeeType_IsDefaultIterKeys(seq->tp_iterkeys))
+			seq_featureset_set(self, FEAT_tp_iterkeys);
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* Special case: map types can define a member "iterkeys" (or "keys") in order to implement "tp_iterkeys" */
+		struct attrinfo info;
+		if (DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, NULL, STR_iterkeys, 8, Dee_HashStr__iterkeys, &info) ||
+		    DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, NULL, STR_keys, 4, Dee_HashStr__keys, &info)) {
+			seq->tp_iterkeys = DeeType_SeqCache_RequireMapIterKeys(tp_self);
+			ASSERT(seq->tp_iterkeys != NULL);
+			ASSERT(seq->tp_iterkeys != &DeeMap_DefaultIterKeysWithError);
+			seq_featureset_set(self, FEAT_tp_iterkeys);
+		}
+	}
+
 	if (seq->tp_enumerate) {
 		if (!DeeType_IsDefaultEnumerate(seq->tp_enumerate))
 			seq_featureset_set(self, FEAT_tp_enumerate);
@@ -17133,12 +17147,18 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_iterkeys = &DeeSeq_DefaultIterKeysWithSizeDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_iter) && seqclass == Dee_SEQCLASS_MAP) {
 			seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIter;
-		} else if (0) {
-			/* TODO: if (has_private_attr("keys")) tp_iterkeys = () -> self.keys.operator iter(); */
-		} else if (seq->tp_iter && seqclass == Dee_SEQCLASS_MAP) {
-			seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIterDefault;
-		} else if (seq_featureset_test(features, FEAT_tp_enumerate)) {
-			seq->tp_iterkeys = &DeeObject_DefaultIterKeysWithEnumerate;
+		} else {
+			if (seqclass == Dee_SEQCLASS_MAP) {
+				/* if (has_private_attr("keys")) tp_iterkeys = () -> self.keys.operator iter(); */
+				if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_iterkeys, 8, Dee_HashStr__iterkeys, &info) ||
+				    DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_keys, 4, Dee_HashStr__keys, &info)) {
+					seq->tp_iterkeys = DeeType_SeqCache_RequireMapIterKeys(self);
+				} else if (seq->tp_iter) {
+					seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIterDefault;
+				}
+			}
+			if (!seq->tp_iterkeys && seq_featureset_test(features, FEAT_tp_enumerate))
+				seq->tp_iterkeys = &DeeObject_DefaultIterKeysWithEnumerate;
 		}
 	}
 
@@ -17646,7 +17666,7 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self, unsigned int seqclas
 	base_seq = self->tp_seq;
 	if (base_seq) {
 		seq_featureset_t features;
-		seq_featureset_init(features, base_seq, seqclass);
+		seq_featureset_init(features, base_seq, self, seqclass);
 
 		/* If the type is implementing sequence features, auto-complete those
 		 * features and don't try to import operators from base classes (when

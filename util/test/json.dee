@@ -118,7 +118,7 @@ assert json.parse(r'{"z":{"foo":[true]}}', into: MyDTO()) == MyDTO(z: MyDTO3(foo
 assert json.parse(r'{"z":{"foo":[]}}', into: MyDTO()) == MyDTO(z: MyDTO2(foo: []));
 
 /* The JSON parser enforces user-defined type annotations, so trying to
- * construct DTOs with illegal member types results inn TypeError to be
+ * construct DTOs with illegal member types results in TypeError being
  * thrown */
 assert (try json.parse(r'{"z":{"foo":[null]}}', into: MyDTO) catch (e...) e) is TypeError;
 assert (try json.parse(r'{"x":null}', into: MyDTO) catch (e...) e) is TypeError;

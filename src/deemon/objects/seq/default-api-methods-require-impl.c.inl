@@ -116,6 +116,7 @@
 //#define DEFINE_DeeType_SeqCache_RequireMapSetNewEx
 //#define DEFINE_DeeType_SeqCache_RequireMapSetDefault
 //#define DEFINE_DeeType_SeqCache_RequireMapUpdate
+//#define DEFINE_DeeType_SeqCache_RequireMapRemove
 //#define DEFINE_DeeType_SeqCache_RequireMapRemoveKeys
 //#define DEFINE_DeeType_SeqCache_RequireMapPop
 //#define DEFINE_DeeType_SeqCache_RequireMapPopWithDefault
@@ -223,6 +224,7 @@
      defined(DEFINE_DeeType_SeqCache_RequireMapSetNewEx) +               \
      defined(DEFINE_DeeType_SeqCache_RequireMapSetDefault) +             \
      defined(DEFINE_DeeType_SeqCache_RequireMapUpdate) +                 \
+     defined(DEFINE_DeeType_SeqCache_RequireMapRemove) +                 \
      defined(DEFINE_DeeType_SeqCache_RequireMapRemoveKeys) +             \
      defined(DEFINE_DeeType_SeqCache_RequireMapPop) +                    \
      defined(DEFINE_DeeType_SeqCache_RequireMapPopWithDefault) +         \
@@ -948,6 +950,15 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_Default         DeeMap_Default
 #define LOCAL_DeeSeq_RequireFoo      MapUpdate
 #define LOCAL_DeeSeq_AttrFoo         Update
+#elif defined(DEFINE_DeeType_SeqCache_RequireMapRemove)
+#define LOCAL_CANONICAL_NAME         remove
+#define LOCAL_default_seq_foo        default_map_remove
+#define LOCAL_tsc_foo                tsc_map_remove
+#define LOCAL_tsc_foo_data           tsc_map_remove_data
+#define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
+#define LOCAL_DeeSeq_Default         DeeMap_Default
+#define LOCAL_DeeSeq_RequireFoo      MapRemove
+#define LOCAL_DeeSeq_AttrFoo         Remove
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapRemoveKeys)
 #define LOCAL_CANONICAL_NAME         removekeys
 #define LOCAL_default_seq_foo        default_map_removekeys
@@ -994,6 +1005,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_Default         DeeMap_Default
 #define LOCAL_DeeSeq_RequireFoo      MapKeys
 #define LOCAL_DeeSeq_AttrFoo         Keys
+#define LOCAL_IS_GETSET
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapValues)
 #define LOCAL_CANONICAL_NAME         values
 #define LOCAL_default_seq_foo        default_map_values
@@ -1003,6 +1015,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_Default         DeeMap_Default
 #define LOCAL_DeeSeq_RequireFoo      MapValues
 #define LOCAL_DeeSeq_AttrFoo         Values
+#define LOCAL_IS_GETSET
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapIterKeys)
 #define LOCAL_CANONICAL_NAME         iterkeys
 #define LOCAL_default_seq_foo        default_map_iterkeys
@@ -1012,6 +1025,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_Default         DeeMap_Default
 #define LOCAL_DeeSeq_RequireFoo      MapIterKeys
 #define LOCAL_DeeSeq_AttrFoo         IterKeys
+#define LOCAL_IS_GETSET
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapIterValues)
 #define LOCAL_CANONICAL_NAME         itervalues
 #define LOCAL_default_seq_foo        default_map_itervalues
@@ -1021,6 +1035,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_Default         DeeMap_Default
 #define LOCAL_DeeSeq_RequireFoo      MapIterValues
 #define LOCAL_DeeSeq_AttrFoo         IterValues
+#define LOCAL_IS_GETSET
 #else /* DEFINE_DeeType_SeqCache_Require... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeType_SeqCache_Require... */
@@ -1165,6 +1180,30 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 			struct Dee_type_seq_cache *sc = DeeType_TryRequireSeqCache(self);
 			if likely(sc) {
 				switch (attrinfo.ai_type) {
+#ifdef LOCAL_IS_GETSET
+				case Dee_ATTRINFO_GETSET:
+					if (attrinfo.ai_value.v_getset->gs_get == &LOCAL_default_seq_foo)
+						return &LOCAL_DeeSeq_DefaultFooWithError;
+					atomic_write(&sc->LOCAL_tsc_foo_data.d_getter, attrinfo.ai_value.v_getset->gs_get);
+					return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
+				case Dee_ATTRINFO_ATTR:
+					if ((attrinfo.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
+					    /*                                */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
+						struct class_desc *desc = DeeClass_DESC(self);
+						uint16_t id = attrinfo.ai_value.v_attr->ca_addr;
+						DREF DeeObject *callback;
+						Dee_class_desc_lock_read(desc);
+						callback = desc->cd_members[id + Dee_CLASS_GETSET_GET];
+						Dee_XIncref(callback);
+						Dee_class_desc_lock_endread(desc);
+						if likely(callback) {
+							if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_foo_data.d_function, NULL, callback))
+								Dee_Decref(callback);
+							return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
+						}
+					}
+					break;
+#else /* LOCAL_IS_GETSET */
 				case Dee_ATTRINFO_METHOD:
 					if ((Dee_funptr_t)attrinfo.ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo)
 						return &LOCAL_DeeSeq_DefaultFooWithError;
@@ -1173,7 +1212,6 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 						return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
 					return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
 				case Dee_ATTRINFO_ATTR:
-					ASSERT(attrinfo.ai_type == Dee_ATTRINFO_ATTR);
 					if ((attrinfo.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
 					    /*                                */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
 						struct class_desc *desc = DeeClass_DESC(self);
@@ -1190,6 +1228,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 						}
 					}
 					break;
+#endif /* !LOCAL_IS_GETSET */
 				default: break;
 				}
 			}
@@ -1264,48 +1303,30 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 	if (seqclass != Dee_SEQCLASS_MAP) {
 		if (DeeType_HasPrivateOperator(self, OPERATOR_CONTAINS))
 			return &DeeSeq_DefaultContainsWithContains;
-		if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
-			return &DeeSeq_DefaultContainsWithForeach;
-		/* TODO: Contains with Find */
 	}
+	/* TODO: Contains with Find */
+	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
+		return &DeeSeq_DefaultContainsWithForeach;
 #elif defined(DEFINE_DeeType_SeqCache_RequireContainsWithKey)
-	if (seqclass != Dee_SEQCLASS_MAP) {
-		/* TODO: Contains with Find */
-	}
+	/* TODO: Contains with Find */
 #elif defined(DEFINE_DeeType_SeqCache_RequireContainsWithRange)
-	if (seqclass != Dee_SEQCLASS_MAP) {
-		/* TODO: Contains with Find */
-	}
+	/* TODO: Contains with Find */
 #elif defined(DEFINE_DeeType_SeqCache_RequireContainsWithRangeAndKey)
-	if (seqclass != Dee_SEQCLASS_MAP) {
-		/* TODO: Contains with Find */
-	}
+	/* TODO: Contains with Find */
 #elif defined(DEFINE_DeeType_SeqCache_RequireLocate)
-	if (seqclass != Dee_SEQCLASS_MAP) {
-		/* TODO: Locate with Find */
-	}
+	/* TODO: Locate with Find */
 #elif defined(DEFINE_DeeType_SeqCache_RequireLocateWithKey)
-	if (seqclass != Dee_SEQCLASS_MAP) {
-		/* TODO: Locate with Find */
-	}
+	/* TODO: Locate with Find */
 #elif defined(DEFINE_DeeType_SeqCache_RequireLocateWithRange)
-	if (seqclass != Dee_SEQCLASS_MAP) {
-		/* TODO: Locate with Find */
-	}
+	/* TODO: Locate with Find */
 #elif defined(DEFINE_DeeType_SeqCache_RequireLocateWithRangeAndKey)
-	if (seqclass != Dee_SEQCLASS_MAP) {
-		/* TODO: Locate with Find */
-	}
+	/* TODO: Locate with Find */
 #elif defined(DEFINE_DeeType_SeqCache_RequireRLocateWithRange)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
-		if (DeeType_SeqCache_HasPrivateEnumerateIndexReverse(orig_type, self))
-			return &DeeSeq_DefaultRLocateWithRangeWithTSCEnumerateIndexReverse;
-	}
+	if (DeeType_SeqCache_HasPrivateEnumerateIndexReverse(orig_type, self))
+		return &DeeSeq_DefaultRLocateWithRangeWithTSCEnumerateIndexReverse;
 #elif defined(DEFINE_DeeType_SeqCache_RequireRLocateWithRangeAndKey)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
-		if (DeeType_SeqCache_HasPrivateEnumerateIndexReverse(orig_type, self))
-			return &DeeSeq_DefaultRLocateWithRangeAndKeyWithTSCEnumerateIndexReverse;
-	}
+	if (DeeType_SeqCache_HasPrivateEnumerateIndexReverse(orig_type, self))
+		return &DeeSeq_DefaultRLocateWithRangeAndKeyWithTSCEnumerateIndexReverse;
 #elif defined(DEFINE_DeeType_SeqCache_RequireStartsWith)
 	/* ... */
 #elif defined(DEFINE_DeeType_SeqCache_RequireStartsWithWithKey)
@@ -1327,15 +1348,11 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 #elif defined(DEFINE_DeeType_SeqCache_RequireFindWithKey)
 	/* ... */
 #elif defined(DEFINE_DeeType_SeqCache_RequireRFind)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
-		if (DeeType_SeqCache_HasPrivateEnumerateIndexReverse(orig_type, self))
-			return &DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse;
-	}
+	if (DeeType_SeqCache_HasPrivateEnumerateIndexReverse(orig_type, self))
+		return &DeeSeq_DefaultRFindWithTSCEnumerateIndexReverse;
 #elif defined(DEFINE_DeeType_SeqCache_RequireRFindWithKey)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
-		if (DeeType_SeqCache_HasPrivateEnumerateIndexReverse(orig_type, self))
-			return &DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse;
-	}
+	if (DeeType_SeqCache_HasPrivateEnumerateIndexReverse(orig_type, self))
+		return &DeeSeq_DefaultRFindWithKeyWithTSCEnumerateIndexReverse;
 #elif defined(DEFINE_DeeType_SeqCache_RequireErase)
 	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
 		if (DeeType_HasPrivateOperator(self, OPERATOR_DELRANGE))
@@ -1496,7 +1513,11 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		break;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequirePop)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO */
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO */
+	} else {
 		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
 			if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_erase, 5, Dee_HashStr__erase, &attrinfo) &&
 			    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_seq_erase))
@@ -1511,7 +1532,9 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemove)
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* TODO */
-	} else if (seqclass != Dee_SEQCLASS_MAP) {
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO */
+	} else {
 		{
 			Dee_tsc_removeall_t tsc_removeall;
 			tsc_removeall = DeeType_SeqCache_RequireRemoveAll_private_uncached(orig_type, self);
@@ -1540,7 +1563,9 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveWithKey)
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* TODO */
-	} else if (seqclass != Dee_SEQCLASS_MAP) {
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO */
+	} else {
 		{
 			Dee_tsc_removeall_with_key_t tsc_removeall_with_key;
 			tsc_removeall_with_key = DeeType_SeqCache_RequireRemoveAllWithKey_private_uncached(orig_type, self);
@@ -1569,7 +1594,9 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemove)
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* TODO */
-	} else if (seqclass != Dee_SEQCLASS_MAP) {
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO */
+	} else {
 		if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
 			Dee_tsc_rfind_t tsc_rfind;
 			tsc_rfind = DeeType_SeqCache_RequireRFind_private_uncached(orig_type, self);
@@ -1588,7 +1615,9 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 #elif defined(DEFINE_DeeType_SeqCache_RequireRRemoveWithKey)
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* TODO */
-	} else if (seqclass != Dee_SEQCLASS_MAP) {
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO */
+	} else {
 		if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
 			Dee_tsc_rfind_with_key_t tsc_rfind_with_key;
 			tsc_rfind_with_key = DeeType_SeqCache_RequireRFindWithKey_private_uncached(orig_type, self);
@@ -1607,7 +1636,9 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveAll)
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* TODO */
-	} else if (seqclass != Dee_SEQCLASS_MAP) {
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO */
+	} else {
 		{
 			Dee_tsc_removeif_t tsc_removeif;
 			tsc_removeif = DeeType_SeqCache_RequireRemoveIf_private_uncached(orig_type, self);
@@ -1630,7 +1661,9 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveAllWithKey)
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* TODO */
-	} else if (seqclass != Dee_SEQCLASS_MAP) {
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO */
+	} else {
 		{
 			Dee_tsc_removeif_t tsc_removeif;
 			tsc_removeif = DeeType_SeqCache_RequireRemoveIf_private_uncached(orig_type, self);
@@ -1653,7 +1686,9 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 #elif defined(DEFINE_DeeType_SeqCache_RequireRemoveIf)
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* TODO */
-	} else if (seqclass != Dee_SEQCLASS_MAP) {
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO */
+	} else {
 		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_removeall, 9, Dee_HashStr__removeall, &attrinfo) &&
 		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_seq_removeall))
 			return &DeeSeq_DefaultRemoveIfWithTSCRemoveAllWithKey;
@@ -1741,27 +1776,27 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 			return &DeeSeq_DefaultSortWithKeyWithSizeAndGetItemIndexAndSetItemIndex;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireSorted)
-	if (seqclass == Dee_SEQCLASS_SEQ &&
-	    DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
+	if (DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
 		if (orig_type->tp_seq->tp_getitem_index_fast)
 			return &DeeSeq_DefaultSortedWithCopySizeAndGetItemIndexFast;
-		return &DeeSeq_DefaultSortedWithCopySizeAndTryGetItemIndex;
+		if (seqclass == Dee_SEQCLASS_SEQ &&
+		    DeeType_HasPrivateOperator(self, OPERATOR_GETITEM))
+			return &DeeSeq_DefaultSortedWithCopySizeAndTryGetItemIndex;
 	}
 	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
 		return &DeeSeq_DefaultSortedWithCopyForeachDefault; /* non-Default would also be OK */
 #elif defined(DEFINE_DeeType_SeqCache_RequireSortedWithKey)
-	if (seqclass == Dee_SEQCLASS_SEQ &&
-	    DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) &&
-	    DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
+	if (DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
 		if (orig_type->tp_seq->tp_getitem_index_fast)
 			return &DeeSeq_DefaultSortedWithKeyWithCopySizeAndGetItemIndexFast;
-		return &DeeSeq_DefaultSortedWithKeyWithCopySizeAndTryGetItemIndex;
+		if (seqclass == Dee_SEQCLASS_SEQ &&
+		    DeeType_HasPrivateOperator(self, OPERATOR_GETITEM))
+			return &DeeSeq_DefaultSortedWithKeyWithCopySizeAndTryGetItemIndex;
 	}
 	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
 		return &DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault; /* non-Default would also be OK */
 #elif defined(DEFINE_DeeType_SeqCache_RequireBFind)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	{
 		Dee_tsc_brange_t tsc_brange;
 		tsc_brange = DeeType_SeqCache_RequireBRange_private_uncached(orig_type, self);
 		if (tsc_brange != NULL &&
@@ -1772,7 +1807,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		}
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireBFindWithKey)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	{
 		Dee_tsc_brange_with_key_t tsc_brange_with_key;
 		tsc_brange_with_key = DeeType_SeqCache_RequireBRangeWithKey_private_uncached(orig_type, self);
 		if (tsc_brange_with_key != NULL &&
@@ -1783,7 +1818,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		}
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireBPosition)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	{
 		Dee_tsc_brange_t tsc_brange;
 		tsc_brange = DeeType_SeqCache_RequireBRange_private_uncached(orig_type, self);
 		if (tsc_brange != NULL &&
@@ -1794,7 +1829,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		}
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireBPositionWithKey)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	{
 		Dee_tsc_brange_with_key_t tsc_brange_with_key;
 		tsc_brange_with_key = DeeType_SeqCache_RequireBRangeWithKey_private_uncached(orig_type, self);
 		if (tsc_brange_with_key != NULL &&
@@ -1805,17 +1840,17 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		}
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireBRange)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	{
 		if (DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) && DeeType_HasOperator(orig_type, OPERATOR_SIZE))
 			return &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireBRangeWithKey)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	{
 		if (DeeType_HasPrivateOperator(self, OPERATOR_GETITEM) && DeeType_HasOperator(orig_type, OPERATOR_SIZE))
 			return &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireBLocate)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	{
 		Dee_tsc_bfind_t tsc_bfind;
 		tsc_bfind = DeeType_SeqCache_RequireBFind_private_uncached(orig_type, self);
 		if (tsc_bfind != NULL &&
@@ -1826,7 +1861,7 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		}
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireBLocateWithKey)
-	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+	{
 		Dee_tsc_bfind_with_key_t tsc_bfind_with_key;
 		tsc_bfind_with_key = DeeType_SeqCache_RequireBFindWithKey_private_uncached(orig_type, self);
 		if (tsc_bfind_with_key != NULL &&
@@ -1838,33 +1873,55 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireSetInsert)
 	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO: use insertall and "operator #" before/after */
+		/* use insertall and "operator #" before/after */
+		if (DeeType_HasOperator(orig_type, OPERATOR_SIZE) &&
+		    DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_insertall, 9, Dee_HashStr__insertall, &attrinfo) &&
+		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_set_insertall))
+			return &DeeSet_DefaultInsertWithSizeAndTSCInsertAll;
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO:
-		 * >> local x = Dict();
+		/* >> local x = Dict();
 		 * >> (x as Set).insert(("foo", "bar")); // x.setnew("foo", "bar");
 		 * >> print repr x; // {"foo":"bar"} */
+		Dee_tsc_map_setnew_t tsc_map_setnew;
+		tsc_map_setnew = DeeType_SeqCache_RequireMapSetNew_private_uncached(orig_type, self);
+		if (tsc_map_setnew != NULL &&
+		    tsc_map_setnew != &DeeMap_DefaultSetNewWithError)
+			return &DeeSet_DefaultInsertWithMapSetNew;
 	} else {
-		/* TODO:
-		 * >> local x = [];
-		 * >> (x as Set).insert(10); // if (10 !in x) x.append(10);
-		 * >> (x as Set).insert(20); // if (10 !in x) x.append(10);
-		 * >> (x as Set).insert(10); // if (10 !in x) x.append(10);
+		/* >> local x = [];
+		 * >> (x as Set).insert(10); // if (!x.contains(10)) x.append(10);
+		 * >> (x as Set).insert(20); // if (!x.contains(20)) x.append(20);
+		 * >> (x as Set).insert(10); // if (!x.contains(10)) x.append(10);
 		 * >> print repr x;          // [10, 20] */
+		Dee_tsc_append_t tsc_append;
+		tsc_append = DeeType_SeqCache_RequireAppend_private_uncached(orig_type, self);
+		if (tsc_append != NULL &&
+		    tsc_append != &DeeSeq_DefaultAppendWithError)
+			return &DeeSet_DefaultInsertWithSeqTSCContainsAndTSCAppend;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireSetRemove)
 	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO: use removeall and "operator #" before/after */
+		/* use removeall and "operator #" before/after */
+		if (DeeType_HasOperator(orig_type, OPERATOR_SIZE) &&
+		    DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_removeall, 9, Dee_HashStr__removeall, &attrinfo) &&
+		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_set_removeall))
+			return &DeeSet_DefaultRemoveWithSizeAndTSCRemoveAll;
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO:
-		 * >> local x = Dict(("foo", "bar"));
-		 * >> (x as Set).remove(("foo", "bar")); // del x["foo"];
+		/* >> local x = Dict(("foo", "bar"));
+		 * >> (x as Set).remove(("foo", "bar")); // if (equals(x["foo"], "bar")) del x["foo"];
 		 * >> print repr x; // {} */
+		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM) &&
+		    DeeType_HasPrivateOperator(self, OPERATOR_DELITEM))
+			return &DeeSet_DefaultRemoveWithMapGetItemAndDelItem;
 	} else {
-		/* TODO:
-		 * >> local x = [10, 20, 30];
+		/* >> local x = [10, 20, 30];
 		 * >> (x as Set).remove(30); // x.remove(30);  (using `DeeType_SeqCache_RequireRemove')
 		 * >> print repr x;          // [10, 20] */
+		Dee_tsc_remove_t tsc_remove;
+		tsc_remove = DeeType_SeqCache_RequireRemove_private_uncached(orig_type, self);
+		if (tsc_remove != NULL &&
+		    tsc_remove != &DeeSeq_DefaultRemoveWithError)
+			return &DeeSet_DefaultRemoveWithSeqTSCRemove;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireSetUnify)
 	if (seqclass == Dee_SEQCLASS_SET) {
@@ -1875,21 +1932,25 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 			if (DeeType_HasOperator(orig_type, OPERATOR_ITER))
 				return &DeeSet_DefaultUnifyWithTSCInsertAndForeach;
 		}
-	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO: (using Map.setdefault)
-		 * >> local x = Dict(("foo", "bar"));
-		 * >> print repr((x as Set).unify(("foo", "ignored"))); // ("foo", "bar")
-		 * >> print repr((x as Set).unify(("bar", 42)));        // ("bar", 42)
-		 * >> print repr x; // {"foo":"bar","bar":42} */
-	} else {
-		/* TODO:
-		 * >> local x = [];
+	} else if (seqclass != Dee_SEQCLASS_MAP) {
+		/* >> local x = [];
 		 * >> (x as Set).unify("foo"); // try { x.locate("foo"); } catch (ValueError) { x.append("foo"); }
 		 * >> (x as Set).unify("bar");
 		 * >> (x as Set).unify("foo");
 		 * >> print repr x; // ["foo", "bar"] */
+		Dee_tsc_append_t tsc_append;
+		tsc_append = DeeType_SeqCache_RequireAppend_private_uncached(orig_type, self);
+		if (tsc_append != NULL &&
+		    tsc_append != &DeeSeq_DefaultAppendWithError)
+			return &DeeSet_DefaultUnifyWithTSCLocateAndTSCAppend;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireSetInsertAll)
+	if (seqclass == Dee_SEQCLASS_SET) {
+		if (DeeType_HasPrivateOperator(self, OPERATOR_INPLACE_ADD))
+			return &DeeSet_DefaultInsertAllWithInplaceAdd;
+		if (DeeType_HasPrivateOperator(self, OPERATOR_INPLACE_OR))
+			return &DeeSet_DefaultInsertAllWithInplaceOr;
+	}
 	{
 		Dee_tsc_set_insert_t tsc_set_insert;
 		tsc_set_insert = DeeType_SeqCache_RequireSetInsert_private_uncached(orig_type, self);
@@ -1898,6 +1959,10 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 			return &DeeSet_DefaultInsertAllWithTSCInsert;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireSetRemoveAll)
+	if (seqclass == Dee_SEQCLASS_SET) {
+		if (DeeType_HasPrivateOperator(self, OPERATOR_INPLACE_SUB))
+			return &DeeSet_DefaultRemoveAllWithInplaceSub;
+	}
 	{
 		Dee_tsc_set_remove_t tsc_set_remove;
 		tsc_set_remove = DeeType_SeqCache_RequireSetRemove_private_uncached(orig_type, self);
@@ -1913,15 +1978,23 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		    tsc_set_remove != &DeeSet_DefaultRemoveWithError)
 			return &DeeSet_DefaultPopWithTSCFirstAndTSCRemove;
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO:
-		 * >> local x = Dict(("foo", "bar"));
-		 * >> print repr((x as Set).pop(("foo", "ignored"))); // ("foo", "bar")
+		/* >> local x = Dict(("foo", "bar"));
+		 * >> print repr((x as Set).pop()); // ("foo", "bar")
 		 * >> print repr x; // {} */
+		Dee_tsc_map_popitem_t tsc_map_popitem;
+		tsc_map_popitem = DeeType_SeqCache_RequireMapPopItem_private_uncached(orig_type, self);
+		if (tsc_map_popitem != NULL &&
+		    tsc_map_popitem != &DeeMap_DefaultPopItemWithError)
+			return &DeeSet_DefaultPopWithMapPopItem;
 	} else {
-		/* TODO: (using Sequence.pop(-1))
-		 * >> local x = [10, 20, 30];
+		/* >> local x = [10, 20, 30];
 		 * >> print repr((x as Set).pop()); // 30
 		 * >> print repr x;                 // [10, 20] */
+		Dee_tsc_pop_t tsc_pop;
+		tsc_pop = DeeType_SeqCache_RequirePop_private_uncached(orig_type, self);
+		if (tsc_pop != NULL &&
+		    tsc_pop != &DeeSeq_DefaultPopWithError)
+			return &DeeSet_DefaultPopWithSeqPop;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireSetPopWithDefault)
 	if (seqclass == Dee_SEQCLASS_SET) {
@@ -1931,15 +2004,23 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		    tsc_set_remove != &DeeSet_DefaultRemoveWithError)
 			return &DeeSet_DefaultPopWithDefaultWithTSCFirstAndTSCRemove;
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO:
-		 * >> local x = Dict(("foo", "bar"));
+		/* >> local x = Dict(("foo", "bar"));
 		 * >> print repr((x as Set).pop(("foo", "ignored"))); // ("foo", "bar")
 		 * >> print repr x; // {} */
+		Dee_tsc_map_popitem_t tsc_map_popitem;
+		tsc_map_popitem = DeeType_SeqCache_RequireMapPopItem_private_uncached(orig_type, self);
+		if (tsc_map_popitem != NULL &&
+		    tsc_map_popitem != &DeeMap_DefaultPopItemWithError)
+			return &DeeSet_DefaultPopWithDefaultWithMapPopItem;
 	} else {
-		/* TODO: (using Sequence.pop(-1))
-		 * >> local x = [10, 20, 30];
+		/* >> local x = [10, 20, 30];
 		 * >> print repr((x as Set).pop()); // 30
 		 * >> print repr x;                 // [10, 20] */
+		Dee_tsc_pop_t tsc_pop;
+		tsc_pop = DeeType_SeqCache_RequirePop_private_uncached(orig_type, self);
+		if (tsc_pop != NULL &&
+		    tsc_pop != &DeeSeq_DefaultPopWithError)
+			return &DeeSet_DefaultPopWithDefaultWithSeqPop;
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapSetOld)
 	if (seqclass == Dee_SEQCLASS_MAP) {
@@ -1957,8 +2038,10 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 				return &DeeMap_DefaultSetOldWithTryGetItemAndSetItem;
 			return &DeeMap_DefaultSetOldWithGetItemAndSetItem;
 		}
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.remove'+`Set.insert' */
 	} else {
-		/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `SetItemIndex' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapSetOldEx)
 	if (seqclass == Dee_SEQCLASS_MAP) {
@@ -1970,8 +2053,10 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 				return &DeeMap_DefaultSetOldExWithTryGetItemAndSetItem;
 			return &DeeMap_DefaultSetOldExWithGetItemAndSetItem;
 		}
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.remove'+`Set.insert' */
 	} else {
-		/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `SetItemIndex' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapSetNew)
 	if (seqclass == Dee_SEQCLASS_MAP) {
@@ -1998,8 +2083,10 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 				return &DeeMap_DefaultSetNewWithGetItemAndSetItem;
 			}
 		}
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.insert' */
 	} else {
-		/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Sequence.append' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapSetNewEx)
 	if (seqclass == Dee_SEQCLASS_MAP) {
@@ -2019,8 +2106,10 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 				return &DeeMap_DefaultSetNewExWithGetItemAndSetItem;
 			}
 		}
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.insert' */
 	} else {
-		/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Sequence.append' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapSetDefault)
 	if (seqclass == Dee_SEQCLASS_MAP) {
@@ -2041,8 +2130,10 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 				return &DeeMap_DefaultSetDefaultWithGetItemAndSetItem;
 			}
 		}
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.insert' */
 	} else {
-		/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Sequence.append' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapUpdate)
 	if (seqclass == Dee_SEQCLASS_MAP) {
@@ -2055,29 +2146,81 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 	} else {
 		/* TODO: Treat as ?S?T2?O?O and use `Set.insert' or `Sequence.append' */
 	}
+#elif defined(DEFINE_DeeType_SeqCache_RequireMapRemove)
+	if (seqclass == Dee_SEQCLASS_MAP) {
+		if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM)) {
+			if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM))
+				return &DeeMap_DefaultRemoveWithBoundItemAndDelItem;
+			if (DeeType_HasOperator(orig_type, OPERATOR_SIZE))
+				return &DeeMap_DefaultRemoveWithSizeAndDelItem;
+		}
+		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_removekeys, 10, Dee_HashStr__removekeys, &attrinfo) &&
+		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_map_removekeys)) {
+			if (DeeType_HasOperator(orig_type, OPERATOR_SIZE))
+				return &DeeMap_DefaultRemoveWithSizeAndTSCRemoveKeys;
+		}
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.remove' */
+	} else {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Sequence.erase' */
+	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapRemoveKeys)
 	if (seqclass == Dee_SEQCLASS_MAP) {
 		if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM))
 			return &DeeMap_DefaultRemoveKeysWithDelItem;
+		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo) &&
+		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_map_remove))
+			return &DeeMap_DefaultRemoveKeysWithTSCRemove;
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.remove' */
 	} else {
-		/* TODO: Treat as ?S?T2?O?O and use `Set.remove' or `Sequence.remove' */
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Sequence.erase' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapPop)
 	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) && DeeType_HasOperator(orig_type, OPERATOR_GETITEM))
-			return &DeeMap_DefaultPopWithGetItemAndDelItem;
+		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+			Dee_tsc_map_remove_t tsc_map_remove;
+			tsc_map_remove = DeeType_SeqCache_RequireMapRemove_private_uncached(orig_type, self);
+			if (tsc_map_remove != NULL &&
+			    tsc_map_remove != &DeeMap_DefaultRemoveWithError &&
+			    tsc_map_remove != &DeeMap_DefaultRemoveWithSizeAndDelItem &&
+			    tsc_map_remove != &DeeMap_DefaultRemoveWithBoundItemAndDelItem)
+				return &DeeMap_DefaultPopWithGetItemAndTSCRemove;
+			if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM))
+				return &DeeMap_DefaultPopWithGetItemAndDelItem;
+		}
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.remove' */
 	} else {
-		/* TODO: Treat as ?S?T2?O?O and use `Set.remove' or `Sequence.remove' */
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Sequence.erase' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapPopWithDefault)
 	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM) && DeeType_HasOperator(orig_type, OPERATOR_GETITEM))
-			return &DeeMap_DefaultPopWithDefaultWithTryGetItemAndDelItem;
+		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+			Dee_tsc_map_remove_t tsc_map_remove;
+			tsc_map_remove = DeeType_SeqCache_RequireMapRemove_private_uncached(orig_type, self);
+			if (tsc_map_remove != NULL &&
+			    tsc_map_remove != &DeeMap_DefaultRemoveWithError &&
+			    tsc_map_remove != &DeeMap_DefaultRemoveWithSizeAndDelItem &&
+			    tsc_map_remove != &DeeMap_DefaultRemoveWithBoundItemAndDelItem)
+				return &DeeMap_DefaultPopWithDefaultWithTryGetItemAndTSCRemove;
+			if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM))
+				return &DeeMap_DefaultPopWithDefaultWithTryGetItemAndDelItem;
+		}
+	} else if (seqclass == Dee_SEQCLASS_SET) {
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.remove' */
 	} else {
-		/* TODO: Treat as ?S?T2?O?O and use `Set.remove' or `Sequence.remove' */
+		/* TODO: Treat as ?S?T2?O?O and use foreach + `Sequence.erase' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapPopItem)
 	if (seqclass == Dee_SEQCLASS_MAP) {
+		Dee_tsc_map_remove_t tsc_map_remove;
+		tsc_map_remove = DeeType_SeqCache_RequireMapRemove_private_uncached(orig_type, self);
+		if (tsc_map_remove != NULL &&
+		    tsc_map_remove != &DeeMap_DefaultRemoveWithError &&
+		    tsc_map_remove != &DeeMap_DefaultRemoveWithSizeAndDelItem &&
+		    tsc_map_remove != &DeeMap_DefaultRemoveWithBoundItemAndDelItem)
+			return &DeeMap_DefaultPopItemWithTSCFirstAndTSCRemove;
 		if (DeeType_HasPrivateOperator(self, OPERATOR_DELITEM))
 			return &DeeMap_DefaultPopItemWithTSCFirstAndDelItem;
 	} else if (seqclass == Dee_SEQCLASS_SET) {
@@ -2086,41 +2229,39 @@ LOCAL_DeeType_SeqCache_RequireFoo_private_uncached(DeeTypeObject *orig_type, Dee
 		/* TODO: Treat as ?S?T2?O?O and use `Sequence.pop' */
 	}
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapKeys)
-	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (self->tp_seq && self->tp_seq->tp_iterkeys)
-			return &DeeMap_DefaultKeysWithTSCIterKeys;
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_iterkeys, 8, Dee_HashStr__iterkeys, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_map_iterkeys))
+	{
+		Dee_tsc_map_iterkeys_t tsc_map_iterkeys;
+		tsc_map_iterkeys = DeeType_SeqCache_RequireMapIterKeys_private_uncached(orig_type, self);
+		if (tsc_map_iterkeys != NULL &&
+		    tsc_map_iterkeys != &DeeMap_DefaultIterKeysWithError)
 			return &DeeMap_DefaultKeysWithTSCIterKeys;
 	}
-	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
-		return &DeeMap_DefaultKeysWithIter;
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapValues)
-	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_itervalues, 10, Dee_HashStr__itervalues, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_map_itervalues))
+	{
+		Dee_tsc_map_itervalues_t tsc_map_itervalues;
+		tsc_map_itervalues = DeeType_SeqCache_RequireMapIterValues_private_uncached(orig_type, self);
+		if (tsc_map_itervalues != NULL &&
+		    tsc_map_itervalues != &DeeMap_DefaultIterValuesWithError)
 			return &DeeMap_DefaultValuesWithTSCIterValues;
 	}
-	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
-		return &DeeMap_DefaultValuesWithIter;
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapIterKeys)
-	if (seqclass == Dee_SEQCLASS_MAP && self->tp_seq && self->tp_seq->tp_iterkeys)
-		return self->tp_seq->tp_iterkeys;
-	{
-		Dee_tsc_map_keys_t tsc_map_keys;
-		tsc_map_keys = DeeType_SeqCache_RequireMapKeys_private_uncached(orig_type, self);
-		if (tsc_map_keys != NULL &&
-		    tsc_map_keys != &DeeMap_DefaultKeysWithError)
+	if (seqclass == Dee_SEQCLASS_MAP) {
+		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_keys, 4, Dee_HashStr__keys, &attrinfo) &&
+		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_map_keys))
 			return &DeeMap_DefaultIterKeysWithTSCKeys;
+		if (self->tp_seq && self->tp_seq->tp_iterkeys)
+			return self->tp_seq->tp_iterkeys;
 	}
+	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
+		return &DeeMap_DefaultIterKeysWithIter;
 #elif defined(DEFINE_DeeType_SeqCache_RequireMapIterValues)
-	{
-		Dee_tsc_map_values_t tsc_map_values;
-		tsc_map_values = DeeType_SeqCache_RequireMapValues_private_uncached(orig_type, self);
-		if (tsc_map_values != NULL &&
-		    tsc_map_values != &DeeMap_DefaultValuesWithError)
+	if (seqclass == Dee_SEQCLASS_MAP) {
+		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_values, 6, Dee_HashStr__values, &attrinfo) &&
+		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD || (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_map_values))
 			return &DeeMap_DefaultIterValuesWithTSCValues;
 	}
+	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER))
+		return &DeeMap_DefaultIterValuesWithIter;
 #endif /* ... */
 	return NULL;
 }
@@ -2180,6 +2321,7 @@ LOCAL_DeeType_SeqCache_RequireFoo(DeeTypeObject *__restrict self) {
 #undef LOCAL_CANONICAL_NAME_str
 #undef LOCAL_CANONICAL_NAME_STR
 #undef LOCAL_CANONICAL_NAME_Dee_HashStr
+#undef LOCAL_IS_GETSET
 
 
 #undef LOCAL_HAS_FOR_SEQ_SUFFIX
@@ -2291,6 +2433,7 @@ DECL_END
 #undef DEFINE_DeeType_SeqCache_RequireMapSetNewEx
 #undef DEFINE_DeeType_SeqCache_RequireMapSetDefault
 #undef DEFINE_DeeType_SeqCache_RequireMapUpdate
+#undef DEFINE_DeeType_SeqCache_RequireMapRemove
 #undef DEFINE_DeeType_SeqCache_RequireMapRemoveKeys
 #undef DEFINE_DeeType_SeqCache_RequireMapPop
 #undef DEFINE_DeeType_SeqCache_RequireMapPopWithDefault

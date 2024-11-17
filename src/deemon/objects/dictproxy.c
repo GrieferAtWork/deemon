@@ -960,32 +960,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_items_byhash(DictProxy *self, size_t argc,
-                  DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *template_;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__template, "o:byhash", &template_))
-		goto err;
-	return DeeDict_ByHash((DeeObject *)self->dp_dict,
-	                      DeeObject_Hash(template_),
-	                      false);
-err:
-	return NULL;
-}
-
-
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst dict_keys_methods[] = {
 	TYPE_KWMETHOD("byhash", &dict_keys_byhash, DOC_GET(map_byhash_doc)),
 	TYPE_METHOD_END
 };
-
-PRIVATE struct type_method tpconst dict_items_methods[] = {
-	TYPE_KWMETHOD("byhash", &dict_items_byhash, DOC_GET(map_byhash_doc)),
-	TYPE_METHOD_END
-};
-
 
 
 PUBLIC DeeTypeObject DeeDictProxy_Type = {
@@ -1131,7 +1111,7 @@ PUBLIC DeeTypeObject DeeDictItems_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ dict_items_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
