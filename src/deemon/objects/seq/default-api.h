@@ -45,14 +45,48 @@ DECL_BEGIN
  *   probably won't actually use them). "Generic" API function will often try to
  *   make use of other APIs (usually Default ones, or operators) for their impl.
  */
+
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_operator_iter_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_operator_sizeob_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_contains_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_getitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_delitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *Dee_tsc_operator_setitem_t)(DeeObject *self, DeeObject *index, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *Dee_tsc_operator_getrange_t)(DeeObject *self, DeeObject *start, DeeObject *end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *Dee_tsc_operator_delrange_t)(DeeObject *self, DeeObject *start, DeeObject *end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *Dee_tsc_operator_setrange_t)(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_operator_foreach_t)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_operator_enumerate_t)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_operator_enumerate_index_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_bounditem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_hasitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *Dee_tsc_operator_size_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *Dee_tsc_operator_size_fast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_operator_getitem_index_t)(DeeObject *self, size_t index);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_operator_delitem_index_t)(DeeObject *self, size_t index);
+typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *Dee_tsc_operator_setitem_index_t)(DeeObject *self, size_t index, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_operator_bounditem_index_t)(DeeObject *self, size_t index);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_operator_hasitem_index_t)(DeeObject *self, size_t index);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_operator_getrange_index_t)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_operator_delrange_index_t)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+typedef WUNUSED_T NONNULL_T((1, 4)) int (DCALL *Dee_tsc_operator_setrange_index_t)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_operator_getrange_index_n_t)(DeeObject *self, Dee_ssize_t start);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_operator_delrange_index_n_t)(DeeObject *self, Dee_ssize_t start);
+typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *Dee_tsc_operator_setrange_index_n_t)(DeeObject *self, Dee_ssize_t start, DeeObject *values);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_trygetitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_operator_trygetitem_index_t)(DeeObject *self, size_t index);
+
+
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_foreach_reverse_t)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_enumerate_index_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_enumerate_index_reverse_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_nonempty_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_trygetfirst_t)(DeeObject *__restrict self); /* @return: ITER_DONE: Sequence is empty */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_getfirst_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_boundfirst_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_delfirst_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_setfirst_t)(DeeObject *self, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_trygetlast_t)(DeeObject *__restrict self); /* @return: ITER_DONE: Sequence is empty */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_getlast_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_boundlast_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_tsc_dellast_t)(DeeObject *__restrict self);
@@ -285,13 +319,45 @@ union Dee_tsc_uslot {
 	DREF DeeObject   *d_function;  /* [1..1][valid_if(:tsc_* == ...)] Thiscall function. */
 	Dee_objmethod_t   d_method;    /* [1..1][valid_if(:tsc_* == ...)] Method callback. */
 	Dee_kwobjmethod_t d_kwmethod;  /* [1..1][valid_if(:tsc_* == ...)] Method callback. */
-	Dee_getmethod_t   d_getter;    /* [1..1][valid_if(:tsc_* == ...)] Getter callback. */
 };
 
 struct Dee_type_seq_cache {
 	/************************************************************************/
 	/* For `deemon.Sequence'                                                */
 	/************************************************************************/
+
+	/* Operators... (TODO: `tsc_operator_iter' should replace `generic_seq_iter' from `seq.c') */
+	//TODO:Dee_tsc_operator_iter_t             tsc_operator_iter;
+	//TODO:Dee_tsc_operator_sizeob_t           tsc_operator_sizeob;
+	//TODO:Dee_tsc_operator_contains_t         tsc_operator_contains;
+	//TODO:Dee_tsc_operator_getitem_t          tsc_operator_getitem;
+	//TODO:Dee_tsc_operator_delitem_t          tsc_operator_delitem;
+	//TODO:Dee_tsc_operator_setitem_t          tsc_operator_setitem;
+	//TODO:Dee_tsc_operator_getrange_t         tsc_operator_getrange;
+	//TODO:Dee_tsc_operator_delrange_t         tsc_operator_delrange;
+	//TODO:Dee_tsc_operator_setrange_t         tsc_operator_setrange;
+	//TODO:Dee_tsc_operator_foreach_t          tsc_operator_foreach;
+	//TODO:Dee_tsc_operator_enumerate_t        tsc_operator_enumerate;
+	//TODO:Dee_tsc_operator_enumerate_index_t  tsc_operator_enumerate_index;
+	//TODO:Dee_tsc_operator_bounditem_t        tsc_operator_bounditem;
+	//TODO:Dee_tsc_operator_hasitem_t          tsc_operator_hasitem;
+	//TODO:Dee_tsc_operator_size_t             tsc_operator_size;
+	//TODO:Dee_tsc_operator_size_fast_t        tsc_operator_size_fast;
+	//TODO:Dee_tsc_operator_getitem_index_t    tsc_operator_getitem_index;
+	//TODO:Dee_tsc_operator_delitem_index_t    tsc_operator_delitem_index;
+	//TODO:Dee_tsc_operator_setitem_index_t    tsc_operator_setitem_index;
+	//TODO:Dee_tsc_operator_bounditem_index_t  tsc_operator_bounditem_index;
+	//TODO:Dee_tsc_operator_hasitem_index_t    tsc_operator_hasitem_index;
+	//TODO:Dee_tsc_operator_getrange_index_t   tsc_operator_getrange_index;
+	//TODO:Dee_tsc_operator_delrange_index_t   tsc_operator_delrange_index;
+	//TODO:Dee_tsc_operator_setrange_index_t   tsc_operator_setrange_index;
+	//TODO:Dee_tsc_operator_getrange_index_n_t tsc_operator_getrange_index_n;
+	//TODO:Dee_tsc_operator_delrange_index_n_t tsc_operator_delrange_index_n;
+	//TODO:Dee_tsc_operator_setrange_index_n_t tsc_operator_setrange_index_n;
+	//TODO:Dee_tsc_operator_trygetitem_t       tsc_operator_trygetitem;
+	//TODO:Dee_tsc_operator_trygetitem_index_t tsc_operator_trygetitem_index;
+
+	/* Common utility functions... */
 	Dee_tsc_foreach_reverse_t         tsc_foreach_reverse;
 	Dee_tsc_enumerate_index_t         tsc_enumerate_index; /* Same as normal enumerate-index, but treated like `(self as Sequence).<enumerate_index>' */
 	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
@@ -304,17 +370,25 @@ struct Dee_type_seq_cache {
 
 	/* Returns the first element of the sequence.
 	 * Calls `err_empty_sequence()' when it is empty. */
-	Dee_tsc_getfirst_t   tsc_getfirst;
-	Dee_tsc_boundfirst_t tsc_boundfirst;
-	Dee_tsc_delfirst_t   tsc_delfirst;
-	Dee_tsc_setfirst_t   tsc_setfirst;
+	Dee_tsc_trygetfirst_t tsc_trygetfirst;
+	Dee_tsc_getfirst_t    tsc_getfirst;
+	union Dee_tsc_uslot   tsc_getfirst_data;
+	Dee_tsc_boundfirst_t  tsc_boundfirst;
+	Dee_tsc_delfirst_t    tsc_delfirst;
+	union Dee_tsc_uslot   tsc_delfirst_data;
+	Dee_tsc_setfirst_t    tsc_setfirst;
+	union Dee_tsc_uslot   tsc_setfirst_data;
 
 	/* Returns the last element of the sequence.
 	 * Calls `err_empty_sequence()' when it is empty. */
-	Dee_tsc_getlast_t   tsc_getlast;
-	Dee_tsc_boundlast_t tsc_boundlast;
-	Dee_tsc_dellast_t   tsc_dellast;
-	Dee_tsc_setlast_t   tsc_setlast;
+	Dee_tsc_trygetlast_t tsc_trygetlast;
+	Dee_tsc_getlast_t    tsc_getlast;
+	union Dee_tsc_uslot  tsc_getlast_data;
+	Dee_tsc_boundlast_t  tsc_boundlast;
+	Dee_tsc_dellast_t    tsc_dellast;
+	union Dee_tsc_uslot  tsc_dellast_data;
+	Dee_tsc_setlast_t    tsc_setlast;
+	union Dee_tsc_uslot  tsc_setlast_data;
 
 	/* Functions that need additional variants for sequence sub-types that don't have indices (sets, maps) */
 	Dee_tsc_any_t                           tsc_any;
@@ -514,16 +588,17 @@ INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_t DCALL DeeT
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_with_int_range_t DCALL DeeType_SeqCache_RequireMakeEnumerationWithIntRange(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_with_range_t DCALL DeeType_SeqCache_RequireMakeEnumerationWithRange(DeeTypeObject *__restrict self);
 
+/* Sequence function... */
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_trygetfirst_t DCALL DeeType_SeqCache_RequireTryGetFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_getfirst_t DCALL DeeType_SeqCache_RequireGetFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundfirst_t DCALL DeeType_SeqCache_RequireBoundFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_delfirst_t DCALL DeeType_SeqCache_RequireDelFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_setfirst_t DCALL DeeType_SeqCache_RequireSetFirst(DeeTypeObject *__restrict self);
+INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_trygetlast_t DCALL DeeType_SeqCache_RequireTryGetLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_getlast_t DCALL DeeType_SeqCache_RequireGetLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundlast_t DCALL DeeType_SeqCache_RequireBoundLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_dellast_t DCALL DeeType_SeqCache_RequireDelLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_setlast_t DCALL DeeType_SeqCache_RequireSetLast(DeeTypeObject *__restrict self);
-
-/* Functions that need additional variants for sequence sub-types that don't have indices (sets, maps) */
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_t DCALL DeeType_SeqCache_RequireAny(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_with_key_t DCALL DeeType_SeqCache_RequireAnyWithKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_with_range_t DCALL DeeType_SeqCache_RequireAnyWithRange(DeeTypeObject *__restrict self);
@@ -659,10 +734,12 @@ INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeSeq_EnumerateWithRange(Dee
 
 
 /* Helpers to quickly invoke default sequence functions. */
+#define DeeSeq_TryGetFirst(self) (*DeeType_SeqCache_RequireTryGetFirst(Dee_TYPE(self)))(self)
 #define DeeSeq_GetFirst(self)    (*DeeType_SeqCache_RequireGetFirst(Dee_TYPE(self)))(self)
 #define DeeSeq_BoundFirst(self)  (*DeeType_SeqCache_RequireBoundFirst(Dee_TYPE(self)))(self)
 #define DeeSeq_DelFirst(self)    (*DeeType_SeqCache_RequireDelFirst(Dee_TYPE(self)))(self)
 #define DeeSeq_SetFirst(self, v) (*DeeType_SeqCache_RequireSetFirst(Dee_TYPE(self)))(self, v)
+#define DeeSeq_TryGetLast(self)  (*DeeType_SeqCache_RequireTryGetLast(Dee_TYPE(self)))(self)
 #define DeeSeq_GetLast(self)     (*DeeType_SeqCache_RequireGetLast(Dee_TYPE(self)))(self)
 #define DeeSeq_BoundLast(self)   (*DeeType_SeqCache_RequireBoundLast(Dee_TYPE(self)))(self)
 #define DeeSeq_DelLast(self)     (*DeeType_SeqCache_RequireDelLast(Dee_TYPE(self)))(self)
@@ -794,44 +871,77 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexRev
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithGetAttr(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetFirstWithTSCGetFirst(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetFirstWithTryGetItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetFirstWithTryGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetFirstWithSizeAndGetItemIndexFast(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetFirstWithSizeAndGetItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetFirstWithSizeAndGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetFirstWithForeach(DeeObject *__restrict self);
+#define DeeSeq_DefaultTryGetFirstWithError DeeSeq_DefaultGetFirstWithError
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithCallAttrGetFirst(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithCallGetFirstDataFunction(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithGetItemIndex(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithForeachDefault(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithBoundAttr(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithBoundItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithForeach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetFirstWithError(DeeObject *__restrict self);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithCallAttrGetFirst(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithCallGetFirstDataFunction(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithBoundItemIndex(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithForeachDefault(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelAttr(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithBoundItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithForeach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundFirstWithError(DeeObject *__restrict self);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithCallAttrDelFirst(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithCallDelFirstDataFunction(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelItemIndex(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithTSCRemoveForSet(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelItemForMap(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithDelItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithTSCFirstAndTSCSetRemove(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithTSCFirstAndMapDelItem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelFirstWithError(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithSetAttr(DeeObject *self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithSetItem(DeeObject *self, DeeObject *value);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithCallAttrSetFirst(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithCallSetFirstDataFunction(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithSetItemIndex(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithSetItem(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetFirstWithError(DeeObject *self, DeeObject *value);
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithGetAttr(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithSizeObAndGetItem(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithSizeAndGetItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetLastWithTSCGetLast(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetLastWithSizeAndGetItemIndexFast(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetLastWithSizeAndGetItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetLastWithSizeAndGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetLastWithForeach(DeeObject *__restrict self);
+#define DeeSeq_DefaultTryGetLastWithError DeeSeq_DefaultGetLastWithError
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithCallAttrGetLast(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithCallGetLastDataFunction(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithSizeAndGetItemIndexFast(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithForeachDefault(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithBoundAttr(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithSizeObAndBoundItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithSizeAndGetItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithSizeAndGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithForeach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultGetLastWithError(DeeObject *__restrict self);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithCallAttrGetLast(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithCallGetLastDataFunction(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithSizeAndBoundItemIndex(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithSizeAndGetItemIndexFast(DeeObject *__restrict self);
-#define DeeSeq_DefaultBoundLastWithForeachDefault DeeSeq_DefaultBoundFirstWithForeachDefault
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithDelAttr(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithSizeAndBoundItem(DeeObject *__restrict self);
+#define DeeSeq_DefaultBoundLastWithForeach DeeSeq_DefaultBoundFirstWithForeach
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoundLastWithError(DeeObject *__restrict self);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithCallAttrDelLast(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithCallDelLastDataFunction(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithSizeAndDelItemIndex(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithSizeObAndDelItem(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithTSCRemoveForSet(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithDelItemForMap(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithSizeAndDelItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithTSCLastAndTSCSetRemove(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithTSCLastAndMapDelItem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultDelLastWithError(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSetAttr(DeeObject *self, DeeObject *value);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithCallAttrSetLast(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithCallSetLastDataFunction(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSizeAndSetItemIndex(DeeObject *self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSizeObAndSetItem(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSizeAndSetItem(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithError(DeeObject *self, DeeObject *value);
 
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultNonEmptyWithError(DeeObject *__restrict self);
@@ -1606,25 +1716,21 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultPopItemWithError
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithCallAttrKeys(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithCallKeysDataFunction(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithCallKeysDataMethod(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithTSCIterKeys(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultKeysWithError(DeeObject *self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithCallAttrValues(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithCallValuesDataFunction(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithCallValuesDataMethod(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithTSCIterValues(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultValuesWithError(DeeObject *self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithCallAttrIterKeys(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithCallIterKeysDataFunction(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithCallIterKeysDataMethod(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithTSCKeys(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterKeysWithError(DeeObject *self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithCallIterValuesDataFunction(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithCallIterValuesDataMethod(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithTSCValues(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithIter(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultIterValuesWithError(DeeObject *self);

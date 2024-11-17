@@ -711,7 +711,10 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-bsearch-impl.c.inl">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-require-impl.c.inl">
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-first.c.inl">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-last.c.inl">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-impl.c.inl">

@@ -96,12 +96,12 @@ ds_mk_visit(DefaultSequence_MapProxy *__restrict self,
 }
 
 
-PRIVATE NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 ds_mk_iter(DefaultSequence_MapProxy *__restrict self) {
 	return new_DeeMap_IterKeys(self->dsmp_map);
 }
 
-PRIVATE NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 ds_mv_iter(DefaultSequence_MapProxy *__restrict self) {
 	return new_DeeMap_IterValues(self->dsmp_map);
 }
@@ -323,7 +323,7 @@ PRIVATE struct type_member tpconst ds_mk_members[] = {
 
 
 
-INTDEF DeeTypeObject DefaultSequence_MapKeys_Type = {
+INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqMapKeys",
 	/* .tp_doc      = */ DOC("(map)"),
@@ -369,7 +369,7 @@ INTDEF DeeTypeObject DefaultSequence_MapKeys_Type = {
 	/* .tp_class_members = */ NULL,
 };
 
-INTDEF DeeTypeObject DefaultSequence_MapValues_Type = {
+INTERN DeeTypeObject DefaultSequence_MapValues_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqMapValues",
 	/* .tp_doc      = */ DOC("(map)"),

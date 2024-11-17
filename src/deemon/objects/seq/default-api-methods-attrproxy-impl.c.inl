@@ -57,6 +57,14 @@ DECL_BEGIN
 #define LOCAL_DeeMap_DefaultFooWithCallAttrBar(Foo, Bar)     LOCAL_DeeApi_DefaultFooWithCallAttrBar(DeeMap_Default, Foo, Bar)
 #define LOCAL_DeeMap_DefaultFooWithCallAttrBar_(Foo, Bar, x) LOCAL_DeeApi_DefaultFooWithCallAttrBar_(DeeMap_Default, Foo, Bar, x)
 
+#define LOCAL_DeeSeq_DefaultGetFirstWithCallAttrGetFirst                       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(GetFirst, GetFirst)
+#define LOCAL_DeeSeq_DefaultBoundFirstWithCallAttrGetFirst                     LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BoundFirst, GetFirst)
+#define LOCAL_DeeSeq_DefaultDelFirstWithCallAttrDelFirst                       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(DelFirst, DelFirst)
+#define LOCAL_DeeSeq_DefaultSetFirstWithCallAttrSetFirst                       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(SetFirst, SetFirst)
+#define LOCAL_DeeSeq_DefaultGetLastWithCallAttrGetLast                         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(GetLast, GetLast)
+#define LOCAL_DeeSeq_DefaultBoundLastWithCallAttrGetLast                       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BoundLast, GetLast)
+#define LOCAL_DeeSeq_DefaultDelLastWithCallAttrDelLast                         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(DelLast, DelLast)
+#define LOCAL_DeeSeq_DefaultSetLastWithCallAttrSetLast                         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(SetLast, SetLast)
 #define LOCAL_DeeSeq_DefaultAnyWithCallAttrAny                                 LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Any, Any)
 #define LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSeq                    LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(AnyWithKey, Any, ForSeq)
 #define LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSetOrMap               LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(AnyWithKey, Any, ForSetOrMap)
@@ -181,6 +189,12 @@ DECL_BEGIN
 #ifdef DEFINE_DeeSeq_DefaultFooWithCallAttrFoo
 #define LOCAL_DeeObject_GetAttr(self, tsc_foo_data, attr) \
 	DeeObject_GetAttr(self, (DeeObject *)(attr))
+#define LOCAL_DeeObject_BoundAttr(self, tsc_foo_data, attr) \
+	DeeObject_BoundAttr(self, (DeeObject *)(attr))
+#define LOCAL_DeeObject_DelAttr(self, tsc_foo_data, attr) \
+	DeeObject_DelAttr(self, (DeeObject *)(attr))
+#define LOCAL_DeeObject_SetAttr(self, tsc_foo_data, attr, value) \
+	DeeObject_SetAttr(self, (DeeObject *)(attr), value)
 #define LOCAL_DeeObject_CallAttr(self, tsc_foo_data, attr, argc, argv) \
 	DeeObject_CallAttr(self, (DeeObject *)(attr), argc, argv)
 #define LOCAL_DeeObject_CallAttrf(self, tsc_foo_data, attr, ...) \
@@ -188,13 +202,17 @@ DECL_BEGIN
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataFunction)
 #define LOCAL_DeeObject_GetAttr(self, tsc_foo_data, attr) \
 	DeeObject_ThisCall(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self, 0, NULL)
+#define LOCAL_DeeObject_BoundAttr(self, tsc_foo_data, attr) \
+	call_getter_for_bound(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self)
+#define LOCAL_DeeObject_DelAttr(self, tsc_foo_data, attr) \
+	call_delete(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self)
+#define LOCAL_DeeObject_SetAttr(self, tsc_foo_data, attr, value) \
+	call_setter(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self, value)
 #define LOCAL_DeeObject_CallAttr(self, tsc_foo_data, attr, argc, argv) \
 	DeeObject_ThisCall(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self, argc, argv)
 #define LOCAL_DeeObject_CallAttrf(self, tsc_foo_data, attr, ...) \
 	DeeObject_ThisCallf(Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_function, self, __VA_ARGS__)
 #elif defined(DEFINE_DeeSeq_DefaultFooWithCallFooDataMethod)
-#define LOCAL_DeeObject_GetAttr(self, tsc_foo_data, attr) \
-	(*Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_getter)(self)
 #define LOCAL_DeeObject_CallAttr(self, tsc_foo_data, attr, argc, argv) \
 	(*Dee_TYPE(self)->tp_seq->_tp_seqcache->tsc_foo_data.d_method)(self, argc, argv)
 #define LOCAL_DeeObject_CallAttrf(self, tsc_foo_data, attr, ...) \
@@ -1535,6 +1553,46 @@ LOCAL_DeeMap_DefaultPopItemWithCallAttrPopItem(DeeObject *self) {
 
 #ifdef LOCAL_DeeObject_GetAttr
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeSeq_DefaultGetFirstWithCallAttrGetFirst(DeeObject *__restrict self) {
+	return LOCAL_DeeObject_GetAttr(self, tsc_getfirst_data, &str_first);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+LOCAL_DeeSeq_DefaultBoundFirstWithCallAttrGetFirst(DeeObject *__restrict self) {
+	return LOCAL_DeeObject_BoundAttr(self, tsc_getfirst_data, &str_first);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+LOCAL_DeeSeq_DefaultDelFirstWithCallAttrDelFirst(DeeObject *__restrict self) {
+	return LOCAL_DeeObject_DelAttr(self, tsc_delfirst_data, &str_first);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeSeq_DefaultSetFirstWithCallAttrSetFirst(DeeObject *self, DeeObject *value) {
+	return LOCAL_DeeObject_SetAttr(self, tsc_delfirst_data, &str_first, value);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeSeq_DefaultGetLastWithCallAttrGetLast(DeeObject *__restrict self) {
+	return LOCAL_DeeObject_GetAttr(self, tsc_getlast_data, &str_last);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+LOCAL_DeeSeq_DefaultBoundLastWithCallAttrGetLast(DeeObject *__restrict self) {
+	return LOCAL_DeeObject_BoundAttr(self, tsc_getlast_data, &str_last);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+LOCAL_DeeSeq_DefaultDelLastWithCallAttrDelLast(DeeObject *__restrict self) {
+	return LOCAL_DeeObject_DelAttr(self, tsc_dellast_data, &str_last);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_DeeSeq_DefaultSetLastWithCallAttrSetLast(DeeObject *self, DeeObject *value) {
+	return LOCAL_DeeObject_SetAttr(self, tsc_dellast_data, &str_last, value);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeMap_DefaultKeysWithCallAttrKeys(DeeObject *self) {
 	return LOCAL_DeeObject_GetAttr(self, tsc_map_keys_data, &str_keys);
 }
@@ -1556,9 +1614,20 @@ LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self) {
 #endif /* LOCAL_DeeObject_GetAttr */
 
 #undef LOCAL_DeeObject_GetAttr
+#undef LOCAL_DeeObject_BoundAttr
+#undef LOCAL_DeeObject_DelAttr
+#undef LOCAL_DeeObject_SetAttr
 #undef LOCAL_DeeObject_CallAttr
 #undef LOCAL_DeeObject_CallAttrf
 
+#undef LOCAL_DeeSeq_DefaultGetFirstWithCallAttrGetFirst
+#undef LOCAL_DeeSeq_DefaultBoundFirstWithCallAttrBoundFirst
+#undef LOCAL_DeeSeq_DefaultDelFirstWithCallAttrDelFirst
+#undef LOCAL_DeeSeq_DefaultSetFirstWithCallAttrSetFirst
+#undef LOCAL_DeeSeq_DefaultGetLastWithCallAttrGetLast
+#undef LOCAL_DeeSeq_DefaultBoundLastWithCallAttrBoundLast
+#undef LOCAL_DeeSeq_DefaultDelLastWithCallAttrDelLast
+#undef LOCAL_DeeSeq_DefaultSetLastWithCallAttrSetLast
 #undef LOCAL_DeeSeq_DefaultAnyWithCallAttrAny
 #undef LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSeq
 #undef LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSetOrMap

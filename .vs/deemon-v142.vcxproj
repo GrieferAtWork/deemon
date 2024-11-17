@@ -246,7 +246,8 @@
 		<ClInclude Include="..\src\deemon\objects\seq\concat.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-attrproxy-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-bsearch-impl.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-require-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-first.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-last.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl" />
