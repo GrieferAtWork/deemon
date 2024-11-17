@@ -23,11 +23,13 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dsmp_map; /* [1..1][const] The map-like object being proxied. */
+	PROXY_OBJECT_HEAD(dsmp_map) /* [1..1][const] The map-like object being proxied. */
 } DefaultSequence_MapProxy;
 
 INTDEF DeeTypeObject DefaultSequence_MapKeys_Type;   /* DefaultSequence_MapProxy */

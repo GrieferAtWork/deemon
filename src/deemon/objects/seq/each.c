@@ -108,45 +108,11 @@ se_ctor(SeqEachBase *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-se_copy(SeqEachBase *__restrict self,
-        SeqEachBase *__restrict other) {
-	self->se_seq = other->se_seq;
-	Dee_Incref(self->se_seq);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-se_deep(SeqEachBase *__restrict self,
-        SeqEachBase *__restrict other) {
-	self->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if unlikely(!self->se_seq)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-se_init(SeqEachBase *__restrict self,
-        size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqEach", &self->se_seq))
-		goto err;
-	Dee_Incref(self->se_seq);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1)) void DCALL
-se_fini(SeqEachBase *__restrict self) {
-	Dee_Decref(self->se_seq);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-se_visit(SeqEachBase *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->se_seq);
-}
+#define se_copy  generic_proxy_copy_alias
+#define se_deep  generic_proxy_deepcopy
+#define se_init  generic_proxy_init
+#define se_fini  generic_proxy_fini
+#define se_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 se_foreach_assign_cb(void *arg, DeeObject *elem) {
@@ -2212,65 +2178,19 @@ sew_nsi_fastsize(SeqEachBase *__restrict self) {
 	return DeeFastSeq_GetSize_deprecated(self->se_seq);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_bounditem(SeqEachBase *self, DeeObject *index) {
-	return DeeObject_BoundItem(self->se_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_hasitem(SeqEachBase *self, DeeObject *index) {
-	return DeeObject_HasItem(self->se_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sew_bounditem_index(SeqEachBase *self, size_t index) {
-	return DeeObject_BoundItemIndex(self->se_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sew_hasitem_index(SeqEachBase *self, size_t index) {
-	return DeeObject_HasItemIndex(self->se_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_bounditem_string_hash(SeqEachBase *self, char const *key, Dee_hash_t hash) {
-	return DeeObject_BoundItemStringHash(self->se_seq, key, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_hasitem_string_hash(SeqEachBase *self, char const *key, Dee_hash_t hash) {
-	return DeeObject_HasItemStringHash(self->se_seq, key, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_bounditem_string_len_hash(SeqEachBase *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	return DeeObject_BoundItemStringLenHash(self->se_seq, key, keylen, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_hasitem_string_len_hash(SeqEachBase *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	return DeeObject_HasItemStringLenHash(self->se_seq, key, keylen, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-sew_size(SeqEachBase *__restrict self) {
-	return DeeObject_Size(self->se_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-sew_size_fast(SeqEachBase *__restrict self) {
-	return DeeObject_SizeFast(self->se_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sew_sizeob(SeqEachBase *__restrict self) {
-	return DeeObject_SizeOb(self->se_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sew_iterkeys(SeqEachBase *__restrict self) {
-	return DeeObject_IterKeys(self->se_seq);
-}
+STATIC_ASSERT(offsetof(SeqEachBase, se_seq) == offsetof(ProxyObject, po_obj));
+#define sew_bounditem                 generic_proxy_bounditem
+#define sew_hasitem                   generic_proxy_hasitem
+#define sew_bounditem_index           generic_proxy_bounditem_index
+#define sew_hasitem_index             generic_proxy_hasitem_index
+#define sew_bounditem_string_hash     generic_proxy_bounditem_string_hash
+#define sew_hasitem_string_hash       generic_proxy_hasitem_string_hash
+#define sew_bounditem_string_len_hash generic_proxy_bounditem_string_len_hash
+#define sew_hasitem_string_len_hash   generic_proxy_hasitem_string_len_hash
+#define sew_size                      generic_proxy_size
+#define sew_size_fast                 generic_proxy_size_fast
+#define sew_sizeob                    generic_proxy_sizeob
+#define sew_iterkeys                  generic_proxy_iterkeys
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seo_getitem_index(SeqEachOperator *__restrict self, size_t index) {
@@ -2502,79 +2422,20 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sewi_copy(SeqEachIterator *__restrict self,
-          SeqEachIterator *__restrict other) {
-	self->ei_iter = DeeObject_Copy(other->ei_iter);
-	if unlikely(!self->ei_iter)
-		goto err;
-	self->ei_each = other->ei_each;
-	Dee_Incref(self->ei_each);
-	return 0;
-err:
-	return -1;
-}
+STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(SeqEachIterator, ei_each) == offsetof(ProxyObject2, po_obj2));
+#define sewi_copy  generic_proxy2_copy_recursive1_alias2 /* Copy "ei_iter", alias "ei_each" */
+#define sewi_deep  generic_proxy2_deepcopy
+#define sewi_fini  generic_proxy2_fini
+#define sewi_visit generic_proxy2_visit
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sewi_deep(SeqEachIterator *__restrict self,
-          SeqEachIterator *__restrict other) {
-	self->ei_iter = DeeObject_DeepCopy(other->ei_iter);
-	if unlikely(!self->ei_iter)
-		goto err;
-	self->ei_each = (DREF SeqEachBase *)DeeObject_DeepCopy((DeeObject *)other->ei_each);
-	if unlikely(!self->ei_each)
-		goto err_iter;
-	return 0;
-err_iter:
-	Dee_Decref(self->ei_iter);
-err:
-	return -1;
-}
+STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject, po_obj));
+#define sewi_bool generic_proxy_bool
 
-PRIVATE NONNULL((1)) void DCALL
-sewi_fini(SeqEachIterator *__restrict self) {
-	Dee_Decref(self->ei_iter);
-	Dee_Decref(self->ei_each);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-sewi_visit(SeqEachIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->ei_iter);
-	Dee_Visit(self->ei_each);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sewi_bool(SeqEachIterator *__restrict self) {
-	return DeeObject_Bool(self->ei_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sewi_compare_eq(SeqEachIterator *self, SeqEachIterator *other) {
-#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-	if (DeeObject_AssertTypeExact(other, &SeqEachOperatorIterator_Type))
-		goto err;
-#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-	return DeeObject_CompareEq(self->ei_iter, other->ei_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sewi_compare(SeqEachIterator *self, SeqEachIterator *other) {
-#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-	if (DeeObject_AssertTypeExact(other, &SeqEachOperatorIterator_Type))
-		goto err;
-#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-	return DeeObject_Compare(self->ei_iter, other->ei_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
+STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject, po_obj));
+#define sewi_compare_eq    generic_proxy_compare_eq_recursive
+#define sewi_compare       generic_proxy_compare_recursive
+#define sewi_trycompare_eq generic_proxy_trycompare_eq_recursive
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachBase *DCALL
 sewi_nii_getseq(SeqEachIterator *__restrict self) {
@@ -2649,7 +2510,7 @@ PRIVATE struct type_cmp sewi_cmp = {
 	/* .tp_hash          = */ NULL,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sewi_compare_eq,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&sewi_compare,
-	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&sewi_trycompare_eq,
 	/* .tp_eq            = */ NULL,
 	/* .tp_ne            = */ NULL,
 	/* .tp_lo            = */ NULL,

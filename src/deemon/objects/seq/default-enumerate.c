@@ -211,10 +211,8 @@ err:
 #define de_wei_fini       withintrange_fini
 #define de_weaf_fini      withrange_fini
 
-PRIVATE NONNULL((1)) void DCALL
-fullrange_fini(DefaultEnumeration_FullRange *__restrict self) {
-	Dee_Decref(self->defr_seq);
-}
+STATIC_ASSERT(offsetof(DefaultEnumeration_FullRange, defr_seq) == offsetof(ProxyObject, po_obj));
+#define fullrange_fini generic_proxy_fini
 
 PRIVATE NONNULL((1)) void DCALL
 withrange_fini(DefaultEnumeration_WithRange *__restrict self) {
@@ -247,11 +245,8 @@ withrange_fini(DefaultEnumeration_WithRange *__restrict self) {
 #define de_wei_visit       withintrange_visit
 #define de_weaf_visit      withrange_visit
 
-PRIVATE NONNULL((1, 2)) void DCALL
-fullrange_visit(DefaultEnumeration_FullRange *__restrict self,
-                dvisit_t proc, void *arg) {
-	Dee_Visit(self->defr_seq);
-}
+STATIC_ASSERT(offsetof(DefaultEnumeration_FullRange, defr_seq) == offsetof(ProxyObject, po_obj));
+#define fullrange_visit generic_proxy_visit
 
 PRIVATE NONNULL((1, 2)) void DCALL
 withrange_visit(DefaultEnumeration_WithRange *__restrict self,

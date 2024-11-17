@@ -45,60 +45,9 @@ byattr_ctor(MapByAttr *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_copy(MapByAttr *__restrict self,
-            MapByAttr *__restrict other) {
-	self->mba_map = other->mba_map;
-	Dee_Incref(self->mba_map);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_deep(MapByAttr *__restrict self,
-            MapByAttr *__restrict other) {
-	self->mba_map = DeeObject_DeepCopy(other->mba_map);
-	if unlikely(!self->mba_map)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-byattr_init(MapByAttr *__restrict self,
-            size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_MappingByAttr", &self->mba_map))
-		goto err;
-	Dee_Incref(self->mba_map);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1)) void DCALL
-byattr_fini(MapByAttr *__restrict self) {
-	Dee_Decref(self->mba_map);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-byattr_visit(MapByAttr *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->mba_map);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-byattr_getattr(MapByAttr *self, /*String*/ DeeObject *name) {
-	return DeeObject_GetItem(self->mba_map, name);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_delattr(MapByAttr *self, /*String*/ DeeObject *name) {
-	return DeeObject_DelItem(self->mba_map, name);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-byattr_setattr(MapByAttr *self, /*String*/ DeeObject *name, DeeObject *value) {
-	return DeeObject_SetItem(self->mba_map, name, value);
-}
+#define byattr_copy generic_proxy_copy_alias
+#define byattr_deep generic_proxy_deepcopy
+#define byattr_init generic_proxy_init
 
 struct byattr_enumattr_foreach_data {
 	MapByAttr *befd_self;
@@ -136,72 +85,23 @@ byattr_enumattr(DeeTypeObject *tp_self, MapByAttr *self,
 	                             &cookie);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_hasattr(MapByAttr *self, /*String*/ DeeObject *attr) {
-	return DeeObject_HasItem(self->mba_map, attr);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_boundattr(MapByAttr *self, /*String*/ DeeObject *attr) {
-	return DeeObject_BoundItem(self->mba_map, attr);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-byattr_getattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
-	return DeeObject_GetItemStringHash(self->mba_map, attr, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_delattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
-	return DeeObject_DelItemStringHash(self->mba_map, attr, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
-byattr_setattr_string_hash(MapByAttr *self, char const *attr,
-                           Dee_hash_t hash, DeeObject *value) {
-	return DeeObject_SetItemStringHash(self->mba_map, attr, hash, value);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_hasattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
-	return DeeObject_HasItemStringHash(self->mba_map, attr, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_boundattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
-	return DeeObject_BoundItemStringHash(self->mba_map, attr, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-byattr_getattr_string_len_hash(MapByAttr *self, char const *attr,
-                               size_t attrlen, Dee_hash_t hash) {
-	return DeeObject_GetItemStringLenHash(self->mba_map, attr, attrlen, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_delattr_string_len_hash(MapByAttr *self, char const *attr,
-                               size_t attrlen, Dee_hash_t hash) {
-	return DeeObject_DelItemStringLenHash(self->mba_map, attr, attrlen, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
-byattr_setattr_string_len_hash(MapByAttr *self, char const *attr,
-                               size_t attrlen, Dee_hash_t hash, DeeObject *value) {
-	return DeeObject_SetItemStringLenHash(self->mba_map, attr, attrlen, hash, value);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_hasattr_string_len_hash(MapByAttr *self, char const *attr,
-                               size_t attrlen, Dee_hash_t hash) {
-	return DeeObject_HasItemStringLenHash(self->mba_map, attr, attrlen, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_boundattr_string_len_hash(MapByAttr *self, char const *attr,
-                                 size_t attrlen, Dee_hash_t hash) {
-	return DeeObject_BoundItemStringLenHash(self->mba_map, attr, attrlen, hash);
-}
-
+#define byattr_fini                      generic_proxy_fini
+#define byattr_visit                     generic_proxy_visit
+#define byattr_getattr                   generic_proxy_getitem
+#define byattr_delattr                   generic_proxy_delitem
+#define byattr_setattr                   generic_proxy_setitem
+#define byattr_hasattr                   generic_proxy_hasitem
+#define byattr_boundattr                 generic_proxy_bounditem
+#define byattr_getattr_string_hash       generic_proxy_getitem_string_hash
+#define byattr_delattr_string_hash       generic_proxy_delitem_string_hash
+#define byattr_setattr_string_hash       generic_proxy_setitem_string_hash
+#define byattr_hasattr_string_hash       generic_proxy_hasitem_string_hash
+#define byattr_boundattr_string_hash     generic_proxy_bounditem_string_hash
+#define byattr_getattr_string_len_hash   generic_proxy_getitem_string_len_hash
+#define byattr_delattr_string_len_hash   generic_proxy_delitem_string_len_hash
+#define byattr_setattr_string_len_hash   generic_proxy_setitem_string_len_hash
+#define byattr_hasattr_string_len_hash   generic_proxy_hasitem_string_len_hash
+#define byattr_boundattr_string_len_hash generic_proxy_bounditem_string_len_hash
 
 
 PRIVATE struct type_attr byattr_attr = {
@@ -244,46 +144,6 @@ byattr_printrepr(MapByAttr *__restrict self,
 	return DeeFormat_Printf(printer, arg, "%r.byattr", self->mba_map);
 }
 
-
-
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-byattr_hash(MapByAttr *__restrict self) {
-	return DeeObject_Hash(self->mba_map);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_compare_eq(MapByAttr *self, MapByAttr *other) {
-	if unlikely(DeeObject_AssertType(other, &MapByAttr_Type))
-		goto err;
-	return DeeObject_CmpEqAsBool(self->mba_map, other->mba_map);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_compare(MapByAttr *self, MapByAttr *other) {
-	if unlikely(DeeObject_AssertType(other, &MapByAttr_Type))
-		goto err;
-	return DeeObject_Compare(self->mba_map, other->mba_map);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-byattr_trycompare_eq(MapByAttr *self, MapByAttr *other) {
-	if unlikely(!DeeObject_InstanceOf(other, &MapByAttr_Type))
-		return -1;
-	return DeeObject_TryCompareEq(self->mba_map, other->mba_map);
-}
-
-PRIVATE struct type_cmp byattr_cmp = {
-	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&byattr_hash,
-	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *self, DeeObject *))&byattr_compare_eq,
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *self, DeeObject *))&byattr_compare,
-	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *self, DeeObject *))&byattr_trycompare_eq,
-};
-
-
 INTERN DeeTypeObject MapByAttr_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MappingByAttr",
@@ -318,7 +178,7 @@ INTERN DeeTypeObject MapByAttr_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&byattr_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &byattr_cmp,
+	/* .tp_cmp           = */ &generic_proxy_cmp_recursive,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,

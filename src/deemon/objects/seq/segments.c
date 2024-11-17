@@ -32,11 +32,12 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
-#include "segments.h"
-/**/
-
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
+
+/**/
+#include "segments.h"
 
 DECL_BEGIN
 
@@ -93,15 +94,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-segiter_fini(SegmentsIterator *__restrict self) {
-	Dee_Decref(self->si_iter);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-segiter_visit(SegmentsIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->si_iter);
-}
+STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_obj));
+#define segiter_fini  generic_proxy_fini
+#define segiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 segiter_next(SegmentsIterator *__restrict self) {
@@ -137,11 +132,8 @@ err_elem:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-segiter_bool(SegmentsIterator *__restrict self) {
-	return DeeObject_Bool(self->si_iter);
-}
-
+STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_obj));
+#define segiter_bool generic_proxy_bool
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 segiter_getseq(SegmentsIterator *__restrict self) {
@@ -169,35 +161,12 @@ PRIVATE struct type_member tpconst segiter_members[] = {
 
 INTDEF DeeTypeObject SeqSegmentsIterator_Type;
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-segiter_compare(SegmentsIterator *self, SegmentsIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SeqSegmentsIterator_Type))
-		goto err;
-	return DeeObject_Compare(self->si_iter, other->si_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-segiter_compare_eq(SegmentsIterator *self, SegmentsIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SeqSegmentsIterator_Type))
-		goto err;
-	return DeeObject_CompareEq(self->si_iter, other->si_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-segiter_hash(SegmentsIterator *self) {
-	return DeeObject_Hash(self->si_iter);
-}
-
-PRIVATE struct type_cmp segiter_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&segiter_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&segiter_compare_eq,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&segiter_compare,
-};
-
+STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_obj));
+#define segiter_hash          generic_proxy_hash_recursive
+#define segiter_compare_eq    generic_proxy_compare_eq_recursive
+#define segiter_compare       generic_proxy_compare_recursive
+#define segiter_trycompare_eq generic_proxy_trycompare_eq_recursive
+#define segiter_cmp           generic_proxy_cmp_recursive
 
 INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -249,11 +218,11 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 
 STATIC_ASSERT(offsetof(Segments, s_seq) == offsetof(SegmentsIterator, si_iter));
 STATIC_ASSERT(offsetof(Segments, s_len) == offsetof(SegmentsIterator, si_len));
-#define seg_copy     segiter_copy
-#define seg_deep     segiter_deep
-#define seg_fini     segiter_fini
-#define seg_visit    segiter_visit
-#define seg_bool     segiter_bool
+#define seg_copy  segiter_copy
+#define seg_deep  segiter_deep
+#define seg_fini  segiter_fini
+#define seg_visit segiter_visit
+#define seg_bool  segiter_bool
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seg_ctor(Segments *__restrict self) {

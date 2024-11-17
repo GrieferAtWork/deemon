@@ -23,18 +23,19 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *smi_iter;   /* [1..1][const] The iterator who's elements are being mapped. */
-	DREF DeeObject *smi_mapper; /* [1..1][const] The function used for transforming. */
+	PROXY_OBJECT_HEAD2(smi_iter,   /* [1..1][const] The iterator who's elements are being mapped. */
+	                   smi_mapper) /* [1..1][const] The function used for transforming. */
 } SeqMappedIterator;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *sm_seq;    /* [1..1][const] The sequence being transformed. */
-	DREF DeeObject *sm_mapper; /* [1..1][const] The function used for transforming. */
+	PROXY_OBJECT_HEAD2(sm_seq,    /* [1..1][const] The sequence being transformed. */
+	                   sm_mapper) /* [1..1][const] The function used for transforming. */
 } SeqMapped;
 
 INTDEF DeeTypeObject SeqMapped_Type;

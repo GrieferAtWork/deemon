@@ -23,6 +23,9 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 /* Sequence enumerations can be used to enumerate the keys & items of a sequence.
@@ -54,15 +57,13 @@ DECL_BEGIN
 
 typedef struct {
 	/* Enumerate all keys within [:dewsgi_size] */
-	OBJECT_HEAD
-	DREF DeeObject  *defr_seq;    /* [1..1][const] The sequence being iterated. */
+	PROXY_OBJECT_HEAD(defr_seq)   /* [1..1][const] The sequence being iterated. */
 	struct type_seq *defr_tp_seq; /* [1..1][const] Sequence operators of `defr_seq' (used operators depend on "ob_type") */
 } DefaultEnumeration_FullRange;
 
 typedef struct {
 	/* Enumerate all keys within [dewir_start:dewir_end] */
-	OBJECT_HEAD
-	DREF DeeObject  *dewir_seq;    /* [1..1][const] The sequence being iterated. */
+	PROXY_OBJECT_HEAD(dewir_seq)   /* [1..1][const] The sequence being iterated. */
 	struct type_seq *dewir_tp_seq; /* [1..1][const] Sequence operators of `dewir_seq' (always has `tp_size' and one of `tp_getitem_index_fast', `tp_trygetitem_index', `tp_getitem_index') */
 	size_t           dewir_start;  /* [const] Enumeration range start. */
 	size_t           dewir_end;    /* [const] Enumeration range end. */

@@ -23,18 +23,19 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *fi_iter; /* [1..1][const] The iterator who's elements are being filtered. */
-	dhash_t         fi_hash; /* [const] The hash for which we're filtering. */
+	PROXY_OBJECT_HEAD(fi_iter) /* [1..1][const] The iterator who's elements are being filtered. */
+	Dee_hash_t        fi_hash; /* [const] The hash for which we're filtering. */
 } HashFilterIterator;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *f_seq;  /* [1..1][const] The sequence being filtered. */
-	dhash_t         f_hash; /* [const] The hash for which we're filtering. */
+	PROXY_OBJECT_HEAD(f_seq)  /* [1..1][const] The sequence being filtered. */
+	Dee_hash_t        f_hash; /* [const] The hash for which we're filtering. */
 } HashFilter;
 
 INTDEF DeeTypeObject SeqHashFilter_Type;

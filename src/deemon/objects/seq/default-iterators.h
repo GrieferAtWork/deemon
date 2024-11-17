@@ -24,19 +24,20 @@
 #include <deemon/object.h>
 #include <deemon/util/lock.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *digi_seq;   /* [1..1][const] The sequence being iterated. */
+	PROXY_OBJECT_HEAD(digi_seq) /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to load the `index'th element of `digi_seq'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *digi_tp_getitem_index)(DeeObject *self, size_t index);
 	size_t          digi_index; /* [lock(ATOMIC)] Next index to enumerate. */
 } DefaultIterator_WithGetItemIndex;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *disgi_seq;   /* [1..1][const] The sequence being iterated. */
+	PROXY_OBJECT_HEAD(disgi_seq) /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to load the `index'th element of `disgi_seq'.
 	 * This is either a `tp_getitem_index' or `tp_getitem_index_fast' operator. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *disgi_tp_getitem_index)(DeeObject *self, size_t index);
@@ -117,17 +118,15 @@ typedef struct {
 #define DefaultIterator_WithTSizeAndGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->ditsg_lock)
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject   *dinl_iter;   /* [1..1][const] The underlying iterator */
+	PROXY_OBJECT_HEAD(dinl_iter)   /* [1..1][const] The underlying iterator */
 	/* [1..1][const] Callback to load the next element from `dinl_iter'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dinl_tp_next)(DeeObject *self);
 	size_t            dinl_limit;  /* [lock(ATOMIC)] Max # of elements to still enumerate. */
 } DefaultIterator_WithNextAndLimit;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject   *diikgi_seq;  /* [1..1][const] Sequence to read key values from */
-	DREF DeeObject   *diikgi_iter; /* [1..1][const] Key iterator */
+	PROXY_OBJECT_HEAD2(diikgi_iter, /* [1..1][const] Sequence to read key values from */
+	                   diikgi_seq)  /* [1..1][const] Key iterator */
 	/* [1..1][const] Callback to load the next key from `diikgi_iter'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *diikgi_tp_next)(DeeObject *self);
 	/* [1..1][const] Callback to load a key value from `diikgi_seq'. */
@@ -135,9 +134,8 @@ typedef struct {
 } DefaultIterator_WithIterKeysAndGetItem;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject   *diiktgi_seq;  /* [1..1][const] Sequence to read key values from */
-	DREF DeeObject   *diiktgi_iter; /* [1..1][const] Key iterator */
+	PROXY_OBJECT_HEAD2(diiktgi_iter, /* [1..1][const] Sequence to read key values from */
+	                   diiktgi_seq)  /* [1..1][const] Key iterator */
 	/* [1..1][const] Callback to load the next key from `diiktgi_iter'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *diiktgi_tp_next)(DeeObject *self);
 	/* [1..1][const] Callback to load a key value from `diiktgi_seq'. */
@@ -185,16 +183,14 @@ INTDEF DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type; /* DefaultItera
 /************************************************************************/
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject   *dinc_iter;    /* [1..1][const] The underlying iterator */
+	PROXY_OBJECT_HEAD(dinc_iter)    /* [1..1][const] The underlying iterator */
 	/* [1..1][const] Callback to load the next element from `dinc_iter'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dinc_tp_next)(DeeObject *self);
 	size_t            dinc_counter; /* [lock(ATOMIC)] Index of the next element to-be read from "dinc_iter". */
 } DefaultIterator_WithNextAndCounter;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject   *dincl_iter;    /* [1..1][const] The underlying iterator */
+	PROXY_OBJECT_HEAD(dincl_iter)    /* [1..1][const] The underlying iterator */
 	/* [1..1][const] Callback to load the next element from `dincl_iter'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dincl_tp_next)(DeeObject *self);
 	size_t            dincl_counter; /* [lock(ATOMIC)] Index of the next element to-be read from "dincl_iter". */
@@ -226,8 +222,7 @@ INTDEF DeeTypeObject DefaultIterator_WithNextAndUnpackFilter_Type;        /* Def
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dipsi_iter; /* [1..1][const] The underlying iterator. */
+	PROXY_OBJECT_HEAD(dipsi_iter) /* [1..1][const] The underlying iterator. */
 	/* [1..1] The get-next-item function to use on `dipsi_iter' in order to load the next item.
 	 *        This is usually the `tp_nextkey' or `tp_nextvalue' operator of `dipsi_iter'. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dipsi_next)(DeeObject *self);

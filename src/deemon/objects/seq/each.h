@@ -23,6 +23,9 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 /* Dynamic proxy sequence for applying transformations
@@ -54,8 +57,7 @@ DECL_BEGIN
 struct string_object;
 
 #define SEQ_EACH_HEAD \
-	OBJECT_HEAD       \
-	DREF DeeObject *se_seq; /* [1..1][const] The sequence being accessed. */
+	PROXY_OBJECT_HEAD(se_seq) /* [1..1][const] The sequence being accessed. */
 
 typedef struct {
 	/* `seq.each' -- The root wrapper descriptor which
@@ -65,9 +67,8 @@ typedef struct {
 
 typedef struct {
 	/* Iterator for any of the sequence-each wrappers. */
-	OBJECT_HEAD
-	DREF SeqEachBase *ei_each; /* [1..1][const] The sequence-each descriptor that is being used. */
-	DREF DeeObject   *ei_iter; /* [1..1][const] The underlying iterator who's elements are being transformed. */
+	PROXY_OBJECT_HEAD2_EX(DeeObject,   ei_iter, /* [1..1][const] The sequence-each descriptor that is being used. */
+	                      SeqEachBase, ei_each) /* [1..1][const] The underlying iterator who's elements are being transformed. */
 } SeqEachIterator;
 
 

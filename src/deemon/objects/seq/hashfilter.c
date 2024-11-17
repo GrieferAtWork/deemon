@@ -36,15 +36,9 @@
 
 DECL_BEGIN
 
-PRIVATE NONNULL((1)) void DCALL
-filter_fini(HashFilter *__restrict self) {
-	Dee_Decref(self->f_seq);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-filter_visit(HashFilterIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->fi_iter);
-}
+STATIC_ASSERT(offsetof(HashFilter, f_seq) == offsetof(ProxyObject, po_obj));
+#define filter_fini  generic_proxy_fini
+#define filter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_ctor(HashFilterIterator *__restrict self) {
@@ -165,7 +159,7 @@ err_r:
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 filteriterator_hash(HashFilterIterator *__restrict self) {
-	return DeeObject_Hash(self->fi_iter) ^ self->fi_hash;
+	return Dee_HashCombine(DeeObject_Hash(self->fi_iter), self->fi_hash);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -179,14 +173,8 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filteriterator_compare(HashFilterIterator *self, HashFilterIterator *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return DeeObject_Compare(self->fi_iter, other->fi_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
+STATIC_ASSERT(offsetof(HashFilterIterator, fi_iter) == offsetof(ProxyObject, po_obj));
+#define filteriterator_compare generic_proxy_compare_recursive
 
 PRIVATE struct type_cmp filteriterator_cmp = {
 	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,

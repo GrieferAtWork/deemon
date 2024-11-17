@@ -128,17 +128,12 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-repeatiter_fini(RepeatIterator *__restrict self) {
-	Dee_Decref(self->rpi_rep);
-	Dee_Decref(self->rpi_iter);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->rpi_rep);
-	Dee_Visit(self->rpi_iter);
-}
+STATIC_ASSERT(offsetof(RepeatIterator, rpi_rep) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(RepeatIterator, rpi_rep) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(RepeatIterator, rpi_iter) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(RepeatIterator, rpi_iter) == offsetof(ProxyObject2, po_obj2));
+#define repeatiter_fini  generic_proxy2_fini
+#define repeatiter_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 repeatiter_hash(RepeatIterator *self) {
@@ -407,20 +402,11 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-repeat_fini(Repeat *__restrict self) {
-	Dee_Decref(self->rp_seq);
-}
 
-PRIVATE NONNULL((1, 2)) void DCALL
-repeat_visit(Repeat *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->rp_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-repeat_bool(Repeat *__restrict self) {
-	return DeeObject_Bool(self->rp_seq);
-}
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_fini  generic_proxy_fini
+#define repeat_visit generic_proxy_visit
+#define repeat_bool  generic_proxy_bool
 
 PRIVATE WUNUSED NONNULL((1)) DREF RepeatIterator *DCALL
 repeat_iter(Repeat *__restrict self) {
@@ -443,10 +429,8 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeat_contains(Repeat *self, DeeObject *item) {
-	return DeeObject_Contains(self->rp_seq, item);
-}
+STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
+#define repeat_contains generic_proxy_contains
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeat_getitem(Repeat *self, DeeObject *index_ob) {
@@ -764,15 +748,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-repeatitemiter_fini(RepeatItemIterator *__restrict self) {
-	Dee_Decref(self->rii_rep);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-repeatitemiter_visit(RepeatItemIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->rii_rep);
-}
+STATIC_ASSERT(offsetof(RepeatItemIterator, rii_rep) == offsetof(ProxyObject, po_obj));
+#define repeatitemiter_fini  generic_proxy_fini
+#define repeatitemiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 repeatitemiter_hash(RepeatItemIterator *self) {

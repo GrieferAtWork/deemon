@@ -29,6 +29,7 @@ DECL_BEGIN
 /* Set proxy types used to implement set operations on the C-level. */
 
 typedef struct {
+	/* TODO: Proxy */
 	OBJECT_HEAD
 	DREF DeeObject *su_a; /* [1..1][const] The first set of the union. */
 	DREF DeeObject *su_b; /* [1..1][const] The second set of the union. */

@@ -26,29 +26,26 @@
 #include <deemon/seq.h>
 #include <deemon/util/lock.h>
 
-#include "../../runtime/runtime_error.h"
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *rp_seq; /* [1..1][const] The sequence being repeated. */
-	size_t          rp_num; /* [!0][const] The number of times by which to repeat the sequence. */
+	PROXY_OBJECT_HEAD(rp_seq) /* [1..1][const] The sequence being repeated. */
+	size_t            rp_num; /* [!0][const] The number of times by which to repeat the sequence. */
 } Repeat;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *rpit_obj; /* [1..1][const] The object being repeated. */
-	size_t          rpit_num; /* [const] The number of times by which to repeat the object. */
+	PROXY_OBJECT_HEAD(rpit_obj) /* [1..1][const] The object being repeated. */
+	size_t            rpit_num; /* [const] The number of times by which to repeat the object. */
 } RepeatItem;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF Repeat        *rpi_rep;  /* [1..1][const] The underlying repeat-proxy-sequence. */
-	DREF DeeObject     *rpi_iter; /* [1..1][lock(rpi_lock)] The current repeat-iterator. */
-	size_t              rpi_num;  /* [lock(rpi_lock)] The remaining number of times to repeat the sequence. */
+	PROXY_OBJECT_HEAD2_EX(Repeat,    rpi_rep,  /* [1..1][const] The underlying repeat-proxy-sequence. */
+	                      DeeObject, rpi_iter) /* [1..1][lock(rpi_lock)] The current repeat-iterator. */
+	size_t                           rpi_num;  /* [lock(rpi_lock)] The remaining number of times to repeat the sequence. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t rpi_lock; /* Lock for accessing the variable fields above. */
+	Dee_atomic_rwlock_t              rpi_lock; /* Lock for accessing the variable fields above. */
 #endif /* !CONFIG_NO_THREADS */
 } RepeatIterator;
 
@@ -70,10 +67,9 @@ typedef struct {
 #define RepeatIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->rpi_lock)
 
 typedef struct {
-	OBJECT_HEAD
-	DREF RepeatItem   *rii_rep; /* [1..1][const] The underlying repeat-proxy-sequence. */
-	DeeObject         *rii_obj; /* [1..1][const][== rii_rep->rpit_obj] The object being repeated. */
-	DWEAK size_t       rii_num; /* The remaining number of repetitions. */
+	PROXY_OBJECT_HEAD_EX(RepeatItem, rii_rep); /* [1..1][const] The underlying repeat-proxy-sequence. */
+	DeeObject                       *rii_obj;  /* [1..1][const][== rii_rep->rpit_obj] The object being repeated. */
+	DWEAK size_t                     rii_num;  /* The remaining number of repetitions. */
 } RepeatItemIterator;
 
 INTDEF DeeTypeObject SeqRepeat_Type;

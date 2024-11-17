@@ -23,18 +23,19 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *s_seq;   /* [1..1][const] The underlying sequence that is being segmented. */
-	size_t          s_len;   /* [const][!0] The (max) length of a single segment. */
+	PROXY_OBJECT_HEAD(s_seq) /* [1..1][const] The underlying sequence that is being segmented. */
+	size_t            s_len; /* [const][!0] The (max) length of a single segment. */
 } Segments;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *si_iter; /* [1..1][const] An iterator for the sequence being segmented. */
-	size_t          si_len;  /* [const][!0] The (max) length of a single segment. */
+	PROXY_OBJECT_HEAD(si_iter) /* [1..1][const] An iterator for the sequence being segmented. */
+	size_t            si_len;  /* [const][!0] The (max) length of a single segment. */
 } SegmentsIterator;
 
 INTDEF DeeTypeObject SeqSegmentsIterator_Type;

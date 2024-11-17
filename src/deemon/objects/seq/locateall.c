@@ -20,8 +20,6 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_LOCATE_ALL_C
 #define GUARD_DEEMON_OBJECTS_SEQ_LOCATE_ALL_C 1
 
-#include "locateall.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -37,6 +35,10 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
+/**/
+
+#include "locateall.h"
 
 DECL_BEGIN
 
@@ -153,35 +155,12 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-locatoriter_hash(LocatorIterator *__restrict self) {
-	return DeeObject_Hash(self->li_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-locatoriter_compare(LocatorIterator *self, LocatorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type))
-		goto err;
-	return DeeObject_Compare(self->li_iter, other->li_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-locatoriter_compare_eq(LocatorIterator *self, LocatorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type))
-		goto err;
-	return DeeObject_CompareEq(self->li_iter, other->li_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE struct type_cmp locatoriter_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&locatoriter_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&locatoriter_compare_eq,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&locatoriter_compare,
-};
-
+STATIC_ASSERT(offsetof(LocatorIterator, li_iter) == offsetof(ProxyObject, po_obj));
+#define locatoriter_hash          generic_proxy_hash_recursive
+#define locatoriter_compare       generic_proxy_compare_recursive
+#define locatoriter_compare_eq    generic_proxy_compare_eq_recursive
+#define locatoriter_trycompare_eq generic_proxy_trycompare_eq_recursive
+#define locatoriter_cmp           generic_proxy_cmp_recursive
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

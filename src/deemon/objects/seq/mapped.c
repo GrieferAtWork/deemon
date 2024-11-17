@@ -20,8 +20,6 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_MAPPED_C
 #define GUARD_DEEMON_OBJECTS_SEQ_MAPPED_C 1
 
-#include "mapped.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -36,25 +34,22 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
+
+/**/
+#include "mapped.h"
 
 DECL_BEGIN
 
-PRIVATE NONNULL((1)) void DCALL
-mappediter_fini(SeqMappedIterator *__restrict self) {
-	Dee_Decref(self->smi_iter);
-	Dee_Decref(self->smi_mapper);
-}
+STATIC_ASSERT(offsetof(SeqMappedIterator, smi_iter) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SeqMappedIterator, smi_iter) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SeqMappedIterator, smi_mapper) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SeqMappedIterator, smi_mapper) == offsetof(ProxyObject2, po_obj2));
+#define mappediter_fini  generic_proxy2_fini
+#define mappediter_visit generic_proxy2_visit
 
-PRIVATE NONNULL((1, 2)) void DCALL
-mappediter_visit(SeqMappedIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->smi_iter);
-	Dee_Visit(self->smi_mapper);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-mappediter_bool(SeqMappedIterator *__restrict self) {
-	return DeeObject_Bool(self->smi_iter);
-}
+STATIC_ASSERT(offsetof(SeqMappedIterator, smi_iter) == offsetof(ProxyObject, po_obj));
+#define mappediter_bool generic_proxy_bool
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mappediter_next(SeqMappedIterator *__restrict self) {
@@ -128,34 +123,10 @@ PRIVATE struct type_cmp mappediter_cmp = {
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&mappediter_compare,
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mappediter_copy(SeqMappedIterator *__restrict self,
-               SeqMappedIterator *__restrict other) {
-	self->smi_iter = DeeObject_Copy(other->smi_iter);
-	if unlikely(!self->smi_iter)
-		goto err;
-	self->smi_mapper = other->smi_mapper;
-	Dee_Incref(self->smi_mapper);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mappediter_deep(SeqMappedIterator *__restrict self,
-               SeqMappedIterator *__restrict other) {
-	self->smi_iter = DeeObject_Copy(other->smi_iter);
-	if unlikely(!self->smi_iter)
-		goto err;
-	self->smi_mapper = DeeObject_Copy(other->smi_mapper);
-	if unlikely(!self->smi_mapper)
-		goto err_iter;
-	return 0;
-err_iter:
-	Dee_Decref(self->smi_iter);
-err:
-	return -1;
-}
+STATIC_ASSERT(offsetof(SeqMappedIterator, smi_iter) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(SeqMappedIterator, smi_mapper) == offsetof(ProxyObject2, po_obj2));
+#define mappediter_copy generic_proxy2_copy_recursive1_alias2 /* copy "smi_iter", alias "smi_mapper" */
+#define mappediter_deep generic_proxy2_deepcopy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mappediter_ctor(SeqMappedIterator *__restrict self) {
@@ -233,22 +204,16 @@ INTERN DeeTypeObject SeqMappedIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE NONNULL((1)) void DCALL
-mapped_fini(SeqMapped *__restrict self) {
-	Dee_Decref(self->sm_seq);
-	Dee_Decref(self->sm_mapper);
-}
 
-PRIVATE NONNULL((1, 2)) void DCALL
-mapped_visit(SeqMapped *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->sm_seq);
-	Dee_Visit(self->sm_mapper);
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
+#define mapped_fini  generic_proxy2_fini
+#define mapped_visit generic_proxy2_visit
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-mapped_bool(SeqMapped *__restrict self) {
-	return DeeObject_Bool(self->sm_seq);
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_bool generic_proxy_bool
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_iter(SeqMapped *__restrict self) {
@@ -256,10 +221,12 @@ mapped_iter(SeqMapped *__restrict self) {
 	result = DeeObject_MALLOC(SeqMappedIterator);
 	if unlikely(!result)
 		goto err;
+
 	/* Create the underlying iterator. */
 	result->smi_iter = DeeObject_Iter(self->sm_seq);
 	if unlikely(!result->smi_iter)
 		goto err_r;
+
 	/* Assign the mapper functions. */
 	result->smi_mapper = self->sm_mapper;
 	Dee_Incref(self->sm_mapper);
@@ -282,10 +249,8 @@ PRIVATE struct type_member tpconst mapped_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mapped_sizeob(SeqMapped *__restrict self) {
-	return DeeObject_SizeOb(self->sm_seq);
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_sizeob generic_proxy_sizeob
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_getitem(SeqMapped *self, DeeObject *index) {
@@ -314,15 +279,9 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-mapped_size(SeqMapped *__restrict self) {
-	return DeeObject_Size(self->sm_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-mapped_size_fast(SeqMapped *__restrict self) {
-	return DeeObject_SizeFast(self->sm_seq);
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_size      generic_proxy_size
+#define mapped_size_fast generic_proxy_size_fast
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getitem_index(SeqMapped *__restrict self, size_t index) {
@@ -432,25 +391,11 @@ mapped_enumerate_index(SeqMapped *self, Dee_enumerate_index_t proc,
 	return DeeObject_EnumerateIndex(self->sm_seq, &mapped_enumerate_index_cb, &data, start, end);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mapped_bounditem(SeqMapped *self, DeeObject *index) {
-	return DeeObject_BoundItem(self->sm_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mapped_hasitem(SeqMapped *self, DeeObject *index) {
-	return DeeObject_HasItem(self->sm_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-mapped_bounditem_index(SeqMapped *self, size_t index) {
-	return DeeObject_BoundItemIndex(self->sm_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-mapped_hasitem_index(SeqMapped *self, size_t index) {
-	return DeeObject_HasItemIndex(self->sm_seq, index);
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_bounditem       generic_proxy_bounditem
+#define mapped_hasitem         generic_proxy_hasitem
+#define mapped_bounditem_index generic_proxy_bounditem_index
+#define mapped_hasitem_index   generic_proxy_hasitem_index
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getrange_index(SeqMapped *self, Dee_ssize_t start, Dee_ssize_t end) {
@@ -530,15 +475,9 @@ mapped_getitem_string_hash(SeqMapped *self, char const *key, Dee_hash_t hash) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mapped_bounditem_string_hash(SeqMapped *self, char const *key, Dee_hash_t hash) {
-	return DeeObject_BoundItemStringHash(self->sm_seq, key, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mapped_hasitem_string_hash(SeqMapped *self, char const *key, Dee_hash_t hash) {
-	return DeeObject_HasItemStringHash(self->sm_seq, key, hash);
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_bounditem_string_hash generic_proxy_bounditem_string_hash
+#define mapped_hasitem_string_hash   generic_proxy_hasitem_string_hash
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_trygetitem_string_len_hash(SeqMapped *self, char const *key, size_t keylen, Dee_hash_t hash) {
@@ -566,15 +505,9 @@ mapped_getitem_string_len_hash(SeqMapped *self, char const *key, size_t keylen, 
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mapped_bounditem_string_len_hash(SeqMapped *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	return DeeObject_BoundItemStringLenHash(self->sm_seq, key, keylen, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mapped_hasitem_string_len_hash(SeqMapped *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	return DeeObject_HasItemStringLenHash(self->sm_seq, key, keylen, hash);
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_bounditem_string_len_hash generic_proxy_bounditem_string_len_hash
+#define mapped_hasitem_string_len_hash   generic_proxy_hasitem_string_len_hash
 
 PRIVATE struct type_nsi tpconst mapped_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -645,43 +578,16 @@ mapped_ctor(SeqMapped *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mapped_copy(SeqMapped *__restrict self,
-           SeqMapped *__restrict other) {
-	self->sm_seq = other->sm_seq;
-	self->sm_mapper = other->sm_mapper;
-	Dee_Incref(self->sm_seq);
-	Dee_Incref(self->sm_mapper);
-	return 0;
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
+#define mapped_copy generic_proxy2_copy_alias12
+#define mapped_deep generic_proxy2_deepcopy
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mapped_deep(SeqMapped *__restrict self,
-           SeqMapped *__restrict other) {
-	self->sm_seq = DeeObject_DeepCopy(other->sm_seq);
-	if unlikely(!self->sm_seq)
-		goto err;
-	self->sm_mapper = DeeObject_DeepCopy(other->sm_mapper);
-	if unlikely(!self->sm_mapper)
-		goto err_seq;
-	return 0;
-err_seq:
-	Dee_Decref(self->sm_seq);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-mapped_init(SeqMapped *__restrict self,
-           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oo:_SeqMapped", &self->sm_seq, &self->sm_mapper))
-		goto err;
-	Dee_Incref(self->sm_seq);
-	Dee_Incref(self->sm_mapper);
-	return 0;
-err:
-	return -1;
-}
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
+#define mapped_init generic_proxy2_init
 
 INTERN DeeTypeObject SeqMapped_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),

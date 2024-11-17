@@ -690,6 +690,9 @@
 		<ClInclude Include="..\src\deemon\objects\gc_inspect.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\generic-proxy.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\int-8bit.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
@@ -1218,6 +1221,9 @@
 			<Filter>src\objects</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\gc_inspect.c">
+			<Filter>src\objects</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\generic-proxy.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\hashset.c">

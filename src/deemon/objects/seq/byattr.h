@@ -23,11 +23,13 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *mba_map;  /* [1..1][const] The underlying map. */
+	PROXY_OBJECT_HEAD(mba_map)  /* [1..1][const] The underlying map. */
 } MapByAttr;
 
 INTDEF DeeTypeObject MapByAttr_Type;

@@ -1473,6 +1473,12 @@
 #define STACK_ALLOCATOR_DECL
 #define CONFIG_DEEMON_PATH(x)
 #define SEQ_EACH_HEAD OBJECT_HEAD DeeObject*se_seq;
+#define PROXY_OBJECT_HEAD_EX(T,o) OBJECT_HEAD T*o;
+#define PROXY_OBJECT_HEAD2_EX(T,o,S,p) OBJECT_HEAD T*o;S*p;
+#define PROXY_OBJECT_HEAD3_EX(T,o,S,p,U,q) OBJECT_HEAD T*o;S*p;U*q;
+#define PROXY_OBJECT_HEAD(o) OBJECT_HEAD DeeObject*o;
+#define PROXY_OBJECT_HEAD2(o,p) OBJECT_HEAD DeeObject*o,*p;
+#define PROXY_OBJECT_HEAD3(o,p,q) OBJECT_HEAD DeeObject*o,*p,*q;
 #define DEFINE_SEQ_EACH_UNARY(n,...) SeqEachOperator*n(SeqEachBase*self){}
 #define DEFINE_SEQ_EACH_BINARY(n,...) SeqEachOperator*n(SeqEachBase*self,DeeObject*other){}
 #define DEFINE_SEQ_EACH_TRINARY(n,...) SeqEachOperator*n(SeqEachBase*self,DeeObject*a,DeeObject*b){}

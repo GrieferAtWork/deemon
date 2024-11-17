@@ -36,6 +36,7 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
@@ -50,18 +51,20 @@ err:
 	return -1;
 }
 
-
-PRIVATE NONNULL((1)) void DCALL
-filter_fini(Filter *__restrict self) {
-	Dee_Decref(self->f_seq);
-	Dee_Decref(self->f_fun);
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+filter_ctor(Filter *__restrict self) {
+	self->f_seq = Dee_EmptySeq;
+	self->f_fun = Dee_None;
+	Dee_Incref(Dee_EmptySeq);
+	Dee_Incref(Dee_None);
+	return 0;
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-filter_visit(FilterIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->fi_func);
-	Dee_Visit(self->fi_iter);
-}
+#define filter_copy  generic_proxy2_copy_alias12
+#define filter_deep  generic_proxy2_deepcopy
+#define filter_init  generic_proxy2_init
+#define filter_fini  generic_proxy2_fini
+#define filter_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_ctor(FilterIterator *__restrict self) {
@@ -93,40 +96,10 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filteriterator_copy(FilterIterator *__restrict self,
-                    FilterIterator *__restrict other) {
-	self->fi_iter = DeeObject_Copy(other->fi_iter);
-	if unlikely(!self->fi_iter)
-		goto err;
-	self->fi_func = other->fi_func;
-	Dee_Incref(self->fi_func);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filteriterator_deep(FilterIterator *__restrict self,
-                    FilterIterator *__restrict other) {
-	self->fi_iter = DeeObject_DeepCopy(other->fi_iter);
-	if unlikely(!self->fi_iter)
-		goto err;
-	self->fi_func = DeeObject_DeepCopy(other->fi_func);
-	if unlikely(!self->fi_func)
-		goto err_iter;
-	return 0;
-err_iter:
-	Dee_Decref_likely(self->fi_iter);
-err:
-	return -1;
-}
-
-
-STATIC_ASSERT(offsetof(FilterIterator, fi_iter) == offsetof(Filter, f_seq));
-STATIC_ASSERT(offsetof(FilterIterator, fi_func) == offsetof(Filter, f_fun));
-#define filteriterator_fini  filter_fini
-#define filteriterator_visit filter_visit
+#define filteriterator_copy  generic_proxy2_copy_recursive1_alias2
+#define filteriterator_deep  generic_proxy2_deepcopy
+#define filteriterator_fini  generic_proxy2_fini
+#define filteriterator_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 filteriterator_next(FilterIterator *__restrict self) {
@@ -150,34 +123,17 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-filteriterator_hash(FilterIterator *__restrict self) {
-	return DeeObject_Hash(self->fi_iter) ^
-	       DeeObject_Hash(self->fi_func);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filteriterator_compare_eq(FilterIterator *self, FilterIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SeqFilterIterator_Type))
-		goto err;
-	return DeeObject_CompareEq(self->fi_iter, other->fi_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filteriterator_compare(FilterIterator *self, FilterIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SeqFilterIterator_Type))
-		goto err;
-	return DeeObject_Compare(self->fi_iter, other->fi_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
+#define filteriterator_hash generic_proxy2_hash_recursive_ordered
+STATIC_ASSERT(offsetof(FilterIterator, fi_iter) == offsetof(ProxyObject, po_obj));
+#define filteriterator_trycompare_eq generic_proxy_trycompare_eq_recursive
+#define filteriterator_compare_eq    generic_proxy_compare_eq_recursive
+#define filteriterator_compare       generic_proxy_compare_recursive
 
 PRIVATE struct type_cmp filteriterator_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&filteriterator_compare_eq,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&filteriterator_compare,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *self, DeeObject *))&filteriterator_compare_eq,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *self, DeeObject *))&filteriterator_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *self, DeeObject *))&filteriterator_trycompare_eq,
 };
 
 
@@ -434,7 +390,8 @@ filter_bool_cb(void *arg, DeeObject *value) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL filter_bool(Filter *self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+filter_bool(Filter *self) {
 	Dee_ssize_t foreach_status;
 	foreach_status = DeeObject_Foreach(self->f_seq, &filter_bool_cb, self->f_fun);
 	if (foreach_status == -2)
@@ -442,10 +399,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL filter_bool(Filter *self) {
 	return (int)foreach_status;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_as_unbound_bool(Filter *self) {
-	return DeeObject_Bool(self->f_seq);
-}
+STATIC_ASSERT(offsetof(Filter, f_seq) == offsetof(ProxyObject, po_obj));
+#define filter_as_unbound_bool generic_proxy_bool
 
 struct filter_getitem_index_data {
 	DeeObject      *fgid_fun;    /* [1..1] Function used for filtering. */
@@ -509,20 +464,10 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-filter_as_unbound_sizeob(Filter *__restrict self) {
-	return DeeObject_SizeOb(self->f_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-filter_as_unbound_size(Filter *__restrict self) {
-	return DeeObject_Size(self->f_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-filter_as_unbound_size_fast(Filter *__restrict self) {
-	return DeeObject_SizeFast(self->f_seq);
-}
+STATIC_ASSERT(offsetof(Filter, f_seq) == offsetof(ProxyObject, po_obj));
+#define filter_as_unbound_sizeob    generic_proxy_sizeob
+#define filter_as_unbound_size      generic_proxy_size
+#define filter_as_unbound_size_fast generic_proxy_size_fast
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 filter_contains(Filter *self, DeeObject *elem) {
@@ -798,25 +743,11 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_as_unbound_hasitem(Filter *self, DeeObject *index) {
-	return DeeObject_HasItem(self->f_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_as_unbound_hasitem_index(Filter *self, size_t index) {
-	return DeeObject_HasItemIndex(self->f_seq, index);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_as_unbound_hasitem_string_hash(Filter *self, char const *key, Dee_hash_t hash) {
-	return DeeObject_HasItemStringHash(self->f_seq, key, hash);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_as_unbound_hasitem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	return DeeObject_HasItemStringLenHash(self->f_seq, key, keylen, hash);
-}
+STATIC_ASSERT(offsetof(Filter, f_seq) == offsetof(ProxyObject, po_obj));
+#define filter_as_unbound_hasitem                 generic_proxy_hasitem
+#define filter_as_unbound_hasitem_index           generic_proxy_hasitem_index
+#define filter_as_unbound_hasitem_string_hash     generic_proxy_hasitem_string_hash
+#define filter_as_unbound_hasitem_string_len_hash generic_proxy_hasitem_string_len_hash
 
 PRIVATE struct type_seq filter_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filter_iter,
@@ -904,56 +835,6 @@ PRIVATE struct type_member tpconst filter_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqFilterIterator_Type),
 	TYPE_MEMBER_END
 };
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_ctor(Filter *__restrict self) {
-	self->f_seq = Dee_EmptySeq;
-	self->f_fun = Dee_None;
-	Dee_Incref(Dee_EmptySeq);
-	Dee_Incref(Dee_None);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_copy(Filter *__restrict self,
-            Filter *__restrict other) {
-	self->f_seq = other->f_seq;
-	self->f_fun = other->f_fun;
-	Dee_Incref(self->f_seq);
-	Dee_Incref(self->f_fun);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_deep(Filter *__restrict self,
-            Filter *__restrict other) {
-	self->f_seq = DeeObject_DeepCopy(other->f_seq);
-	if unlikely(!self->f_seq)
-		goto err;
-	self->f_fun = DeeObject_DeepCopy(other->f_fun);
-	if unlikely(!self->f_fun)
-		goto err_seq;
-	return 0;
-err_seq:
-	Dee_Decref_likely(self->f_seq);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_init(Filter *__restrict self,
-            size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oo:_SeqFilter", &self->f_seq, &self->f_fun))
-		goto err;
-	self->f_seq = Dee_EmptySeq;
-	self->f_fun = Dee_None;
-	Dee_Incref(self->f_seq);
-	Dee_Incref(self->f_fun);
-	return 0;
-err:
-	return -1;
-}
-
 
 INTERN DeeTypeObject SeqFilter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),

@@ -32,6 +32,7 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 #include "default-api.h"
 
 /**/
@@ -39,31 +40,15 @@
 
 DECL_BEGIN
 
-#define ds_mv_copy ds_mk_copy
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ds_mk_copy(DefaultSequence_MapProxy *__restrict self,
-           DefaultSequence_MapProxy *__restrict other) {
-	Dee_Incref(other->dsmp_map);
-	self->dsmp_map = other->dsmp_map;
-	return 0;
-}
-
-#define ds_mv_deepcopy ds_mk_deepcopy
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ds_mk_deepcopy(DefaultSequence_MapProxy *__restrict self,
-               DefaultSequence_MapProxy *__restrict other) {
-	self->dsmp_map = DeeObject_DeepCopy(other->dsmp_map);
-	if unlikely(!self->dsmp_map)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
+#define ds_mk_copy     generic_proxy_copy_alias
+#define ds_mv_copy     generic_proxy_copy_alias
+#define ds_mv_deepcopy generic_proxy_deepcopy
+#define ds_mk_deepcopy generic_proxy_deepcopy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_mk_init(DefaultSequence_MapProxy *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqMapKeys", &self->dsmp_map))
+	if (DeeArg_Unpack(argc, argv, "o:_SeqMapKeys", &self->dsmp_map))
 		goto err;
 	Dee_Incref(self->dsmp_map);
 	return 0;
@@ -74,7 +59,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_mv_init(DefaultSequence_MapProxy *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqMapValues", &self->dsmp_map))
+	if (DeeArg_Unpack(argc, argv, "o:_SeqMapValues", &self->dsmp_map))
 		goto err;
 	Dee_Incref(self->dsmp_map);
 	return 0;
@@ -82,19 +67,10 @@ err:
 	return -1;
 }
 
-#define ds_mv_fini ds_mk_fini
-PRIVATE NONNULL((1)) void DCALL
-ds_mk_fini(DefaultSequence_MapProxy *__restrict self) {
-	Dee_Decref(self->dsmp_map);
-}
-
-#define ds_mv_visit ds_mk_visit
-PRIVATE NONNULL((1, 2)) void DCALL
-ds_mk_visit(DefaultSequence_MapProxy *__restrict self,
-            dvisit_t proc, void *arg) {
-	Dee_Visit(self->dsmp_map);
-}
-
+#define ds_mv_fini  generic_proxy_fini
+#define ds_mk_fini  generic_proxy_fini
+#define ds_mv_visit generic_proxy_visit
+#define ds_mk_visit generic_proxy_visit
 
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 ds_mk_iter(DefaultSequence_MapProxy *__restrict self) {
