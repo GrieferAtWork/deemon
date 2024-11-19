@@ -25,6 +25,9 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/util/lock.h>
+/**/
+
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
@@ -82,11 +85,10 @@ typedef struct {
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF SharedMap *smi_seq;   /* [1..1][const] The shared-vector that is being iterated. */
-	size_t          smi_index; /* [atomic] The current sequence index.
-	                            * Should this value be `>= si_seq->sv_length',
-	                            * then the iterator has been exhausted. */
+	PROXY_OBJECT_HEAD_EX(SharedMap, smi_seq);  /* [1..1][const] The shared-vector that is being iterated. */
+	size_t                          smi_index; /* [atomic] The current sequence index.
+	                                            * Should this value be `>= si_seq->sv_length',
+	                                            * then the iterator has been exhausted. */
 } SharedMapIterator;
 
 INTDEF DeeTypeObject SharedMapIterator_Type;

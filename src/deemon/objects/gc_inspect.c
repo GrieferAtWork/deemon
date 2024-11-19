@@ -35,6 +35,7 @@
 #include <deemon/util/atomic.h>
 
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 DECL_BEGIN
 
@@ -49,9 +50,8 @@ DECL_BEGIN
  * are only created when the associated attribute is accessed. */
 
 typedef struct {
-	OBJECT_HEAD
-	DREF GCSet  *gsi_set;   /* [1..1][const] The set being iterated. */
-	DWEAK size_t gsi_index; /* Index of the next set element to-be iterated. */
+	PROXY_OBJECT_HEAD_EX(GCSet, gsi_set);  /* [1..1][const] The set being iterated. */
+	DWEAK size_t                gsi_index; /* Index of the next set element to-be iterated. */
 } GCSetIterator;
 #define READ_INDEX(x) atomic_read(&(x)->gsi_index)
 
@@ -87,15 +87,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-gcsetiterator_fini(GCSetIterator *__restrict self) {
-	Dee_Decref(self->gsi_set);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-gcsetiterator_visit(GCSetIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->gsi_set);
-}
+STATIC_ASSERT(offsetof(GCSetIterator, gsi_set) == offsetof(ProxyObject, po_obj));
+#define gcsetiterator_fini  generic_proxy_fini
+#define gcsetiterator_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcsetiterator_next(GCSetIterator *__restrict self) {

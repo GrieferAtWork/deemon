@@ -45,6 +45,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
@@ -1096,24 +1097,16 @@ err:
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF String   *si_string; /* [1..1][const] The string that is being iterated. */
-	union dcharptr si_iter;   /* [1..1][weak] The current iterator position. */
-	union dcharptr si_end;    /* [1..1][const] The string end pointer. */
-	unsigned int   si_width;  /* [const] The stirng width used during iteration (One of `STRING_WIDTH_*'). */
+	PROXY_OBJECT_HEAD_EX(String, si_string); /* [1..1][const] The string that is being iterated. */
+	union dcharptr               si_iter;    /* [1..1][weak] The current iterator position. */
+	union dcharptr               si_end;     /* [1..1][const] The string end pointer. */
+	unsigned int                 si_width;   /* [const] The stirng width used during iteration (One of `STRING_WIDTH_*'). */
 } StringIterator;
 #define READ_ITER_PTR(x) atomic_read(&(x)->si_iter.ptr)
 
-
-PRIVATE NONNULL((1)) void DCALL
-stringiter_fini(StringIterator *__restrict self) {
-	Dee_Decref(self->si_string);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-stringiter_visit(StringIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->si_string);
-}
+STATIC_ASSERT(offsetof(StringIterator, si_string) == offsetof(ProxyObject, po_obj));
+#define stringiter_fini  generic_proxy_fini
+#define stringiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_next(StringIterator *__restrict self) {

@@ -26,6 +26,9 @@
 #include <deemon/seq.h>
 #include <deemon/util/lock.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
@@ -47,8 +50,7 @@ typedef struct {
 #define TypeMROIterator_LockRelease(self)    Dee_atomic_lock_release(&(self)->tmi_lock)
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeTypeObject *tm_type; /* [1..1][const] The type whose mro/bases is being queried. */
+	PROXY_OBJECT_HEAD_EX(DeeTypeObject, tm_type); /* [1..1][const] The type whose mro/bases is being queried. */
 } TypeMRO;
 
 /* Helper types for enumerating a type's mro/bases */

@@ -968,7 +968,7 @@ PRIVATE struct type_method tpconst dict_keys_methods[] = {
 };
 
 
-PUBLIC DeeTypeObject DeeDictProxy_Type = {
+PUBLIC DeeTypeObject DeeDictProxy_Type = { /* TODO: Get rid of this type */
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictProxy",
 	/* .tp_doc      = */ DOC("()\n"
@@ -1023,7 +1023,7 @@ PRIVATE DeeTypeObject *tpconst dict_keys_mro[] = {
 	NULL
 };
 
-PUBLIC DeeTypeObject DeeDictKeys_Type = {
+PUBLIC DeeTypeObject DeeDictKeys_Type = { /* TODO: Shouldn't be PUBLIC */
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictKeys",
 	/* .tp_doc      = */ DOC("()\n"
@@ -1072,7 +1072,7 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = {
 	/* .tp_mro           = */ dict_keys_mro
 };
 
-PUBLIC DeeTypeObject DeeDictItems_Type = {
+PUBLIC DeeTypeObject DeeDictItems_Type = { /* TODO: Get rid of this type */
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictItems",
 	/* .tp_doc      = */ DOC("()\n"
@@ -1119,7 +1119,7 @@ PUBLIC DeeTypeObject DeeDictItems_Type = {
 	/* .tp_class_members = */ dict_items_class_members
 };
 
-PUBLIC DeeTypeObject DeeDictValues_Type = {
+PUBLIC DeeTypeObject DeeDictValues_Type = { /* TODO: Shouldn't be PUBLIC */
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictValues",
 	/* .tp_doc      = */ DOC("()\n"

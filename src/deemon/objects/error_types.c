@@ -126,7 +126,7 @@ get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
  * Note that any additional memory are zero-initialized upon success (true),
  * and that no error will be thrown on failure (false).
  * NOTE: Upon failure, the message and inner fields are initialized to NULL. */
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 error_try_init(DeeErrorObject *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	size_t instance_size;
@@ -269,7 +269,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_init_kw(DeeErrorObject *__restrict self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t instance_size;

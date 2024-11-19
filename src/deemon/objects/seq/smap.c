@@ -20,8 +20,6 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_SMAP_C
 #define GUARD_DEEMON_OBJECTS_SEQ_SMAP_C 1
 
-#include "smap.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -39,7 +37,11 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 #include "svec.h"
+
+/**/
+#include "smap.h"
 
 #undef si_key
 #undef si_value
@@ -171,25 +173,22 @@ err:
 	return -1;
 }
 
-INTDEF NONNULL((1)) void DCALL
-sveciter_fini(SharedVectorIterator *__restrict self);
-#define smapiter_fini sveciter_fini
+STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(ProxyObject, po_obj));
+#define smapiter_fini  generic_proxy_fini
+#define smapiter_visit generic_proxy_visit
 
-INTDEF NONNULL((1, 2)) void DCALL
-sveciter_visit(SharedVectorIterator *__restrict self, dvisit_t proc, void *arg);
-#define smapiter_visit sveciter_visit
-
+STATIC_ASSERT(offsetof(SharedMapIterator, smi_index) == offsetof(SharedVectorIterator, si_index));
+STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(SharedVectorIterator, si_seq));
+STATIC_ASSERT(offsetof(SharedMap, sm_length) == offsetof(SharedVector, sv_length));
 INTDEF WUNUSED NONNULL((1)) int DCALL
 sveciter_bool(SharedVectorIterator *__restrict self);
-#define smapiter_bool sveciter_bool
-
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_copy(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other);
-#define smapiter_copy sveciter_copy
-
 INTDEF struct type_cmp sveciter_cmp;
-#define smapiter_cmp sveciter_cmp
+#define smapiter_bool sveciter_bool
+#define smapiter_copy sveciter_copy
+#define smapiter_cmp  sveciter_cmp
 
 PRIVATE struct type_member tpconst smapiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SharedMapIterator, smi_seq), "->?Ert:SharedMap"),

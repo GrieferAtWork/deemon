@@ -25,6 +25,9 @@
 #include <deemon/seq.h>
 #include <deemon/util/lock.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 /* A type `RefVector' that acts and works very much the same as `SharedVector',
@@ -32,8 +35,7 @@ DECL_BEGIN
  * global objects of modules, or their imports, as well as static variables of
  * code objects, etc. etc. etc... */
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject      *rv_owner;    /* [1..1] The object that is actually owning the vector. */
+	PROXY_OBJECT_HEAD   (rv_owner);   /* [1..1] The object that is actually owning the vector. */
 	size_t               rv_length;   /* [const] The number of items in this vector. */
 	DREF DeeObject     **rv_vector;   /* [0..1][lock(*rv_plock)][0..rv_length][lock(*rv_plock)][const]
 	                                   * The vector of objects that is being referenced.
@@ -103,10 +105,9 @@ typedef struct {
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF RefVector  *rvi_vector; /* [1..1][const] The underlying vector being iterated. */
-	DREF DeeObject **rvi_pos;    /* [0..1][lock(*rvi_vector->rv_plock)][1..1][in(rvi_vector->rv_vector)][atomic]
-	                              * The current iterator position. */
+	PROXY_OBJECT_HEAD_EX(RefVector, rvi_vector); /* [1..1][const] The underlying vector being iterated. */
+	DREF DeeObject                **rvi_pos;     /* [0..1][lock(*rvi_vector->rv_plock)][1..1][in(rvi_vector->rv_vector)][atomic]
+	                                              * The current iterator position. */
 } RefVectorIterator;
 
 
@@ -143,11 +144,10 @@ typedef struct {
 #define SharedVector_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->sv_lock)
 
 typedef struct {
-	OBJECT_HEAD
-	DREF SharedVector *si_seq;   /* [1..1][const] The shared-vector that is being iterated. */
-	size_t             si_index; /* [atomic] The current sequence index.
-	                              * Should this value be `>= si_seq->sv_length',
-	                              * then the iterator has been exhausted. */
+	PROXY_OBJECT_HEAD_EX(SharedVector, si_seq);  /* [1..1][const] The shared-vector that is being iterated. */
+	size_t                             si_index; /* [atomic] The current sequence index.
+	                                              * Should this value be `>= si_seq->sv_length',
+	                                              * then the iterator has been exhausted. */
 } SharedVectorIterator;
 
 INTDEF DeeTypeObject SharedVectorIterator_Type;

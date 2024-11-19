@@ -50,6 +50,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 #undef SSIZE_MIN
 #undef SSIZE_MAX
@@ -1106,9 +1107,8 @@ err:
 
 /*  ====== `Tuple.Iterator' type implementation ======  */
 typedef struct {
-	OBJECT_HEAD
-	DREF Tuple  *ti_tuple; /* [1..1][const] Referenced tuple. */
-	DWEAK size_t ti_index; /* [<= ti_tuple->t_size] Next-element index. */
+	PROXY_OBJECT_HEAD_EX(Tuple, ti_tuple); /* [1..1][const] Referenced tuple. */
+	DWEAK size_t                ti_index;  /* [<= ti_tuple->t_size] Next-element index. */
 } TupleIterator;
 #define READ_INDEX(x) atomic_read(&(x)->ti_index)
 
@@ -1165,15 +1165,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-tuple_iterator_fini(TupleIterator *__restrict self) {
-	Dee_Decref(self->ti_tuple);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-tuple_iterator_visit(TupleIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->ti_tuple);
-}
+STATIC_ASSERT(offsetof(TupleIterator, ti_tuple) == offsetof(ProxyObject, po_obj));
+#define tuple_iterator_fini  generic_proxy_fini
+#define tuple_iterator_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_iterator_next(TupleIterator *__restrict self) {
@@ -1198,7 +1192,7 @@ PRIVATE struct type_member tpconst tuple_iterator_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 tuple_iterator_hash(TupleIterator *self) {
-	return Dee_HashPointer(READ_INDEX(self));
+	return READ_INDEX(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1498,7 +1492,7 @@ tuple_getrange_index(Tuple *__restrict self,
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getrange_index_n(Tuple *__restrict self,
-                  Dee_ssize_t begin) {
+                       Dee_ssize_t begin) {
 #ifdef __OPTIMIZE_SIZE__
 	return tuple_getrange_index(self, begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
@@ -1512,9 +1506,7 @@ tuple_getrange_index_n(Tuple *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-tuple_getrange(Tuple *__restrict self,
-               DeeObject *__restrict begin,
-               DeeObject *__restrict end) {
+tuple_getrange(Tuple *self, DeeObject *begin, DeeObject *end) {
 	Dee_ssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
@@ -1729,7 +1721,7 @@ tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg) {
 /* Print all elements of the given tuple without any separators in-between
  * elements. This is equivalent to `Tuple.operator str' and is related to
  * the change introduced for handling `print("foo", "bar");'-like statements */
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 tuple_print(Tuple *__restrict self,
             Dee_formatprinter_t printer, void *arg) {
 	size_t i;
@@ -2495,8 +2487,8 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 		/* .tp_str       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_str,
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&tuple_bool,
-		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&tuple_print,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&tuple_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&tuple_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&tuple_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tuple_visit,

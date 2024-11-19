@@ -329,12 +329,45 @@ err:
 }
 
 
+
+INTERN struct type_cmp generic_proxy2_cmp_recursive_ordered = {
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&generic_proxy2_hash_recursive_ordered,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *self, DeeObject *))&generic_proxy2_compare_eq_recursive,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *self, DeeObject *))&generic_proxy2_trycompare_eq_recursive,
+};
+
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 generic_proxy2_hash_recursive_ordered(ProxyObject2 *__restrict self) {
 	return Dee_HashCombine(DeeObject_Hash(self->po_obj1),
 	                       DeeObject_Hash(self->po_obj2));
 }
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy2_trycompare_eq_recursive(ProxyObject2 *self,
+                                       ProxyObject2 *other) {
+	int result;
+	if (!DeeObject_InstanceOf(other, Dee_TYPE(self)))
+		return 1;
+	result = DeeObject_TryCompareEq(self->po_obj1, other->po_obj1);
+	if (result == 0)
+		result = DeeObject_TryCompareEq(self->po_obj2, other->po_obj2);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy2_compare_eq_recursive(ProxyObject2 *self,
+                                    ProxyObject2 *other) {
+	int result;
+	if (DeeObject_AssertType(other, Dee_TYPE(self)))
+		goto err;
+	result = DeeObject_CompareEq(self->po_obj1, other->po_obj1);
+	if (result == 0)
+		result = DeeObject_CompareEq(self->po_obj2, other->po_obj2);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
 
 
 

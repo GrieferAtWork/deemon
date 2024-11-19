@@ -46,6 +46,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 #include "seq/sort.h"
 
 #undef SSIZE_MAX
@@ -62,9 +63,8 @@ DECL_BEGIN
 typedef DeeListObject List;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF List   *li_list;  /* [1..1][const] The list being iterated. */
-	DWEAK size_t li_index; /* The current iteration index. */
+	PROXY_OBJECT_HEAD_EX(List, li_list); /* [1..1][const] The list being iterated. */
+	DWEAK size_t               li_index; /* The current iteration index. */
 } ListIterator;
 
 INTDEF DeeTypeObject DeeListIterator_Type;
@@ -4570,15 +4570,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-li_dtor(ListIterator *__restrict self) {
-	Dee_Decref(self->li_list);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-li_visit(ListIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->li_list);
-}
+STATIC_ASSERT(offsetof(ListIterator, li_list) == offsetof(ProxyObject, po_obj));
+#define li_fini  generic_proxy_fini_unlikely /* Lists are usually referenced externally; else you'd use a Tuple */
+#define li_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_bool(ListIterator *__restrict self) {
@@ -4769,7 +4763,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(ListIterator)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&li_dtor,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&li_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL

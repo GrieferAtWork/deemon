@@ -27,7 +27,7 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *po_obj;  /* [1..1][const] The object being proxied */
+	DREF DeeObject *po_obj; /* [1..1][const] The object being proxied */
 } ProxyObject;
 
 typedef struct {
@@ -69,6 +69,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_init(ProxyObject *__restrict
 
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy_visit(ProxyObject *__restrict self, dvisit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy_fini(ProxyObject *__restrict self);
+#define generic_proxy_fini_unlikely generic_proxy_fini
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_copy_alias12(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_copy_recursive1_alias2(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
@@ -118,7 +119,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_trycompare_eq_recursive(P
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_compare_eq_recursive(ProxyObject *self, ProxyObject *other);    /* DeeObject_CompareEq(self->po_obj, other->po_obj) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_compare_recursive(ProxyObject *self, ProxyObject *other);       /* DeeObject_Compare(self->po_obj, other->po_obj) */
 
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy2_hash_recursive_ordered(ProxyObject2 *__restrict self); /* Dee_HashCombine(DeeObject_Hash(po_obj1), DeeObject_Hash(po_obj2)) */
+INTDEF struct type_cmp generic_proxy2_cmp_recursive_ordered;
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy2_hash_recursive_ordered(ProxyObject2 *__restrict self);      /* Dee_HashCombine(DeeObject_Hash(po_obj1), DeeObject_Hash(po_obj2)) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_trycompare_eq_recursive(ProxyObject2 *self, ProxyObject2 *other); /* DeeObject_TryCompareEq(self->po_obj1, other->po_obj1) ?: DeeObject_TryCompareEq(self->po_obj2, other->po_obj2) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_compare_eq_recursive(ProxyObject2 *self, ProxyObject2 *other);    /* DeeObject_CompareEq(self->po_obj1, other->po_obj1) ?: DeeObject_CompareEq(self->po_obj2, other->po_obj2) */
 
 DECL_END
 

@@ -65,17 +65,12 @@ STATIC_ASSERT(offsetof(SetUnionIterator, sui_in2nd) == offsetof(SetSymmetricDiff
 /* ================================================================================ */
 /*   COMMON PROXY                                                                   */
 /* ================================================================================ */
-PRIVATE NONNULL((1)) void DCALL
-proxy_fini(SetUnion *__restrict self) {
-	Dee_Decref(self->su_a);
-	Dee_Decref(self->su_b);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-proxy_visit(SetUnion *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->su_a);
-	Dee_Visit(self->su_b);
-}
+STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj2));
+#define proxy_fini  generic_proxy2_fini
+#define proxy_visit generic_proxy2_visit
 
 
 
@@ -83,9 +78,12 @@ proxy_visit(SetUnion *__restrict self, dvisit_t proc, void *arg) {
 /* ================================================================================ */
 /*   SET UNION                                                                      */
 /* ================================================================================ */
-STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetUnion, su_a));
-STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(SetUnion, su_b));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetUnionIterator, sui_union) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetUnionIterator, sui_iter) == offsetof(ProxyObject2, po_obj2));
 #define suiter_fini proxy_fini
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_get_iter(SetUnionIterator *__restrict self) {
 	DREF DeeObject *result;
@@ -441,31 +439,12 @@ su_ctor(SetUnion *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-su_copy(SetUnion *__restrict self,
-        SetUnion *__restrict other) {
-	self->su_a = other->su_a;
-	Dee_Incref(self->su_a);
-	self->su_b = other->su_b;
-	Dee_Incref(self->su_b);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-su_deep(SetUnion *__restrict self,
-        SetUnion *__restrict other) {
-	self->su_a = DeeObject_DeepCopy(other->su_a);
-	if unlikely(!self->su_a)
-		goto err;
-	self->su_b = DeeObject_DeepCopy(other->su_b);
-	if unlikely(!self->su_a)
-		goto err_a;
-	return 0;
-err_a:
-	Dee_Decref(self->su_a);
-err:
-	return -1;
-}
+STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj2));
+#define su_copy generic_proxy2_copy_alias12
+#define su_deep generic_proxy2_deepcopy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 su_init(SetUnion *__restrict self,
@@ -514,7 +493,7 @@ su_contains(SetUnion *self, DeeObject *item) {
 		goto err_r;
 	if (temp)
 		goto done;
-	Dee_Decref(result);
+	Dee_Decref_unlikely(result);
 
 	/* Check the second set, and forward the return value. */
 	result = DeeObject_Contains(self->su_b, item);
@@ -938,12 +917,12 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 /* ================================================================================ */
 /*   SET INTERSECTION                                                               */
 /* ================================================================================ */
-PRIVATE NONNULL((1)) void DCALL
-siiter_fini(SetIntersectionIterator *__restrict self) {
-	Dee_Decref_unlikely(self->sii_other);
-	Dee_Decref(self->sii_intersect);
-	Dee_Decref(self->sii_iter);
-}
+STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_intersect) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetIntersectionIterator, sii_intersect) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetIntersectionIterator, sii_iter) == offsetof(ProxyObject2, po_obj2));
+#define siiter_fini  generic_proxy2_fini
+#define siiter_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 siiter_ctor(SetIntersectionIterator *__restrict self) {
@@ -956,7 +935,6 @@ siiter_ctor(SetIntersectionIterator *__restrict self) {
 	if unlikely(!self->sii_iter)
 		goto err_isec;
 	self->sii_other = self->sii_intersect->si_b;
-	Dee_Incref(self->sii_other);
 	return 0;
 err_isec:
 	Dee_Decref(self->sii_intersect);
@@ -973,7 +951,6 @@ siiter_copy(SetIntersectionIterator *__restrict self,
 	self->sii_intersect = other->sii_intersect;
 	self->sii_other     = other->sii_other;
 	Dee_Incref(self->sii_intersect);
-	Dee_Incref(self->sii_other);
 	return 0;
 err:
 	return -1;
@@ -989,7 +966,6 @@ siiter_deep(SetIntersectionIterator *__restrict self,
 	if unlikely(!self->sii_intersect)
 		goto err_iter;
 	self->sii_other = self->sii_intersect->si_b;
-	Dee_Incref(self->sii_other);
 	return 0;
 err_iter:
 	Dee_Decref(self->sii_iter);
@@ -1009,17 +985,9 @@ siiter_init(SetIntersectionIterator *__restrict self,
 		goto err;
 	Dee_Incref(self->sii_intersect);
 	self->sii_other = self->sii_intersect->si_b;
-	Dee_Incref(self->sii_other);
 	return 0;
 err:
 	return -1;
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-siiter_visit(SetIntersectionIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->sii_intersect);
-	Dee_Visit(self->sii_iter);
-	Dee_Visit(self->sii_other);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1045,34 +1013,12 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-siiter_hash(SetIntersectionIterator *self) {
-	return DeeObject_Hash(self->sii_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-siiter_compare(SetIntersectionIterator *self, SetIntersectionIterator *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return DeeObject_Compare(self->sii_iter, other->sii_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-siiter_compare_eq(SetIntersectionIterator *self, SetIntersectionIterator *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return DeeObject_CompareEq(self->sii_iter, other->sii_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE struct type_cmp siiter_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&siiter_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&siiter_compare_eq,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&siiter_compare,
-};
+STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(ProxyObject, po_obj));
+#define siiter_hash          generic_proxy_hash_recursive
+#define siiter_compare       generic_proxy_compare_recursive
+#define siiter_compare_eq    generic_proxy_compare_eq_recursive
+#define siiter_trycompare_eq generic_proxy_trycompare_eq_recursive
+#define siiter_cmp           generic_proxy_cmp_recursive
 
 PRIVATE struct type_member tpconst siiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_intersect), "->?Ert:SetIntersection"),
@@ -1153,10 +1099,9 @@ si_iter(SetIntersection *__restrict self) {
 	result->sii_iter = DeeObject_Iter(self->si_a);
 	if unlikely(!result->sii_iter)
 		goto err_r;
+	Dee_Incref(self);
 	result->sii_intersect = self;
 	result->sii_other     = self->si_b;
-	Dee_Incref(self);
-	Dee_Incref(self->si_b);
 	DeeObject_Init(result, &SetIntersectionIterator_Type);
 done:
 	return result;
@@ -1381,7 +1326,6 @@ sd_iter(SetDifference *__restrict self) {
 	result->sdi_diff  = self;
 	result->sdi_other = self->sd_b;
 	Dee_Incref(self);
-	Dee_Incref(self->sd_b);
 	DeeObject_Init(result, &SetDifferenceIterator_Type);
 done:
 	return result;

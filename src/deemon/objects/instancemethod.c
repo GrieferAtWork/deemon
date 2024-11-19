@@ -32,16 +32,17 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/super.h>
 #include <deemon/util/atomic.h>
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 DECL_BEGIN
 
 typedef DeeInstanceMethodObject InstanceMethod;
+
 
 /* Create a new instance method.
  * This is a simple wrapper object that simply invokes a thiscall on
@@ -77,31 +78,18 @@ im_ctor(InstanceMethod *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-im_copy(InstanceMethod *__restrict self,
-        InstanceMethod *__restrict other) {
-	self->im_this = other->im_this;
-	self->im_func = other->im_func;
-	Dee_Incref(self->im_this);
-	Dee_Incref(self->im_func);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-im_deepcopy(InstanceMethod *__restrict self,
-            InstanceMethod *__restrict other) {
-	self->im_this = DeeObject_DeepCopy(other->im_this);
-	if unlikely(!self->im_this)
-		goto err;
-	self->im_func = DeeObject_DeepCopy(other->im_func);
-	if unlikely(!self->im_func)
-		goto err_im_this;
-	return 0;
-err_im_this:
-	Dee_Decref(self->im_this);
-err:
-	return -1;
-}
+STATIC_ASSERT(offsetof(InstanceMethod, im_func) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(InstanceMethod, im_func) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj2));
+#define im_fini          generic_proxy2_fini
+#define im_visit         generic_proxy2_visit
+#define im_copy          generic_proxy2_copy_alias12
+#define im_deepcopy      generic_proxy2_deepcopy
+#define im_hash          generic_proxy2_hash_recursive_ordered
+#define im_compare_eq    generic_proxy2_compare_eq_recursive
+#define im_trycompare_eq generic_proxy2_trycompare_eq_recursive
+#define im_cmp           generic_proxy2_cmp_recursive_ordered
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_init_kw(InstanceMethod *__restrict self, size_t argc,
@@ -119,7 +107,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 im_printrepr(InstanceMethod *__restrict self,
-             dformatprinter printer, void *arg) {
+             Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg,
 	                        "InstanceMethod(func: %r, thisarg: %r)",
 	                        self->im_func, self->im_this);
@@ -135,55 +123,6 @@ im_callkw(InstanceMethod *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	return DeeObject_ThisCallKw(self->im_func, self->im_this, argc, argv, kw);
 }
-
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-im_hash(InstanceMethod *__restrict self) {
-	return Dee_HashCombine(DeeObject_Hash(self->im_func),
-	                       DeeObject_Hash(self->im_this));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-im_compare_eq(InstanceMethod *self, InstanceMethod *other) {
-	int result;
-	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
-		goto err;
-	result = DeeObject_CompareEq(self->im_func, other->im_func);
-	if (result == 0)
-		result = DeeObject_CompareEq(self->im_this, other->im_this);
-	return result;
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-im_trycompare_eq(InstanceMethod *self, InstanceMethod *other) {
-	int result;
-	if (!DeeInstanceMethod_Check(other))
-		return -1;
-	result = DeeObject_TryCompareEq(self->im_func, other->im_func);
-	if (result == 0)
-		result = DeeObject_TryCompareEq(self->im_this, other->im_this);
-	return result;
-}
-
-PRIVATE struct type_cmp im_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&im_hash,
-	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&im_compare_eq,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&im_trycompare_eq,
-};
-
-
-STATIC_ASSERT(sizeof(DeeSuperObject) == sizeof(InstanceMethod));
-STATIC_ASSERT(offsetof(DeeSuperObject, s_type) == offsetof(InstanceMethod, im_func));
-STATIC_ASSERT(offsetof(DeeSuperObject, s_self) == offsetof(InstanceMethod, im_this));
-
-/* Since `super' and `InstanceMethod' share an identical
- * layout, we can re-use some operators here... */
-INTDEF NONNULL((1)) void DCALL super_fini(DeeSuperObject *__restrict self);
-INTDEF NONNULL((1, 2)) void DCALL super_visit(DeeSuperObject *__restrict self, dvisit_t proc, void *arg);
-#define im_fini  super_fini
-#define im_visit super_visit
 
 PRIVATE WUNUSED NONNULL((1)) struct class_attribute *DCALL
 instancemethod_getattr(InstanceMethod *__restrict self,
@@ -404,7 +343,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&im_printrepr
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&im_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&im_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,

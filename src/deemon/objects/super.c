@@ -29,6 +29,7 @@
 #include <deemon/super.h>
 
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 /* Define type-specific object operators. */
 #define DEFINE_TYPED_OPERATORS 1
@@ -216,17 +217,13 @@ err:
 }
 
 
-INTERN NONNULL((1)) void DCALL
-super_fini(Super *__restrict self) {
-	Dee_Decref(self->s_self);
-	Dee_Decref(self->s_type);
-}
 
-INTERN NONNULL((1, 2)) void DCALL
-super_visit(Super *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->s_self);
-	Dee_Visit(self->s_type);
-}
+STATIC_ASSERT(offsetof(Super, s_self) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(Super, s_self) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(Super, s_type) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(Super, s_type) == offsetof(ProxyObject2, po_obj2));
+#define super_fini  generic_proxy2_fini
+#define super_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_assign(Super *self, DeeObject *some_object) {

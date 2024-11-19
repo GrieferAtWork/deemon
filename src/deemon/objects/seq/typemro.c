@@ -30,9 +30,11 @@
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 
-/**/
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
+
+/**/
 #include "typemro.h"
 
 DECL_BEGIN
@@ -89,17 +91,11 @@ err:
 	return -1;
 }
 
-#define typebasesiter_fini typemroiter_fini
-PRIVATE NONNULL((1)) void DCALL
-typemroiter_fini(TypeMROIterator *__restrict self) {
-	Dee_Decref_unlikely((DeeTypeObject *)self->tmi_mro.tp_mro_orig);
-}
-
-#define typebasesiter_visit typemroiter_visit
-PRIVATE NONNULL((1, 2)) void DCALL
-typemroiter_visit(TypeMROIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit((DeeTypeObject *)self->tmi_mro.tp_mro_orig);
-}
+STATIC_ASSERT(offsetof(TypeMROIterator, tmi_mro.tp_mro_orig) == offsetof(ProxyObject, po_obj));
+#define typemroiter_fini    generic_proxy_fini_unlikely /* Unlikely because types are usually referenced elsewhre */
+#define typebasesiter_fini  generic_proxy_fini_unlikely /* Unlikely because types are usually referenced elsewhre */
+#define typemroiter_visit   generic_proxy_visit
+#define typebasesiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemroiter_bool(TypeMROIterator *__restrict self) {
@@ -452,11 +448,11 @@ err:
 }
 
 
-#define typebases_fini typemro_fini
-PRIVATE NONNULL((1)) void DCALL
-typemro_fini(TypeMRO *__restrict self) {
-	Dee_Decref_unlikely(self->tm_type);
-}
+STATIC_ASSERT(offsetof(TypeMRO, tm_type) == offsetof(ProxyObject, po_obj));
+#define typebases_fini  generic_proxy_fini_unlikely /* Unlikely because types are usually referenced elsewhre */
+#define typemro_fini    generic_proxy_fini_unlikely /* Unlikely because types are usually referenced elsewhre */
+#define typebases_visit generic_proxy_visit
+#define typemro_visit   generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemro_bool(TypeMRO *__restrict self) {
@@ -470,13 +466,6 @@ typebases_bool(TypeMRO *__restrict self) {
 	/* Bases are empty when the type doesn't have any bases. */
 	return DeeType_Base(self->tm_type) != NULL ? 1 : 0;
 }
-
-#define typebases_visit typemro_visit
-PRIVATE NONNULL((1, 2)) void DCALL
-typemro_visit(TypeMRO *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->tm_type);
-}
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF TypeMROIterator *DCALL
 typemro_iter(TypeMRO *__restrict self) {

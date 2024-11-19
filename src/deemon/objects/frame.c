@@ -60,13 +60,13 @@ typedef DeeFrameObject Frame;
 #define DOC_ReferenceError \
 	"#tReferenceError{The Frame has continued execution, or was otherwise released}"
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_dead_frame(Frame *__restrict UNUSED(self)) {
 	return DeeError_Throwf(&DeeError_ReferenceError,
 	                       "Frame access was revoked");
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_readonly_frame(Frame *__restrict UNUSED(self)) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "The Frame is readonly and cannot be modifed");
