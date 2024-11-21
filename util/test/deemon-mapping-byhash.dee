@@ -21,7 +21,12 @@
 
 import * from deemon;
 
-/* Sanity check */
+/* Sanity check (NOTE: specs actually allow this to fail since except for
+ * integers (whose hash value must match their integral value, so-long as
+ * that integral can be represented by the runtime's hash type), no further
+ * mandates are made regarding the hash value of objects, which also means
+ * that a deemon implementation would be allowed to assign the same hash
+ * for "foo" and "bar"; but no sane implementation would do that...) */
 assert "foo".operator hash() != "bar".operator hash();
 
 function testByHashSequence(seq) {

@@ -43,6 +43,7 @@
 #include <hybrid/unaligned.h>
 
 /**/
+#include "../objects/generic-proxy.h"
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -64,15 +65,13 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 /************************************************************************/
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeFunctionObject *fs_func; /* [1..1][const] Function in question */
+	PROXY_OBJECT_HEAD_EX(DeeFunctionObject, fs_func); /* [1..1][const] Function in question */
 } FunctionStatics;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeFunctionObject *fsi_func; /* [1..1][const] Function in question */
-	uint16_t                fsi_sid;  /* [>= fsi_func->fo_code->co_refc][lock(ATOMIC)] Index of next static to enumerate. */
-	uint16_t                fsi_end;  /* [== fsi_func->fo_code->co_refstaticc][const] Static enumeration end */
+	PROXY_OBJECT_HEAD_EX(DeeFunctionObject, fsi_func); /* [1..1][const] Function in question */
+	uint16_t                                fsi_sid;   /* [>= fsi_func->fo_code->co_refc][lock(ATOMIC)] Index of next static to enumerate. */
+	uint16_t                                fsi_end;   /* [== fsi_func->fo_code->co_refstaticc][const] Static enumeration end */
 } FunctionStaticsIterator;
 
 INTDEF DeeTypeObject FunctionStaticsIterator_Type;
@@ -160,16 +159,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-funcstaticsiter_fini(FunctionStaticsIterator *__restrict self) {
-	Dee_Decref(self->fsi_func);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-funcstaticsiter_visit(FunctionStaticsIterator *__restrict self,
-                      dvisit_t proc, void *arg) {
-	Dee_Visit(self->fsi_func);
-}
+STATIC_ASSERT(offsetof(FunctionStaticsIterator, fsi_func) == offsetof(ProxyObject, po_obj));
+#define funcstaticsiter_fini  generic_proxy_fini
+#define funcstaticsiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstaticsiter_bool(FunctionStaticsIterator *__restrict self) {
@@ -439,14 +431,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-funcstatics_copy(FunctionStatics *__restrict self,
-                 FunctionStatics *__restrict other) {
-	self->fs_func = other->fs_func;
-	Dee_Incref(self->fs_func);
-	return 0;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstatics_init(FunctionStatics *__restrict self,
                  size_t argc, DeeObject *const *argv) {
@@ -460,16 +444,11 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-funcstatics_fini(FunctionStatics *__restrict self) {
-	Dee_Decref(self->fs_func);
-}
 
-PRIVATE NONNULL((1, 2)) void DCALL
-funcstatics_visit(FunctionStatics *__restrict self,
-                  dvisit_t proc, void *arg) {
-	Dee_Visit(self->fs_func);
-}
+STATIC_ASSERT(offsetof(FunctionStatics, fs_func) == offsetof(ProxyObject, po_obj));
+#define funcstatics_copy  generic_proxy_copy_alias
+#define funcstatics_fini  generic_proxy_fini
+#define funcstatics_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 funcstatics_enumerate_index(FunctionStatics *self, Dee_enumerate_index_t proc,
@@ -648,18 +627,16 @@ err:
 /************************************************************************/
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeFunctionObject *fsbn_func;      /* [1..1][const] Function in question */
-	uint16_t                fsbn_rid_start; /* [const] First RID/SID to enumerate. */
-	uint16_t                fsbn_rid_end;   /* [const] Last RID/SID to enumerate, plus 1. */
+	PROXY_OBJECT_HEAD_EX(DeeFunctionObject, fsbn_func);     /* [1..1][const] Function in question */
+	uint16_t                                fsbn_rid_start; /* [const] First RID/SID to enumerate. */
+	uint16_t                                fsbn_rid_end;   /* [const] Last RID/SID to enumerate, plus 1. */
 } FunctionSymbolsByName;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF FunctionSymbolsByName *fsbni_seq;  /* [1..1][const] Function whose references/statics are being enumerated. */
-	DeeFunctionObject          *fsbni_func; /* [== fsbni_seq->fsbn_func][1..1][const] Function whose references/statics are being enumerated. */
-	uint16_t                    fsbni_rid;  /* [lock(ATOMIC)] Next rid (overflowing into sids) to enumerate. */
-	uint16_t                    fsbni_end;  /* [== fsbni_seq->fsbn_rid_end][const] RIS/SID end index. */
+	PROXY_OBJECT_HEAD_EX(FunctionSymbolsByName, fsbni_seq); /* [1..1][const] Function whose references/statics are being enumerated. */
+	DeeFunctionObject                          *fsbni_func; /* [== fsbni_seq->fsbn_func][1..1][const] Function whose references/statics are being enumerated. */
+	uint16_t                                    fsbni_rid;  /* [lock(ATOMIC)] Next rid (overflowing into sids) to enumerate. */
+	uint16_t                                    fsbni_end;  /* [== fsbni_seq->fsbn_rid_end][const] RIS/SID end index. */
 } FunctionSymbolsByNameIterator;
 
 INTDEF DeeTypeObject FunctionSymbolsByNameIterator_Type;
@@ -748,16 +725,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-funcsymbolsbynameiter_fini(FunctionSymbolsByNameIterator *__restrict self) {
-	Dee_Decref(self->fsbni_func);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-funcsymbolsbynameiter_visit(FunctionSymbolsByNameIterator *__restrict self,
-                           dvisit_t proc, void *arg) {
-	Dee_Visit(self->fsbni_func);
-}
+STATIC_ASSERT(offsetof(FunctionSymbolsByNameIterator, fsbni_seq) == offsetof(ProxyObject, po_obj));
+#define funcsymbolsbynameiter_fini  generic_proxy_fini
+#define funcsymbolsbynameiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcsymbolsbynameiter_bool(FunctionSymbolsByNameIterator *__restrict self) {
@@ -1464,18 +1434,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-funcsymbolsbyname_fini(FunctionSymbolsByName *__restrict self) {
-	Dee_Decref(self->fsbn_func);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-funcsymbolsbyname_visit(FunctionSymbolsByName *__restrict self,
-                        dvisit_t proc, void *arg) {
-	Dee_Visit(self->fsbn_func);
-}
-
-
+STATIC_ASSERT(offsetof(FunctionSymbolsByName, fsbn_func) == offsetof(ProxyObject, po_obj));
+#define funcsymbolsbyname_fini  generic_proxy_fini
+#define funcsymbolsbyname_visit generic_proxy_visit
 
 PRIVATE struct type_nsi tpconst funcsymbolsbyname_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
@@ -1653,11 +1614,10 @@ err:
 /************************************************************************/
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeYieldFunctionObject *yfsbn_yfunc;     /* [1..1][const] The function of the frame (as a cache) */
-	uint16_t                     yfsbn_nargs;     /* [<= yfsbn_yfunc->yf_func->fo_code->co_argc_max][const] The # of arguments to enumerate. */
-	uint16_t                     yfsbn_rid_start; /* [<= frsbn_rid_end][const] First RID/SID to enumerate. */
-	uint16_t                     yfsbn_rid_end;   /* [<= yfsbn_yfunc->yf_func->fo_code->co_refstaticc][const] Last RID/SID to enumerate, plus 1. */
+	PROXY_OBJECT_HEAD_EX(DeeYieldFunctionObject, yfsbn_yfunc);    /* [1..1][const] The function of the frame (as a cache) */
+	uint16_t                                     yfsbn_nargs;     /* [<= yfsbn_yfunc->yf_func->fo_code->co_argc_max][const] The # of arguments to enumerate. */
+	uint16_t                                     yfsbn_rid_start; /* [<= frsbn_rid_end][const] First RID/SID to enumerate. */
+	uint16_t                                     yfsbn_rid_end;   /* [<= yfsbn_yfunc->yf_func->fo_code->co_refstaticc][const] Last RID/SID to enumerate, plus 1. */
 } YieldFunctionSymbolsByName;
 
 typedef union {
@@ -1669,9 +1629,8 @@ typedef union {
 } YieldFunctionSymbolsByNameIteratorIndex;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF YieldFunctionSymbolsByName        *yfsbni_seq;  /* [1..1][const] Underlying frame-symbols sequence. */
-	YieldFunctionSymbolsByNameIteratorIndex yfsbni_idx;  /* Iterator index */
+	PROXY_OBJECT_HEAD_EX(YieldFunctionSymbolsByName, yfsbni_seq); /* [1..1][const] Underlying frame-symbols sequence. */
+	YieldFunctionSymbolsByNameIteratorIndex          yfsbni_idx;  /* Iterator index */
 } YieldFunctionSymbolsByNameIterator;
 
 INTDEF DeeTypeObject YieldFunctionSymbolsByNameIterator_Type;
@@ -1771,16 +1730,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-yfuncsymbolsbynameiter_fini(YieldFunctionSymbolsByNameIterator *__restrict self) {
-	Dee_Decref(self->yfsbni_seq);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-yfuncsymbolsbynameiter_visit(YieldFunctionSymbolsByNameIterator *__restrict self,
-                             dvisit_t proc, void *arg) {
-	Dee_Visit(self->yfsbni_seq);
-}
+STATIC_ASSERT(offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq) == offsetof(ProxyObject, po_obj));
+#define yfuncsymbolsbynameiter_fini  generic_proxy_fini
+#define yfuncsymbolsbynameiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbynameiter_bool(YieldFunctionSymbolsByNameIterator *__restrict self) {
@@ -2570,16 +2522,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-yfuncsymbolsbyname_fini(YieldFunctionSymbolsByName *__restrict self) {
-	Dee_Decref(self->yfsbn_yfunc);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-yfuncsymbolsbyname_visit(YieldFunctionSymbolsByName *__restrict self,
-                         dvisit_t proc, void *arg) {
-	Dee_Visit(self->yfsbn_yfunc);
-}
+STATIC_ASSERT(offsetof(YieldFunctionSymbolsByName, yfsbn_yfunc) == offsetof(ProxyObject, po_obj));
+#define yfuncsymbolsbyname_fini  generic_proxy_fini
+#define yfuncsymbolsbyname_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
 yfuncsymbolsbyname_getfunc(YieldFunctionSymbolsByName *__restrict self) {
@@ -2753,9 +2698,8 @@ err:
 /************************************************************************/
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeFrameObject *fa_frame; /* [1..1][const] The frame in question */
-	DREF DeeCodeObject  *fa_code;  /* [1..1][const] The code running in `fa_frame' (cache) */
+	PROXY_OBJECT_HEAD2_EX(DeeFrameObject, fa_frame, /* [1..1][const] The frame in question */
+	                      DeeCodeObject,  fa_code); /* [1..1][const] The code running in `fa_frame' (cache) */
 } FrameArgs;
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -2812,16 +2756,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-frameargs_copy(FrameArgs *__restrict self,
-               FrameArgs *__restrict other) {
-	self->fa_frame = other->fa_frame;
-	self->fa_code  = other->fa_code;
-	Dee_Incref(self->fa_frame);
-	Dee_Incref(self->fa_code);
-	return 0;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frameargs_init(FrameArgs *__restrict self,
                  size_t argc, DeeObject *const *argv) {
@@ -2842,19 +2776,14 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-frameargs_fini(FrameArgs *__restrict self) {
-	Dee_Decref(self->fa_frame);
-	Dee_Decref(self->fa_code);
-}
 
-PRIVATE NONNULL((1, 2)) void DCALL
-frameargs_visit(FrameArgs *__restrict self,
-                dvisit_t proc, void *arg) {
-	Dee_Visit(self->fa_frame);
-	Dee_Visit(self->fa_code);
-}
-
+STATIC_ASSERT(offsetof(FrameArgs, fa_frame) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(FrameArgs, fa_frame) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(FrameArgs, fa_code) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(FrameArgs, fa_code) == offsetof(ProxyObject2, po_obj2));
+#define frameargs_copy  generic_proxy2_copy_alias12
+#define frameargs_fini  generic_proxy2_fini
+#define frameargs_visit generic_proxy2_visit
 
 PRIVATE struct type_nsi tpconst frameargs_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -2991,9 +2920,8 @@ err:
 /************************************************************************/
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeFrameObject *fl_frame;  /* [1..1][const] The frame in question */
-	uint16_t             fl_localc; /* [const] The # of local variables there are (cache) */
+	PROXY_OBJECT_HEAD_EX(DeeFrameObject, fl_frame); /* [1..1][const] The frame in question */
+	uint16_t                             fl_localc; /* [const] The # of local variables there are (cache) */
 } FrameLocals;
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -3162,17 +3090,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-framelocals_fini(FrameLocals *__restrict self) {
-	Dee_Decref(self->fl_frame);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-framelocals_visit(FrameLocals *__restrict self,
-                  dvisit_t proc, void *arg) {
-	Dee_Visit(self->fl_frame);
-}
-
+STATIC_ASSERT(offsetof(FrameLocals, fl_frame) == offsetof(ProxyObject, po_obj));
+#define framelocals_fini  generic_proxy_fini
+#define framelocals_visit generic_proxy_visit
 
 PRIVATE struct type_nsi tpconst framelocals_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -3328,8 +3248,7 @@ err:
 /************************************************************************/
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeFrameObject *fs_frame;  /* [1..1][const] The frame in question */
+	PROXY_OBJECT_HEAD_EX(DeeFrameObject, fs_frame); /* [1..1][const] The frame in question */
 } FrameStack;
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -3419,14 +3338,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-framestack_copy(FrameStack *__restrict self,
-                FrameStack *__restrict other) {
-	self->fs_frame = other->fs_frame;
-	Dee_Incref(self->fs_frame);
-	return 0;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framestack_init(FrameStack *__restrict self,
                 size_t argc, DeeObject *const *argv) {
@@ -3440,16 +3351,10 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-framestack_fini(FrameStack *__restrict self) {
-	Dee_Decref(self->fs_frame);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-framestack_visit(FrameStack *__restrict self,
-                 dvisit_t proc, void *arg) {
-	Dee_Visit(self->fs_frame);
-}
+STATIC_ASSERT(offsetof(FrameStack, fs_frame) == offsetof(ProxyObject, po_obj));
+#define framestack_copy  generic_proxy_copy_alias
+#define framestack_fini  generic_proxy_fini
+#define framestack_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 framestack_enumerate_index(FrameStack *__restrict self, Dee_enumerate_index_t proc,
@@ -3767,14 +3672,13 @@ err:
 /************************************************************************/
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeFrameObject    *frsbn_frame;     /* [1..1][const] The frame in question */
-	DREF DeeFunctionObject *frsbn_func;      /* [1..1][const] The function of the frame (as a cache) */
-	uint16_t                frsbn_nargs;     /* [<= frsbn_func->fo_code->co_argc_max][const] The # of arguments to enumerate. */
-	uint16_t                frsbn_rid_start; /* [<= frsbn_rid_end][const] First RID/SID to enumerate. */
-	uint16_t                frsbn_rid_end;   /* [<= frsbn_func->fo_code->co_refstaticc][const] Last RID/SID to enumerate, plus 1. */
-	uint16_t                frsbn_localc;    /* [<= frsbn_func->fo_code->co_localc][const] The # of locals to enumerate. */
-	uint16_t                frsbn_stackc;    /* [const] The # of stack slots to enumerate (during enum, stop early if less than this remain). */
+	PROXY_OBJECT_HEAD2_EX(DeeFrameObject,    frsbn_frame,     /* [1..1][const] The frame in question */
+	                      DeeFunctionObject, frsbn_func);     /* [1..1][const] The function of the frame (as a cache) */
+	uint16_t                                 frsbn_nargs;     /* [<= frsbn_func->fo_code->co_argc_max][const] The # of arguments to enumerate. */
+	uint16_t                                 frsbn_rid_start; /* [<= frsbn_rid_end][const] First RID/SID to enumerate. */
+	uint16_t                                 frsbn_rid_end;   /* [<= frsbn_func->fo_code->co_refstaticc][const] Last RID/SID to enumerate, plus 1. */
+	uint16_t                                 frsbn_localc;    /* [<= frsbn_func->fo_code->co_localc][const] The # of locals to enumerate. */
+	uint16_t                                 frsbn_stackc;    /* [const] The # of stack slots to enumerate (during enum, stop early if less than this remain). */
 } FrameSymbolsByName;
 
 typedef struct {
@@ -3785,12 +3689,11 @@ typedef struct {
 } FrameSymbolsByNameIteratorIndex;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF FrameSymbolsByName        *frsbni_seq;   /* [1..1][const] Underlying frame-symbols sequence. */
+	PROXY_OBJECT_HEAD_EX(FrameSymbolsByName, frsbni_seq); /* [1..1][const] Underlying frame-symbols sequence. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t               frsbni_lock;  /* Lock for the below indices */
+	Dee_atomic_lock_t                        frsbni_lock; /* Lock for the below indices */
 #endif /* !CONFIG_NO_THREADS */
-	FrameSymbolsByNameIteratorIndex frsbni_idx; /* Iterator index */
+	FrameSymbolsByNameIteratorIndex          frsbni_idx;  /* Iterator index */
 } FrameSymbolsByNameIterator;
 
 #define FrameSymbolsByNameIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->frsbni_lock)
@@ -3944,16 +3847,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-framesymbolsbynameiter_fini(FrameSymbolsByNameIterator *__restrict self) {
-	Dee_Decref(self->frsbni_seq);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-framesymbolsbynameiter_visit(FrameSymbolsByNameIterator *__restrict self,
-                             dvisit_t proc, void *arg) {
-	Dee_Visit(self->frsbni_seq);
-}
+STATIC_ASSERT(offsetof(FrameSymbolsByNameIterator, frsbni_seq) == offsetof(ProxyObject, po_obj));
+#define framesymbolsbynameiter_fini  generic_proxy_fini
+#define framesymbolsbynameiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framesymbolsbynameiter_bool(FrameSymbolsByNameIterator *__restrict self) {
@@ -5038,19 +4934,12 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-framesymbolsbyname_fini(FrameSymbolsByName *__restrict self) {
-	Dee_Decref(self->frsbn_frame);
-	Dee_Decref(self->frsbn_func);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-framesymbolsbyname_visit(FrameSymbolsByName *__restrict self,
-                         dvisit_t proc, void *arg) {
-	Dee_Visit(self->frsbn_frame);
-	Dee_Visit(self->frsbn_func);
-}
-
+STATIC_ASSERT(offsetof(FrameSymbolsByName, frsbn_frame) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(FrameSymbolsByName, frsbn_frame) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2, po_obj2));
+#define framesymbolsbyname_fini  generic_proxy2_fini
+#define framesymbolsbyname_visit generic_proxy2_visit
 
 
 PRIVATE struct type_nsi tpconst framesymbolsbyname_nsi = {

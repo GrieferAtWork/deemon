@@ -39,9 +39,10 @@
 
 #include <hybrid/typecore.h>
 
-#include "../runtime/kwlist.h"
-#include "../runtime/runtime_error.h"
-#include "../runtime/strings.h"
+#include "../objects/generic-proxy.h"
+#include "kwlist.h"
+#include "runtime_error.h"
+#include "strings.h"
 
 DECL_BEGIN
 
@@ -51,10 +52,9 @@ DECL_BEGIN
 /* ======================== DeeBlackListKwdsObject ======================== */
 
 typedef struct {
-	OBJECT_HEAD
-	DWEAK struct kwds_entry     *blki_iter; /* [1..1] The next entry to iterate. */
-	struct kwds_entry           *blki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-	DREF DeeBlackListKwdsObject *blki_map;  /* [1..1][const] The associated keywords mapping. */
+	PROXY_OBJECT_HEAD_EX(DeeBlackListKwdsObject, blki_map); /* [1..1][const] The associated keywords mapping. */
+	DWEAK struct kwds_entry                     *blki_iter; /* [1..1] The next entry to iterate. */
+	struct kwds_entry                           *blki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
 } DeeBlackListKwdsIterator;
 
 INTDEF DeeTypeObject DeeBlackListKwdsIterator_Type;
@@ -91,16 +91,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-blvi_fini(DeeBlackListKwdsIterator *__restrict self) {
-	Dee_Decref(self->blki_map);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-blvi_visit(DeeBlackListKwdsIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->blki_map);
-}
-
+STATIC_ASSERT(offsetof(DeeBlackListKwdsIterator, blki_map) == offsetof(ProxyObject, po_obj));
+#define blvi_fini  generic_proxy_fini
+#define blvi_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) struct kwds_entry *DCALL
 blvi_nextiter(DeeBlackListKwdsIterator *__restrict self) {
@@ -1131,38 +1124,17 @@ DeeBlackListKwds_Decref(DREF DeeObject *__restrict self) {
 
 /* ======================== DeeBlackListKwObject ======================== */
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject            *mi_iter; /* [1..1][const] An iterator for the underlying `mi_map->blkw_kw'. */
-	DREF DeeBlackListKwObject *mi_map;  /* [1..1][const] The general-purpose blacklist mapping being iterated. */
+	PROXY_OBJECT_HEAD2_EX(DeeObject,            mi_iter, /* [1..1][const] An iterator for the underlying `mi_map->blkw_kw'. */
+	                      DeeBlackListKwObject, mi_map); /* [1..1][const] The general-purpose blacklist mapping being iterated. */
 } DeeBlackListKwIterator;
 
 INTDEF DeeTypeObject DeeBlackListKwIterator_Type;
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-blmi_copy(DeeBlackListKwIterator *__restrict self,
-          DeeBlackListKwIterator *__restrict other) {
-	self->mi_iter = DeeObject_Copy(other->mi_iter);
-	if unlikely(!self->mi_iter)
-		goto err;
-	self->mi_map = other->mi_map;
-	Dee_Incref(self->mi_map);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1)) void DCALL
-blmi_fini(DeeBlackListKwIterator *__restrict self) {
-	Dee_Decref(self->mi_iter);
-	Dee_Decref(self->mi_map);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-blmi_visit(DeeBlackListKwIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->mi_iter);
-	Dee_Visit(self->mi_map);
-}
-
+STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_map) == offsetof(ProxyObject2, po_obj2));
+#define blmi_copy  generic_proxy2_copy_recursive1_alias2
+#define blmi_fini  generic_proxy2_fini
+#define blmi_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blmi_next(DeeBlackListKwIterator *__restrict self) {
@@ -1243,42 +1215,12 @@ err_r:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-blmi_hash(DeeBlackListKwIterator *self) {
-	return DeeObject_Hash(self->mi_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-blmi_compare(DeeBlackListKwIterator *self, DeeBlackListKwIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeBlackListKwIterator_Type))
-		goto err;
-	return DeeObject_Compare(self->mi_iter, other->mi_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-blmi_compare_eq(DeeBlackListKwIterator *self, DeeBlackListKwIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeBlackListKwIterator_Type))
-		goto err;
-	return DeeObject_CompareEq(self->mi_iter, other->mi_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-blmi_trycompare_eq(DeeBlackListKwIterator *self, DeeBlackListKwIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeBlackListKwIterator_Type))
-		return 1;
-	return DeeObject_TryCompareEq(self->mi_iter, other->mi_iter);
-}
-
-PRIVATE struct type_cmp blmi_cmp = {
-	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&blmi_hash,
-	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&blmi_compare_eq,
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&blmi_compare,
-	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&blmi_trycompare_eq,
-};
+STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject, po_obj));
+#define blmi_hash          generic_proxy_hash_recursive
+#define blmi_compare       generic_proxy_compare_recursive
+#define blmi_compare_eq    generic_proxy_compare_eq_recursive
+#define blmi_trycompare_eq generic_proxy_trycompare_eq_recursive
+#define blmi_cmp           generic_proxy_cmp_recursive
 
 PRIVATE struct type_member tpconst blmi_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwIterator, mi_map), "->?Ert:BlackListKw"),
@@ -1556,17 +1498,12 @@ blkw_trygetitemnr_string_len_hash(DeeBlackListKwObject *__restrict self,
 	return ITER_DONE;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-blkw_fini(DeeBlackListKwObject *__restrict self) {
-	Dee_Decref(self->blkw_code);
-	Dee_Decref(self->blkw_kw);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-blkw_visit(DeeBlackListKwObject *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->blkw_code);
-	Dee_Visit(self->blkw_kw);
-}
+STATIC_ASSERT(offsetof(DeeBlackListKwObject, blkw_code) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(DeeBlackListKwObject, blkw_code) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(DeeBlackListKwObject, blkw_kw) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(DeeBlackListKwObject, blkw_kw) == offsetof(ProxyObject2, po_obj2));
+#define blkw_fini  generic_proxy2_fini
+#define blkw_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 blkw_bool_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
@@ -1627,9 +1564,10 @@ err_r:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 blkw_contains(DeeBlackListKwObject *self,
              DeeObject *key) {
-	if (DeeString_Check(key) &&
-	    DeeBlackListKw_IsBlackListed(self, key))
-		return_false;
+	if (DeeString_Check(key)) {
+		if (DeeBlackListKw_IsBlackListed(self, key))
+			return_false;
+	}
 	return DeeObject_Contains(self->blkw_kw, key);
 }
 

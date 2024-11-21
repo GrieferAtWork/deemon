@@ -676,9 +676,7 @@ DeeBlackListKwds_Decref(DREF DeeObject *__restrict self);
 typedef struct {
 	/* Variable keywords mapping-like object for general-purpose mapping-like objects. */
 	OBJECT_HEAD
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t                            blkw_lock;  /* Lock for this kwds wrapper. */
-#endif /* !CONFIG_NO_THREADS */
+	DREF DeeObject                                *blkw_kw;    /* [1..1][const] The underlying mapping which is being affected. */
 	DREF struct Dee_code_object                   *blkw_code;  /* [1..1][const] The code object who's keyword arguments should
 	                                                            *               be blacklisted from the the resulting mapping.
 	                                                            * NOTE: This code doesn't always takes at least 1 argument, and
@@ -690,15 +688,17 @@ typedef struct {
 	                                                            * NOTE: If revived during unsharing, the object in this field
 	                                                            *       gets incref'd, meaning that before that point, this
 	                                                            *       field doesn't actually carry a reference. */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_rwlock_t                            blkw_lock;  /* Lock for this kwds wrapper. */
+#endif /* !CONFIG_NO_THREADS */
 	size_t                                         blkw_ckwc;  /* [const][!0] Number of black-listed keywords */
 	struct Dee_string_object *const               *blkw_ckwv;  /* [1..1][const][1..blkw_ckwc][const] Vector of black-listed keywords. */
-	DREF DeeObject                                *blkw_kw;    /* [1..1][const] The underlying mapping which is being affected. */
 	size_t                                         blkw_load;  /* [lock(blkw_lock, INCREMENT_ONLY)][<= blkw_ckwc]
 	                                                            * Index of the next keyword which has yet to be loaded into
 	                                                            * the `blkw_blck' hash-set for blacklisted identifiers. */
 	size_t                                         blkw_mask;  /* [!0][const] Hash-mask for `blkw_blck' */
 	COMPILER_FLEXIBLE_ARRAY(DeeBlackListKwdsEntry, blkw_blck); /* [lock(blkw_lock)][0..blkw_mask+1]
-	                                                               * Hash-vector of loaded, black-listed keywords. */
+	                                                            * Hash-vector of loaded, black-listed keywords. */
 } DeeBlackListKwObject;
 #define DeeBlackListKw_KW(self)             ((DeeBlackListKwObject *)Dee_REQUIRES_OBJECT(self))->blkw_kw
 #define DeeBlackListKw_BLCKNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)

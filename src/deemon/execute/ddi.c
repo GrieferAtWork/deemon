@@ -660,9 +660,9 @@ PRIVATE WUNUSED DREF DeeDDIObject *DCALL ddi_ctor(void) {
 	return_reference_((DREF DeeDDIObject *)&DeeDDI_Empty);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 ddi_hash(DeeDDIObject *__restrict self) {
-	dhash_t result;
+	Dee_hash_t result;
 	result = Dee_HashPtr(&self->d_ddisize,
 	                     self->d_ddisize +
 	                     (offsetof(DeeDDIObject, d_ddi) -
@@ -679,9 +679,7 @@ ddi_hash(DeeDDIObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ddi_compare_eq(DeeDDIObject *self, DeeDDIObject *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeDDI_Type))
-		goto err;
+ddi_compare_eq_impl(DeeDDIObject *self, DeeDDIObject *other) {
 	if (self == other)
 		return 0;
 	if (self->d_ddisize != other->d_ddisize)
@@ -709,13 +707,29 @@ ddi_compare_eq(DeeDDIObject *self, DeeDDIObject *other) {
 	return 0;
 nope:
 	return 1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ddi_compare_eq(DeeDDIObject *self, DeeDDIObject *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeDDI_Type))
+		goto err;
+	return ddi_compare_eq_impl(self, other);
 err:
 	return Dee_COMPARE_ERR;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ddi_trycompare_eq(DeeDDIObject *self, DeeDDIObject *other) {
+	if (!DeeObject_InstanceOf(other, &DeeDDI_Type))
+		return 1;
+	return ddi_compare_eq_impl(self, other);
+}
+
 PRIVATE struct type_cmp ddi_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&ddi_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&ddi_compare_eq,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&ddi_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ddi_compare_eq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&ddi_trycompare_eq,
 };
 
 

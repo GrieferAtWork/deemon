@@ -857,6 +857,7 @@ PUBLIC size_t DCALL Dee_Shutdown(void) {
 	size_t num_gc = 0, num_empty_gc = 0;
 	for (;;) {
 		bool must_continue = false;
+
 		/* Track how often we've already invoked the GC. */
 		if (++num_gc == MAX_NONEMPTY_GC_ITERATIONS_BEFORE_KILL) {
 do_kill_user:
@@ -925,6 +926,7 @@ do_kill_user:
 				goto do_kill_user;
 			continue;
 		}
+
 		/* If nothing's left to-be done, _then_ we can stop. */
 		if (!must_continue)
 			break;

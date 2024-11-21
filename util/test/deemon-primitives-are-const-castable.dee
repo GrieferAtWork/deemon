@@ -41,5 +41,10 @@ if (hasattr(Type, "__isconstcastable__")) {
 	/* Types that shouldn't be constant castable */
 	assert !List.__isconstcastable__,
 		"Not possible because the type is mutable";
+	assert List.Frozen.__isconstcastable__;
+	assert !Dict.__isconstcastable__;
+	assert Dict.Frozen.__isconstcastable__;
+	assert !HashSet.__isconstcastable__;
+	assert HashSet.Frozen.__isconstcastable__;
 }
 
