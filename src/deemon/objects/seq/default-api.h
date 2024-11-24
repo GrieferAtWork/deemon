@@ -1154,7 +1154,7 @@ INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultOperatorBoolWithError(DeeObject *__restrict self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorIterWithEmpty(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorIterWithError(DeeObject *__restrict self);
+INTDEF /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorIterWithError(DeeObject *__restrict self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorSizeObWithSeqOperatorSize(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorSizeObWithEmpty(DeeObject *__restrict self);

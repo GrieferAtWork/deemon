@@ -44,7 +44,7 @@ DeeSeq_DefaultOperatorIterWithEmpty(DeeObject *__restrict self) {
 	return_empty_iterator;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultOperatorIterWithError(DeeObject *__restrict self) {
 	err_seq_unsupportedf(self, "operator iter");
 	return NULL;
