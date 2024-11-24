@@ -28,8 +28,8 @@ DECL_BEGIN
 /************************************************************************/
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_DefaultTryGetLastWithTSCGetLast(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeSeq_GetLast(self);
+DeeSeq_DefaultTryGetLastWithSeqGetLast(DeeObject *__restrict self) {
+	DREF DeeObject *result = DeeSeq_InvokeGetLast(self);
 	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_IndexError) ||
 		    DeeError_Catch(&DeeError_UnboundItem))
@@ -300,12 +300,12 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_DefaultDelLastWithTSCLastAndTSCSetRemove(DeeObject *__restrict self) {
+DeeSeq_DefaultDelLastWithSeqGetLastAndSetRemove(DeeObject *__restrict self) {
 	int result;
-	DREF DeeObject *key = DeeSeq_GetLast(self);
+	DREF DeeObject *key = DeeSeq_InvokeGetLast(self);
 	if unlikely(!key)
 		goto err;
-	result = new_DeeSet_Remove(self, key);
+	result = DeeSet_InvokeRemove(self, key);
 	Dee_Decref(key);
 	if (result > 0)
 		result = 0;
@@ -315,10 +315,10 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_DefaultDelLastWithTSCLastAndMapDelItem(DeeObject *__restrict self) {
+DeeSeq_DefaultDelLastWithSeqGetLastAndMaplikeDelItem(DeeObject *__restrict self) {
 	int result;
 	DREF DeeObject *key_and_value[2];
-	DREF DeeObject *item = DeeSeq_GetLast(self);
+	DREF DeeObject *item = DeeSeq_InvokeGetLast(self);
 	if unlikely(!item)
 		goto err;
 	if unlikely(DeeObject_Unpack(item, 2, key_and_value))

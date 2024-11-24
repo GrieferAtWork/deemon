@@ -2945,8 +2945,8 @@ map_Iterator_get(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_Keys_get(DeeTypeObject *__restrict self) {
 	DREF DeeTypeObject *result = &DeeSet_Type;
-	Dee_tsc_map_keys_t tsc_map_keys = DeeType_SeqCache_RequireMapKeys(self);
-	if (tsc_map_keys == &DeeMap_DefaultKeysWithTSCIterKeys)
+	Dee_tsc_map_keys_t tsc_map_keys = DeeType_RequireMapKeys(self);
+	if (tsc_map_keys == &DeeMap_DefaultKeysWithMapIterKeys)
 		result = &DefaultSequence_MapKeys_Type;
 	return_reference_(result);
 }
@@ -2954,8 +2954,8 @@ map_Keys_get(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_Values_get(DeeTypeObject *__restrict self) {
 	DREF DeeTypeObject *result = &DeeSeq_Type;
-	Dee_tsc_map_values_t tsc_map_values = DeeType_SeqCache_RequireMapValues(self);
-	if (tsc_map_values == &DeeMap_DefaultValuesWithTSCIterValues)
+	Dee_tsc_map_values_t tsc_map_values = DeeType_RequireMapValues(self);
+	if (tsc_map_values == &DeeMap_DefaultValuesWithMapIterValues)
 		result = &DefaultSequence_MapValues_Type;
 	return_reference_(result);
 }
@@ -2963,7 +2963,7 @@ map_Values_get(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_IterKeys_get(DeeTypeObject *__restrict self) {
 	DREF DeeTypeObject *result = &DeeIterator_Type;
-	Dee_tsc_map_iterkeys_t tsc_map_iterkeys = DeeType_SeqCache_RequireMapIterKeys(self);
+	Dee_tsc_map_iterkeys_t tsc_map_iterkeys = DeeType_RequireMapIterKeys(self);
 	if (tsc_map_iterkeys == &DeeObject_DefaultIterKeysWithEnumerate) {
 		/* TODO: Custom iterator type that uses "tp_enumerate" */
 	} else if (tsc_map_iterkeys == &DeeObject_DefaultIterKeysWithEnumerateIndex) {
@@ -2982,7 +2982,7 @@ map_IterKeys_get(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_IterValues_get(DeeTypeObject *__restrict self) {
 	DREF DeeTypeObject *result = &DeeIterator_Type;
-	Dee_tsc_map_itervalues_t tsc_map_itervalues = DeeType_SeqCache_RequireMapIterValues(self);
+	Dee_tsc_map_itervalues_t tsc_map_itervalues = DeeType_RequireMapIterValues(self);
 	if (tsc_map_itervalues == &DeeMap_DefaultIterValuesWithIter) {
 		result = &DefaultIterator_WithNextValue;
 	}

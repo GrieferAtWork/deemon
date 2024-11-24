@@ -74,12 +74,12 @@ err:
 
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 ds_mk_iter(DefaultSequence_MapProxy *__restrict self) {
-	return new_DeeMap_IterKeys(self->dsmp_map);
+	return DeeMap_InvokeIterKeys(self->dsmp_map);
 }
 
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 ds_mv_iter(DefaultSequence_MapProxy *__restrict self) {
-	return new_DeeMap_IterValues(self->dsmp_map);
+	return DeeMap_InvokeIterValues(self->dsmp_map);
 }
 
 PRIVATE struct type_seq ds_mk_seq = {
@@ -192,7 +192,7 @@ ds_mk_remove(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv
 	DeeObject *key;
 	if (DeeArg_Unpack(argc, argv, "o:remove", &key))
 		goto err;
-	result = new_DeeMap_Remove(self->dsmp_map, key);
+	result = DeeMap_InvokeRemove(self->dsmp_map, key);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -205,7 +205,7 @@ ds_mk_removeall(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *a
 	DeeObject *keys;
 	if (DeeArg_Unpack(argc, argv, "o:removeall", &keys))
 		goto err;
-	if unlikely(new_DeeMap_RemoveKeys(self->dsmp_map, keys))
+	if unlikely(DeeMap_InvokeRemoveKeys(self->dsmp_map, keys))
 		goto err;
 	return_none;
 err:
@@ -218,7 +218,7 @@ ds_mk_pop(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:pop", &def))
 		goto err;
-	item = new_DeeMap_PopItem(self->dsmp_map);
+	item = DeeMap_InvokePopItem(self->dsmp_map);
 	if unlikely(!item)
 		goto err;
 	if (!DeeNone_Check(item)) {
@@ -243,7 +243,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_mk_clear(DefaultSequence_MapProxy *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
-	if unlikely(new_DeeSeq_Clear(self->dsmp_map))
+	if unlikely(DeeSeq_InvokeClear(self->dsmp_map))
 		goto err;
 	return_none;
 err:

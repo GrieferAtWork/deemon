@@ -392,7 +392,7 @@ DeeSeq_DefaultOperatorGetRangeIndexWithIterAndSeqSize(DeeObject *self,
 	result->dsial_seq     = self;
 	result->dsial_start   = range.sr_start;
 	result->dsial_limit   = range.sr_end - range.sr_start;
-	result->dsial_tp_iter = DeeType_SeqCache_RequireOperatorIter(Dee_TYPE(self));
+	result->dsial_tp_iter = DeeType_RequireSeqOperatorIter(Dee_TYPE(self));
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 	return (DREF DeeObject *)result;
 err:
@@ -437,7 +437,7 @@ DeeSeq_DefaultOperatorGetRangeIndexNWithIterAndSeqSize(DeeObject *self, Dee_ssiz
 	result->dsial_seq     = self;
 	result->dsial_start   = used_start;
 	result->dsial_limit   = (size_t)-1;
-	result->dsial_tp_iter = DeeType_SeqCache_RequireOperatorIter(Dee_TYPE(self));
+	result->dsial_tp_iter = DeeType_RequireSeqOperatorIter(Dee_TYPE(self));
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 	return (DREF DeeObject *)result;
 err:
@@ -727,7 +727,7 @@ DeeSeq_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultOperatorInplaceAddWithTSCExtend(DREF DeeObject **__restrict p_self,
                                               DeeObject *some_object) {
-	return new_DeeSeq_Extend(*p_self, some_object);
+	return DeeSeq_InvokeExtend(*p_self, some_object);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -739,13 +739,13 @@ DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend(DREF DeeObject **__rest
 	if (DeeObject_AsSize(some_object, &repeat))
 		goto err;
 	if (repeat == 0)
-		return new_DeeSeq_Clear(*p_self);
+		return DeeSeq_InvokeClear(*p_self);
 	if (repeat == 1)
 		return 0;
 	extend_with_this = DeeSeq_Repeat(*p_self, repeat - 1);
 	if unlikely(!extend_with_this)
 		goto err;
-	result = new_DeeSeq_Extend(*p_self, extend_with_this);
+	result = DeeSeq_InvokeExtend(*p_self, extend_with_this);
 	Dee_Decref_likely(extend_with_this);
 	return result;
 err:

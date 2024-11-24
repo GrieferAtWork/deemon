@@ -235,136 +235,136 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_trycompare_eq(DeeObject *lh
 
 
 /* Define sequence operator implementation selectors */
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bool_t DCALL DeeType_SeqCache_RequireOperatorBool_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_iter_t DCALL DeeType_SeqCache_RequireOperatorIter_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_sizeob_t DCALL DeeType_SeqCache_RequireOperatorSizeOb_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_contains_t DCALL DeeType_SeqCache_RequireOperatorContains_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_t DCALL DeeType_SeqCache_RequireOperatorGetItem_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delitem_t DCALL DeeType_SeqCache_RequireOperatorDelItem_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setitem_t DCALL DeeType_SeqCache_RequireOperatorSetItem_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getrange_t DCALL DeeType_SeqCache_RequireOperatorGetRange_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delrange_t DCALL DeeType_SeqCache_RequireOperatorDelRange_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setrange_t DCALL DeeType_SeqCache_RequireOperatorSetRange_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_foreach_t DCALL DeeType_SeqCache_RequireOperatorForeach_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_enumerate_t DCALL DeeType_SeqCache_RequireOperatorEnumerate_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_enumerate_index_t DCALL DeeType_SeqCache_RequireOperatorEnumerateIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_t DCALL DeeType_SeqCache_RequireOperatorBoundItem_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_t DCALL DeeType_SeqCache_RequireOperatorHasItem_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_size_t DCALL DeeType_SeqCache_RequireOperatorSize_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_size_fast_t DCALL DeeType_SeqCache_RequireOperatorSizeFast_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_index_t DCALL DeeType_SeqCache_RequireOperatorGetItemIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delitem_index_t DCALL DeeType_SeqCache_RequireOperatorDelItemIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setitem_index_t DCALL DeeType_SeqCache_RequireOperatorSetItemIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_index_t DCALL DeeType_SeqCache_RequireOperatorBoundItemIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_index_t DCALL DeeType_SeqCache_RequireOperatorHasItemIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getrange_index_t DCALL DeeType_SeqCache_RequireOperatorGetRangeIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delrange_index_t DCALL DeeType_SeqCache_RequireOperatorDelRangeIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setrange_index_t DCALL DeeType_SeqCache_RequireOperatorSetRangeIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getrange_index_n_t DCALL DeeType_SeqCache_RequireOperatorGetRangeIndexN_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delrange_index_n_t DCALL DeeType_SeqCache_RequireOperatorDelRangeIndexN_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setrange_index_n_t DCALL DeeType_SeqCache_RequireOperatorSetRangeIndexN_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trygetitem_t DCALL DeeType_SeqCache_RequireOperatorTryGetItem_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trygetitem_index_t DCALL DeeType_SeqCache_RequireOperatorTryGetItemIndex_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hash_t DCALL DeeType_SeqCache_RequireOperatorHash_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_compare_eq_t DCALL DeeType_SeqCache_RequireOperatorCompareEq_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_compare_t DCALL DeeType_SeqCache_RequireOperatorCompare_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trycompare_eq_t DCALL DeeType_SeqCache_RequireOperatorTryCompareEq_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_eq_t DCALL DeeType_SeqCache_RequireOperatorEq_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ne_t DCALL DeeType_SeqCache_RequireOperatorNe_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_lo_t DCALL DeeType_SeqCache_RequireOperatorLo_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCALL DeeType_SeqCache_RequireOperatorLe_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_SeqCache_RequireOperatorGr_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_SeqCache_RequireOperatorGe_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_add_t DCALL DeeType_SeqCache_RequireOperatorInplaceAdd_for_optimize(DeeTypeObject *__restrict self);
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_mul_t DCALL DeeType_SeqCache_RequireOperatorInplaceMul_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bool_t DCALL DeeType_RequireSeqOperatorBool_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_iter_t DCALL DeeType_RequireSeqOperatorIter_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_sizeob_t DCALL DeeType_RequireSeqOperatorSizeOb_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_contains_t DCALL DeeType_RequireSeqOperatorContains_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_t DCALL DeeType_RequireSeqOperatorGetItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delitem_t DCALL DeeType_RequireSeqOperatorDelItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setitem_t DCALL DeeType_RequireSeqOperatorSetItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getrange_t DCALL DeeType_RequireSeqOperatorGetRange_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delrange_t DCALL DeeType_RequireSeqOperatorDelRange_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setrange_t DCALL DeeType_RequireSeqOperatorSetRange_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_foreach_t DCALL DeeType_RequireSeqOperatorForeach_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_enumerate_t DCALL DeeType_RequireSeqOperatorEnumerate_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_enumerate_index_t DCALL DeeType_RequireSeqOperatorEnumerateIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_t DCALL DeeType_RequireSeqOperatorBoundItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_t DCALL DeeType_RequireSeqOperatorHasItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_size_t DCALL DeeType_RequireSeqOperatorSize_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_size_fast_t DCALL DeeType_RequireSeqOperatorSizeFast_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_index_t DCALL DeeType_RequireSeqOperatorGetItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delitem_index_t DCALL DeeType_RequireSeqOperatorDelItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setitem_index_t DCALL DeeType_RequireSeqOperatorSetItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_index_t DCALL DeeType_RequireSeqOperatorBoundItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_index_t DCALL DeeType_RequireSeqOperatorHasItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getrange_index_t DCALL DeeType_RequireSeqOperatorGetRangeIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delrange_index_t DCALL DeeType_RequireSeqOperatorDelRangeIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setrange_index_t DCALL DeeType_RequireSeqOperatorSetRangeIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getrange_index_n_t DCALL DeeType_RequireSeqOperatorGetRangeIndexN_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delrange_index_n_t DCALL DeeType_RequireSeqOperatorDelRangeIndexN_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setrange_index_n_t DCALL DeeType_RequireSeqOperatorSetRangeIndexN_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trygetitem_t DCALL DeeType_RequireSeqOperatorTryGetItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trygetitem_index_t DCALL DeeType_RequireSeqOperatorTryGetItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hash_t DCALL DeeType_RequireSeqOperatorHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_compare_eq_t DCALL DeeType_RequireSeqOperatorCompareEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_compare_t DCALL DeeType_RequireSeqOperatorCompare_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trycompare_eq_t DCALL DeeType_RequireSeqOperatorTryCompareEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_eq_t DCALL DeeType_RequireSeqOperatorEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ne_t DCALL DeeType_RequireSeqOperatorNe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_lo_t DCALL DeeType_RequireSeqOperatorLo_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCALL DeeType_RequireSeqOperatorLe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_RequireSeqOperatorGr_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireSeqOperatorGe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_add_t DCALL DeeType_RequireSeqOperatorInplaceAdd_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_mul_t DCALL DeeType_RequireSeqOperatorInplaceMul_for_optimize(DeeTypeObject *__restrict self);
 
 #ifndef __INTELLISENSE__
 #define LOCAL_FOR_OPTIMIZE
 DECL_END
 
-#define DEFINE_DeeType_SeqCache_RequireOperatorBool
+#define DEFINE_DeeType_RequireSeqOperatorBool
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorIter
+#define DEFINE_DeeType_RequireSeqOperatorIter
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorSizeOb
+#define DEFINE_DeeType_RequireSeqOperatorSizeOb
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorContains
+#define DEFINE_DeeType_RequireSeqOperatorContains
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorGetItem
+#define DEFINE_DeeType_RequireSeqOperatorGetItem
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorDelItem
+#define DEFINE_DeeType_RequireSeqOperatorDelItem
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorSetItem
+#define DEFINE_DeeType_RequireSeqOperatorSetItem
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorGetRange
+#define DEFINE_DeeType_RequireSeqOperatorGetRange
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorDelRange
+#define DEFINE_DeeType_RequireSeqOperatorDelRange
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorSetRange
+#define DEFINE_DeeType_RequireSeqOperatorSetRange
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorForeach
+#define DEFINE_DeeType_RequireSeqOperatorForeach
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorEnumerate
+#define DEFINE_DeeType_RequireSeqOperatorEnumerate
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorEnumerateIndex
+#define DEFINE_DeeType_RequireSeqOperatorEnumerateIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorBoundItem
+#define DEFINE_DeeType_RequireSeqOperatorBoundItem
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorHasItem
+#define DEFINE_DeeType_RequireSeqOperatorHasItem
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorSize
+#define DEFINE_DeeType_RequireSeqOperatorSize
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorSizeFast
+#define DEFINE_DeeType_RequireSeqOperatorSizeFast
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorGetItemIndex
+#define DEFINE_DeeType_RequireSeqOperatorGetItemIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorDelItemIndex
+#define DEFINE_DeeType_RequireSeqOperatorDelItemIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorSetItemIndex
+#define DEFINE_DeeType_RequireSeqOperatorSetItemIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorBoundItemIndex
+#define DEFINE_DeeType_RequireSeqOperatorBoundItemIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorHasItemIndex
+#define DEFINE_DeeType_RequireSeqOperatorHasItemIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorGetRangeIndex
+#define DEFINE_DeeType_RequireSeqOperatorGetRangeIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorDelRangeIndex
+#define DEFINE_DeeType_RequireSeqOperatorDelRangeIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorSetRangeIndex
+#define DEFINE_DeeType_RequireSeqOperatorSetRangeIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorGetRangeIndexN
+#define DEFINE_DeeType_RequireSeqOperatorGetRangeIndexN
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorDelRangeIndexN
+#define DEFINE_DeeType_RequireSeqOperatorDelRangeIndexN
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorSetRangeIndexN
+#define DEFINE_DeeType_RequireSeqOperatorSetRangeIndexN
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorTryGetItem
+#define DEFINE_DeeType_RequireSeqOperatorTryGetItem
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorTryGetItemIndex
+#define DEFINE_DeeType_RequireSeqOperatorTryGetItemIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorHash
+#define DEFINE_DeeType_RequireSeqOperatorHash
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorCompareEq
+#define DEFINE_DeeType_RequireSeqOperatorCompareEq
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorCompare
+#define DEFINE_DeeType_RequireSeqOperatorCompare
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorTryCompareEq
+#define DEFINE_DeeType_RequireSeqOperatorTryCompareEq
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorEq
+#define DEFINE_DeeType_RequireSeqOperatorEq
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorNe
+#define DEFINE_DeeType_RequireSeqOperatorNe
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorLo
+#define DEFINE_DeeType_RequireSeqOperatorLo
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorLe
+#define DEFINE_DeeType_RequireSeqOperatorLe
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorGr
+#define DEFINE_DeeType_RequireSeqOperatorGr
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorGe
+#define DEFINE_DeeType_RequireSeqOperatorGe
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorInplaceAdd
+#define DEFINE_DeeType_RequireSeqOperatorInplaceAdd
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
-#define DEFINE_DeeType_SeqCache_RequireOperatorInplaceMul
+#define DEFINE_DeeType_RequireSeqOperatorInplaceMul
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 
 DECL_BEGIN
@@ -379,18 +379,18 @@ DECL_BEGIN
 	      DeeType_SeqCache_Variants_Map##OperatorFoo(|| (tp_foo) == )) {         \
 		switch (DeeType_GetSeqClass(dst)) {                                      \
 		case Dee_SEQCLASS_SEQ;                                                   \
-			return DeeType_SeqCache_Require##OperatorFoo##_for_optimize(dst);    \
+			return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst);    \
 		case Dee_SEQCLASS_SET;                                                   \
-			return DeeType_SeqCache_RequireSet##OperatorFoo##_for_optimize(dst); \
+			return DeeType_RequireSet##OperatorFoo##_for_optimize(dst); \
 		case Dee_SEQCLASS_MAP;                                                   \
-			return DeeType_SeqCache_RequireMap##OperatorFoo##_for_optimize(dst); \
+			return DeeType_RequireMap##OperatorFoo##_for_optimize(dst); \
 		default: break;                                                          \
 		}                                                                        \
 	}
 #else
 #define OPTIMIZE_SEQ_OPERATOR(OperatorFoo, dst, tp_foo)             \
 	if (0 DeeType_SeqCache_Variants_##OperatorFoo(|| (tp_foo) == )) \
-		return DeeType_SeqCache_Require##OperatorFoo##_for_optimize(dst)
+		return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst)
 #endif
 
 
@@ -1481,7 +1481,7 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq,
 		struct attrinfo info;
 		if (DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, NULL, STR_iterkeys, 8, Dee_HashStr__iterkeys, &info) ||
 		    DeeObject_TFindPrivateAttrInfoStringLenHash(tp_self, NULL, STR_keys, 4, Dee_HashStr__keys, &info)) {
-			seq->tp_iterkeys = DeeType_SeqCache_RequireMapIterKeys(tp_self);
+			seq->tp_iterkeys = DeeType_RequireMapIterKeys(tp_self);
 			ASSERT(seq->tp_iterkeys != NULL);
 			ASSERT(seq->tp_iterkeys != &DeeMap_DefaultIterKeysWithError);
 			seq_featureset_set(self, FEAT_tp_iterkeys);
@@ -2386,7 +2386,7 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 				/* if (has_private_attr("keys")) tp_iterkeys = () -> self.keys.operator iter(); */
 				if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_iterkeys, 8, Dee_HashStr__iterkeys, &info) ||
 				    DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_keys, 4, Dee_HashStr__keys, &info)) {
-					seq->tp_iterkeys = DeeType_SeqCache_RequireMapIterKeys(self);
+					seq->tp_iterkeys = DeeType_RequireMapIterKeys(self);
 				} else if (seq->tp_iter) {
 					seq->tp_iterkeys = &DeeMap_DefaultIterKeysWithIterDefault;
 				}

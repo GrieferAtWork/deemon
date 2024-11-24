@@ -13307,7 +13307,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexWithSizeDefaultAndTSCErase
 	if unlikely(size == (size_t)-1)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, size);
-	return (*DeeType_SeqCache_RequireErase(tp_self))(self, range.sr_start, range.sr_end - range.sr_start);
+	return (*DeeType_RequireSeqErase(tp_self))(self, range.sr_start, range.sr_end - range.sr_start);
 err:
 	return -1;
 }
@@ -13416,7 +13416,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSizeDefaultAndTSCEras
 			}
 		}
 	}
-	return (*DeeType_SeqCache_RequireErase(tp_self))(self, (size_t)start, size - (size_t)start);
+	return (*DeeType_RequireSeqErase(tp_self))(self, (size_t)start, size - (size_t)start);
 empty_range:
 	return 0;
 err:
@@ -13532,11 +13532,11 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeDefaultAndTSCErase
 	DeeSeqRange_Clamp(&range, start, end, size);
 	if (range.sr_end > range.sr_start) {
 		/* Erase what was there before... */
-		if unlikely((*DeeType_SeqCache_RequireErase(tp_self))(self, range.sr_start, range.sr_end - range.sr_start))
+		if unlikely((*DeeType_RequireSeqErase(tp_self))(self, range.sr_start, range.sr_end - range.sr_start))
 			goto err;
 	}
 	/* Insert new values. */
-	return (*DeeType_SeqCache_RequireInsertAll(tp_self))(self, range.sr_start, value);
+	return (*DeeType_RequireSeqInsertAll(tp_self))(self, range.sr_start, value);
 err:
 	return -1;
 }

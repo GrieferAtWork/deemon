@@ -3189,8 +3189,8 @@ seq_index(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? new_DeeSeq_FindWithKey(self, item, start, end, key)
-	         : new_DeeSeq_Find(self, item, start, end);
+	         ? DeeSeq_InvokeFindWithKey(self, item, start, end, key)
+	         : DeeSeq_InvokeFind(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -3211,8 +3211,8 @@ seq_rindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? new_DeeSeq_RFindWithKey(self, item, start, end, key)
-	         : new_DeeSeq_RFind(self, item, start, end);
+	         ? DeeSeq_InvokeRFindWithKey(self, item, start, end, key)
+	         : DeeSeq_InvokeRFind(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -3318,8 +3318,8 @@ seq_bcontains(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? new_DeeSeq_BFindWithKey(self, item, start, end, key)
-	         : new_DeeSeq_BFind(self, item, start, end);
+	         ? DeeSeq_InvokeBFindWithKey(self, item, start, end, key)
+	         : DeeSeq_InvokeBFind(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result != (size_t)-1);
@@ -3336,8 +3336,8 @@ seq_bindex(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? new_DeeSeq_BFindWithKey(self, item, start, end, key)
-	         : new_DeeSeq_BFind(self, item, start, end);
+	         ? DeeSeq_InvokeBFindWithKey(self, item, start, end, key)
+	         : DeeSeq_InvokeBFind(self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -3358,8 +3358,8 @@ seq_blocateall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *
 	                    &item, &start, &end, &key))
 		goto err;
 	if (!DeeNone_Check(key)
-	    ? new_DeeSeq_BRangeWithKey(self, item, start, end, key, result_range)
-	    : new_DeeSeq_BRange(self, item, start, end, result_range))
+	    ? DeeSeq_InvokeBRangeWithKey(self, item, start, end, key, result_range)
+	    : DeeSeq_InvokeBRange(self, item, start, end, result_range))
 		goto err;
 #ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	return DeeSeq_OperatorGetRangeIndex(self, result_range[0], result_range[1]);
@@ -3378,10 +3378,10 @@ seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	                    "o|" UNPuSIZ UNPuSIZ "o:binsert",
 	                    &item, &start, &end))
 		goto err;
-	index = new_DeeSeq_BPosition(self, item, start, end);
+	index = DeeSeq_InvokeBPosition(self, item, start, end);
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	if unlikely(new_DeeSeq_Insert(self, index, item))
+	if unlikely(DeeSeq_InvokeInsert(self, index, item))
 		goto err;
 	return_none;
 err:
