@@ -321,6 +321,10 @@ DFUNDEF WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes);
 	Dee_CollectMemory(_Dee_MalloccBufsize(elem_count, elem_size))
 #define Dee_CollectMemoryoc(base_offset, elem_count, elem_size) \
 	Dee_CollectMemory(_Dee_MallococBufsize(base_offset, elem_count, elem_size))
+#define Dee_CollectMemorycSafe(elem_count, elem_size) \
+	Dee_CollectMemory(_Dee_MalloccBufsizeSafe(elem_count, elem_size))
+#define Dee_CollectMemoryocSafe(base_offset, elem_count, elem_size) \
+	Dee_CollectMemory(_Dee_MallococBufsizeSafe(base_offset, elem_count, elem_size))
 
 /* Throw a bad-allocation error for `req_bytes' bytes.
  * @return: -1: Always returns -1. */

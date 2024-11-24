@@ -4074,10 +4074,10 @@ again:
 		DeeList_LockEndRead(me);
 		return (DREF List *)DeeList_New();
 	}
-	res_elemv = Dee_objectlist_elemv_trymalloc(res_elemc);
+	res_elemv = Dee_objectlist_elemv_trymalloc_safe(res_elemc);
 	if unlikely(!res_elemv) {
 		DeeList_LockEndRead(me);
-		if (Dee_CollectMemoryc(res_elemc, sizeof(DREF DeeObject *)))
+		if (Dee_CollectMemorycSafe(res_elemc, sizeof(DREF DeeObject *)))
 			goto again;
 		goto err;
 	}
