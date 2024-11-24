@@ -249,7 +249,9 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-bsearch-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-first.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-last.c.inl" />
-		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-operators.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-method-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-operator-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-compare.h" />
@@ -302,6 +304,7 @@
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\operator-require.h" />
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h" />
 		<ClInclude Include="..\src\deemon\runtime\slab-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\slab.c.inl" />
@@ -495,6 +498,7 @@
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />
 		<ClCompile Include="..\src\deemon\runtime\notify.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-constcall.c" />
+		<ClCompile Include="..\src\deemon\runtime\operator-inherit.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator_info.c" />
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c" />

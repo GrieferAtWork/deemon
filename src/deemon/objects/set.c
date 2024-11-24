@@ -37,6 +37,7 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 
+#include "../runtime/operator-require.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/default-api.h"
@@ -860,23 +861,6 @@ PRIVATE struct type_getset tpconst set_class_getsets[] = {
  * For this purpose, trust the return value of `DeeType_GetSeqClass()',
  * and wrap/modify operator invocation such that the object behaves as
  * though it was an indexable sequence. */
-#define DeeType_RequireIter(tp_self)                  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_iter) || DeeType_InheritIter(tp_self))
-#define DeeType_RequireSizeOb(tp_self)                (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_sizeob) || DeeType_InheritSize(tp_self))
-#define DeeType_RequireSize(tp_self)                  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_size) || DeeType_InheritSize(tp_self))
-#define DeeType_RequireContains(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_contains) || DeeType_InheritContains(tp_self))
-#define DeeType_RequireForeach(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self))
-#define DeeType_RequireForeachPair(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
-#define DeeType_RequireForeachAndForeachPair(tp_self) (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
-#define DeeType_RequireHash(tp_self)                  (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_hash) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireCompareEq(tp_self)             (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_compare_eq) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireTryCompareEq(tp_self)          (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_trycompare_eq) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireEq(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_eq) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireNe(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_ne) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireLo(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_lo) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireLe(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_le) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireGr(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_gr) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireGe(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_ge) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireBool(tp_self)                  (((tp_self)->tp_cast.tp_bool) || DeeType_InheritBool(tp_self))
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_set_iter(DeeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_set_sizeob(DeeObject *__restrict self);
@@ -1091,10 +1075,8 @@ handle_empty:
 }
 
 
-INTDEF WUNUSED NONNULL((1)) int DCALL empty_seq_compare(DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1)) int DCALL empty_seq_trycompare_eq(DeeObject *some_object);
-#define empty_set_compare       empty_seq_compare
-#define empty_set_trycompare_eq empty_seq_trycompare_eq
+#define empty_set_compare       DeeSeq_DefaultOperatorCompareWithEmpty
+#define empty_set_trycompare_eq DeeSeq_DefaultOperatorTryCompareEqWithEmpty
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_set_compare_eq(DeeObject *self, DeeObject *some_object) {
@@ -1112,7 +1094,7 @@ generic_set_compare_eq(DeeObject *self, DeeObject *some_object) {
 	err_unimplemented_operator(tp_self, OPERATOR_EQ);
 	return Dee_COMPARE_ERR;
 handle_empty:
-	return empty_set_compare(some_object);
+	return empty_set_compare(self, some_object);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1130,7 +1112,7 @@ generic_set_trycompare_eq(DeeObject *self, DeeObject *some_object) {
 	}
 	return -1;
 handle_empty:
-	return empty_set_trycompare_eq(some_object);
+	return empty_set_trycompare_eq(self, some_object);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1148,7 +1130,7 @@ process_result:
 		goto err;
 	return_bool(result == 0);
 handle_empty:
-	result = empty_set_compare(some_object);
+	result = empty_set_compare(self, some_object);
 	goto process_result;
 err:
 	return NULL;
@@ -1169,7 +1151,7 @@ process_result:
 		goto err;
 	return_bool(result != 0);
 handle_empty:
-	result = empty_set_compare(some_object);
+	result = empty_set_compare(self, some_object);
 	goto process_result;
 err:
 	return NULL;
@@ -1193,7 +1175,7 @@ generic_set_lo(DeeObject *self, DeeObject *some_object) {
 err:
 	return NULL;
 handle_empty:
-	result = empty_set_compare(some_object);
+	result = empty_set_compare(self, some_object);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result == 0);
@@ -1255,7 +1237,7 @@ generic_set_ge(DeeObject *self, DeeObject *some_object) {
 err:
 	return NULL;
 handle_empty:
-	result = empty_set_compare(some_object);
+	result = empty_set_compare(self, some_object);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result != 0);

@@ -20,6 +20,7 @@
 #ifndef GUARD_DEEMON_CLASS_H
 #define GUARD_DEEMON_CLASS_H 1
 
+#ifndef _DEE_WITHOUT_INCLUDES
 #include "api.h"
 
 #include <stddef.h>
@@ -27,6 +28,7 @@
 
 #include "object.h"
 #include "util/lock.h"
+#endif /* !_DEE_WITHOUT_INCLUDES */
 
 /*
  * Automatically generated operators / constructors:
@@ -1916,6 +1918,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultTryGetItemInd
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultTryGetItemIndexWithGetItem(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultTryGetItemIndexWithErrorRequiresString(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultTryGetItemIndexWithGetItemIndexDefault(DeeObject *__restrict self, size_t index); /* May call other DEFAULT operators */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultTryGetItemIndexWithForeachDefault(DeeObject *__restrict self, size_t index);    /* May call other DEFAULT operators */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultTryGetItemIndexWithEnumerate(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_DefaultTryGetItemIndexWithEnumerateDefault(DeeObject *__restrict self, size_t index); /* May call other DEFAULT operators */
 

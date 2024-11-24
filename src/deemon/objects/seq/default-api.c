@@ -36,6 +36,7 @@
 #include <deemon/util/atomic.h>
 
 /**/
+#include "../../runtime/operator-require.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
@@ -47,48 +48,6 @@
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 DECL_BEGIN
-
-#define DeeType_RequireIter(tp_self)                  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_iter) || DeeType_InheritIter(tp_self))
-#define DeeType_RequireSizeOb(tp_self)                (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_sizeob) || DeeType_InheritSize(tp_self))
-#define DeeType_RequireSize(tp_self)                  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_size) || DeeType_InheritSize(tp_self))
-#define DeeType_RequireContains(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_contains) || DeeType_InheritContains(tp_self))
-#define DeeType_RequireForeach(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self))
-#define DeeType_RequireForeachPair(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
-#define DeeType_RequireEnumerate(tp_self)             (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_enumerate) || (DeeType_InheritIter(tp_self) && (tp_self)->tp_seq->tp_enumerate))
-#define DeeType_RequireEnumerateIndex(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_enumerate_index) || (DeeType_InheritIter(tp_self) && (tp_self)->tp_seq->tp_enumerate_index))
-#define DeeType_RequireForeachAndForeachPair(tp_self) (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
-#define DeeType_RequireGetItem(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireGetItemIndex(tp_self)          (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem_index) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireTryGetItem(tp_self)            (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_trygetitem) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireTryGetItemIndex(tp_self)       (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_trygetitem_index) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireBoundItem(tp_self)             (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_bounditem) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireBoundItemIndex(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_bounditem_index) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireHasItem(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_hasitem) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireHasItemIndex(tp_self)          (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_hasitem_index) || DeeType_InheritGetItem(tp_self))
-#define DeeType_RequireDelItem(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_delitem) || DeeType_InheritDelItem(tp_self))
-#define DeeType_RequireDelItemIndex(tp_self)          (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_delitem_index) || DeeType_InheritDelItem(tp_self))
-#define DeeType_RequireSetItem(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_setitem) || DeeType_InheritSetItem(tp_self))
-#define DeeType_RequireSetItemIndex(tp_self)          (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_setitem_index) || DeeType_InheritSetItem(tp_self))
-#define DeeType_RequireGetRange(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getrange) || DeeType_InheritGetRange(tp_self))
-#define DeeType_RequireGetRangeIndex(tp_self)         (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getrange_index) || DeeType_InheritGetRange(tp_self))
-#define DeeType_RequireGetRangeIndexN(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getrange_index_n) || DeeType_InheritGetRange(tp_self))
-#define DeeType_RequireDelRange(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_delrange) || DeeType_InheritDelRange(tp_self))
-#define DeeType_RequireDelRangeIndex(tp_self)         (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_delrange_index) || DeeType_InheritDelRange(tp_self))
-#define DeeType_RequireDelRangeIndexN(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_delrange_index_n) || DeeType_InheritDelRange(tp_self))
-#define DeeType_RequireSetRange(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_setrange) || DeeType_InheritSetRange(tp_self))
-#define DeeType_RequireSetRangeIndex(tp_self)         (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_setrange_index) || DeeType_InheritSetRange(tp_self))
-#define DeeType_RequireSetRangeIndexN(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_setrange_index_n) || DeeType_InheritSetRange(tp_self))
-#define DeeType_RequireHash(tp_self)                  (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_hash) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireCompareEq(tp_self)             (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_compare_eq) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireCompare(tp_self)               (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_compare) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireTryCompareEq(tp_self)          (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_trycompare_eq) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireEq(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_eq) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireNe(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_ne) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireLo(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_lo) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireLe(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_le) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireGr(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_gr) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireGe(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_ge) || DeeType_InheritCompare(tp_self))
-#define DeeType_RequireBool(tp_self)                  (((tp_self)->tp_cast.tp_bool) || DeeType_InheritBool(tp_self))
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_trygetfirst_t DCALL DeeType_SeqCache_RequireTryGetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_tsc_getfirst_t DCALL DeeType_SeqCache_RequireGetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
@@ -671,45 +630,6 @@ DeeType_SeqCache_RequireEnumerateIndex(DeeTypeObject *__restrict self) {
 	return result;
 }
 
-INTERN ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_nonempty_t DCALL
-DeeType_SeqCache_RequireNonEmpty(DeeTypeObject *__restrict self) {
-	Dee_tsc_nonempty_t result;
-	struct Dee_type_seq_cache *sc;
-	if likely(self->tp_seq) {
-		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->tsc_nonempty)
-			return sc->tsc_nonempty;
-	}
-	result = &DeeSeq_DefaultNonEmptyWithError;
-	if (DeeType_GetSeqClass(self) != Dee_SEQCLASS_NONE) {
-		if (DeeType_RequireBool(self) && self->tp_cast.tp_bool != &default_seq_bool) {
-			result = self->tp_cast.tp_bool;
-		} else if (Dee_type_seq_has_custom_tp_size(self->tp_seq)) {
-			result = &DeeSeq_DefaultBoolWithSize;
-		} else if (Dee_type_seq_has_custom_tp_sizeob(self->tp_seq)) {
-			result = &DeeSeq_DefaultBoolWithSizeOb;
-		} else if (Dee_type_seq_has_custom_tp_foreach(self->tp_seq)) {
-			result = &DeeSeq_DefaultBoolWithForeach;
-		} else if (self->tp_cmp && self->tp_cmp->tp_compare_eq &&
-		           !DeeType_IsDefaultCompareEq(self->tp_cmp->tp_compare_eq) &&
-		           !DeeType_IsDefaultCompare(self->tp_cmp->tp_compare_eq)) {
-			result = &DeeSeq_DefaultBoolWithCompareEq;
-		} else if (self->tp_cmp && self->tp_cmp->tp_eq && !DeeType_IsDefaultEq(self->tp_cmp->tp_eq)) {
-			result = &DeeSeq_DefaultBoolWithEq;
-		} else if (self->tp_cmp && self->tp_cmp->tp_ne && !DeeType_IsDefaultNe(self->tp_cmp->tp_ne)) {
-			result = &DeeSeq_DefaultBoolWithNe;
-		} else if (self->tp_seq->tp_foreach || DeeType_InheritIter(self)) {
-			result = &DeeSeq_DefaultBoolWithForeachDefault;
-		}
-	} else if (DeeType_RequireForeach(self)) {
-		result = &DeeSeq_DefaultBoolWithForeach;
-	}
-	sc = DeeType_TryRequireSeqCache(self);
-	if likely(sc)
-		atomic_write(&sc->tsc_nonempty, result);
-	return result;
-}
-
 
 /* Operators for the purpose of constructing `DefaultEnumeration_With*' objects. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -932,240 +852,328 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 
 DECL_END
 
+/* Define sequence operator implementation selectors */
+#ifndef __INTELLISENSE__
+#define DEFINE_DeeType_SeqCache_RequireOperatorBool
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorIter
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorSizeOb
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorContains
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorGetItem
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorDelItem
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorSetItem
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorGetRange
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorDelRange
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorSetRange
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorForeach
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorEnumerate
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorEnumerateIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorBoundItem
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorHasItem
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorSize
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorSizeFast
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorGetItemIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorDelItemIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorSetItemIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorBoundItemIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorHasItemIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorGetRangeIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorDelRangeIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorSetRangeIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorGetRangeIndexN
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorDelRangeIndexN
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorSetRangeIndexN
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorTryGetItem
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorTryGetItemIndex
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorHash
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorCompareEq
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorCompare
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorTryCompareEq
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorEq
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorNe
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorLo
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorLe
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorGr
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorGe
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorInplaceAdd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_SeqCache_RequireOperatorInplaceMul
+#include "default-api-require-operator-impl.c.inl"
+#endif /* !__INTELLISENSE__ */
+
 /* Define sequence function implementation selectors */
 #ifndef __INTELLISENSE__
 #define DEFINE_DeeType_SeqCache_RequireTryGetFirst
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireGetFirst
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBoundFirst
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireDelFirst
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetFirst
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireTryGetLast
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireGetLast
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBoundLast
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireDelLast
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetLast
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAny
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAnyWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAnyWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAnyWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAll
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAllWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAllWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAllWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireParity
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireParityWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireParityWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireParityWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireReduce
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireReduceWithInit
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireReduceWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireReduceWithRangeAndInit
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMin
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMinWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMinWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMinWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMax
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMaxWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMaxWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMaxWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSum
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSumWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireCount
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireCountWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireCountWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireCountWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireContains
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireContainsWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireContainsWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireContainsWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireLocate
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireLocateWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireLocateWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireLocateWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRLocateWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRLocateWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireStartsWith
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireStartsWithWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireStartsWithWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireStartsWithWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireEndsWith
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireEndsWithWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireEndsWithWithRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireEndsWithWithRangeAndKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireFind
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireFindWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRFind
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRFindWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireErase
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireInsert
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireInsertAll
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequirePushFront
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireAppend
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireExtend
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireXchItemIndex
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireClear
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequirePop
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRemove
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRemoveWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRRemove
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRRemoveWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRemoveAll
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRemoveAllWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireRemoveIf
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireResize
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireFill
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireReverse
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireReversed
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSort
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSortWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSorted
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSortedWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBFind
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBFindWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBPosition
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBPositionWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBRange
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBRangeWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBLocate
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireBLocateWithKey
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetInsert
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetRemove
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetUnify
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetInsertAll
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetRemoveAll
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetPop
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireSetPopWithDefault
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapSetOld
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapSetOldEx
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapSetNew
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapSetNewEx
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapSetDefault
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapUpdate
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapRemove
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapRemoveKeys
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapPop
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapPopWithDefault
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapPopItem
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapKeys
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapValues
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapIterKeys
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_SeqCache_RequireMapIterValues
-#include "default-api-require-impl.c.inl"
+#include "default-api-require-method-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_C */

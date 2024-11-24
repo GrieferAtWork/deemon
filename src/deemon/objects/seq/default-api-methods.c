@@ -480,17 +480,6 @@ err:
 
 
 
-/************************************************************************/
-/* Sequence.nonempty                                                    */
-/************************************************************************/
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-DeeSeq_DefaultNonEmptyWithError(DeeObject *__restrict self) {
-	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
-}
-
-
-
 
 
 
@@ -6264,11 +6253,6 @@ default_seq_setlast(DeeObject *self, DeeObject *value) {
 	return DeeSeq_SetLast(self, value);
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-default_seq_bool(DeeObject *__restrict self) {
-	return DeeSeq_NonEmpty(self);
-}
-
 /*[[[deemon
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("cb");
@@ -7595,6 +7579,7 @@ DECL_END
 #ifndef __INTELLISENSE__
 #include "default-api-methods-first.c.inl"
 #include "default-api-methods-last.c.inl"
+#include "default-api-operators.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_METHODS_C */
