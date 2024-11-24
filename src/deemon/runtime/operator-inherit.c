@@ -1849,9 +1849,9 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_enumerate = &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_sizeob) && seq_featureset_test(features, FEAT_tp_getitem) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_enumerate = &DeeSeq_DefaultEnumerateWithSizeObAndGetItem;
-		} else if (seq_featureset_test(features, FEAT_tp_foreach) && (seqclass == Dee_SEQCLASS_SEQ || seqclass == Dee_SEQCLASS_SET)) {
+		} else if (seq_featureset_test(features, FEAT_tp_foreach) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_enumerate = &DeeSeq_DefaultEnumerateWithCounterAndForeach;
-		} else if (seq_featureset_test(features, FEAT_tp_iter) && (seqclass == Dee_SEQCLASS_SEQ || seqclass == Dee_SEQCLASS_SET)) {
+		} else if (seq_featureset_test(features, FEAT_tp_iter) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_enumerate = &DeeSeq_DefaultEnumerateWithCounterAndIter;
 		} else if (seq_featureset_test(features, FEAT_tp_iter) && seqclass == Dee_SEQCLASS_MAP) {
 			seq->tp_enumerate = &DeeMap_DefaultEnumerateWithIter;

@@ -161,7 +161,9 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		Dee_atomic_rwlock_cinit(&result->fl_lock);
 		result->fl_size = size;
 	} else {
-		size_t size = DeeObject_Size(sizeob_or_seq);
+		size_t size;
+		/* (x as Sequence).operator # () */
+		size = (*DeeSeq_Type.tp_seq->tp_size)(sizeob_or_seq);
 		if unlikely(size == (size_t)-1)
 			goto err;
 		result = (DREF FixedList *)DeeGCObject_CalloccSafe(offsetof(FixedList, fl_elem),
@@ -170,9 +172,10 @@ fl_init(size_t argc, DeeObject *const *argv) {
 			goto err;
 		Dee_atomic_rwlock_cinit(&result->fl_lock);
 		FixedList_InitEnumerate_SetAllocatedSize(result, size);
-		if unlikely(DeeObject_EnumerateIndex(sizeob_or_seq,
-		                                     &fl_init_enumerate_cb,
-		                                     &result, 0, (size_t)-1))
+		/* (x as Sequence).enumerate((index, value?) -> fl_init_enumerate_cb(index, value)) */
+		if unlikely((*DeeSeq_Type.tp_seq->tp_enumerate_index)(sizeob_or_seq,
+		                                                      &fl_init_enumerate_cb,
+		                                                      &result, 0, (size_t)-1))
 			goto err_r_elem;
 		result->fl_size = size;
 	}
