@@ -26,7 +26,7 @@
 //#define DEFINE_DeeType_RequireSetFirst
 //#define DEFINE_DeeType_RequireSeqTryGetLast
 //#define DEFINE_DeeType_RequireSeqGetLast
-#define DEFINE_DeeType_RequireSeqBoundLast
+//#define DEFINE_DeeType_RequireSeqBoundLast
 //#define DEFINE_DeeType_RequireSeqDelLast
 //#define DEFINE_DeeType_RequireSetLast
 //#define DEFINE_DeeType_RequireSeqAny
@@ -87,7 +87,7 @@
 //#define DEFINE_DeeType_RequireSeqPushFront
 //#define DEFINE_DeeType_RequireSeqAppend
 //#define DEFINE_DeeType_RequireSeqExtend
-//#define DEFINE_DeeType_RequireSeqXchItemIndex
+#define DEFINE_DeeType_RequireSeqXchItemIndex
 //#define DEFINE_DeeType_RequireSeqClear
 //#define DEFINE_DeeType_RequireSeqPop
 //#define DEFINE_DeeType_RequireSeqRemove
@@ -261,993 +261,798 @@ DECL_BEGIN
 
 
 #ifdef DEFINE_DeeType_RequireSeqTryGetFirst
-#define LOCAL_CANONICAL_NAME             first
-#define LOCAL_tsc_foo                    tsc_trygetfirst
-#define LOCAL_DeeSeq_AttrFoo             TryGetFirst
-#define LOCAL_IS_OPERATOR
+#define LOCAL_foo      trygetfirst
+#define LOCAL_Foo      TryGetFirst
+#define LOCAL_Attr_foo first
+#define LOCAL_WITHOUT_ATTRIBUTE
 #elif defined(DEFINE_DeeType_RequireSeqGetFirst)
-#define LOCAL_CANONICAL_NAME             first
-#define LOCAL_default_seq_foo            default_seq_getfirst
-#define LOCAL_tsc_foo                    tsc_getfirst
-#define LOCAL_tsc_foo_data               tsc_getfirst_data
-#define LOCAL_DeeSeq_AttrFoo             GetFirst
+#define LOCAL_foo      getfirst
+#define LOCAL_Foo      GetFirst
+#define LOCAL_Attr_foo first
 #define LOCAL_IS_GETSET_GET
 #elif defined(DEFINE_DeeType_RequireSeqBoundFirst)
-#define LOCAL_CANONICAL_NAME             first
-#define LOCAL_default_seq_foo            default_seq_boundfirst
-#define LOCAL_tsc_foo                    tsc_boundfirst
-#define LOCAL_tsc_foo_data               tsc_getfirst_data
-#define LOCAL_DeeSeq_AttrFoo             BoundFirst
-#define LOCAL_DeeSeq_AttrBar             GetFirst
+#define LOCAL_foo              boundfirst
+#define LOCAL_Foo              BoundFirst
+#define LOCAL_Bar              GetFirst
+#define LOCAL_Attr_foo         first
+#define LOCAL_tsc_seq_foo_data tsc_seq_getfirst_data
 #define LOCAL_IS_GETSET_BOUND
 #elif defined(DEFINE_DeeType_RequireSeqDelFirst)
-#define LOCAL_CANONICAL_NAME             first
-#define LOCAL_default_seq_foo            default_seq_delfirst
-#define LOCAL_tsc_foo                    tsc_delfirst
-#define LOCAL_tsc_foo_data               tsc_delfirst_data
-#define LOCAL_DeeSeq_AttrFoo             DelFirst
+#define LOCAL_foo      delfirst
+#define LOCAL_Foo      DelFirst
+#define LOCAL_Attr_foo first
 #define LOCAL_IS_GETSET_DEL
 #elif defined(DEFINE_DeeType_RequireSetFirst)
-#define LOCAL_CANONICAL_NAME             first
-#define LOCAL_default_seq_foo            default_seq_setfirst
-#define LOCAL_tsc_foo                    tsc_setfirst
-#define LOCAL_tsc_foo_data               tsc_setfirst_data
-#define LOCAL_DeeSeq_AttrFoo             SetFirst
+#define LOCAL_foo      setfirst
+#define LOCAL_Foo      SetFirst
+#define LOCAL_Attr_foo first
 #define LOCAL_IS_GETSET_SET
 #elif defined(DEFINE_DeeType_RequireSeqTryGetLast)
-#define LOCAL_CANONICAL_NAME             last
-#define LOCAL_tsc_foo                    tsc_trygetlast
-#define LOCAL_DeeSeq_AttrFoo             TryGetLast
-#define LOCAL_IS_OPERATOR
+#define LOCAL_foo      trygetlast
+#define LOCAL_Foo      TryGetLast
+#define LOCAL_Attr_foo last
+#define LOCAL_WITHOUT_ATTRIBUTE
 #elif defined(DEFINE_DeeType_RequireSeqGetLast)
-#define LOCAL_CANONICAL_NAME             last
-#define LOCAL_default_seq_foo            default_seq_getlast
-#define LOCAL_tsc_foo                    tsc_getlast
-#define LOCAL_tsc_foo_data               tsc_getlast_data
-#define LOCAL_DeeSeq_AttrFoo             GetLast
+#define LOCAL_foo      getlast
+#define LOCAL_Foo      GetLast
+#define LOCAL_Attr_foo last
 #define LOCAL_IS_GETSET_GET
 #elif defined(DEFINE_DeeType_RequireSeqBoundLast)
-#define LOCAL_CANONICAL_NAME             last
-#define LOCAL_default_seq_foo            default_seq_boundlast
-#define LOCAL_tsc_foo                    tsc_boundlast
-#define LOCAL_tsc_foo_data               tsc_getlast_data
-#define LOCAL_DeeSeq_AttrFoo             BoundLast
-#define LOCAL_DeeSeq_AttrBar             GetLast
+#define LOCAL_foo              boundlast
+#define LOCAL_Foo              BoundLast
+#define LOCAL_Bar              GetLast
+#define LOCAL_Attr_foo         last
+#define LOCAL_tsc_seq_foo_data tsc_seq_getlast_data
 #define LOCAL_IS_GETSET_BOUND
 #elif defined(DEFINE_DeeType_RequireSeqDelLast)
-#define LOCAL_CANONICAL_NAME             last
-#define LOCAL_default_seq_foo            default_seq_dellast
-#define LOCAL_tsc_foo                    tsc_dellast
-#define LOCAL_tsc_foo_data               tsc_dellast_data
-#define LOCAL_DeeSeq_AttrFoo             DelLast
+#define LOCAL_foo      dellast
+#define LOCAL_Foo      DelLast
+#define LOCAL_Attr_foo last
 #define LOCAL_IS_GETSET_DEL
 #elif defined(DEFINE_DeeType_RequireSetLast)
-#define LOCAL_CANONICAL_NAME             last
-#define LOCAL_default_seq_foo            default_seq_setlast
-#define LOCAL_tsc_foo                    tsc_setlast
-#define LOCAL_tsc_foo_data               tsc_setlast_data
-#define LOCAL_DeeSeq_AttrFoo             SetLast
+#define LOCAL_foo      setlast
+#define LOCAL_Foo      SetLast
+#define LOCAL_Attr_foo last
 #define LOCAL_IS_GETSET_SET
 #elif defined(DEFINE_DeeType_RequireSeqAny)
-#define LOCAL_CANONICAL_NAME             any
-#define LOCAL_default_seq_foo            default_seq_any
-#define LOCAL_tsc_foo                    tsc_any
-#define LOCAL_DeeSeq_AttrFoo             Any
+#define LOCAL_foo                        any
+#define LOCAL_Foo                        Any
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultAnyWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqAnyWithKey)
-#define LOCAL_CANONICAL_NAME             any
-#define LOCAL_default_seq_foo            default_seq_any
-#define LOCAL_tsc_foo                    tsc_any_with_key
-#define LOCAL_DeeSeq_AttrFoo             AnyWithKey
-#define LOCAL_DeeSeq_AttrBar             Any
+#define LOCAL_foo                        any_with_key
+#define LOCAL_Foo                        AnyWithKey
+#define LOCAL_Bar                        Any
+#define LOCAL_Attr_foo                   any
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultAnyWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqAnyWithRange)
-#define LOCAL_CANONICAL_NAME             any
-#define LOCAL_default_seq_foo            default_seq_any
-#define LOCAL_tsc_foo                    tsc_any_with_range
-#define LOCAL_DeeSeq_AttrFoo             AnyWithRange
-#define LOCAL_DeeSeq_AttrBar             Any
+#define LOCAL_foo                        any_with_range
+#define LOCAL_Foo                        AnyWithRange
+#define LOCAL_Attr_foo                   any
+#define LOCAL_Bar                        Any
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultAnyWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqAnyWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             any
-#define LOCAL_default_seq_foo            default_seq_any
-#define LOCAL_tsc_foo                    tsc_any_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             AnyWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             Any
+#define LOCAL_foo                        any_with_range_and_key
+#define LOCAL_Foo                        AnyWithRangeAndKey
+#define LOCAL_Attr_foo                   any
+#define LOCAL_Bar                        Any
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultAnyWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqAll)
-#define LOCAL_CANONICAL_NAME             all
-#define LOCAL_default_seq_foo            default_seq_all
-#define LOCAL_tsc_foo                    tsc_all
-#define LOCAL_DeeSeq_AttrFoo             All
+#define LOCAL_foo                        all
+#define LOCAL_Foo                        All
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultAllWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqAllWithKey)
-#define LOCAL_CANONICAL_NAME             all
-#define LOCAL_default_seq_foo            default_seq_all
-#define LOCAL_tsc_foo                    tsc_all_with_key
-#define LOCAL_DeeSeq_AttrFoo             AllWithKey
-#define LOCAL_DeeSeq_AttrBar             All
+#define LOCAL_foo                        all_with_key
+#define LOCAL_Foo                        AllWithKey
+#define LOCAL_Attr_foo                   all
+#define LOCAL_Bar                        All
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultAllWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqAllWithRange)
-#define LOCAL_CANONICAL_NAME             all
-#define LOCAL_default_seq_foo            default_seq_all
-#define LOCAL_tsc_foo                    tsc_all_with_range
-#define LOCAL_DeeSeq_AttrFoo             AllWithRange
-#define LOCAL_DeeSeq_AttrBar             All
+#define LOCAL_foo                        all_with_range
+#define LOCAL_Foo                        AllWithRange
+#define LOCAL_Attr_foo                   all
+#define LOCAL_Bar                        All
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultAllWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqAllWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             all
-#define LOCAL_default_seq_foo            default_seq_all
-#define LOCAL_tsc_foo                    tsc_all_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             AllWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             All
+#define LOCAL_foo                        all_with_range_and_key
+#define LOCAL_Foo                        AllWithRangeAndKey
+#define LOCAL_Attr_foo                   all
+#define LOCAL_Bar                        All
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultAllWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqParity)
-#define LOCAL_CANONICAL_NAME             parity
-#define LOCAL_default_seq_foo            default_seq_parity
-#define LOCAL_tsc_foo                    tsc_parity
-#define LOCAL_DeeSeq_AttrFoo             Parity
+#define LOCAL_foo                        parity
+#define LOCAL_Foo                        Parity
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultParityWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqParityWithKey)
-#define LOCAL_CANONICAL_NAME             parity
-#define LOCAL_default_seq_foo            default_seq_parity
-#define LOCAL_tsc_foo                    tsc_parity_with_key
-#define LOCAL_DeeSeq_AttrFoo             ParityWithKey
-#define LOCAL_DeeSeq_AttrBar             Parity
+#define LOCAL_foo                        parity_with_key
+#define LOCAL_Foo                        ParityWithKey
+#define LOCAL_Attr_foo                   parity
+#define LOCAL_Bar                        Parity
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultParityWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqParityWithRange)
-#define LOCAL_CANONICAL_NAME             parity
-#define LOCAL_default_seq_foo            default_seq_parity
-#define LOCAL_tsc_foo                    tsc_parity_with_range
-#define LOCAL_DeeSeq_AttrFoo             ParityWithRange
-#define LOCAL_DeeSeq_AttrBar             Parity
+#define LOCAL_foo                        parity_with_range
+#define LOCAL_Foo                        ParityWithRange
+#define LOCAL_Attr_foo                   parity
+#define LOCAL_Bar                        Parity
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultParityWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqParityWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             parity
-#define LOCAL_default_seq_foo            default_seq_parity
-#define LOCAL_tsc_foo                    tsc_parity_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             ParityWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             Parity
+#define LOCAL_foo                        parity_with_range_and_key
+#define LOCAL_Foo                        ParityWithRangeAndKey
+#define LOCAL_Attr_foo                   parity
+#define LOCAL_Bar                        Parity
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultParityWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqReduce)
-#define LOCAL_CANONICAL_NAME             reduce
-#define LOCAL_default_seq_foo            default_seq_reduce
-#define LOCAL_tsc_foo                    tsc_reduce
-#define LOCAL_DeeSeq_AttrFoo             Reduce
+#define LOCAL_foo                        reduce
+#define LOCAL_Foo                        Reduce
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultReduceWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqReduceWithInit)
-#define LOCAL_CANONICAL_NAME             reduce
-#define LOCAL_default_seq_foo            default_seq_reduce
-#define LOCAL_tsc_foo                    tsc_reduce_with_init
-#define LOCAL_DeeSeq_AttrFoo             ReduceWithInit
-#define LOCAL_DeeSeq_AttrBar             Reduce
+#define LOCAL_foo                        reduce_with_init
+#define LOCAL_Foo                        ReduceWithInit
+#define LOCAL_Attr_foo                   reduce
+#define LOCAL_Bar                        Reduce
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultReduceWithInitWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqReduceWithRange)
-#define LOCAL_CANONICAL_NAME             reduce
-#define LOCAL_default_seq_foo            default_seq_reduce
-#define LOCAL_tsc_foo                    tsc_reduce_with_range
-#define LOCAL_DeeSeq_AttrFoo             ReduceWithRange
-#define LOCAL_DeeSeq_AttrBar             Reduce
+#define LOCAL_foo                        reduce_with_range
+#define LOCAL_Foo                        ReduceWithRange
+#define LOCAL_Attr_foo                   reduce
+#define LOCAL_Bar                        Reduce
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultReduceWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqReduceWithRangeAndInit)
-#define LOCAL_CANONICAL_NAME             reduce
-#define LOCAL_default_seq_foo            default_seq_reduce
-#define LOCAL_tsc_foo                    tsc_reduce_with_range_and_init
-#define LOCAL_DeeSeq_AttrFoo             ReduceWithRangeAndInit
-#define LOCAL_DeeSeq_AttrBar             Reduce
+#define LOCAL_foo                        reduce_with_range_and_init
+#define LOCAL_Foo                        ReduceWithRangeAndInit
+#define LOCAL_Attr_foo                   reduce
+#define LOCAL_Bar                        Reduce
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultReduceWithRangeAndInitWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqMin)
-#define LOCAL_CANONICAL_NAME             min
-#define LOCAL_default_seq_foo            default_seq_min
-#define LOCAL_tsc_foo                    tsc_min
-#define LOCAL_DeeSeq_AttrFoo             Min
+#define LOCAL_foo                        min
+#define LOCAL_Foo                        Min
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultMinWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqMinWithKey)
-#define LOCAL_CANONICAL_NAME             min
-#define LOCAL_default_seq_foo            default_seq_min
-#define LOCAL_tsc_foo                    tsc_min_with_key
-#define LOCAL_DeeSeq_AttrFoo             MinWithKey
-#define LOCAL_DeeSeq_AttrBar             Min
+#define LOCAL_foo                        min_with_key
+#define LOCAL_Foo                        MinWithKey
+#define LOCAL_Attr_foo                   min
+#define LOCAL_Bar                        Min
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultMinWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqMinWithRange)
-#define LOCAL_CANONICAL_NAME             min
-#define LOCAL_default_seq_foo            default_seq_min
-#define LOCAL_tsc_foo                    tsc_min_with_range
-#define LOCAL_DeeSeq_AttrFoo             MinWithRange
-#define LOCAL_DeeSeq_AttrBar             Min
+#define LOCAL_foo                        min_with_range
+#define LOCAL_Foo                        MinWithRange
+#define LOCAL_Attr_foo                   min
+#define LOCAL_Bar                        Min
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultMinWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqMinWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             min
-#define LOCAL_default_seq_foo            default_seq_min
-#define LOCAL_tsc_foo                    tsc_min_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             MinWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             Min
+#define LOCAL_foo                        min_with_range_and_key
+#define LOCAL_Foo                        MinWithRangeAndKey
+#define LOCAL_Attr_foo                   min
+#define LOCAL_Bar                        Min
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultMinWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqMax)
-#define LOCAL_CANONICAL_NAME             max
-#define LOCAL_default_seq_foo            default_seq_max
-#define LOCAL_tsc_foo                    tsc_max
-#define LOCAL_DeeSeq_AttrFoo             Max
+#define LOCAL_foo                        max
+#define LOCAL_Foo                        Max
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultMaxWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqMaxWithKey)
-#define LOCAL_CANONICAL_NAME             max
-#define LOCAL_default_seq_foo            default_seq_max
-#define LOCAL_tsc_foo                    tsc_max_with_key
-#define LOCAL_DeeSeq_AttrFoo             MaxWithKey
-#define LOCAL_DeeSeq_AttrBar             Max
+#define LOCAL_foo                        max_with_key
+#define LOCAL_Foo                        MaxWithKey
+#define LOCAL_Attr_foo                   max
+#define LOCAL_Bar                        Max
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultMaxWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqMaxWithRange)
-#define LOCAL_CANONICAL_NAME             max
-#define LOCAL_default_seq_foo            default_seq_max
-#define LOCAL_tsc_foo                    tsc_max_with_range
-#define LOCAL_DeeSeq_AttrFoo             MaxWithRange
-#define LOCAL_DeeSeq_AttrBar             Max
+#define LOCAL_foo                        max_with_range
+#define LOCAL_Foo                        MaxWithRange
+#define LOCAL_Attr_foo                   max
+#define LOCAL_Bar                        Max
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultMaxWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqMaxWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             max
-#define LOCAL_default_seq_foo            default_seq_max
-#define LOCAL_tsc_foo                    tsc_max_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             MaxWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             Max
+#define LOCAL_foo                        max_with_range_and_key
+#define LOCAL_Foo                        MaxWithRangeAndKey
+#define LOCAL_Attr_foo                   max
+#define LOCAL_Bar                        Max
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultMaxWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqSum)
-#define LOCAL_CANONICAL_NAME             sum
-#define LOCAL_default_seq_foo            default_seq_sum
-#define LOCAL_tsc_foo                    tsc_sum
-#define LOCAL_DeeSeq_AttrFoo             Sum
+#define LOCAL_foo                        sum
+#define LOCAL_Foo                        Sum
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultSumWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqSumWithRange)
-#define LOCAL_CANONICAL_NAME             sum
-#define LOCAL_default_seq_foo            default_seq_sum
-#define LOCAL_tsc_foo                    tsc_sum_with_range
-#define LOCAL_DeeSeq_AttrFoo             SumWithRange
-#define LOCAL_DeeSeq_AttrBar             Sum
+#define LOCAL_foo                        sum_with_range
+#define LOCAL_Foo                        SumWithRange
+#define LOCAL_Attr_foo                   sum
+#define LOCAL_Bar                        Sum
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultSumWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqCount)
-#define LOCAL_CANONICAL_NAME             count
-#define LOCAL_default_seq_foo            default_seq_count
-#define LOCAL_tsc_foo                    tsc_count
-#define LOCAL_DeeSeq_AttrFoo             Count
+#define LOCAL_foo                        count
+#define LOCAL_Foo                        Count
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultCountWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqCountWithKey)
-#define LOCAL_CANONICAL_NAME             count
-#define LOCAL_default_seq_foo            default_seq_count
-#define LOCAL_tsc_foo                    tsc_count_with_key
-#define LOCAL_DeeSeq_AttrFoo             CountWithKey
-#define LOCAL_DeeSeq_AttrBar             Count
+#define LOCAL_foo                        count_with_key
+#define LOCAL_Foo                        CountWithKey
+#define LOCAL_Attr_foo                   count
+#define LOCAL_Bar                        Count
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultCountWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqCountWithRange)
-#define LOCAL_CANONICAL_NAME             count
-#define LOCAL_default_seq_foo            default_seq_count
-#define LOCAL_tsc_foo                    tsc_count_with_range
-#define LOCAL_DeeSeq_AttrFoo             CountWithRange
-#define LOCAL_DeeSeq_AttrBar             Count
+#define LOCAL_foo                        count_with_range
+#define LOCAL_Foo                        CountWithRange
+#define LOCAL_Attr_foo                   count
+#define LOCAL_Bar                        Count
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultCountWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqCountWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             count
-#define LOCAL_default_seq_foo            default_seq_count
-#define LOCAL_tsc_foo                    tsc_count_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             CountWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             Count
+#define LOCAL_foo                        count_with_range_and_key
+#define LOCAL_Foo                        CountWithRangeAndKey
+#define LOCAL_Attr_foo                   count
+#define LOCAL_Bar                        Count
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultCountWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqContains)
-#define LOCAL_CANONICAL_NAME             contains
-#define LOCAL_default_seq_foo            default_seq_contains
-#define LOCAL_tsc_foo                    tsc_contains
-#define LOCAL_DeeSeq_AttrFoo             Contains
+#define LOCAL_foo                        contains
+#define LOCAL_Foo                        Contains
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultContainsWithForeach
 #elif defined(DEFINE_DeeType_RequireSeqContainsWithKey)
-#define LOCAL_CANONICAL_NAME             contains
-#define LOCAL_default_seq_foo            default_seq_contains
-#define LOCAL_tsc_foo                    tsc_contains_with_key
-#define LOCAL_DeeSeq_AttrFoo             ContainsWithKey
-#define LOCAL_DeeSeq_AttrBar             Contains
+#define LOCAL_foo                        contains_with_key
+#define LOCAL_Foo                        ContainsWithKey
+#define LOCAL_Attr_foo                   contains
+#define LOCAL_Bar                        Contains
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultContainsWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqContainsWithRange)
-#define LOCAL_CANONICAL_NAME             contains
-#define LOCAL_default_seq_foo            default_seq_contains
-#define LOCAL_tsc_foo                    tsc_contains_with_range
-#define LOCAL_DeeSeq_AttrFoo             ContainsWithRange
-#define LOCAL_DeeSeq_AttrBar             Contains
+#define LOCAL_foo                        contains_with_range
+#define LOCAL_Foo                        ContainsWithRange
+#define LOCAL_Attr_foo                   contains
+#define LOCAL_Bar                        Contains
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultContainsWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqContainsWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             contains
-#define LOCAL_default_seq_foo            default_seq_contains
-#define LOCAL_tsc_foo                    tsc_contains_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             ContainsWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             Contains
+#define LOCAL_foo                        contains_with_range_and_key
+#define LOCAL_Foo                        ContainsWithRangeAndKey
+#define LOCAL_Attr_foo                   contains
+#define LOCAL_Bar                        Contains
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultContainsWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqLocate)
-#define LOCAL_CANONICAL_NAME             locate
-#define LOCAL_default_seq_foo            default_seq_locate
-#define LOCAL_tsc_foo                    tsc_locate
-#define LOCAL_DeeSeq_AttrFoo             Locate
+#define LOCAL_foo                        locate
+#define LOCAL_Foo                        Locate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultLocateWithSeqForeach
 #elif defined(DEFINE_DeeType_RequireSeqLocateWithKey)
-#define LOCAL_CANONICAL_NAME             locate
-#define LOCAL_default_seq_foo            default_seq_locate
-#define LOCAL_tsc_foo                    tsc_locate_with_key
-#define LOCAL_DeeSeq_AttrFoo             LocateWithKey
-#define LOCAL_DeeSeq_AttrBar             Locate
+#define LOCAL_foo                        locate_with_key
+#define LOCAL_Foo                        LocateWithKey
+#define LOCAL_Attr_foo                   locate
+#define LOCAL_Bar                        Locate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultLocateWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqLocateWithRange)
-#define LOCAL_CANONICAL_NAME             locate
-#define LOCAL_default_seq_foo            default_seq_locate
-#define LOCAL_tsc_foo                    tsc_locate_with_range
-#define LOCAL_DeeSeq_AttrFoo             LocateWithRange
-#define LOCAL_DeeSeq_AttrBar             Locate
+#define LOCAL_foo                        locate_with_range
+#define LOCAL_Foo                        LocateWithRange
+#define LOCAL_Attr_foo                   locate
+#define LOCAL_Bar                        Locate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultLocateWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqLocateWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             locate
-#define LOCAL_default_seq_foo            default_seq_locate
-#define LOCAL_tsc_foo                    tsc_locate_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             LocateWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             Locate
+#define LOCAL_foo                        locate_with_range_and_key
+#define LOCAL_Foo                        LocateWithRangeAndKey
+#define LOCAL_Attr_foo                   locate
+#define LOCAL_Bar                        Locate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultLocateWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRLocateWithRange)
-#define LOCAL_CANONICAL_NAME             rlocate
-#define LOCAL_default_seq_foo            default_seq_rlocate
-#define LOCAL_tsc_foo                    tsc_rlocate_with_range
-#define LOCAL_DeeSeq_AttrFoo             RLocateWithRange
-#define LOCAL_DeeSeq_AttrBar             RLocate
+#define LOCAL_foo                        rlocate_with_range
+#define LOCAL_Foo                        RLocateWithRange
+#define LOCAL_Attr_foo                   rlocate
+#define LOCAL_Bar                        RLocate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRLocateWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             rlocate
-#define LOCAL_default_seq_foo            default_seq_rlocate
-#define LOCAL_tsc_foo                    tsc_rlocate_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             RLocateWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             RLocate
+#define LOCAL_foo                        rlocate_with_range_and_key
+#define LOCAL_Foo                        RLocateWithRangeAndKey
+#define LOCAL_Attr_foo                   rlocate
+#define LOCAL_Bar                        RLocate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqStartsWith)
-#define LOCAL_CANONICAL_NAME             startswith
-#define LOCAL_default_seq_foo            default_seq_startswith
-#define LOCAL_tsc_foo                    tsc_startswith
-#define LOCAL_DeeSeq_AttrFoo             StartsWith
+#define LOCAL_foo                        startswith
+#define LOCAL_Foo                        StartsWith
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultStartsWithWithSeqTryGetFirst
 #elif defined(DEFINE_DeeType_RequireSeqStartsWithWithKey)
-#define LOCAL_CANONICAL_NAME             startswith
-#define LOCAL_default_seq_foo            default_seq_startswith
-#define LOCAL_tsc_foo                    tsc_startswith_with_key
-#define LOCAL_DeeSeq_AttrFoo             StartsWithWithKey
-#define LOCAL_DeeSeq_AttrBar             StartsWith
+#define LOCAL_foo                        startswith_with_key
+#define LOCAL_Foo                        StartsWithWithKey
+#define LOCAL_Attr_foo                   startswith
+#define LOCAL_Bar                        StartsWith
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultStartsWithWithKeyWithSeqTryGetFirst
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqStartsWithWithRange)
-#define LOCAL_CANONICAL_NAME             startswith
-#define LOCAL_default_seq_foo            default_seq_startswith
-#define LOCAL_tsc_foo                    tsc_startswith_with_range
-#define LOCAL_DeeSeq_AttrFoo             StartsWithWithRange
-#define LOCAL_DeeSeq_AttrBar             StartsWith
+#define LOCAL_foo                        startswith_with_range
+#define LOCAL_Foo                        StartsWithWithRange
+#define LOCAL_Attr_foo                   startswith
+#define LOCAL_Bar                        StartsWith
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultStartsWithWithRangeWithSeqTryGetItemIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqStartsWithWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             startswith
-#define LOCAL_default_seq_foo            default_seq_startswith
-#define LOCAL_tsc_foo                    tsc_startswith_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             StartsWithWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             StartsWith
+#define LOCAL_foo                        startswith_with_range_and_key
+#define LOCAL_Foo                        StartsWithWithRangeAndKey
+#define LOCAL_Attr_foo                   startswith
+#define LOCAL_Bar                        StartsWith
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultStartsWithWithRangeAndKeyWithSeqTryGetItemIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqEndsWith)
-#define LOCAL_CANONICAL_NAME             endswith
-#define LOCAL_default_seq_foo            default_seq_endswith
-#define LOCAL_tsc_foo                    tsc_endswith
-#define LOCAL_DeeSeq_AttrFoo             EndsWith
+#define LOCAL_foo                        endswith
+#define LOCAL_Foo                        EndsWith
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultEndsWithWithSeqTryGetLast
 #elif defined(DEFINE_DeeType_RequireSeqEndsWithWithKey)
-#define LOCAL_CANONICAL_NAME             endswith
-#define LOCAL_default_seq_foo            default_seq_endswith
-#define LOCAL_tsc_foo                    tsc_endswith_with_key
-#define LOCAL_DeeSeq_AttrFoo             EndsWithWithKey
-#define LOCAL_DeeSeq_AttrBar             EndsWith
+#define LOCAL_foo                        endswith_with_key
+#define LOCAL_Foo                        EndsWithWithKey
+#define LOCAL_Attr_foo                   endswith
+#define LOCAL_Bar                        EndsWith
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultEndsWithWithKeyWithSeqTryGetLast
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqEndsWithWithRange)
-#define LOCAL_CANONICAL_NAME             endswith
-#define LOCAL_default_seq_foo            default_seq_endswith
-#define LOCAL_tsc_foo                    tsc_endswith_with_range
-#define LOCAL_DeeSeq_AttrFoo             EndsWithWithRange
-#define LOCAL_DeeSeq_AttrBar             EndsWith
+#define LOCAL_foo                        endswith_with_range
+#define LOCAL_Foo                        EndsWithWithRange
+#define LOCAL_Attr_foo                   endswith
+#define LOCAL_Bar                        EndsWith
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultEndsWithWithRangeWithSeqSizeAndSeqTryGetItemIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqEndsWithWithRangeAndKey)
-#define LOCAL_CANONICAL_NAME             endswith
-#define LOCAL_default_seq_foo            default_seq_endswith
-#define LOCAL_tsc_foo                    tsc_endswith_with_range_and_key
-#define LOCAL_DeeSeq_AttrFoo             EndsWithWithRangeAndKey
-#define LOCAL_DeeSeq_AttrBar             EndsWith
+#define LOCAL_foo                        endswith_with_range_and_key
+#define LOCAL_Foo                        EndsWithWithRangeAndKey
+#define LOCAL_Attr_foo                   endswith
+#define LOCAL_Bar                        EndsWith
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultEndsWithWithRangeAndKeyWithSeqSizeAndSeqTryGetItemIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqFind)
-#define LOCAL_CANONICAL_NAME             find
-#define LOCAL_default_seq_foo            default_seq_find
-#define LOCAL_tsc_foo                    tsc_find
-#define LOCAL_DeeSeq_AttrFoo             Find
+#define LOCAL_foo                        find
+#define LOCAL_Foo                        Find
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultFindWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqFindWithKey)
-#define LOCAL_CANONICAL_NAME             find
-#define LOCAL_default_seq_foo            default_seq_find
-#define LOCAL_tsc_foo                    tsc_find_with_key
-#define LOCAL_DeeSeq_AttrFoo             FindWithKey
-#define LOCAL_DeeSeq_AttrBar             Find
+#define LOCAL_foo                        find_with_key
+#define LOCAL_Foo                        FindWithKey
+#define LOCAL_Attr_foo                   find
+#define LOCAL_Bar                        Find
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRFind)
-#define LOCAL_CANONICAL_NAME             rfind
-#define LOCAL_default_seq_foo            default_seq_rfind
-#define LOCAL_tsc_foo                    tsc_rfind
-#define LOCAL_DeeSeq_AttrFoo             RFind
+#define LOCAL_foo                        rfind
+#define LOCAL_Foo                        RFind
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultRFindWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRFindWithKey)
-#define LOCAL_CANONICAL_NAME             rfind
-#define LOCAL_default_seq_foo            default_seq_rfind
-#define LOCAL_tsc_foo                    tsc_rfind_with_key
-#define LOCAL_DeeSeq_AttrFoo             RFindWithKey
-#define LOCAL_DeeSeq_AttrBar             RFind
+#define LOCAL_foo                        rfind_with_key
+#define LOCAL_Foo                        RFindWithKey
+#define LOCAL_Attr_foo                   rfind
+#define LOCAL_Bar                        RFind
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqErase)
-#define LOCAL_CANONICAL_NAME         erase
-#define LOCAL_default_seq_foo        default_seq_erase
-#define LOCAL_tsc_foo                tsc_erase
-#define LOCAL_DeeSeq_AttrFoo         Erase
+#define LOCAL_foo                    erase
+#define LOCAL_Foo                    Erase
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqInsert)
-#define LOCAL_CANONICAL_NAME         insert
-#define LOCAL_default_seq_foo        default_seq_insert
-#define LOCAL_tsc_foo                tsc_insert
-#define LOCAL_DeeSeq_AttrFoo         Insert
+#define LOCAL_foo                    insert
+#define LOCAL_Foo                    Insert
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqInsertAll)
-#define LOCAL_CANONICAL_NAME         insertall
-#define LOCAL_default_seq_foo        default_seq_insertall
-#define LOCAL_tsc_foo                tsc_insertall
-#define LOCAL_DeeSeq_AttrFoo         InsertAll
+#define LOCAL_foo                    insertall
+#define LOCAL_Foo                    InsertAll
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqPushFront)
-#define LOCAL_CANONICAL_NAME             pushfront
-#define LOCAL_default_seq_foo            default_seq_pushfront
-#define LOCAL_tsc_foo                    tsc_pushfront
-#define LOCAL_DeeSeq_AttrFoo             PushFront
+#define LOCAL_foo                        pushfront
+#define LOCAL_Foo                        PushFront
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultPushFrontWithSeqInsert /* Use insert() by default */
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqAppend)
-#define LOCAL_CANONICAL_NAME         append
-#define LOCAL_default_seq_foo        default_seq_append
-#define LOCAL_tsc_foo                tsc_append
-#define LOCAL_DeeSeq_AttrFoo         Append
+#define LOCAL_foo                    append
+#define LOCAL_Foo                    Append
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqExtend)
-#define LOCAL_CANONICAL_NAME         extend
-#define LOCAL_default_seq_foo        default_seq_extend
-#define LOCAL_tsc_foo                tsc_extend
-#define LOCAL_DeeSeq_AttrFoo         Extend
+#define LOCAL_foo                    extend
+#define LOCAL_Foo                    Extend
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqXchItemIndex)
-#define LOCAL_CANONICAL_NAME         xchitem
-#define LOCAL_default_seq_foo        default_seq_xchitem
-#define LOCAL_tsc_foo                tsc_xchitem_index
-#define LOCAL_tsc_foo_data           tsc_xchitem_data
-#define LOCAL_DeeSeq_AttrFoo         XchItemIndex
-#define LOCAL_DeeSeq_AttrBar         XchItem
+#define LOCAL_foo                    xchitem_index
+#define LOCAL_Foo                    XchItemIndex
+#define LOCAL_tsc_seq_foo_data       tsc_seq_xchitem_data
+#define LOCAL_Attr_foo               xchitem
+#define LOCAL_Bar                    XchItem
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqClear)
-#define LOCAL_CANONICAL_NAME         clear
-#define LOCAL_default_seq_foo        default_seq_clear
-#define LOCAL_tsc_foo                tsc_clear
-#define LOCAL_DeeSeq_AttrFoo         Clear
+#define LOCAL_foo                    clear
+#define LOCAL_Foo                    Clear
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqPop)
-#define LOCAL_CANONICAL_NAME         pop
-#define LOCAL_default_seq_foo        default_seq_pop
-#define LOCAL_tsc_foo                tsc_pop
-#define LOCAL_DeeSeq_AttrFoo         Pop
+#define LOCAL_foo                    pop
+#define LOCAL_Foo                    Pop
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRemove)
-#define LOCAL_CANONICAL_NAME         remove
-#define LOCAL_default_seq_foo        default_seq_remove
-#define LOCAL_tsc_foo                tsc_remove
-#define LOCAL_DeeSeq_AttrFoo         Remove
+#define LOCAL_foo                    remove
+#define LOCAL_Foo                    Remove
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRemoveWithKey)
-#define LOCAL_CANONICAL_NAME         remove
-#define LOCAL_default_seq_foo        default_seq_remove
-#define LOCAL_tsc_foo                tsc_remove_with_key
-#define LOCAL_DeeSeq_AttrFoo         RemoveWithKey
-#define LOCAL_DeeSeq_AttrBar         Remove
+#define LOCAL_foo                    remove_with_key
+#define LOCAL_Foo                    RemoveWithKey
+#define LOCAL_Attr_foo               remove
+#define LOCAL_Bar                    Remove
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRRemove)
-#define LOCAL_CANONICAL_NAME         rremove
-#define LOCAL_default_seq_foo        default_seq_rremove
-#define LOCAL_tsc_foo                tsc_rremove
-#define LOCAL_DeeSeq_AttrFoo         RRemove
+#define LOCAL_foo                    rremove
+#define LOCAL_Foo                    RRemove
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRRemoveWithKey)
-#define LOCAL_CANONICAL_NAME         rremove
-#define LOCAL_default_seq_foo        default_seq_rremove
-#define LOCAL_tsc_foo                tsc_rremove_with_key
-#define LOCAL_DeeSeq_AttrFoo         RRemoveWithKey
-#define LOCAL_DeeSeq_AttrBar         RRemove
+#define LOCAL_foo                    rremove_with_key
+#define LOCAL_Foo                    RRemoveWithKey
+#define LOCAL_Attr_foo               rremove
+#define LOCAL_Bar                    RRemove
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRemoveAll)
-#define LOCAL_CANONICAL_NAME         removeall
-#define LOCAL_default_seq_foo        default_seq_removeall
-#define LOCAL_tsc_foo                tsc_removeall
-#define LOCAL_DeeSeq_AttrFoo         RemoveAll
+#define LOCAL_foo                    removeall
+#define LOCAL_Foo                    RemoveAll
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRemoveAllWithKey)
-#define LOCAL_CANONICAL_NAME         removeall
-#define LOCAL_default_seq_foo        default_seq_removeall
-#define LOCAL_tsc_foo                tsc_removeall_with_key
-#define LOCAL_DeeSeq_AttrFoo         RemoveAllWithKey
-#define LOCAL_DeeSeq_AttrBar         RemoveAll
+#define LOCAL_foo                    removeall_with_key
+#define LOCAL_Foo                    RemoveAllWithKey
+#define LOCAL_Attr_foo               removeall
+#define LOCAL_Bar                    RemoveAll
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRemoveIf)
-#define LOCAL_CANONICAL_NAME         removeif
-#define LOCAL_default_seq_foo        default_seq_removeif
-#define LOCAL_tsc_foo                tsc_removeif
-#define LOCAL_DeeSeq_AttrFoo         RemoveIf
+#define LOCAL_foo                    removeif
+#define LOCAL_Foo                    RemoveIf
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqResize)
-#define LOCAL_CANONICAL_NAME             resize
-#define LOCAL_default_seq_foo            default_seq_resize
-#define LOCAL_tsc_foo                    tsc_resize
-#define LOCAL_DeeSeq_AttrFoo             Resize
+#define LOCAL_foo                        resize
+#define LOCAL_Foo                        Resize
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultResizeWithSizeAndSeqEraseAndSeqExtend /* Use erase() and extend() by default */
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqFill)
-#define LOCAL_CANONICAL_NAME         fill
-#define LOCAL_default_seq_foo        default_seq_fill
-#define LOCAL_tsc_foo                tsc_fill
-#define LOCAL_DeeSeq_AttrFoo         Fill
+#define LOCAL_foo                    fill
+#define LOCAL_Foo                    Fill
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqReverse)
-#define LOCAL_CANONICAL_NAME         reverse
-#define LOCAL_default_seq_foo        default_seq_reverse
-#define LOCAL_tsc_foo                tsc_reverse
-#define LOCAL_DeeSeq_AttrFoo         Reverse
+#define LOCAL_foo                    reverse
+#define LOCAL_Foo                    Reverse
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqReversed)
-#define LOCAL_CANONICAL_NAME             reversed
-#define LOCAL_default_seq_foo            default_seq_reversed
-#define LOCAL_tsc_foo                    tsc_reversed
-#define LOCAL_DeeSeq_AttrFoo             Reversed
+#define LOCAL_foo                        reversed
+#define LOCAL_Foo                        Reversed
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultReversedWithCopyForeachDefault
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqSort)
-#define LOCAL_CANONICAL_NAME  sort
-#define LOCAL_default_seq_foo default_seq_sort
-#define LOCAL_tsc_foo         tsc_sort
-#define LOCAL_DeeSeq_AttrFoo  Sort
+#define LOCAL_foo      sort
+#define LOCAL_Foo      Sort
 #elif defined(DEFINE_DeeType_RequireSeqSortWithKey)
-#define LOCAL_CANONICAL_NAME  sort
-#define LOCAL_default_seq_foo default_seq_sort
-#define LOCAL_tsc_foo         tsc_sort_with_key
-#define LOCAL_DeeSeq_AttrFoo  SortWithKey
-#define LOCAL_DeeSeq_AttrBar  Sort
+#define LOCAL_foo      sort_with_key
+#define LOCAL_Foo      SortWithKey
+#define LOCAL_Attr_foo sort
+#define LOCAL_Bar      Sort
 #elif defined(DEFINE_DeeType_RequireSeqSorted)
-#define LOCAL_CANONICAL_NAME             sorted
-#define LOCAL_default_seq_foo            default_seq_sorted
-#define LOCAL_tsc_foo                    tsc_sorted
-#define LOCAL_DeeSeq_AttrFoo             Sorted
+#define LOCAL_foo                        sorted
+#define LOCAL_Foo                        Sorted
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultSortedWithCopyForeachDefault
 #elif defined(DEFINE_DeeType_RequireSeqSortedWithKey)
-#define LOCAL_CANONICAL_NAME             sorted
-#define LOCAL_default_seq_foo            default_seq_sorted
-#define LOCAL_tsc_foo                    tsc_sorted_with_key
-#define LOCAL_DeeSeq_AttrFoo             SortedWithKey
-#define LOCAL_DeeSeq_AttrBar             Sorted
+#define LOCAL_foo                        sorted_with_key
+#define LOCAL_Foo                        SortedWithKey
+#define LOCAL_Attr_foo                   sorted
+#define LOCAL_Bar                        Sorted
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault
 #elif defined(DEFINE_DeeType_RequireSeqBFind)
-#define LOCAL_CANONICAL_NAME         bfind
-#define LOCAL_default_seq_foo        default_seq_bfind
-#define LOCAL_tsc_foo                tsc_bfind
-#define LOCAL_DeeSeq_AttrFoo         BFind
+#define LOCAL_foo                    bfind
+#define LOCAL_Foo                    BFind
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqBFindWithKey)
-#define LOCAL_CANONICAL_NAME         bfind
-#define LOCAL_default_seq_foo        default_seq_bfind
-#define LOCAL_tsc_foo                tsc_bfind_with_key
-#define LOCAL_DeeSeq_AttrFoo         BFindWithKey
-#define LOCAL_DeeSeq_AttrBar         BFind
+#define LOCAL_foo                    bfind_with_key
+#define LOCAL_Foo                    BFindWithKey
+#define LOCAL_Attr_foo               bfind
+#define LOCAL_Bar                    BFind
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqBPosition)
-#define LOCAL_CANONICAL_NAME         bposition
-#define LOCAL_default_seq_foo        default_seq_bposition
-#define LOCAL_tsc_foo                tsc_bposition
-#define LOCAL_DeeSeq_AttrFoo         BPosition
+#define LOCAL_foo                    bposition
+#define LOCAL_Foo                    BPosition
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqBPositionWithKey)
-#define LOCAL_CANONICAL_NAME         bposition
-#define LOCAL_default_seq_foo        default_seq_bposition
-#define LOCAL_tsc_foo                tsc_bposition_with_key
-#define LOCAL_DeeSeq_AttrFoo         BPositionWithKey
-#define LOCAL_DeeSeq_AttrBar         BPosition
+#define LOCAL_foo                    bposition_with_key
+#define LOCAL_Foo                    BPositionWithKey
+#define LOCAL_Attr_foo               bposition
+#define LOCAL_Bar                    BPosition
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqBRange)
-#define LOCAL_CANONICAL_NAME         brange
-#define LOCAL_default_seq_foo        default_seq_brange
-#define LOCAL_tsc_foo                tsc_brange
-#define LOCAL_DeeSeq_AttrFoo         BRange
+#define LOCAL_foo                    brange
+#define LOCAL_Foo                    BRange
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqBRangeWithKey)
-#define LOCAL_CANONICAL_NAME         brange
-#define LOCAL_default_seq_foo        default_seq_brange
-#define LOCAL_tsc_foo                tsc_brange_with_key
-#define LOCAL_DeeSeq_AttrFoo         BRangeWithKey
-#define LOCAL_DeeSeq_AttrBar         BRange
+#define LOCAL_foo                    brange_with_key
+#define LOCAL_Foo                    BRangeWithKey
+#define LOCAL_Attr_foo               brange
+#define LOCAL_Bar                    BRange
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqBLocate)
-#define LOCAL_CANONICAL_NAME         blocate
-#define LOCAL_default_seq_foo        default_seq_blocate
-#define LOCAL_tsc_foo                tsc_blocate
-#define LOCAL_DeeSeq_AttrFoo         BLocate
+#define LOCAL_foo                    blocate
+#define LOCAL_Foo                    BLocate
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqBLocateWithKey)
-#define LOCAL_CANONICAL_NAME         blocate
-#define LOCAL_default_seq_foo        default_seq_blocate
-#define LOCAL_tsc_foo                tsc_blocate_with_key
-#define LOCAL_DeeSeq_AttrFoo         BLocateWithKey
-#define LOCAL_DeeSeq_AttrBar         BLocate
+#define LOCAL_foo                    blocate_with_key
+#define LOCAL_Foo                    BLocateWithKey
+#define LOCAL_Attr_foo               blocate
+#define LOCAL_Bar                    BLocate
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSetInsert)
-#define LOCAL_CANONICAL_NAME         insert
-#define LOCAL_default_seq_foo        default_set_insert
-#define LOCAL_tsc_foo                tsc_set_insert
-#define LOCAL_tsc_foo_data           tsc_set_insert_data
+#define LOCAL_foo                    insert
+#define LOCAL_Foo                    Insert
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_SET
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SET
-#define LOCAL_DeeSeq_Default         DeeSet_Default
-#define LOCAL_DeeSeq_RequireFoo      SetInsert
-#define LOCAL_DeeSeq_AttrFoo         Insert
 #elif defined(DEFINE_DeeType_RequireSetRemove)
-#define LOCAL_CANONICAL_NAME         remove
-#define LOCAL_default_seq_foo        default_set_remove
-#define LOCAL_tsc_foo                tsc_set_remove
-#define LOCAL_tsc_foo_data           tsc_set_remove_data
+#define LOCAL_foo                    remove
+#define LOCAL_Foo                    Remove
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_SET
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SET
-#define LOCAL_DeeSeq_Default         DeeSet_Default
-#define LOCAL_DeeSeq_RequireFoo      SetRemove
-#define LOCAL_DeeSeq_AttrFoo         Remove
 #elif defined(DEFINE_DeeType_RequireSetUnify)
-#define LOCAL_CANONICAL_NAME         unify
-#define LOCAL_default_seq_foo        default_set_unify
-#define LOCAL_tsc_foo                tsc_set_unify
-#define LOCAL_tsc_foo_data           tsc_set_unify_data
+#define LOCAL_foo                    unify
+#define LOCAL_Foo                    Unify
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_SET
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SET
-#define LOCAL_DeeSeq_Default         DeeSet_Default
-#define LOCAL_DeeSeq_RequireFoo      SetUnify
-#define LOCAL_DeeSeq_AttrFoo         Unify
 #elif defined(DEFINE_DeeType_RequireSetInsertAll)
-#define LOCAL_CANONICAL_NAME         insertall
-#define LOCAL_default_seq_foo        default_set_insertall
-#define LOCAL_tsc_foo                tsc_set_insertall
-#define LOCAL_tsc_foo_data           tsc_set_insertall_data
+#define LOCAL_foo                    insertall
+#define LOCAL_Foo                    InsertAll
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_SET
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SET
-#define LOCAL_DeeSeq_Default         DeeSet_Default
-#define LOCAL_DeeSeq_RequireFoo      SetInsertAll
-#define LOCAL_DeeSeq_AttrFoo         InsertAll
 #elif defined(DEFINE_DeeType_RequireSetRemoveAll)
-#define LOCAL_CANONICAL_NAME         removeall
-#define LOCAL_default_seq_foo        default_set_removeall
-#define LOCAL_tsc_foo                tsc_set_removeall
-#define LOCAL_tsc_foo_data           tsc_set_removeall_data
+#define LOCAL_foo                    removeall
+#define LOCAL_Foo                    RemoveAll
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_SET
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SET
-#define LOCAL_DeeSeq_Default         DeeSet_Default
-#define LOCAL_DeeSeq_RequireFoo      SetRemoveAll
-#define LOCAL_DeeSeq_AttrFoo         RemoveAll
 #elif defined(DEFINE_DeeType_RequireSetPop)
-#define LOCAL_CANONICAL_NAME         pop
-#define LOCAL_default_seq_foo        default_set_pop
-#define LOCAL_tsc_foo                tsc_set_pop
-#define LOCAL_tsc_foo_data           tsc_set_pop_data
+#define LOCAL_foo                    pop
+#define LOCAL_Foo                    Pop
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_SET
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SET
-#define LOCAL_DeeSeq_Default         DeeSet_Default
-#define LOCAL_DeeSeq_RequireFoo      SetPop
-#define LOCAL_DeeSeq_AttrFoo         Pop
 #elif defined(DEFINE_DeeType_RequireSetPopWithDefault)
-#define LOCAL_CANONICAL_NAME         pop
-#define LOCAL_default_seq_foo        default_set_pop
-#define LOCAL_tsc_foo                tsc_set_pop_with_default
-#define LOCAL_tsc_foo_data           tsc_set_pop_data
+#define LOCAL_foo                    pop_with_default
+#define LOCAL_Foo                    PopWithDefault
+#define LOCAL_Attr_foo               pop
+#define LOCAL_Bar                    Pop
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_SET
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SET
-#define LOCAL_DeeSeq_Default         DeeSet_Default
-#define LOCAL_DeeSeq_RequireFoo      SetPopWithDefault
-#define LOCAL_DeeSeq_AttrFoo         PopWithDefault
-#define LOCAL_DeeSeq_AttrBar         Pop
 #elif defined(DEFINE_DeeType_RequireMapSetOld)
-#define LOCAL_CANONICAL_NAME         setold
-#define LOCAL_default_seq_foo        default_map_setold
-#define LOCAL_tsc_foo                tsc_map_setold
-#define LOCAL_tsc_foo_data           tsc_map_setold_data
+#define LOCAL_foo                    setold
+#define LOCAL_Foo                    SetOld
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapSetOld
-#define LOCAL_DeeSeq_AttrFoo         SetOld
 #elif defined(DEFINE_DeeType_RequireMapSetOldEx)
-#define LOCAL_CANONICAL_NAME         setold_ex
-#define LOCAL_default_seq_foo        default_map_setold_ex
-#define LOCAL_tsc_foo                tsc_map_setold_ex
-#define LOCAL_tsc_foo_data           tsc_map_setold_ex_data
+#define LOCAL_foo                    setold_ex
+#define LOCAL_Foo                    SetOldEx
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapSetOldEx
-#define LOCAL_DeeSeq_AttrFoo         SetOldEx
 #elif defined(DEFINE_DeeType_RequireMapSetNew)
-#define LOCAL_CANONICAL_NAME         setnew
-#define LOCAL_default_seq_foo        default_map_setnew
-#define LOCAL_tsc_foo                tsc_map_setnew
-#define LOCAL_tsc_foo_data           tsc_map_setnew_data
+#define LOCAL_foo                    setnew
+#define LOCAL_Foo                    SetNew
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapSetNew
-#define LOCAL_DeeSeq_AttrFoo         SetNew
 #elif defined(DEFINE_DeeType_RequireMapSetNewEx)
-#define LOCAL_CANONICAL_NAME         setnew_ex
-#define LOCAL_default_seq_foo        default_map_setnew_ex
-#define LOCAL_tsc_foo                tsc_map_setnew_ex
-#define LOCAL_tsc_foo_data           tsc_map_setnew_ex_data
+#define LOCAL_foo                    setnew_ex
+#define LOCAL_Foo                    SetNewEx
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapSetNewEx
-#define LOCAL_DeeSeq_AttrFoo         SetNewEx
 #elif defined(DEFINE_DeeType_RequireMapSetDefault)
-#define LOCAL_CANONICAL_NAME         setdefault
-#define LOCAL_default_seq_foo        default_map_setdefault
-#define LOCAL_tsc_foo                tsc_map_setdefault
-#define LOCAL_tsc_foo_data           tsc_map_setdefault_data
+#define LOCAL_foo                    setdefault
+#define LOCAL_Foo                    SetDefault
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapSetDefault
-#define LOCAL_DeeSeq_AttrFoo         SetDefault
 #elif defined(DEFINE_DeeType_RequireMapUpdate)
-#define LOCAL_CANONICAL_NAME         update
-#define LOCAL_default_seq_foo        default_map_update
-#define LOCAL_tsc_foo                tsc_map_update
-#define LOCAL_tsc_foo_data           tsc_map_update_data
+#define LOCAL_foo                    update
+#define LOCAL_Foo                    Update
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapUpdate
-#define LOCAL_DeeSeq_AttrFoo         Update
 #elif defined(DEFINE_DeeType_RequireMapRemove)
-#define LOCAL_CANONICAL_NAME         remove
-#define LOCAL_default_seq_foo        default_map_remove
-#define LOCAL_tsc_foo                tsc_map_remove
-#define LOCAL_tsc_foo_data           tsc_map_remove_data
+#define LOCAL_foo                    remove
+#define LOCAL_Foo                    Remove
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapRemove
-#define LOCAL_DeeSeq_AttrFoo         Remove
 #elif defined(DEFINE_DeeType_RequireMapRemoveKeys)
-#define LOCAL_CANONICAL_NAME         removekeys
-#define LOCAL_default_seq_foo        default_map_removekeys
-#define LOCAL_tsc_foo                tsc_map_removekeys
-#define LOCAL_tsc_foo_data           tsc_map_removekeys_data
+#define LOCAL_foo                    removekeys
+#define LOCAL_Foo                    RemoveKeys
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapRemoveKeys
-#define LOCAL_DeeSeq_AttrFoo         RemoveKeys
 #elif defined(DEFINE_DeeType_RequireMapPop)
-#define LOCAL_CANONICAL_NAME         pop
-#define LOCAL_default_seq_foo        default_map_pop
-#define LOCAL_tsc_foo                tsc_map_pop
-#define LOCAL_tsc_foo_data           tsc_map_pop_data
+#define LOCAL_foo                    pop
+#define LOCAL_Foo                    Pop
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapPop
-#define LOCAL_DeeSeq_AttrFoo         Pop
 #elif defined(DEFINE_DeeType_RequireMapPopWithDefault)
-#define LOCAL_CANONICAL_NAME         pop
-#define LOCAL_default_seq_foo        default_map_pop
-#define LOCAL_tsc_foo                tsc_map_pop_with_default
-#define LOCAL_tsc_foo_data           tsc_map_pop_data
+#define LOCAL_foo                    pop_with_default
+#define LOCAL_Foo                    PopWithDefault
+#define LOCAL_Attr_foo               pop
+#define LOCAL_Bar                    Pop
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapPopWithDefault
-#define LOCAL_DeeSeq_AttrFoo         PopWithDefault
-#define LOCAL_DeeSeq_AttrBar         Pop
 #elif defined(DEFINE_DeeType_RequireMapPopItem)
-#define LOCAL_CANONICAL_NAME         popitem
-#define LOCAL_default_seq_foo        default_map_popitem
-#define LOCAL_tsc_foo                tsc_map_popitem
-#define LOCAL_tsc_foo_data           tsc_map_popitem_data
+#define LOCAL_foo                    popitem
+#define LOCAL_Foo                    PopItem
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapPopItem
-#define LOCAL_DeeSeq_AttrFoo         PopItem
 #elif defined(DEFINE_DeeType_RequireMapKeys)
-#define LOCAL_CANONICAL_NAME         keys
-#define LOCAL_default_seq_foo        default_map_keys
-#define LOCAL_tsc_foo                tsc_map_keys
-#define LOCAL_tsc_foo_data           tsc_map_keys_data
+#define LOCAL_foo                    keys
+#define LOCAL_Foo                    Keys
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapKeys
-#define LOCAL_DeeSeq_AttrFoo         Keys
 #define LOCAL_IS_GETSET_GET
 #elif defined(DEFINE_DeeType_RequireMapValues)
-#define LOCAL_CANONICAL_NAME         values
-#define LOCAL_default_seq_foo        default_map_values
-#define LOCAL_tsc_foo                tsc_map_values
-#define LOCAL_tsc_foo_data           tsc_map_values_data
+#define LOCAL_foo                    values
+#define LOCAL_Foo                    Values
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapValues
-#define LOCAL_DeeSeq_AttrFoo         Values
 #define LOCAL_IS_GETSET_GET
 #elif defined(DEFINE_DeeType_RequireMapIterKeys)
-#define LOCAL_CANONICAL_NAME         iterkeys
-#define LOCAL_default_seq_foo        default_map_iterkeys
-#define LOCAL_tsc_foo                tsc_map_iterkeys
-#define LOCAL_tsc_foo_data           tsc_map_iterkeys_data
+#define LOCAL_foo                    iterkeys
+#define LOCAL_Foo                    IterKeys
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapIterKeys
-#define LOCAL_DeeSeq_AttrFoo         IterKeys
 #define LOCAL_IS_GETSET_GET
 #elif defined(DEFINE_DeeType_RequireMapIterValues)
-#define LOCAL_CANONICAL_NAME         itervalues
-#define LOCAL_default_seq_foo        default_map_itervalues
-#define LOCAL_tsc_foo                tsc_map_itervalues
-#define LOCAL_tsc_foo_data           tsc_map_itervalues_data
+#define LOCAL_foo                    itervalues
+#define LOCAL_Foo                    IterValues
+#define LOCAL_Dee_SEQCLASS           Dee_SEQCLASS_MAP
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_MAP
-#define LOCAL_DeeSeq_Default         DeeMap_Default
-#define LOCAL_DeeSeq_RequireFoo      MapIterValues
-#define LOCAL_DeeSeq_AttrFoo         IterValues
 #define LOCAL_IS_GETSET_GET
 #else /* DEFINE_DeeType_RequireSeq... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeType_RequireSeq... */
-
-#ifndef LOCAL_DeeSeq_AttrBar
-#define LOCAL_DeeSeq_AttrBar LOCAL_DeeSeq_AttrFoo
-#endif /* !LOCAL_DeeSeq_AttrBar */
-
-#ifndef LOCAL_default_seq_foo
-#define LOCAL_default_seq_foo PP_CAT2(default_seq_, LOCAL_CANONICAL_NAME)
-#endif /* !LOCAL_default_seq_foo */
-
-#ifndef LOCAL_tsc_foo
-#define LOCAL_tsc_foo PP_CAT2(tsc_, LOCAL_CANONICAL_NAME)
-#endif /* !LOCAL_tsc_foo */
-
-#ifndef LOCAL_DeeSeq_Default
-#define LOCAL_DeeSeq_Default DeeSeq_Default
-#endif /* !LOCAL_DeeSeq_Default */
-
-#ifndef LOCAL_DeeSeq_RequireFoo
-#define LOCAL_DeeSeq_RequireFoo PP_CAT2(Seq, LOCAL_DeeSeq_AttrFoo)
-#endif /* !LOCAL_DeeSeq_RequireFoo */
-
-#ifndef LOCAL_DeeType_RequireSeqFoo
-#define LOCAL_DeeType_RequireSeqFoo_private_uncached PP_CAT3(DeeType_Require, LOCAL_DeeSeq_RequireFoo, _private_uncached)
-#define LOCAL_DeeType_RequireSeqFoo_uncached         PP_CAT3(DeeType_Require, LOCAL_DeeSeq_RequireFoo, _uncached)
-#define LOCAL_DeeType_RequireSeqFoo                  PP_CAT2(DeeType_Require, LOCAL_DeeSeq_RequireFoo)
-#else /* !LOCAL_DeeType_RequireSeqFoo */
-#ifndef LOCAL_DeeType_RequireSeqFoo_private_uncached
-#define LOCAL_DeeType_RequireSeqFoo_private_uncached PP_CAT2(LOCAL_DeeType_RequireSeqFoo, _private_uncached)
-#endif /* !LOCAL_DeeType_RequireSeqFoo_private_uncached */
-#ifndef LOCAL_DeeType_RequireSeqFoo_uncached
-#define LOCAL_DeeType_RequireSeqFoo_uncached PP_CAT2(LOCAL_DeeType_RequireSeqFoo, _uncached)
-#endif /* !LOCAL_DeeType_RequireSeqFoo_uncached */
-#endif /* LOCAL_DeeType_RequireSeqFoo */
-
-#ifdef LOCAL_HAS_FOR_SEQ_SUFFIX
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCallAttr, LOCAL_DeeSeq_AttrBar, ForSeq)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataFunctionForSeq)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataMethodForSeq)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataKwMethodForSeq)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCallAttr, LOCAL_DeeSeq_AttrBar, ForSetOrMap)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataFunctionForSetOrMap)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataMethodForSetOrMap)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataKwMethodForSetOrMap)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap */
-#else /* LOCAL_HAS_FOR_SEQ_SUFFIX */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallAttrBar
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar \
-	PP_CAT4(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCallAttr, LOCAL_DeeSeq_AttrBar)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallAttrBar */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataFunction)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataMethod)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod */
-#ifndef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod \
-	PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithCall, LOCAL_DeeSeq_AttrBar, DataKwMethod)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod */
-#endif /* !LOCAL_HAS_FOR_SEQ_SUFFIX */
-#ifndef LOCAL_DeeSeq_DefaultFooWithError
-#define LOCAL_DeeSeq_DefaultFooWithError \
-	PP_CAT3(LOCAL_DeeSeq_Default, LOCAL_DeeSeq_AttrFoo, WithError)
-#endif /* !LOCAL_DeeSeq_DefaultFooWithError */
-#ifndef LOCAL_DeeSeq_DefaultFooForEmpty
-#define LOCAL_DeeSeq_DefaultFooForEmpty LOCAL_DeeSeq_DefaultFooWithError
-#endif /* !LOCAL_DeeSeq_DefaultFooForEmpty */
-
-
-#ifndef LOCAL_Dee_tsc_foo_t
-#define LOCAL_Dee_tsc_foo_t PP_CAT3(Dee_, LOCAL_tsc_foo, _t)
-#endif /* !LOCAL_Dee_tsc_foo_t */
-#ifndef LOCAL_tsc_foo_data
-#define LOCAL_tsc_foo_data PP_CAT3(tsc_, LOCAL_CANONICAL_NAME, _data)
-#endif /* !LOCAL_tsc_foo_data */
-
-#define LOCAL_CANONICAL_NAME_LENGTHOF    COMPILER_STRLEN(PP_STR(LOCAL_CANONICAL_NAME))
-#define LOCAL_CANONICAL_NAME_str         PP_CAT2(str_, LOCAL_CANONICAL_NAME)
-#define LOCAL_CANONICAL_NAME_STR         PP_CAT2(STR_, LOCAL_CANONICAL_NAME)
-#define LOCAL_CANONICAL_NAME_Dee_HashStr PP_CAT2(Dee_HashStr__, LOCAL_CANONICAL_NAME)
-
 
 #if (defined(LOCAL_IS_GETSET_GET) || defined(LOCAL_IS_GETSET_BOUND) || \
      defined(LOCAL_IS_GETSET_DEL) || defined(LOCAL_IS_GETSET_SET))
 #define LOCAL_IS_GETSET
 #endif /* LOCAL_IS_GETSET_* */
 
+#ifndef LOCAL_method_foo
+#if defined(LOCAL_WITHOUT_ATTRIBUTE) || defined(LOCAL_IS_GETSET)
+#define LOCAL_method_foo LOCAL_foo
+#else /* LOCAL_WITHOUT_ATTRIBUTE || LOCAL_IS_GETSET */
+#define LOCAL_method_foo LOCAL_Attr_foo
+#endif /* !LOCAL_WITHOUT_ATTRIBUTE && !LOCAL_IS_GETSET */
+#endif /* !LOCAL_ */
+
+#ifndef LOCAL_Dee_SEQCLASS
+#define LOCAL_Dee_SEQCLASS Dee_SEQCLASS_SEQ
+#endif /* !LOCAL_Dee_SEQCLASS */
+
+#ifndef LOCAL_default_seq_foo
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_default_seq_foo PP_CAT2(default_seq_, LOCAL_method_foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_default_seq_foo PP_CAT2(default_set_, LOCAL_method_foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_default_seq_foo PP_CAT2(default_map_, LOCAL_method_foo)
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_default_seq_foo PP_CAT2(default_INVALID_LOCAL_Dee_SEQCLASS_, LOCAL_method_foo)
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_default_seq_foo */
+
+#ifndef LOCAL_Attr_foo
+#define LOCAL_Attr_foo LOCAL_foo
+#endif /* !LOCAL_Attr_foo */
+
+#ifndef LOCAL_tsc_seq_foo
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_tsc_seq_foo PP_CAT2(tsc_seq_, LOCAL_foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_tsc_seq_foo PP_CAT2(tsc_set_, LOCAL_foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_tsc_seq_foo PP_CAT2(tsc_map_, LOCAL_foo)
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_tsc_seq_foo PP_CAT2(tsc_INVALID_LOCAL_Dee_SEQCLASS_, LOCAL_foo)
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_tsc_seq_foo */
+
+#ifndef LOCAL_tsc_seq_method_foo
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_tsc_seq_method_foo PP_CAT2(tsc_seq_, LOCAL_method_foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_tsc_seq_method_foo PP_CAT2(tsc_set_, LOCAL_method_foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_tsc_seq_method_foo PP_CAT2(tsc_map_, LOCAL_method_foo)
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_tsc_seq_method_foo PP_CAT2(tsc_INVALID_LOCAL_Dee_SEQCLASS_, LOCAL_method_foo)
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_tsc_seq_method_foo */
+
+#ifndef LOCAL_Dee_tsc_seq_foo_t
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_Dee_tsc_seq_foo_t PP_CAT3(Dee_tsc_seq_, LOCAL_foo, _t)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_Dee_tsc_seq_foo_t PP_CAT3(Dee_tsc_set_, LOCAL_foo, _t)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_Dee_tsc_seq_foo_t PP_CAT3(Dee_tsc_map_, LOCAL_foo, _t)
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_Dee_tsc_seq_foo_t PP_CAT3(Dee_tsc_INVALID_LOCAL_Dee_SEQCLASS_, LOCAL_foo, _t)
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_Dee_tsc_seq_foo_t */
+#ifndef LOCAL_tsc_seq_foo_data
+#define LOCAL_tsc_seq_foo_data PP_CAT2(LOCAL_tsc_seq_method_foo, _data)
+#endif /* !LOCAL_tsc_seq_foo_data */
+
+
+#ifndef LOCAL_DeeSeq_Default
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_DeeSeq_Default DeeSeq_Default
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_DeeSeq_Default DeeSet_Default
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_DeeSeq_Default DeeMap_Default
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_DeeSeq_Default DeeINVALID_LOCAL_Dee_SEQCLASS_Default
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_DeeSeq_Default */
+
+#ifndef LOCAL_DeeSeq_RequireFoo
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_DeeSeq_RequireFoo PP_CAT2(Seq, LOCAL_Foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_DeeSeq_RequireFoo PP_CAT2(Set, LOCAL_Foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_DeeSeq_RequireFoo PP_CAT2(Map, LOCAL_Foo)
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_DeeSeq_RequireFoo PP_CAT2(INVALID_LOCAL_DeeSeq_RequireFoo, LOCAL_Foo)
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_DeeSeq_RequireFoo */
+
+#define LOCAL_DeeType_RequireSeqFoo_private_uncached PP_CAT3(DeeType_Require, LOCAL_DeeSeq_RequireFoo, _private_uncached)
+#define LOCAL_DeeType_RequireSeqFoo_uncached         PP_CAT3(DeeType_Require, LOCAL_DeeSeq_RequireFoo, _uncached)
+#define LOCAL_DeeType_RequireSeqFoo                  PP_CAT2(DeeType_Require, LOCAL_DeeSeq_RequireFoo)
+
+#ifndef LOCAL_Bar
+#define LOCAL_Bar LOCAL_Foo
+#endif /* !LOCAL_Bar */
+
+#ifdef LOCAL_HAS_FOR_SEQ_SUFFIX
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq              PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttr, LOCAL_Bar, ForSeq)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq      PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataFunctionForSeq)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq        PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataMethodForSeq)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq      PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataKwMethodForSeq)
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap         PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttr, LOCAL_Bar, ForSetOrMap)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataFunctionForSetOrMap)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap   PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataMethodForSetOrMap)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataKwMethodForSetOrMap)
+#else /* LOCAL_HAS_FOR_SEQ_SUFFIX */
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar         PP_CAT4(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttr, LOCAL_Bar)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataFunction)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod   PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataMethod)
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataKwMethod)
+#endif /* !LOCAL_HAS_FOR_SEQ_SUFFIX */
+#ifndef LOCAL_DeeSeq_DefaultFooWithError
+#define LOCAL_DeeSeq_DefaultFooWithError \
+	PP_CAT3(LOCAL_DeeSeq_Default, LOCAL_Foo, WithError)
+#endif /* !LOCAL_DeeSeq_DefaultFooWithError */
+#ifndef LOCAL_DeeSeq_DefaultFooForEmpty
+#define LOCAL_DeeSeq_DefaultFooForEmpty LOCAL_DeeSeq_DefaultFooWithError
+#endif /* !LOCAL_DeeSeq_DefaultFooForEmpty */
+
+
+#define LOCAL_CANONICAL_NAME_LENGTHOF    COMPILER_STRLEN(PP_STR(LOCAL_Attr_foo))
+#define LOCAL_CANONICAL_NAME_str         PP_CAT2(str_, LOCAL_Attr_foo)
+#define LOCAL_CANONICAL_NAME_STR         PP_CAT2(STR_, LOCAL_Attr_foo)
+#define LOCAL_CANONICAL_NAME_Dee_HashStr PP_CAT2(Dee_HashStr__, LOCAL_Attr_foo)
+
+
+
 /* Mutable sequence functions */
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) LOCAL_Dee_tsc_foo_t DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) LOCAL_Dee_tsc_seq_foo_t DCALL
 LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self) {
 	int seqclass = DeeType_GetSeqClass(self);
-#ifndef LOCAL_IS_OPERATOR
+#ifndef LOCAL_WITHOUT_ATTRIBUTE
 	struct Dee_attrinfo attrinfo;
-#endif /* !LOCAL_IS_OPERATOR */
+#endif /* !LOCAL_WITHOUT_ATTRIBUTE */
 	(void)orig_type;
 	(void)seqclass;
 #ifdef LOCAL_HAS_FOR_SEQ_SUFFIX
@@ -1266,7 +1071,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 #endif /* LOCAL_HAS_FOR_SEQ_SUFFIX */
 
 	/* Check if the type defines an attribute matching the canonical name of this function. */
-#ifndef LOCAL_IS_OPERATOR
+#ifndef LOCAL_WITHOUT_ATTRIBUTE
 #ifdef LOCAL_ATTR_REQUIRED_SEQCLASS
 	if (seqclass == LOCAL_ATTR_REQUIRED_SEQCLASS)
 #else /* LOCAL_ATTR_REQUIRED_SEQCLASS */
@@ -1323,7 +1128,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 						Dee_XIncref(callback);
 						Dee_class_desc_lock_endread(desc);
 						if likely(callback) {
-							if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_foo_data.d_function, NULL, callback))
+							if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_seq_foo_data.d_function, NULL, callback))
 								Dee_Decref(callback);
 							return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
 						}
@@ -1333,7 +1138,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 				case Dee_ATTRINFO_METHOD:
 					if ((Dee_funptr_t)attrinfo.ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo)
 						return &LOCAL_DeeSeq_DefaultFooForEmpty;
-					atomic_write(&sc->LOCAL_tsc_foo_data.d_method, attrinfo.ai_value.v_method->m_func);
+					atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, attrinfo.ai_value.v_method->m_func);
 					if (attrinfo.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
 						return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
 					return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
@@ -1348,7 +1153,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 						Dee_XIncref(callback);
 						Dee_class_desc_lock_endread(desc);
 						if likely(callback) {
-							if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_foo_data.d_function, NULL, callback))
+							if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_seq_foo_data.d_function, NULL, callback))
 								Dee_Decref(callback);
 							return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
 						}
@@ -1361,13 +1166,13 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			return &LOCAL_DeeSeq_DefaultFooWithCallAttrBar;
 		}
 	}
-#endif /* !LOCAL_IS_OPERATOR */
+#endif /* !LOCAL_WITHOUT_ATTRIBUTE */
 
 #ifdef DEFINE_DeeType_RequireSeqTryGetFirst
 	{
-		Dee_tsc_getfirst_t tsc_getfirst;
-		tsc_getfirst = DeeType_RequireSeqGetFirst_private_uncached(orig_type, self);
-		if (tsc_getfirst == &DeeSeq_DefaultGetFirstWithGetItemIndex) {
+		Dee_tsc_seq_getfirst_t tsc_seq_getfirst;
+		tsc_seq_getfirst = DeeType_RequireSeqGetFirst_private_uncached(orig_type, self);
+		if (tsc_seq_getfirst == &DeeSeq_DefaultGetFirstWithGetItemIndex) {
 			if (!DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index))
 				return &DeeSeq_DefaultTryGetFirstWithTryGetItemIndex;
 			if (DeeType_HasOperator(self, OPERATOR_SIZE)) {
@@ -1376,17 +1181,17 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 				return &DeeSeq_DefaultTryGetFirstWithSizeAndGetItemIndex;
 			}
 			return &DeeSeq_DefaultTryGetFirstWithTryGetItemIndex;
-		} else if (tsc_getfirst == &DeeSeq_DefaultGetFirstWithGetItem) {
+		} else if (tsc_seq_getfirst == &DeeSeq_DefaultGetFirstWithGetItem) {
 			if (!DeeType_IsDefaultTryGetItem(self->tp_seq->tp_trygetitem))
 				return &DeeSeq_DefaultTryGetFirstWithTryGetItem;
 			if (DeeType_HasOperator(self, OPERATOR_SIZE))
 				return &DeeSeq_DefaultTryGetFirstWithSizeAndGetItem;
 			return &DeeSeq_DefaultTryGetFirstWithTryGetItem;
-		} else if (tsc_getfirst == &DeeSeq_DefaultGetFirstWithForeach) {
+		} else if (tsc_seq_getfirst == &DeeSeq_DefaultGetFirstWithForeach) {
 			return &DeeSeq_DefaultTryGetFirstWithForeach;
-		} else if (tsc_getfirst == &DeeSeq_DefaultGetFirstWithError) {
+		} else if (tsc_seq_getfirst == &DeeSeq_DefaultGetFirstWithError) {
 			return &DeeSeq_DefaultTryGetFirstWithError;
-		} else if (tsc_getfirst != NULL) {
+		} else if (tsc_seq_getfirst != NULL) {
 			return &DeeSeq_DefaultTryGetFirstWithSeqGetFirst;
 		}
 	}
@@ -1422,18 +1227,18 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		tsc_set_remove = DeeType_RequireSetRemove_private_uncached(orig_type, self);
 		if (tsc_set_remove != NULL &&
 		    tsc_set_remove != &DeeSet_DefaultRemoveWithError) {
-			Dee_tsc_trygetfirst_t tsc_trygetfirst;
-			tsc_trygetfirst = DeeType_RequireSeqTryGetFirst_private_uncached(orig_type, self);
-			if (tsc_trygetfirst != NULL &&
-			    tsc_trygetfirst != &DeeSeq_DefaultTryGetFirstWithError)
+			Dee_tsc_seq_trygetfirst_t tsc_seq_trygetfirst;
+			tsc_seq_trygetfirst = DeeType_RequireSeqTryGetFirst_private_uncached(orig_type, self);
+			if (tsc_seq_trygetfirst != NULL &&
+			    tsc_seq_trygetfirst != &DeeSeq_DefaultTryGetFirstWithError)
 				return &DeeSeq_DefaultDelFirstWithSeqGetFirstAndSetRemove;
 		}
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
-			Dee_tsc_trygetfirst_t tsc_trygetfirst;
-			tsc_trygetfirst = DeeType_RequireSeqTryGetFirst_private_uncached(orig_type, self);
-			if (tsc_trygetfirst != NULL &&
-			    tsc_trygetfirst != &DeeSeq_DefaultTryGetFirstWithError)
+			Dee_tsc_seq_trygetfirst_t tsc_seq_trygetfirst;
+			tsc_seq_trygetfirst = DeeType_RequireSeqTryGetFirst_private_uncached(orig_type, self);
+			if (tsc_seq_trygetfirst != NULL &&
+			    tsc_seq_trygetfirst != &DeeSeq_DefaultTryGetFirstWithError)
 				return &DeeSeq_DefaultDelFirstWithSeqGetFirstAndMaplikeDelItem;
 		}
 	}
@@ -1447,19 +1252,19 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireSeqTryGetLast)
 	{
-		Dee_tsc_getlast_t tsc_getlast;
-		tsc_getlast = DeeType_RequireSeqGetLast_private_uncached(orig_type, self);
-		if (tsc_getlast == &DeeSeq_DefaultGetLastWithSizeAndGetItemIndexFast) {
+		Dee_tsc_seq_getlast_t tsc_seq_getlast;
+		tsc_seq_getlast = DeeType_RequireSeqGetLast_private_uncached(orig_type, self);
+		if (tsc_seq_getlast == &DeeSeq_DefaultGetLastWithSizeAndGetItemIndexFast) {
 			return &DeeSeq_DefaultTryGetLastWithSizeAndGetItemIndexFast;
-		} else if (tsc_getlast == &DeeSeq_DefaultGetLastWithSizeAndGetItemIndex) {
+		} else if (tsc_seq_getlast == &DeeSeq_DefaultGetLastWithSizeAndGetItemIndex) {
 			return &DeeSeq_DefaultTryGetLastWithSizeAndGetItemIndex;
-		} else if (tsc_getlast == &DeeSeq_DefaultGetLastWithSizeAndGetItem) {
+		} else if (tsc_seq_getlast == &DeeSeq_DefaultGetLastWithSizeAndGetItem) {
 			return &DeeSeq_DefaultTryGetLastWithSizeAndGetItem;
-		} else if (tsc_getlast == &DeeSeq_DefaultGetLastWithForeach) {
+		} else if (tsc_seq_getlast == &DeeSeq_DefaultGetLastWithForeach) {
 			return &DeeSeq_DefaultTryGetLastWithForeach;
-		} else if (tsc_getlast == &DeeSeq_DefaultGetLastWithError) {
+		} else if (tsc_seq_getlast == &DeeSeq_DefaultGetLastWithError) {
 			return &DeeSeq_DefaultTryGetLastWithError;
-		} else if (tsc_getlast != NULL) {
+		} else if (tsc_seq_getlast != NULL) {
 			return &DeeSeq_DefaultTryGetLastWithSeqGetLast;
 		}
 	}
@@ -1503,18 +1308,18 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		tsc_set_remove = DeeType_RequireSetRemove_private_uncached(orig_type, self);
 		if (tsc_set_remove != NULL &&
 		    tsc_set_remove != &DeeSet_DefaultRemoveWithError) {
-			Dee_tsc_trygetlast_t tsc_trygetlast;
-			tsc_trygetlast = DeeType_RequireSeqTryGetLast_private_uncached(orig_type, self);
-			if (tsc_trygetlast != NULL &&
-			    tsc_trygetlast != &DeeSeq_DefaultTryGetLastWithError)
+			Dee_tsc_seq_trygetlast_t tsc_seq_trygetlast;
+			tsc_seq_trygetlast = DeeType_RequireSeqTryGetLast_private_uncached(orig_type, self);
+			if (tsc_seq_trygetlast != NULL &&
+			    tsc_seq_trygetlast != &DeeSeq_DefaultTryGetLastWithError)
 				return &DeeSeq_DefaultDelLastWithSeqGetLastAndSetRemove;
 		}
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
-			Dee_tsc_trygetlast_t tsc_trygetlast;
-			tsc_trygetlast = DeeType_RequireSeqTryGetLast_private_uncached(orig_type, self);
-			if (tsc_trygetlast != NULL &&
-			    tsc_trygetlast != &DeeSeq_DefaultTryGetLastWithError)
+			Dee_tsc_seq_trygetlast_t tsc_seq_trygetlast;
+			tsc_seq_trygetlast = DeeType_RequireSeqTryGetLast_private_uncached(orig_type, self);
+			if (tsc_seq_trygetlast != NULL &&
+			    tsc_seq_trygetlast != &DeeSeq_DefaultTryGetLastWithError)
 				return &DeeSeq_DefaultDelLastWithSeqGetLastAndMaplikeDelItem;
 		}
 	}
@@ -1651,19 +1456,19 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELRANGE))
 			return &DeeSeq_DefaultEraseWithDelRangeIndex;
 		{
-			Dee_tsc_pop_t tsc_pop;
-			tsc_pop = DeeType_RequireSeqPop_private_uncached(orig_type, self);
-			if (tsc_pop != NULL &&
-			    tsc_pop != &DeeSeq_DefaultPopWithError)
+			Dee_tsc_seq_pop_t tsc_seq_pop;
+			tsc_seq_pop = DeeType_RequireSeqPop_private_uncached(orig_type, self);
+			if (tsc_seq_pop != NULL &&
+			    tsc_seq_pop != &DeeSeq_DefaultPopWithError)
 				return &DeeSeq_DefaultEraseWithPop;
 		}
 	}
 #elif defined(DEFINE_DeeType_RequireSeqInsert)
 	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
-		Dee_tsc_insertall_t tsc_insertall;
-		tsc_insertall = DeeType_RequireSeqInsertAll_private_uncached(orig_type, self);
-		if (tsc_insertall != NULL &&
-		    tsc_insertall != &DeeSeq_DefaultInsertAllWithError)
+		Dee_tsc_seq_insertall_t tsc_seq_insertall;
+		tsc_seq_insertall = DeeType_RequireSeqInsertAll_private_uncached(orig_type, self);
+		if (tsc_seq_insertall != NULL &&
+		    tsc_seq_insertall != &DeeSeq_DefaultInsertAllWithError)
 			return &DeeSeq_DefaultInsertWithSeqInsertAll;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqInsertAll)
@@ -1689,7 +1494,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 					case Dee_ATTRINFO_METHOD:
 						if ((Dee_funptr_t)attrinfo.ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo)
 							return &LOCAL_DeeSeq_DefaultFooForEmpty;
-						atomic_write(&sc->LOCAL_tsc_foo_data.d_method, attrinfo.ai_value.v_method->m_func);
+						atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, attrinfo.ai_value.v_method->m_func);
 						if (attrinfo.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
 							return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
 						return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
@@ -1705,7 +1510,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 							Dee_XIncref(callback);
 							Dee_class_desc_lock_endread(desc);
 							if likely(callback) {
-								if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_foo_data.d_function, NULL, callback))
+								if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_seq_foo_data.d_function, NULL, callback))
 									Dee_Decref(callback);
 								return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
 							}
@@ -1718,21 +1523,21 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			}
 		}
 		{
-			Dee_tsc_extend_t tsc_extend;
-			tsc_extend = DeeType_RequireSeqExtend_private_uncached(orig_type, self);
-			if (tsc_extend != NULL &&
-			    tsc_extend != &DeeSeq_DefaultExtendWithError) {
-				if (tsc_extend == &DeeSeq_DefaultExtendWithSizeAndSeqInsertAll)
+			Dee_tsc_seq_extend_t tsc_seq_extend;
+			tsc_seq_extend = DeeType_RequireSeqExtend_private_uncached(orig_type, self);
+			if (tsc_seq_extend != NULL &&
+			    tsc_seq_extend != &DeeSeq_DefaultExtendWithError) {
+				if (tsc_seq_extend == &DeeSeq_DefaultExtendWithSizeAndSeqInsertAll)
 					return &DeeSeq_DefaultAppendWithSizeAndSeqInsert;;
 				return &DeeSeq_DefaultAppendWithSeqExtend;
 			}
 		}
 		if (seqclass == Dee_SEQCLASS_SEQ &&
 		    DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
-			Dee_tsc_insert_t tsc_insert;
-			tsc_insert = DeeType_RequireSeqInsert_private_uncached(orig_type, self);
-			if (tsc_insert != NULL &&
-			    tsc_insert != &DeeSeq_DefaultInsertWithError)
+			Dee_tsc_seq_insert_t tsc_seq_insert;
+			tsc_seq_insert = DeeType_RequireSeqInsert_private_uncached(orig_type, self);
+			if (tsc_seq_insert != NULL &&
+			    tsc_seq_insert != &DeeSeq_DefaultInsertWithError)
 				return &DeeSeq_DefaultAppendWithSizeAndSeqInsert;
 		}
 	}
@@ -1748,17 +1553,17 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		}
 		if (seqclass == Dee_SEQCLASS_SEQ &&
 		    DeeType_HasOperator(orig_type, OPERATOR_SIZE)) {
-			Dee_tsc_insertall_t tsc_insertall;
-			tsc_insertall = DeeType_RequireSeqInsertAll_private_uncached(orig_type, self);
-			if (tsc_insertall != NULL &&
-			    tsc_insertall != &DeeSeq_DefaultInsertAllWithError)
+			Dee_tsc_seq_insertall_t tsc_seq_insertall;
+			tsc_seq_insertall = DeeType_RequireSeqInsertAll_private_uncached(orig_type, self);
+			if (tsc_seq_insertall != NULL &&
+			    tsc_seq_insertall != &DeeSeq_DefaultInsertAllWithError)
 				return &DeeSeq_DefaultExtendWithSizeAndSeqInsertAll;
 		}
 		if (DeeType_HasOperator(orig_type, OPERATOR_ITER)) {
-			Dee_tsc_insert_t tsc_insert;
-			tsc_insert = DeeType_RequireSeqInsert_private_uncached(orig_type, self);
-			if (tsc_insert != NULL &&
-				tsc_insert != &DeeSeq_DefaultInsertWithError)
+			Dee_tsc_seq_insert_t tsc_seq_insert;
+			tsc_seq_insert = DeeType_RequireSeqInsert_private_uncached(orig_type, self);
+			if (tsc_seq_insert != NULL &&
+				tsc_seq_insert != &DeeSeq_DefaultInsertWithError)
 				return &DeeSeq_DefaultExtendWithSeqAppend;
 		}
 	}
@@ -1797,10 +1602,10 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_SETRANGE))
 			return &DeeSeq_DefaultClearWithSetRangeIndexN;
 		{
-			Dee_tsc_erase_t tsc_erase;
-			tsc_erase = DeeType_RequireSeqErase_private_uncached(orig_type, self);
-			if (tsc_erase != NULL &&
-			    tsc_erase != &DeeSeq_DefaultEraseWithError)
+			Dee_tsc_seq_erase_t tsc_seq_erase;
+			tsc_seq_erase = DeeType_RequireSeqErase_private_uncached(orig_type, self);
+			if (tsc_seq_erase != NULL &&
+			    tsc_seq_erase != &DeeSeq_DefaultEraseWithError)
 				return &DeeSeq_DefaultClearWithSeqErase;
 		}
 		break;
@@ -1829,25 +1634,25 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* TODO */
 	} else {
 		{
-			Dee_tsc_removeall_t tsc_removeall;
-			tsc_removeall = DeeType_RequireSeqRemoveAll_private_uncached(orig_type, self);
-			if (tsc_removeall != NULL &&
-			    tsc_removeall != &DeeSeq_DefaultRemoveAllWithError)
+			Dee_tsc_seq_removeall_t tsc_seq_removeall;
+			tsc_seq_removeall = DeeType_RequireSeqRemoveAll_private_uncached(orig_type, self);
+			if (tsc_seq_removeall != NULL &&
+			    tsc_seq_removeall != &DeeSeq_DefaultRemoveAllWithError)
 				return &DeeSeq_DefaultRemoveWithSeqRemoveAll;
 		}
 		{
-			Dee_tsc_removeif_t tsc_removeif;
-			tsc_removeif = DeeType_RequireSeqRemoveIf_private_uncached(orig_type, self);
-			if (tsc_removeif != NULL &&
-			    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
+			Dee_tsc_seq_removeif_t tsc_seq_removeif;
+			tsc_seq_removeif = DeeType_RequireSeqRemoveIf_private_uncached(orig_type, self);
+			if (tsc_seq_removeif != NULL &&
+			    tsc_seq_removeif != &DeeSeq_DefaultRemoveAllWithError)
 				return &DeeSeq_DefaultRemoveWithSeqRemoveIf;
 		}
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
-			Dee_tsc_find_t tsc_find;
-			tsc_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
-			if (tsc_find == &DeeSeq_DefaultFindWithSeqEnumerateIndex)
+			Dee_tsc_seq_find_t tsc_seq_find;
+			tsc_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
+			if (tsc_seq_find == &DeeSeq_DefaultFindWithSeqEnumerateIndex)
 				return &DeeSeq_DefaultRemoveWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_find)
+			if (tsc_seq_find)
 				return &DeeSeq_DefaultRemoveWithSeqFindAndDelItemIndex;
 			if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 				return &DeeSeq_DefaultRemoveWithSeqEnumerateIndexAndDelItemIndex;
@@ -1860,25 +1665,25 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* TODO */
 	} else {
 		{
-			Dee_tsc_removeall_with_key_t tsc_removeall_with_key;
-			tsc_removeall_with_key = DeeType_RequireSeqRemoveAllWithKey_private_uncached(orig_type, self);
-			if (tsc_removeall_with_key != NULL &&
-			    tsc_removeall_with_key != &DeeSeq_DefaultRemoveAllWithKeyWithError)
+			Dee_tsc_seq_removeall_with_key_t tsc_seq_removeall_with_key;
+			tsc_seq_removeall_with_key = DeeType_RequireSeqRemoveAllWithKey_private_uncached(orig_type, self);
+			if (tsc_seq_removeall_with_key != NULL &&
+			    tsc_seq_removeall_with_key != &DeeSeq_DefaultRemoveAllWithKeyWithError)
 				return &DeeSeq_DefaultRemoveWithKeyWithSeqRemoveAllWithKey;
 		}
 		{
-			Dee_tsc_removeif_t tsc_removeif;
-			tsc_removeif = DeeType_RequireSeqRemoveIf_private_uncached(orig_type, self);
-			if (tsc_removeif != NULL &&
-			    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
+			Dee_tsc_seq_removeif_t tsc_seq_removeif;
+			tsc_seq_removeif = DeeType_RequireSeqRemoveIf_private_uncached(orig_type, self);
+			if (tsc_seq_removeif != NULL &&
+			    tsc_seq_removeif != &DeeSeq_DefaultRemoveAllWithError)
 				return &DeeSeq_DefaultRemoveWithKeyWithSeqRemoveIf;
 		}
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
-			Dee_tsc_find_with_key_t tsc_find_with_key;
-			tsc_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
-			if (tsc_find_with_key == &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
+			Dee_tsc_seq_find_with_key_t tsc_seq_find_with_key;
+			tsc_seq_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
+			if (tsc_seq_find_with_key == &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
 				return &DeeSeq_DefaultRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_find_with_key)
+			if (tsc_seq_find_with_key)
 				return &DeeSeq_DefaultRemoveWithKeyWithSeqFindWithKeyAndDelItemIndex;
 			if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 				return &DeeSeq_DefaultRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
@@ -1891,13 +1696,13 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* TODO */
 	} else {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
-			Dee_tsc_rfind_t tsc_rfind;
-			tsc_rfind = DeeType_RequireSeqRFind_private_uncached(orig_type, self);
-			if (tsc_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse)
+			Dee_tsc_seq_rfind_t tsc_seq_rfind;
+			tsc_seq_rfind = DeeType_RequireSeqRFind_private_uncached(orig_type, self);
+			if (tsc_seq_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse)
 				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex;
-			if (tsc_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndex)
+			if (tsc_seq_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndex)
 				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_rfind)
+			if (tsc_seq_rfind)
 				return &DeeSeq_DefaultRRemoveWithTSeqFindAndDelItemIndex;
 			if (DeeType_TryRequireSeqEnumerateIndexReverse(orig_type))
 				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex;
@@ -1912,13 +1717,13 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* TODO */
 	} else {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
-			Dee_tsc_rfind_with_key_t tsc_rfind_with_key;
-			tsc_rfind_with_key = DeeType_RequireSeqRFindWithKey_private_uncached(orig_type, self);
-			if (tsc_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse)
+			Dee_tsc_seq_rfind_with_key_t tsc_seq_rfind_with_key;
+			tsc_seq_rfind_with_key = DeeType_RequireSeqRFindWithKey_private_uncached(orig_type, self);
+			if (tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse)
 				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex;
-			if (tsc_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndex)
+			if (tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndex)
 				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_rfind_with_key)
+			if (tsc_seq_rfind_with_key)
 				return &DeeSeq_DefaultRRemoveWithKeyWithSeqRFindWithKeyAndDelItemIndex;
 			if (DeeType_TryRequireSeqEnumerateIndexReverse(orig_type))
 				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex;
@@ -1933,10 +1738,10 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* TODO */
 	} else {
 		{
-			Dee_tsc_removeif_t tsc_removeif;
-			tsc_removeif = DeeType_RequireSeqRemoveIf_private_uncached(orig_type, self);
-			if (tsc_removeif != NULL &&
-			    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
+			Dee_tsc_seq_removeif_t tsc_seq_removeif;
+			tsc_seq_removeif = DeeType_RequireSeqRemoveIf_private_uncached(orig_type, self);
+			if (tsc_seq_removeif != NULL &&
+			    tsc_seq_removeif != &DeeSeq_DefaultRemoveAllWithError)
 				return &DeeSeq_DefaultRemoveAllWithSeqRemoveIf;
 		}
 		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo) &&
@@ -1958,10 +1763,10 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* TODO */
 	} else {
 		{
-			Dee_tsc_removeif_t tsc_removeif;
-			tsc_removeif = DeeType_RequireSeqRemoveIf_private_uncached(orig_type, self);
-			if (tsc_removeif != NULL &&
-			    tsc_removeif != &DeeSeq_DefaultRemoveAllWithError)
+			Dee_tsc_seq_removeif_t tsc_seq_removeif;
+			tsc_seq_removeif = DeeType_RequireSeqRemoveIf_private_uncached(orig_type, self);
+			if (tsc_seq_removeif != NULL &&
+			    tsc_seq_removeif != &DeeSeq_DefaultRemoveAllWithError)
 				return &DeeSeq_DefaultRemoveAllWithKeyWithSeqRemoveIf;
 		}
 		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo) &&
@@ -2090,44 +1895,44 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		return &DeeSeq_DefaultSortedWithKeyWithCopyForeachDefault; /* non-Default would also be OK */
 #elif defined(DEFINE_DeeType_RequireSeqBFind)
 	{
-		Dee_tsc_brange_t tsc_brange;
-		tsc_brange = DeeType_RequireSeqBRange_private_uncached(orig_type, self);
-		if (tsc_brange != NULL &&
-		    tsc_brange != &DeeSeq_DefaultBRangeWithError) {
-			if (tsc_brange == &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex)
+		Dee_tsc_seq_brange_t tsc_seq_brange;
+		tsc_seq_brange = DeeType_RequireSeqBRange_private_uncached(orig_type, self);
+		if (tsc_seq_brange != NULL &&
+		    tsc_seq_brange != &DeeSeq_DefaultBRangeWithError) {
+			if (tsc_seq_brange == &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex)
 				return &DeeSeq_DefaultBFindWithSizeAndTryGetItemIndex;
 			return &DeeSeq_DefaultBFindWithSeqBRange;
 		}
 	}
 #elif defined(DEFINE_DeeType_RequireSeqBFindWithKey)
 	{
-		Dee_tsc_brange_with_key_t tsc_brange_with_key;
-		tsc_brange_with_key = DeeType_RequireSeqBRangeWithKey_private_uncached(orig_type, self);
-		if (tsc_brange_with_key != NULL &&
-		    tsc_brange_with_key != &DeeSeq_DefaultBRangeWithKeyWithError) {
-			if (tsc_brange_with_key == &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex)
+		Dee_tsc_seq_brange_with_key_t tsc_seq_brange_with_key;
+		tsc_seq_brange_with_key = DeeType_RequireSeqBRangeWithKey_private_uncached(orig_type, self);
+		if (tsc_seq_brange_with_key != NULL &&
+		    tsc_seq_brange_with_key != &DeeSeq_DefaultBRangeWithKeyWithError) {
+			if (tsc_seq_brange_with_key == &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex)
 				return &DeeSeq_DefaultBFindWithKeyWithSizeAndTryGetItemIndex;
 			return &DeeSeq_DefaultBFindWithKeyWithSeqBRangeWithKey;
 		}
 	}
 #elif defined(DEFINE_DeeType_RequireSeqBPosition)
 	{
-		Dee_tsc_brange_t tsc_brange;
-		tsc_brange = DeeType_RequireSeqBRange_private_uncached(orig_type, self);
-		if (tsc_brange != NULL &&
-		    tsc_brange != &DeeSeq_DefaultBRangeWithError) {
-			if (tsc_brange == &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex)
+		Dee_tsc_seq_brange_t tsc_seq_brange;
+		tsc_seq_brange = DeeType_RequireSeqBRange_private_uncached(orig_type, self);
+		if (tsc_seq_brange != NULL &&
+		    tsc_seq_brange != &DeeSeq_DefaultBRangeWithError) {
+			if (tsc_seq_brange == &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex)
 				return &DeeSeq_DefaultBPositionWithSizeAndTryGetItemIndex;
 			return &DeeSeq_DefaultBPositionWithSeqBRange;
 		}
 	}
 #elif defined(DEFINE_DeeType_RequireSeqBPositionWithKey)
 	{
-		Dee_tsc_brange_with_key_t tsc_brange_with_key;
-		tsc_brange_with_key = DeeType_RequireSeqBRangeWithKey_private_uncached(orig_type, self);
-		if (tsc_brange_with_key != NULL &&
-		    tsc_brange_with_key != &DeeSeq_DefaultBRangeWithKeyWithError) {
-			if (tsc_brange_with_key == &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex)
+		Dee_tsc_seq_brange_with_key_t tsc_seq_brange_with_key;
+		tsc_seq_brange_with_key = DeeType_RequireSeqBRangeWithKey_private_uncached(orig_type, self);
+		if (tsc_seq_brange_with_key != NULL &&
+		    tsc_seq_brange_with_key != &DeeSeq_DefaultBRangeWithKeyWithError) {
+			if (tsc_seq_brange_with_key == &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex)
 				return &DeeSeq_DefaultBPositionWithKeyWithSizeAndTryGetItemIndex;
 			return &DeeSeq_DefaultBPositionWithKeyWithSeqBRangeWithKey;
 		}
@@ -2144,22 +1949,22 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireSeqBLocate)
 	{
-		Dee_tsc_bfind_t tsc_bfind;
-		tsc_bfind = DeeType_RequireSeqBFind_private_uncached(orig_type, self);
-		if (tsc_bfind != NULL &&
-		    tsc_bfind != &DeeSeq_DefaultBFindWithError) {
-			if (tsc_bfind == &DeeSeq_DefaultBFindWithSizeAndTryGetItemIndex)
+		Dee_tsc_seq_bfind_t tsc_seq_bfind;
+		tsc_seq_bfind = DeeType_RequireSeqBFind_private_uncached(orig_type, self);
+		if (tsc_seq_bfind != NULL &&
+		    tsc_seq_bfind != &DeeSeq_DefaultBFindWithError) {
+			if (tsc_seq_bfind == &DeeSeq_DefaultBFindWithSizeAndTryGetItemIndex)
 				return &DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex;
 			return &DeeSeq_DefaultBLocateWithSeqBFindAndGetItemIndex;
 		}
 	}
 #elif defined(DEFINE_DeeType_RequireSeqBLocateWithKey)
 	{
-		Dee_tsc_bfind_with_key_t tsc_bfind_with_key;
-		tsc_bfind_with_key = DeeType_RequireSeqBFindWithKey_private_uncached(orig_type, self);
-		if (tsc_bfind_with_key != NULL &&
-		    tsc_bfind_with_key != &DeeSeq_DefaultBFindWithKeyWithError) {
-			if (tsc_bfind_with_key == &DeeSeq_DefaultBFindWithKeyWithSizeAndTryGetItemIndex)
+		Dee_tsc_seq_bfind_with_key_t tsc_seq_bfind_with_key;
+		tsc_seq_bfind_with_key = DeeType_RequireSeqBFindWithKey_private_uncached(orig_type, self);
+		if (tsc_seq_bfind_with_key != NULL &&
+		    tsc_seq_bfind_with_key != &DeeSeq_DefaultBFindWithKeyWithError) {
+			if (tsc_seq_bfind_with_key == &DeeSeq_DefaultBFindWithKeyWithSizeAndTryGetItemIndex)
 				return &DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex;
 			return &DeeSeq_DefaultBLocateWithKeyWithSeqBFindWithKeyAndGetItemIndex;
 		}
@@ -2186,7 +1991,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		 * >> (x as Set).insert(20); // if (!x.contains(20)) x.append(20);
 		 * >> (x as Set).insert(10); // if (!x.contains(10)) x.append(10);
 		 * >> print repr x;          // [10, 20] */
-		Dee_tsc_append_t tsc_append;
+		Dee_tsc_seq_append_t tsc_append;
 		tsc_append = DeeType_RequireSeqAppend_private_uncached(orig_type, self);
 		if (tsc_append != NULL &&
 		    tsc_append != &DeeSeq_DefaultAppendWithError)
@@ -2210,7 +2015,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* >> local x = [10, 20, 30];
 		 * >> (x as Set).remove(30); // x.remove(30);  (using `DeeType_RequireSeqRemove')
 		 * >> print repr x;          // [10, 20] */
-		Dee_tsc_remove_t tsc_remove;
+		Dee_tsc_seq_remove_t tsc_remove;
 		tsc_remove = DeeType_RequireSeqRemove_private_uncached(orig_type, self);
 		if (tsc_remove != NULL &&
 		    tsc_remove != &DeeSeq_DefaultRemoveWithError)
@@ -2231,7 +2036,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		 * >> (x as Set).unify("bar");
 		 * >> (x as Set).unify("foo");
 		 * >> print repr x; // ["foo", "bar"] */
-		Dee_tsc_append_t tsc_append;
+		Dee_tsc_seq_append_t tsc_append;
 		tsc_append = DeeType_RequireSeqAppend_private_uncached(orig_type, self);
 		if (tsc_append != NULL &&
 		    tsc_append != &DeeSeq_DefaultAppendWithError)
@@ -2283,10 +2088,10 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* >> local x = [10, 20, 30];
 		 * >> print repr((x as Set).pop()); // 30
 		 * >> print repr x;                 // [10, 20] */
-		Dee_tsc_pop_t tsc_pop;
-		tsc_pop = DeeType_RequireSeqPop_private_uncached(orig_type, self);
-		if (tsc_pop != NULL &&
-		    tsc_pop != &DeeSeq_DefaultPopWithError)
+		Dee_tsc_seq_pop_t tsc_seq_pop;
+		tsc_seq_pop = DeeType_RequireSeqPop_private_uncached(orig_type, self);
+		if (tsc_seq_pop != NULL &&
+		    tsc_seq_pop != &DeeSeq_DefaultPopWithError)
 			return &DeeSet_DefaultPopWithSeqPop;
 	}
 #elif defined(DEFINE_DeeType_RequireSetPopWithDefault)
@@ -2309,10 +2114,10 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* >> local x = [10, 20, 30];
 		 * >> print repr((x as Set).pop()); // 30
 		 * >> print repr x;                 // [10, 20] */
-		Dee_tsc_pop_t tsc_pop;
-		tsc_pop = DeeType_RequireSeqPop_private_uncached(orig_type, self);
-		if (tsc_pop != NULL &&
-		    tsc_pop != &DeeSeq_DefaultPopWithError)
+		Dee_tsc_seq_pop_t tsc_seq_pop;
+		tsc_seq_pop = DeeType_RequireSeqPop_private_uncached(orig_type, self);
+		if (tsc_seq_pop != NULL &&
+		    tsc_seq_pop != &DeeSeq_DefaultPopWithError)
 			return &DeeSet_DefaultPopWithDefaultWithSeqPop;
 	}
 #elif defined(DEFINE_DeeType_RequireMapSetOld)
@@ -2561,13 +2366,13 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	return NULL;
 }
 
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_tsc_foo_t DCALL
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_tsc_seq_foo_t DCALL
 LOCAL_DeeType_RequireSeqFoo_uncached(DeeTypeObject *__restrict self) {
 	DeeTypeObject *iter;
 	DeeTypeMRO mro;
 	iter = DeeTypeMRO_Init(&mro, self);
 	do {
-		LOCAL_Dee_tsc_foo_t result;
+		LOCAL_Dee_tsc_seq_foo_t result;
 		result = LOCAL_DeeType_RequireSeqFoo_private_uncached(self, iter);
 		if (result)
 			return result;
@@ -2575,65 +2380,66 @@ LOCAL_DeeType_RequireSeqFoo_uncached(DeeTypeObject *__restrict self) {
 	return &LOCAL_DeeSeq_DefaultFooWithError;
 }
 
-INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_tsc_foo_t DCALL
+INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_tsc_seq_foo_t DCALL
 LOCAL_DeeType_RequireSeqFoo(DeeTypeObject *__restrict self) {
-	LOCAL_Dee_tsc_foo_t result;
+	LOCAL_Dee_tsc_seq_foo_t result;
 	struct Dee_type_seq_cache *sc;
 	struct Dee_type_seq *seq = self->tp_seq;
 	if likely(seq) {
 		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->LOCAL_tsc_foo)
-			return sc->LOCAL_tsc_foo;
+		if likely(sc && sc->LOCAL_tsc_seq_foo)
+			return sc->LOCAL_tsc_seq_foo;
 	}
 	result = LOCAL_DeeType_RequireSeqFoo_uncached(self);
 	sc     = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
-		atomic_write(&sc->LOCAL_tsc_foo, result);
+		atomic_write(&sc->LOCAL_tsc_seq_foo, result);
 	return result;
 }
 
 
-#undef LOCAL_DeeSeq_AttrBar
+#undef LOCAL_Dee_SEQCLASS
+#undef LOCAL_Attr_foo
+#undef LOCAL_Foo
+#undef LOCAL_foo
+#undef LOCAL_method_foo
+#undef LOCAL_default_seq_foo
+#undef LOCAL_tsc_seq_foo
+#undef LOCAL_Dee_tsc_seq_foo_t
+#undef LOCAL_tsc_seq_method_foo
+#undef LOCAL_tsc_seq_foo_data
+#undef LOCAL_DeeSeq_Default
+#undef LOCAL_DeeSeq_RequireFoo
 #undef LOCAL_DeeType_RequireSeqFoo_private_uncached
 #undef LOCAL_DeeType_RequireSeqFoo_uncached
 #undef LOCAL_DeeType_RequireSeqFoo
-#undef LOCAL_DeeSeq_DefaultFooWithCallAttrBar
+#undef LOCAL_Bar
 #undef LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq
-#undef LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap
-#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq
-#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap
-#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq
-#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap
-#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq
+#undef LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap
+#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap
+#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap
+#undef LOCAL_DeeSeq_DefaultFooWithCallAttrBar
+#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction
+#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod
+#undef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod
 #undef LOCAL_DeeSeq_DefaultFooWithError
 #undef LOCAL_DeeSeq_DefaultFooForEmpty
-#undef LOCAL_Dee_tsc_foo_t
-#undef LOCAL_tsc_foo_data
 #undef LOCAL_CANONICAL_NAME_LENGTHOF
 #undef LOCAL_CANONICAL_NAME_str
 #undef LOCAL_CANONICAL_NAME_STR
 #undef LOCAL_CANONICAL_NAME_Dee_HashStr
-#undef LOCAL_IS_OPERATOR
-#undef LOCAL_IS_GETSET
 #undef LOCAL_IS_GETSET_GET
 #undef LOCAL_IS_GETSET_BOUND
 #undef LOCAL_IS_GETSET_DEL
 #undef LOCAL_IS_GETSET_SET
-
-
+#undef LOCAL_IS_GETSET
 #undef LOCAL_HAS_FOR_SEQ_SUFFIX
+#undef LOCAL_WITHOUT_ATTRIBUTE
 #undef LOCAL_ATTR_REQUIRED_SEQCLASS
-#undef LOCAL_CANONICAL_NAME
-#undef LOCAL_default_seq_foo
-#undef LOCAL_tsc_foo
-#undef LOCAL_DeeSeq_Default
-#undef LOCAL_DeeSeq_RequireFoo
-#undef LOCAL_DeeSeq_AttrFoo
-#undef LOCAL_DeeSeq_AttrBar
 
 DECL_END
 

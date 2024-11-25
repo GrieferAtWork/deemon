@@ -121,137 +121,169 @@
 DECL_BEGIN
 
 #ifdef DEFINE_DeeType_RequireSeqOperatorBool
-#define LOCAL_tsc_operator_foo tsc_operator_bool
+#define LOCAL_operator_foo     operator_bool
 #define LOCAL_OperatorFoo      OperatorBool
 #elif defined(DEFINE_DeeType_RequireSeqOperatorIter)
-#define LOCAL_tsc_operator_foo tsc_operator_iter
+#define LOCAL_operator_foo     operator_iter
 #define LOCAL_OperatorFoo      OperatorIter
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSizeOb)
-#define LOCAL_tsc_operator_foo tsc_operator_sizeob
+#define LOCAL_operator_foo     operator_sizeob
 #define LOCAL_OperatorFoo      OperatorSizeOb
 #elif defined(DEFINE_DeeType_RequireSeqOperatorContains)
-#define LOCAL_tsc_operator_foo tsc_operator_contains
+#define LOCAL_operator_foo     operator_contains
 #define LOCAL_OperatorFoo      OperatorContains
 #elif defined(DEFINE_DeeType_RequireSeqOperatorGetItem)
-#define LOCAL_tsc_operator_foo tsc_operator_getitem
+#define LOCAL_operator_foo     operator_getitem
 #define LOCAL_OperatorFoo      OperatorGetItem
 #elif defined(DEFINE_DeeType_RequireSeqOperatorDelItem)
-#define LOCAL_tsc_operator_foo tsc_operator_delitem
+#define LOCAL_operator_foo     operator_delitem
 #define LOCAL_OperatorFoo      OperatorDelItem
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSetItem)
-#define LOCAL_tsc_operator_foo tsc_operator_setitem
+#define LOCAL_operator_foo     operator_setitem
 #define LOCAL_OperatorFoo      OperatorSetItem
 #elif defined(DEFINE_DeeType_RequireSeqOperatorGetRange)
-#define LOCAL_tsc_operator_foo tsc_operator_getrange
+#define LOCAL_operator_foo     operator_getrange
 #define LOCAL_OperatorFoo      OperatorGetRange
 #elif defined(DEFINE_DeeType_RequireSeqOperatorDelRange)
-#define LOCAL_tsc_operator_foo tsc_operator_delrange
+#define LOCAL_operator_foo     operator_delrange
 #define LOCAL_OperatorFoo      OperatorDelRange
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSetRange)
-#define LOCAL_tsc_operator_foo tsc_operator_setrange
+#define LOCAL_operator_foo     operator_setrange
 #define LOCAL_OperatorFoo      OperatorSetRange
 #elif defined(DEFINE_DeeType_RequireSeqOperatorForeach)
-#define LOCAL_tsc_operator_foo tsc_operator_foreach
+#define LOCAL_operator_foo     operator_foreach
 #define LOCAL_OperatorFoo      OperatorForeach
 #elif defined(DEFINE_DeeType_RequireSeqOperatorEnumerate)
-#define LOCAL_tsc_operator_foo tsc_operator_enumerate
+#define LOCAL_operator_foo     operator_enumerate
 #define LOCAL_OperatorFoo      OperatorEnumerate
 #elif defined(DEFINE_DeeType_RequireSeqOperatorEnumerateIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_enumerate_index
+#define LOCAL_operator_foo     operator_enumerate_index
 #define LOCAL_OperatorFoo      OperatorEnumerateIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorBoundItem)
-#define LOCAL_tsc_operator_foo tsc_operator_bounditem
+#define LOCAL_operator_foo     operator_bounditem
 #define LOCAL_OperatorFoo      OperatorBoundItem
 #elif defined(DEFINE_DeeType_RequireSeqOperatorHasItem)
-#define LOCAL_tsc_operator_foo tsc_operator_hasitem
+#define LOCAL_operator_foo     operator_hasitem
 #define LOCAL_OperatorFoo      OperatorHasItem
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSize)
-#define LOCAL_tsc_operator_foo tsc_operator_size
+#define LOCAL_operator_foo     operator_size
 #define LOCAL_OperatorFoo      OperatorSize
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSizeFast)
-#define LOCAL_tsc_operator_foo tsc_operator_size_fast
+#define LOCAL_operator_foo     operator_size_fast
 #define LOCAL_OperatorFoo      OperatorSizeFast
 #elif defined(DEFINE_DeeType_RequireSeqOperatorGetItemIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_getitem_index
+#define LOCAL_operator_foo     operator_getitem_index
 #define LOCAL_OperatorFoo      OperatorGetItemIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorDelItemIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_delitem_index
+#define LOCAL_operator_foo     operator_delitem_index
 #define LOCAL_OperatorFoo      OperatorDelItemIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSetItemIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_setitem_index
+#define LOCAL_operator_foo     operator_setitem_index
 #define LOCAL_OperatorFoo      OperatorSetItemIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorBoundItemIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_bounditem_index
+#define LOCAL_operator_foo     operator_bounditem_index
 #define LOCAL_OperatorFoo      OperatorBoundItemIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorHasItemIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_hasitem_index
+#define LOCAL_operator_foo     operator_hasitem_index
 #define LOCAL_OperatorFoo      OperatorHasItemIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorGetRangeIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_getrange_index
+#define LOCAL_operator_foo     operator_getrange_index
 #define LOCAL_OperatorFoo      OperatorGetRangeIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorDelRangeIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_delrange_index
+#define LOCAL_operator_foo     operator_delrange_index
 #define LOCAL_OperatorFoo      OperatorDelRangeIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSetRangeIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_setrange_index
+#define LOCAL_operator_foo     operator_setrange_index
 #define LOCAL_OperatorFoo      OperatorSetRangeIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorGetRangeIndexN)
-#define LOCAL_tsc_operator_foo tsc_operator_getrange_index_n
+#define LOCAL_operator_foo     operator_getrange_index_n
 #define LOCAL_OperatorFoo      OperatorGetRangeIndexN
 #elif defined(DEFINE_DeeType_RequireSeqOperatorDelRangeIndexN)
-#define LOCAL_tsc_operator_foo tsc_operator_delrange_index_n
+#define LOCAL_operator_foo     operator_delrange_index_n
 #define LOCAL_OperatorFoo      OperatorDelRangeIndexN
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSetRangeIndexN)
-#define LOCAL_tsc_operator_foo tsc_operator_setrange_index_n
+#define LOCAL_operator_foo     operator_setrange_index_n
 #define LOCAL_OperatorFoo      OperatorSetRangeIndexN
 #elif defined(DEFINE_DeeType_RequireSeqOperatorTryGetItem)
-#define LOCAL_tsc_operator_foo tsc_operator_trygetitem
+#define LOCAL_operator_foo     operator_trygetitem
 #define LOCAL_OperatorFoo      OperatorTryGetItem
 #elif defined(DEFINE_DeeType_RequireSeqOperatorTryGetItemIndex)
-#define LOCAL_tsc_operator_foo tsc_operator_trygetitem_index
+#define LOCAL_operator_foo     operator_trygetitem_index
 #define LOCAL_OperatorFoo      OperatorTryGetItemIndex
 #elif defined(DEFINE_DeeType_RequireSeqOperatorHash)
-#define LOCAL_tsc_operator_foo tsc_operator_hash
+#define LOCAL_operator_foo     operator_hash
 #define LOCAL_OperatorFoo      OperatorHash
 #elif defined(DEFINE_DeeType_RequireSeqOperatorCompareEq)
-#define LOCAL_tsc_operator_foo tsc_operator_compare_eq
+#define LOCAL_operator_foo     operator_compare_eq
 #define LOCAL_OperatorFoo      OperatorCompareEq
 #elif defined(DEFINE_DeeType_RequireSeqOperatorCompare)
-#define LOCAL_tsc_operator_foo tsc_operator_compare
+#define LOCAL_operator_foo     operator_compare
 #define LOCAL_OperatorFoo      OperatorCompare
 #elif defined(DEFINE_DeeType_RequireSeqOperatorTryCompareEq)
-#define LOCAL_tsc_operator_foo tsc_operator_trycompare_eq
+#define LOCAL_operator_foo     operator_trycompare_eq
 #define LOCAL_OperatorFoo      OperatorTryCompareEq
 #elif defined(DEFINE_DeeType_RequireSeqOperatorEq)
-#define LOCAL_tsc_operator_foo tsc_operator_eq
+#define LOCAL_operator_foo     operator_eq
 #define LOCAL_OperatorFoo      OperatorEq
 #elif defined(DEFINE_DeeType_RequireSeqOperatorNe)
-#define LOCAL_tsc_operator_foo tsc_operator_ne
+#define LOCAL_operator_foo     operator_ne
 #define LOCAL_OperatorFoo      OperatorNe
 #elif defined(DEFINE_DeeType_RequireSeqOperatorLo)
-#define LOCAL_tsc_operator_foo tsc_operator_lo
+#define LOCAL_operator_foo     operator_lo
 #define LOCAL_OperatorFoo      OperatorLo
 #elif defined(DEFINE_DeeType_RequireSeqOperatorLe)
-#define LOCAL_tsc_operator_foo tsc_operator_le
+#define LOCAL_operator_foo     operator_le
 #define LOCAL_OperatorFoo      OperatorLe
 #elif defined(DEFINE_DeeType_RequireSeqOperatorGr)
-#define LOCAL_tsc_operator_foo tsc_operator_gr
+#define LOCAL_operator_foo     operator_gr
 #define LOCAL_OperatorFoo      OperatorGr
 #elif defined(DEFINE_DeeType_RequireSeqOperatorGe)
-#define LOCAL_tsc_operator_foo tsc_operator_ge
+#define LOCAL_operator_foo     operator_ge
 #define LOCAL_OperatorFoo      OperatorGe
 #elif defined(DEFINE_DeeType_RequireSeqOperatorInplaceAdd)
-#define LOCAL_tsc_operator_foo tsc_operator_inplace_add
+#define LOCAL_operator_foo     operator_inplace_add
 #define LOCAL_OperatorFoo      OperatorInplaceAdd
 #elif defined(DEFINE_DeeType_RequireSeqOperatorInplaceMul)
-#define LOCAL_tsc_operator_foo tsc_operator_inplace_mul
+#define LOCAL_operator_foo     operator_inplace_mul
 #define LOCAL_OperatorFoo      OperatorInplaceMul
 #else /* DEFINE_DeeType_RequireSeq... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeType_RequireSeq... */
 
+#ifndef LOCAL_Dee_SEQCLASS
+#define LOCAL_Dee_SEQCLASS Dee_SEQCLASS_SEQ
+#endif /* !LOCAL_Dee_SEQCLASS */
+
+#ifndef LOCAL_SeqClass
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_SeqClass Seq
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_SeqClass Set
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_SeqClass Map
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_SeqClass INVALID_LOCAL_Dee_SEQCLASS
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_SeqClass */
+
+#ifndef LOCAL_seq_class
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_seq_class seq
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_seq_class set
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_seq_class map
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_seq_class INVALID_LOCAL_Dee_SEQCLASS
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_seq_class */
+
+#ifndef LOCAL_tsc_seq_operator_foo
+#define LOCAL_tsc_seq_operator_foo PP_CAT4(tsc_, LOCAL_seq_class, _, LOCAL_operator_foo)
+#endif /* !LOCAL_tsc_seq_operator_foo */
+
 #ifndef LOCAL_Dee_tsc_operator_foo_t
-#define LOCAL_Dee_tsc_operator_foo_t PP_CAT3(Dee_, LOCAL_tsc_operator_foo, _t)
+#define LOCAL_Dee_tsc_operator_foo_t PP_CAT3(Dee_tsc_, LOCAL_operator_foo, _t)
 #endif /* !LOCAL_Dee_tsc_operator_foo_t */
 
 #ifndef LOCAL_DeeSeq_OperatorFoo
@@ -760,9 +792,9 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_math->tp_inplace_add;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_extend_t tsc_extend;
-		tsc_extend = DeeType_RequireSeqExtend(self);
-		if (tsc_extend != &DeeSeq_DefaultExtendWithError)
+		Dee_tsc_seq_extend_t tsc_seq_extend;
+		tsc_seq_extend = DeeType_RequireSeqExtend(self);
+		if (tsc_seq_extend != &DeeSeq_DefaultExtendWithError)
 			return &DeeSeq_DefaultOperatorInplaceAddWithTSCExtend;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorInplaceMul)
@@ -771,10 +803,10 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_math->tp_inplace_mul;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_extend_t tsc_extend;
-		Dee_tsc_clear_t tsc_clear;
-		if ((tsc_extend = DeeType_RequireSeqExtend(self)) != &DeeSeq_DefaultExtendWithError &&
-		    (tsc_clear = DeeType_RequireSeqClear(self)) != &DeeSeq_DefaultClearWithError)
+		Dee_tsc_seq_extend_t tsc_seq_extend;
+		Dee_tsc_seq_clear_t tsc_seq_clear;
+		if ((tsc_seq_extend = DeeType_RequireSeqExtend(self)) != &DeeSeq_DefaultExtendWithError &&
+		    (tsc_seq_clear = DeeType_RequireSeqClear(self)) != &DeeSeq_DefaultClearWithError)
 			return &DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend;
 	}
 #endif /* ... */
@@ -800,8 +832,8 @@ LOCAL_DeeType_RequireSeqOperatorFoo(DeeTypeObject *__restrict self) {
 	struct Dee_type_seq *seq = self->tp_seq;
 	if likely(seq) {
 		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->LOCAL_tsc_operator_foo)
-			return sc->LOCAL_tsc_operator_foo;
+		if likely(sc && sc->LOCAL_tsc_seq_operator_foo)
+			return sc->LOCAL_tsc_seq_operator_foo;
 	}
 	result = LOCAL_DeeType_RequireSeqOperatorFoo_uncached(self);
 	if unlikely(result == &LOCAL_DeeSeq_OperatorFoo) {
@@ -813,19 +845,23 @@ LOCAL_DeeType_RequireSeqOperatorFoo(DeeTypeObject *__restrict self) {
 	}
 	sc = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
-		atomic_write(&sc->LOCAL_tsc_operator_foo, result);
+		atomic_write(&sc->LOCAL_tsc_seq_operator_foo, result);
 	return result;
 }
 #endif /* !LOCAL_FOR_OPTIMIZE */
 
 #undef LOCAL_DeeSeq_OperatorFoo
 #undef LOCAL_Dee_tsc_operator_foo_t
+#undef LOCAL_tsc_seq_operator_foo
+#undef LOCAL_seq_class
+#undef LOCAL_SeqClass
 #undef LOCAL_DeeType_RequireSeqOperatorFoo_uncached
 #undef LOCAL_DeeType_RequireSeqOperatorFoo
 #undef LOCAL_DeeSeq_DefaultOperatorFooWithEmpty
 #undef LOCAL_DeeSeq_DefaultOperatorFooWithError
-#undef LOCAL_tsc_operator_foo
+#undef LOCAL_operator_foo
 #undef LOCAL_OperatorFoo
+#undef LOCAL_Dee_SEQCLASS
 
 DECL_END
 

@@ -1997,7 +1997,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *item,
                                                            size_t start, size_t end) {
 	Dee_ssize_t foreach_status;
-	Dee_tsc_enumerate_index_reverse_t op;
+	Dee_tsc_seq_enumerate_index_reverse_t op;
 	op = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
 	ASSERT(op);
 	foreach_status = (*op)(self, &default_seq_locate_enumerate_cb, &item, start, end);
@@ -2028,7 +2028,7 @@ INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *item,
                                                                  size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t foreach_status;
-	Dee_tsc_enumerate_index_reverse_t op;
+	Dee_tsc_seq_enumerate_index_reverse_t op;
 	struct default_seq_locate_with_key_data data;
 	data.gslwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gslwk_kelem)
@@ -2417,7 +2417,7 @@ DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *item
                                                 size_t start, size_t end) {
 	Dee_ssize_t status;
 	union default_seq_find_data data;
-	Dee_tsc_enumerate_index_reverse_t renum;
+	Dee_tsc_seq_enumerate_index_reverse_t renum;
 	data.gsfd_elem = item;
 	renum = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
 	ASSERT(renum);
@@ -2488,7 +2488,7 @@ DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse(DeeObject *self, DeeObjec
                                                        size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct default_seq_find_with_key_data data;
-	Dee_tsc_enumerate_index_reverse_t renum;
+	Dee_tsc_seq_enumerate_index_reverse_t renum;
 	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gsfwk_base.gsfd_elem)
 		goto err;
@@ -2555,7 +2555,7 @@ err_overflow:
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DefaultEraseWithPop(DeeObject *self, size_t index, size_t count) {
 	size_t end_index;
-	Dee_tsc_pop_t tsc_pop;
+	Dee_tsc_seq_pop_t tsc_pop;
 	if unlikely(OVERFLOW_UADD(index, count, &end_index))
 		goto err_overflow;
 	tsc_pop = DeeType_RequireSeqPop(Dee_TYPE(self));
@@ -2631,26 +2631,26 @@ err:
 	return -1;
 }
 
-struct default_insertall_with_foreach_insert_data {
-	Dee_tsc_insert_t diawfid_insert; /* [1..1] Insert callback */
-	DeeObject       *diawfid_self;   /* [1..1] The sequence to insert into */
-	size_t           diawfid_index;  /* Next index for insertion */
+struct default_seq_insertall_with_foreach_insert_data {
+	Dee_tsc_seq_insert_t dsiawfid_insert; /* [1..1] Insert callback */
+	DeeObject           *dsiawfid_self;   /* [1..1] The sequence to insert into */
+	size_t               dsiawfid_index;  /* Next index for insertion */
 };
 
 PRIVATE WUNUSED_T NONNULL_T((2)) Dee_ssize_t DCALL
-default_insertall_with_foreach_insert_cb(void *arg, DeeObject *item) {
-	struct default_insertall_with_foreach_insert_data *data;
-	data = (struct default_insertall_with_foreach_insert_data *)arg;
-	return (Dee_ssize_t)(*data->diawfid_insert)(data->diawfid_self, data->diawfid_index++, item);
+default_seq_insertall_with_foreach_insert_cb(void *arg, DeeObject *item) {
+	struct default_seq_insertall_with_foreach_insert_data *data;
+	data = (struct default_seq_insertall_with_foreach_insert_data *)arg;
+	return (Dee_ssize_t)(*data->dsiawfid_insert)(data->dsiawfid_self, data->dsiawfid_index++, item);
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 DeeSeq_DefaultInsertAllWithSeqInsert(DeeObject *self, size_t index, DeeObject *items) {
-	struct default_insertall_with_foreach_insert_data data;
-	data.diawfid_self   = self;
-	data.diawfid_index  = index;
-	data.diawfid_insert = DeeType_RequireSeqInsert(Dee_TYPE(self));
-	return (int)DeeSeq_OperatorForeach(items, &default_insertall_with_foreach_insert_cb, &data);
+	struct default_seq_insertall_with_foreach_insert_data data;
+	data.dsiawfid_self   = self;
+	data.dsiawfid_index  = index;
+	data.dsiawfid_insert = DeeType_RequireSeqInsert(Dee_TYPE(self));
+	return (int)DeeSeq_OperatorForeach(items, &default_seq_insertall_with_foreach_insert_cb, &data);
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
@@ -2718,25 +2718,25 @@ DeeSeq_DefaultAppendWithError(DeeObject *self, DeeObject *item) {
 /************************************************************************/
 /* extend()                                                             */
 /************************************************************************/
-struct default_extend_with_foreach_append_data {
-	Dee_tsc_append_t dewfad_append; /* [1..1] Append callback */
-	DeeObject       *dewfad_self;   /* [1..1] The sequence to append to */
+struct default_seq_extend_with_foreach_append_data {
+	Dee_tsc_seq_append_t dsewfad_append; /* [1..1] Append callback */
+	DeeObject           *dsewfad_self;   /* [1..1] The sequence to append to */
 };
 
 PRIVATE WUNUSED_T NONNULL_T((2)) Dee_ssize_t DCALL
-default_extend_with_foreach_append_cb(void *arg, DeeObject *item) {
-	struct default_extend_with_foreach_append_data *data;
-	data = (struct default_extend_with_foreach_append_data *)arg;
-	return (Dee_ssize_t)(*data->dewfad_append)(data->dewfad_self, item);
+default_seq_extend_with_foreach_append_cb(void *arg, DeeObject *item) {
+	struct default_seq_extend_with_foreach_append_data *data;
+	data = (struct default_seq_extend_with_foreach_append_data *)arg;
+	return (Dee_ssize_t)(*data->dsewfad_append)(data->dsewfad_self, item);
 }
 
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultExtendWithSeqAppend(DeeObject *self, DeeObject *items) {
-	struct default_extend_with_foreach_append_data data;
-	data.dewfad_self   = self;
-	data.dewfad_append = DeeType_RequireSeqAppend(Dee_TYPE(self));
-	return (int)DeeSeq_OperatorForeach(items, &default_extend_with_foreach_append_cb, &data);
+	struct default_seq_extend_with_foreach_append_data data;
+	data.dsewfad_self   = self;
+	data.dsewfad_append = DeeType_RequireSeqAppend(Dee_TYPE(self));
+	return (int)DeeSeq_OperatorForeach(items, &default_seq_extend_with_foreach_append_cb, &data);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -3335,7 +3335,7 @@ DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex(DeeObject *self
                                                                  size_t start, size_t end) {
 	Dee_ssize_t foreach_status;
 	struct default_remove_with_enumerate_index_and_delitem_index_data data;
-	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
+	Dee_tsc_seq_enumerate_index_reverse_t tsc_enumerate_index_reverse;
 	data.drweiadiid_self = self;
 	data.drweiadiid_item = item;
 	tsc_enumerate_index_reverse = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
@@ -3404,7 +3404,7 @@ DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex(DeeObjec
                                                                         size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data data;
-	Dee_tsc_enumerate_index_reverse_t tsc_enumerate_index_reverse;
+	Dee_tsc_seq_enumerate_index_reverse_t tsc_enumerate_index_reverse;
 	data.drwkweiadiid_self = self;
 	data.drwkweiadiid_item = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.drwkweiadiid_item)
@@ -3478,7 +3478,7 @@ INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_DefaultRemoveAllWithSeqRemove(DeeObject *self, DeeObject *item,
                                      size_t start, size_t end, size_t max) {
 	size_t result = 0;
-	Dee_tsc_remove_t tsc_remove;
+	Dee_tsc_seq_remove_t tsc_remove;
 	tsc_remove = DeeType_RequireSeqRemove(Dee_TYPE(self));
 	while (result < max) {
 		int temp;
@@ -3595,7 +3595,7 @@ DeeSeq_DefaultRemoveAllWithKeyWithSeqRemoveWithKey(DeeObject *self, DeeObject *i
                                                    size_t start, size_t end, size_t max,
                                                    DeeObject *key) {
 	size_t result = 0;
-	Dee_tsc_remove_with_key_t tsc_remove_with_key;
+	Dee_tsc_seq_remove_with_key_t tsc_remove_with_key;
 	tsc_remove_with_key = DeeType_RequireSeqRemoveWithKey(Dee_TYPE(self));
 	while (result < max) {
 		int temp;
@@ -6315,27 +6315,27 @@ handle_with_cb:
 				if (startob != ITER_DONE) {
 					if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
-						result = DeeSeq_MakeEnumerationWithIntRange(self, start, end);
+						result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
 					} else {
-						result = DeeSeq_MakeEnumerationWithRange(self, startob, endob);
+						result = DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
 					}
 				} else if (DeeInt_Check(endob) && DeeInt_TryAsSize(endob, &end)) {
-					result = DeeSeq_MakeEnumerationWithIntRange(self, 0, end);
+					result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, 0, end);
 				} else {
 					startob = DeeObject_NewDefault(Dee_TYPE(endob));
 					if unlikely(!startob)
 						goto err;
-					result = DeeSeq_MakeEnumerationWithRange(self, startob, endob);
+					result = DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
 					Dee_Decref(startob);
 				}
 			} else if (startob == ITER_DONE) {
-				result = DeeSeq_MakeEnumeration(self);
+				result = DeeSeq_InvokeMakeEnumeration(self);
 			} else {
 				ASSERT(startob != ITER_DONE);
 				ASSERT(endob == ITER_DONE);
 				if (DeeObject_AsSize(startob, &start))
 					goto err;
-				result = DeeSeq_MakeEnumerationWithIntRange(self, start, (size_t)-1);
+				result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
 			}
 		}
 	}	break;
@@ -6353,14 +6353,14 @@ handle_with_cb:
 		if (endob != ITER_DONE) {
 			if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 			    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
-				result = DeeSeq_MakeEnumerationWithIntRange(self, start, end);
+				result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
 			} else {
-				result = DeeSeq_MakeEnumerationWithRange(self, startob, endob);
+				result = DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
 			}
 		} else {
 			if (DeeObject_AsSize(startob, &start))
 				goto err;
-			result = DeeSeq_MakeEnumerationWithIntRange(self, start, (size_t)-1);
+			result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
 		}
 	}	break;
 
@@ -6376,9 +6376,9 @@ handle_with_cb:
 		endob   = argv[1];
 		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
-			result = DeeSeq_MakeEnumerationWithIntRange(self, start, end);
+			result = DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
 		} else {
-			result = DeeSeq_MakeEnumerationWithRange(self, startob, endob);
+			result = DeeSeq_InvokeMakeEnumerationWithRange(self, startob, endob);
 		}
 	}	break;
 
@@ -6415,7 +6415,7 @@ default_seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeO
 	if unlikely(kw)
 		return do_default_seq_enumerate_with_kw(self, argc, argv, kw);
 	if likely(argc == 0)
-		return DeeSeq_MakeEnumeration(self);
+		return DeeSeq_InvokeMakeEnumeration(self);
 	if (DeeCallable_Check(argv[0])) {
 		if (argc == 1)
 			return DeeSeq_Enumerate(self, argv[0]);
@@ -6434,14 +6434,14 @@ default_seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeO
 		if unlikely(argc == 1) {
 			if (DeeObject_AsSize(argv[0], &start))
 				goto err;
-			return DeeSeq_MakeEnumerationWithIntRange(self, start, (size_t)-1);
+			return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
 		}
 		if (argc != 2)
 			goto err_bad_args;
 		if ((DeeInt_Check(argv[0]) && DeeInt_Check(argv[1])) &&
 		    (DeeInt_TryAsSize(argv[0], &start) && DeeInt_TryAsSize(argv[1], &end)))
-			return DeeSeq_MakeEnumerationWithIntRange(self, start, end);
-		return DeeSeq_MakeEnumerationWithRange(self, argv[0], argv[1]);
+			return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end);
+		return DeeSeq_InvokeMakeEnumerationWithRange(self, argv[0], argv[1]);
 	}
 	__builtin_unreachable();
 err_bad_args:

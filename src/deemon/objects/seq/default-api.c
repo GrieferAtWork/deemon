@@ -49,98 +49,98 @@
 
 DECL_BEGIN
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_trygetfirst_t DCALL DeeType_RequireSeqTryGetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_getfirst_t DCALL DeeType_RequireSeqGetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_boundfirst_t DCALL DeeType_RequireSeqBoundFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_delfirst_t DCALL DeeType_RequireSeqDelFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_setfirst_t DCALL DeeType_RequireSeqSetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_trygetlast_t DCALL DeeType_RequireSeqTryGetLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_getlast_t DCALL DeeType_RequireSeqGetLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_boundlast_t DCALL DeeType_RequireSeqBoundLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_dellast_t DCALL DeeType_RequireSeqDelLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_setlast_t DCALL DeeType_RequireSeqSetLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_any_t DCALL DeeType_RequireSeqAny_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_any_with_key_t DCALL DeeType_RequireSeqAnyWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_any_with_range_t DCALL DeeType_RequireSeqAnyWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_any_with_range_and_key_t DCALL DeeType_RequireSeqAnyWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_all_t DCALL DeeType_RequireSeqAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_all_with_key_t DCALL DeeType_RequireSeqAllWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_all_with_range_t DCALL DeeType_RequireSeqAllWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_all_with_range_and_key_t DCALL DeeType_RequireSeqAllWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_parity_t DCALL DeeType_RequireSeqParity_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_parity_with_key_t DCALL DeeType_RequireSeqParityWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_parity_with_range_t DCALL DeeType_RequireSeqParityWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_parity_with_range_and_key_t DCALL DeeType_RequireSeqParityWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_reduce_t DCALL DeeType_RequireSeqReduce_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_reduce_with_init_t DCALL DeeType_RequireSeqReduceWithInit_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_reduce_with_range_t DCALL DeeType_RequireSeqReduceWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_reduce_with_range_and_init_t DCALL DeeType_RequireSeqReduceWithRangeAndInit_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_min_t DCALL DeeType_RequireSeqMin_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_min_with_key_t DCALL DeeType_RequireSeqMinWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_min_with_range_t DCALL DeeType_RequireSeqMinWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_min_with_range_and_key_t DCALL DeeType_RequireSeqMinWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_max_t DCALL DeeType_RequireSeqMax_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_max_with_key_t DCALL DeeType_RequireSeqMaxWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_max_with_range_t DCALL DeeType_RequireSeqMaxWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_max_with_range_and_key_t DCALL DeeType_RequireSeqMaxWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_count_t DCALL DeeType_RequireSeqCount_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_count_with_key_t DCALL DeeType_RequireSeqCountWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_count_with_range_t DCALL DeeType_RequireSeqCountWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_count_with_range_and_key_t DCALL DeeType_RequireSeqCountWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_contains_t DCALL DeeType_RequireSeqContains_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_contains_with_key_t DCALL DeeType_RequireSeqContainsWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_contains_with_range_t DCALL DeeType_RequireSeqContainsWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_contains_with_range_and_key_t DCALL DeeType_RequireSeqContainsWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_locate_t DCALL DeeType_RequireSeqLocate_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_locate_with_key_t DCALL DeeType_RequireSeqLocateWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_locate_with_range_t DCALL DeeType_RequireSeqLocateWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_locate_with_range_and_key_t DCALL DeeType_RequireSeqLocateWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_rlocate_with_range_t DCALL DeeType_RequireSeqRLocateWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_rlocate_with_range_and_key_t DCALL DeeType_RequireSeqRLocateWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_startswith_t DCALL DeeType_RequireSeqStartsWith_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_startswith_with_key_t DCALL DeeType_RequireSeqStartsWithWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_startswith_with_range_t DCALL DeeType_RequireSeqStartsWithWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_startswith_with_range_and_key_t DCALL DeeType_RequireSeqStartsWithWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_endswith_t DCALL DeeType_RequireSeqEndsWith_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_endswith_with_key_t DCALL DeeType_RequireSeqEndsWithWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_endswith_with_range_t DCALL DeeType_RequireSeqEndsWithWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_endswith_with_range_and_key_t DCALL DeeType_RequireSeqEndsWithWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_find_t DCALL DeeType_RequireSeqFind_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_find_with_key_t DCALL DeeType_RequireSeqFindWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_rfind_t DCALL DeeType_RequireSeqRFind_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_rfind_with_key_t DCALL DeeType_RequireSeqRFindWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_erase_t DCALL DeeType_RequireSeqErase_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_insert_t DCALL DeeType_RequireSeqInsert_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_insertall_t DCALL DeeType_RequireSeqInsertAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_pushfront_t DCALL DeeType_RequireSeqPushFront_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_append_t DCALL DeeType_RequireSeqAppend_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_extend_t DCALL DeeType_RequireSeqExtend_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_xchitem_index_t DCALL DeeType_RequireSeqXchItemIndex_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_clear_t DCALL DeeType_RequireSeqClear_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_pop_t DCALL DeeType_RequireSeqPop_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_remove_t DCALL DeeType_RequireSeqRemove_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_remove_with_key_t DCALL DeeType_RequireSeqRemoveWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_rremove_t DCALL DeeType_RequireSeqRRemove_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_rremove_with_key_t DCALL DeeType_RequireSeqRRemoveWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_removeall_t DCALL DeeType_RequireSeqRemoveAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_removeall_with_key_t DCALL DeeType_RequireSeqRemoveAllWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_removeif_t DCALL DeeType_RequireSeqRemoveIf_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_resize_t DCALL DeeType_RequireSeqResize_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_fill_t DCALL DeeType_RequireSeqFill_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_reverse_t DCALL DeeType_RequireSeqReverse_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_reversed_t DCALL DeeType_RequireSeqReversed_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_sort_t DCALL DeeType_RequireSeqSort_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_sort_with_key_t DCALL DeeType_RequireSeqSortWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_sorted_t DCALL DeeType_RequireSeqSorted_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_sorted_with_key_t DCALL DeeType_RequireSeqSortedWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_bfind_t DCALL DeeType_RequireSeqBFind_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_bfind_with_key_t DCALL DeeType_RequireSeqBFindWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_bposition_t DCALL DeeType_RequireSeqBPosition_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_bposition_with_key_t DCALL DeeType_RequireSeqBPositionWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_brange_t DCALL DeeType_RequireSeqBRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_brange_with_key_t DCALL DeeType_RequireSeqBRangeWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_blocate_t DCALL DeeType_RequireSeqBLocate_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_blocate_with_key_t DCALL DeeType_RequireSeqBLocateWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_trygetfirst_t DCALL DeeType_RequireSeqTryGetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_getfirst_t DCALL DeeType_RequireSeqGetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_boundfirst_t DCALL DeeType_RequireSeqBoundFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_delfirst_t DCALL DeeType_RequireSeqDelFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_setfirst_t DCALL DeeType_RequireSeqSetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_trygetlast_t DCALL DeeType_RequireSeqTryGetLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_getlast_t DCALL DeeType_RequireSeqGetLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_boundlast_t DCALL DeeType_RequireSeqBoundLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_dellast_t DCALL DeeType_RequireSeqDelLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_setlast_t DCALL DeeType_RequireSeqSetLast_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_any_t DCALL DeeType_RequireSeqAny_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_any_with_key_t DCALL DeeType_RequireSeqAnyWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_any_with_range_t DCALL DeeType_RequireSeqAnyWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_any_with_range_and_key_t DCALL DeeType_RequireSeqAnyWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_all_t DCALL DeeType_RequireSeqAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_all_with_key_t DCALL DeeType_RequireSeqAllWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_all_with_range_t DCALL DeeType_RequireSeqAllWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_all_with_range_and_key_t DCALL DeeType_RequireSeqAllWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_parity_t DCALL DeeType_RequireSeqParity_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_parity_with_key_t DCALL DeeType_RequireSeqParityWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_parity_with_range_t DCALL DeeType_RequireSeqParityWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_parity_with_range_and_key_t DCALL DeeType_RequireSeqParityWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_reduce_t DCALL DeeType_RequireSeqReduce_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_reduce_with_init_t DCALL DeeType_RequireSeqReduceWithInit_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_reduce_with_range_t DCALL DeeType_RequireSeqReduceWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_reduce_with_range_and_init_t DCALL DeeType_RequireSeqReduceWithRangeAndInit_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_min_t DCALL DeeType_RequireSeqMin_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_min_with_key_t DCALL DeeType_RequireSeqMinWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_min_with_range_t DCALL DeeType_RequireSeqMinWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_min_with_range_and_key_t DCALL DeeType_RequireSeqMinWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_max_t DCALL DeeType_RequireSeqMax_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_max_with_key_t DCALL DeeType_RequireSeqMaxWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_max_with_range_t DCALL DeeType_RequireSeqMaxWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_max_with_range_and_key_t DCALL DeeType_RequireSeqMaxWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_count_t DCALL DeeType_RequireSeqCount_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_count_with_key_t DCALL DeeType_RequireSeqCountWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_count_with_range_t DCALL DeeType_RequireSeqCountWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_count_with_range_and_key_t DCALL DeeType_RequireSeqCountWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_contains_t DCALL DeeType_RequireSeqContains_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_contains_with_key_t DCALL DeeType_RequireSeqContainsWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_contains_with_range_t DCALL DeeType_RequireSeqContainsWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_contains_with_range_and_key_t DCALL DeeType_RequireSeqContainsWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_locate_t DCALL DeeType_RequireSeqLocate_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_locate_with_key_t DCALL DeeType_RequireSeqLocateWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_locate_with_range_t DCALL DeeType_RequireSeqLocateWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_locate_with_range_and_key_t DCALL DeeType_RequireSeqLocateWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_rlocate_with_range_t DCALL DeeType_RequireSeqRLocateWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_rlocate_with_range_and_key_t DCALL DeeType_RequireSeqRLocateWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_startswith_t DCALL DeeType_RequireSeqStartsWith_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_startswith_with_key_t DCALL DeeType_RequireSeqStartsWithWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_startswith_with_range_t DCALL DeeType_RequireSeqStartsWithWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_startswith_with_range_and_key_t DCALL DeeType_RequireSeqStartsWithWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_endswith_t DCALL DeeType_RequireSeqEndsWith_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_endswith_with_key_t DCALL DeeType_RequireSeqEndsWithWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_endswith_with_range_t DCALL DeeType_RequireSeqEndsWithWithRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_endswith_with_range_and_key_t DCALL DeeType_RequireSeqEndsWithWithRangeAndKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_find_t DCALL DeeType_RequireSeqFind_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_find_with_key_t DCALL DeeType_RequireSeqFindWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_rfind_t DCALL DeeType_RequireSeqRFind_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_rfind_with_key_t DCALL DeeType_RequireSeqRFindWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_erase_t DCALL DeeType_RequireSeqErase_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_insert_t DCALL DeeType_RequireSeqInsert_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_insertall_t DCALL DeeType_RequireSeqInsertAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_pushfront_t DCALL DeeType_RequireSeqPushFront_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_append_t DCALL DeeType_RequireSeqAppend_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_extend_t DCALL DeeType_RequireSeqExtend_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_xchitem_index_t DCALL DeeType_RequireSeqXchItemIndex_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_clear_t DCALL DeeType_RequireSeqClear_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_pop_t DCALL DeeType_RequireSeqPop_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_remove_t DCALL DeeType_RequireSeqRemove_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_remove_with_key_t DCALL DeeType_RequireSeqRemoveWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_rremove_t DCALL DeeType_RequireSeqRRemove_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_rremove_with_key_t DCALL DeeType_RequireSeqRRemoveWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_removeall_t DCALL DeeType_RequireSeqRemoveAll_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_removeall_with_key_t DCALL DeeType_RequireSeqRemoveAllWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_removeif_t DCALL DeeType_RequireSeqRemoveIf_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_resize_t DCALL DeeType_RequireSeqResize_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_fill_t DCALL DeeType_RequireSeqFill_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_reverse_t DCALL DeeType_RequireSeqReverse_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_reversed_t DCALL DeeType_RequireSeqReversed_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_sort_t DCALL DeeType_RequireSeqSort_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_sort_with_key_t DCALL DeeType_RequireSeqSortWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_sorted_t DCALL DeeType_RequireSeqSorted_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_sorted_with_key_t DCALL DeeType_RequireSeqSortedWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_bfind_t DCALL DeeType_RequireSeqBFind_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_bfind_with_key_t DCALL DeeType_RequireSeqBFindWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_bposition_t DCALL DeeType_RequireSeqBPosition_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_bposition_with_key_t DCALL DeeType_RequireSeqBPositionWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_brange_t DCALL DeeType_RequireSeqBRange_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_brange_with_key_t DCALL DeeType_RequireSeqBRangeWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_blocate_t DCALL DeeType_RequireSeqBLocate_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_blocate_with_key_t DCALL DeeType_RequireSeqBLocateWithKey_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_set_insert_t DCALL DeeType_RequireSetInsert_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_set_remove_t DCALL DeeType_RequireSetRemove_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_set_unify_t DCALL DeeType_RequireSetUnify_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
@@ -164,98 +164,98 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_map_values_t DCALL DeeType_Req
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_map_iterkeys_t DCALL DeeType_RequireMapIterKeys_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_map_itervalues_t DCALL DeeType_RequireMapIterValues_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);
 
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_trygetfirst_t DCALL DeeType_RequireSeqTryGetFirst_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_getfirst_t DCALL DeeType_RequireSeqGetFirst_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundfirst_t DCALL DeeType_RequireSeqBoundFirst_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_delfirst_t DCALL DeeType_RequireSeqDelFirst_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_setfirst_t DCALL DeeType_RequireSeqSetFirst_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_trygetlast_t DCALL DeeType_RequireSeqTryGetLast_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_getlast_t DCALL DeeType_RequireSeqGetLast_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_boundlast_t DCALL DeeType_RequireSeqBoundLast_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_dellast_t DCALL DeeType_RequireSeqDelLast_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_setlast_t DCALL DeeType_RequireSeqSetLast_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_t DCALL DeeType_RequireSeqAny_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_with_key_t DCALL DeeType_RequireSeqAnyWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_with_range_t DCALL DeeType_RequireSeqAnyWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_any_with_range_and_key_t DCALL DeeType_RequireSeqAnyWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_all_t DCALL DeeType_RequireSeqAll_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_all_with_key_t DCALL DeeType_RequireSeqAllWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_all_with_range_t DCALL DeeType_RequireSeqAllWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_all_with_range_and_key_t DCALL DeeType_RequireSeqAllWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_parity_t DCALL DeeType_RequireSeqParity_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_parity_with_key_t DCALL DeeType_RequireSeqParityWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_parity_with_range_t DCALL DeeType_RequireSeqParityWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_parity_with_range_and_key_t DCALL DeeType_RequireSeqParityWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_reduce_t DCALL DeeType_RequireSeqReduce_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_reduce_with_init_t DCALL DeeType_RequireSeqReduceWithInit_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_reduce_with_range_t DCALL DeeType_RequireSeqReduceWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_reduce_with_range_and_init_t DCALL DeeType_RequireSeqReduceWithRangeAndInit_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_min_t DCALL DeeType_RequireSeqMin_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_min_with_key_t DCALL DeeType_RequireSeqMinWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_min_with_range_t DCALL DeeType_RequireSeqMinWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_min_with_range_and_key_t DCALL DeeType_RequireSeqMinWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_max_t DCALL DeeType_RequireSeqMax_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_max_with_key_t DCALL DeeType_RequireSeqMaxWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_max_with_range_t DCALL DeeType_RequireSeqMaxWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_max_with_range_and_key_t DCALL DeeType_RequireSeqMaxWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_count_t DCALL DeeType_RequireSeqCount_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_count_with_key_t DCALL DeeType_RequireSeqCountWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_count_with_range_t DCALL DeeType_RequireSeqCountWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_count_with_range_and_key_t DCALL DeeType_RequireSeqCountWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_contains_t DCALL DeeType_RequireSeqContains_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_contains_with_key_t DCALL DeeType_RequireSeqContainsWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_contains_with_range_t DCALL DeeType_RequireSeqContainsWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_contains_with_range_and_key_t DCALL DeeType_RequireSeqContainsWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_locate_t DCALL DeeType_RequireSeqLocate_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_locate_with_key_t DCALL DeeType_RequireSeqLocateWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_locate_with_range_t DCALL DeeType_RequireSeqLocateWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_locate_with_range_and_key_t DCALL DeeType_RequireSeqLocateWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rlocate_with_range_t DCALL DeeType_RequireSeqRLocateWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rlocate_with_range_and_key_t DCALL DeeType_RequireSeqRLocateWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_startswith_t DCALL DeeType_RequireSeqStartsWith_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_startswith_with_key_t DCALL DeeType_RequireSeqStartsWithWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_startswith_with_range_t DCALL DeeType_RequireSeqStartsWithWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_startswith_with_range_and_key_t DCALL DeeType_RequireSeqStartsWithWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_endswith_t DCALL DeeType_RequireSeqEndsWith_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_endswith_with_key_t DCALL DeeType_RequireSeqEndsWithWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_endswith_with_range_t DCALL DeeType_RequireSeqEndsWithWithRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_endswith_with_range_and_key_t DCALL DeeType_RequireSeqEndsWithWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_find_t DCALL DeeType_RequireSeqFind_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_find_with_key_t DCALL DeeType_RequireSeqFindWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rfind_t DCALL DeeType_RequireSeqRFind_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rfind_with_key_t DCALL DeeType_RequireSeqRFindWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_erase_t DCALL DeeType_RequireSeqErase_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_insert_t DCALL DeeType_RequireSeqInsert_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_insertall_t DCALL DeeType_RequireSeqInsertAll_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_pushfront_t DCALL DeeType_RequireSeqPushFront_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_append_t DCALL DeeType_RequireSeqAppend_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_extend_t DCALL DeeType_RequireSeqExtend_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_xchitem_index_t DCALL DeeType_RequireSeqXchItemIndex_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_clear_t DCALL DeeType_RequireSeqClear_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_pop_t DCALL DeeType_RequireSeqPop_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_remove_t DCALL DeeType_RequireSeqRemove_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_remove_with_key_t DCALL DeeType_RequireSeqRemoveWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rremove_t DCALL DeeType_RequireSeqRRemove_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_rremove_with_key_t DCALL DeeType_RequireSeqRRemoveWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_removeall_t DCALL DeeType_RequireSeqRemoveAll_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_removeall_with_key_t DCALL DeeType_RequireSeqRemoveAllWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_removeif_t DCALL DeeType_RequireSeqRemoveIf_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_resize_t DCALL DeeType_RequireSeqResize_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_fill_t DCALL DeeType_RequireSeqFill_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_reverse_t DCALL DeeType_RequireSeqReverse_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_reversed_t DCALL DeeType_RequireSeqReversed_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_sort_t DCALL DeeType_RequireSeqSort_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_sort_with_key_t DCALL DeeType_RequireSeqSortWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_sorted_t DCALL DeeType_RequireSeqSorted_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_sorted_with_key_t DCALL DeeType_RequireSeqSortedWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_bfind_t DCALL DeeType_RequireSeqBFind_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_bfind_with_key_t DCALL DeeType_RequireSeqBFindWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_bposition_t DCALL DeeType_RequireSeqBPosition_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_bposition_with_key_t DCALL DeeType_RequireSeqBPositionWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_brange_t DCALL DeeType_RequireSeqBRange_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_brange_with_key_t DCALL DeeType_RequireSeqBRangeWithKey_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_blocate_t DCALL DeeType_RequireSeqBLocate_uncached(DeeTypeObject *__restrict self);
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_blocate_with_key_t DCALL DeeType_RequireSeqBLocateWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_trygetfirst_t DCALL DeeType_RequireSeqTryGetFirst_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_getfirst_t DCALL DeeType_RequireSeqGetFirst_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_boundfirst_t DCALL DeeType_RequireSeqBoundFirst_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_delfirst_t DCALL DeeType_RequireSeqDelFirst_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_setfirst_t DCALL DeeType_RequireSeqSetFirst_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_trygetlast_t DCALL DeeType_RequireSeqTryGetLast_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_getlast_t DCALL DeeType_RequireSeqGetLast_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_boundlast_t DCALL DeeType_RequireSeqBoundLast_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_dellast_t DCALL DeeType_RequireSeqDelLast_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_setlast_t DCALL DeeType_RequireSeqSetLast_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_any_t DCALL DeeType_RequireSeqAny_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_any_with_key_t DCALL DeeType_RequireSeqAnyWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_any_with_range_t DCALL DeeType_RequireSeqAnyWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_any_with_range_and_key_t DCALL DeeType_RequireSeqAnyWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_all_t DCALL DeeType_RequireSeqAll_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_all_with_key_t DCALL DeeType_RequireSeqAllWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_all_with_range_t DCALL DeeType_RequireSeqAllWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_all_with_range_and_key_t DCALL DeeType_RequireSeqAllWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_parity_t DCALL DeeType_RequireSeqParity_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_parity_with_key_t DCALL DeeType_RequireSeqParityWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_parity_with_range_t DCALL DeeType_RequireSeqParityWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_parity_with_range_and_key_t DCALL DeeType_RequireSeqParityWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_reduce_t DCALL DeeType_RequireSeqReduce_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_reduce_with_init_t DCALL DeeType_RequireSeqReduceWithInit_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_reduce_with_range_t DCALL DeeType_RequireSeqReduceWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_reduce_with_range_and_init_t DCALL DeeType_RequireSeqReduceWithRangeAndInit_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_min_t DCALL DeeType_RequireSeqMin_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_min_with_key_t DCALL DeeType_RequireSeqMinWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_min_with_range_t DCALL DeeType_RequireSeqMinWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_min_with_range_and_key_t DCALL DeeType_RequireSeqMinWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_max_t DCALL DeeType_RequireSeqMax_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_max_with_key_t DCALL DeeType_RequireSeqMaxWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_max_with_range_t DCALL DeeType_RequireSeqMaxWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_max_with_range_and_key_t DCALL DeeType_RequireSeqMaxWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_count_t DCALL DeeType_RequireSeqCount_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_count_with_key_t DCALL DeeType_RequireSeqCountWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_count_with_range_t DCALL DeeType_RequireSeqCountWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_count_with_range_and_key_t DCALL DeeType_RequireSeqCountWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_contains_t DCALL DeeType_RequireSeqContains_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_contains_with_key_t DCALL DeeType_RequireSeqContainsWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_contains_with_range_t DCALL DeeType_RequireSeqContainsWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_contains_with_range_and_key_t DCALL DeeType_RequireSeqContainsWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_locate_t DCALL DeeType_RequireSeqLocate_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_locate_with_key_t DCALL DeeType_RequireSeqLocateWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_locate_with_range_t DCALL DeeType_RequireSeqLocateWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_locate_with_range_and_key_t DCALL DeeType_RequireSeqLocateWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_rlocate_with_range_t DCALL DeeType_RequireSeqRLocateWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_rlocate_with_range_and_key_t DCALL DeeType_RequireSeqRLocateWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_startswith_t DCALL DeeType_RequireSeqStartsWith_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_startswith_with_key_t DCALL DeeType_RequireSeqStartsWithWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_startswith_with_range_t DCALL DeeType_RequireSeqStartsWithWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_startswith_with_range_and_key_t DCALL DeeType_RequireSeqStartsWithWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_endswith_t DCALL DeeType_RequireSeqEndsWith_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_endswith_with_key_t DCALL DeeType_RequireSeqEndsWithWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_endswith_with_range_t DCALL DeeType_RequireSeqEndsWithWithRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_endswith_with_range_and_key_t DCALL DeeType_RequireSeqEndsWithWithRangeAndKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_find_t DCALL DeeType_RequireSeqFind_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_find_with_key_t DCALL DeeType_RequireSeqFindWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_rfind_t DCALL DeeType_RequireSeqRFind_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_rfind_with_key_t DCALL DeeType_RequireSeqRFindWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_erase_t DCALL DeeType_RequireSeqErase_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_insert_t DCALL DeeType_RequireSeqInsert_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_insertall_t DCALL DeeType_RequireSeqInsertAll_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_pushfront_t DCALL DeeType_RequireSeqPushFront_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_append_t DCALL DeeType_RequireSeqAppend_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_extend_t DCALL DeeType_RequireSeqExtend_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_xchitem_index_t DCALL DeeType_RequireSeqXchItemIndex_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_clear_t DCALL DeeType_RequireSeqClear_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_pop_t DCALL DeeType_RequireSeqPop_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_remove_t DCALL DeeType_RequireSeqRemove_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_remove_with_key_t DCALL DeeType_RequireSeqRemoveWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_rremove_t DCALL DeeType_RequireSeqRRemove_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_rremove_with_key_t DCALL DeeType_RequireSeqRRemoveWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_removeall_t DCALL DeeType_RequireSeqRemoveAll_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_removeall_with_key_t DCALL DeeType_RequireSeqRemoveAllWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_removeif_t DCALL DeeType_RequireSeqRemoveIf_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_resize_t DCALL DeeType_RequireSeqResize_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_fill_t DCALL DeeType_RequireSeqFill_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_reverse_t DCALL DeeType_RequireSeqReverse_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_reversed_t DCALL DeeType_RequireSeqReversed_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_sort_t DCALL DeeType_RequireSeqSort_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_sort_with_key_t DCALL DeeType_RequireSeqSortWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_sorted_t DCALL DeeType_RequireSeqSorted_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_sorted_with_key_t DCALL DeeType_RequireSeqSortedWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_bfind_t DCALL DeeType_RequireSeqBFind_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_bfind_with_key_t DCALL DeeType_RequireSeqBFindWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_bposition_t DCALL DeeType_RequireSeqBPosition_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_bposition_with_key_t DCALL DeeType_RequireSeqBPositionWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_brange_t DCALL DeeType_RequireSeqBRange_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_brange_with_key_t DCALL DeeType_RequireSeqBRangeWithKey_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_blocate_t DCALL DeeType_RequireSeqBLocate_uncached(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_blocate_with_key_t DCALL DeeType_RequireSeqBLocateWithKey_uncached(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_insert_t DCALL DeeType_RequireSetInsert_uncached(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_remove_t DCALL DeeType_RequireSetRemove_uncached(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_set_unify_t DCALL DeeType_RequireSetUnify_uncached(DeeTypeObject *__restrict self);
@@ -334,141 +334,141 @@ DeeType_TryRequireSeqCache(DeeTypeObject *__restrict self) {
 INTERN NONNULL((1)) void DCALL
 Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 	/* Drop function references where they are present. */
-	if (self->tsc_getfirst == &DeeSeq_DefaultGetFirstWithCallGetFirstDataFunction ||
-	    self->tsc_boundfirst == &DeeSeq_DefaultBoundFirstWithCallGetFirstDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_getfirst_data);
-	if (self->tsc_delfirst == &DeeSeq_DefaultDelFirstWithCallDelFirstDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_delfirst_data);
-	if (self->tsc_setfirst == &DeeSeq_DefaultSetFirstWithCallSetFirstDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_setfirst_data);
-	if (self->tsc_getlast == &DeeSeq_DefaultGetLastWithCallGetLastDataFunction ||
-	    self->tsc_boundlast == &DeeSeq_DefaultBoundLastWithCallGetLastDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_getlast_data);
-	if (self->tsc_dellast == &DeeSeq_DefaultDelLastWithCallDelLastDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_dellast_data);
-	if (self->tsc_setlast == &DeeSeq_DefaultSetLastWithCallSetLastDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_setlast_data);
-	if (self->tsc_any == &DeeSeq_DefaultAnyWithCallAnyDataFunction ||
-	    self->tsc_any_with_key == &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSeq ||
-	    self->tsc_any_with_key == &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSetOrMap ||
-	    self->tsc_any_with_range == &DeeSeq_DefaultAnyWithRangeWithCallAnyDataFunction ||
-	    self->tsc_any_with_range_and_key == &DeeSeq_DefaultAnyWithRangeAndKeyWithCallAnyDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_any_data);
-	if (self->tsc_all == &DeeSeq_DefaultAllWithCallAllDataFunction ||
-	    self->tsc_all_with_key == &DeeSeq_DefaultAllWithKeyWithCallAllDataFunctionForSeq ||
-	    self->tsc_all_with_key == &DeeSeq_DefaultAllWithKeyWithCallAllDataFunctionForSetOrMap ||
-	    self->tsc_all_with_range == &DeeSeq_DefaultAllWithRangeWithCallAllDataFunction ||
-	    self->tsc_all_with_range_and_key == &DeeSeq_DefaultAllWithRangeAndKeyWithCallAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_all_data);
-	if (self->tsc_parity == &DeeSeq_DefaultParityWithCallParityDataFunction ||
-	    self->tsc_parity_with_key == &DeeSeq_DefaultParityWithKeyWithCallParityDataFunctionForSeq ||
-	    self->tsc_parity_with_key == &DeeSeq_DefaultParityWithKeyWithCallParityDataFunctionForSetOrMap ||
-	    self->tsc_parity_with_range == &DeeSeq_DefaultParityWithRangeWithCallParityDataFunction ||
-	    self->tsc_parity_with_range_and_key == &DeeSeq_DefaultParityWithRangeAndKeyWithCallParityDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_parity_data);
-	if (self->tsc_reduce == &DeeSeq_DefaultReduceWithCallReduceDataFunction ||
-	    self->tsc_reduce_with_init == &DeeSeq_DefaultReduceWithInitWithCallReduceDataFunctionForSeq ||
-	    self->tsc_reduce_with_init == &DeeSeq_DefaultReduceWithInitWithCallReduceDataFunctionForSetOrMap ||
-	    self->tsc_reduce_with_range == &DeeSeq_DefaultReduceWithRangeWithCallReduceDataFunction ||
-	    self->tsc_reduce_with_range_and_init == &DeeSeq_DefaultReduceWithRangeAndInitWithCallReduceDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_reduce_data);
-	if (self->tsc_min == &DeeSeq_DefaultMinWithCallMinDataFunction ||
-	    self->tsc_min_with_key == &DeeSeq_DefaultMinWithKeyWithCallMinDataFunctionForSeq ||
-	    self->tsc_min_with_key == &DeeSeq_DefaultMinWithKeyWithCallMinDataFunctionForSetOrMap ||
-	    self->tsc_min_with_range == &DeeSeq_DefaultMinWithRangeWithCallMinDataFunction ||
-	    self->tsc_min_with_range_and_key == &DeeSeq_DefaultMinWithRangeAndKeyWithCallMinDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_min_data);
-	if (self->tsc_max == &DeeSeq_DefaultMaxWithCallMaxDataFunction ||
-	    self->tsc_max_with_key == &DeeSeq_DefaultMaxWithKeyWithCallMaxDataFunctionForSeq ||
-	    self->tsc_max_with_key == &DeeSeq_DefaultMaxWithKeyWithCallMaxDataFunctionForSetOrMap ||
-	    self->tsc_max_with_range == &DeeSeq_DefaultMaxWithRangeWithCallMaxDataFunction ||
-	    self->tsc_max_with_range_and_key == &DeeSeq_DefaultMaxWithRangeAndKeyWithCallMaxDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_max_data);
-	if (self->tsc_sum == &DeeSeq_DefaultSumWithCallSumDataFunction ||
-	    self->tsc_sum_with_range == &DeeSeq_DefaultSumWithRangeWithCallSumDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sum_data);
-	if (self->tsc_count == &DeeSeq_DefaultCountWithCallCountDataFunction ||
-	    self->tsc_count_with_key == &DeeSeq_DefaultCountWithKeyWithCallCountDataFunctionForSeq ||
-	    self->tsc_count_with_key == &DeeSeq_DefaultCountWithKeyWithCallCountDataFunctionForSetOrMap ||
-	    self->tsc_count_with_range == &DeeSeq_DefaultCountWithRangeWithCallCountDataFunction ||
-	    self->tsc_count_with_range_and_key == &DeeSeq_DefaultCountWithRangeAndKeyWithCallCountDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_count_data);
-	if (self->tsc_contains == &DeeSeq_DefaultContainsWithCallContainsDataFunction ||
-	    self->tsc_contains_with_key == &DeeSeq_DefaultContainsWithKeyWithCallContainsDataFunctionForSeq ||
-	    self->tsc_contains_with_key == &DeeSeq_DefaultContainsWithKeyWithCallContainsDataFunctionForSetOrMap ||
-	    self->tsc_contains_with_range == &DeeSeq_DefaultContainsWithRangeWithCallContainsDataFunction ||
-	    self->tsc_contains_with_range_and_key == &DeeSeq_DefaultContainsWithRangeAndKeyWithCallContainsDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_contains_data);
-	if (self->tsc_locate == &DeeSeq_DefaultLocateWithCallLocateDataFunction ||
-	    self->tsc_locate_with_key == &DeeSeq_DefaultLocateWithKeyWithCallLocateDataFunctionForSeq ||
-	    self->tsc_locate_with_key == &DeeSeq_DefaultLocateWithKeyWithCallLocateDataFunctionForSetOrMap ||
-	    self->tsc_locate_with_range == &DeeSeq_DefaultLocateWithRangeWithCallLocateDataFunction ||
-	    self->tsc_locate_with_range_and_key == &DeeSeq_DefaultLocateWithRangeAndKeyWithCallLocateDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_locate_data);
-	if (self->tsc_rlocate_with_range == &DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataFunction ||
-	    self->tsc_rlocate_with_range_and_key == &DeeSeq_DefaultRLocateWithRangeAndKeyWithCallRLocateDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_rlocate_data);
-	if (self->tsc_startswith == &DeeSeq_DefaultStartsWithWithCallStartsWithDataFunction ||
-	    self->tsc_startswith_with_key == &DeeSeq_DefaultStartsWithWithKeyWithCallStartsWithDataFunctionForSeq ||
-	    self->tsc_startswith_with_key == &DeeSeq_DefaultStartsWithWithKeyWithCallStartsWithDataFunctionForSetOrMap ||
-	    self->tsc_startswith_with_range == &DeeSeq_DefaultStartsWithWithRangeWithCallStartsWithDataFunction ||
-	    self->tsc_startswith_with_range_and_key == &DeeSeq_DefaultStartsWithWithRangeAndKeyWithCallStartsWithDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_startswith_data);
-	if (self->tsc_endswith == &DeeSeq_DefaultEndsWithWithCallEndsWithDataFunction ||
-	    self->tsc_endswith_with_key == &DeeSeq_DefaultEndsWithWithKeyWithCallEndsWithDataFunctionForSeq ||
-	    self->tsc_endswith_with_key == &DeeSeq_DefaultEndsWithWithKeyWithCallEndsWithDataFunctionForSetOrMap ||
-	    self->tsc_endswith_with_range == &DeeSeq_DefaultEndsWithWithRangeWithCallEndsWithDataFunction ||
-	    self->tsc_endswith_with_range_and_key == &DeeSeq_DefaultEndsWithWithRangeAndKeyWithCallEndsWithDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_endswith_data);
-	if (self->tsc_find == &DeeSeq_DefaultFindWithCallFindDataFunction ||
-	    self->tsc_find_with_key == &DeeSeq_DefaultFindWithKeyWithCallFindDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_find_data);
-	if (self->tsc_rfind == &DeeSeq_DefaultRFindWithCallRFindDataFunction ||
-	    self->tsc_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_rfind_data);
-	if (self->tsc_erase == &DeeSeq_DefaultEraseWithCallEraseDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_erase_data);
-	if (self->tsc_insert == &DeeSeq_DefaultInsertWithCallInsertDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_insert_data);
-	if (self->tsc_insertall == &DeeSeq_DefaultInsertAllWithCallInsertAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_insertall_data);
-	if (self->tsc_pushfront == &DeeSeq_DefaultPushFrontWithCallPushFrontDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_pushfront_data);
-	if (self->tsc_append == &DeeSeq_DefaultAppendWithCallAppendDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_append_data);
-	if (self->tsc_extend == &DeeSeq_DefaultExtendWithCallExtendDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_extend_data);
-	if (self->tsc_xchitem_index == &DeeSeq_DefaultXchItemIndexWithCallXchItemDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_xchitem_data);
-	if (self->tsc_clear == &DeeSeq_DefaultClearWithCallClearDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_clear_data);
-	if (self->tsc_pop == &DeeSeq_DefaultPopWithCallPopDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_pop_data);
-	if (self->tsc_remove == &DeeSeq_DefaultRemoveWithCallRemoveDataFunction ||
-	    self->tsc_remove_with_key == &DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_remove_data);
-	if (self->tsc_rremove == &DeeSeq_DefaultRRemoveWithCallRRemoveDataFunction ||
-	    self->tsc_rremove_with_key == &DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_rremove_data);
-	if (self->tsc_removeall == &DeeSeq_DefaultRemoveAllWithCallRemoveAllDataFunction ||
-	    self->tsc_removeall_with_key == &DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_removeall_data);
-	if (self->tsc_removeif == &DeeSeq_DefaultRemoveIfWithCallRemoveIfDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_removeif_data);
-	if (self->tsc_resize == &DeeSeq_DefaultResizeWithCallResizeDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_resize_data);
-	if (self->tsc_fill == &DeeSeq_DefaultFillWithCallFillDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_fill_data);
-	if (self->tsc_reverse == &DeeSeq_DefaultReverseWithCallReverseDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_reverse_data);
-	if (self->tsc_reversed == &DeeSeq_DefaultReversedWithCallReversedDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_reversed_data);
-	if (self->tsc_sort == &DeeSeq_DefaultSortWithCallSortDataFunction ||
-	    self->tsc_sort_with_key == &DeeSeq_DefaultSortWithKeyWithCallSortDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sort_data);
-	if (self->tsc_sorted == &DeeSeq_DefaultSortedWithCallSortedDataFunction ||
-	    self->tsc_sorted_with_key == &DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_sorted_data);
+	if (self->tsc_seq_getfirst == &DeeSeq_DefaultGetFirstWithCallGetFirstDataFunction ||
+	    self->tsc_seq_boundfirst == &DeeSeq_DefaultBoundFirstWithCallGetFirstDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_getfirst_data);
+	if (self->tsc_seq_delfirst == &DeeSeq_DefaultDelFirstWithCallDelFirstDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_delfirst_data);
+	if (self->tsc_seq_setfirst == &DeeSeq_DefaultSetFirstWithCallSetFirstDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_setfirst_data);
+	if (self->tsc_seq_getlast == &DeeSeq_DefaultGetLastWithCallGetLastDataFunction ||
+	    self->tsc_seq_boundlast == &DeeSeq_DefaultBoundLastWithCallGetLastDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_getlast_data);
+	if (self->tsc_seq_dellast == &DeeSeq_DefaultDelLastWithCallDelLastDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_dellast_data);
+	if (self->tsc_seq_setlast == &DeeSeq_DefaultSetLastWithCallSetLastDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_setlast_data);
+	if (self->tsc_seq_any == &DeeSeq_DefaultAnyWithCallAnyDataFunction ||
+	    self->tsc_seq_any_with_key == &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSeq ||
+	    self->tsc_seq_any_with_key == &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSetOrMap ||
+	    self->tsc_seq_any_with_range == &DeeSeq_DefaultAnyWithRangeWithCallAnyDataFunction ||
+	    self->tsc_seq_any_with_range_and_key == &DeeSeq_DefaultAnyWithRangeAndKeyWithCallAnyDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_any_data);
+	if (self->tsc_seq_all == &DeeSeq_DefaultAllWithCallAllDataFunction ||
+	    self->tsc_seq_all_with_key == &DeeSeq_DefaultAllWithKeyWithCallAllDataFunctionForSeq ||
+	    self->tsc_seq_all_with_key == &DeeSeq_DefaultAllWithKeyWithCallAllDataFunctionForSetOrMap ||
+	    self->tsc_seq_all_with_range == &DeeSeq_DefaultAllWithRangeWithCallAllDataFunction ||
+	    self->tsc_seq_all_with_range_and_key == &DeeSeq_DefaultAllWithRangeAndKeyWithCallAllDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_all_data);
+	if (self->tsc_seq_parity == &DeeSeq_DefaultParityWithCallParityDataFunction ||
+	    self->tsc_seq_parity_with_key == &DeeSeq_DefaultParityWithKeyWithCallParityDataFunctionForSeq ||
+	    self->tsc_seq_parity_with_key == &DeeSeq_DefaultParityWithKeyWithCallParityDataFunctionForSetOrMap ||
+	    self->tsc_seq_parity_with_range == &DeeSeq_DefaultParityWithRangeWithCallParityDataFunction ||
+	    self->tsc_seq_parity_with_range_and_key == &DeeSeq_DefaultParityWithRangeAndKeyWithCallParityDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_parity_data);
+	if (self->tsc_seq_reduce == &DeeSeq_DefaultReduceWithCallReduceDataFunction ||
+	    self->tsc_seq_reduce_with_init == &DeeSeq_DefaultReduceWithInitWithCallReduceDataFunctionForSeq ||
+	    self->tsc_seq_reduce_with_init == &DeeSeq_DefaultReduceWithInitWithCallReduceDataFunctionForSetOrMap ||
+	    self->tsc_seq_reduce_with_range == &DeeSeq_DefaultReduceWithRangeWithCallReduceDataFunction ||
+	    self->tsc_seq_reduce_with_range_and_init == &DeeSeq_DefaultReduceWithRangeAndInitWithCallReduceDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_reduce_data);
+	if (self->tsc_seq_min == &DeeSeq_DefaultMinWithCallMinDataFunction ||
+	    self->tsc_seq_min_with_key == &DeeSeq_DefaultMinWithKeyWithCallMinDataFunctionForSeq ||
+	    self->tsc_seq_min_with_key == &DeeSeq_DefaultMinWithKeyWithCallMinDataFunctionForSetOrMap ||
+	    self->tsc_seq_min_with_range == &DeeSeq_DefaultMinWithRangeWithCallMinDataFunction ||
+	    self->tsc_seq_min_with_range_and_key == &DeeSeq_DefaultMinWithRangeAndKeyWithCallMinDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_min_data);
+	if (self->tsc_seq_max == &DeeSeq_DefaultMaxWithCallMaxDataFunction ||
+	    self->tsc_seq_max_with_key == &DeeSeq_DefaultMaxWithKeyWithCallMaxDataFunctionForSeq ||
+	    self->tsc_seq_max_with_key == &DeeSeq_DefaultMaxWithKeyWithCallMaxDataFunctionForSetOrMap ||
+	    self->tsc_seq_max_with_range == &DeeSeq_DefaultMaxWithRangeWithCallMaxDataFunction ||
+	    self->tsc_seq_max_with_range_and_key == &DeeSeq_DefaultMaxWithRangeAndKeyWithCallMaxDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_max_data);
+	if (self->tsc_seq_sum == &DeeSeq_DefaultSumWithCallSumDataFunction ||
+	    self->tsc_seq_sum_with_range == &DeeSeq_DefaultSumWithRangeWithCallSumDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_sum_data);
+	if (self->tsc_seq_count == &DeeSeq_DefaultCountWithCallCountDataFunction ||
+	    self->tsc_seq_count_with_key == &DeeSeq_DefaultCountWithKeyWithCallCountDataFunctionForSeq ||
+	    self->tsc_seq_count_with_key == &DeeSeq_DefaultCountWithKeyWithCallCountDataFunctionForSetOrMap ||
+	    self->tsc_seq_count_with_range == &DeeSeq_DefaultCountWithRangeWithCallCountDataFunction ||
+	    self->tsc_seq_count_with_range_and_key == &DeeSeq_DefaultCountWithRangeAndKeyWithCallCountDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_count_data);
+	if (self->tsc_seq_contains == &DeeSeq_DefaultContainsWithCallContainsDataFunction ||
+	    self->tsc_seq_contains_with_key == &DeeSeq_DefaultContainsWithKeyWithCallContainsDataFunctionForSeq ||
+	    self->tsc_seq_contains_with_key == &DeeSeq_DefaultContainsWithKeyWithCallContainsDataFunctionForSetOrMap ||
+	    self->tsc_seq_contains_with_range == &DeeSeq_DefaultContainsWithRangeWithCallContainsDataFunction ||
+	    self->tsc_seq_contains_with_range_and_key == &DeeSeq_DefaultContainsWithRangeAndKeyWithCallContainsDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_contains_data);
+	if (self->tsc_seq_locate == &DeeSeq_DefaultLocateWithCallLocateDataFunction ||
+	    self->tsc_seq_locate_with_key == &DeeSeq_DefaultLocateWithKeyWithCallLocateDataFunctionForSeq ||
+	    self->tsc_seq_locate_with_key == &DeeSeq_DefaultLocateWithKeyWithCallLocateDataFunctionForSetOrMap ||
+	    self->tsc_seq_locate_with_range == &DeeSeq_DefaultLocateWithRangeWithCallLocateDataFunction ||
+	    self->tsc_seq_locate_with_range_and_key == &DeeSeq_DefaultLocateWithRangeAndKeyWithCallLocateDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_locate_data);
+	if (self->tsc_seq_rlocate_with_range == &DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataFunction ||
+	    self->tsc_seq_rlocate_with_range_and_key == &DeeSeq_DefaultRLocateWithRangeAndKeyWithCallRLocateDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_rlocate_data);
+	if (self->tsc_seq_startswith == &DeeSeq_DefaultStartsWithWithCallStartsWithDataFunction ||
+	    self->tsc_seq_startswith_with_key == &DeeSeq_DefaultStartsWithWithKeyWithCallStartsWithDataFunctionForSeq ||
+	    self->tsc_seq_startswith_with_key == &DeeSeq_DefaultStartsWithWithKeyWithCallStartsWithDataFunctionForSetOrMap ||
+	    self->tsc_seq_startswith_with_range == &DeeSeq_DefaultStartsWithWithRangeWithCallStartsWithDataFunction ||
+	    self->tsc_seq_startswith_with_range_and_key == &DeeSeq_DefaultStartsWithWithRangeAndKeyWithCallStartsWithDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_startswith_data);
+	if (self->tsc_seq_endswith == &DeeSeq_DefaultEndsWithWithCallEndsWithDataFunction ||
+	    self->tsc_seq_endswith_with_key == &DeeSeq_DefaultEndsWithWithKeyWithCallEndsWithDataFunctionForSeq ||
+	    self->tsc_seq_endswith_with_key == &DeeSeq_DefaultEndsWithWithKeyWithCallEndsWithDataFunctionForSetOrMap ||
+	    self->tsc_seq_endswith_with_range == &DeeSeq_DefaultEndsWithWithRangeWithCallEndsWithDataFunction ||
+	    self->tsc_seq_endswith_with_range_and_key == &DeeSeq_DefaultEndsWithWithRangeAndKeyWithCallEndsWithDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_endswith_data);
+	if (self->tsc_seq_find == &DeeSeq_DefaultFindWithCallFindDataFunction ||
+	    self->tsc_seq_find_with_key == &DeeSeq_DefaultFindWithKeyWithCallFindDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_find_data);
+	if (self->tsc_seq_rfind == &DeeSeq_DefaultRFindWithCallRFindDataFunction ||
+	    self->tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_rfind_data);
+	if (self->tsc_seq_erase == &DeeSeq_DefaultEraseWithCallEraseDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_erase_data);
+	if (self->tsc_seq_insert == &DeeSeq_DefaultInsertWithCallInsertDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_insert_data);
+	if (self->tsc_seq_insertall == &DeeSeq_DefaultInsertAllWithCallInsertAllDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_insertall_data);
+	if (self->tsc_seq_pushfront == &DeeSeq_DefaultPushFrontWithCallPushFrontDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_pushfront_data);
+	if (self->tsc_seq_append == &DeeSeq_DefaultAppendWithCallAppendDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_append_data);
+	if (self->tsc_seq_extend == &DeeSeq_DefaultExtendWithCallExtendDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_extend_data);
+	if (self->tsc_seq_xchitem_index == &DeeSeq_DefaultXchItemIndexWithCallXchItemDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_xchitem_data);
+	if (self->tsc_seq_clear == &DeeSeq_DefaultClearWithCallClearDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_clear_data);
+	if (self->tsc_seq_pop == &DeeSeq_DefaultPopWithCallPopDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_pop_data);
+	if (self->tsc_seq_remove == &DeeSeq_DefaultRemoveWithCallRemoveDataFunction ||
+	    self->tsc_seq_remove_with_key == &DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_remove_data);
+	if (self->tsc_seq_rremove == &DeeSeq_DefaultRRemoveWithCallRRemoveDataFunction ||
+	    self->tsc_seq_rremove_with_key == &DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_rremove_data);
+	if (self->tsc_seq_removeall == &DeeSeq_DefaultRemoveAllWithCallRemoveAllDataFunction ||
+	    self->tsc_seq_removeall_with_key == &DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_removeall_data);
+	if (self->tsc_seq_removeif == &DeeSeq_DefaultRemoveIfWithCallRemoveIfDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_removeif_data);
+	if (self->tsc_seq_resize == &DeeSeq_DefaultResizeWithCallResizeDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_resize_data);
+	if (self->tsc_seq_fill == &DeeSeq_DefaultFillWithCallFillDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_fill_data);
+	if (self->tsc_seq_reverse == &DeeSeq_DefaultReverseWithCallReverseDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_reverse_data);
+	if (self->tsc_seq_reversed == &DeeSeq_DefaultReversedWithCallReversedDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_reversed_data);
+	if (self->tsc_seq_sort == &DeeSeq_DefaultSortWithCallSortDataFunction ||
+	    self->tsc_seq_sort_with_key == &DeeSeq_DefaultSortWithKeyWithCallSortDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_sort_data);
+	if (self->tsc_seq_sorted == &DeeSeq_DefaultSortedWithCallSortedDataFunction ||
+	    self->tsc_seq_sorted_with_key == &DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_sorted_data);
 	if (self->tsc_set_insert == &DeeSet_DefaultInsertWithCallInsertDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_set_insert_data);
 	if (self->tsc_set_remove == &DeeSet_DefaultRemoveWithCallRemoveDataFunction)
@@ -516,17 +516,17 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 }
 
 
-INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_tsc_foreach_reverse_t DCALL
+INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_tsc_seq_foreach_reverse_t DCALL
 DeeType_TryRequireSeqForeachReverse(DeeTypeObject *__restrict self) {
 	struct Dee_type_seq *seq = self->tp_seq;
 	if likely(seq) {
 		struct Dee_type_seq_cache *sc;
 		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->tsc_foreach_reverse)
-			return sc->tsc_foreach_reverse;
+		if likely(sc && sc->tsc_seq_foreach_reverse)
+			return sc->tsc_seq_foreach_reverse;
 	}
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
-		Dee_tsc_foreach_reverse_t result = NULL;
+		Dee_tsc_seq_foreach_reverse_t result = NULL;
 		if (DeeType_RequireSize(self) && DeeType_RequireGetItem(self)) {
 			bool has_size = !DeeType_IsDefaultSize(self->tp_seq->tp_size);
 			if (has_size && self->tp_seq->tp_getitem_index_fast) {
@@ -544,24 +544,24 @@ DeeType_TryRequireSeqForeachReverse(DeeTypeObject *__restrict self) {
 			struct Dee_type_seq_cache *sc;
 			sc = DeeType_TryRequireSeqCache(self);
 			if likely(sc)
-				atomic_write(&sc->tsc_foreach_reverse, result);
+				atomic_write(&sc->tsc_seq_foreach_reverse, result);
 		}
 		return result;
 	}
 	return NULL; /* Not possible... */
 }
 
-INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_tsc_enumerate_index_reverse_t DCALL
+INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_tsc_seq_enumerate_index_reverse_t DCALL
 DeeType_TryRequireSeqEnumerateIndexReverse(DeeTypeObject *__restrict self) {
 	struct Dee_type_seq *seq = self->tp_seq;
 	if likely(seq) {
 		struct Dee_type_seq_cache *sc;
 		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->tsc_enumerate_index_reverse)
-			return sc->tsc_enumerate_index_reverse;
+		if likely(sc && sc->tsc_seq_enumerate_index_reverse)
+			return sc->tsc_seq_enumerate_index_reverse;
 	}
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
-		Dee_tsc_enumerate_index_reverse_t result = NULL;
+		Dee_tsc_seq_enumerate_index_reverse_t result = NULL;
 		if (DeeType_RequireSize(self) && DeeType_RequireGetItem(self)) {
 			bool has_size = !DeeType_IsDefaultSize(self->tp_seq->tp_size);
 			if (has_size && self->tp_seq->tp_getitem_index_fast) {
@@ -579,7 +579,7 @@ DeeType_TryRequireSeqEnumerateIndexReverse(DeeTypeObject *__restrict self) {
 			struct Dee_type_seq_cache *sc;
 			sc = DeeType_TryRequireSeqCache(self);
 			if likely(sc)
-				atomic_write(&sc->tsc_enumerate_index_reverse, result);
+				atomic_write(&sc->tsc_seq_enumerate_index_reverse, result);
 		}
 		return result;
 	}
@@ -602,7 +602,7 @@ DeeSeq_DefaultMakeEnumerationWithIntRangeWithError(DeeObject *self, size_t start
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeSeq_DefaultMakeEnumerationWithRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end);
 
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_t DCALL
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_makeenumeration_t DCALL
 DeeType_RequireSeqMakeEnumeration_uncached(DeeTypeObject *__restrict self) {
 	if (DeeType_HasOperator(self, OPERATOR_ITER)) {
 		unsigned int seqclass;
@@ -689,31 +689,31 @@ DeeType_RequireSeqMakeEnumeration_uncached(DeeTypeObject *__restrict self) {
 	return &DeeSeq_DefaultMakeEnumerationWithError;
 }
 
-INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_t DCALL
+INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_makeenumeration_t DCALL
 DeeType_RequireSeqMakeEnumeration(DeeTypeObject *__restrict self) {
-	Dee_tsc_makeenumeration_t result;
+	Dee_tsc_seq_makeenumeration_t result;
 	struct Dee_type_seq_cache *sc;
 	if likely(self->tp_seq) {
 		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->tsc_makeenumeration)
-			return sc->tsc_makeenumeration;
+		if likely(sc && sc->tsc_seq_makeenumeration)
+			return sc->tsc_seq_makeenumeration;
 	}
 	result = DeeType_RequireSeqMakeEnumeration_uncached(self);
 	sc     = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
-		atomic_write(&sc->tsc_makeenumeration, result);
+		atomic_write(&sc->tsc_seq_makeenumeration, result);
 	return result;
 }
 
-INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_with_int_range_t DCALL
+INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_makeenumeration_with_int_range_t DCALL
 DeeType_RequireSeqMakeEnumerationWithIntRange(DeeTypeObject *__restrict self) {
-	Dee_tsc_makeenumeration_with_int_range_t result;
-	Dee_tsc_makeenumeration_t base;
+	Dee_tsc_seq_makeenumeration_with_int_range_t result;
+	Dee_tsc_seq_makeenumeration_t base;
 	struct Dee_type_seq_cache *sc;
 	if likely(self->tp_seq) {
 		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->tsc_makeenumeration_with_int_range)
-			return sc->tsc_makeenumeration_with_int_range;
+		if likely(sc && sc->tsc_seq_makeenumeration_with_int_range)
+			return sc->tsc_seq_makeenumeration_with_int_range;
 	}
 	base = DeeType_RequireSeqMakeEnumeration(self);
 	if (base == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast) {
@@ -741,19 +741,19 @@ DeeType_RequireSeqMakeEnumerationWithIntRange(DeeTypeObject *__restrict self) {
 	}
 	sc = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
-		atomic_write(&sc->tsc_makeenumeration_with_int_range, result);
+		atomic_write(&sc->tsc_seq_makeenumeration_with_int_range, result);
 	return result;
 }
 
-INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_makeenumeration_with_range_t DCALL
+INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_seq_makeenumeration_with_range_t DCALL
 DeeType_RequireSeqMakeEnumerationWithRange(DeeTypeObject *__restrict self) {
-	Dee_tsc_makeenumeration_with_range_t result;
-	Dee_tsc_makeenumeration_t base;
+	Dee_tsc_seq_makeenumeration_with_range_t result;
+	Dee_tsc_seq_makeenumeration_t base;
 	struct Dee_type_seq_cache *sc;
 	if likely(self->tp_seq) {
 		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->tsc_makeenumeration_with_range)
-			return sc->tsc_makeenumeration_with_range;
+		if likely(sc && sc->tsc_seq_makeenumeration_with_range)
+			return sc->tsc_seq_makeenumeration_with_range;
 	}
 	base = DeeType_RequireSeqMakeEnumeration(self);
 	if (base == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast ||
@@ -778,7 +778,7 @@ DeeType_RequireSeqMakeEnumerationWithRange(DeeTypeObject *__restrict self) {
 	}
 	sc = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
-		atomic_write(&sc->tsc_makeenumeration_with_range, result);
+		atomic_write(&sc->tsc_seq_makeenumeration_with_range, result);
 	return result;
 }
 

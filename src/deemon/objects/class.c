@@ -5302,8 +5302,8 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
 		}
 
 		new_size  = class_type->tp_operators_size + 1;
-		new_table = (struct type_operator *)Dee_Realloc((void *)class_type->tp_operators,
-		                                                new_size * sizeof(struct type_operator));
+		new_table = (struct type_operator *)Dee_Reallocc((void *)class_type->tp_operators,
+		                                                 new_size, sizeof(struct type_operator));
 		if unlikely(!new_table)
 			goto err;
 		class_type->tp_operators = new_table;

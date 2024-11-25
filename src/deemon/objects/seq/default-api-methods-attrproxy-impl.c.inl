@@ -249,7 +249,7 @@ DEFINE_UINT8(Dee_int_SIZE_MAX, (uint8_t)-1);
 /* Functions that need additional variants for sequence sub-types that don't have indices (sets, maps) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultAnyWithCallAttrAny(DeeObject *self) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttr(self, tsc_any_data, &str_any, 0, NULL);
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttr(self, tsc_seq_any_data, &str_any, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -264,7 +264,7 @@ LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSeq(DeeObject *self, DeeObject *
 	args[0] = DeeInt_Zero;
 	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[2] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_any_data, &str_any, 3, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_any_data, &str_any, 3, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -275,7 +275,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSetOrMap(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_any_data, &str_any, 1, &key);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_any_data, &str_any, 1, &key);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -285,7 +285,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultAnyWithRangeWithCallAttrAny(DeeObject *self, size_t start, size_t end) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_any_data, &str_any,
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_any_data, &str_any,
 	                                                   PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
@@ -296,7 +296,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 LOCAL_DeeSeq_DefaultAnyWithRangeAndKeyWithCallAttrAny(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_any_data, &str_any,
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_any_data, &str_any,
 	                                                   PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
@@ -307,7 +307,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultAllWithCallAttrAll(DeeObject *self) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttr(self, tsc_all_data, &str_all, 0, NULL);
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttr(self, tsc_seq_all_data, &str_all, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -322,7 +322,7 @@ LOCAL_DeeSeq_DefaultAllWithKeyWithCallAttrAllForSeq(DeeObject *self, DeeObject *
 	args[0] = DeeInt_Zero;
 	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[2] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_all_data, &str_all, 3, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_all_data, &str_all, 3, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -333,7 +333,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultAllWithKeyWithCallAttrAllForSetOrMap(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_all_data, &str_all, 1, &key);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_all_data, &str_all, 1, &key);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -343,7 +343,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultAllWithRangeWithCallAttrAll(DeeObject *self, size_t start, size_t end) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_all_data, &str_all,
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_all_data, &str_all,
 	                                                   PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
@@ -354,7 +354,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 LOCAL_DeeSeq_DefaultAllWithRangeAndKeyWithCallAttrAll(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_all_data, &str_all,
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_all_data, &str_all,
 	                                                   PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
@@ -365,7 +365,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultParityWithCallAttrParity(DeeObject *self) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttr(self, tsc_parity_data, &str_parity, 0, NULL);
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttr(self, tsc_seq_parity_data, &str_parity, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -380,7 +380,7 @@ LOCAL_DeeSeq_DefaultParityWithKeyWithCallAttrParityForSeq(DeeObject *self, DeeOb
 	args[0] = DeeInt_Zero;
 	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[2] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_parity_data, &str_parity, 3, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_parity_data, &str_parity, 3, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -391,7 +391,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultParityWithKeyWithCallAttrParityForSetOrMap(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_parity_data, &str_parity, 1, &key);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_parity_data, &str_parity, 1, &key);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -401,7 +401,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultParityWithRangeWithCallAttrParity(DeeObject *self, size_t start, size_t end) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_parity_data, &str_parity,
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_parity_data, &str_parity,
 	                                                   PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
@@ -412,7 +412,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 LOCAL_DeeSeq_DefaultParityWithRangeAndKeyWithCallAttrParity(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_parity_data, &str_parity,
+	DREF DeeObject *result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_parity_data, &str_parity,
 	                                                   PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
@@ -424,7 +424,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultReduceWithCallAttrReduce(DeeObject *self, DeeObject *combine) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_reduce_data, &str_reduce, 1, &combine);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_reduce_data, &str_reduce, 1, &combine);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -434,7 +434,7 @@ LOCAL_DeeSeq_DefaultReduceWithInitWithCallAttrReduceForSeq(DeeObject *self, DeeO
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[3] = init;
-	return LOCAL_DeeObject_CallAttr(self, tsc_reduce_data, &str_reduce, 4, args);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_reduce_data, &str_reduce, 4, args);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -442,22 +442,22 @@ LOCAL_DeeSeq_DefaultReduceWithInitWithCallAttrReduceForSetOrMap(DeeObject *self,
 	DeeObject *args[2];
 	args[0] = combine;
 	args[1] = init;
-	return LOCAL_DeeObject_CallAttr(self, tsc_reduce_data, &str_reduce, 2, args);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_reduce_data, &str_reduce, 2, args);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultReduceWithRangeWithCallAttrReduce(DeeObject *self, DeeObject *combine, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_reduce_data, &str_reduce, "o" PCKuSIZ PCKuSIZ, combine, start, end);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_reduce_data, &str_reduce, "o" PCKuSIZ PCKuSIZ, combine, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultReduceWithRangeAndInitWithCallAttrReduce(DeeObject *self, DeeObject *combine, size_t start, size_t end, DeeObject *init) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_reduce_data, &str_reduce, "o" PCKuSIZ PCKuSIZ "o", combine, start, end, init);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_reduce_data, &str_reduce, "o" PCKuSIZ PCKuSIZ "o", combine, start, end, init);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultMinWithCallAttrMin(DeeObject *self) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_min_data, &str_min, 0, NULL);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_min_data, &str_min, 0, NULL);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -466,27 +466,27 @@ LOCAL_DeeSeq_DefaultMinWithKeyWithCallAttrMinForSeq(DeeObject *self, DeeObject *
 	args[0] = DeeInt_Zero;
 	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[2] = key;
-	return LOCAL_DeeObject_CallAttr(self, tsc_min_data, &str_min, 3, args);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_min_data, &str_min, 3, args);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultMinWithKeyWithCallAttrMinForSetOrMap(DeeObject *self, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_min_data, &str_min, 1, &key);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_min_data, &str_min, 1, &key);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultMinWithRangeWithCallAttrMin(DeeObject *self, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_min_data, &str_min, PCKuSIZ PCKuSIZ, start, end);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_min_data, &str_min, PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultMinWithRangeAndKeyWithCallAttrMin(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_min_data, &str_min, PCKuSIZ PCKuSIZ "o", start, end, key);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_min_data, &str_min, PCKuSIZ PCKuSIZ "o", start, end, key);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultMaxWithCallAttrMax(DeeObject *self) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_max_data, &str_max, 0, NULL);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_max_data, &str_max, 0, NULL);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -495,38 +495,38 @@ LOCAL_DeeSeq_DefaultMaxWithKeyWithCallAttrMaxForSeq(DeeObject *self, DeeObject *
 	args[0] = DeeInt_Zero;
 	args[1] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[2] = key;
-	return LOCAL_DeeObject_CallAttr(self, tsc_max_data, &str_max, 3, args);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_max_data, &str_max, 3, args);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultMaxWithKeyWithCallAttrMaxForSetOrMap(DeeObject *self, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_max_data, &str_max, 1, &key);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_max_data, &str_max, 1, &key);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultMaxWithRangeWithCallAttrMax(DeeObject *self, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_max_data, &str_max, PCKuSIZ PCKuSIZ, start, end);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_max_data, &str_max, PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultMaxWithRangeAndKeyWithCallAttrMax(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_max_data, &str_max, PCKuSIZ PCKuSIZ "o", start, end, key);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_max_data, &str_max, PCKuSIZ PCKuSIZ "o", start, end, key);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultSumWithCallAttrSum(DeeObject *self) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_sum_data, &str_sum, 0, NULL);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_sum_data, &str_sum, 0, NULL);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultSumWithRangeWithCallAttrSum(DeeObject *self, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_sum_data, &str_sum, PCKuSIZ PCKuSIZ, start, end);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_sum_data, &str_sum, PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 LOCAL_DeeSeq_DefaultCountWithCallAttrCount(DeeObject *self, DeeObject *item) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_count_data, &str_count, 1, &item);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_count_data, &str_count, 1, &item);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(result);
@@ -542,7 +542,7 @@ LOCAL_DeeSeq_DefaultCountWithKeyWithCallAttrCountForSeq(DeeObject *self, DeeObje
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[3] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_count_data, &str_count, 4, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_count_data, &str_count, 4, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(result);
@@ -556,7 +556,7 @@ LOCAL_DeeSeq_DefaultCountWithKeyWithCallAttrCountForSetOrMap(DeeObject *self, De
 	DeeObject *args[2];
 	args[0] = item;
 	args[1] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_count_data, &str_count, 2, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_count_data, &str_count, 2, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(result);
@@ -567,7 +567,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 LOCAL_DeeSeq_DefaultCountWithRangeWithCallAttrCount(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_count_data, &str_count, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_count_data, &str_count, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(result);
@@ -578,7 +578,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 LOCAL_DeeSeq_DefaultCountWithRangeAndKeyWithCallAttrCount(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_count_data, &str_count, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_count_data, &str_count, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(result);
@@ -589,7 +589,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultContainsWithCallAttrContains(DeeObject *self, DeeObject *item) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_contains_data, &str_contains, 1, &item);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_contains_data, &str_contains, 1, &item);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -605,7 +605,7 @@ LOCAL_DeeSeq_DefaultContainsWithKeyWithCallAttrContainsForSeq(DeeObject *self, D
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[3] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_contains_data, &str_contains, 4, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_contains_data, &str_contains, 4, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -619,7 +619,7 @@ LOCAL_DeeSeq_DefaultContainsWithKeyWithCallAttrContainsForSetOrMap(DeeObject *se
 	DeeObject *args[2];
 	args[0] = item;
 	args[1] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_contains_data, &str_contains, 2, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_contains_data, &str_contains, 2, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -630,7 +630,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultContainsWithRangeWithCallAttrContains(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_contains_data, &str_contains, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_contains_data, &str_contains, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -641,7 +641,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 LOCAL_DeeSeq_DefaultContainsWithRangeAndKeyWithCallAttrContains(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_contains_data, &str_contains, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_contains_data, &str_contains, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -651,7 +651,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultLocateWithCallAttrLocate(DeeObject *self, DeeObject *item) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_locate_data, &str_locate, 1, &item);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_locate_data, &str_locate, 1, &item);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -661,7 +661,7 @@ LOCAL_DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSeq(DeeObject *self, DeeOb
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[3] = key;
-	return LOCAL_DeeObject_CallAttr(self, tsc_locate_data, &str_locate, 4, args);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_locate_data, &str_locate, 4, args);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
@@ -669,33 +669,33 @@ LOCAL_DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSetOrMap(DeeObject *self, 
 	DeeObject *args[4];
 	args[0] = item;
 	args[1] = key;
-	return LOCAL_DeeObject_CallAttr(self, tsc_locate_data, &str_locate, 2, args);
+	return LOCAL_DeeObject_CallAttr(self, tsc_seq_locate_data, &str_locate, 2, args);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultLocateWithRangeWithCallAttrLocate(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_locate_data, &str_locate, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_locate_data, &str_locate, "o" PCKuSIZ PCKuSIZ, item, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultLocateWithRangeAndKeyWithCallAttrLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_locate_data, &str_locate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_locate_data, &str_locate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultRLocateWithRangeWithCallAttrRLocate(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_rlocate_data, &str_rlocate, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_rlocate_data, &str_rlocate, "o" PCKuSIZ PCKuSIZ, item, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultRLocateWithRangeAndKeyWithCallAttrRLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_rlocate_data, &str_rlocate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_rlocate_data, &str_rlocate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultStartsWithWithCallAttrStartsWith(DeeObject *self, DeeObject *item) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_startswith_data, &str_startswith, 1, &item);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_startswith_data, &str_startswith, 1, &item);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -711,7 +711,7 @@ LOCAL_DeeSeq_DefaultStartsWithWithKeyWithCallAttrStartsWithForSeq(DeeObject *sel
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[3] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_startswith_data, &str_startswith, 4, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_startswith_data, &str_startswith, 4, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -725,7 +725,7 @@ LOCAL_DeeSeq_DefaultStartsWithWithKeyWithCallAttrStartsWithForSetOrMap(DeeObject
 	DeeObject *args[2];
 	args[0] = item;
 	args[1] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_startswith_data, &str_startswith, 2, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_startswith_data, &str_startswith, 2, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -736,7 +736,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultStartsWithWithRangeWithCallAttrStartsWith(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_startswith_data, &str_startswith, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_startswith_data, &str_startswith, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -747,7 +747,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 LOCAL_DeeSeq_DefaultStartsWithWithRangeAndKeyWithCallAttrStartsWith(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_startswith_data, &str_startswith, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_startswith_data, &str_startswith, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -758,7 +758,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultEndsWithWithCallAttrEndsWith(DeeObject *self, DeeObject *item) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_endswith_data, &str_endswith, 1, &item);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_endswith_data, &str_endswith, 1, &item);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -774,7 +774,7 @@ LOCAL_DeeSeq_DefaultEndsWithWithKeyWithCallAttrEndsWithForSeq(DeeObject *self, D
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
 	args[3] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_endswith_data, &str_endswith, 4, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_endswith_data, &str_endswith, 4, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -788,7 +788,7 @@ LOCAL_DeeSeq_DefaultEndsWithWithKeyWithCallAttrEndsWithForSetOrMap(DeeObject *se
 	DeeObject *args[2];
 	args[0] = item;
 	args[1] = key;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_endswith_data, &str_endswith, 2, args);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_endswith_data, &str_endswith, 2, args);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -799,7 +799,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultEndsWithWithRangeWithCallAttrEndsWith(DeeObject *self, DeeObject *item, size_t start, size_t end) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_endswith_data, &str_endswith, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_endswith_data, &str_endswith, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -810,7 +810,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 LOCAL_DeeSeq_DefaultEndsWithWithRangeAndKeyWithCallAttrEndsWith(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_endswith_data, &str_endswith, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_endswith_data, &str_endswith, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -827,7 +827,7 @@ LOCAL_DeeSeq_DefaultFindWithCallAttrFind(DeeObject *self, DeeObject *item, size_
 	int temp;
 	Dee_ssize_t result_index;
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_find_data, &str_find, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_find_data, &str_find, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	temp = DeeObject_AsSSize(result, &result_index);
@@ -846,7 +846,7 @@ LOCAL_DeeSeq_DefaultFindWithKeyWithCallAttrFind(DeeObject *self, DeeObject *item
 	int temp;
 	Dee_ssize_t result_index;
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_find_data, &str_find, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_find_data, &str_find, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	temp = DeeObject_AsSSize(result, &result_index);
@@ -865,7 +865,7 @@ LOCAL_DeeSeq_DefaultRFindWithCallAttrRFind(DeeObject *self, DeeObject *item, siz
 	int temp;
 	Dee_ssize_t result_index;
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_rfind_data, &str_rfind, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_rfind_data, &str_rfind, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	temp = DeeObject_AsSSize(result, &result_index);
@@ -884,7 +884,7 @@ LOCAL_DeeSeq_DefaultRFindWithKeyWithCallAttrRFind(DeeObject *self, DeeObject *it
 	int temp;
 	Dee_ssize_t result_index;
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_rfind_data, &str_rfind, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_rfind_data, &str_rfind, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	temp = DeeObject_AsSSize(result, &result_index);
@@ -901,7 +901,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultEraseWithCallAttrErase(DeeObject *self, size_t index, size_t count) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_erase_data, &str_erase, PCKuSIZ PCKuSIZ, index, count);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_erase_data, &str_erase, PCKuSIZ PCKuSIZ, index, count);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -913,7 +913,7 @@ err:
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 LOCAL_DeeSeq_DefaultInsertWithCallAttrInsert(DeeObject *self, size_t index, DeeObject *item) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_insert_data, &str_insert, PCKuSIZ "o", index, item);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_insert_data, &str_insert, PCKuSIZ "o", index, item);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -925,7 +925,7 @@ err:
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 LOCAL_DeeSeq_DefaultInsertAllWithCallAttrInsertAll(DeeObject *self, size_t index, DeeObject *items) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_insertall_data, &str_insertall, PCKuSIZ "o", index, items);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_insertall_data, &str_insertall, PCKuSIZ "o", index, items);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -937,7 +937,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultPushFrontWithCallAttrPushFront(DeeObject *self, DeeObject *item) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_pushfront_data, &str_pushfront, 1, &item);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_pushfront_data, &str_pushfront, 1, &item);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -949,7 +949,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultAppendWithCallAttrAppend(DeeObject *self, DeeObject *item) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_append_data, &str_append, 1, &item);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_append_data, &str_append, 1, &item);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -962,7 +962,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultAppendWithCallAttrPushBack(DeeObject *self, DeeObject *item) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_append_data, &str_pushback, 1, &item);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_append_data, &str_pushback, 1, &item);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -975,7 +975,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultExtendWithCallAttrExtend(DeeObject *self, DeeObject *items) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_extend_data, &str_extend, 1, &items);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_extend_data, &str_extend, 1, &items);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -986,13 +986,13 @@ err:
 
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultXchItemIndexWithCallAttrXchItem(DeeObject *self, size_t index, DeeObject *value) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_xchitem_data, &str_xchitem, PCKuSIZ "o", index, value);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_xchitem_data, &str_xchitem, PCKuSIZ "o", index, value);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultClearWithCallAttrClear(DeeObject *self) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttr(self, tsc_clear_data, &str_clear, 0, NULL);
+	result = LOCAL_DeeObject_CallAttr(self, tsc_seq_clear_data, &str_clear, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -1003,14 +1003,14 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultPopWithCallAttrPop(DeeObject *self, Dee_ssize_t index) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_pop_data, &str_pop, PCKdSIZ, index);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_pop_data, &str_pop, PCKdSIZ, index);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultRemoveWithCallAttrRemove(DeeObject *self, DeeObject *item,
                                              size_t start, size_t end) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_remove_data, &str_remove,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_remove_data, &str_remove,
 	                                   "o" PCKuSIZ PCKuSIZ,
 	                                   item, start, end);
 	if unlikely(!result)
@@ -1024,7 +1024,7 @@ INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 LOCAL_DeeSeq_DefaultRemoveWithKeyWithCallAttrRemove(DeeObject *self, DeeObject *item,
                                                     size_t start, size_t end, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_remove_data, &str_remove,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_remove_data, &str_remove,
 	                                   "o" PCKuSIZ PCKuSIZ "o",
 	                                   item, start, end, key);
 	if unlikely(!result)
@@ -1038,7 +1038,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultRRemoveWithCallAttrRRemove(DeeObject *self, DeeObject *item,
                                                size_t start, size_t end) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_rremove_data, &str_rremove,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_rremove_data, &str_rremove,
 	                                   "o" PCKuSIZ PCKuSIZ,
 	                                   item, start, end);
 	if unlikely(!result)
@@ -1052,7 +1052,7 @@ INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 LOCAL_DeeSeq_DefaultRRemoveWithKeyWithCallAttrRRemove(DeeObject *self, DeeObject *item,
                                                       size_t start, size_t end, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_rremove_data, &str_rremove,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_rremove_data, &str_rremove,
 	                                   "o" PCKuSIZ PCKuSIZ "o",
 	                                   item, start, end, key);
 	if unlikely(!result)
@@ -1066,7 +1066,7 @@ INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 LOCAL_DeeSeq_DefaultRemoveAllWithCallAttrRemoveAll(DeeObject *self, DeeObject *item,
                                                    size_t start, size_t end, size_t max) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_removeall_data, &str_removeall,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_removeall_data, &str_removeall,
 	                                   "o" PCKuSIZ PCKuSIZ PCKuSIZ,
 	                                   item, start, end, max);
 	if unlikely(!result)
@@ -1081,7 +1081,7 @@ LOCAL_DeeSeq_DefaultRemoveAllWithKeyWithCallAttrRemoveAll(DeeObject *self, DeeOb
                                                           size_t start, size_t end,
                                                           size_t max, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_removeall_data, &str_removeall,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_removeall_data, &str_removeall,
 	                                   "o" PCKuSIZ PCKuSIZ PCKuSIZ "o",
 	                                   item, start, end, max, key);
 	if unlikely(!result)
@@ -1095,7 +1095,7 @@ INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 LOCAL_DeeSeq_DefaultRemoveIfWithCallAttrRemoveIf(DeeObject *self, DeeObject *should,
                                                  size_t start, size_t end, size_t max) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_removeif_data, &str_removeif,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_removeif_data, &str_removeif,
 	                                   "o" PCKuSIZ PCKuSIZ PCKuSIZ,
 	                                   should, start, end, max);
 	if unlikely(!result)
@@ -1108,7 +1108,7 @@ err:
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 LOCAL_DeeSeq_DefaultResizeWithCallAttrResize(DeeObject *self, size_t newsize, DeeObject *filler) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_resize_data, &str_resize,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_resize_data, &str_resize,
 	                                   PCKuSIZ "o", newsize, filler);
 	if unlikely(!result)
 		goto err;
@@ -1121,7 +1121,7 @@ err:
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 LOCAL_DeeSeq_DefaultFillWithCallAttrFill(DeeObject *self, size_t start, size_t end, DeeObject *filler) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_fill_data, &str_fill,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_fill_data, &str_fill,
 	                                   PCKuSIZ PCKuSIZ "o",
 	                                   start, end, filler);
 	if unlikely(!result)
@@ -1135,7 +1135,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultReverseWithCallAttrReverse(DeeObject *self, size_t start, size_t end) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_reverse_data, &str_reverse,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_reverse_data, &str_reverse,
 	                                   PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
@@ -1147,14 +1147,14 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultReversedWithCallAttrReversed(DeeObject *self, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_reversed_data, &str_reversed,
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_reversed_data, &str_reversed,
 	                                 PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultSortWithCallAttrSort(DeeObject *self, size_t start, size_t end) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_sort_data, &str_sort,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_sort_data, &str_sort,
 	                                   PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
 		goto err;
@@ -1167,7 +1167,7 @@ err:
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 LOCAL_DeeSeq_DefaultSortWithKeyWithCallAttrSort(DeeObject *self, size_t start, size_t end, DeeObject *key) {
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_sort_data, &str_sort,
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_sort_data, &str_sort,
 	                                   PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
 		goto err;
@@ -1179,13 +1179,13 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultSortedWithCallAttrSorted(DeeObject *self, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_sorted_data, &str_sorted,
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_sorted_data, &str_sorted,
 	                                 PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultSortedWithKeyWithCallAttrSorted(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_sorted_data, &str_sorted,
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_sorted_data, &str_sorted,
 	                                 PCKuSIZ PCKuSIZ "o", start, end, key);
 }
 
@@ -1195,7 +1195,7 @@ LOCAL_DeeSeq_DefaultBFindWithCallAttrBFind(DeeObject *self, DeeObject *item,
 	int temp;
 	size_t result_index;
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_bfind_data, &str_bfind, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_bfind_data, &str_bfind, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	if (DeeNone_Check(result)) {
@@ -1219,7 +1219,7 @@ LOCAL_DeeSeq_DefaultBFindWithKeyWithCallAttrBFind(DeeObject *self, DeeObject *it
 	int temp;
 	size_t result_index;
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_bfind_data, &str_bfind, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_bfind_data, &str_bfind, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	if (DeeNone_Check(result)) {
@@ -1243,7 +1243,7 @@ LOCAL_DeeSeq_DefaultBPositionWithCallAttrBPosition(DeeObject *self, DeeObject *i
 	int temp;
 	size_t result_index;
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_bposition_data, &str_bposition, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_bposition_data, &str_bposition, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	temp = DeeObject_AsSize(result, &result_index);
@@ -1263,7 +1263,7 @@ LOCAL_DeeSeq_DefaultBPositionWithKeyWithCallAttrBPosition(DeeObject *self, DeeOb
 	int temp;
 	size_t result_index;
 	DREF DeeObject *result;
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_bposition_data, &str_bposition, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_bposition_data, &str_bposition, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	temp = DeeObject_AsSize(result, &result_index);
@@ -1282,7 +1282,7 @@ LOCAL_DeeSeq_DefaultBRangeWithCallAttrBRange(DeeObject *self, DeeObject *item,
                                              size_t start, size_t end, size_t result_range[2]) {
 	int temp;
 	DREF DeeObject *result, *result_range_objs[2];
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_brange_data, &str_brange, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_brange_data, &str_brange, "o" PCKuSIZ PCKuSIZ, item, start, end);
 	if unlikely(!result)
 		goto err;
 	temp = DeeObject_Unpack(result, 2, result_range_objs);
@@ -1306,7 +1306,7 @@ LOCAL_DeeSeq_DefaultBRangeWithKeyWithCallAttrBRange(DeeObject *self, DeeObject *
                                                     size_t result_range[2]) {
 	int temp;
 	DREF DeeObject *result, *result_range_objs[2];
-	result = LOCAL_DeeObject_CallAttrf(self, tsc_brange_data, &str_brange, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	result = LOCAL_DeeObject_CallAttrf(self, tsc_seq_brange_data, &str_brange, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 	if unlikely(!result)
 		goto err;
 	temp = DeeObject_Unpack(result, 2, result_range_objs);
@@ -1327,13 +1327,13 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate(DeeObject *self, DeeObject *item,
                                                size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_blocate_data, &str_blocate, "o" PCKuSIZ PCKuSIZ, item, start, end);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_blocate_data, &str_blocate, "o" PCKuSIZ PCKuSIZ, item, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate(DeeObject *self, DeeObject *item,
                                                       size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_blocate_data, &str_blocate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_blocate_data, &str_blocate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
 }
 
 
@@ -1554,42 +1554,42 @@ LOCAL_DeeMap_DefaultPopItemWithCallAttrPopItem(DeeObject *self) {
 #ifdef LOCAL_DeeObject_GetAttr
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultGetFirstWithCallAttrGetFirst(DeeObject *__restrict self) {
-	return LOCAL_DeeObject_GetAttr(self, tsc_getfirst_data, &str_first);
+	return LOCAL_DeeObject_GetAttr(self, tsc_seq_getfirst_data, &str_first);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultBoundFirstWithCallAttrGetFirst(DeeObject *__restrict self) {
-	return LOCAL_DeeObject_BoundAttr(self, tsc_getfirst_data, &str_first);
+	return LOCAL_DeeObject_BoundAttr(self, tsc_seq_getfirst_data, &str_first);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultDelFirstWithCallAttrDelFirst(DeeObject *__restrict self) {
-	return LOCAL_DeeObject_DelAttr(self, tsc_delfirst_data, &str_first);
+	return LOCAL_DeeObject_DelAttr(self, tsc_seq_delfirst_data, &str_first);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultSetFirstWithCallAttrSetFirst(DeeObject *self, DeeObject *value) {
-	return LOCAL_DeeObject_SetAttr(self, tsc_delfirst_data, &str_first, value);
+	return LOCAL_DeeObject_SetAttr(self, tsc_seq_delfirst_data, &str_first, value);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeSeq_DefaultGetLastWithCallAttrGetLast(DeeObject *__restrict self) {
-	return LOCAL_DeeObject_GetAttr(self, tsc_getlast_data, &str_last);
+	return LOCAL_DeeObject_GetAttr(self, tsc_seq_getlast_data, &str_last);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultBoundLastWithCallAttrGetLast(DeeObject *__restrict self) {
-	return LOCAL_DeeObject_BoundAttr(self, tsc_getlast_data, &str_last);
+	return LOCAL_DeeObject_BoundAttr(self, tsc_seq_getlast_data, &str_last);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 LOCAL_DeeSeq_DefaultDelLastWithCallAttrDelLast(DeeObject *__restrict self) {
-	return LOCAL_DeeObject_DelAttr(self, tsc_dellast_data, &str_last);
+	return LOCAL_DeeObject_DelAttr(self, tsc_seq_dellast_data, &str_last);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_DeeSeq_DefaultSetLastWithCallAttrSetLast(DeeObject *self, DeeObject *value) {
-	return LOCAL_DeeObject_SetAttr(self, tsc_dellast_data, &str_last, value);
+	return LOCAL_DeeObject_SetAttr(self, tsc_seq_dellast_data, &str_last, value);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
