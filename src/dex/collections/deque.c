@@ -820,14 +820,10 @@ err:
 }
 
 
-#ifndef CONFIG_NO_THREADS
-#define DEQUE_BUFFER_STARTFIELD d_lock
-#else /* !CONFIG_NO_THREADS */
 #define DEQUE_BUFFER_STARTFIELD d_head
-#endif /* CONFIG_NO_THREADS */
-#define DEQUE_BUFFER_ENDFIELD d_version
-#define DEQUE_BUFFER_OF(self) (&(self)->DEQUE_BUFFER_STARTFIELD)
-#define DEQUE_BUFFER_SIZE     (offsetof(Deque, DEQUE_BUFFER_ENDFIELD) - offsetof(Deque, DEQUE_BUFFER_STARTFIELD))
+#define DEQUE_BUFFER_ENDFIELD   d_version
+#define DEQUE_BUFFER_OF(self)   (&(self)->DEQUE_BUFFER_STARTFIELD)
+#define DEQUE_BUFFER_SIZE       (offsetof(Deque, DEQUE_BUFFER_ENDFIELD) - offsetof(Deque, DEQUE_BUFFER_STARTFIELD))
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
