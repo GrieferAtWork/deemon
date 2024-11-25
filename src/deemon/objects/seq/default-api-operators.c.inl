@@ -857,7 +857,7 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
 	return DeeSeq_OperatorEnumerateIndex(self, proc, arg, start, end);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeSeq_OperatorIterKeys)(DeeObject *__restrict self) {
 	return DeeSeq_OperatorIterKeys(self);
 }
