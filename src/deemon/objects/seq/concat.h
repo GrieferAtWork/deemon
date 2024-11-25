@@ -26,7 +26,6 @@
 
 DECL_BEGIN
 
-typedef DeeTupleObject Tuple;
 typedef DeeTupleObject Cat;
 
 INTDEF DeeTypeObject SeqConcat_Type;

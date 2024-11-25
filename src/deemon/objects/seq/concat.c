@@ -370,8 +370,8 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 };
 
 
-INTDEF NONNULL((1)) void DCALL tuple_fini(Tuple *__restrict self);
-INTDEF NONNULL((1, 2)) void DCALL tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL tuple_fini(DeeTupleObject *__restrict self);
+INTDEF NONNULL((1, 2)) void DCALL tuple_visit(DeeTupleObject *__restrict self, dvisit_t proc, void *arg);
 #define cat_fini   tuple_fini
 #define cat_visit  tuple_visit
 
@@ -644,13 +644,13 @@ cat_bool(Cat *__restrict self) {
 
 
 
-INTDEF WUNUSED NONNULL((1)) DREF Tuple *DCALL
-tuple_deepcopy(Tuple *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+tuple_deepcopy(DeeTupleObject *__restrict self);
 
 PRIVATE WUNUSED NONNULL((1)) DREF Cat *DCALL
 cat_deepcopy(Cat *__restrict self) {
 	DREF Cat *result;
-	result = (DREF Cat *)tuple_deepcopy((Tuple *)self);
+	result = (DREF Cat *)tuple_deepcopy((DeeTupleObject *)self);
 	if likely(result) {
 		Dee_Incref(&SeqConcat_Type);
 		result->ob_type = &SeqConcat_Type;
