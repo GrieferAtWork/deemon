@@ -81,12 +81,25 @@ INTERN ATTR_COLD NONNULL((1)) int
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeObject_TypeAssertFailed)(DeeObject *self,
-                                   DeeTypeObject *wanted_type) {
+                                   DeeTypeObject *required_type) {
 	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(wanted_type);
+	ASSERT_OBJECT(required_type);
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Expected instance of `%r', but got a `%r' object: %k",
-	                       wanted_type, Dee_TYPE(self), self);
+	                       required_type, Dee_TYPE(self), self);
+}
+
+PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
+(DCALL DeeObject_TypeAssertFailed2)(DeeObject *self,
+                                    DeeTypeObject *required_type1,
+                                    DeeTypeObject *required_type2) {
+	ASSERT_OBJECT(self);
+	ASSERT_OBJECT(required_type1);
+	ASSERT_OBJECT(required_type2);
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Expected instance of `%r' or `%r', but got a `%r' object: %k",
+	                       required_type1, required_type2,
+	                       Dee_TYPE(self), self);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int

@@ -249,6 +249,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-bsearch-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-first.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-last.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-operator-methods.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-operators.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-method-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-require-operator-impl.c.inl" />

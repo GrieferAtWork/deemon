@@ -778,6 +778,37 @@ INTERN_TPCONST struct type_method tpconst set_methods[] = {
 	            "#tValueError{Set is empty and no @def was given}\n"
 	            "Remove and return some random key from @this set. "
 	            /**/ "If the set is empty, return @def or throw :ValueError"),
+
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	TYPE_METHOD("__hash__", &default_set___hash__,
+	            "->?Dint\n"
+	            "Alias for ${(this as Set).operator hash()}"),
+	TYPE_METHOD("__compare_eq__", &default_set___compare_eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set).operator == (rhs)}"),
+	TYPE_METHOD("__trycompare_eq__", &default_set___trycompare_eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${deemon.equals(this as Set, rhs)}"),
+	TYPE_METHOD("__eq__", &default_set___eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) == (rhs)}"),
+	TYPE_METHOD("__ne__", &default_set___ne__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) != (rhs)}"),
+	TYPE_METHOD("__lo__", &default_set___lo__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) < (rhs)}"),
+	TYPE_METHOD("__le__", &default_set___le__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) <= (rhs)}"),
+	TYPE_METHOD("__gr__", &default_set___gr__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) > (rhs)}"),
+	TYPE_METHOD("__ge__", &default_set___ge__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) >= (rhs)}"),
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
 	TYPE_METHOD_END
 };
 

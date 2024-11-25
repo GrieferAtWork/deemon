@@ -434,6 +434,100 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 	TYPE_METHOD(STR_pop, &default_map_pop, DOC_GET(map_pop_doc)),
 	TYPE_METHOD(STR_popitem, &default_map_popitem, DOC_GET(map_popitem_doc)),
 
+	TYPE_METHOD("__contains__", &default_map___contains__,
+	            "(item)->?Dbool\n"
+	            "Alias for ${item in (this as Mapping)}"),
+	TYPE_METHOD("__getitem__", &default_map___getitem__,
+	            "(key)->\n"
+	            "Alias for ${(this as Mapping)[key]}"),
+	TYPE_METHOD("__delitem__", &default_map___delitem__,
+	            "(key)\n"
+	            "Alias for ${del (this as Mapping)[key]}"),
+	TYPE_METHOD("__setitem__", &default_map___setitem__,
+	            "(key,value)\n"
+	            "Alias for ${(this as Mapping)[key] = value}"),
+	TYPE_METHOD("__enumerate__", &default_map___enumerate__,
+	            "(cb)->\n"
+	            "Alias for ${(this as Mapping).enumerate(cb)}"),
+	TYPE_KWMETHOD("__enumerate_index__", &default_map___enumerate_index__,
+	              "(cb,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->\n"
+	              "Alias for ${Mapping.enumerate(this, cb, start, end)}"),
+	TYPE_METHOD("__iterkeys__", &default_map___iterkeys__,
+	            "->?DIterator\n"
+	            "Alias for: ${(this as Mapping).iterkeys}"),
+	TYPE_METHOD("__bounditem__", &default_map___bounditem__,
+	            "(key,allow_missing=!t)->?Dbool\n"
+	            "Alias for ${deemon.bounditem(this as Mapping, key, allow_missing)}"),
+	TYPE_METHOD("__hasitem__", &default_map___hasitem__,
+	            "(key)->?Dbool\n"
+	            "Alias for ${deemon.hasitem(this as Mapping, key)}"),
+	TYPE_METHOD("__getitem_index__", &default_map___getitem_index__,
+	            "(key:?Dint)->\n"
+	            "Alias for ${(this as Mapping)[key]}"),
+	TYPE_METHOD("__delitem_index__", &default_map___delitem_index__,
+	            "(key:?Dint)\n"
+	            "Alias for ${del (this as Mapping)[key]}"),
+	TYPE_METHOD("__setitem_index__", &default_map___setitem_index__,
+	            "(key:?Dint,value)\n"
+	            "Alias for ${(this as Mapping)[key] = value}"),
+	TYPE_METHOD("__bounditem_index__", &default_map___bounditem_index__,
+	            "(key:?Dint,allow_missing=!t)->?Dbool\n"
+	            "Alias for ${deemon.bounditem(this as Mapping, key, allow_missing)}"),
+	TYPE_METHOD("__hasitem_index__", &default_map___hasitem_index__,
+	            "(key:?Dint)->?Dbool\n"
+	            "Alias for ${deemon.hasitem(this as Mapping, key)}"),
+	TYPE_METHOD("__trygetitem__", &default_map___trygetitem__,
+	            "(key,def=!N)->\n"
+	            "Alias for ${(this as Mapping).get(key, def)"),
+	TYPE_METHOD("__trygetitem_index__", &default_map___trygetitem_index__,
+	            "(key:?Dint,def=!N)->\n"
+	            "Alias for ${(this as Mapping).get(key, def)"),
+	TYPE_METHOD("__trygetitem_string__", &default_map___trygetitem_string__,
+	            "(key:?X2?DBytes?Dstring,def=!N)->\n"
+	            "Alias for ${(this as Mapping).get(key, def)"),
+	TYPE_METHOD("__getitem_string__", &default_map___getitem_string__,
+	            "(key:?X2?DBytes?Dstring)->\n"
+	            "Alias for ${(this as Mapping)[key]}"),
+	TYPE_METHOD("__delitem_string__", &default_map___delitem_string__,
+	            "(key:?X2?DBytes?Dstring)\n"
+	            "Alias for ${del (this as Mapping)[key]}"),
+	TYPE_METHOD("__setitem_string__", &default_map___setitem_string__,
+	            "(key:?X2?DBytes?Dstring,value)\n"
+	            "Alias for ${(this as Mapping)[key] = value}"),
+	TYPE_METHOD("__bounditem_string__", &default_map___bounditem_string__,
+	            "(key:?X2?DBytes?Dstring,allow_missing=!t)->?Dbool\n"
+	            "Alias for ${deemon.bounditem(this as Mapping, key, allow_missing)}"),
+	TYPE_METHOD("__hasitem_string__", &default_map___hasitem_string__,
+	            "(key:?X2?DBytes?Dstring)->?Dbool\n"
+	            "Alias for ${deemon.hasitem(this as Mapping, key)}"),
+	TYPE_METHOD("__hash__", &default_map___hash__,
+	            "->?Dint\n"
+	            "Alias for ${(this as Mapping).operator hash()}"),
+	TYPE_METHOD("__compare_eq__", &default_map___compare_eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Mapping).operator == (rhs)}"),
+	TYPE_METHOD("__trycompare_eq__", &default_map___trycompare_eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${deemon.equals(this as Mapping, rhs)}"),
+	TYPE_METHOD("__eq__", &default_map___eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Mapping) == (rhs)}"),
+	TYPE_METHOD("__ne__", &default_map___ne__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Mapping) != (rhs)}"),
+	TYPE_METHOD("__lo__", &default_map___lo__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Mapping) < (rhs)}"),
+	TYPE_METHOD("__le__", &default_map___le__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Mapping) <= (rhs)}"),
+	TYPE_METHOD("__gr__", &default_map___gr__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Mapping) > (rhs)}"),
+	TYPE_METHOD("__ge__", &default_map___ge__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Mapping) >= (rhs)}"),
+
 	/* Old function names. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD("insert_all", &default_map_update,

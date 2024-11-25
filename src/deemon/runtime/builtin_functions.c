@@ -108,7 +108,7 @@ f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
 	switch (DeeObject_BoundItem(self, key)) {
 	case -2:
 		if unlikely(!allow_missing) {
-			err_unbound_key(self, key);
+			err_unknown_key(self, key);
 			goto err;
 		}
 		ATTR_FALLTHROUGH

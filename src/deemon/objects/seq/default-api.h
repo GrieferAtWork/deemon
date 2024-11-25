@@ -410,8 +410,8 @@ struct Dee_type_seq_cache {
 	Dee_tsc_operator_inplace_mul_t      tsc_seq_operator_inplace_mul;
 
 	/* Common utility functions... */
-	Dee_tsc_seq_foreach_reverse_t         tsc_seq_foreach_reverse;
-	Dee_tsc_seq_enumerate_index_reverse_t tsc_seq_enumerate_index_reverse;
+	Dee_tsc_seq_foreach_reverse_t         tsc_seq_foreach_reverse;         /* [0..1] Not necessarily available! */
+	Dee_tsc_seq_enumerate_index_reverse_t tsc_seq_enumerate_index_reverse; /* [0..1] Not necessarily available! */
 
 	/* Operators for the purpose of constructing `DefaultEnumeration_With*' objects. */
 	Dee_tsc_seq_makeenumeration_t                tsc_seq_makeenumeration;
@@ -445,12 +445,12 @@ struct Dee_type_seq_cache {
 	Dee_tsc_seq_any_with_key_t                  tsc_seq_any_with_key;
 	Dee_tsc_seq_any_with_range_t                tsc_seq_any_with_range;
 	Dee_tsc_seq_any_with_range_and_key_t        tsc_seq_any_with_range_and_key;
-	union Dee_tsc_uslot                     tsc_seq_any_data;
+	union Dee_tsc_uslot                         tsc_seq_any_data;
 	Dee_tsc_seq_all_t                           tsc_seq_all;
 	Dee_tsc_seq_all_with_key_t                  tsc_seq_all_with_key;
 	Dee_tsc_seq_all_with_range_t                tsc_seq_all_with_range;
 	Dee_tsc_seq_all_with_range_and_key_t        tsc_seq_all_with_range_and_key;
-	union Dee_tsc_uslot                     tsc_seq_all_data;
+	union Dee_tsc_uslot                         tsc_seq_all_data;
 	Dee_tsc_seq_parity_t                        tsc_seq_parity;
 	Dee_tsc_seq_parity_with_key_t               tsc_seq_parity_with_key;
 	Dee_tsc_seq_parity_with_range_t             tsc_seq_parity_with_range;
@@ -1205,13 +1205,13 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObj
  * For this purpose, trust the return value of `DeeType_GetSeqClass()',
  * and wrap/modify operator invocation such that the object behaves as
  * though it was an indexable sequence. */
-#define DeeSet_OperatorBool     DeeSeq_OperatorBool
-#define DeeSet_OperatorIter     DeeSeq_OperatorIter
-#define DeeSet_OperatorSizeOb   DeeSeq_OperatorSizeOb
-#define DeeSet_OperatorContains DeeSeq_OperatorContains
-#define DeeSet_OperatorForeach  DeeSeq_OperatorForeach
-#define DeeSet_OperatorSize     DeeSeq_OperatorSize
-#define DeeSet_OperatorSizeFast DeeSeq_OperatorSizeFast
+#define DeeSet_OperatorBool                            DeeSeq_OperatorBool
+#define DeeSet_OperatorIter                            DeeSeq_OperatorIter
+#define DeeSet_OperatorSizeOb                          DeeSeq_OperatorSizeOb
+#define DeeSet_OperatorContains                        DeeSeq_OperatorContains
+#define DeeSet_OperatorForeach                         DeeSeq_OperatorForeach
+#define DeeSet_OperatorSize                            DeeSeq_OperatorSize
+#define DeeSet_OperatorSizeFast                        DeeSeq_OperatorSizeFast
 #define DeeSet_OperatorHash(self)                      (*DeeType_RequireSetOperatorHash(Dee_TYPE(self)))(self)
 #define DeeSet_OperatorCompareEq(self, some_object)    (*DeeType_RequireSetOperatorCompareEq(Dee_TYPE(self)))(self, some_object)
 #define DeeSet_OperatorTryCompareEq(self, some_object) (*DeeType_RequireSetOperatorTryCompareEq(Dee_TYPE(self)))(self, some_object)
@@ -2751,6 +2751,93 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL default_map_itervalues)(DeeOb
 #define default_map_values(self)     DeeMap_InvokeValues(self)
 #define default_map_iterkeys(self)   DeeMap_InvokeIterKeys(self)
 #define default_map_itervalues(self) DeeMap_InvokeIterValues(self)
+
+
+/* Default operators as type_method-s */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___bool__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___iter__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___size__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___contains__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___getitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___delitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___setitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___getrange__(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___delrange__(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___setrange__(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___foreach__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___foreach_pair__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___enumerate__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___enumerate_index__(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___iterkeys__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___bounditem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___hasitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___size_fast__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___getitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___delitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___setitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___bounditem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___hasitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___getrange_index__(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___delrange_index__(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___setrange_index__(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___trygetitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___trygetitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___hash__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___compare_eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___compare__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___trycompare_eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___ne__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___lo__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___le__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___gr__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___ge__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___inplace_add__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___inplace_mul__(DeeObject *self, size_t argc, DeeObject *const *argv);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___hash__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___compare_eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___trycompare_eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___ne__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___lo__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___le__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___gr__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___ge__(DeeObject *self, size_t argc, DeeObject *const *argv);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___contains__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___getitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___delitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___setitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___enumerate__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___enumerate_index__(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___iterkeys__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___bounditem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___hasitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___getitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___delitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___setitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___bounditem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___hasitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___trygetitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___trygetitem_index__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___trygetitem_string__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___getitem_string__(DeeObject *self, size_t argc, DeeObject *const *argv); /* for deemon.string, use GetItemStringHash; for deemon.Bytes, use GetItemStringLenHash */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___delitem_string__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___setitem_string__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___bounditem_string__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___hasitem_string__(DeeObject *self, size_t argc, DeeObject *const *argv);
+#define default_map___hash__ default_set___hash__
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___compare_eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___trycompare_eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___ne__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___lo__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___le__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___gr__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___ge__(DeeObject *self, size_t argc, DeeObject *const *argv);
+
+
 
 DECL_END
 

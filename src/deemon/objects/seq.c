@@ -4432,7 +4432,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 
 
-	/* TODO: Sequence operators as member functions:
+	/* Sequence operators as member functions:
 	 * >> __getitem__(index:?Dint)->
 	 * >> __delitem__(index:?Dint)
 	 * >> __setitem__(index:?Dint,value)
@@ -4443,9 +4443,158 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	 * instead of (and needing to create a super-proxy):
 	 * >> (ob as Sequence)[42];
 	 *
-	 * NOTE: The compiler should also be able to automatically
+	 * TODO: The compiler should also be able to automatically
 	 *       optimize the second version into the first. */
-
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	TYPE_METHOD("__bool__", &default_seq___bool__,
+	            "->?Dbool\n"
+	            "Alias for ${!!(this as Sequence)}"),
+	TYPE_METHOD("__iter__", &default_seq___iter__,
+	            "->?DIterator\n"
+	            "Alias for ${(this as Sequence).operator iter()}"),
+	TYPE_METHOD("__size__", &default_seq___size__,
+	            "->?Dint\n"
+	            "Alias for ${##(this as Sequence)}"),
+	TYPE_METHOD("__contains__", &default_seq___contains__,
+	            "(item)->?Dbool\n"
+	            "Alias for ${item in (this as Sequence)}"),
+	TYPE_METHOD("__getitem__", &default_seq___getitem__,
+	            "(index:?Dint)->\n"
+	            "Alias for ${(this as Sequence)[index]}"),
+	TYPE_METHOD("__delitem__", &default_seq___delitem__,
+	            "(index:?Dint)\n"
+	            "Alias for ${del (this as Sequence)[index]}"),
+	TYPE_METHOD("__setitem__", &default_seq___setitem__,
+	            "(index:?Dint,value)\n"
+	            "Alias for ${(this as Sequence)[index] = value}"),
+	TYPE_KWMETHOD("__getrange__", &default_seq___getrange__,
+	              "(start=!0,end?:?X2?N?Dint)->?S?O\n"
+	              "Alias for ${(this as Sequence)[start:end]}"),
+	TYPE_KWMETHOD("__delrange__", &default_seq___delrange__,
+	              "(start=!0,end?:?X2?N?Dint)\n"
+	              "Alias for ${del (this as Sequence)[start:end]}"),
+	TYPE_KWMETHOD("__setrange__", &default_seq___setrange__,
+	              "(start=!0,end?:?X2?N?Dint,values:?S?O)\n"
+	              "Alias for ${(this as Sequence)[start:end] = values}"),
+	TYPE_METHOD("__foreach__", &default_seq___foreach__,
+	            "(cb)->\n"
+	            "Alias for:\n"
+	            "${"
+	            /**/ "for (local item: this as Sequence) {\n"
+	            /**/ "	local res = cb(item);\n"
+	            /**/ "	if (res !is none)\n"
+	            /**/ "		return res;\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_METHOD("__foreach_pair__", &default_seq___foreach_pair__,
+	            "(cb)->\n"
+	            "Alias for:\n"
+	            "${"
+	            /**/ "for (local key, value: this as Sequence) {\n"
+	            /**/ "	local res = cb(key, value);\n"
+	            /**/ "	if (res !is none)\n"
+	            /**/ "		return res;\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_METHOD("__enumerate__", &default_seq___enumerate__,
+	            "(cb)->\n"
+	            "Alias for ${(this as Sequence).enumerate(cb)}"),
+	TYPE_KWMETHOD("__enumerate_index__", &default_seq___enumerate_index__,
+	              "(cb,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->\n"
+	              "Alias for ${Sequence.enumerate(this, cb, start, end)}"),
+	TYPE_METHOD("__iterkeys__", &default_seq___iterkeys__,
+	            "->?DIterator\n"
+	            "Alias for (with special optimizations for known types):\n"
+	            "${"
+	            /**/ "// When indices cannot be unbound (enumerate all indices)\n"
+	            /**/ "return [:##(this as Sequence)].operator iter();\n"
+	            /**/ "\n"
+	            /**/ "// When indices can be unbound (enumerate bound indices)\n"
+	            /**/ "return (() -> {\n"
+	            /**/ "	local keys = [];\n"
+	            /**/ "	Sequence.enumerate(this, (key, ...) -> {\n"
+	            /**/ "		keys.append(key);\n"
+	            /**/ "	});\n"
+	            /**/ "	return keys;\n"
+	            /**/ "})().operator iter()"
+	            "}"),
+	TYPE_METHOD("__bounditem__", &default_seq___bounditem__,
+	            "(index:?Dint,allow_missing=!t)->?Dbool\n"
+	            "Alias for ${deemon.bounditem(this as Sequence, index, allow_missing)}"),
+	TYPE_METHOD("__hasitem__", &default_seq___hasitem__,
+	            "(index:?Dint)->?Dbool\n"
+	            "Alias for ${deemon.hasitem(this as Sequence, index)}"),
+	TYPE_METHOD("__size_fast__", &default_seq___size_fast__,
+	            "->?X2?N?Dint\n"
+	            "Returns the same as ?#op:size, but do so in #C{O(1)} time. "
+	            /**/ "If the size cannot be computed in that time, return !N instead."),
+	TYPE_METHOD("__getitem_index__", &default_seq___getitem_index__,
+	            "(index:?Dint)->\n"
+	            "Alias for ${(this as Sequence)[index]}"),
+	TYPE_METHOD("__delitem_index__", &default_seq___delitem_index__,
+	            "(index:?Dint)\n"
+	            "Alias for ${del (this as Sequence)[index]}"),
+	TYPE_METHOD("__setitem_index__", &default_seq___setitem_index__,
+	            "(index:?Dint,value)\n"
+	            "Alias for ${(this as Sequence)[index] = value}"),
+	TYPE_METHOD("__bounditem_index__", &default_seq___bounditem_index__,
+	            "(index:?Dint,allow_missing=!t)->?Dbool\n"
+	            "Alias for ${deemon.bounditem(this as Sequence, index, allow_missing)}"),
+	TYPE_METHOD("__hasitem_index__", &default_seq___hasitem_index__,
+	            "(index:?Dint)->?Dbool\n"
+	            "Alias for ${deemon.hasitem(this as Sequence, index)}"),
+	TYPE_KWMETHOD("__getrange_index__", &default_seq___getrange_index__,
+	              "(start=!0,end?:?X2?N?Dint)->?S?O\n"
+	              "Alias for ${(this as Sequence)[start:end]}"),
+	TYPE_KWMETHOD("__delrange_index__", &default_seq___delrange_index__,
+	              "(start=!0,end?:?X2?N?Dint)\n"
+	              "Alias for ${del (this as Sequence)[start:end]}"),
+	TYPE_KWMETHOD("__setrange_index__", &default_seq___setrange_index__,
+	              "(start=!0,end?:?X2?N?Dint,values:?S?O)\n"
+	              "Alias for ${(this as Sequence)[start:end] = values}"),
+	TYPE_METHOD("__trygetitem__", &default_seq___trygetitem__,
+	            "(index:?Dint,def=!N)->\n"
+	            "Alias for ${try (this as Sequence)[index] catch (IndexError | UnboundItem) def}"),
+	TYPE_METHOD("__trygetitem_index__", &default_seq___trygetitem_index__,
+	            "(index:?Dint,def=!N)->\n"
+	            "Alias for ${try (this as Sequence)[index] catch (IndexError | UnboundItem) def}"),
+	TYPE_METHOD("__hash__", &default_seq___hash__,
+	            "->?Dint\n"
+	            "Alias for ${(this as Sequence).operator hash()}"),
+	TYPE_METHOD("__compare_eq__", &default_seq___compare_eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Sequence).operator == (rhs)}"),
+	TYPE_METHOD("__compare__", &default_seq___compare__,
+	            "(rhs:?S?O)->?Dint\n"
+	            "Alias for ${deemon.compare(this as Sequence, rhs)}"),
+	TYPE_METHOD("__trycompare_eq__", &default_seq___trycompare_eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${deemon.equals(this as Sequence, rhs)}"),
+	TYPE_METHOD("__eq__", &default_seq___eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Sequence) == (rhs)}"),
+	TYPE_METHOD("__ne__", &default_seq___ne__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Sequence) != (rhs)}"),
+	TYPE_METHOD("__lo__", &default_seq___lo__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Sequence) < (rhs)}"),
+	TYPE_METHOD("__le__", &default_seq___le__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Sequence) <= (rhs)}"),
+	TYPE_METHOD("__gr__", &default_seq___gr__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Sequence) > (rhs)}"),
+	TYPE_METHOD("__ge__", &default_seq___ge__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Sequence) >= (rhs)}"),
+	TYPE_METHOD("__inplace_add__", &default_seq___inplace_add__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Sequence) += rhs}"),
+	TYPE_METHOD("__inplace_mul__", &default_seq___inplace_mul__,
+	            "(factor:?Dint)->?.\n"
+	            "Alias for ${(this as Sequence) *= factor}"),
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 	/* Old function names/deprecated functions. */
 	TYPE_METHOD("transform", &seq_map,

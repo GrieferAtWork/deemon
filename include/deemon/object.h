@@ -4533,6 +4533,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertImplements)(DeeObject
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeExact)(DeeObject *self, DeeTypeObject *required_type);
 /* Throw a TypeError stating that an instance of `required_type' was required, when `self' was given. */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObject *self, DeeTypeObject *required_type);
+DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeObject_TypeAssertFailed2)(DeeObject *self, DeeTypeObject *required_type1, DeeTypeObject *required_type2);
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
 #define DeeObject_TypeAssertFailed(self, required_type) Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed(self, required_type), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */

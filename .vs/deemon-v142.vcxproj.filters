@@ -720,6 +720,9 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-methods-last.c.inl">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\default-api-operator-methods.c.inl">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-api-operators.c.inl">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
