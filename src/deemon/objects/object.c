@@ -3046,7 +3046,7 @@ set_basic_member(DeeTypeObject *__restrict tp_self,
 	int temp;
 	DeeTypeObject *iter   = tp_self;
 	char const *attr_name = DeeString_STR(member_name);
-	dhash_t attr_hash     = DeeString_Hash((DeeObject *)member_name);
+	Dee_hash_t attr_hash  = DeeString_Hash((DeeObject *)member_name);
 	if ((temp = DeeType_SetBasicCachedAttrStringHash(tp_self, self, attr_name, attr_hash, value)) <= 0)
 		goto done_temp;
 	do {
@@ -3094,7 +3094,7 @@ set_private_basic_member(DeeTypeObject *__restrict tp_self,
                          DeeObject *__restrict value) {
 	int temp;
 	char const *attr_name = DeeString_STR(member_name);
-	dhash_t attr_hash     = DeeString_Hash((DeeObject *)member_name);
+	Dee_hash_t attr_hash  = DeeString_Hash((DeeObject *)member_name);
 	if (DeeType_IsClass(tp_self)) {
 		struct class_attribute *attr;
 		struct instance_desc *instance;
@@ -3516,7 +3516,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 impl_type_hasprivateattribute_string_hash(DeeTypeObject *__restrict self,
                                           char const *name_str,
-                                          dhash_t name_hash) {
+                                          Dee_hash_t name_hash) {
 	/* TODO: Lookup the attribute in the member cache, and
 	 *       see which type is set as the declaring type! */
 	if (DeeType_IsClass(self)) {
@@ -3545,7 +3545,7 @@ type_hasattribute(DeeTypeObject *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	char const *name_str;
-	dhash_t name_hash;
+	Dee_hash_t name_hash;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr, "o:hasattribute", &name))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -4579,7 +4579,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 
 
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 generic_object_hash(DeeObject *__restrict self) {
 	return Dee_HashPointer(self);
 }
@@ -4626,6 +4626,47 @@ PUBLIC struct Dee_type_cmp DeeObject_GenericCmpByAddr = {
 	/* .tp_trycompare_eq = */ &generic_object_trycompare_eq,
 	/* .tp_eq            = */ &generic_object_eq,
 	/* .tp_ne            = */ &generic_object_ne,
+};
+
+
+
+
+#define type_hash generic_object_hash
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_compare_eq(DeeObject *self, DeeObject *some_object) {
+	if (DeeObject_AssertType(some_object, &DeeType_Type))
+		goto err;
+	return self == some_object ? 0 : 1;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+#define type_trycompare_eq generic_object_trycompare_eq
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+type_eq(DeeObject *self, DeeObject *some_object) {
+	if (DeeObject_AssertType(some_object, &DeeType_Type))
+		goto err;
+	return_bool_(self == some_object);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+type_ne(DeeObject *self, DeeObject *some_object) {
+	if (DeeObject_AssertType(some_object, &DeeType_Type))
+		goto err;
+	return_bool_(self != some_object);
+err:
+	return NULL;
+}
+
+PRIVATE struct type_cmp type_cmp_ = {
+	/* .tp_hash          = */ &type_hash,
+	/* .tp_compare_eq    = */ &type_compare_eq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ &type_trycompare_eq,
+	/* .tp_eq            = */ &type_eq,
+	/* .tp_ne            = */ &type_ne,
 };
 
 
@@ -4786,7 +4827,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,
 	/* .tp_gc            = */ &type_gc_data,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &DeeObject_GenericCmpByAddr,
+	/* .tp_cmp           = */ &type_cmp_,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
