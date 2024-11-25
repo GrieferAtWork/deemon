@@ -2104,7 +2104,10 @@ invoke_operator(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self
 			ASSERT(info->oi_invoke->opi_invoke);
 			ASSERT(info->oi_class != OPCLASS_CUSTOM);
 			/* Inherit the operator if necessary. */
-			if (DeeType_GetOpPointer(tp_self, info) == NULL) {
+			if (DeeType_GetOpPointer(tp_self, info) == NULL &&
+			    /* Special case for "OPERATOR_CONSTRUCTOR", which is inherited abnormally,
+			     * in that after being inherited, its OpPointer may still be `null'! */
+			    likely(name != OPERATOR_CONSTRUCTOR)) {
 				if unlikely(!DeeType_InheritOperator(tp_self, name))
 					goto err_not_implemented;
 				ASSERT(DeeType_GetOpPointer(tp_self, info) != NULL);
