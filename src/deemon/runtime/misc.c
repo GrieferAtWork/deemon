@@ -2102,6 +2102,49 @@ PRIVATE void assert_attach_debugger_loop(void) {
 #define assert_attach_debugger_loop() (void)0
 #endif /* !CONFIG_HOST_WINDOWS */
 
+INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+print_ddi(Dee_formatprinter_t printer, void *arg,
+          DeeCodeObject *__restrict code, code_addr_t ip);
+
+PRIVATE void DCALL do_assert_print_usercode_trace(void) {
+	DeeThreadObject *current = DeeThread_Self();
+	uint16_t sz = current->t_execsz;
+	struct Dee_code_frame *exec = current->t_exec;
+	for (; sz && exec; --sz, exec = exec->cf_prev) {
+		DeeCodeObject *code;
+		if unlikely(!DeeObject_Check(exec->cf_func))
+			break;
+		if unlikely(Dee_TYPE(exec->cf_func) != &DeeFunction_Type)
+			break;
+		code = exec->cf_func->fo_code;
+		if unlikely(!DeeObject_Check(code))
+			break;
+		if unlikely(Dee_TYPE(code) != &DeeCode_Type)
+			break;
+		if unlikely(exec->cf_ip < code->co_code)
+			break;
+		if unlikely(exec->cf_ip >= (code->co_code + code->co_codebytes))
+			break;
+		if (print_ddi((Dee_formatprinter_t)&DeeFile_WriteAll, DeeFile_DefaultStddbg,
+		              code, (code_addr_t)(exec->cf_ip - code->co_code)) < 0)
+			goto err;
+	}
+	return;
+err:
+	DeeError_Handled(ERROR_HANDLED_RESTORE);
+}
+
+PRIVATE bool in_assert_print_usercode_trace = false;
+PRIVATE void DCALL assert_print_usercode_trace(void) {
+	/* Safety check: prevent recursion on double-assert */
+	if (!in_assert_print_usercode_trace) {
+		in_assert_print_usercode_trace = true;
+		do_assert_print_usercode_trace();
+		in_assert_print_usercode_trace = false;
+	}
+}
+
+
 PUBLIC void
 (_DeeAssert_Failf)(char const *expr, char const *file,
                    int line, char const *format, ...) {
@@ -2115,6 +2158,7 @@ PUBLIC void
 		va_end(args);
 		assert_printf("\n");
 	}
+	assert_print_usercode_trace();
 	assert_attach_debugger_loop();
 }
 
