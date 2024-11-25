@@ -40,7 +40,7 @@
 DECL_BEGIN
 
 
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 get_scope_lookupmode(DeeObject *__restrict value,
                      unsigned int *__restrict p_result);
 
@@ -224,126 +224,126 @@ done:
 
 PRIVATE struct type_method tpconst parser_methods[] = {
 	TYPE_KWMETHOD("parse_unaryhead", &parser_parse_unaryhead,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a unary head-expression, that is a unary expression without any tail- or binary suffix"),
 	TYPE_KWMETHOD("parse_unary", &parser_parse_unary,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a whole unary expression"),
 	TYPE_KWMETHOD("parse_prod", &parser_parse_prod,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a product expression"),
 	TYPE_KWMETHOD("parse_sum", &parser_parse_sum,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a sum expression"),
 	TYPE_KWMETHOD("parse_shift", &parser_parse_shift,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a shift expression"),
 	TYPE_KWMETHOD("parse_cmp", &parser_parse_cmp,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a compare expression (non-equal)"),
 	TYPE_KWMETHOD("parse_cmpeq", &parser_parse_cmpeq,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a compare expression (equal)"),
 	TYPE_KWMETHOD("parse_and", &parser_parse_and,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a bit-wise and expression"),
 	TYPE_KWMETHOD("parse_xor", &parser_parse_xor,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a bit-wise xor expression"),
 	TYPE_KWMETHOD("parse_or", &parser_parse_or,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a bit-wise or expression"),
 	TYPE_KWMETHOD("parse_as", &parser_parse_as,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse an as expression"),
 	TYPE_KWMETHOD("parse_land", &parser_parse_land,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a logical and expression"),
 	TYPE_KWMETHOD("parse_lor", &parser_parse_lor,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a logical or expression"),
 	TYPE_KWMETHOD("parse_cond", &parser_parse_cond,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse a conditional expression"),
 	TYPE_KWMETHOD("parse_assign", &parser_parse_assign,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Parse an assignment (not store), or inplace expression"),
 	TYPE_KWMETHOD("parse_expr", &parser_parse_assign,
-	              "(lookupmode=!P{})->?AAst?Ert:Compiler\n"
-	              "(lookupmode=!0)->?AAst?Ert:Compiler\n"
+	              "(lookupmode=!P{})->?#Ast\n"
+	              "(lookupmode=!0)->?#Ast\n"
 	              "Alias for ?#parse_assign"),
 	TYPE_KWMETHOD("parse_unarytail", &parser_parse_unarytail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a unary expression (which includes attribute lookups, and call operations)"),
 	TYPE_KWMETHOD("parse_prodtail", &parser_parse_prodtail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a product expression"),
 	TYPE_KWMETHOD("parse_sumtail", &parser_parse_sumtail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a sum expression"),
 	TYPE_KWMETHOD("parse_shifttail", &parser_parse_shifttail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a shift expression"),
 	TYPE_KWMETHOD("parse_cmptail", &parser_parse_cmptail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a cmp expression"),
 	TYPE_KWMETHOD("parse_cmpeqtail", &parser_parse_cmpeqtail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a cmpeq expression"),
 	TYPE_KWMETHOD("parse_andtail", &parser_parse_andtail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a and expression"),
 	TYPE_KWMETHOD("parse_xortail", &parser_parse_xortail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a xor expression"),
 	TYPE_KWMETHOD("parse_ortail", &parser_parse_ortail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a or expression"),
 	TYPE_KWMETHOD("parse_astail", &parser_parse_astail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a as expression"),
 	TYPE_KWMETHOD("parse_landtail", &parser_parse_landtail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a land expression"),
 	TYPE_KWMETHOD("parse_lortail", &parser_parse_lortail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a lor expression"),
 	TYPE_KWMETHOD("parse_condtail", &parser_parse_condtail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a cond expression"),
 	TYPE_KWMETHOD("parse_assigntail", &parser_parse_assigntail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a assign expression"),
 	TYPE_KWMETHOD("parse_exprtail", &parser_parse_exprtail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a expr expression"),
 	TYPE_KWMETHOD("parse_maptail", &parser_parse_maptail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a generic mapping expression"),
 	TYPE_KWMETHOD("parse_seqtail", &parser_parse_seqtail,
-	              "(head:?AAst?Ert:Compiler)->?AAst?Ert:Compiler\n"
+	              "(head:?#Ast)->?#Ast\n"
 	              "Parse the tail of a generic sequence expression"),
 	TYPE_KWMETHOD("parse_stmt", &parser_parse_stmt,
-	              "(bool nonblocking=false)->?AAst?Ert:Compiler\n"
+	              "(bool nonblocking=false)->?#Ast\n"
 	              "Parse a statement or ?#parse_comma expression"),
 	TYPE_KWMETHOD("parse_allstmt", &parser_parse_allstmt,
-	              "(end=!P{})->?AAst?Ert:Compiler\n"
-	              "(end=!0)->?AAst?Ert:Compiler\n"
+	              "(end=!P{})->?#Ast\n"
+	              "(end=!0)->?#Ast\n"
 	              "Parse statements (?#parse_stmt) and pack them togerther into "
 	              "a multiple/keep-last branch, until the input file ends, or "
 	              "a token equal to @end (s.a. :Compiler.lexer.token.op:eq) is "
@@ -402,43 +402,44 @@ PRIVATE struct type_member tpconst parser_class_members[] = {
 INTERN DeeTypeObject DeeCompilerParser_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Parser",
-	/* .tp_doc      = */ DOC("Parse data from the input token stream (:Compiler.lexer) of the associated ?#compiler\n"
-	                         "For more information on what exactly is parsed by individual `parse_*' functions, see the "
-	                         /**/ "following table, or consult the `/lib/LANGUAGE.txt' file within the deemon source tree\n"
+	/* .tp_doc      = */ DOC("Parse data from the input token stream (" DR_CLexer ") of the associated ?#compiler\n"
+	                         "For more information on what exactly is parsed by individual #C{parse_*} functions, see the "
+	                         /**/ "following table, or consult the #C{/lib/LANGUAGE.txt} file within the deemon source tree\n"
 	                         "#T{Function|Example|Description~"
-	                         "?#parse_unaryhead|${[foo].bar}, ${[42] + 7}, ${[(10 + 20)]}, ${[[]{ return 42; }]}|Parse the head of a unary expression, including unary prefix operators, and the unary operand itself&"
-	                         "?#parse_unary|${[foo.bar]}, ${[getitems(a, b, c)]}|Parse a whole unary expression&"
-	                         "?#parse_prod|${[x * y / z % v ** w]}|Parse product expressions (using ?#parse_unary for operands)&"
-	                         "?#parse_sum|${[x + y - z]}|Parse sum expressions (using ?#parse_prod for operands)&"
-	                         "?#parse_shift|${[x << y >> z]}|Parse shift expressions (using ?#parse_sum for operands)&"
-	                         "?#parse_cmp|${[x < y <= z > v >= w]}|Parse compare expressions (non-equal) (using ?#parse_shift for operands)&"
-	                         "?#parse_cmpeq|${[x == y != z === a !== b is c in d !is e !in f]}|Parse compare expressions (equal) and in/is-expressions (using ?#parse_cmp for operands)&"
-	                         "?#parse_and|${[x & y]}|Parse bit-wise and expressions (using ?#parse_cmpeq for operands)&"
-	                         "?#parse_xor|${[x ^ y]}|Parse bit-wise xor expressions (using ?#parse_and for operands)&"
-	                         "?#parse_or|${[x | y]}|Parse bit-wise or expressions (using ?#parse_xor for operands)&"
-	                         "?#parse_as|${[x as y]}|Parse bit-wise or expressions (using ?#parse_or for operands)&"
-	                         "?#parse_land|${[x && y]}|Parse logical and expressions (using ?#parse_as for operands)&"
-	                         "?#parse_lor|${[x || y]}|Parse logical or expressions (using ?#parse_land for operands)&"
-	                         "?#parse_cond|${[x ? y : z]}, ${[x ? : z]}, ${[x ? y]}, ${[x ? y : ]}|Parse conditional expressions (using ?#parse_lor for `x', and ?#parse_cond for `y' and `z')&"
-	                         "?#parse_assign|${[x := y += z -= v += w /= a %= b <<= c >>= d &= e |= f ^= g **= h]}|Parse assignment expressions (using ?#parse_cond for operands)&"
-	                         "?#parse_expr|-|Alias for ?#parse_assign&"
-	                         "?#parse_unarytail|${foo[.bar]}, ${getitems[(a, b, c)]}|Parse the tail of a unary expression, including all tightly bound suffix expressions&"
-	                         "?#parse_prodtail|${x [* y / z % v ** w]}|Given a ?#parse_unary operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_sumtail|${x [+ y - z]}|Given a ?#parse_prod operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_shifttail|${x [<< y >> z]}|Given a ?#parse_sum operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_cmptail|${x [< y <= z > v >= w]}|Given a ?#parse_shift operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_cmpeqtail|${x [== y != z === a !== b is c in d !is e !in f]}|Given a ?#parse_cmp operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_andtail|${x [& y]}|Given a ?#parse_cmpeq operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_xortail|${x [^ y]}|Given a ?#parse_and operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_ortail|${x [| y]}|Given a ?#parse_xor operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_astail|${x [as y]}|Given a ?#parse_or operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_landtail|${x [&& y]}|Given a ?#parse_as operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_lortail|${x [|| y]}|Given a ?#parse_land operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_condtail|${x [? y : z]}, ${x [? : z]}, ${x [? y]}, ${x [? y : ]}|Given a ?#parse_lor operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_assigntail|${x [:= y += z -= v += w /= a %= b <<= c >>= d &= e |= f ^= g **= h]}|Given a ?#parse_cond operand `x', parse the suffix also parsed by ?#parse_prod&"
-	                         "?#parse_exprtail|${x [<any-non-unary-tail> y]}|Does the work of all the *-tail functions, excluding ?#parse_unarytail&"
-	                         "?#parse_maptail|${{x [: y, v: w]}}|Process the tail in a generic mapping expression. - No-op when the current token isn't a $\":\"&"
-	                         "?#parse_seqtail|${{x [, y, z]}}|Process the tail in a generic sequence expression. - No-op when the current token isn't a $\",\"}\n"
+	                         /**/ "?#parse_unaryhead|${[foo].bar}, ${[42] + 7}, ${[(10 + 20)]}, ${[[]{ return 42; }]}|Parse the head of a unary expression, including unary prefix operators, and the unary operand itself&"
+	                         /**/ "?#parse_unary|${[foo.bar]}, ${[getitems(a, b, c)]}|Parse a whole unary expression&"
+	                         /**/ "?#parse_prod|${[x * y / z % v ** w]}|Parse product expressions (using ?#parse_unary for operands)&"
+	                         /**/ "?#parse_sum|${[x + y - z]}|Parse sum expressions (using ?#parse_prod for operands)&"
+	                         /**/ "?#parse_shift|${[x << y >> z]}|Parse shift expressions (using ?#parse_sum for operands)&"
+	                         /**/ "?#parse_cmp|${[x < y <= z > v >= w]}|Parse compare expressions (non-equal) (using ?#parse_shift for operands)&"
+	                         /**/ "?#parse_cmpeq|${[x == y != z === a !== b is c in d !is e !in f]}|Parse compare expressions (equal) and in/is-expressions (using ?#parse_cmp for operands)&"
+	                         /**/ "?#parse_and|${[x & y]}|Parse bit-wise and expressions (using ?#parse_cmpeq for operands)&"
+	                         /**/ "?#parse_xor|${[x ^ y]}|Parse bit-wise xor expressions (using ?#parse_and for operands)&"
+	                         /**/ "?#parse_or|${[x | y]}|Parse bit-wise or expressions (using ?#parse_xor for operands)&"
+	                         /**/ "?#parse_as|${[x as y]}|Parse bit-wise or expressions (using ?#parse_or for operands)&"
+	                         /**/ "?#parse_land|${[x && y]}|Parse logical and expressions (using ?#parse_as for operands)&"
+	                         /**/ "?#parse_lor|${[x || y]}|Parse logical or expressions (using ?#parse_land for operands)&"
+	                         /**/ "?#parse_cond|${[x ? y : z]}, ${[x ? : z]}, ${[x ? y]}, ${[x ? y : ]}|Parse conditional expressions (using ?#parse_lor for `x', and ?#parse_cond for `y' and `z')&"
+	                         /**/ "?#parse_assign|${[x := y += z -= v += w /= a %= b <<= c >>= d &= e |= f ^= g **= h]}|Parse assignment expressions (using ?#parse_cond for operands)&"
+	                         /**/ "?#parse_expr|-|Alias for ?#parse_assign&"
+	                         /**/ "?#parse_unarytail|${foo[.bar]}, ${getitems[(a, b, c)]}|Parse the tail of a unary expression, including all tightly bound suffix expressions&"
+	                         /**/ "?#parse_prodtail|${x [* y / z % v ** w]}|Given a ?#parse_unary operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_sumtail|${x [+ y - z]}|Given a ?#parse_prod operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_shifttail|${x [<< y >> z]}|Given a ?#parse_sum operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_cmptail|${x [< y <= z > v >= w]}|Given a ?#parse_shift operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_cmpeqtail|${x [== y != z === a !== b is c in d !is e !in f]}|Given a ?#parse_cmp operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_andtail|${x [& y]}|Given a ?#parse_cmpeq operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_xortail|${x [^ y]}|Given a ?#parse_and operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_ortail|${x [| y]}|Given a ?#parse_xor operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_astail|${x [as y]}|Given a ?#parse_or operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_landtail|${x [&& y]}|Given a ?#parse_as operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_lortail|${x [|| y]}|Given a ?#parse_land operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_condtail|${x [? y : z]}, ${x [? : z]}, ${x [? y]}, ${x [? y : ]}|Given a ?#parse_lor operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_assigntail|${x [:= y += z -= v += w /= a %= b <<= c >>= d &= e |= f ^= g **= h]}|Given a ?#parse_cond operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         /**/ "?#parse_exprtail|${x [<any-non-unary-tail> y]}|Does the work of all the *-tail functions, excluding ?#parse_unarytail&"
+	                         /**/ "?#parse_maptail|${{x [: y, v: w]}}|Process the tail in a generic mapping expression. - No-op when the current token isn't a $\":\"&"
+	                         /**/ "?#parse_seqtail|${{x [, y, z]}}|Process the tail in a generic sequence expression. - No-op when the current token isn't a $\",\""
+	                         "}\n"
 	                         "Note the processed portion of an expression is written in []-brackets\n"
 	                         "In order to explain what tail parsers do, look at this example:\n"
 	                         "${"

@@ -223,24 +223,24 @@ err:
 INTDEF struct type_getset tpconst compiler_getsets[];
 INTERN_TPCONST struct type_getset tpconst compiler_getsets[] = {
 	TYPE_GETTER("lexer", &compiler_get_lexer,
-	            "->?ALexer?Ert:Compiler\n"
+	            "->?#Lexer\n"
 	            "Returns the lexer (tokenizer) of @this compiler"),
 	TYPE_GETTER("parser", &compiler_get_parser,
-	            "->?AParser?Ert:Compiler\n"
+	            "->?#Parser\n"
 	            "Returns the parser (token to ast converter) of @this compiler"),
 	TYPE_GETSET("scope", &compiler_get_scope, NULL, &compiler_set_scope,
-	            "->?AScope?Ert:Compiler\n"
+	            "->?#Scope\n"
 	            "#tValueError{Attempted to set a scope who's compiler doesn't match @this}"
 	            "#tReferenceError{Attempted to set a scope not apart of the same base-scope as ?#basescope}"
 	            "Get or set the current scope used for parsing new ?#{ast}s"),
 	TYPE_GETSET("basescope", &compiler_get_basescope, NULL, &compiler_set_basescope,
-	            "->?ABaseScope?Ert:Compiler\n"
+	            "->?#BaseScope\n"
 	            "#tValueError{Attempted to set a scope who's compiler doesn't match @this}"
 	            "#tReferenceError{Attempted to set a scope not apart of the same root-scope as ?#rootscope}"
 	            "Get or set the current base-scope, representing the current function-context\n"
 	            "When setting the base-scope, ?#scope is set to the same scope"),
 	TYPE_GETTER("rootscope", &compiler_get_rootscope,
-	            "->?ARootScope?Ert:Compiler\n"
+	            "->?#RootScope\n"
 	            "Get the root-scope active within @this compiler\n"
 	            "Note that this scope is fixed and cannot be changed"),
 	TYPE_GETTER(STR_module, &compiler_get_module,
@@ -729,7 +729,7 @@ LOCAL int DCALL
 unpack_catch_expression(DeeObject *__restrict triple,
                         struct catch_expr *__restrict result,
                         DeeBaseScopeObject *__restrict base_scope) {
-	/* (flags:?Dstring,mask:?AAst?Ert:Compiler,code:?AAst?Ert:Compiler) */
+	/* (flags:?Dstring,mask:?#Ast,code:?#Ast) */
 	DeeCompilerAstObject *args[3];
 	if (DeeObject_Unpack(triple, 3, (DeeObject **)args))
 		goto err;
@@ -952,8 +952,8 @@ ast_makeloop(DeeCompilerObject *self, size_t argc,
 	DeeCompilerAstObject *cond = (DeeCompilerAstObject *)Dee_None;
 	DeeCompilerAstObject *next = (DeeCompilerAstObject *)Dee_None;
 	DeeCompilerAstObject *loop = (DeeCompilerAstObject *)Dee_None;
-	/* "(flags:?Dstring,elem:?AAst?Ert:Compiler=!N,iter:?AAst?Ert:Compiler,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n"
-	 * "(flags:?Dstring,cond:?AAst?Ert:Compiler=!N,next:?AAst?Ert:Compiler=!N,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
+	/* "(flags:?Dstring,elem:?#Ast=!N,iter:?#Ast,loop:?#Ast=!N,scope:?#Scope=!N)->?#Ast\n"
+	 * "(flags:?Dstring,cond:?#Ast=!N,next:?#Ast=!N,loop:?#Ast=!N,scope:?#Scope=!N)->?#Ast\n" */
 	if unlikely(!argc) {
 		err_invalid_argc("makeloop", argc, 1, 5);
 		goto done;
@@ -1318,7 +1318,7 @@ check_function_code_scope(DeeBaseScopeObject *code_scope,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makefunction(DeeCompilerObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	/* "(code:?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
+	/* "(code:?#Ast,scope:?#Scope=!N)->?#Ast\n" */
 	DREF DeeObject *result = NULL;
 	DeeCompilerAstObject *code;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -1425,8 +1425,8 @@ unknown_str:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makeoperatorfunc(DeeCompilerObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
-	/* "(name:?Dstring,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n"
-	 * "(name:?Dint,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
+	/* "(name:?Dstring,binding:?#Ast=!N,scope:?#Scope=!N)->?#Ast\n"
+	 * "(name:?Dint,binding:?#Ast=!N,scope:?#Scope=!N)->?#Ast\n" */
 	DREF DeeObject *result = NULL;
 	DeeObject *name;
 	Dee_operator_t id;
@@ -1515,8 +1515,8 @@ parse_operator_flags(char const *__restrict flags,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makeoperator(DeeCompilerObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	/* "(name:?Dstring,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope=!N)->?AAst?Ert:Compiler\n"
-	 * "(name:?Dint,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope=!N)->?AAst?Ert:Compiler\n" */
+	/* "(name:?Dstring,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!P{},scope=!N)->?#Ast\n"
+	 * "(name:?Dint,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!P{},scope=!N)->?#Ast\n" */
 	DREF DeeObject *result = NULL;
 	DeeObject *name;
 	uint16_t id, flags = 0;
@@ -1845,7 +1845,7 @@ get_action_name(uint16_t action) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_makeaction(DeeCompilerObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	/* "(name:?Dstring,a:?AAst?Ert:Compiler=!N,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,bool mustrun=true,scope=!N)->?AAst?Ert:Compiler\n" */
+	/* "(name:?Dstring,a:?#Ast=!N,b:?#Ast=!N,c:?#Ast=!N,bool mustrun=true,scope=!N)->?#Ast\n" */
 	DREF DeeObject *result = NULL;
 	DeeObject *name;
 	int32_t id;
@@ -2009,125 +2009,128 @@ ast_makeassembly(DeeCompilerObject *self, size_t argc,
 INTDEF struct type_method tpconst compiler_methods[];
 INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	TYPE_KWMETHOD("makeconstexpr", &ast_makeconstexpr,
-	              "(value,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(value,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @scope doesn't match @this}"
 	              "Construct a new constant-expression ast referring to @value"),
 	TYPE_KWMETHOD("makesym", &ast_makesym,
-	              "(sym:?ASymbol?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @sym or @scope doesn't match @this}"
 	              "#tReferenceError{The given @sym is not reachable from the effectively used @scope}"
 	              "Construct a new branch that is using a symbol @sym\n"
 	              "By default, the branch uses @sym for reading, however if the branch "
-	              "is later used as target of a store-action branch, @sym will be used "
-	              "for writing instead. Similarly, special handling is done when the "
-	              "branch is used in an assembly output operand"),
+	              /**/ "is later used as target of a store-action branch, @sym will be used "
+	              /**/ "for writing instead. Similarly, special handling is done when the "
+	              /**/ "branch is used in an assembly output operand"),
 	TYPE_KWMETHOD("makeunbind", &ast_makeunbind,
-	              "(sym:?ASymbol?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @sym or @scope doesn't match @this}"
 	              "#tReferenceError{The given @sym is not reachable from the effectively used @scope}"
 	              "Construct a branch for unbinding the value of @sym at runtime"),
 	TYPE_KWMETHOD("makebound", &ast_makebound,
-	              "(sym:?ASymbol?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(sym:?#Symbol,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @sym or @scope doesn't match @this}"
 	              "#tReferenceError{The given @sym is not reachable from the effectively used @scope}"
 	              "Construct a branch for checking if a given symbol @sym is bound"),
 	TYPE_KWMETHOD("makemultiple", &ast_makemultiple,
-	              "(branches:?S?AAst?Ert:Compiler,typing:?DType=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(branches:?S?#Ast,typing:?DType=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of one of the given @branches or @scope doesn't match @this}"
 	              "#tTypeError{The given @typing is neither ?N, nor one of the types listed below}"
 	              "#tReferenceError{One of the given @branches is not part of the basescope of the effective @scope}"
 	              "Construct a multi-branch, which either behaves as keep-last (only the last ast from @branches "
-	              "is used as expression value of the returned branch, while all others are evaluated before then), "
-	              "when @typing is ?N, or construct a sequence expression for the associated type when @typeing "
-	              "is one of the following\n"
+	              /**/ "is used as expression value of the returned branch, while all others are evaluated before then), "
+	              /**/ "when @typing is ?N, or construct a sequence expression for the associated type when @typing "
+	              /**/ "is one of the following\n"
 	              "#T{Type|Example|Description~"
-	              "?DTuple|${(a, b, c)}|Construct a Tuple expression&"
-	              "?DList|${[a, b, c]}|Construct a List expression&"
-	              "?DHashSet|-|Construct a mutable HashSet sequence expression&"
-	              "?DDict|-|Construct a mutable Dict-like mapping expression&"
-	              "?DSequence|${{ a, b, c }}|Construct an abstract sequence expression&"
-	              "?DMapping|${{ a: b, c: d }}|Construct an abstract mapping expression}\n"
+	              /**/ "?DTuple|${(a, b, c)}|Construct a Tuple expression&"
+	              /**/ "?DList|${[a, b, c]}|Construct a List expression&"
+	              /**/ "?DHashSet|-|Construct a mutable HashSet sequence expression&"
+	              /**/ "?DDict|-|Construct a mutable Dict-like mapping expression&"
+	              /**/ "?DSequence|${{ a, b, c }}|Construct an abstract sequence expression&"
+	              /**/ "?DMapping|${{ a: b, c: d }}|Construct an abstract mapping expression"
+	              "}\n"
 	              "Note that in any kind of sequence branch, asts created by @makeexpand may "
-	              "appear, and will be inlined as part of the greater whole expression"),
+	              /**/ "appear, and will be inlined as part of the greater whole expression"),
 	TYPE_KWMETHOD("makereturn", &ast_makereturn,
-	              "(expr:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(expr:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct a return-branch that either returns @expr, or ?N when @expr is ?N"),
 	TYPE_KWMETHOD("makeyield", &ast_makeyield,
-	              "(expr:?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(expr:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct a yield-branch that either returns @expr, or ?N when @expr is ?N"),
 	TYPE_KWMETHOD("makethrow", &ast_makethrow,
-	              "(expr:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(expr:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct a throw-branch that either throws @expr, or re-throws the last exception when @expr is ?N"),
 	TYPE_KWMETHOD("maketry", &ast_maketry,
-	              "(guard:?AAst?Ert:Compiler,handlers:?S?T3?Dstring?AAst?Ert:Compiler?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(guard:?AAst?Ert:Compiler,handlers:?S?T3?Dint?AAst?Ert:Compiler?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(guard:?#Ast,handlers:?S?T3?Dstring?#Ast?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(guard:?#Ast,handlers:?S?T3?Dint?#Ast?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of one of the given branches or @scope doesn't match @this}"
 	              "#tValueError{One of the flags-strings contains an unknown flag}"
 	              "#tReferenceError{One of the given branch is not part of the basescope of the effective @scope}"
 	              "Construct a try-branch guarding @guard, referring to @handlers, which is a sequences "
-	              "of tuples in the form of (:string flags, ?#ast mask, ?#ast code), where `mask' may also be "
-	              "passed as ?N in order to indicate the lack of a catch-mask\n"
+	              /**/ "of tuples in the form of (:string flags, ?#Ast mask, ?#Ast code), where `mask' may also be "
+	              /**/ "passed as ?N in order to indicate the lack of a catch-mask\n"
 	              "The flags in this triple is a $\",\"-separated string containing "
-	              "zero or more of the following options, with empty options being ignored:\n"
+	              /**/ "zero or more of the following options, with empty options being ignored:\n"
 	              "#T{Name|Description~"
-	              "$\"finally\"|The handler is a finally-handler, meaning it always gets executed&"
-	              "$\"interrupt\"|The handler is capable of catching interrupt-exceptions (ignored when $\"finally\" is given)}"),
+	              /**/ "$\"finally\"|The handler is a finally-handler, meaning it always gets executed&"
+	              /**/ "$\"interrupt\"|The handler is capable of catching interrupt-exceptions (ignored when $\"finally\" is given)"
+	              "}"),
 	TYPE_KWMETHOD("makeloop", &ast_makeloop,
-	              "(flags:?Dstring,elem:?AAst?Ert:Compiler=!N,iter:?AAst?Ert:Compiler,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(flags:?Dstring,cond:?AAst?Ert:Compiler=!N,next:?AAst?Ert:Compiler=!N,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(flags:?Dint,elem:?AAst?Ert:Compiler=!N,iter:?AAst?Ert:Compiler,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(flags:?Dint,cond:?AAst?Ert:Compiler=!N,next:?AAst?Ert:Compiler=!N,loop:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(flags:?Dstring,elem:?#Ast=!N,iter:?#Ast,loop:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(flags:?Dstring,cond:?#Ast=!N,next:?#Ast=!N,loop:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(flags:?Dint,elem:?#Ast=!N,iter:?#Ast,loop:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(flags:?Dint,cond:?#Ast=!N,next:?#Ast=!N,loop:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of one of the given branches or @scope doesn't match @this}"
 	              "#tValueError{The given @flags contains an unknown flag}"
 	              "#tReferenceError{One of the given branch is not part of the basescope of the effective @scope}"
 	              "Construct a loop, with the type of loop being determined by @flags, which is a "
-	              "$\",\"-separated string containing zero or more of the following options, "
-	              "with empty options being ignored:\n"
+	              /**/ "$\",\"-separated string containing zero or more of the following options, "
+	              /**/ "with empty options being ignored:\n"
 	              "#T{Name|Description~"
-	              "$\"foreach\"|The loop is a foreach-loop and the first prototype is "
-	              "used, with @iter having to be passed as an ?#ast object. "
-	              "Otherwise, the second prototype is used, and any of the "
-	              "given branches may be none when omitted&"
-	              "$\"postcond\"|The given @cond is evaluated after the loop (as seen in ${do loop; while (cond);}). "
-	              "This flag is ignored in foreach-loops&"
-	              "$\"unlikely\"|The block (@loop) of the loop is unlikely to be reached, and "
-	              "should be placed in a section of code that is rarely used}"),
+	              /**/ "$\"foreach\"|The loop is a foreach-loop and the first prototype is "
+	              /**/ /*        */ "used, with @iter having to be passed as an ?#Ast object. "
+	              /**/ /*        */ "Otherwise, the second prototype is used, and any of the "
+	              /**/ /*        */ "given branches may be none when omitted&"
+	              /**/ "$\"postcond\"|The given @cond is evaluated after the loop (as seen in ${do loop; while (cond);}). "
+	              /**/ /*         */ "This flag is ignored in foreach-loops&"
+	              /**/ "$\"unlikely\"|The block (@loop) of the loop is unlikely to be reached, and "
+	              /**/ /*         */ "should be placed in a section of code that is rarely used"
+	              "}"),
 	TYPE_KWMETHOD("makeloopctl", &ast_makeloopctl,
-	              "(isbreak:?Dbool,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(isbreak:?Dbool,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @scope doesn't match @this}"
 	              "Construct a loop control branch, that is either a $continue (when "
-	              "@isbreak is ?f), or a $break statement (when @isbreak is ?t)"),
+	              /**/ "@isbreak is ?f), or a $break statement (when @isbreak is ?t)"),
 	TYPE_KWMETHOD("makeconditional", &ast_makeconditional,
-	              "(cond:?AAst?Ert:Compiler,tt:?AAst?Ert:Compiler=!N,ff:?AAst?Ert:Compiler=!N,flags=!P{},scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(cond:?AAst?Ert:Compiler,tt:?AAst?Ert:Compiler=!N,ff:?AAst?Ert:Compiler=!N,flags=!0,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(cond:?#Ast,tt:?#Ast=!N,ff:?#Ast=!N,flags=!P{},scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(cond:?#Ast,tt:?#Ast=!N,ff:?#Ast=!N,flags=!0,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The given @flags contains an unrecognized, or invalid flag}"
@@ -2147,29 +2150,30 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              "The given @flags is a $\",\"-separated string containing zero or "
 	              "more of the following options, with empty options being ignored:\n"
 	              "#T{Name|Description~"
-	              "$\"bool\"|The values of @cond, @tt and @ff are cast to a boolean during evaluation. "
-	              "Using this, code like ${a || b} results in a branch ${makeconditional(a, a, b, \"bool\")}, "
-	              "and ${a && b} results in a branch ${makeconditional(a, b, a, \"bool\")}&"
-	              "$\"likely\"|When given, assembly for @ff is placed in a section of code that is rarely used&"
-	              "$\"unlikely\"|When given, assembly for @tt is placed in a section of code that is rarely used}"),
+	              /**/ "$\"bool\"|The values of @cond, @tt and @ff are cast to a boolean during evaluation. "
+	              /**/ /*     */ "Using this, code like ${a || b} results in a branch ${makeconditional(a, a, b, \"bool\")}, "
+	              /**/ /*     */ "and ${a && b} results in a branch ${makeconditional(a, b, a, \"bool\")}&"
+	              /**/ "$\"likely\"|When given, assembly for @ff is placed in a section of code that is rarely used&"
+	              /**/ "$\"unlikely\"|When given, assembly for @tt is placed in a section of code that is rarely used"
+	              "}"),
 	TYPE_KWMETHOD("makebool", &ast_makebool,
-	              "(expr:?AAst?Ert:Compiler,negate=!f,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(expr:?#Ast,negate=!f,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct a branch for casting @expr to a boolean, optionally inverting the "
-	              "underlying boolean logic when @negate is ?t\n"
+	              /**/ "underlying boolean logic when @negate is ?t\n"
 	              "The expression ${!!a} results in ${makebool(a, false)}, while ${!a} results in ${makebool(a, true)}"),
 	TYPE_KWMETHOD("makeexpand", &ast_makeexpand,
-	              "(expr:?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(expr:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @expr or @scope doesn't match @this}"
 	              "#tReferenceError{The given @expr is not part of the basescope of the effective @scope}"
 	              "Construct an expand-branch that will unpack a sequence expression @expr at runtime"),
 	TYPE_KWMETHOD("makefunction", &ast_makefunction,
-	              "(code:?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(code:?#Ast,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The compiler of @code or @scope doesn't match @this}"
@@ -2177,28 +2181,28 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              "#tReferenceError{The effective ${scope.base} is identical to ${code.scope.base}}"
 	              "Construct a new lambda-like function that will execute @code\n"
 	              "The base-scope of the function is set to ${code.scope.base}, while the returned "
-	              "branch will be executed in the context of @scope, or the current scope when ?N"),
+	              /**/ "branch will be executed in the context of @scope, or the current scope when ?N"),
 	TYPE_KWMETHOD("makeoperatorfunc", &ast_makeoperatorfunc,
-	              "(name:?Dstring,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(name:?Dint,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(name:?Dstring,binding:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(name:?Dint,binding:?#Ast=!N,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pname{The name of the operator, or one of ${[\"+\", \"-\", \"[]\", \"[:]\", \".\"]} "
-	              "for ambiguous operators resolved at runtime}"
+	              /*  */ "for ambiguous operators resolved at runtime}"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The given @name is not recognized as a valid operator}"
 	              "#tValueError{The compiler of @binding or @scope doesn't match @this}"
 	              "#tReferenceError{The given @binding is not part of the same base-scope as the effective @scope}"
 	              "Create a new branch a reference to one of the operator functions, or to "
-	              "construct an instance-bound operator function\n"
+	              /**/ "construct an instance-bound operator function\n"
 	              "For example ${operator add} results in ${makeoperatorfunc(\"add\")}, while "
-	              "${binding.operator add} results in ${makeoperatorfunc(\"add\", binding)}"),
+	              /**/ "${binding.operator add} results in ${makeoperatorfunc(\"add\", binding)}"),
 	TYPE_KWMETHOD("makeoperator", &ast_makeoperator,
-	              "(name:?Dstring,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(name:?Dint,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(name:?Dstring,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!0,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
-	              "(name:?Dint,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!0,scope:?AScope?Ert:Compiler=!N,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?AAst?Ert:Compiler\n"
+	              "(name:?Dstring,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!P{},scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(name:?Dint,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!P{},scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(name:?Dstring,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!0,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
+	              "(name:?Dint,a:?#Ast,b:?#Ast=!N,c:?#Ast=!N,d:?#Ast=!N,flags=!0,scope:?#Scope=!N,loc?:?T3?AFile?#Lexer?Dint?Dint)->?#Ast\n"
 	              "#pname{The name of the operator, or one of ${[\"+\", \"-\", \"[]\", \"[:]\", \".\"]} "
-	              "for ambiguous operators resolved based on argument count}"
+	              /*  */ "for ambiguous operators resolved based on argument count}"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The given @name is not recognized as a valid operator}"
@@ -2206,24 +2210,24 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              "#tReferenceError{One of the given branches is not part of the same base-scope as the effective @scope}"
 	              "Create an operator branch for invoking the operator @name with the given branches @a, @b, @c and @d\n"
 	              "The given @flags is a $\",\"-separated string containing zero or "
-	              "more of the following options, with empty options being ignored:\n"
+	              /**/ "more of the following options, with empty options being ignored:\n"
 	              "#T{Flag|Description~"
-	              "$\"post\"|The invocation is assembled as $TYPE_KWMETHOD(({ __stack local _res = copy a; a.operator <name> (b[, [c, d]]); _res; }); } "
-	              "when the result of the expression is being used. Otherwise, this flag is ignored. "
-	              "This is mainly used to implement ${a++}, such that the old value of @a is returned&"
-	              "$\"varargs\"|May only be passed when exactly 2 operands (@a and @b) are given: @b should be "
-	              "interpreted as a sequence expression containing the actual operands then used "
-	              "to invoke the operator at runtime. This is mainly used to implement operator "
-	              "invocations with variable secondary operand counts, as caused by an expand "
-	              "expression appearing within a multi-branch argument&"
-	              "$\"maybeprefix\"|Still generate valid assembly for dealing with the problem at runtime when an "
-	              "inplace operator is used when the @a operand cannot actually be written to&"
-	              "$\"dontoptimize\"|Don't perform constant optimizations within this branch during the ast-optimization pass}"),
+	              /**/ "$\"post\"|The invocation is assembled as ${({ __stack local _res = copy a; a.operator <name> (b[, [c, d]]); _res; })} "
+	              /**/ /*     */ "when the result of the expression is being used. Otherwise, this flag is ignored. "
+	              /**/ /*     */ "This is mainly used to implement ${a++}, such that the old value of @a is returned&"
+	              /**/ "$\"varargs\"|May only be passed when exactly 2 operands (@a and @b) are given: @b should be "
+	              /**/ /*        */ "interpreted as a sequence expression containing the actual operands then used "
+	              /**/ /*        */ "to invoke the operator at runtime. This is mainly used to implement operator "
+	              /**/ /*        */ "invocations with variable secondary operand counts, as caused by an expand "
+	              /**/ /*        */ "expression appearing within a multi-branch argument&"
+	              /**/ "$\"maybeprefix\"|Still generate valid assembly for dealing with the problem at runtime when an "
+	              /**/ /*            */ "inplace operator is used when the @a operand cannot actually be written to&"
+	              /**/ "$\"dontoptimize\"|Don't perform constant optimizations within this branch during the ast-optimization pass}"),
 	TYPE_KWMETHOD("makeaction", &ast_makeaction,
-	              "(name:?Dstring,a:?AAst?Ert:Compiler=!N,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,mustrun=!t,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n"
+	              "(name:?Dstring,a:?#Ast=!N,b:?#Ast=!N,c:?#Ast=!N,mustrun=!t,scope:?#Scope=!N)->?#Ast\n"
 	              "#pname{The name of the action (see table below)}"
 	              "#pmustrun{When ?f, ast-optimization may optimize away side-effects caused by action operands. "
-	              "Otherwise, all operands are required to execute as required by the action (which usually means executed-in-order)}"
+	              /*     */ "Otherwise, all operands are required to execute as required by the action (which usually means executed-in-order)}"
 	              "#pscope{The scope to-be used for the new branch, or ?N to use ?#scope}"
 	              "#ploc{The location of the ast for DDI, omitted to use the current token position, or ?N when not available}"
 	              "#tValueError{The given @name is not recognized as a valid action}"
@@ -2231,32 +2235,33 @@ INTERN_TPCONST struct type_method tpconst compiler_methods[] = {
 	              "#tReferenceError{One of the given branches is not part of the same base-scope as the effective @scope}"
 	              "#tTypeError{Too many or too few operand-branches provided for the specified action}"
 	              "Similar to ?#makeoperator, but instead used to construct action-branches that are then used "
-	              "to perform operator-unrelated actions, such as storing an expression into a symbol\n"
+	              /**/ "to perform operator-unrelated actions, such as storing an expression into a symbol\n"
 	              "The given @name is must be one of the following\n"
 	              "#T{Action|Example|Operands|Description~"
-	              "$\"typeof\"|${type a}|1|Returns the type of a given expression&"
-	              "$\"classof\"|${a.class}|1|Returns the class of a given expression (which is the bound type in :super objects)&"
-	              "$\"superof\"|${a.super}|1|Returns a view for the super-class of a given object&"
-	              "$\"print\"|${print a...,;}|1|Print the individual elements of a sequence @a, separated by spaces&"
-	              "$\"println\"|${print a...;}|1|Print the individual elements of a sequence @a, separated by spaces, and followed by a line-feed&"
-	              "$\"fprint\"|${print a: b...,;}|2|Same as $\"print\", but print a sequence @b, and write data to a file @a&"
-	              "$\"fprintln\"|${print a: b...;}|2|Same as $\"println\", but print a sequence @b, and write data to a file @a&"
-	              "$\"range\"|${[a:b, c]}|3|Construct a range expression. Note that @a and @c may evaluate to ?N at runtime, in which case the behavior is the same as when omitted in user-code&"
-	              "$\"is\"|${a is b}|2|Check if @a is an instance of @b at runtime, and evaluate to ?t or ?f&"
-	              "$\"in\"|${a in b}|2|Same as ${b.operator contains(a)}, however operands are evaluated in reverse order&"
-	              "$\"as\"|${a as b}|2|Construct a super-wrapper for @a with a typing of @b&"
-	              "$\"min\"|${a < ...}|1|Evaluate to the lowest element from a sequence in @a, with the side-effect of enumerating @a&"
-	              "$\"max\"|${a > ...}|1|Evaluate to the greatest element from a sequence in @a, with the side-effect of enumerating @a&"
-	              "$\"sum\"|${a + ...}|1|Evaluate to the sum of all element from a sequence in @a, with the side-effect of enumerating @a&"
-	              "$\"any\"|${a || ...}|1|Evaluate to ?t if any element from @a evaluates to ?t, or ?f when @a is empty or has no such elements, with the side-effect of enumerating @a&"
-	              "$\"all\"|${a && ...}|1|Evaluate to ?t if all elements from @a evaluate to ?t or when @a is empty, or ?f otherwise, with the side-effect of enumerating @a&"
-	              "$\"store\"|${a = b}|2|Store the expression in @b into the branch @a (@a may be a ?#makesym, ?#makemultiple, or a $\"getitem\", $\"getrange\", or $\"getattr\" #makeoperator branch)&"
-	              "$\"assert\"|${assert(a)} or ${assert(a, b)}|1 or 2|Assert that @a evaluates to ?t when cast to a boolean, otherwise throwing an :AssertionError at runtime, alongside an optional message @b. "
-	              "When ?t and used in an expression, evaluate to the propagated value of @a, such that ${print assert(42);} would output $42 to :File.stdout&"
-	              "$\"boundattr\"|${a.operator . (b) is bound}|2|Evaluate to ?t / ?f when attribute @b of @a is bound at runtime&"
-	              "$\"sameobj\"|${a === b is bound}|2|Evaluate to ?t when @a and @b are the same object at runtime, or ?f otherwise&"
-	              "$\"diffobj\"|${a !== b is bound}|2|Evaluate to ?t when @a and @b are different objects at runtime, or ?f otherwise&"
-	              "$\"callkw\"|${a(b..., **c)}|3|Perform a call to @a, using positional arguments from @b, and a keyword list from @c}"),
+	              /**/ "$\"typeof\"|${type a}|1|Returns the type of a given expression&"
+	              /**/ "$\"classof\"|${a.class}|1|Returns the class of a given expression (which is the bound type in :super objects)&"
+	              /**/ "$\"superof\"|${a.super}|1|Returns a view for the super-class of a given object&"
+	              /**/ "$\"print\"|${print a...,;}|1|Print the individual elements of a sequence @a, separated by spaces&"
+	              /**/ "$\"println\"|${print a...;}|1|Print the individual elements of a sequence @a, separated by spaces, and followed by a line-feed&"
+	              /**/ "$\"fprint\"|${print a: b...,;}|2|Same as $\"print\", but print a sequence @b, and write data to a file @a&"
+	              /**/ "$\"fprintln\"|${print a: b...;}|2|Same as $\"println\", but print a sequence @b, and write data to a file @a&"
+	              /**/ "$\"range\"|${[a:b, c]}|3|Construct a range expression. Note that @a and @c may evaluate to ?N at runtime, in which case the behavior is the same as when omitted in user-code&"
+	              /**/ "$\"is\"|${a is b}|2|Check if @a is an instance of @b at runtime, and evaluate to ?t or ?f&"
+	              /**/ "$\"in\"|${a in b}|2|Same as ${b.operator contains(a)}, however operands are evaluated in reverse order&"
+	              /**/ "$\"as\"|${a as b}|2|Construct a super-wrapper for @a with a typing of @b&"
+	              /**/ "$\"min\"|${a < ...}|1|Evaluate to the lowest element from a sequence in @a, with the side-effect of enumerating @a&"
+	              /**/ "$\"max\"|${a > ...}|1|Evaluate to the greatest element from a sequence in @a, with the side-effect of enumerating @a&"
+	              /**/ "$\"sum\"|${a + ...}|1|Evaluate to the sum of all element from a sequence in @a, with the side-effect of enumerating @a&"
+	              /**/ "$\"any\"|${a || ...}|1|Evaluate to ?t if any element from @a evaluates to ?t, or ?f when @a is empty or has no such elements, with the side-effect of enumerating @a&"
+	              /**/ "$\"all\"|${a && ...}|1|Evaluate to ?t if all elements from @a evaluate to ?t or when @a is empty, or ?f otherwise, with the side-effect of enumerating @a&"
+	              /**/ "$\"store\"|${a = b}|2|Store the expression in @b into the branch @a (@a may be a ?#makesym, ?#makemultiple, or a $\"getitem\", $\"getrange\", or $\"getattr\" ?#makeoperator branch)&"
+	              /**/ "$\"assert\"|${assert(a)} or ${assert(a, b)}|1 or 2|Assert that @a evaluates to ?t when cast to a boolean, otherwise throwing an :AssertionError at runtime, alongside an optional message @b. "
+	              /**/ /*                                              */ "When ?t and used in an expression, evaluate to the propagated value of @a, such that ${print assert(42);} would output $42 to :File.stdout&"
+	              /**/ "$\"boundattr\"|${a.operator . (b) is bound}|2|Evaluate to ?t / ?f when attribute @b of @a is bound at runtime&"
+	              /**/ "$\"sameobj\"|${a === b is bound}|2|Evaluate to ?t when @a and @b are the same object at runtime, or ?f otherwise&"
+	              /**/ "$\"diffobj\"|${a !== b is bound}|2|Evaluate to ?t when @a and @b are different objects at runtime, or ?f otherwise&"
+	              /**/ "$\"callkw\"|${a(b..., **c)}|3|Perform a call to @a, using positional arguments from @b, and a keyword list from @c"
+	              "}"),
 	TYPE_KWMETHOD("makeclass", &ast_makeclass, "TODO"),
 	TYPE_KWMETHOD("makelabel", &ast_makelabel, "TODO"),
 	TYPE_KWMETHOD("makegoto", &ast_makegoto, "TODO"),

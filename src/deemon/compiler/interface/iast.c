@@ -554,7 +554,7 @@ ast_delreturnast(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_RETURN) {
 		result = err_invalid_ast_type(self, AST_RETURN);
-	} else {
+	} else if (me->a_return) {
 		ast_decref(me->a_return);
 		me->a_return = NULL;
 	}
@@ -674,7 +674,7 @@ ast_delthrowast(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_THROW) {
 		result = err_invalid_ast_type(self, AST_THROW);
-	} else {
+	} else if (me->a_throw) {
 		ast_decref(me->a_throw);
 		me->a_throw = NULL;
 	}
@@ -1141,7 +1141,7 @@ ast_delloopcond(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_is_a_foreach_loop(self);
-	} else {
+	} else if (me->a_loop.l_cond) {
 		ast_decref(me->a_loop.l_cond);
 		me->a_loop.l_cond = NULL;
 	}
@@ -1220,7 +1220,7 @@ ast_delloopnext(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_is_a_foreach_loop(self);
-	} else {
+	} else if (me->a_loop.l_next) {
 		ast_decref(me->a_loop.l_next);
 		me->a_loop.l_next = NULL;
 	}
@@ -1299,7 +1299,7 @@ ast_delloopelem(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
 		result = err_not_a_foreach_loop(self);
-	} else {
+	} else if (me->a_loop.l_elem) {
 		ast_decref(me->a_loop.l_elem);
 		me->a_loop.l_elem = NULL;
 	}
@@ -1427,7 +1427,7 @@ ast_dellooploop(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
-	} else {
+	} else if (me->a_loop.l_loop) {
 		ast_decref(me->a_loop.l_loop);
 		me->a_loop.l_loop = NULL;
 	}
@@ -1500,7 +1500,7 @@ ast_delloopelemcond(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
-	} else {
+	} else if (me->a_loop.l_elem) {
 		ast_decref(me->a_loop.l_elem);
 		me->a_loop.l_elem = NULL;
 	}
@@ -1574,7 +1574,7 @@ ast_delloopiternext(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_cant_access_attribute_string(Dee_TYPE(self), "loopiternext", ATTR_ACCESS_DEL);
-	} else {
+	} else if (me->a_loop.l_iter) {
 		ast_decref(me->a_loop.l_iter);
 		me->a_loop.l_iter = NULL;
 	}
@@ -1738,7 +1738,7 @@ ast_delconditionaltt(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	} else {
+	} else if (me->a_conditional.c_tt) {
 		ast_decref(me->a_conditional.c_tt);
 		me->a_conditional.c_tt = NULL;
 	}
@@ -1810,7 +1810,7 @@ ast_delconditionalff(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-	} else {
+	} else if (me->a_conditional.c_ff) {
 		ast_decref(me->a_conditional.c_ff);
 		me->a_conditional.c_ff = NULL;
 	}
@@ -2352,7 +2352,7 @@ ast_deloperatorfuncbinding(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-	} else {
+	} else if (me->a_operator_func.of_binding) {
 		ast_decref(me->a_operator_func.of_binding);
 		me->a_operator_func.of_binding = NULL;
 	}
@@ -2516,7 +2516,7 @@ ast_deloperatorb(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-	} else {
+	} else if (me->a_operator.o_op1) {
 		ast_decref(me->a_operator.o_op1);
 		me->a_operator.o_op1 = NULL;
 	}
@@ -2588,7 +2588,7 @@ ast_deloperatorc(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-	} else {
+	} else if (me->a_operator.o_op2) {
 		ast_decref(me->a_operator.o_op2);
 		me->a_operator.o_op2 = NULL;
 	}
@@ -2660,7 +2660,7 @@ ast_deloperatord(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-	} else {
+	} else if (me->a_operator.o_op3) {
 		ast_decref(me->a_operator.o_op3);
 		me->a_operator.o_op3 = NULL;
 	}
@@ -3699,7 +3699,7 @@ got_except_symbol:
 		if (!is_scope && is_expression)
 			goto force_scope;
 		if (self->a_flag & AST_FLOOP_UNLIKELY)
-			PRINT("@unlikely ");
+			PRINT("@[unlikely] ");
 		if (self->a_flag & AST_FLOOP_FOREACH) {
 			PRINT("foreach (");
 			need_semicolon = false;
@@ -5313,14 +5313,14 @@ err:
 
 PRIVATE struct type_getset tpconst ast_getsets[] = {
 	TYPE_GETSET("scope", &ast_getscope, NULL, &ast_setscope,
-	            "->?AScope?Ert:Compiler\n"
+	            "->" DR_CScope "\n"
 	            "#tValueError{Attempted to set a scope associated with a different compiler}"
-	            "#tReferenceError{Attempted to set a scope not apart of the same base-scope (s.a. :Compiler.scope.base)}"
+	            "#tReferenceError{Attempted to set a scope not apart of the same base-scope (s.a. ?Abase" DR_CScope ")}"
 	            "#tReferenceError{Attempted to set the scope of a branch containing symbols that would no longer be reachable}"
 	            "Get or set the scope with which this branch is associated"),
 	TYPE_GETTER("kind", &ast_getkind,
 	            "->?Dstring\n"
-	            "Get the name of the ast kind (same as the `make*' methods of :Compiler)"),
+	            "Get the name of the ast kind (same as the #C{*} in #C{make*} methods of " DR_Compiler ")"),
 	TYPE_GETTER("typeid", &ast_gettypeid,
 	            "->?Dint\n"
 	            "Get the internal type-id of ast"),
@@ -5329,9 +5329,9 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            "#tTypeError{?#kind isn't $\"constexpr\"}"
 	            "Get or set the constant expression value of a $\"constexpr\" (s.a. ?#kind) ast"),
 	TYPE_GETSET(STR_sym, &ast_getsym, NULL, &ast_setsym,
-	            "->?ASymbol?Ert:Compiler\n"
+	            "->" DR_CSymbol "\n"
 	            "#tTypeError{?#kind isn't $\"sym\", $\"unbind\" or $\"bound\"}"
-	            "#tValueError{Attempted to set a :Compiler.symbol associated with a different compiler}"
+	            "#tValueError{Attempted to set a " DR_CSymbol " associated with a different compiler}"
 	            "Get or set the symbol associated with a symbol-related AST"),
 	TYPE_GETSET(STR_multiple,
 	            &ast_getmultiple,
@@ -5339,13 +5339,13 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setmultiple,
 	            "->?S?.\n"
 	            "#tTypeError{?#kind isn't $\"multiple\"}"
-	            "#tValueError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tValueError{Attempted to set an ?. associated with a different compiler}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the sequence of sub-branches associated with @this multi-branch ast"),
 	TYPE_GETSET("multiple_typing", &ast_getmultiple_typing, NULL, &ast_setmultiple_typing,
 	            "->?DType\n"
 	            "#tTypeError{?#kind isn't $\"multiple\"}"
-	            "#tTypeError{Attempted to set a typing that is neither ?N, nor one of the type listed in :Compiler.makemultiple}"
+	            "#tTypeError{Attempted to set a typing that is neither ?N, nor one of the type listed in ?Amakemultiple" DR_Compiler "}"
 	            "Get or set the typing of a @ multi-branch ast"),
 	TYPE_GETSET("returnast",
 	            &ast_getreturnast,
@@ -5353,7 +5353,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setreturnast,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"return\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No return expression has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the ast describing the expression returned by @this branch\n"
@@ -5361,7 +5361,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	TYPE_GETSET("yieldast", &ast_getyieldast, NULL, &ast_setyieldast,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"yield\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the ast describing the expression yielded by @this branch"),
 	TYPE_GETSET("throwast",
@@ -5370,7 +5370,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setthrowast,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"throw\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No throw expression has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the ast describing the expression thrown by @this branch\n"
@@ -5378,7 +5378,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	TYPE_GETSET("tryguard", &ast_gettryguard, NULL, &ast_settryguard,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"try\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No throw expression has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the ast guarded by the ?#tryhandlers of @this try-branch"),
@@ -5388,7 +5388,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            "#tValueError{The compiler of one of the given branches or @scope doesn't match @this}"
 	            "#tValueError{One of the flags-strings contains an unknown flag}"
 	            "#tReferenceError{One of the given branch is not part of the basescope of the effective @scope}"
-	            "Get or set the ast guarded by the ?#tryhandlers of @this try-branch (s.a. :Compiler.maketry)"),
+	            "Get or set the ast guarded by the ?#tryhandlers of @this try-branch (s.a. ?Amaketry" DR_Compiler ")"),
 	TYPE_GETSET("loopflags", &ast_getloopflags, NULL, &ast_setloopflags,
 	            "->?Dstring\n"
 	            "#tTypeError{?#kind isn't $\"loop\"}"
@@ -5421,7 +5421,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"loop\"}"
 	            "#tTypeError{?#loopflags contains $\"foreach\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No condition expression has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the continue-condition of @this loop (${for (; loopcond; loopnext) looploop})\n"
@@ -5433,7 +5433,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"loop\"}"
 	            "#tTypeError{?#loopflags contains $\"foreach\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No advance expression expression has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the optional advance expression of @this loop (${for (; loopcond; loopnext) looploop})\n"
@@ -5444,7 +5444,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setlooploop,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"loop\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No loop block expression has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the block executed by @this loop (${for (; loopcond; loopnext) looploop})\n"
@@ -5456,7 +5456,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"loop\"}"
 	            "#tTypeError{?#loopflags doesn't contain $\"foreach\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No loop element has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the foreach element of @this loop (${foreach (loopelem: loopiter) looploop})\n"
@@ -5465,7 +5465,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"loop\"}"
 	            "#tTypeError{?#loopflags doesn't contain $\"foreach\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the foreach iterator expression of @this loop (${foreach (loopelem: loopiter) looploop})"),
 	TYPE_GETSET("loopelemcond",
@@ -5474,7 +5474,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setloopelemcond,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"loop\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No condition or element expression has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Alias for accessing either the condition of a regular loop (#loopcond), or the element of foreach-loop (#loopelem)"),
@@ -5484,7 +5484,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setloopiternext,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"loop\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No loop advance expression has been bound}"
 	            "#tAttributeError{Attempted to unbind or assign ?N to ?#loopiter}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
@@ -5496,7 +5496,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	TYPE_GETSET("conditionalcond", &ast_getconditionalcond, NULL, &ast_setconditionalcond,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"conditional\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the condition used to determine the the path taken by a conditional branch"),
 	TYPE_GETSET("conditionaltt",
@@ -5505,7 +5505,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setconditionaltt,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"conditional\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No true-branch has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the branch taken when ?#conditionalcond evaluates to ?t\n"
@@ -5517,7 +5517,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setconditionalff,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"conditional\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{No false-branch has been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the branch taken when ?#conditionalcond evaluates to ?f\n"
@@ -5527,23 +5527,23 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            "->?Dstring\n"
 	            "#tTypeError{?#kind isn't $\"conditional\"}"
 	            "#tValueError{Attempted to set an invalid set of flags}"
-	            "Get or set the flags used for evaluating @this conditional branch (s.a. :Compiler.makeconditional)"),
+	            "Get or set the flags used for evaluating @this conditional branch (s.a. ?Amakeconditional" DR_Compiler ")"),
 	TYPE_GETSET("conditionalisbool", &ast_getconditionalisbool, NULL, &ast_setconditionalisbool,
 	            "->?Dbool\n"
 	            "#tTypeError{?#kind isn't $\"conditional\"}"
-	            "Control the $\"bool\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)"),
+	            "Control the $\"bool\"-flag of ?#conditionalflags (s.a. ?Amakeconditional" DR_Compiler ")"),
 	TYPE_GETSET("conditionalislikely", &ast_getconditionalislikely, NULL, &ast_setconditionalislikely,
 	            "->?Dbool\n"
 	            "#tTypeError{?#kind isn't $\"conditional\"}"
-	            "Control the $\"likely\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)"),
+	            "Control the $\"likely\"-flag of ?#conditionalflags (s.a. ?Amakeconditional" DR_Compiler ")"),
 	TYPE_GETSET("conditionalisunlikely", &ast_getconditionalisunlikely, NULL, &ast_setconditionalisunlikely,
 	            "->?Dbool\n"
 	            "#tTypeError{?#kind isn't $\"conditional\"}"
-	            "Control the $\"unlikely\"-flag of ?#conditionalflags (s.a. :Compiler.makeconditional)"),
+	            "Control the $\"unlikely\"-flag of ?#conditionalflags (s.a. ?Amakeconditional" DR_Compiler ")"),
 	TYPE_GETSET("boolast", &ast_getboolast, NULL, &ast_setboolast,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"bool\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the ast describing the expression turned into a boolean by @this branch"),
 	TYPE_GETSET("boolisnegated", &ast_getboolisnegated, NULL, &ast_setboolisnegated,
@@ -5553,13 +5553,13 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	TYPE_GETSET("expandast", &ast_getexpandast, NULL, &ast_setexpandast,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"expand\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the ast being expanded by @this one"),
 	TYPE_GETSET("functioncode", &ast_getfunctioncode, NULL, &ast_setfunctioncode,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"function\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tReferenceError{${this.scope} is not reachable from ${VALUE.scope}}"
 	            "#tReferenceError{${this.scope.base} is identical to ${VALUE.scope.base}}"
 	            "Get or set the code bound to the function of @this ast"),
@@ -5574,7 +5574,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            &ast_setoperatorfuncbinding,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"operatorfunc\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{The operator function hasn't been bound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the binding of the operator function loaded by this branch\n"
@@ -5588,13 +5588,13 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	TYPE_GETSET("operatora", &ast_getoperatora, NULL, &ast_setoperatora,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the first operand used for invoking ?#operatorname"),
 	TYPE_GETSET("operatorb", &ast_getoperatorb, &ast_deloperatorb, &ast_setoperatorb,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{The second operand has been unbound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the second operand used for invoking ?#operatorname\n"
@@ -5602,7 +5602,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	TYPE_GETSET("operatorc", &ast_getoperatorc, &ast_deloperatorc, &ast_setoperatorc,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{The third operand has been unbound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the second third used for invoking ?#operatorname\n"
@@ -5610,7 +5610,7 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	TYPE_GETSET("operatord", &ast_getoperatord, &ast_deloperatord, &ast_setoperatord,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tUnboundAttribute{The fourth operand has been unbound}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get, del or set the second fourth used for invoking ?#operatorname\n"
@@ -5619,48 +5619,48 @@ PRIVATE struct type_getset tpconst ast_getsets[] = {
 	            "->?Dstring\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
 	            "#tValueError{Attempted to set invalid flags}"
-	            "Get or set the flags used to describe special behavior for executing an operator (s.a. :Compiler.makeoperator)"),
+	            "Get or set the flags used to describe special behavior for executing an operator (s.a. ?Amakeoperator" DR_Compiler ")"),
 	TYPE_GETSET("operatorispost", &ast_getoperatorispost, NULL, &ast_setoperatorispost,
 	            "->?Dbool\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "Get or set the $\"post\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)"),
+	            "Get or set the $\"post\"-flag of ?#operatorflags (s.a. ?Amakeoperator" DR_Compiler ")"),
 	TYPE_GETSET("operatorisvarargs", &ast_getoperatorisvarargs, NULL, &ast_setoperatorisvarargs,
 	            "->?Dbool\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "Get or set the $\"varargs\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)"),
+	            "Get or set the $\"varargs\"-flag of ?#operatorflags (s.a. ?Amakeoperator" DR_Compiler ")"),
 	TYPE_GETSET("operatorismaybeprefix", &ast_getoperatorismaybeprefix, NULL, &ast_setoperatorismaybeprefix,
 	            "->?Dbool\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "Get or set the $\"maybeprefix\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)"),
+	            "Get or set the $\"maybeprefix\"-flag of ?#operatorflags (s.a. ?Amakeoperator" DR_Compiler ")"),
 	TYPE_GETSET("operatorisdontoptimize", &ast_getoperatorisdontoptimize, NULL, &ast_setoperatorisdontoptimize,
 	            "->?Dbool\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "Get or set the $\"dontoptimize\"-flag of ?#operatorflags (s.a. :Compiler.makeoperator)"),
+	            "Get or set the $\"dontoptimize\"-flag of ?#operatorflags (s.a. ?Amakeoperator" DR_Compiler ")"),
 	TYPE_GETSET("actionname", &ast_getactionname, NULL, &ast_setactionname,
 	            "->?Dstring\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
 	            "#tValueError{Attempted to set an invalid action}"
 	            "#tValueError{Attempted to set an action taking a different number of operands than "
-	            "the old. To work around this restriction, use ?#setaction instead}"
+	            /*        */ "the old. To work around this restriction, use ?#setaction instead}"
 	            "Get or set the name of the action performed by @this ast"),
 	TYPE_GETSET("actiona", &ast_getactiona, NULL, &ast_setactiona,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tAttributeError{The currently set action takes $0 arguments}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the first operand used by the action performed by @this ast"),
 	TYPE_GETSET("actionb", &ast_getactionb, NULL, &ast_setactionb,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tAttributeError{The currently set action takes $0, or $1 argument}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the second operand used by the action performed by @this ast"),
 	TYPE_GETSET("actionc", &ast_getactionc, NULL, &ast_setactionc,
 	            "->?.\n"
 	            "#tTypeError{?#kind isn't $\"operator\"}"
-	            "#tTypeError{Attempted to set an ?AAst?Ert:Compiler associated with a different compiler}"
+	            "#tTypeError{Attempted to set an ?. associated with a different compiler}"
 	            "#tAttributeError{The currently set action takes $0, $1 or $2 arguments}"
 	            "#tReferenceError{Attempted to set a sub-branch apart of a different base-scope than @this}"
 	            "Get or set the third operand used by the action performed by @this ast"),

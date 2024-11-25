@@ -738,18 +738,18 @@ PRIVATE struct type_getset tpconst keyword_getsets[] = {
 	            "->?Dint\n"
 	            "Returns the hash of @this keyword"),
 	TYPE_GETTER("macrofile", &keyword_macrofile,
-	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "->?X2" DR_CFile "?N\n"
 	            "Returns the macro definitions file, or ?N if "
 	            "@this keyword isn't being used as a user-defined macro"),
 	TYPE_GETTER("oldmacrofile", &keyword_oldmacrofile,
-	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "->?X2" DR_CFile "?N\n"
 	            "Returns the latest old macro file, that is the first macro "
 	            "file definition that is preserved when ${##pragma push_macro(\"foo\")} is used"),
 	TYPE_GETTER("defmacrofile", &keyword_defmacrofile,
-	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "->?X2" DR_CFile "?N\n"
 	            "Returns the default definition of a user-overwritten macro"),
 	TYPE_GETTER("cachedfile", &keyword_cachedfile,
-	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "->?X2" DR_CFile "?N\n"
 	            "Returns a file that has been cached under this keyword"),
 	TYPE_GETSET("counter",
 	            &keyword_get_counter,
@@ -1650,7 +1650,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            "Returns a descriptor for the currently active token"),
 	TYPE_GETTER("file", &lexer_get_file,
 	            "->?X2?#File?N\n"
-	            "Returns the currently active file, or ?N if no file is currently active. Same as ?Aid?#token"),
+	            "Returns the currently active file, or ?N if no file is currently active. Same as ?Aid?#Token"),
 	TYPE_GETTER("textfile", &lexer_get_textfile,
 	            "->?X2?#File?N\n"
 	            "Same as ?#File, but return the first non-macro file"),
@@ -1673,11 +1673,11 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            "Similar to ?#textposition, however in the event of the current token originating "
 	            /**/ "from a macro, return the source position of that token within the macro, rather "
 	            /**/ "than the source position of the macro being invoked\n"
-	            "Same as ?Aposition?#token"),
+	            "Same as ?Aposition?#Token"),
 	TYPE_GETTER("tokenendposition", &lexer_get_tokenendposition,
 	            "->?X2?T3?#File?Dint?Dint?N\n"
-	            "Same as ?#tokenposition, however return the end position of the current token\n"
-	            "Same as ?Aendposition?#token"),
+	            "Same as ?#Tokenposition, however return the end position of the current token\n"
+	            "Same as ?Aendposition?#Token"),
 	TYPE_GETTER("atstartofline", &lexer_get_atstartofline,
 	            "->?Dbool\n"
 	            "Returns ?t if the current token is located at the "
@@ -1714,9 +1714,9 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            &lexer_del_noseek_on_eob,
 	            &lexer_set_noseek_on_eob,
 	            "->?Dbool\n"
-	            "When ?t, don't seek the next chunk (s.a. ?#File.nextchunk) "
+	            "When ?t, don't seek the next chunk (s.a. ?Anextchunk?#File) "
 	            /**/ "when the current one ends. Instead, indicate EOF by setting the "
-	            /**/ "current ?Aid?#token to $0\n"
+	            /**/ "current ?Aid?#Token to $0\n"
 	            "Note: This field is preserved by ?#flags"),
 	TYPE_GETSET("nopop_on_eof",
 	            &lexer_get_nopop_on_eof,
@@ -1725,7 +1725,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            "->?Dbool\n"
 	            "When ?t, don't automatically pop the current ?#File when it signals "
 	            /**/ "eof in order to continue parsing older files, but instead propagate the "
-	            /**/ "EOF by setting the current ?Aid?#token to $0\n"
+	            /**/ "EOF by setting the current ?Aid?#Token to $0\n"
 	            "Note: This field is preserved by ?#flags"),
 	TYPE_GETSET("keepmacrospace",
 	            &lexer_get_keepmacrospace,
@@ -1742,7 +1742,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            &lexer_set_nonblocking,
 	            "->?Dbool\n"
 	            "When ?t, operate in non-blocking mode when loading new chunks from "
-	            /**/ "files, which essentically means that whenever ?#File.nextchunk is called, "
+	            /**/ "files, which essentically means that whenever ?Anextchunk?#File is called, "
 	            /**/ "the $nonblocking argument is set to this value\n"
 	            "Note: This field is preserved by ?#flags"),
 	TYPE_GETSET("terminatestringlf",
@@ -1753,7 +1753,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            "When ?t, regular strings are terminated by line-feeds, which will also "
 	            /**/ "cause a warning/error to be emit, alongside the incomplete token still "
 	            /**/ "packaged as a complete string\n"
-	            "Note that this also affects ?#File.nextchunk, in that incomplete strings "
+	            "Note that this also affects ?Anextchunk?#File, in that incomplete strings "
 	            /**/ "near the end of the input stream can also be terminted by line-feeds\n"
 	            "Note: This field is preserved by ?#flags"),
 	TYPE_GETSET("nodirectives",
@@ -1770,8 +1770,8 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            &lexer_set_nomacros,
 	            "->?Dbool\n"
 	            "When ?t, do not expand user-defined macros. Note however that "
-	            /**/ "builtin macros are still expanded, unless ?#nobuiltinmacros is also "
-	            /**/ "set to ?t\n"
+	            /**/ "builtin macros are still expanded, unless ?#nobuiltinmacros "
+	            /**/ "is also set to ?t\n"
 	            "Note: This field is preserved by ?#flags"),
 	TYPE_GETSET("nobuiltinmacros",
 	            &lexer_get_nobuiltinmacros,
@@ -1779,8 +1779,8 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            &lexer_set_nobuiltinmacros,
 	            "->?Dbool\n"
 	            "When ?t, do not expand builtin macros. Note however that "
-	            /**/ "user-defined macros are still expanded, unless ?#nomacros is also "
-	            /**/ "set to ?t\n"
+	            /**/ "user-defined macros are still expanded, unless ?#nomacros "
+	            /**/ "is also set to ?t\n"
 	            "Note: This field is preserved by ?#flags"),
 	TYPE_GETSET("asmcomments",
 	            &lexer_get_asmcomments,
@@ -1839,7 +1839,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            /**/ "all strings as though they were raw string literals, meaning that a "
 	            /**/ "backslash-escape sequences are not recognized\n"
 	            "The intended use for this is to parse the string of an ${##include} directive\n"
-	            "Note that this flag also affects the behavior of ?Adecodestring?#token, which "
+	            "Note that this flag also affects the behavior of ?Adecodestring?#Token, which "
 	            /**/ "won't not recognize escape sequences for non-raw string literals, either\n"
 	            "Note: This field is preserved by ?#flags"),
 	TYPE_GETSET("nolegacyguards",
@@ -1864,7 +1864,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            &lexer_del_wsystemheaders,
 	            &lexer_set_wsystemheaders,
 	            "->?Dbool\n"
-	            "When ?t, ignore ?#File.issystemheader, and still produce "
+	            "When ?t, ignore ?Aissystemheader?#File, and still produce "
 	            /**/ "warnings in files marked as system headers\n"
 	            "Note: This field is preserved by ?#flags"),
 	TYPE_GETSET("nodeprecated",
@@ -1897,7 +1897,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            &lexer_set_noencoding,
 	            "->?Dbool\n"
 	            "When ?t, don't decode input text prior to processing it\n"
-	            "This essentically means that whenever ?#File.nextchunk is called, "
+	            "This essentically means that whenever ?Anextchunk?#File is called, "
 	            /**/ "the $binary is set to this value"),
 	TYPE_GETSET("reemitunknownpragma",
 	            &lexer_get_reemitunknownpragma,
@@ -1930,7 +1930,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            "->?Dint\n"
 	            "Used in conjunction with ?#{eofonparen}: The amount of unmatched $\")\" tokens "
 	            /**/ "to let through before the next $\")\" token will result in EOF being indicated "
-	            /**/ "by setting ?Aid?#token to $0"),
+	            /**/ "by setting ?Aid?#Token to $0"),
 	TYPE_GETSET("eobfile",
 	            &lexer_get_eobfile,
 	            &lexer_del_eobfile,
@@ -1954,7 +1954,7 @@ PRIVATE struct type_getset tpconst lexer_getsets[] = {
 	            &lexer_del_macrolimit,
 	            &lexer_set_macrolimit,
 	            "->?Dint\n"
-	            "The max number of times that a recursive macro (s.a. ?#File.allowselfexpansion) "
+	            "The max number of times that a recursive macro (s.a. ?Aallowselfexpansion?#File) "
 	            /**/ "is allowed to appear on the macro stack, before an error is emit, and further "
 	            /**/ "expansion is prevented (defaults to $" PP_STR(TPPLEXER_DEFAULT_LIMIT_MREC) ", "
 	            /**/ "which is also restored when deleting this property)"),
@@ -2229,7 +2229,7 @@ err:
 DOC_DEF(lexer_getkwd_doc,
         "(name:?Dstring,create=!t)->?X2?#Keyword?N\n"
         "Lookup the keyword associated with @name and return it, or ?N "
-        "when @create is ?f and the keyword hasn't been accessed yet");
+        /**/ "when @create is ?f and the keyword hasn't been accessed yet");
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
@@ -2270,8 +2270,8 @@ err:
 DOC_DEF(lexer_getxkwd_doc,
         "(name:?Dstring,create=!t)->?X2?#Keyword?N\n"
         "Same as ?#getkwd, however the given @name may contain escaped "
-        "line-feeds that are removed prior to it being used to lookup "
-        "a keyword");
+        /**/ "line-feeds that are removed prior to it being used to lookup "
+        /**/ "a keyword");
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
@@ -2311,7 +2311,7 @@ err:
 DOC_DEF(lexer_getkwdid_doc,
         "(id:?Dint)->?X2?#Keyword?N\n"
         "Lookup the keyword associated with the given @id, "
-        "returning it or ?N if no such keyword exists.\n"
+        /**/ "returning it or ?N if no such keyword exists.\n"
         "WARNING: This is an O(n) operation and should be avoided if at all possible");
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_getkwdid(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
@@ -2514,24 +2514,24 @@ PRIVATE struct type_method tpconst lexer_methods[] = {
 	TYPE_METHOD("undef", &lexer_undef,
 	            "(name:?Dstring)->?Dbool\n"
 	            "Delete a user-defined macro definition for a macro @name, returning ?t "
-	            "if such a definition existed and got deleted, or ?f if no such definition "
-	            "existed, and therefor didn't get deleted, either"),
+	            /**/ "if such a definition existed and got deleted, or ?f if no such definition "
+	            /**/ "existed, and therefor didn't get deleted, either"),
 	TYPE_KWMETHOD("define", &lexer_define,
 	              "(name:?Dstring,value:?Dstring,builtin=!f)\n"
 	              "#pbuiltin{When ?t define the macro as builtin, meaning the "
-	              "definition set by @value is restored when resetting macros}"
+	              /*     */ "definition set by @value is restored when resetting macros}"
 	              "Define a new keyword-like macro @name to expand to @value"),
 	TYPE_KWMETHOD("addassert", &lexer_addassert,
 	              "(predicate:?Dstring,answer:?Dstring)\n"
 	              "Define an assertion @answer for a given @predicate, such that "
-	              "${##if #predicate(answer)} evaluates to ?t when encountered "
+	              /**/ "${##if #predicate(answer)} evaluates to ?t when encountered "
 	              "within a preprocessor expression"),
 	TYPE_KWMETHOD("delassert", &lexer_delassert,
 	              "(predicate:?Dstring,answer?:?Dstring)->?Dbool\n"
 	              "#r{Returns ?t when at least 1 answer got deleted for the given @predicate}"
 	              "Delete an assertion @answer, or all assertions made for a given "
-	              "@predicate, such that ${##if #predicate(answer)} no longer evaluates "
-	              "to ?t when encountered within a preprocessor expression"),
+	              /**/ "@predicate, such that ${##if #predicate(answer)} no longer evaluates "
+	              /**/ "to ?t when encountered within a preprocessor expression"),
 	/* TODO */
 	TYPE_METHOD_END
 };
@@ -2638,7 +2638,7 @@ PRIVATE struct type_method tpconst lexer_keywords_methods[] = {
 INTERN DeeTypeObject DeeCompilerLexerKeywords_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_LexerKeywords",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("getitem(name:?Dstring)->" DR_CKeyword),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3246,26 +3246,27 @@ PRIVATE struct type_getset tpconst lexer_token_getsets[] = {
 	            "->?Dint\n"
 	            "Get, del (set to $0), or set the current token number\n"
 	            "The current token number is incremented by at least $1 every "
-	            "time one of :lexer.next, :lexer.nextpp or :lexer.nextraw are called"),
+	            /**/ "time one of ?Anext" DR_CLexer ", ?Anextpp" DR_CLexer " "
+	            /**/ "or ?Anextraw" DR_CLexer " are called"),
 	TYPE_GETSET("keyword", &token_keyword, NULL, &token_setkeyword,
-	            "->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
+	            "->?X2" DR_CKeyword "?N\n"
 	            "Returns the keyword associated with the current token, or "
-	            ":none if the current token doesn't have an associated keyword\n"
+	            /**/ ":none if the current token doesn't have an associated keyword\n"
 	            "When setting this field, both the token's ?#Keyword, as well "
-	            "as its ?#id field are set to the given value"),
+	            /**/ "as its ?#id field are set to the given value"),
 	TYPE_GETTER("file", &lexer_get_file,
-	            "->?X2?AFile?ALexer?Ert:Compiler?N\n"
+	            "->?X2?#File?N\n"
 	            "Returns the currently active file, or ?N if no file is currently active"),
 	TYPE_GETTER("position", &lexer_get_tokenposition,
-	            "->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
+	            "->?X2?T3?#File?Dint?Dint?N\n"
 	            "Return the exact source position of @this token within a macro definition, or text source"),
 	TYPE_GETTER("endposition", &lexer_get_tokenendposition,
-	            "->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
+	            "->?X2?T3?#File?Dint?Dint?N\n"
 	            "Same as ?#position, however return the end position of the current token"),
 	TYPE_GETTER("atstartofline", &lexer_get_atstartofline,
 	            "->?Dbool\n"
 	            "Returns ?t if the current token is located at the "
-	            "start of a line, optionally prefixed by whitespace"),
+	            /**/ "start of a line, optionally prefixed by whitespace"),
 	TYPE_GETSET_END
 };
 
@@ -3331,7 +3332,7 @@ PRIVATE struct type_method tpconst lexer_token_methods[] = {
 	            "(warnchar=!t)->?Dint\n"
 	            "#tValueError{The current token isn't an integer, or character}"
 	            "#tValueError{The current token contains an invalid digit}"
-	            "Decode the current token (which must be an integer or character) as an :int object\n"
+	            "Decode the current token (which must be an integer or character) as an ?Dint object\n"
 	            "When @warnchar is ?t, emit a warning when a character is used as an integer"),
 	TYPE_METHOD_END
 };
@@ -3382,62 +3383,65 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
 	/* .tp_doc      = */ DOC("str->\n"
 	                         "Returns a string representation for the ?#id of @this token\n"
 	                         "For most tokens, this is equivalent to ?#text, with the exception of the following:\n"
-
 	                         "#T{Str-value|Token|Description~"
-	                         "$\"\"|${<EOF>}|End-of-file is encoded as an empty string&"
-	                         "$\"\\\'\"|$\'x\'|Character tokens have a single-quote as str-id&"
-	                         "$\"\\\"\"|$\"foo\"|String tokens have a double-quote as str-id (including raw string literals)&"
-	                         "$\"0\"|$42|Integer tokens have use the digit 0 as str-id&"
-	                         "$\".0\"|${1.5}|Floating point tokens are encoded as `.0' as str-id&"
-	                         "$\"\\n\"|#C{<LF>}|Any kind of line-feed token is encoded as an LF-character&"
-	                         "$\" \"|#C{<SPACE>}|A space-sequence of any sort of length is encoded as a single space character&"
-	                         "$\"//\"|#C{<COMMENT>}|Any kind of comment token is encoded as 2 forward slashes #C{//}}\n"
-
+	                         /**/ "$\"\"|${<EOF>}|End-of-file is encoded as an empty string&"
+	                         /**/ "$\"\\\'\"|$\'x\'|Character tokens have a single-quote as str-id&"
+	                         /**/ "$\"\\\"\"|$\"foo\"|String tokens have a double-quote as str-id (including raw string literals)&"
+	                         /**/ "$\"0\"|$42|Integer tokens have use the digit 0 as str-id&"
+	                         /**/ "$\".0\"|${1.5}|Floating point tokens are encoded as `.0' as str-id&"
+	                         /**/ "$\"\\n\"|#C{<LF>}|Any kind of line-feed token is encoded as an LF-character&"
+	                         /**/ "$\" \"|#C{<SPACE>}|A space-sequence of any sort of length is encoded as a single space character&"
+	                         /**/ "$\"//\"|#C{<COMMENT>}|Any kind of comment token is encoded as 2 forward slashes #C{//}"
+	                         "}\n"
 	                         "\n"
+
 	                         "repr->\n"
 	                         "Same as ${repr this.text}\n"
 	                         "\n"
+
 	                         "bool->\n"
 	                         "Returns ?t if @this token has a non-negative and non-zero ?#id\n"
 	                         "\n"
+
 	                         "hash->\n"
 	                         "Returns the hash value of ${str this}\n"
 	                         "\n"
+
 	                         "==(name:?Dstring)->\n"
 	                         "!=(name:?Dstring)->\n"
 	                         "Compare ${str this} with the given @name\n"
 	                         "This operator, alongside ?#{op:hash} allows tokens to be used in switch-statements\n"
-
 	                         "${"
-	                         "switch (com.lexer.token) {\n"
-	                         "case \"foobar\":\n"
-	                         "	print \"keyword: foobar\";\n"
-	                         "	break;\n"
-	                         "case \"(\":\n"
-	                         "	print \"token: lparen\";\n"
-	                         "	break;\n"
-	                         "case \"++\":\n"
-	                         "	print \"token: increment\";\n"
-	                         "	break;\n"
-	                         "case \"\":\n"
-	                         "	print \"Special token: end-of-file\";\n"
-	                         "	break;\n"
-	                         "case \"//\":\n"
-	                         "	print \"Special token: comment\";\n"
-	                         "	break;\n"
-	                         "case \"\\\"\":\n"
-	                         "	print \"Special token: string\", com.lexer.token.decodestring();\n"
-	                         "	break;\n"
-	                         "case \"\\\'\":\n"
-	                         "	print \"Special token: character\", com.lexer.token.decodeinteger();\n"
-	                         "	break;\n"
-	                         "case \"0\":\n"
-	                         "	print \"Special token: integer\", com.lexer.token.decodeinteger();\n"
-	                         "	break;\n"
-	                         "default:\n"
-	                         "	print \"Other: \", repr com.lexer.token;\n"
-	                         "	break;\n"
-	                         "}}"),
+	                         /**/ "switch (com.lexer.token) {\n"
+	                         /**/ "case \"foobar\":\n"
+	                         /**/ "	print \"keyword: foobar\";\n"
+	                         /**/ "	break;\n"
+	                         /**/ "case \"(\":\n"
+	                         /**/ "	print \"token: lparen\";\n"
+	                         /**/ "	break;\n"
+	                         /**/ "case \"++\":\n"
+	                         /**/ "	print \"token: increment\";\n"
+	                         /**/ "	break;\n"
+	                         /**/ "case \"\":\n"
+	                         /**/ "	print \"Special token: end-of-file\";\n"
+	                         /**/ "	break;\n"
+	                         /**/ "case \"//\":\n"
+	                         /**/ "	print \"Special token: comment\";\n"
+	                         /**/ "	break;\n"
+	                         /**/ "case \"\\\"\":\n"
+	                         /**/ "	print \"Special token: string\", com.lexer.token.decodestring();\n"
+	                         /**/ "	break;\n"
+	                         /**/ "case \"\\\'\":\n"
+	                         /**/ "	print \"Special token: character\", com.lexer.token.decodeinteger();\n"
+	                         /**/ "	break;\n"
+	                         /**/ "case \"0\":\n"
+	                         /**/ "	print \"Special token: integer\", com.lexer.token.decodeinteger();\n"
+	                         /**/ "	break;\n"
+	                         /**/ "default:\n"
+	                         /**/ "	print \"Other: \", repr com.lexer.token;\n"
+	                         /**/ "	break;\n"
+	                         /**/ "}"
+	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -4742,7 +4746,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_getguard,
 	            &file_delguard,
 	            &file_setguard,
-	            "->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
+	            "->?X2" DR_CKeyword "?N\n"
 	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Get, delete, or set a keyword that is checked for being defined "
 	            /**/ "before allowing @this File to be included by ${##include} again\n"
@@ -4753,7 +4757,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            &file_getnewguard,
 	            &file_delnewguard,
 	            &file_setnewguard,
-	            "->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
+	            "->?X2" DR_CKeyword "?N\n"
 	            "#tValueError{@this File isn't a text file (?#istext is ?f)}"
 	            "Get, delete, or set a keyword that will be set as ?#guard (if no guard has "
 	            /**/ "already been set) once @this File is popped from the ${##include}-stack, and "

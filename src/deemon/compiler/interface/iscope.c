@@ -122,7 +122,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_scope_lookupmode(DeeObject *__restrict value,
                      unsigned int *__restrict p_result) {
 	if (value == Dee_EmptyString) {
@@ -174,10 +174,10 @@ scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
 
 PRIVATE struct type_getset tpconst scope_getsets[] = {
 	TYPE_GETTER("base", &scope_getbase,
-	            "->?ABaseScope?Ert:Compiler\n"
+	            "->" DR_CBaseScope "\n"
 	            "Returns the nearest base-scope that @this scope is apart of"),
 	TYPE_GETTER(STR_prev, &scope_getprev,
-	            "->?X2?AScope?Ert:Compiler?N\n"
+	            "->?X2" DR_CScope "?N\n"
 	            "Returns a the parent of @this scope, or ?N if @this scope is the root-scope"),
 	TYPE_GETTER("isclassscope", &scope_get_isclassscope,
 	            "->?Dbool\n"
@@ -185,7 +185,7 @@ PRIVATE struct type_getset tpconst scope_getsets[] = {
 	            "Class scopes are somewhat special, in that they prolong the full linkage of "
 	            /**/ "symbol lookup going beyond their range, up to the point where the scope is "
 	            /**/ "removed from the scope-stack\n"
-	            "This in turn allows for so-called `fwd' (forward; s.a.: #symbol.kind) symbols "
+	            "This in turn allows for so-called #Cfwd (forward; s.a.: ?Akind?#Symbol) symbols "
 	            /**/ "to be used like any other general-purpose symbol, but only be fully linked once "
 	            /**/ "it is known if the surrounding class defines a symbol of the same name, thus "
 	            /**/ "allowing member functions that havn't actually been declared, to already be used "
@@ -402,23 +402,23 @@ done:
 
 PRIVATE struct type_method tpconst scope_methods[] = {
 	TYPE_METHOD("newanon", &scope_newanon,
-	            "->?ASymbol?Ert:Compiler\n"
+	            "->" DR_CSymbol "\n"
 	            "Construct a new anonymous symbol, and add it as part of @this scope\n"
 	            "The symbol isn't given a name (when queried it will have an empty name), and "
 	            /**/ "will otherwise behave just like a symbol that has been deleted (s.a. ?#{op:delitem})\n"
 	            "The symbol can however be used to hold values just like any other symbol, "
 	            /**/ "meaning that this is the type of symbol that should be used to hold hidden "
 	            /**/ "values, as used by $with-statements\n"
-	            "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)"),
+	            "New symbols are created with $\"none\"-typing (s.a. ?Akind?#Symbol)"),
 	TYPE_KWMETHOD("newlocal", &scope_newlocal,
-	              "(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
+	              "(name:?Dstring,requirenew=!t,loc?:?T3" DR_CFile "?Dint?Dint)->" DR_CSymbol "\n"
 	              "#ploc{The declaration position of the symbol, omitted to use the current "
-	              /*      */ "token position, or ?N when not available}"
+	              /* */ "token position, or ?N when not available}"
 	              "#tValueError{@requirenew is ?t, and another symbol @name already exists}"
 	              "Lookup, or create a new local symbol named @name\n"
 	              "If another symbol with that same name already exists, either return that "
 	              /**/ "symbol when @requirenew is ?f, or throw a :ValueError otherwise\n"
-	              "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)"),
+	              "New symbols are created with $\"none\"-typing (s.a. ?Akind?#Symbol)"),
 	TYPE_METHOD_END
 };
 
@@ -446,17 +446,17 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 	                         "\n"
 
 	                         "contains(name:?Dstring)->?Dbool\n"
-	                         "contains(sym:?ASymbol?Ert:Compiler)->?Dbool\n"
+	                         "contains(sym:" DR_CSymbol ")->?Dbool\n"
 	                         "Returns ?t if @this scope contains a given symbol @sym, "
 	                         /**/ "or some symbol with a name matching the given @name\n"
 	                         "\n"
 
-	                         "[](string name)->symbol\n"
+	                         "[](name:?Dstring)->" DR_CSymbol "\n"
 	                         "#tValueError{No symbol matching @name is contained within @this scope}"
 	                         "Returns the symbol associated with @name\n"
 	                         "\n"
 
-	                         "del[](string name)->\n"
+	                         "del[](name:?Dstring)->\n"
 	                         "#tValueError{No symbol matching @name is contained within @this scope}"
 	                         "Delete the symbol associated with @name, adding it to the set of deleted symbols"),
 	/* .tp_flags    = */ TP_FNORMAL,

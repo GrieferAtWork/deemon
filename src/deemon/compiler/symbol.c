@@ -823,7 +823,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 
 /* -------- DeeRootScopeObject Implementation -------- */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-root_scope_ctor(DeeRootScopeObject *__restrict self,
+root_scope_init(DeeRootScopeObject *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	DeeModuleObject *module;
 	if (DeeArg_Unpack(argc, argv, "o:root_scope", &module))
@@ -890,7 +890,7 @@ root_scope_visit(DeeRootScopeObject *__restrict self,
 INTERN DeeTypeObject DeeRootScope_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "RootScope",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(module:?DModule)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeScopeObject),
 	/* .tp_features = */ TF_NONE,
@@ -901,7 +901,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&root_scope_ctor,
+				/* .tp_any_ctor  = */ (dfunptr_t)&root_scope_init,
 				TYPE_FIXED_ALLOCATOR(DeeRootScopeObject)
 			}
 		},

@@ -329,7 +329,7 @@ compiler_init(DeeCompilerObject *__restrict self,
 PUBLIC DeeTypeObject DeeCompiler_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Compiler",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(module:?X3?N?Dstring?DModule)"),
 	/* TODO: This must be a GC object, because user-code may create const-symbols
 	 *       that re-reference the compiler, creating a reference loop:
 	 * >> import Compiler from rt;

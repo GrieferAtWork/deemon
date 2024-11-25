@@ -92,7 +92,7 @@ INTDEF struct type_member tpconst DeeCompilerItem_Members[];
 INTERN_CONST struct type_member tpconst DeeCompilerItem_Members[] = {
 	TYPE_MEMBER_FIELD_DOC("compiler", STRUCT_OBJECT,
 	                      offsetof(CompilerItem, ci_compiler),
-	                      "->?Ert:Compiler"),
+	                      "->" DR_Compiler),
 	TYPE_MEMBER_END
 };
 

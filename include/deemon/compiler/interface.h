@@ -208,6 +208,25 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 check_function_code_scope(DeeBaseScopeObject *code_scope,
                           DeeBaseScopeObject *ast_base_scope);
 
+
+/* Doc paths */
+#define DR_Compiler    "?Ert:Compiler"
+#define DR_CLexer      "?ALexer" DR_Compiler     /* DeeCompilerLexer_Type */
+#define DR_CKeyword    "?AKeyword" DR_CLexer     /* DeeCompilerKeyword_Type */
+#define DR_CSymbol     "?ASymbol" DR_Compiler    /* DeeCompilerSymbol_Type */
+#define DR_CFile       "?AFile" DR_CLexer        /* DeeCompilerFile_Type */
+#define DR_CKeywords   "?AKeywords" DR_CLexer    /* DeeCompilerLexerKeywords_Type */
+#define DR_CExtensions "?AExtensions" DR_CLexer  /* DeeCompilerLexerExtensions_Type */
+#define DR_CWarnings   "?AWarnings" DR_CLexer    /* DeeCompilerLexerWarnings_Type */
+#define DR_CSysPaths   "?ASysPaths" DR_CLexer    /* DeeCompilerLexerSyspaths_Type */
+#define DR_CIfdef      "?AIfdef" DR_CLexer       /* DeeCompilerLexerIfdef_Type */
+#define DR_CToken      "?AToken" DR_CLexer       /* DeeCompilerLexerToken_Type */
+#define DR_CParser     "?AParser" DR_Compiler    /* DeeCompilerParser_Type */
+#define DR_CAst        "?AAst" DR_Compiler       /* DeeCompilerAst_Type */
+#define DR_CScope      "?AScope" DR_Compiler     /* DeeCompilerScope_Type */
+#define DR_CBaseScope  "?ABaseScope" DR_Compiler /* DeeCompilerBaseScope_Type */
+#define DR_CRootScope  "?ARootScope" DR_Compiler /* DeeCompilerRootScope_Type */
+
 #endif /* CONFIG_BUILDING_DEEMON */
 
 DECL_END
