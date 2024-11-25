@@ -2174,6 +2174,7 @@ PUBLIC ATTR_NORETURN void
 		va_end(args);
 		assert_printf("\n");
 	}
+	assert_print_usercode_trace();
 	assert_attach_debugger_loop();
 #if defined(CONFIG_HAVE_abort) && !defined(CONFIG_HAVE_abort_IS_ASSERT_XFAIL)
 	abort();
