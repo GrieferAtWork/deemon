@@ -176,8 +176,10 @@ typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeType_tp_getran
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeType_tp_delrange_t)(DeeObject *self, DeeObject *start, DeeObject *end);
 typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeType_tp_setrange_t)(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_foreach_t)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_foreach_pair_t)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_enumerate_t)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_enumerate_index_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeType_tp_iterkeys_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_bounditem_t)(DeeObject *self, DeeObject *index);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_hasitem_t)(DeeObject *self, DeeObject *index);
 typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeType_tp_size_t)(DeeObject *__restrict self);
@@ -195,6 +197,19 @@ typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeType_tp_delrange_index_n_t)(DeeO
 typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *DeeType_tp_setrange_index_n_t)(DeeObject *self, Dee_ssize_t start, DeeObject *values);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_trygetitem_t)(DeeObject *self, DeeObject *index);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeType_tp_trygetitem_index_t)(DeeObject *self, size_t index);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_trygetitem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_getitem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_delitem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2, 4)) int (DCALL *DeeType_tp_setitem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_bounditem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_hasitem_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_trygetitem_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_getitem_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_delitem_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *DeeType_tp_setitem_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_bounditem_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_hasitem_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+
 typedef WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *DeeType_tp_hash_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_compare_eq_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_compare_t)(DeeObject *self, DeeObject *some_object);
@@ -207,18 +222,6 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_gr_t)(Dee
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_ge_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_add_t)(DeeObject **__restrict p_self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_mul_t)(DeeObject **__restrict p_self, DeeObject *some_object);
-
-INTDEF struct Dee_type_cmp generic_map_cmp;
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_map_hash(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_eq(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_ne(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_lo(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_le(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_gr(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_ge(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_compare_eq(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
-
 
 
 
@@ -235,8 +238,10 @@ PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getrange
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delrange_t DCALL DeeType_RequireSeqOperatorDelRange_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setrange_t DCALL DeeType_RequireSeqOperatorSetRange_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_foreach_t DCALL DeeType_RequireSeqOperatorForeach_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_foreach_pair_t DCALL DeeType_RequireSeqOperatorForeachPair_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_enumerate_t DCALL DeeType_RequireSeqOperatorEnumerate_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_enumerate_index_t DCALL DeeType_RequireSeqOperatorEnumerateIndex_for_optimize(DeeTypeObject *__restrict self);
+//IVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_iterkeys_t DCALL DeeType_RequireSeqOperatorIterKeys_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_t DCALL DeeType_RequireSeqOperatorBoundItem_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_t DCALL DeeType_RequireSeqOperatorHasItem_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_size_t DCALL DeeType_RequireSeqOperatorSize_for_optimize(DeeTypeObject *__restrict self);
@@ -277,6 +282,42 @@ PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCA
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_RequireSetOperatorGr_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireSetOperatorGe_for_optimize(DeeTypeObject *__restrict self);
 
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_contains_t DCALL DeeType_RequireMapOperatorContains_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_t DCALL DeeType_RequireMapOperatorGetItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delitem_t DCALL DeeType_RequireMapOperatorDelItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setitem_t DCALL DeeType_RequireMapOperatorSetItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_enumerate_t DCALL DeeType_RequireMapOperatorEnumerate_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_enumerate_index_t DCALL DeeType_RequireMapOperatorEnumerateIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_t DCALL DeeType_RequireMapOperatorBoundItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_t DCALL DeeType_RequireMapOperatorHasItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_index_t DCALL DeeType_RequireMapOperatorGetItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delitem_index_t DCALL DeeType_RequireMapOperatorDelItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setitem_index_t DCALL DeeType_RequireMapOperatorSetItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_index_t DCALL DeeType_RequireMapOperatorBoundItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_index_t DCALL DeeType_RequireMapOperatorHasItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trygetitem_t DCALL DeeType_RequireMapOperatorTryGetItem_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trygetitem_index_t DCALL DeeType_RequireMapOperatorTryGetItemIndex_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trygetitem_string_hash_t DCALL DeeType_RequireMapOperatorTryGetItemStringHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_string_hash_t DCALL DeeType_RequireMapOperatorGetItemStringHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delitem_string_hash_t DCALL DeeType_RequireMapOperatorDelItemStringHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setitem_string_hash_t DCALL DeeType_RequireMapOperatorSetItemStringHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_string_hash_t DCALL DeeType_RequireMapOperatorBoundItemStringHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_string_hash_t DCALL DeeType_RequireMapOperatorHasItemStringHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trygetitem_string_len_hash_t DCALL DeeType_RequireMapOperatorTryGetItemStringLenHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_string_len_hash_t DCALL DeeType_RequireMapOperatorGetItemStringLenHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_delitem_string_len_hash_t DCALL DeeType_RequireMapOperatorDelItemStringLenHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_setitem_string_len_hash_t DCALL DeeType_RequireMapOperatorSetItemStringLenHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_bounditem_string_len_hash_t DCALL DeeType_RequireMapOperatorBoundItemStringLenHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hasitem_string_len_hash_t DCALL DeeType_RequireMapOperatorHasItemStringLenHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_compare_eq_t DCALL DeeType_RequireMapOperatorCompareEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trycompare_eq_t DCALL DeeType_RequireMapOperatorTryCompareEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_eq_t DCALL DeeType_RequireMapOperatorEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ne_t DCALL DeeType_RequireMapOperatorNe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_lo_t DCALL DeeType_RequireMapOperatorLo_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCALL DeeType_RequireMapOperatorLe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_RequireMapOperatorGr_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireMapOperatorGe_for_optimize(DeeTypeObject *__restrict self);
+
 #ifndef __INTELLISENSE__
 #define LOCAL_FOR_OPTIMIZE
 DECL_END
@@ -303,10 +344,14 @@ DECL_END
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSeqOperatorForeach
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSeqOperatorForeachPair
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSeqOperatorEnumerate
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSeqOperatorEnumerateIndex
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
+/*#define DEFINE_DeeType_RequireSeqOperatorIterKeys
+#include "../objects/seq/default-api-require-operator-impl.c.inl"*/
 #define DEFINE_DeeType_RequireSeqOperatorBoundItem
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSeqOperatorHasItem
@@ -385,6 +430,77 @@ DECL_END
 #define DEFINE_DeeType_RequireSetOperatorGe
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 
+#define DEFINE_DeeType_RequireMapOperatorContains
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorGetItem
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorDelItem
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorSetItem
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorEnumerate
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorEnumerateIndex
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorBoundItem
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorHasItem
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorGetItemIndex
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorDelItemIndex
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorSetItemIndex
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorBoundItemIndex
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorHasItemIndex
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorTryGetItem
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorTryGetItemIndex
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorTryGetItemStringHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorGetItemStringHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorDelItemStringHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorSetItemStringHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorBoundItemStringHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorHasItemStringHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorTryGetItemStringLenHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorGetItemStringLenHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorDelItemStringLenHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorSetItemStringLenHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorBoundItemStringLenHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorHasItemStringLenHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorCompareEq
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorTryCompareEq
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorEq
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorNe
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorLo
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorLe
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorGr
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorGe
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+
 DECL_BEGIN
 #undef LOCAL_FOR_OPTIMIZE
 #endif /* !__INTELLISENSE__ */
@@ -393,6 +509,9 @@ DECL_BEGIN
 #define OPTIMIZE_SEQ_OPERATOR(OperatorFoo, dst, tp_foo)      \
 	if (0 DeeSeq_VariantsFor_##OperatorFoo(|| (tp_foo) == )) \
 		return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst)
+#define OPTIMIZE_MAP_OPERATOR(OperatorFoo, dst, tp_foo)      \
+	if (0 DeeMap_VariantsFor_##OperatorFoo(|| (tp_foo) == )) \
+		return DeeType_RequireMap##OperatorFoo##_for_optimize(dst)
 #define OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorFoo, dst, tp_foo) \
 	if (0 DeeSeq_VariantsFor_##OperatorFoo(|| (tp_foo) == )             \
 	      DeeSet_VariantsFor_##OperatorFoo(|| (tp_foo) == )) {          \
@@ -413,6 +532,17 @@ DECL_BEGIN
 			return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst); \
 		case Dee_SEQCLASS_SET:                                          \
 			return DeeType_RequireSet##OperatorFoo##_for_optimize(dst); \
+		case Dee_SEQCLASS_MAP:                                          \
+			return DeeType_RequireMap##OperatorFoo##_for_optimize(dst); \
+		default: break;                                                 \
+		}                                                               \
+	}
+#define OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorFoo, dst, tp_foo)          \
+	if (0 DeeSeq_VariantsFor_##OperatorFoo(|| (tp_foo) == )             \
+	      DeeMap_VariantsFor_##OperatorFoo(|| (tp_foo) == )) {          \
+		switch (DeeType_GetSeqClass(dst)) {                             \
+		case Dee_SEQCLASS_SEQ:                                          \
+			return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst); \
 		case Dee_SEQCLASS_MAP:                                          \
 			return DeeType_RequireMap##OperatorFoo##_for_optimize(dst); \
 		default: break;                                                 \
@@ -444,25 +574,25 @@ DeeType_Optimize_tp_sizeob(DeeTypeObject *__restrict dst, DeeType_tp_sizeob_t tp
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_contains_t DCALL
 DeeType_Optimize_tp_contains(DeeTypeObject *__restrict dst, DeeType_tp_contains_t tp_contains) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorContains, dst, tp_contains);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorContains, dst, tp_contains);
 	return tp_contains;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_getitem_t DCALL
 DeeType_Optimize_tp_getitem(DeeTypeObject *__restrict dst, DeeType_tp_getitem_t tp_getitem) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorGetItem, dst, tp_getitem);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorGetItem, dst, tp_getitem);
 	return tp_getitem;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_delitem_t DCALL
 DeeType_Optimize_tp_delitem(DeeTypeObject *__restrict dst, DeeType_tp_delitem_t tp_delitem) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorDelItem, dst, tp_delitem);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorDelItem, dst, tp_delitem);
 	return tp_delitem;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_setitem_t DCALL
 DeeType_Optimize_tp_setitem(DeeTypeObject *__restrict dst, DeeType_tp_setitem_t tp_setitem) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorSetItem, dst, tp_setitem);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorSetItem, dst, tp_setitem);
 	return tp_setitem;
 }
 
@@ -490,27 +620,39 @@ DeeType_Optimize_tp_foreach(DeeTypeObject *__restrict dst, DeeType_tp_foreach_t 
 	return tp_foreach;
 }
 
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_foreach_pair_t DCALL
+DeeType_Optimize_tp_foreach_pair(DeeTypeObject *__restrict dst, DeeType_tp_foreach_pair_t tp_foreach_pair) {
+	OPTIMIZE_SEQ_OPERATOR(OperatorForeachPair, dst, tp_foreach_pair);
+	return tp_foreach_pair;
+}
+
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_enumerate_t DCALL
 DeeType_Optimize_tp_enumerate(DeeTypeObject *__restrict dst, DeeType_tp_enumerate_t tp_enumerate) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorEnumerate, dst, tp_enumerate);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorEnumerate, dst, tp_enumerate);
 	return tp_enumerate;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_enumerate_index_t DCALL
 DeeType_Optimize_tp_enumerate_index(DeeTypeObject *__restrict dst, DeeType_tp_enumerate_index_t tp_enumerate_index) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorEnumerateIndex, dst, tp_enumerate_index);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorEnumerateIndex, dst, tp_enumerate_index);
 	return tp_enumerate_index;
 }
 
+/*PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_iterkeys_t DCALL
+DeeType_Optimize_tp_iterkeys(DeeTypeObject *__restrict dst, DeeType_tp_iterkeys_t tp_iterkeys) {
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorIterKeys, dst, tp_iterkeys);
+	return tp_iterkeys;
+}*/
+
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_bounditem_t DCALL
 DeeType_Optimize_tp_bounditem(DeeTypeObject *__restrict dst, DeeType_tp_bounditem_t tp_bounditem) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorBoundItem, dst, tp_bounditem);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorBoundItem, dst, tp_bounditem);
 	return tp_bounditem;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_hasitem_t DCALL
 DeeType_Optimize_tp_hasitem(DeeTypeObject *__restrict dst, DeeType_tp_hasitem_t tp_hasitem) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorHasItem, dst, tp_hasitem);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorHasItem, dst, tp_hasitem);
 	return tp_hasitem;
 }
 
@@ -528,31 +670,31 @@ DeeType_Optimize_tp_size_fast(DeeTypeObject *__restrict dst, DeeType_tp_size_fas
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_getitem_index_t DCALL
 DeeType_Optimize_tp_getitem_index(DeeTypeObject *__restrict dst, DeeType_tp_getitem_index_t tp_getitem_index) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorGetItemIndex, dst, tp_getitem_index);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorGetItemIndex, dst, tp_getitem_index);
 	return tp_getitem_index;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_delitem_index_t DCALL
 DeeType_Optimize_tp_delitem_index(DeeTypeObject *__restrict dst, DeeType_tp_delitem_index_t tp_delitem_index) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorDelItemIndex, dst, tp_delitem_index);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorDelItemIndex, dst, tp_delitem_index);
 	return tp_delitem_index;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_setitem_index_t DCALL
 DeeType_Optimize_tp_setitem_index(DeeTypeObject *__restrict dst, DeeType_tp_setitem_index_t tp_setitem_index) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorSetItemIndex, dst, tp_setitem_index);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorSetItemIndex, dst, tp_setitem_index);
 	return tp_setitem_index;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_bounditem_index_t DCALL
 DeeType_Optimize_tp_bounditem_index(DeeTypeObject *__restrict dst, DeeType_tp_bounditem_index_t tp_bounditem_index) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorBoundItemIndex, dst, tp_bounditem_index);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorBoundItemIndex, dst, tp_bounditem_index);
 	return tp_bounditem_index;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_hasitem_index_t DCALL
 DeeType_Optimize_tp_hasitem_index(DeeTypeObject *__restrict dst, DeeType_tp_hasitem_index_t tp_hasitem_index) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorHasItemIndex, dst, tp_hasitem_index);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorHasItemIndex, dst, tp_hasitem_index);
 	return tp_hasitem_index;
 }
 
@@ -594,26 +736,84 @@ DeeType_Optimize_tp_setrange_index_n(DeeTypeObject *__restrict dst, DeeType_tp_s
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_trygetitem_t DCALL
 DeeType_Optimize_tp_trygetitem(DeeTypeObject *__restrict dst, DeeType_tp_trygetitem_t tp_trygetitem) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorTryGetItem, dst, tp_trygetitem);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorTryGetItem, dst, tp_trygetitem);
 	return tp_trygetitem;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_trygetitem_index_t DCALL
 DeeType_Optimize_tp_trygetitem_index(DeeTypeObject *__restrict dst, DeeType_tp_trygetitem_index_t tp_trygetitem_index) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorTryGetItemIndex, dst, tp_trygetitem_index);
+	OPTIMIZE_SEQ_OR_MAP_OPERATOR(OperatorTryGetItemIndex, dst, tp_trygetitem_index);
 	return tp_trygetitem_index;
 }
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_trygetitem_string_hash_t DCALL
+DeeType_Optimize_tp_trygetitem_string_hash(DeeTypeObject *__restrict dst, DeeType_tp_trygetitem_string_hash_t tp_trygetitem_string_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorTryGetItemStringHash, dst, tp_trygetitem_string_hash);
+	return tp_trygetitem_string_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_getitem_string_hash_t DCALL
+DeeType_Optimize_tp_getitem_string_hash(DeeTypeObject *__restrict dst, DeeType_tp_getitem_string_hash_t tp_getitem_string_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorGetItemStringHash, dst, tp_getitem_string_hash);
+	return tp_getitem_string_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_delitem_string_hash_t DCALL
+DeeType_Optimize_tp_delitem_string_hash(DeeTypeObject *__restrict dst, DeeType_tp_delitem_string_hash_t tp_delitem_string_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorDelItemStringHash, dst, tp_delitem_string_hash);
+	return tp_delitem_string_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_setitem_string_hash_t DCALL
+DeeType_Optimize_tp_setitem_string_hash(DeeTypeObject *__restrict dst, DeeType_tp_setitem_string_hash_t tp_setitem_string_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorSetItemStringHash, dst, tp_setitem_string_hash);
+	return tp_setitem_string_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_bounditem_string_hash_t DCALL
+DeeType_Optimize_tp_bounditem_string_hash(DeeTypeObject *__restrict dst, DeeType_tp_bounditem_string_hash_t tp_bounditem_string_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorBoundItemStringHash, dst, tp_bounditem_string_hash);
+	return tp_bounditem_string_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_hasitem_string_hash_t DCALL
+DeeType_Optimize_tp_hasitem_string_hash(DeeTypeObject *__restrict dst, DeeType_tp_hasitem_string_hash_t tp_hasitem_string_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorHasItemStringHash, dst, tp_hasitem_string_hash);
+	return tp_hasitem_string_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_trygetitem_string_len_hash_t DCALL
+DeeType_Optimize_tp_trygetitem_string_len_hash(DeeTypeObject *__restrict dst, DeeType_tp_trygetitem_string_len_hash_t tp_trygetitem_string_len_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorTryGetItemStringLenHash, dst, tp_trygetitem_string_len_hash);
+	return tp_trygetitem_string_len_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_getitem_string_len_hash_t DCALL
+DeeType_Optimize_tp_getitem_string_len_hash(DeeTypeObject *__restrict dst, DeeType_tp_getitem_string_len_hash_t tp_getitem_string_len_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorGetItemStringLenHash, dst, tp_getitem_string_len_hash);
+	return tp_getitem_string_len_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_delitem_string_len_hash_t DCALL
+DeeType_Optimize_tp_delitem_string_len_hash(DeeTypeObject *__restrict dst, DeeType_tp_delitem_string_len_hash_t tp_delitem_string_len_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorDelItemStringLenHash, dst, tp_delitem_string_len_hash);
+	return tp_delitem_string_len_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_setitem_string_len_hash_t DCALL
+DeeType_Optimize_tp_setitem_string_len_hash(DeeTypeObject *__restrict dst, DeeType_tp_setitem_string_len_hash_t tp_setitem_string_len_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorSetItemStringLenHash, dst, tp_setitem_string_len_hash);
+	return tp_setitem_string_len_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_bounditem_string_len_hash_t DCALL
+DeeType_Optimize_tp_bounditem_string_len_hash(DeeTypeObject *__restrict dst, DeeType_tp_bounditem_string_len_hash_t tp_bounditem_string_len_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorBoundItemStringLenHash, dst, tp_bounditem_string_len_hash);
+	return tp_bounditem_string_len_hash;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_hasitem_string_len_hash_t DCALL
+DeeType_Optimize_tp_hasitem_string_len_hash(DeeTypeObject *__restrict dst, DeeType_tp_hasitem_string_len_hash_t tp_hasitem_string_len_hash) {
+	OPTIMIZE_MAP_OPERATOR(OperatorHasItemStringLenHash, dst, tp_hasitem_string_len_hash);
+	return tp_hasitem_string_len_hash;
+}
+
+
+
 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_hash_t DCALL
 DeeType_Optimize_tp_hash(DeeTypeObject *__restrict dst,
                          DeeType_tp_hash_t tp_hash) {
 	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorHash, dst, tp_hash);
-	if (tp_hash == &generic_map_hash ||
-	    tp_hash == &DeeMap_DefaultHashWithForeachPairDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeMap_DefaultHashWithForeachPairDefault;
-		return &generic_map_hash;
-	}
 	return tp_hash;
 }
 
@@ -626,100 +826,57 @@ DeeType_Optimize_tp_compare(DeeTypeObject *__restrict dst, DeeType_tp_compare_t 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_compare_eq_t DCALL
 DeeType_Optimize_tp_compare_eq(DeeTypeObject *__restrict dst,
                                DeeType_tp_compare_eq_t tp_compare_eq) {
-	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorCompareEq, dst, tp_compare_eq);
-	if (tp_compare_eq == &generic_map_compare_eq ||
-	    tp_compare_eq == &DeeMap_DefaultCompareEqWithForeachPairDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeMap_DefaultCompareEqWithForeachPairDefault;
-		return &generic_map_compare_eq;
-	}
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorCompareEq, dst, tp_compare_eq);
+	/* fast-forward (because "compare_eq" can be substituted with "compare") */
 	return DeeType_Optimize_tp_compare(dst, tp_compare_eq);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_trycompare_eq_t DCALL
 DeeType_Optimize_tp_trycompare_eq(DeeTypeObject *__restrict dst,
                                   DeeType_tp_trycompare_eq_t tp_trycompare_eq) {
-	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorTryCompareEq, dst, tp_trycompare_eq);
-	if (tp_trycompare_eq == &generic_map_trycompare_eq ||
-	    tp_trycompare_eq == &DeeMap_DefaultTryCompareEqWithForeachPairDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeMap_DefaultTryCompareEqWithForeachPairDefault;
-		return &generic_map_trycompare_eq;
-	}
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorTryCompareEq, dst, tp_trycompare_eq);
 	return tp_trycompare_eq;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_eq_t DCALL
 DeeType_Optimize_tp_eq(DeeTypeObject *__restrict dst,
                        DeeType_tp_eq_t tp_eq) {
-	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorEq, dst, tp_eq);
-	if (tp_eq == &generic_map_eq) {
-		if (dst->tp_cmp->tp_compare_eq)
-			return &DeeObject_DefaultEqWithCompareEqDefault;
-	}
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorEq, dst, tp_eq);
 	return tp_eq;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_ne_t DCALL
 DeeType_Optimize_tp_ne(DeeTypeObject *__restrict dst,
                        DeeType_tp_ne_t tp_ne) {
-	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorNe, dst, tp_ne);
-	if (tp_ne == &generic_map_ne) {
-		if (dst->tp_cmp->tp_compare_eq)
-			return &DeeObject_DefaultNeWithCompareEqDefault;
-	}
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorNe, dst, tp_ne);
 	return tp_ne;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_lo_t DCALL
 DeeType_Optimize_tp_lo(DeeTypeObject *__restrict dst,
                        DeeType_tp_lo_t tp_lo) {
-	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorLo, dst, tp_lo);
-	if (tp_lo == &generic_map_lo ||
-	    tp_lo == &DeeMap_DefaultLoWithForeachPairDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeMap_DefaultLoWithForeachPairDefault;
-		return &generic_map_lo;
-	}
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorLo, dst, tp_lo);
 	return tp_lo;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_le_t DCALL
 DeeType_Optimize_tp_le(DeeTypeObject *__restrict dst,
                        DeeType_tp_le_t tp_le) {
-	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorLe, dst, tp_le);
-	if (tp_le == &generic_map_le ||
-	    tp_le == &DeeMap_DefaultLeWithForeachPairDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeMap_DefaultLeWithForeachPairDefault;
-		return &generic_map_le;
-	}
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorLe, dst, tp_le);
 	return tp_le;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_gr_t DCALL
 DeeType_Optimize_tp_gr(DeeTypeObject *__restrict dst,
                        DeeType_tp_gr_t tp_gr) {
-	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorGr, dst, tp_gr);
-	if (tp_gr == &generic_map_gr ||
-	    tp_gr == &DeeMap_DefaultGrWithForeachPairDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeMap_DefaultGrWithForeachPairDefault;
-		return &generic_map_gr;
-	}
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorGr, dst, tp_gr);
 	return tp_gr;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_ge_t DCALL
 DeeType_Optimize_tp_ge(DeeTypeObject *__restrict dst,
                        DeeType_tp_ge_t tp_ge) {
-	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorGe, dst, tp_ge);
-	if (tp_ge == &generic_map_ge ||
-	    tp_ge == &DeeMap_DefaultGeWithForeachPairDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeMap_DefaultGeWithForeachPairDefault;
-		return &generic_map_ge;
-	}
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorGe, dst, tp_ge);
 	return tp_ge;
 }
 
@@ -754,11 +911,11 @@ DeeType_Optimize_tp_cmp(DeeTypeObject *__restrict dst,
 		if (DeeType_InheritIter(dst))
 			return &DeeSet_DefaultCmpWithForeachDefault;
 		return &DeeSet_OperatorCmp;
-	} else if (tp_cmp == &generic_map_cmp ||
+	} else if (tp_cmp == &DeeMap_OperatorCmp ||
 	           tp_cmp == &DeeMap_DefaultCmpWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeMap_DefaultCmpWithForeachPairDefault;
-		return &generic_map_cmp;
+		return &DeeMap_OperatorCmp;
 	}
 	return tp_cmp;
 }
@@ -778,52 +935,38 @@ DeeType_Optimize_tp_inplace_mul(DeeTypeObject *__restrict dst, DeeType_tp_inplac
 
 
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-#define DeeType_Optimize_tp_bool(self, tp_bool)                         tp_bool
-#define DeeType_Optimize_tp_iter(self, tp_iter)                         tp_iter
-#define DeeType_Optimize_tp_sizeob(self, tp_sizeob)                     tp_sizeob
-#define DeeType_Optimize_tp_contains(self, tp_contains)                 tp_contains
-#define DeeType_Optimize_tp_getitem(self, tp_getitem)                   tp_getitem
-#define DeeType_Optimize_tp_delitem(self, tp_delitem)                   tp_delitem
-#define DeeType_Optimize_tp_setitem(self, tp_setitem)                   tp_setitem
-#define DeeType_Optimize_tp_getrange(self, tp_getrange)                 tp_getrange
-#define DeeType_Optimize_tp_delrange(self, tp_delrange)                 tp_delrange
-#define DeeType_Optimize_tp_setrange(self, tp_setrange)                 tp_setrange
-#define DeeType_Optimize_tp_foreach(self, tp_foreach)                   tp_foreach
-#define DeeType_Optimize_tp_enumerate(self, tp_enumerate)               tp_enumerate
-#define DeeType_Optimize_tp_enumerate_index(self, tp_enumerate_index)   tp_enumerate_index
-#define DeeType_Optimize_tp_bounditem(self, tp_bounditem)               tp_bounditem
-#define DeeType_Optimize_tp_hasitem(self, tp_hasitem)                   tp_hasitem
-#define DeeType_Optimize_tp_size(self, tp_size)                         tp_size
-#define DeeType_Optimize_tp_size_fast(self, tp_size_fast)               tp_size_fast
-#define DeeType_Optimize_tp_getitem_index(self, tp_getitem_index)       tp_getitem_index
-#define DeeType_Optimize_tp_delitem_index(self, tp_delitem_index)       tp_delitem_index
-#define DeeType_Optimize_tp_setitem_index(self, tp_setitem_index)       tp_setitem_index
-#define DeeType_Optimize_tp_bounditem_index(self, tp_bounditem_index)   tp_bounditem_index
-#define DeeType_Optimize_tp_hasitem_index(self, tp_hasitem_index)       tp_hasitem_index
-#define DeeType_Optimize_tp_getrange_index(self, tp_getrange_index)     tp_getrange_index
-#define DeeType_Optimize_tp_delrange_index(self, tp_delrange_index)     tp_delrange_index
-#define DeeType_Optimize_tp_setrange_index(self, tp_setrange_index)     tp_setrange_index
-#define DeeType_Optimize_tp_getrange_index_n(self, tp_getrange_index_n) tp_getrange_index_n
-#define DeeType_Optimize_tp_delrange_index_n(self, tp_delrange_index_n) tp_delrange_index_n
-#define DeeType_Optimize_tp_setrange_index_n(self, tp_setrange_index_n) tp_setrange_index_n
-#define DeeType_Optimize_tp_trygetitem(self, tp_trygetitem)             tp_trygetitem
-#define DeeType_Optimize_tp_trygetitem_index(self, tp_trygetitem_index) tp_trygetitem_index
-#define DeeType_Optimize_tp_hash(self, tp_hash)                         tp_hash
-#define DeeType_Optimize_tp_compare_eq(self, tp_compare_eq)             tp_compare_eq
-#define DeeType_Optimize_tp_compare(self, tp_compare)                   tp_compare
-#define DeeType_Optimize_tp_trycompare_eq(self, tp_trycompare_eq)       tp_trycompare_eq
-#define DeeType_Optimize_tp_eq(self, tp_eq)                             tp_eq
-#define DeeType_Optimize_tp_ne(self, tp_ne)                             tp_ne
-#define DeeType_Optimize_tp_lo(self, tp_lo)                             tp_lo
-#define DeeType_Optimize_tp_le(self, tp_le)                             tp_le
-#define DeeType_Optimize_tp_gr(self, tp_gr)                             tp_gr
-#define DeeType_Optimize_tp_ge(self, tp_ge)                             tp_ge
-#define DeeType_Optimize_tp_cmp(dst, tp_cmp)                            tp_cmp
-#define DeeType_Optimize_tp_inplace_add(self, tp_inplace_add)           tp_inplace_add
-#define DeeType_Optimize_tp_inplace_mul(self, tp_inplace_mul)           tp_inplace_mul
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
+#define DeeType_Optimize_tp_bool(self, tp_bool)                                             tp_bool
+#define DeeType_Optimize_tp_iter(self, tp_iter)                                             tp_iter
+#define DeeType_Optimize_tp_sizeob(self, tp_sizeob)                                         tp_sizeob
+#define DeeType_Optimize_tp_contains(self, tp_contains)                                     tp_contains
+#define DeeType_Optimize_tp_getitem(self, tp_getitem)                                       tp_getitem
+#define DeeType_Optimize_tp_delitem(self, tp_delitem)                                       tp_delitem
+#define DeeType_Optimize_tp_setitem(self, tp_setitem)                                       tp_setitem
+#define DeeType_Optimize_tp_getrange(self, tp_getrange)                                     tp_getrange
+#define DeeType_Optimize_tp_delrange(self, tp_delrange)                                     tp_delrange
+#define DeeType_Optimize_tp_setrange(self, tp_setrange)                                     tp_setrange
+#define DeeType_Optimize_tp_foreach(self, tp_foreach)                                       tp_foreach
 #define DeeType_Optimize_tp_foreach_pair(self, tp_foreach_pair)                             tp_foreach_pair
+#define DeeType_Optimize_tp_enumerate(self, tp_enumerate)                                   tp_enumerate
+#define DeeType_Optimize_tp_enumerate_index(self, tp_enumerate_index)                       tp_enumerate_index
+//efine DeeType_Optimize_tp_iterkeys(self, tp_iterkeys)                                     tp_iterkeys
+#define DeeType_Optimize_tp_bounditem(self, tp_bounditem)                                   tp_bounditem
+#define DeeType_Optimize_tp_hasitem(self, tp_hasitem)                                       tp_hasitem
+#define DeeType_Optimize_tp_size(self, tp_size)                                             tp_size
+#define DeeType_Optimize_tp_size_fast(self, tp_size_fast)                                   tp_size_fast
+#define DeeType_Optimize_tp_getitem_index(self, tp_getitem_index)                           tp_getitem_index
+#define DeeType_Optimize_tp_delitem_index(self, tp_delitem_index)                           tp_delitem_index
+#define DeeType_Optimize_tp_setitem_index(self, tp_setitem_index)                           tp_setitem_index
+#define DeeType_Optimize_tp_bounditem_index(self, tp_bounditem_index)                       tp_bounditem_index
+#define DeeType_Optimize_tp_hasitem_index(self, tp_hasitem_index)                           tp_hasitem_index
+#define DeeType_Optimize_tp_getrange_index(self, tp_getrange_index)                         tp_getrange_index
+#define DeeType_Optimize_tp_delrange_index(self, tp_delrange_index)                         tp_delrange_index
+#define DeeType_Optimize_tp_setrange_index(self, tp_setrange_index)                         tp_setrange_index
+#define DeeType_Optimize_tp_getrange_index_n(self, tp_getrange_index_n)                     tp_getrange_index_n
+#define DeeType_Optimize_tp_delrange_index_n(self, tp_delrange_index_n)                     tp_delrange_index_n
+#define DeeType_Optimize_tp_setrange_index_n(self, tp_setrange_index_n)                     tp_setrange_index_n
+#define DeeType_Optimize_tp_trygetitem(self, tp_trygetitem)                                 tp_trygetitem
+#define DeeType_Optimize_tp_trygetitem_index(self, tp_trygetitem_index)                     tp_trygetitem_index
 #define DeeType_Optimize_tp_trygetitem_string_hash(self, tp_trygetitem_string_hash)         tp_trygetitem_string_hash
 #define DeeType_Optimize_tp_getitem_string_hash(self, tp_getitem_string_hash)               tp_getitem_string_hash
 #define DeeType_Optimize_tp_delitem_string_hash(self, tp_delitem_string_hash)               tp_delitem_string_hash
@@ -836,10 +979,25 @@ DeeType_Optimize_tp_inplace_mul(DeeTypeObject *__restrict dst, DeeType_tp_inplac
 #define DeeType_Optimize_tp_setitem_string_len_hash(self, tp_setitem_string_len_hash)       tp_setitem_string_len_hash
 #define DeeType_Optimize_tp_bounditem_string_len_hash(self, tp_bounditem_string_len_hash)   tp_bounditem_string_len_hash
 #define DeeType_Optimize_tp_hasitem_string_len_hash(self, tp_hasitem_string_len_hash)       tp_hasitem_string_len_hash
-#define DeeType_Optimize_tp_asvector(self, tp_asvector)                                     tp_asvector
-#define DeeType_Optimize_tp_asvector_nothrow(self, tp_asvector_nothrow)                     tp_asvector_nothrow
-#define DeeType_Optimize_tp_unpack(self, tp_unpack)                                         tp_unpack
-#define DeeType_Optimize_tp_unpack_ub(self, tp_unpack_ub)                                   tp_unpack_ub
+#define DeeType_Optimize_tp_hash(self, tp_hash)                                             tp_hash
+#define DeeType_Optimize_tp_compare_eq(self, tp_compare_eq)                                 tp_compare_eq
+#define DeeType_Optimize_tp_compare(self, tp_compare)                                       tp_compare
+#define DeeType_Optimize_tp_trycompare_eq(self, tp_trycompare_eq)                           tp_trycompare_eq
+#define DeeType_Optimize_tp_eq(self, tp_eq)                                                 tp_eq
+#define DeeType_Optimize_tp_ne(self, tp_ne)                                                 tp_ne
+#define DeeType_Optimize_tp_lo(self, tp_lo)                                                 tp_lo
+#define DeeType_Optimize_tp_le(self, tp_le)                                                 tp_le
+#define DeeType_Optimize_tp_gr(self, tp_gr)                                                 tp_gr
+#define DeeType_Optimize_tp_ge(self, tp_ge)                                                 tp_ge
+#define DeeType_Optimize_tp_cmp(dst, tp_cmp)                                                tp_cmp
+#define DeeType_Optimize_tp_inplace_add(self, tp_inplace_add)                               tp_inplace_add
+#define DeeType_Optimize_tp_inplace_mul(self, tp_inplace_mul)                               tp_inplace_mul
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+#define DeeType_Optimize_tp_asvector(self, tp_asvector)                 tp_asvector
+#define DeeType_Optimize_tp_asvector_nothrow(self, tp_asvector_nothrow) tp_asvector_nothrow
+#define DeeType_Optimize_tp_unpack(self, tp_unpack)                     tp_unpack
+#define DeeType_Optimize_tp_unpack_ub(self, tp_unpack_ub)               tp_unpack_ub
 
 
 #define DeeType_Optimize_tp_deepload(self, tp_deepload)       tp_deepload

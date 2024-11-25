@@ -720,7 +720,7 @@ PRIVATE struct type_math set_math = {
 	/* .tp_dec         = */ NULL,
 	/* .tp_inplace_add = */ &set_inplace_union, /* TODO: Virtual: DeeSet_OperatorInplaceAdd */
 	/* .tp_inplace_sub = */ &set_inplace_sub, /* TODO: Virtual: DeeSet_OperatorInplaceSub */
-	/* .tp_inplace_mul = */ &set_inplace_mul, /* TODO: Virtual: DeeSet_OperatorInplaceMul */
+	/* .tp_inplace_mul = */ &set_inplace_mul, /* TODO: Delete operator (rather than behavior like `Sequence.operator *=', which is a no-op for sets) */
 	/* .tp_inplace_div = */ NULL,
 	/* .tp_inplace_mod = */ NULL,
 	/* .tp_inplace_shl = */ NULL,
@@ -1253,7 +1253,7 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
+		/* .tp_repr = */ NULL, /* TODO: "{ 10, 20, 30 } as Set" */
 		/* .tp_bool = */ &DeeSet_OperatorBool
 	},
 	/* .tp_call          = */ NULL,

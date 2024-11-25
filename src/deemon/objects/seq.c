@@ -4432,6 +4432,21 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"),
 
 
+	/* TODO: Sequence operators as member functions:
+	 * >> __getitem__(index:?Dint)->
+	 * >> __delitem__(index:?Dint)
+	 * >> __setitem__(index:?Dint,value)
+	 * >> ...
+	 *
+	 * Using these, user-code can write:
+	 * >> Sequence.__getitem__(ob, 42);
+	 * instead of (and needing to create a super-proxy):
+	 * >> (ob as Sequence)[42];
+	 *
+	 * NOTE: The compiler should also be able to automatically
+	 *       optimize the second version into the first. */
+
+
 	/* Old function names/deprecated functions. */
 	TYPE_METHOD("transform", &seq_map,
 	            "(mapper:?DCallable)->?DSequence\n"

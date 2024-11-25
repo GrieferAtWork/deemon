@@ -28,6 +28,7 @@
 
 #include "../../runtime/operator-require.h"
 #include "default-sequences.h"
+#include "range.h"
 
 DECL_BEGIN
 
@@ -80,7 +81,7 @@ DeeSeq_DefaultOperatorContainsWithMapTryGetItem(DeeObject *self, DeeObject *some
 	DREF DeeObject *value, *result;
 	if (DeeObject_Unpack(some_object, 2, wanted_key_value))
 		goto err;
-	value = DeeObject_TryGetItem(self, wanted_key_value[0]); /* TODO: `DeeMap_OperatorTryGetItem' */
+	value = DeeMap_OperatorTryGetItem(self, wanted_key_value[0]);
 	Dee_Decref(wanted_key_value[0]);
 	if unlikely(!value) {
 		Dee_Decref(wanted_key_value[1]);
@@ -130,7 +131,7 @@ DeeSeq_DefaultOperatorGetItemWithEmpty(DeeObject *self, DeeObject *index) {
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeq_DefaultOperatorGetItemWithError(DeeObject *self, DeeObject *index) {
-	err_seq_unsupportedf(self, "operator [](%r)", index);
+	err_seq_unsupportedf(self, "operator [] (%r)", index);
 	return NULL;
 }
 
@@ -142,7 +143,7 @@ DeeSeq_DefaultOperatorDelItemWithEmpty(DeeObject *self, DeeObject *index) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultOperatorDelItemWithError(DeeObject *self, DeeObject *index) {
-	return err_seq_unsupportedf(self, "operator del[](%r)", index);
+	return err_seq_unsupportedf(self, "operator del[] (%r)", index);
 }
 
 
@@ -154,7 +155,7 @@ DeeSeq_DefaultOperatorSetItemWithEmpty(DeeObject *self, DeeObject *index, DeeObj
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeSeq_DefaultOperatorSetItemWithError(DeeObject *self, DeeObject *index, DeeObject *value) {
-	return err_seq_unsupportedf(self, "operator []=(%r, %r)", index, value);
+	return err_seq_unsupportedf(self, "operator []= (%r, %r)", index, value);
 }
 
 
@@ -197,7 +198,7 @@ DeeSeq_DefaultOperatorDelRangeWithError(DeeObject *self, DeeObject *start, DeeOb
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeSeq_DefaultOperatorSetRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values) {
-	return err_seq_unsupportedf(self, "operator [:]=(%r, %r, %r)", start, end, values);
+	return err_seq_unsupportedf(self, "operator [:]= (%r, %r, %r)", start, end, values);
 }
 
 
@@ -241,6 +242,31 @@ DeeSeq_DefaultOperatorEnumerateIndexWithError(DeeObject *__restrict self,
 	return err_seq_unsupportedf(self, "enumerate(start: %" PRFuSIZ ", end: %" PRFuSIZ ")", start, end);
 }
 
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultOperatorIterKeysWithSeqSize(DeeObject *__restrict self) {
+	size_t size;
+	DREF IntRangeIterator *result;
+	size = DeeSeq_OperatorSize(self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(IntRangeIterator);
+	if unlikely(!result)
+		goto err;
+	result->iri_index = 0;
+	result->iri_end   = (Dee_ssize_t)size; /* TODO: Need another range iterator type that uses unsigned indices */
+	result->iri_step  = 1;
+	DeeObject_Init(result, &SeqIntRangeIterator_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultOperatorIterKeysWithError(DeeObject *__restrict self) {
+	err_seq_unsupportedf(self, "__iterkeys__()");
+	return NULL;
+}
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultOperatorBoundItemWithSeqBoundItemIndex(DeeObject *self, DeeObject *index) {
@@ -302,7 +328,7 @@ DeeSeq_DefaultOperatorGetItemIndexWithEmpty(DeeObject *self, size_t index) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultOperatorGetItemIndexWithError(DeeObject *self, size_t index) {
-	err_seq_unsupportedf(self, "operator [](%" PRFuSIZ ")", index);
+	err_seq_unsupportedf(self, "operator [] (%" PRFuSIZ ")", index);
 	return NULL;
 }
 
@@ -314,7 +340,7 @@ DeeSeq_DefaultOperatorDelItemIndexWithEmpty(DeeObject *self, size_t index) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DefaultOperatorDelItemIndexWithError(DeeObject *self, size_t index) {
-	return err_seq_unsupportedf(self, "operator del[](%" PRFuSIZ ")", index);
+	return err_seq_unsupportedf(self, "operator del[] (%" PRFuSIZ ")", index);
 }
 
 
@@ -326,7 +352,7 @@ DeeSeq_DefaultOperatorSetItemIndexWithEmpty(DeeObject *self, size_t index, DeeOb
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 DeeSeq_DefaultOperatorSetItemIndexWithError(DeeObject *self, size_t index, DeeObject *value) {
-	return err_seq_unsupportedf(self, "operator []=(%" PRFdSIZ ", %r)", index, value);
+	return err_seq_unsupportedf(self, "operator []= (%" PRFdSIZ ", %r)", index, value);
 }
 
 
@@ -414,7 +440,7 @@ DeeSeq_DefaultOperatorDelRangeIndexWithError(DeeObject *self, Dee_ssize_t start,
 
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 DeeSeq_DefaultOperatorSetRangeIndexWithError(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values) {
-	return err_seq_unsupportedf(self, "operator [:]=(%" PRFdSIZ ", %" PRFdSIZ ", %r)", start, end, values);
+	return err_seq_unsupportedf(self, "operator [:]= (%" PRFdSIZ ", %" PRFdSIZ ", %r)", start, end, values);
 }
 
 
@@ -466,7 +492,7 @@ DeeSeq_DefaultOperatorDelRangeIndexNWithError(DeeObject *self, Dee_ssize_t start
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 DeeSeq_DefaultOperatorSetRangeIndexNWithError(DeeObject *self, Dee_ssize_t start, DeeObject *values) {
-	return err_seq_unsupportedf(self, "operator [:]=(%" PRFdSIZ ", none, %r)", start, values);
+	return err_seq_unsupportedf(self, "operator [:]= (%" PRFdSIZ ", none, %r)", start, values);
 }
 
 
@@ -817,6 +843,11 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
+(DCALL DeeSeq_OperatorForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg) {
+	return DeeSeq_OperatorForeachPair(self, proc, arg);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeSeq_OperatorEnumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg) {
 	return DeeSeq_OperatorEnumerate(self, proc, arg);
 }
@@ -824,6 +855,11 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeSeq_OperatorEnumerateIndex)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	return DeeSeq_OperatorEnumerateIndex(self, proc, arg, start, end);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSeq_OperatorIterKeys)(DeeObject *__restrict self) {
+	return DeeSeq_OperatorIterKeys(self);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int
@@ -911,6 +947,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 	return DeeSeq_OperatorTryGetItemIndex(self, index);
 }
 
+
 INTERN struct type_seq DeeSeq_OperatorSeq = {
 	/* .tp_iter                       = */ &DeeSeq_OperatorIter,
 	/* .tp_sizeob                     = */ &DeeSeq_OperatorSizeOb,
@@ -923,10 +960,10 @@ INTERN struct type_seq DeeSeq_OperatorSeq = {
 	/* .tp_setrange                   = */ &DeeSeq_OperatorSetRange,
 	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ &DeeSeq_OperatorForeach,
-	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_foreach_pair               = */ &DeeSeq_OperatorForeachPair,
 	/* .tp_enumerate                  = */ &DeeSeq_OperatorEnumerate,
 	/* .tp_enumerate_index            = */ &DeeSeq_OperatorEnumerateIndex,
-	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_iterkeys                   = */ &DeeSeq_OperatorIterKeys,
 	/* .tp_bounditem                  = */ &DeeSeq_OperatorBoundItem,
 	/* .tp_hasitem                    = */ &DeeSeq_OperatorHasItem,
 	/* .tp_size                       = */ &DeeSeq_OperatorSize,
@@ -1097,6 +1134,16 @@ INTERN struct type_seq DeeSet_OperatorSeq = {
 };
 
 
+INTERN /*WUNUSED*/ NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorCompareEqWithError(DeeObject *self, DeeObject *some_object) {
+	return err_set_unsupportedf(self, "operator == (%r)", some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorTryCompareEqWithError(DeeObject *self, DeeObject *some_object) {
+	return err_set_unsupportedf(self, "__equals__(%r)", some_object);
+}
+
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSet_DefaultOperatorEqWithSetCompareEq(DeeObject *self, DeeObject *some_object) {
 	int result = DeeSet_OperatorCompareEq(self, some_object);
@@ -1104,6 +1151,12 @@ DeeSet_DefaultOperatorEqWithSetCompareEq(DeeObject *self, DeeObject *some_object
 		goto err;
 	return_bool(result == 0);
 err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorEqWithError(DeeObject *self, DeeObject *some_object) {
+	DeeSet_DefaultOperatorCompareEqWithError(self, some_object);
 	return NULL;
 }
 
@@ -1118,6 +1171,18 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorNeWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator != (%r)", some_object);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorLoWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator < (%r)", some_object);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSet_DefaultOperatorLeWithEmpty(DeeObject *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
@@ -1125,10 +1190,28 @@ DeeSet_DefaultOperatorLeWithEmpty(DeeObject *self, DeeObject *some_object) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorLeWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator <= (%r)", some_object);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSet_DefaultOperatorGrWithEmpty(DeeObject *self, DeeObject *some_object) {
 	(void)self;
 	(void)some_object;
 	return_false;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorGrWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator > (%r)", some_object);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator >= (%r)", some_object);
+	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) Dee_hash_t
@@ -1187,6 +1270,557 @@ INTERN struct type_cmp DeeSet_OperatorCmp = {
 	/* .tp_le            = */ &DeeSet_OperatorLe,
 	/* .tp_gr            = */ &DeeSet_OperatorGr,
 	/* .tp_ge            = */ &DeeSet_OperatorGe,
+};
+
+
+
+
+
+
+
+/************************************************************************/
+/* MAP                                                                  */
+/************************************************************************/
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorContainsWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator contains(%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGetItemWithEmpty(DeeObject *self, DeeObject *index) {
+	err_unknown_key(self, index);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGetItemWithError(DeeObject *self, DeeObject *index) {
+	err_map_unsupportedf(self, "operator [] (%r)", index);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorDelItemWithError(DeeObject *self, DeeObject *index) {
+	return err_map_unsupportedf(self, "operator del[] (%r)", index);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeMap_DefaultOperatorSetItemWithError(DeeObject *self, DeeObject *index, DeeObject *value) {
+	return err_map_unsupportedf(self, "operator []= (%r, %r)", index, value);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeMap_DefaultOperatorEnumerateWithError(DeeObject *__restrict self,
+                                         Dee_enumerate_t proc, void *arg) {
+	(void)proc;
+	(void)arg;
+	return err_map_unsupportedf(self, "enumerate()");
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeMap_DefaultOperatorEnumerateIndexWithError(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+                                              void *arg, size_t start, size_t end) {
+	(void)proc;
+	(void)arg;
+	return err_map_unsupportedf(self, "enumerate(start: %" PRFuSIZ ", end: %" PRFuSIZ ")", start, end);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorBoundItemWithError(DeeObject *self, DeeObject *index) {
+	return err_map_unsupportedf(self, "__bounditem__(%r)", index);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorHasItemWithError(DeeObject *self, DeeObject *index) {
+	return err_map_unsupportedf(self, "__hasitem__(%r)", index);
+}
+
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGetItemIndexWithEmpty(DeeObject *self, size_t index) {
+	err_unknown_key_int(self, index);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGetItemIndexWithError(DeeObject *self, size_t index) {
+	err_map_unsupportedf(self, "operator [] (%" PRFuSIZ ")", index);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeMap_DefaultOperatorDelItemIndexWithError(DeeObject *self, size_t index) {
+	return err_map_unsupportedf(self, "operator del[] (%" PRFuSIZ ")", index);
+}
+
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeMap_DefaultOperatorSetItemIndexWithError(DeeObject *self, size_t index, DeeObject *value) {
+	return err_map_unsupportedf(self, "operator []= (%" PRFuSIZ ", %r)", index, value);
+}
+
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeMap_DefaultOperatorBoundItemIndexWithError(DeeObject *self, size_t index) {
+	return err_map_unsupportedf(self, "__bounditem__(%" PRFuSIZ ")", index);
+}
+
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeMap_DefaultOperatorHasItemIndexWithError(DeeObject *self, size_t index) {
+	return err_map_unsupportedf(self, "__hasitem__(%" PRFuSIZ ")", index);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorTryGetItemStringHashWithEmpty(DeeObject *self, char const *key, Dee_hash_t hash) {
+	COMPILER_IMPURE();
+	(void)self;
+	(void)key;
+	(void)hash;
+	return ITER_DONE;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGetItemStringHashWithEmpty(DeeObject *self, char const *key, Dee_hash_t hash) {
+	(void)hash;
+	err_unknown_key_str(self, key);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGetItemStringHashWithError(DeeObject *self, char const *key, Dee_hash_t hash) {
+	(void)hash;
+	err_map_unsupportedf(self, "operator [] (%q)", key);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorDelItemStringHashWithError(DeeObject *self, char const *key, Dee_hash_t hash) {
+	(void)hash;
+	return err_map_unsupportedf(self, "operator del[] (%q)", key);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
+DeeMap_DefaultOperatorSetItemStringHashWithError(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value) {
+	(void)hash;
+	return err_map_unsupportedf(self, "operator []= (%q, %r)", key, value);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorBoundItemStringHashWithEmpty(DeeObject *self, char const *key, Dee_hash_t hash) {
+	COMPILER_IMPURE();
+	(void)self;
+	(void)key;
+	(void)hash;
+	return -2;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorBoundItemStringHashWithError(DeeObject *self, char const *key, Dee_hash_t hash) {
+	(void)hash;
+	return err_map_unsupportedf(self, "__bounditem__(%q)", key);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorHasItemStringHashWithError(DeeObject *self, char const *key, Dee_hash_t hash) {
+	(void)hash;
+	return err_map_unsupportedf(self, "__hasitem__(%q)", key);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorTryGetItemStringLenHashWithEmpty(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	COMPILER_IMPURE();
+	(void)self;
+	(void)key;
+	(void)keylen;
+	(void)hash;
+	return ITER_DONE;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGetItemStringLenHashWithEmpty(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	(void)hash;
+	err_unknown_key_str_len(self, key, keylen);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGetItemStringLenHashWithError(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	(void)hash;
+	err_map_unsupportedf(self, "operator [] (%$q)", keylen, key);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorDelItemStringLenHashWithError(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	(void)hash;
+	return err_map_unsupportedf(self, "operator del[] (%$q)", keylen, key);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+DeeMap_DefaultOperatorSetItemStringLenHashWithError(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
+	(void)hash;
+	return err_map_unsupportedf(self, "operator []= (%$q, %r)", keylen, key, value);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorBoundItemStringLenHashWithEmpty(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	COMPILER_IMPURE();
+	(void)self;
+	(void)key;
+	(void)keylen;
+	(void)hash;
+	return -2;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorBoundItemStringLenHashWithError(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	(void)hash;
+	return err_map_unsupportedf(self, "__bounditem__(%$q)", keylen, key);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorHasItemStringLenHashWithError(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	(void)hash;
+	return err_map_unsupportedf(self, "__hasitem__(%$q)", keylen, key);
+}
+
+
+INTERN /*WUNUSED*/ NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorCompareEqWithError(DeeObject *self, DeeObject *some_object) {
+	return err_map_unsupportedf(self, "operator == (%r)", some_object);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorTryCompareEqWithError(DeeObject *self, DeeObject *some_object) {
+	return err_map_unsupportedf(self, "__equals__(%r)", some_object);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorEqWithMapCompareEq(DeeObject *self, DeeObject *some_object) {
+	int result = DeeMap_OperatorCompareEq(self, some_object);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(result == 0);
+err:
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorEqWithError(DeeObject *self, DeeObject *some_object) {
+	DeeMap_DefaultOperatorCompareEqWithError(self, some_object);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorNeWithMapCompareEq(DeeObject *self, DeeObject *some_object) {
+	int result = DeeMap_OperatorCompareEq(self, some_object);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(result != 0);
+err:
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorNeWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator != (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorLoWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator < (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorLeWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator <= (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGrWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator > (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator >= (%r)", some_object);
+	return NULL;
+}
+
+
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorContains)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorContains(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorGetItem)(DeeObject *self, DeeObject *index) {
+	return DeeMap_OperatorGetItem(self, index);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorDelItem)(DeeObject *self, DeeObject *index) {
+	return DeeMap_OperatorDelItem(self, index);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int
+(DCALL DeeMap_OperatorSetItem)(DeeObject *self, DeeObject *index, DeeObject *value) {
+	return DeeMap_OperatorSetItem(self, index, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
+(DCALL DeeMap_OperatorEnumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg) {
+	return DeeMap_OperatorEnumerate(self, proc, arg);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
+(DCALL DeeMap_OperatorEnumerateIndex)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+	return DeeMap_OperatorEnumerateIndex(self, proc, arg, start, end);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorBoundItem)(DeeObject *self, DeeObject *index) {
+	return DeeMap_OperatorBoundItem(self, index);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorHasItem)(DeeObject *self, DeeObject *index) {
+	return DeeMap_OperatorHasItem(self, index);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeMap_OperatorGetItemIndex)(DeeObject *self, size_t index) {
+	return DeeMap_OperatorGetItemIndex(self, index);
+}
+
+INTERN WUNUSED NONNULL((1)) int
+(DCALL DeeMap_OperatorDelItemIndex)(DeeObject *self, size_t index) {
+	return DeeMap_OperatorDelItemIndex(self, index);
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int
+(DCALL DeeMap_OperatorSetItemIndex)(DeeObject *self, size_t index, DeeObject *value) {
+	return DeeMap_OperatorSetItemIndex(self, index, value);
+}
+
+INTERN WUNUSED NONNULL((1)) int
+(DCALL DeeMap_OperatorBoundItemIndex)(DeeObject *self, size_t index) {
+	return DeeMap_OperatorBoundItemIndex(self, index);
+}
+
+INTERN WUNUSED NONNULL((1)) int
+(DCALL DeeMap_OperatorHasItemIndex)(DeeObject *self, size_t index) {
+	return DeeMap_OperatorHasItemIndex(self, index);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorTryGetItem)(DeeObject *self, DeeObject *index) {
+	return DeeMap_OperatorTryGetItem(self, index);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeMap_OperatorTryGetItemIndex)(DeeObject *self, size_t index) {
+	return DeeMap_OperatorTryGetItemIndex(self, index);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorTryGetItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash) {
+	return DeeMap_OperatorTryGetItemStringHash(self, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorGetItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash) {
+	return DeeMap_OperatorGetItemStringHash(self, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorDelItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash) {
+	return DeeMap_OperatorDelItemStringHash(self, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeMap_OperatorSetItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value) {
+	return DeeMap_OperatorSetItemStringHash(self, key, hash, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorBoundItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash) {
+	return DeeMap_OperatorBoundItemStringHash(self, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorHasItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash) {
+	return DeeMap_OperatorHasItemStringHash(self, key, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorTryGetItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	return DeeMap_OperatorTryGetItemStringLenHash(self, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorGetItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	return DeeMap_OperatorGetItemStringLenHash(self, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorDelItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	return DeeMap_OperatorDelItemStringLenHash(self, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) int
+(DCALL DeeMap_OperatorSetItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
+	return DeeMap_OperatorSetItemStringLenHash(self, key, keylen, hash, value);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorBoundItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	return DeeMap_OperatorBoundItemStringLenHash(self, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorHasItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	return DeeMap_OperatorHasItemStringLenHash(self, key, keylen, hash);
+}
+
+INTERN struct type_seq DeeMap_OperatorSeq = {
+	/* .tp_iter                       = */ &DeeMap_OperatorIter,
+	/* .tp_sizeob                     = */ &DeeMap_OperatorSizeOb,
+	/* .tp_contains                   = */ &DeeMap_OperatorContains,
+	/* .tp_getitem                    = */ &DeeMap_OperatorGetItem,
+	/* .tp_delitem                    = */ &DeeMap_OperatorDelItem,
+	/* .tp_setitem                    = */ &DeeMap_OperatorSetItem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ &DeeMap_OperatorForeach,
+	/* .tp_foreach_pair               = */ &DeeMap_OperatorForeachPair,
+	/* .tp_enumerate                  = */ &DeeMap_OperatorEnumerate,
+	/* .tp_enumerate_index            = */ &DeeMap_OperatorEnumerateIndex,
+	/* .tp_iterkeys                   = */ &DeeMap_OperatorIterKeys,
+	/* .tp_bounditem                  = */ &DeeMap_OperatorBoundItem,
+	/* .tp_hasitem                    = */ &DeeMap_OperatorHasItem,
+	/* .tp_size                       = */ &DeeMap_OperatorSize,
+	/* .tp_size_fast                  = */ &DeeMap_OperatorSizeFast,
+	/* .tp_getitem_index              = */ &DeeMap_OperatorGetItemIndex,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ &DeeMap_OperatorDelItemIndex,
+	/* .tp_setitem_index              = */ &DeeMap_OperatorSetItemIndex,
+	/* .tp_bounditem_index            = */ &DeeMap_OperatorBoundItemIndex,
+	/* .tp_hasitem_index              = */ &DeeMap_OperatorHasItemIndex,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ &DeeMap_OperatorTryGetItem,
+	/* .tp_trygetitem_index           = */ &DeeMap_OperatorTryGetItemIndex,
+	/* .tp_trygetitem_string_hash     = */ &DeeMap_OperatorTryGetItemStringHash,
+	/* .tp_getitem_string_hash        = */ &DeeMap_OperatorGetItemStringHash,
+	/* .tp_delitem_string_hash        = */ &DeeMap_OperatorDelItemStringHash,
+	/* .tp_setitem_string_hash        = */ &DeeMap_OperatorSetItemStringHash,
+	/* .tp_bounditem_string_hash      = */ &DeeMap_OperatorBoundItemStringHash,
+	/* .tp_hasitem_string_hash        = */ &DeeMap_OperatorHasItemStringHash,
+	/* .tp_trygetitem_string_len_hash = */ &DeeMap_OperatorTryGetItemStringLenHash,
+	/* .tp_getitem_string_len_hash    = */ &DeeMap_OperatorGetItemStringLenHash,
+	/* .tp_delitem_string_len_hash    = */ &DeeMap_OperatorDelItemStringLenHash,
+	/* .tp_setitem_string_len_hash    = */ &DeeMap_OperatorSetItemStringLenHash,
+	/* .tp_bounditem_string_len_hash  = */ &DeeMap_OperatorBoundItemStringLenHash,
+	/* .tp_hasitem_string_len_hash    = */ &DeeMap_OperatorHasItemStringLenHash,
+};
+
+
+
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorCompareEq)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorCompareEq(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorTryCompareEq)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorTryCompareEq(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorEq)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorEq(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorNe)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorNe(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorLo)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorLo(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorLe)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorLe(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorGr)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorGr(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorGe)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorGe(self, some_object);
+}
+
+INTERN struct type_cmp DeeMap_OperatorCmp = {
+	/* .tp_hash          = */ &DeeMap_OperatorHash,
+	/* .tp_compare_eq    = */ &DeeMap_OperatorCompareEq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ &DeeMap_OperatorTryCompareEq,
+	/* .tp_eq            = */ &DeeMap_OperatorEq,
+	/* .tp_ne            = */ &DeeMap_OperatorNe,
+	/* .tp_lo            = */ &DeeMap_OperatorLo,
+	/* .tp_le            = */ &DeeMap_OperatorLe,
+	/* .tp_gr            = */ &DeeMap_OperatorGr,
+	/* .tp_ge            = */ &DeeMap_OperatorGe,
 };
 
 DECL_END

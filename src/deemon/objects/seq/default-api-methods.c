@@ -4951,7 +4951,7 @@ DeeSet_DefaultRemoveWithMapTryGetItemAndMapDelItem(DeeObject *self, DeeObject *k
 	DREF DeeObject *map_key_and_value[2];
 	if unlikely(DeeObject_Unpack(key, 2, map_key_and_value))
 		goto err;
-	current_value = DeeObject_TryGetItem(self, map_key_and_value[0]); /* TODO: DeeMap_OperatorTryGetItem */
+	current_value = DeeMap_OperatorTryGetItem(self, map_key_and_value[0]);
 	if unlikely(!current_value)
 		goto err_map_key_and_value;
 	if (current_value == ITER_DONE) {
@@ -4965,7 +4965,7 @@ DeeSet_DefaultRemoveWithMapTryGetItemAndMapDelItem(DeeObject *self, DeeObject *k
 	Dee_Decref(current_value);
 	if unlikely(temp == Dee_COMPARE_ERR)
 		goto err_map_key;
-	temp = DeeObject_DelItem(self, map_key_and_value[0]); /* TODO: DeeMap_OperatorDelItem */
+	temp = DeeMap_OperatorDelItem(self, map_key_and_value[0]);
 	Dee_Decref(map_key_and_value[0]);
 	if unlikely(temp)
 		goto err;
@@ -7239,7 +7239,7 @@ default_map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		goto err;
-	result = DeeObject_TryGetItem(self, key); /* TODO: Only use this when "self is Mapping"; else, must treat as ?S?T2?O?O and search for first item where `key == self[i].first' -- DeeMap_OperatorTryGetItem() */
+	result = DeeMap_OperatorTryGetItem(self, key);
 	if (result == ITER_DONE) {
 		Dee_Incref(def);
 		result = def;
@@ -7399,23 +7399,23 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default_map_keys(DeeObject *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL default_map_keys)(DeeObject *self) {
 	return DeeMap_InvokeKeys(self);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default_map_values(DeeObject *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL default_map_values)(DeeObject *self) {
 	return DeeMap_InvokeValues(self);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default_map_iterkeys(DeeObject *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL default_map_iterkeys)(DeeObject *self) {
 	return DeeMap_InvokeIterKeys(self);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default_map_itervalues(DeeObject *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL default_map_itervalues)(DeeObject *self) {
 	return DeeMap_InvokeIterValues(self);
 }
 

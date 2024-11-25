@@ -30,8 +30,10 @@
 //#define DEFINE_DeeType_RequireSeqOperatorDelRange
 //#define DEFINE_DeeType_RequireSeqOperatorSetRange
 //#define DEFINE_DeeType_RequireSeqOperatorForeach
+//#define DEFINE_DeeType_RequireSeqOperatorForeachPair
 //#define DEFINE_DeeType_RequireSeqOperatorEnumerate
 //#define DEFINE_DeeType_RequireSeqOperatorEnumerateIndex
+//#define DEFINE_DeeType_RequireSeqOperatorIterKeys
 //#define DEFINE_DeeType_RequireSeqOperatorBoundItem
 //#define DEFINE_DeeType_RequireSeqOperatorHasItem
 //#define DEFINE_DeeType_RequireSeqOperatorSize
@@ -61,7 +63,8 @@
 //#define DEFINE_DeeType_RequireSeqOperatorGe
 //#define DEFINE_DeeType_RequireSeqOperatorInplaceAdd
 //#define DEFINE_DeeType_RequireSeqOperatorInplaceMul
-#define DEFINE_DeeType_RequireSetOperatorHash
+
+//#define DEFINE_DeeType_RequireSetOperatorHash
 //#define DEFINE_DeeType_RequireSetOperatorCompareEq
 //#define DEFINE_DeeType_RequireSetOperatorTryCompareEq
 //#define DEFINE_DeeType_RequireSetOperatorEq
@@ -70,67 +73,144 @@
 //#define DEFINE_DeeType_RequireSetOperatorLe
 //#define DEFINE_DeeType_RequireSetOperatorGr
 //#define DEFINE_DeeType_RequireSetOperatorGe
+
+#define DEFINE_DeeType_RequireMapOperatorContains
+//#define DEFINE_DeeType_RequireMapOperatorGetItem
+//#define DEFINE_DeeType_RequireMapOperatorDelItem
+//#define DEFINE_DeeType_RequireMapOperatorSetItem
+//#define DEFINE_DeeType_RequireMapOperatorEnumerate
+//#define DEFINE_DeeType_RequireMapOperatorEnumerateIndex
+//#define DEFINE_DeeType_RequireMapOperatorBoundItem
+//#define DEFINE_DeeType_RequireMapOperatorHasItem
+//#define DEFINE_DeeType_RequireMapOperatorGetItemIndex
+//#define DEFINE_DeeType_RequireMapOperatorDelItemIndex
+//#define DEFINE_DeeType_RequireMapOperatorSetItemIndex
+//#define DEFINE_DeeType_RequireMapOperatorBoundItemIndex
+//#define DEFINE_DeeType_RequireMapOperatorHasItemIndex
+//#define DEFINE_DeeType_RequireMapOperatorTryGetItem
+//#define DEFINE_DeeType_RequireMapOperatorTryGetItemIndex
+//#define DEFINE_DeeType_RequireMapOperatorTryGetItemStringHash
+//#define DEFINE_DeeType_RequireMapOperatorGetItemStringHash
+//#define DEFINE_DeeType_RequireMapOperatorDelItemStringHash
+//#define DEFINE_DeeType_RequireMapOperatorSetItemStringHash
+//#define DEFINE_DeeType_RequireMapOperatorBoundItemStringHash
+//#define DEFINE_DeeType_RequireMapOperatorHasItemStringHash
+//#define DEFINE_DeeType_RequireMapOperatorTryGetItemStringLenHash
+//#define DEFINE_DeeType_RequireMapOperatorGetItemStringLenHash
+//#define DEFINE_DeeType_RequireMapOperatorDelItemStringLenHash
+//#define DEFINE_DeeType_RequireMapOperatorSetItemStringLenHash
+//#define DEFINE_DeeType_RequireMapOperatorBoundItemStringLenHash
+//#define DEFINE_DeeType_RequireMapOperatorHasItemStringLenHash
+//#define DEFINE_DeeType_RequireMapOperatorCompareEq
+//#define DEFINE_DeeType_RequireMapOperatorTryCompareEq
+//#define DEFINE_DeeType_RequireMapOperatorEq
+//#define DEFINE_DeeType_RequireMapOperatorNe
+//#define DEFINE_DeeType_RequireMapOperatorLo
+//#define DEFINE_DeeType_RequireMapOperatorLe
+//#define DEFINE_DeeType_RequireMapOperatorGr
+//#define DEFINE_DeeType_RequireMapOperatorGe
 #endif /* __INTELLISENSE__ */
 
-#if (defined(DEFINE_DeeType_RequireSeqOperatorBool) +            \
-     defined(DEFINE_DeeType_RequireSeqOperatorIter) +            \
-     defined(DEFINE_DeeType_RequireSeqOperatorSizeOb) +          \
-     defined(DEFINE_DeeType_RequireSeqOperatorContains) +        \
-     defined(DEFINE_DeeType_RequireSeqOperatorGetItem) +         \
-     defined(DEFINE_DeeType_RequireSeqOperatorDelItem) +         \
-     defined(DEFINE_DeeType_RequireSeqOperatorSetItem) +         \
-     defined(DEFINE_DeeType_RequireSeqOperatorGetRange) +        \
-     defined(DEFINE_DeeType_RequireSeqOperatorDelRange) +        \
-     defined(DEFINE_DeeType_RequireSeqOperatorSetRange) +        \
-     defined(DEFINE_DeeType_RequireSeqOperatorForeach) +         \
-     defined(DEFINE_DeeType_RequireSeqOperatorEnumerate) +       \
-     defined(DEFINE_DeeType_RequireSeqOperatorEnumerateIndex) +  \
-     defined(DEFINE_DeeType_RequireSeqOperatorBoundItem) +       \
-     defined(DEFINE_DeeType_RequireSeqOperatorHasItem) +         \
-     defined(DEFINE_DeeType_RequireSeqOperatorSize) +            \
-     defined(DEFINE_DeeType_RequireSeqOperatorSizeFast) +        \
-     defined(DEFINE_DeeType_RequireSeqOperatorGetItemIndex) +    \
-     defined(DEFINE_DeeType_RequireSeqOperatorDelItemIndex) +    \
-     defined(DEFINE_DeeType_RequireSeqOperatorSetItemIndex) +    \
-     defined(DEFINE_DeeType_RequireSeqOperatorBoundItemIndex) +  \
-     defined(DEFINE_DeeType_RequireSeqOperatorHasItemIndex) +    \
-     defined(DEFINE_DeeType_RequireSeqOperatorGetRangeIndex) +   \
-     defined(DEFINE_DeeType_RequireSeqOperatorDelRangeIndex) +   \
-     defined(DEFINE_DeeType_RequireSeqOperatorSetRangeIndex) +   \
-     defined(DEFINE_DeeType_RequireSeqOperatorGetRangeIndexN) +  \
-     defined(DEFINE_DeeType_RequireSeqOperatorDelRangeIndexN) +  \
-     defined(DEFINE_DeeType_RequireSeqOperatorSetRangeIndexN) +  \
-     defined(DEFINE_DeeType_RequireSeqOperatorTryGetItem) +      \
-     defined(DEFINE_DeeType_RequireSeqOperatorTryGetItemIndex) + \
-     defined(DEFINE_DeeType_RequireSeqOperatorHash) +            \
-     defined(DEFINE_DeeType_RequireSeqOperatorCompareEq) +       \
-     defined(DEFINE_DeeType_RequireSeqOperatorCompare) +         \
-     defined(DEFINE_DeeType_RequireSeqOperatorTryCompareEq) +    \
-     defined(DEFINE_DeeType_RequireSeqOperatorEq) +              \
-     defined(DEFINE_DeeType_RequireSeqOperatorNe) +              \
-     defined(DEFINE_DeeType_RequireSeqOperatorLo) +              \
-     defined(DEFINE_DeeType_RequireSeqOperatorLe) +              \
-     defined(DEFINE_DeeType_RequireSeqOperatorGr) +              \
-     defined(DEFINE_DeeType_RequireSeqOperatorGe) +              \
-     defined(DEFINE_DeeType_RequireSeqOperatorInplaceAdd) +      \
-     defined(DEFINE_DeeType_RequireSeqOperatorInplaceMul) +      \
-     defined(DEFINE_DeeType_RequireSetOperatorHash) +            \
-     defined(DEFINE_DeeType_RequireSetOperatorCompareEq) +       \
-     defined(DEFINE_DeeType_RequireSetOperatorTryCompareEq) +    \
-     defined(DEFINE_DeeType_RequireSetOperatorEq) +              \
-     defined(DEFINE_DeeType_RequireSetOperatorNe) +              \
-     defined(DEFINE_DeeType_RequireSetOperatorLo) +              \
-     defined(DEFINE_DeeType_RequireSetOperatorLe) +              \
-     defined(DEFINE_DeeType_RequireSetOperatorGr) +              \
-     defined(DEFINE_DeeType_RequireSetOperatorGe)) != 1
+#if (defined(DEFINE_DeeType_RequireSeqOperatorBool) +                    \
+     defined(DEFINE_DeeType_RequireSeqOperatorIter) +                    \
+     defined(DEFINE_DeeType_RequireSeqOperatorSizeOb) +                  \
+     defined(DEFINE_DeeType_RequireSeqOperatorContains) +                \
+     defined(DEFINE_DeeType_RequireSeqOperatorGetItem) +                 \
+     defined(DEFINE_DeeType_RequireSeqOperatorDelItem) +                 \
+     defined(DEFINE_DeeType_RequireSeqOperatorSetItem) +                 \
+     defined(DEFINE_DeeType_RequireSeqOperatorGetRange) +                \
+     defined(DEFINE_DeeType_RequireSeqOperatorDelRange) +                \
+     defined(DEFINE_DeeType_RequireSeqOperatorSetRange) +                \
+     defined(DEFINE_DeeType_RequireSeqOperatorForeach) +                 \
+     defined(DEFINE_DeeType_RequireSeqOperatorForeachPair) +             \
+     defined(DEFINE_DeeType_RequireSeqOperatorEnumerate) +               \
+     defined(DEFINE_DeeType_RequireSeqOperatorEnumerateIndex) +          \
+     defined(DEFINE_DeeType_RequireSeqOperatorIterKeys) +                \
+     defined(DEFINE_DeeType_RequireSeqOperatorBoundItem) +               \
+     defined(DEFINE_DeeType_RequireSeqOperatorHasItem) +                 \
+     defined(DEFINE_DeeType_RequireSeqOperatorSize) +                    \
+     defined(DEFINE_DeeType_RequireSeqOperatorSizeFast) +                \
+     defined(DEFINE_DeeType_RequireSeqOperatorGetItemIndex) +            \
+     defined(DEFINE_DeeType_RequireSeqOperatorDelItemIndex) +            \
+     defined(DEFINE_DeeType_RequireSeqOperatorSetItemIndex) +            \
+     defined(DEFINE_DeeType_RequireSeqOperatorBoundItemIndex) +          \
+     defined(DEFINE_DeeType_RequireSeqOperatorHasItemIndex) +            \
+     defined(DEFINE_DeeType_RequireSeqOperatorGetRangeIndex) +           \
+     defined(DEFINE_DeeType_RequireSeqOperatorDelRangeIndex) +           \
+     defined(DEFINE_DeeType_RequireSeqOperatorSetRangeIndex) +           \
+     defined(DEFINE_DeeType_RequireSeqOperatorGetRangeIndexN) +          \
+     defined(DEFINE_DeeType_RequireSeqOperatorDelRangeIndexN) +          \
+     defined(DEFINE_DeeType_RequireSeqOperatorSetRangeIndexN) +          \
+     defined(DEFINE_DeeType_RequireSeqOperatorTryGetItem) +              \
+     defined(DEFINE_DeeType_RequireSeqOperatorTryGetItemIndex) +         \
+     defined(DEFINE_DeeType_RequireSeqOperatorHash) +                    \
+     defined(DEFINE_DeeType_RequireSeqOperatorCompareEq) +               \
+     defined(DEFINE_DeeType_RequireSeqOperatorCompare) +                 \
+     defined(DEFINE_DeeType_RequireSeqOperatorTryCompareEq) +            \
+     defined(DEFINE_DeeType_RequireSeqOperatorEq) +                      \
+     defined(DEFINE_DeeType_RequireSeqOperatorNe) +                      \
+     defined(DEFINE_DeeType_RequireSeqOperatorLo) +                      \
+     defined(DEFINE_DeeType_RequireSeqOperatorLe) +                      \
+     defined(DEFINE_DeeType_RequireSeqOperatorGr) +                      \
+     defined(DEFINE_DeeType_RequireSeqOperatorGe) +                      \
+     defined(DEFINE_DeeType_RequireSeqOperatorInplaceAdd) +              \
+     defined(DEFINE_DeeType_RequireSeqOperatorInplaceMul) +              \
+     defined(DEFINE_DeeType_RequireSetOperatorHash) +                    \
+     defined(DEFINE_DeeType_RequireSetOperatorCompareEq) +               \
+     defined(DEFINE_DeeType_RequireSetOperatorTryCompareEq) +            \
+     defined(DEFINE_DeeType_RequireSetOperatorEq) +                      \
+     defined(DEFINE_DeeType_RequireSetOperatorNe) +                      \
+     defined(DEFINE_DeeType_RequireSetOperatorLo) +                      \
+     defined(DEFINE_DeeType_RequireSetOperatorLe) +                      \
+     defined(DEFINE_DeeType_RequireSetOperatorGr) +                      \
+     defined(DEFINE_DeeType_RequireSetOperatorGe) +                      \
+     defined(DEFINE_DeeType_RequireMapOperatorContains) +                \
+     defined(DEFINE_DeeType_RequireMapOperatorGetItem) +                 \
+     defined(DEFINE_DeeType_RequireMapOperatorDelItem) +                 \
+     defined(DEFINE_DeeType_RequireMapOperatorSetItem) +                 \
+     defined(DEFINE_DeeType_RequireMapOperatorEnumerate) +               \
+     defined(DEFINE_DeeType_RequireMapOperatorEnumerateIndex) +          \
+     defined(DEFINE_DeeType_RequireMapOperatorBoundItem) +               \
+     defined(DEFINE_DeeType_RequireMapOperatorHasItem) +                 \
+     defined(DEFINE_DeeType_RequireMapOperatorGetItemIndex) +            \
+     defined(DEFINE_DeeType_RequireMapOperatorDelItemIndex) +            \
+     defined(DEFINE_DeeType_RequireMapOperatorSetItemIndex) +            \
+     defined(DEFINE_DeeType_RequireMapOperatorBoundItemIndex) +          \
+     defined(DEFINE_DeeType_RequireMapOperatorHasItemIndex) +            \
+     defined(DEFINE_DeeType_RequireMapOperatorTryGetItem) +              \
+     defined(DEFINE_DeeType_RequireMapOperatorTryGetItemIndex) +         \
+     defined(DEFINE_DeeType_RequireMapOperatorTryGetItemStringHash) +    \
+     defined(DEFINE_DeeType_RequireMapOperatorGetItemStringHash) +       \
+     defined(DEFINE_DeeType_RequireMapOperatorDelItemStringHash) +       \
+     defined(DEFINE_DeeType_RequireMapOperatorSetItemStringHash) +       \
+     defined(DEFINE_DeeType_RequireMapOperatorBoundItemStringHash) +     \
+     defined(DEFINE_DeeType_RequireMapOperatorHasItemStringHash) +       \
+     defined(DEFINE_DeeType_RequireMapOperatorTryGetItemStringLenHash) + \
+     defined(DEFINE_DeeType_RequireMapOperatorGetItemStringLenHash) +    \
+     defined(DEFINE_DeeType_RequireMapOperatorDelItemStringLenHash) +    \
+     defined(DEFINE_DeeType_RequireMapOperatorSetItemStringLenHash) +    \
+     defined(DEFINE_DeeType_RequireMapOperatorBoundItemStringLenHash) +  \
+     defined(DEFINE_DeeType_RequireMapOperatorHasItemStringLenHash) +    \
+     defined(DEFINE_DeeType_RequireMapOperatorCompareEq) +               \
+     defined(DEFINE_DeeType_RequireMapOperatorTryCompareEq) +            \
+     defined(DEFINE_DeeType_RequireMapOperatorEq) +                      \
+     defined(DEFINE_DeeType_RequireMapOperatorNe) +                      \
+     defined(DEFINE_DeeType_RequireMapOperatorLo) +                      \
+     defined(DEFINE_DeeType_RequireMapOperatorLe) +                      \
+     defined(DEFINE_DeeType_RequireMapOperatorGr) +                      \
+     defined(DEFINE_DeeType_RequireMapOperatorGe)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* DEFINE_DeeType_RequireSeq... */
 
 #ifdef LOCAL_FOR_VARIANTS
+#define PP_PRIVATE_CAT5(a, b, c, d, e) a##b##c##d##e
+#define PP_PRIVATE_CAT4(a, b, c, d) a##b##c##d
 #define PP_PRIVATE_CAT3(a, b, c) a##b##c
-#define PP_PRIVATE_CAT2(a, b)    a##b
+#define PP_PRIVATE_CAT2(a, b) a##b
+#define PP_CAT5(a, b, c, d, e) PP_PRIVATE_CAT5(a, b, c, d, e)
+#define PP_CAT4(a, b, c, d) PP_PRIVATE_CAT4(a, b, c, d)
 #define PP_CAT3(a, b, c) PP_PRIVATE_CAT3(a, b, c)
-#define PP_CAT2(a, b, c) PP_PRIVATE_CAT2(a, b, c)
+#define PP_CAT2(a, b) PP_PRIVATE_CAT2(a, b)
 #define LOCAL_FOR_OPTIMIZE
 #include "default-api.h"
 #endif /* LOCAL_FOR_VARIANTS */
@@ -171,12 +251,18 @@ DECL_BEGIN
 #elif defined(DEFINE_DeeType_RequireSeqOperatorForeach)
 #define LOCAL_operator_foo     operator_foreach
 #define LOCAL_OperatorFoo      OperatorForeach
+#elif defined(DEFINE_DeeType_RequireSeqOperatorForeachPair)
+#define LOCAL_operator_foo     operator_foreach_pair
+#define LOCAL_OperatorFoo      OperatorForeachPair
 #elif defined(DEFINE_DeeType_RequireSeqOperatorEnumerate)
 #define LOCAL_operator_foo     operator_enumerate
 #define LOCAL_OperatorFoo      OperatorEnumerate
 #elif defined(DEFINE_DeeType_RequireSeqOperatorEnumerateIndex)
 #define LOCAL_operator_foo     operator_enumerate_index
 #define LOCAL_OperatorFoo      OperatorEnumerateIndex
+#elif defined(DEFINE_DeeType_RequireSeqOperatorIterKeys)
+#define LOCAL_operator_foo     operator_iterkeys
+#define LOCAL_OperatorFoo      OperatorIterKeys
 #elif defined(DEFINE_DeeType_RequireSeqOperatorBoundItem)
 #define LOCAL_operator_foo     operator_bounditem
 #define LOCAL_OperatorFoo      OperatorBoundItem
@@ -300,6 +386,146 @@ DECL_BEGIN
 #define LOCAL_operator_foo     operator_ge
 #define LOCAL_OperatorFoo      OperatorGe
 #define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_SET
+#elif defined(DEFINE_DeeType_RequireMapOperatorContains)
+#define LOCAL_operator_foo     operator_contains
+#define LOCAL_OperatorFoo      OperatorContains
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorGetItem)
+#define LOCAL_operator_foo     operator_getitem
+#define LOCAL_OperatorFoo      OperatorGetItem
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorDelItem)
+#define LOCAL_operator_foo     operator_delitem
+#define LOCAL_OperatorFoo      OperatorDelItem
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorSetItem)
+#define LOCAL_operator_foo     operator_setitem
+#define LOCAL_OperatorFoo      OperatorSetItem
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorEnumerate)
+#define LOCAL_operator_foo     operator_enumerate
+#define LOCAL_OperatorFoo      OperatorEnumerate
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorEnumerateIndex)
+#define LOCAL_operator_foo     operator_enumerate_index
+#define LOCAL_OperatorFoo      OperatorEnumerateIndex
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorBoundItem)
+#define LOCAL_operator_foo     operator_bounditem
+#define LOCAL_OperatorFoo      OperatorBoundItem
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorHasItem)
+#define LOCAL_operator_foo     operator_hasitem
+#define LOCAL_OperatorFoo      OperatorHasItem
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorGetItemIndex)
+#define LOCAL_operator_foo     operator_getitem_index
+#define LOCAL_OperatorFoo      OperatorGetItemIndex
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorDelItemIndex)
+#define LOCAL_operator_foo     operator_delitem_index
+#define LOCAL_OperatorFoo      OperatorDelItemIndex
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorSetItemIndex)
+#define LOCAL_operator_foo     operator_setitem_index
+#define LOCAL_OperatorFoo      OperatorSetItemIndex
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorBoundItemIndex)
+#define LOCAL_operator_foo     operator_bounditem_index
+#define LOCAL_OperatorFoo      OperatorBoundItemIndex
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorHasItemIndex)
+#define LOCAL_operator_foo     operator_hasitem_index
+#define LOCAL_OperatorFoo      OperatorHasItemIndex
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryGetItem)
+#define LOCAL_operator_foo     operator_trygetitem
+#define LOCAL_OperatorFoo      OperatorTryGetItem
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryGetItemIndex)
+#define LOCAL_operator_foo     operator_trygetitem_index
+#define LOCAL_OperatorFoo      OperatorTryGetItemIndex
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryGetItemStringHash)
+#define LOCAL_operator_foo     operator_trygetitem_string_hash
+#define LOCAL_OperatorFoo      OperatorTryGetItemStringHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorGetItemStringHash)
+#define LOCAL_operator_foo     operator_getitem_string_hash
+#define LOCAL_OperatorFoo      OperatorGetItemStringHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorDelItemStringHash)
+#define LOCAL_operator_foo     operator_delitem_string_hash
+#define LOCAL_OperatorFoo      OperatorDelItemStringHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorSetItemStringHash)
+#define LOCAL_operator_foo     operator_setitem_string_hash
+#define LOCAL_OperatorFoo      OperatorSetItemStringHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorBoundItemStringHash)
+#define LOCAL_operator_foo     operator_bounditem_string_hash
+#define LOCAL_OperatorFoo      OperatorBoundItemStringHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorHasItemStringHash)
+#define LOCAL_operator_foo     operator_hasitem_string_hash
+#define LOCAL_OperatorFoo      OperatorHasItemStringHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryGetItemStringLenHash)
+#define LOCAL_operator_foo     operator_trygetitem_string_len_hash
+#define LOCAL_OperatorFoo      OperatorTryGetItemStringLenHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorGetItemStringLenHash)
+#define LOCAL_operator_foo     operator_getitem_string_len_hash
+#define LOCAL_OperatorFoo      OperatorGetItemStringLenHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorDelItemStringLenHash)
+#define LOCAL_operator_foo     operator_delitem_string_len_hash
+#define LOCAL_OperatorFoo      OperatorDelItemStringLenHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorSetItemStringLenHash)
+#define LOCAL_operator_foo     operator_setitem_string_len_hash
+#define LOCAL_OperatorFoo      OperatorSetItemStringLenHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorBoundItemStringLenHash)
+#define LOCAL_operator_foo     operator_bounditem_string_len_hash
+#define LOCAL_OperatorFoo      OperatorBoundItemStringLenHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorHasItemStringLenHash)
+#define LOCAL_operator_foo     operator_hasitem_string_len_hash
+#define LOCAL_OperatorFoo      OperatorHasItemStringLenHash
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorCompareEq)
+#define LOCAL_operator_foo     operator_compare_eq
+#define LOCAL_OperatorFoo      OperatorCompareEq
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryCompareEq)
+#define LOCAL_operator_foo     operator_trycompare_eq
+#define LOCAL_OperatorFoo      OperatorTryCompareEq
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorEq)
+#define LOCAL_operator_foo     operator_eq
+#define LOCAL_OperatorFoo      OperatorEq
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorNe)
+#define LOCAL_operator_foo     operator_ne
+#define LOCAL_OperatorFoo      OperatorNe
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorLo)
+#define LOCAL_operator_foo     operator_lo
+#define LOCAL_OperatorFoo      OperatorLo
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorLe)
+#define LOCAL_operator_foo     operator_le
+#define LOCAL_OperatorFoo      OperatorLe
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorGr)
+#define LOCAL_operator_foo     operator_gr
+#define LOCAL_OperatorFoo      OperatorGr
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
+#elif defined(DEFINE_DeeType_RequireMapOperatorGe)
+#define LOCAL_operator_foo     operator_ge
+#define LOCAL_OperatorFoo      OperatorGe
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_MAP
 #else /* DEFINE_DeeType_RequireSeq... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeType_RequireSeq... */
@@ -320,30 +546,6 @@ DECL_BEGIN
 #endif /* LOCAL_Dee_SEQCLASS != ... */
 #endif /* !LOCAL_SeqClass */
 
-#ifndef LOCAL_seq_class
-#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
-#define LOCAL_seq_class seq
-#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
-#define LOCAL_seq_class set
-#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
-#define LOCAL_seq_class map
-#else /* LOCAL_Dee_SEQCLASS == ... */
-#define LOCAL_seq_class INVALID_LOCAL_Dee_SEQCLASS
-#endif /* LOCAL_Dee_SEQCLASS != ... */
-#endif /* !LOCAL_seq_class */
-
-#ifndef LOCAL_tsc_seq_operator_foo
-#define LOCAL_tsc_seq_operator_foo PP_CAT4(tsc_, LOCAL_seq_class, _, LOCAL_operator_foo)
-#endif /* !LOCAL_tsc_seq_operator_foo */
-
-#ifndef LOCAL_Dee_tsc_operator_foo_t
-#define LOCAL_Dee_tsc_operator_foo_t PP_CAT3(Dee_tsc_, LOCAL_operator_foo, _t)
-#endif /* !LOCAL_Dee_tsc_operator_foo_t */
-
-#ifndef LOCAL_DeeSeq_OperatorFoo
-#define LOCAL_DeeSeq_OperatorFoo PP_CAT2(DeeSeq_, LOCAL_OperatorFoo)
-#endif /* !LOCAL_DeeSeq_OperatorFoo */
-
 #ifndef LOCAL_Seq
 #if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
 #define LOCAL_Seq Seq
@@ -355,6 +557,30 @@ DECL_BEGIN
 #define LOCAL_Seq INVALID_LOCAL_Dee_SEQCLASS
 #endif /* LOCAL_Dee_SEQCLASS != ... */
 #endif /* !LOCAL_Seq */
+
+#ifndef LOCAL_seq
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_seq seq
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_seq set
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_seq map
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_seq INVALID_LOCAL_Dee_SEQCLASS
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_seq */
+
+#ifndef LOCAL_tsc_seq_operator_foo
+#define LOCAL_tsc_seq_operator_foo PP_CAT4(tsc_, LOCAL_seq, _, LOCAL_operator_foo)
+#endif /* !LOCAL_tsc_seq_operator_foo */
+
+#ifndef LOCAL_Dee_tsc_operator_foo_t
+#define LOCAL_Dee_tsc_operator_foo_t PP_CAT3(Dee_tsc_, LOCAL_operator_foo, _t)
+#endif /* !LOCAL_Dee_tsc_operator_foo_t */
+
+#ifndef LOCAL_DeeSeq_OperatorFoo
+#define LOCAL_DeeSeq_OperatorFoo PP_CAT4(Dee, LOCAL_Seq, _, LOCAL_OperatorFoo)
+#endif /* !LOCAL_DeeSeq_OperatorFoo */
 
 #ifndef LOCAL_DeeType_RequireSeqOperatorFoo_uncached
 #ifdef LOCAL_FOR_OPTIMIZE
@@ -380,6 +606,7 @@ DECL_BEGIN
 #ifdef LOCAL_FOR_OPTIMIZE
 #define LOCAL_DeeType_RequireSeqOperatorSize            DeeType_RequireSeqOperatorSize_for_optimize
 #define LOCAL_DeeType_RequireSeqOperatorForeach         DeeType_RequireSeqOperatorForeach_for_optimize
+#define LOCAL_DeeType_RequireSeqOperatorForeachPair     DeeType_RequireSeqOperatorForeachPair_for_optimize
 #define LOCAL_DeeType_RequireSeqOperatorGetItemIndex    DeeType_RequireSeqOperatorGetItemIndex_for_optimize
 #define LOCAL_DeeType_RequireSeqOperatorIter            DeeType_RequireSeqOperatorIter_for_optimize
 #define LOCAL_DeeType_RequireSeqOperatorBoundItemIndex  DeeType_RequireSeqOperatorBoundItemIndex_for_optimize
@@ -388,9 +615,11 @@ DECL_BEGIN
 #define LOCAL_DeeType_RequireSeqOperatorCompareEq       DeeType_RequireSeqOperatorCompareEq_for_optimize
 #define LOCAL_DeeType_RequireSeqOperatorCompare         DeeType_RequireSeqOperatorCompare_for_optimize
 #define LOCAL_DeeType_RequireSetOperatorCompareEq       DeeType_RequireSetOperatorCompareEq_for_optimize
+#define LOCAL_DeeType_RequireMapOperatorCompareEq       DeeType_RequireMapOperatorCompareEq_for_optimize
 #else /* LOCAL_FOR_OPTIMIZE */
 #define LOCAL_DeeType_RequireSeqOperatorSize            DeeType_RequireSeqOperatorSize
 #define LOCAL_DeeType_RequireSeqOperatorForeach         DeeType_RequireSeqOperatorForeach
+#define LOCAL_DeeType_RequireSeqOperatorForeachPair     DeeType_RequireSeqOperatorForeachPair
 #define LOCAL_DeeType_RequireSeqOperatorGetItemIndex    DeeType_RequireSeqOperatorGetItemIndex
 #define LOCAL_DeeType_RequireSeqOperatorIter            DeeType_RequireSeqOperatorIter
 #define LOCAL_DeeType_RequireSeqOperatorBoundItemIndex  DeeType_RequireSeqOperatorBoundItemIndex
@@ -399,6 +628,7 @@ DECL_BEGIN
 #define LOCAL_DeeType_RequireSeqOperatorCompareEq       DeeType_RequireSeqOperatorCompareEq
 #define LOCAL_DeeType_RequireSeqOperatorCompare         DeeType_RequireSeqOperatorCompare
 #define LOCAL_DeeType_RequireSetOperatorCompareEq       DeeType_RequireSetOperatorCompareEq
+#define LOCAL_DeeType_RequireMapOperatorCompareEq       DeeType_RequireMapOperatorCompareEq
 #endif /* !LOCAL_FOR_OPTIMIZE */
 
 
@@ -527,6 +757,11 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	if (DeeType_RequireForeach(self))
 		return self->tp_seq->tp_foreach;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+#elif defined(DEFINE_DeeType_RequireSeqOperatorForeachPair)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_RequireForeachPair(self))
+		return self->tp_seq->tp_foreach_pair;
+#endif /* !LOCAL_FOR_OPTIMIZE */
 #elif defined(DEFINE_DeeType_RequireSeqOperatorEnumerate)
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireEnumerate(self))
@@ -539,6 +774,19 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 			return &DeeSeq_DefaultOperatorEnumerateWithEmpty;
 		if (tsc_seq_operator_foreach != &DeeSeq_DefaultOperatorForeachWithError)
 			return &DeeSeq_DefaultEnumerateWithCounterAndForeach;
+	}
+#elif defined(DEFINE_DeeType_RequireSeqOperatorIterKeys)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireIterKeys(self))
+		return self->tp_seq->tp_iterkeys;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		tsc_seq_operator_foreach = LOCAL_DeeType_RequireSeqOperatorForeach(self);
+		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
+			return &DeeSeq_DefaultOperatorIterKeysWithEmpty;
+		if (tsc_seq_operator_foreach != &DeeSeq_DefaultOperatorForeachWithError)
+			return &DeeSeq_DefaultOperatorIterKeysWithSeqSize;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorEnumerateIndex)
 #ifndef LOCAL_FOR_OPTIMIZE
@@ -890,8 +1138,12 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		tsc_seq_operator_foreach = LOCAL_DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorHashWithEmpty;
-		if (tsc_seq_operator_foreach != &DeeSeq_DefaultOperatorForeachWithError)
+		if (tsc_seq_operator_foreach != &DeeSeq_DefaultOperatorForeachWithError) {
+			if (self->tp_seq && self->tp_seq->tp_foreach_pair &&
+			    !DeeType_IsDefaultForeachPair(self->tp_seq->tp_foreach_pair))
+				return &DeeMap_DefaultHashWithForeachPairDefault;
 			return &DeeSet_DefaultHashWithForeachDefault;
+		}
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorCompareEq)
 #ifndef LOCAL_FOR_OPTIMIZE
@@ -1009,12 +1261,423 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		if (tsc_seq_operator_foreach != &DeeSeq_DefaultOperatorForeachWithError)
 			return &DeeSet_DefaultGeWithForeachDefault;
 	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorContains)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireContains(self))
+		return self->tp_seq->tp_contains;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorContainsWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultContainsWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorGetItem)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireGetItem(self))
+		return self->tp_seq->tp_getitem;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorGetItemWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultGetItemWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorDelItem)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireDelItem(self))
+		return self->tp_seq->tp_delitem;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	/* TODO: Treat as ?S?T2?O?O and implement as (if used functions are available):
+	 * >> operator del[](key) {
+	 * >>     Sequence.remove(key: x -> key == x.first);
+	 * >> } */
+#elif defined(DEFINE_DeeType_RequireMapOperatorSetItem)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireSetItem(self))
+		return self->tp_seq->tp_setitem;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	/* TODO: Treat as ?S?T2?O?O and implement as (if used functions are available):
+	 * >> operator []= (key, value) {
+	 * >>     local index = Sequence.find(this, key: x -> key == x.first);
+	 * >>     if (index == -1) {
+	 * >>         Sequence.append(this, (key, value));
+	 * >>     } else {
+	 * >>         Sequence.__delitem__(this, index);
+	 * >>     }
+	 * >> } */
+#elif defined(DEFINE_DeeType_RequireMapOperatorEnumerate)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireEnumerate(self))
+		return self->tp_seq->tp_enumerate;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorEnumerateWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultEnumerateWithForeachPairDefault;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorEnumerateIndex)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireEnumerateIndex(self))
+		return self->tp_seq->tp_enumerate_index;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorEnumerateIndexWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultEnumerateIndexWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorBoundItem)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireBoundItem(self))
+		return self->tp_seq->tp_bounditem;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorBoundItemWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultBoundItemWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorHasItem)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireHasItem(self))
+		return self->tp_seq->tp_hasitem;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorHasItemWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultHasItemWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorGetItemIndex)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireGetItemIndex(self))
+		return self->tp_seq->tp_getitem_index;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorGetItemIndexWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultGetItemIndexWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorDelItemIndex)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireDelItemIndex(self))
+		return self->tp_seq->tp_delitem_index;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	/* TODO: See `DEFINE_DeeType_RequireMapOperatorDelItem' */
+#elif defined(DEFINE_DeeType_RequireMapOperatorSetItemIndex)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireSetItemIndex(self))
+		return self->tp_seq->tp_setitem_index;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	/* TODO: See `DEFINE_DeeType_RequireMapOperatorSetItem' */
+#elif defined(DEFINE_DeeType_RequireMapOperatorBoundItemIndex)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireBoundItemIndex(self))
+		return self->tp_seq->tp_bounditem_index;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorBoundItemIndexWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultBoundItemIndexWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorHasItemIndex)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireHasItemIndex(self))
+		return self->tp_seq->tp_hasitem_index;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorHasItemIndexWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultHasItemIndexWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryGetItem)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireTryGetItem(self))
+		return self->tp_seq->tp_trygetitem;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorTryGetItemWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultTryGetItemWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryGetItemIndex)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireTryGetItemIndex(self))
+		return self->tp_seq->tp_trygetitem_index;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorTryGetItemIndexWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultTryGetItemIndexWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryGetItemStringHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireTryGetItemStringHash(self))
+		return self->tp_seq->tp_trygetitem_string_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorTryGetItemStringHashWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultTryGetItemStringHashWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorGetItemStringHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireGetItemStringHash(self))
+		return self->tp_seq->tp_getitem_string_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorGetItemStringHashWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultGetItemStringHashWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorDelItemStringHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireDelItemStringHash(self))
+		return self->tp_seq->tp_delitem_string_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	/* TODO: See `DEFINE_DeeType_RequireMapOperatorDelItem' */
+#elif defined(DEFINE_DeeType_RequireMapOperatorSetItemStringHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireSetItemStringHash(self))
+		return self->tp_seq->tp_setitem_string_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	/* TODO: See `DEFINE_DeeType_RequireMapOperatorSetItem' */
+#elif defined(DEFINE_DeeType_RequireMapOperatorBoundItemStringHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireBoundItemStringHash(self))
+		return self->tp_seq->tp_bounditem_string_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorBoundItemStringHashWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultBoundItemStringHashWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorHasItemStringHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireHasItemStringHash(self))
+		return self->tp_seq->tp_hasitem_string_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorHasItemStringHashWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultHasItemStringHashWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryGetItemStringLenHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireTryGetItemStringLenHash(self))
+		return self->tp_seq->tp_trygetitem_string_len_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorTryGetItemStringLenHashWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultTryGetItemStringLenHashWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorGetItemStringLenHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireGetItemStringLenHash(self))
+		return self->tp_seq->tp_getitem_string_len_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorGetItemStringLenHashWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultGetItemStringLenHashWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorDelItemStringLenHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireDelItemStringLenHash(self))
+		return self->tp_seq->tp_delitem_string_len_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	/* TODO: See `DEFINE_DeeType_RequireMapOperatorDelItem' */
+#elif defined(DEFINE_DeeType_RequireMapOperatorSetItemStringLenHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireSetItemStringLenHash(self))
+		return self->tp_seq->tp_setitem_string_len_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	/* TODO: See `DEFINE_DeeType_RequireMapOperatorSetItem' */
+#elif defined(DEFINE_DeeType_RequireMapOperatorBoundItemStringLenHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireBoundItemStringLenHash(self))
+		return self->tp_seq->tp_bounditem_string_len_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorBoundItemStringLenHashWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultBoundItemStringLenHashWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorHasItemStringLenHash)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireHasItemStringLenHash(self))
+		return self->tp_seq->tp_hasitem_string_len_hash;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorHasItemStringLenHashWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultHasItemStringLenHashWithForeachPair;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorCompareEq)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireCompareEq(self))
+		return self->tp_cmp->tp_compare_eq;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorCompareEqWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultCompareEqWithForeachPairDefault;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorTryCompareEq)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireTryCompareEq(self))
+		return self->tp_cmp->tp_trycompare_eq;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorTryCompareEqWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultTryCompareEqWithForeachPairDefault;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorEq)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireEq(self))
+		return self->tp_cmp->tp_eq;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_compare_eq_t tsc_map_operator_compare_eq;
+		tsc_map_operator_compare_eq = LOCAL_DeeType_RequireMapOperatorCompareEq(self);
+		if (tsc_map_operator_compare_eq == &DeeMap_DefaultOperatorCompareEqWithEmpty)
+			return &DeeMap_DefaultOperatorEqWithEmpty;
+		if (tsc_map_operator_compare_eq != &DeeMap_DefaultOperatorCompareEqWithError)
+			return &DeeMap_DefaultOperatorEqWithMapCompareEq;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorNe)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireNe(self))
+		return self->tp_cmp->tp_ne;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_compare_eq_t tsc_map_operator_compare_eq;
+		tsc_map_operator_compare_eq = LOCAL_DeeType_RequireMapOperatorCompareEq(self);
+		if (tsc_map_operator_compare_eq == &DeeMap_DefaultOperatorCompareEqWithEmpty)
+			return &DeeMap_DefaultOperatorNeWithEmpty;
+		if (tsc_map_operator_compare_eq != &DeeMap_DefaultOperatorCompareEqWithError)
+			return &DeeMap_DefaultOperatorNeWithMapCompareEq;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorLo)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireLo(self))
+		return self->tp_cmp->tp_lo;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorLoWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultLoWithForeachPairDefault;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorLe)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireLe(self))
+		return self->tp_cmp->tp_le;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorLeWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultLeWithForeachPairDefault;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorGr)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireGr(self))
+		return self->tp_cmp->tp_gr;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorGrWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultGrWithForeachPairDefault;
+	}
+#elif defined(DEFINE_DeeType_RequireMapOperatorGe)
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_MAP && DeeType_RequireGe(self))
+		return self->tp_cmp->tp_ge;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		tsc_seq_operator_foreach_pair = LOCAL_DeeType_RequireSeqOperatorForeachPair(self);
+		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
+			return &DeeMap_DefaultOperatorGeWithEmpty;
+		if (tsc_seq_operator_foreach_pair != &DeeSeq_DefaultOperatorForeachPairWithError)
+			return &DeeMap_DefaultGeWithForeachPairDefault;
+	}
 #endif /* ... */
 	return &LOCAL_DeeSeq_DefaultOperatorFooWithError;
 }
 
 #undef LOCAL_DeeType_RequireSeqOperatorSize
 #undef LOCAL_DeeType_RequireSeqOperatorForeach
+#undef LOCAL_DeeType_RequireSeqOperatorForeachPair
 #undef LOCAL_DeeType_RequireSeqOperatorGetItemIndex
 #undef LOCAL_DeeType_RequireSeqOperatorIter
 #undef LOCAL_DeeType_RequireSeqOperatorBoundItemIndex
@@ -1023,6 +1686,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 #undef LOCAL_DeeType_RequireSeqOperatorCompareEq
 #undef LOCAL_DeeType_RequireSeqOperatorCompare
 #undef LOCAL_DeeType_RequireSetOperatorCompareEq
+#undef LOCAL_DeeType_RequireMapOperatorCompareEq
 
 
 #ifndef LOCAL_FOR_OPTIMIZE
@@ -1054,7 +1718,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo(DeeTypeObject *__restrict self) {
 #undef LOCAL_DeeSeq_OperatorFoo
 #undef LOCAL_Dee_tsc_operator_foo_t
 #undef LOCAL_tsc_seq_operator_foo
-#undef LOCAL_seq_class
+#undef LOCAL_seq
 #undef LOCAL_SeqClass
 #undef LOCAL_Seq
 #undef LOCAL_DeeType_RequireSeqOperatorFoo_uncached
@@ -1078,8 +1742,10 @@ DECL_END
 #undef DEFINE_DeeType_RequireSeqOperatorDelRange
 #undef DEFINE_DeeType_RequireSeqOperatorSetRange
 #undef DEFINE_DeeType_RequireSeqOperatorForeach
+#undef DEFINE_DeeType_RequireSeqOperatorForeachPair
 #undef DEFINE_DeeType_RequireSeqOperatorEnumerate
 #undef DEFINE_DeeType_RequireSeqOperatorEnumerateIndex
+#undef DEFINE_DeeType_RequireSeqOperatorIterKeys
 #undef DEFINE_DeeType_RequireSeqOperatorBoundItem
 #undef DEFINE_DeeType_RequireSeqOperatorHasItem
 #undef DEFINE_DeeType_RequireSeqOperatorSize
@@ -1118,3 +1784,38 @@ DECL_END
 #undef DEFINE_DeeType_RequireSetOperatorLe
 #undef DEFINE_DeeType_RequireSetOperatorGr
 #undef DEFINE_DeeType_RequireSetOperatorGe
+#undef DEFINE_DeeType_RequireMapOperatorContains
+#undef DEFINE_DeeType_RequireMapOperatorGetItem
+#undef DEFINE_DeeType_RequireMapOperatorDelItem
+#undef DEFINE_DeeType_RequireMapOperatorSetItem
+#undef DEFINE_DeeType_RequireMapOperatorEnumerate
+#undef DEFINE_DeeType_RequireMapOperatorEnumerateIndex
+#undef DEFINE_DeeType_RequireMapOperatorBoundItem
+#undef DEFINE_DeeType_RequireMapOperatorHasItem
+#undef DEFINE_DeeType_RequireMapOperatorGetItemIndex
+#undef DEFINE_DeeType_RequireMapOperatorDelItemIndex
+#undef DEFINE_DeeType_RequireMapOperatorSetItemIndex
+#undef DEFINE_DeeType_RequireMapOperatorBoundItemIndex
+#undef DEFINE_DeeType_RequireMapOperatorHasItemIndex
+#undef DEFINE_DeeType_RequireMapOperatorTryGetItem
+#undef DEFINE_DeeType_RequireMapOperatorTryGetItemIndex
+#undef DEFINE_DeeType_RequireMapOperatorTryGetItemStringHash
+#undef DEFINE_DeeType_RequireMapOperatorGetItemStringHash
+#undef DEFINE_DeeType_RequireMapOperatorDelItemStringHash
+#undef DEFINE_DeeType_RequireMapOperatorSetItemStringHash
+#undef DEFINE_DeeType_RequireMapOperatorBoundItemStringHash
+#undef DEFINE_DeeType_RequireMapOperatorHasItemStringHash
+#undef DEFINE_DeeType_RequireMapOperatorTryGetItemStringLenHash
+#undef DEFINE_DeeType_RequireMapOperatorGetItemStringLenHash
+#undef DEFINE_DeeType_RequireMapOperatorDelItemStringLenHash
+#undef DEFINE_DeeType_RequireMapOperatorSetItemStringLenHash
+#undef DEFINE_DeeType_RequireMapOperatorBoundItemStringLenHash
+#undef DEFINE_DeeType_RequireMapOperatorHasItemStringLenHash
+#undef DEFINE_DeeType_RequireMapOperatorCompareEq
+#undef DEFINE_DeeType_RequireMapOperatorTryCompareEq
+#undef DEFINE_DeeType_RequireMapOperatorEq
+#undef DEFINE_DeeType_RequireMapOperatorNe
+#undef DEFINE_DeeType_RequireMapOperatorLo
+#undef DEFINE_DeeType_RequireMapOperatorLe
+#undef DEFINE_DeeType_RequireMapOperatorGr
+#undef DEFINE_DeeType_RequireMapOperatorGe
