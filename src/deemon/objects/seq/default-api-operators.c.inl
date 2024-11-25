@@ -1038,6 +1038,157 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	return DeeSeq_OperatorInplaceMul(p_self, some_object);
 }
 
+
+
+
+
+
+
+/************************************************************************/
+/* SET                                                                  */
+/************************************************************************/
+
+INTERN struct type_seq DeeSet_OperatorSeq = {
+	/* .tp_iter                       = */ &DeeSet_OperatorIter,
+	/* .tp_sizeob                     = */ &DeeSet_OperatorSizeOb,
+	/* .tp_contains                   = */ &DeeSet_OperatorContains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ &DeeSet_OperatorForeach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ &DeeSet_OperatorSize,
+	/* .tp_size_fast                  = */ &DeeSet_OperatorSizeFast,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+};
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorEqWithSetCompareEq(DeeObject *self, DeeObject *some_object) {
+	int result = DeeSet_OperatorCompareEq(self, some_object);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(result == 0);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorNeWithSetCompareEq(DeeObject *self, DeeObject *some_object) {
+	int result = DeeSet_OperatorCompareEq(self, some_object);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(result != 0);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorLeWithEmpty(DeeObject *self, DeeObject *some_object) {
+	(void)self;
+	(void)some_object;
+	return_true;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorGrWithEmpty(DeeObject *self, DeeObject *some_object) {
+	(void)self;
+	(void)some_object;
+	return_false;
+}
+
+INTERN WUNUSED NONNULL((1)) Dee_hash_t
+(DCALL DeeSet_OperatorHash)(DeeObject *__restrict self) {
+	return DeeSet_OperatorHash(self);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeSet_OperatorCompareEq)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorCompareEq(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeSet_OperatorTryCompareEq)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorTryCompareEq(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorEq)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorEq(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorNe)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorNe(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorLo)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorLo(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorLe)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorLe(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorGr)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorGr(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorGe)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorGe(self, some_object);
+}
+
+INTERN struct type_cmp DeeSet_OperatorCmp = {
+	/* .tp_hash          = */ &DeeSet_OperatorHash,
+	/* .tp_compare_eq    = */ &DeeSet_OperatorCompareEq,
+	/* .tp_compare       = */ NULL, /* Not possible */
+	/* .tp_trycompare_eq = */ &DeeSet_OperatorTryCompareEq,
+	/* .tp_eq            = */ &DeeSet_OperatorEq,
+	/* .tp_ne            = */ &DeeSet_OperatorNe,
+	/* .tp_lo            = */ &DeeSet_OperatorLo,
+	/* .tp_le            = */ &DeeSet_OperatorLe,
+	/* .tp_gr            = */ &DeeSet_OperatorGr,
+	/* .tp_ge            = */ &DeeSet_OperatorGe,
+};
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_OPERATORS_C_INL */

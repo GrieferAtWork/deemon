@@ -208,17 +208,6 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_ge_t)(Dee
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_add_t)(DeeObject **__restrict p_self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_mul_t)(DeeObject **__restrict p_self, DeeObject *some_object);
 
-INTDEF struct Dee_type_cmp generic_set_cmp;
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_set_hash(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_eq(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_ne(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_lo(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_le(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_gr(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_ge(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_set_compare_eq(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_set_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
-
 INTDEF struct Dee_type_cmp generic_map_cmp;
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_map_hash(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_eq(DeeObject *lhs, DeeObject *rhs);
@@ -277,6 +266,16 @@ PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCA
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireSeqOperatorGe_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_add_t DCALL DeeType_RequireSeqOperatorInplaceAdd_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_mul_t DCALL DeeType_RequireSeqOperatorInplaceMul_for_optimize(DeeTypeObject *__restrict self);
+
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_hash_t DCALL DeeType_RequireSetOperatorHash_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_compare_eq_t DCALL DeeType_RequireSetOperatorCompareEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_trycompare_eq_t DCALL DeeType_RequireSetOperatorTryCompareEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_eq_t DCALL DeeType_RequireSetOperatorEq_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ne_t DCALL DeeType_RequireSetOperatorNe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_lo_t DCALL DeeType_RequireSetOperatorLo_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCALL DeeType_RequireSetOperatorLe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_RequireSetOperatorGr_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireSetOperatorGe_for_optimize(DeeTypeObject *__restrict self);
 
 #ifndef __INTELLISENSE__
 #define LOCAL_FOR_OPTIMIZE
@@ -367,31 +366,58 @@ DECL_END
 #define DEFINE_DeeType_RequireSeqOperatorInplaceMul
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 
+#define DEFINE_DeeType_RequireSetOperatorHash
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorCompareEq
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorTryCompareEq
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorEq
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorNe
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorLo
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorLe
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorGr
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorGe
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+
 DECL_BEGIN
 #undef LOCAL_FOR_OPTIMIZE
 #endif /* !__INTELLISENSE__ */
 
 
-#if 0 /* TODO: Enable this once Set and Map default operators are also virtual */
-#define OPTIMIZE_SEQ_OPERATOR(OperatorFoo, dst, tp_foo)                          \
-	if (0 DeeType_SeqCache_Variants_##OperatorFoo(|| (tp_foo) == )               \
-	      DeeType_SeqCache_Variants_Set##OperatorFoo(|| (tp_foo) == )            \
-	      DeeType_SeqCache_Variants_Map##OperatorFoo(|| (tp_foo) == )) {         \
-		switch (DeeType_GetSeqClass(dst)) {                                      \
-		case Dee_SEQCLASS_SEQ;                                                   \
-			return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst);    \
-		case Dee_SEQCLASS_SET;                                                   \
-			return DeeType_RequireSet##OperatorFoo##_for_optimize(dst); \
-		case Dee_SEQCLASS_MAP;                                                   \
-			return DeeType_RequireMap##OperatorFoo##_for_optimize(dst); \
-		default: break;                                                          \
-		}                                                                        \
-	}
-#else
-#define OPTIMIZE_SEQ_OPERATOR(OperatorFoo, dst, tp_foo)             \
-	if (0 DeeType_SeqCache_Variants_##OperatorFoo(|| (tp_foo) == )) \
+#define OPTIMIZE_SEQ_OPERATOR(OperatorFoo, dst, tp_foo)      \
+	if (0 DeeSeq_VariantsFor_##OperatorFoo(|| (tp_foo) == )) \
 		return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst)
-#endif
+#define OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorFoo, dst, tp_foo) \
+	if (0 DeeSeq_VariantsFor_##OperatorFoo(|| (tp_foo) == )             \
+	      DeeSet_VariantsFor_##OperatorFoo(|| (tp_foo) == )) {          \
+		switch (DeeType_GetSeqClass(dst)) {                             \
+		case Dee_SEQCLASS_SEQ:                                          \
+			return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst); \
+		case Dee_SEQCLASS_SET:                                          \
+			return DeeType_RequireSet##OperatorFoo##_for_optimize(dst); \
+		default: break;                                                 \
+		}                                                               \
+	}
+#define OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorFoo, dst, tp_foo)   \
+	if (0 DeeSeq_VariantsFor_##OperatorFoo(|| (tp_foo) == )             \
+	      DeeSet_VariantsFor_##OperatorFoo(|| (tp_foo) == )             \
+	      DeeMap_VariantsFor_##OperatorFoo(|| (tp_foo) == )) {          \
+		switch (DeeType_GetSeqClass(dst)) {                             \
+		case Dee_SEQCLASS_SEQ:                                          \
+			return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst); \
+		case Dee_SEQCLASS_SET:                                          \
+			return DeeType_RequireSet##OperatorFoo##_for_optimize(dst); \
+		case Dee_SEQCLASS_MAP:                                          \
+			return DeeType_RequireMap##OperatorFoo##_for_optimize(dst); \
+		default: break;                                                 \
+		}                                                               \
+	}
 
 
 /************************************************************************/
@@ -581,14 +607,9 @@ DeeType_Optimize_tp_trygetitem_index(DeeTypeObject *__restrict dst, DeeType_tp_t
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_hash_t DCALL
 DeeType_Optimize_tp_hash(DeeTypeObject *__restrict dst,
                          DeeType_tp_hash_t tp_hash) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorHash, dst, tp_hash);
-	if (tp_hash == &generic_set_hash ||
-	    tp_hash == &DeeSet_DefaultHashWithForeachDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeSet_DefaultHashWithForeachDefault;
-		return &generic_set_hash;
-	} else if (tp_hash == &generic_map_hash ||
-	           tp_hash == &DeeMap_DefaultHashWithForeachPairDefault) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorHash, dst, tp_hash);
+	if (tp_hash == &generic_map_hash ||
+	    tp_hash == &DeeMap_DefaultHashWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeMap_DefaultHashWithForeachPairDefault;
 		return &generic_map_hash;
@@ -605,14 +626,9 @@ DeeType_Optimize_tp_compare(DeeTypeObject *__restrict dst, DeeType_tp_compare_t 
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_compare_eq_t DCALL
 DeeType_Optimize_tp_compare_eq(DeeTypeObject *__restrict dst,
                                DeeType_tp_compare_eq_t tp_compare_eq) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorCompareEq, dst, tp_compare_eq);
-	if (tp_compare_eq == &generic_set_compare_eq ||
-	    tp_compare_eq == &DeeSet_DefaultCompareEqWithForeachDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeSet_DefaultCompareEqWithForeachDefault;
-		return &generic_set_compare_eq;
-	} else if (tp_compare_eq == &generic_map_compare_eq ||
-	           tp_compare_eq == &DeeMap_DefaultCompareEqWithForeachPairDefault) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorCompareEq, dst, tp_compare_eq);
+	if (tp_compare_eq == &generic_map_compare_eq ||
+	    tp_compare_eq == &DeeMap_DefaultCompareEqWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeMap_DefaultCompareEqWithForeachPairDefault;
 		return &generic_map_compare_eq;
@@ -623,14 +639,9 @@ DeeType_Optimize_tp_compare_eq(DeeTypeObject *__restrict dst,
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_trycompare_eq_t DCALL
 DeeType_Optimize_tp_trycompare_eq(DeeTypeObject *__restrict dst,
                                   DeeType_tp_trycompare_eq_t tp_trycompare_eq) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorTryCompareEq, dst, tp_trycompare_eq);
-	if (tp_trycompare_eq == &generic_set_trycompare_eq ||
-	    tp_trycompare_eq == &DeeSet_DefaultTryCompareEqWithForeachDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeSet_DefaultTryCompareEqWithForeachDefault;
-		return &generic_set_trycompare_eq;
-	} else if (tp_trycompare_eq == &generic_map_trycompare_eq ||
-	           tp_trycompare_eq == &DeeMap_DefaultTryCompareEqWithForeachPairDefault) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorTryCompareEq, dst, tp_trycompare_eq);
+	if (tp_trycompare_eq == &generic_map_trycompare_eq ||
+	    tp_trycompare_eq == &DeeMap_DefaultTryCompareEqWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeMap_DefaultTryCompareEqWithForeachPairDefault;
 		return &generic_map_trycompare_eq;
@@ -641,8 +652,8 @@ DeeType_Optimize_tp_trycompare_eq(DeeTypeObject *__restrict dst,
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_eq_t DCALL
 DeeType_Optimize_tp_eq(DeeTypeObject *__restrict dst,
                        DeeType_tp_eq_t tp_eq) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorEq, dst, tp_eq);
-	if (tp_eq == &generic_set_eq || tp_eq == &generic_map_eq) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorEq, dst, tp_eq);
+	if (tp_eq == &generic_map_eq) {
 		if (dst->tp_cmp->tp_compare_eq)
 			return &DeeObject_DefaultEqWithCompareEqDefault;
 	}
@@ -652,8 +663,8 @@ DeeType_Optimize_tp_eq(DeeTypeObject *__restrict dst,
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_ne_t DCALL
 DeeType_Optimize_tp_ne(DeeTypeObject *__restrict dst,
                        DeeType_tp_ne_t tp_ne) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorNe, dst, tp_ne);
-	if (tp_ne == &generic_set_ne || tp_ne == &generic_map_ne) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorNe, dst, tp_ne);
+	if (tp_ne == &generic_map_ne) {
 		if (dst->tp_cmp->tp_compare_eq)
 			return &DeeObject_DefaultNeWithCompareEqDefault;
 	}
@@ -663,14 +674,9 @@ DeeType_Optimize_tp_ne(DeeTypeObject *__restrict dst,
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_lo_t DCALL
 DeeType_Optimize_tp_lo(DeeTypeObject *__restrict dst,
                        DeeType_tp_lo_t tp_lo) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorLo, dst, tp_lo);
-	if (tp_lo == &generic_set_lo ||
-	    tp_lo == &DeeSet_DefaultLoWithForeachDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeSet_DefaultLoWithForeachDefault;
-		return &generic_set_lo;
-	} else if (tp_lo == &generic_map_lo ||
-	           tp_lo == &DeeMap_DefaultLoWithForeachPairDefault) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorLo, dst, tp_lo);
+	if (tp_lo == &generic_map_lo ||
+	    tp_lo == &DeeMap_DefaultLoWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeMap_DefaultLoWithForeachPairDefault;
 		return &generic_map_lo;
@@ -681,14 +687,9 @@ DeeType_Optimize_tp_lo(DeeTypeObject *__restrict dst,
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_le_t DCALL
 DeeType_Optimize_tp_le(DeeTypeObject *__restrict dst,
                        DeeType_tp_le_t tp_le) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorLe, dst, tp_le);
-	if (tp_le == &generic_set_le ||
-	    tp_le == &DeeSet_DefaultLeWithForeachDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeSet_DefaultLeWithForeachDefault;
-		return &generic_set_le;
-	} else if (tp_le == &generic_map_le ||
-	           tp_le == &DeeMap_DefaultLeWithForeachPairDefault) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorLe, dst, tp_le);
+	if (tp_le == &generic_map_le ||
+	    tp_le == &DeeMap_DefaultLeWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeMap_DefaultLeWithForeachPairDefault;
 		return &generic_map_le;
@@ -699,14 +700,9 @@ DeeType_Optimize_tp_le(DeeTypeObject *__restrict dst,
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_gr_t DCALL
 DeeType_Optimize_tp_gr(DeeTypeObject *__restrict dst,
                        DeeType_tp_gr_t tp_gr) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorGr, dst, tp_gr);
-	if (tp_gr == &generic_set_gr ||
-	    tp_gr == &DeeSet_DefaultGrWithForeachDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeSet_DefaultGrWithForeachDefault;
-		return &generic_set_gr;
-	} else if (tp_gr == &generic_map_gr ||
-	           tp_gr == &DeeMap_DefaultGrWithForeachPairDefault) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorGr, dst, tp_gr);
+	if (tp_gr == &generic_map_gr ||
+	    tp_gr == &DeeMap_DefaultGrWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeMap_DefaultGrWithForeachPairDefault;
 		return &generic_map_gr;
@@ -717,14 +713,9 @@ DeeType_Optimize_tp_gr(DeeTypeObject *__restrict dst,
 PRIVATE WUNUSED NONNULL((1)) DeeType_tp_ge_t DCALL
 DeeType_Optimize_tp_ge(DeeTypeObject *__restrict dst,
                        DeeType_tp_ge_t tp_ge) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorGe, dst, tp_ge);
-	if (tp_ge == &generic_set_ge ||
-	    tp_ge == &DeeSet_DefaultGeWithForeachDefault) {
-		if (DeeType_InheritIter(dst))
-			return &DeeSet_DefaultGeWithForeachDefault;
-		return &generic_set_ge;
-	} else if (tp_ge == &generic_map_ge ||
-	           tp_ge == &DeeMap_DefaultGeWithForeachPairDefault) {
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorGe, dst, tp_ge);
+	if (tp_ge == &generic_map_ge ||
+	    tp_ge == &DeeMap_DefaultGeWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeMap_DefaultGeWithForeachPairDefault;
 		return &generic_map_ge;
@@ -758,11 +749,11 @@ DeeType_Optimize_tp_cmp(DeeTypeObject *__restrict dst,
 			}
 		}
 		return &DeeSeq_OperatorCmp;
-	} else if (tp_cmp == &generic_set_cmp ||
+	} else if (tp_cmp == &DeeSet_OperatorCmp ||
 	           tp_cmp == &DeeSet_DefaultCmpWithForeachDefault) {
 		if (DeeType_InheritIter(dst))
 			return &DeeSet_DefaultCmpWithForeachDefault;
-		return &generic_set_cmp;
+		return &DeeSet_OperatorCmp;
 	} else if (tp_cmp == &generic_map_cmp ||
 	           tp_cmp == &DeeMap_DefaultCmpWithForeachPairDefault) {
 		if (DeeType_InheritIter(dst))

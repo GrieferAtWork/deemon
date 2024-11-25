@@ -901,6 +901,24 @@ DECL_END
 #include "default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSeqOperatorInplaceMul
 #include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorHash
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorCompareEq
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorTryCompareEq
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorEq
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorNe
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorLo
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorLe
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorGr
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorGe
+#include "default-api-require-operator-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 /* Define sequence function implementation selectors */
