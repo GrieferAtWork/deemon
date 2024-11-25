@@ -638,6 +638,14 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
 
 #endif /* CONFIG_NO_THREADS */
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+tls_printrepr(TLS *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	DeeObject *factory = self->t_factory;
+	return factory ? DeeFormat_Printf(printer, arg, "TLS(%r)", factory)
+	               : DeeFormat_PRINT(printer, arg, "TLS()");
+}
+
+
 
 PRIVATE struct type_getset tpconst tls_getsets[] = {
 	TYPE_GETSET_BOUND_F("value", &tls_getvalue, &tls_delvalue, &tls_setvalue, &tls_bool, METHOD_FNOREFESCAPE,
@@ -769,9 +777,11 @@ INTERN DeeTypeObject DeeTLS_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&tls_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&tls_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&tls_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tls_visit,
