@@ -2445,7 +2445,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	              "#pmaxbytes{The max number of bytes (excluding @nulbytes) that should be mapped starting "
 	              /*      */ "at @offset. If the file is smaller than this, or indicates EOF before this "
 	              /*      */ "number of bytes has been reached, simply stop there.}"
-	              "#poffset{Starting offset of mapping (absolute), or ${-1} to map the entire file}"
+	              "#poffset{Starting offset of mapping (absolute), or ${-1} to use ?#pos}"
 	              "#pnulbytes{When non-zero, append this many trailing ${0x00}-bytes at the end of the map}"
 	              "#preadall{When ?t, use ?#readall, rather than ?#read}"
 	              "#pmustmmap{When ?t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap}"

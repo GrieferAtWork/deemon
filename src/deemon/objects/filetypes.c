@@ -36,6 +36,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/system.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/overflow.h>
@@ -1922,13 +1923,13 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *fd;
-	size_t minbytes = (size_t)0;
-	size_t maxbytes = (size_t)-1;
-	Dee_pos_t offset   = (Dee_pos_t)-1;
-	size_t nulbytes = 0;
-	bool readall    = false;
-	bool mustmmap   = false;
-	bool mapshared  = false;
+	size_t minbytes  = (size_t)0;
+	size_t maxbytes  = (size_t)-1;
+	Dee_pos_t offset = (Dee_pos_t)-1;
+	size_t nulbytes  = 0;
+	bool readall     = false;
+	bool mustmmap    = false;
+	bool mapshared   = false;
 	unsigned int mapflags;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__fd_minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared,
 	                    "o|" UNPdSIZ UNPdSIZ UNPuN(Dee_SIZEOF_POS_T) UNPdSIZ "bbb" ":mapfile",
@@ -1950,10 +1951,40 @@ mapfile_init_kw(DeeMapFileObject *__restrict self, size_t argc,
 	}
 
 	/* Construct the mapfile. */
-	if unlikely(DeeMapFile_InitFile(&self->mf_map, fd,
-	                                offset, minbytes, maxbytes,
-	                                nulbytes, mapflags))
-		goto err;
+	{
+		int error;
+#if defined(Dee_fd_t_IS_HANDLE) && defined(CONFIG_HOST_WINDOWS)
+#define FDTYP_mapfile_init_kw "?X3?DFile?Dint?Ewin32:HANDLE"
+		if (!DeeFile_Check(fd)) {
+			void *sysfd = DeeNTSystem_GetHandle(fd);
+			if unlikely(sysfd == (void *)-1)
+				goto err;
+			error = DeeMapFile_InitSysFd(&self->mf_map, sysfd,
+			                             offset, minbytes, maxbytes,
+			                             nulbytes, mapflags);
+		} else
+#elif defined(Dee_fd_t_IS_int)
+#define FDTYP_mapfile_init_kw "?X2?DFile?Dint"
+		if (!DeeFile_Check(fd)) {
+			int sysfd = DeeUnixSystem_GetFD(fd);
+			if unlikely(sysfd == -1)
+				goto err;
+			error = DeeMapFile_InitSysFd(&self->mf_map, sysfd,
+			                             offset, minbytes, maxbytes,
+			                             nulbytes, mapflags);
+		} else
+#endif /* ... */
+		{
+#ifndef FDTYP_mapfile_init_kw
+#define FDTYP_mapfile_init_kw "?DFile"
+#endif /* !FDTYP_mapfile_init_kw */
+			error = DeeMapFile_InitFile(&self->mf_map, fd,
+			                            offset, minbytes, maxbytes,
+			                            nulbytes, mapflags);
+		}
+		if unlikely(error)
+			goto err;
+	}
 	self->mf_rsize = DeeMapFile_GetSize(&self->mf_map) + nulbytes;
 	return 0;
 err:
@@ -2020,7 +2051,15 @@ PRIVATE struct type_getset tpconst mapfile_getsets[] = {
 PUBLIC DeeTypeObject DeeMapFile_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MapFile",
-	/* .tp_doc      = */ DOC("(fd:?X2?Dint?DFile,maxbytes:?Dint=!A!Dint!PSIZE_MAX,offset:?Dint=!A!Dint!PSIZE_MAX,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)"),
+	/* .tp_doc      = */ DOC("("
+	                         /**/ "fd:" FDTYP_mapfile_init_kw ","
+	                         /**/ "maxbytes:?Dint=!A!Dint!PSIZE_MAX,"
+	                         /**/ "offset:?Dint=!A!Dint!PSIZE_MAX,"
+	                         /**/ "nulbytes=!0,"
+	                         /**/ "readall=!f,"
+	                         /**/ "mustmmap=!f,"
+	                         /**/ "mapshared=!f"
+	                         ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
