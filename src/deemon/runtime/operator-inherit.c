@@ -220,8 +220,19 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_lo_t)(Dee
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_le_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_gr_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_ge_t)(DeeObject *self, DeeObject *some_object);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_add_t)(DeeObject **__restrict p_self, DeeObject *some_object);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_mul_t)(DeeObject **__restrict p_self, DeeObject *some_object);
+
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeType_tp_inv_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_add_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_sub_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_and_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_or_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_xor_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_add_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_sub_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_mul_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_and_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_or_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_inplace_xor_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 
 
 
@@ -281,6 +292,15 @@ PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_lo_t DCA
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCALL DeeType_RequireSetOperatorLe_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_RequireSetOperatorGr_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireSetOperatorGe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inv_t DCALL DeeType_RequireSetOperatorInv_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_add_t DCALL DeeType_RequireSetOperatorAdd_for_optimize(DeeTypeObject *__restrict self); /* {"a"} + {"b"}         -> {"a","b"} */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_sub_t DCALL DeeType_RequireSetOperatorSub_for_optimize(DeeTypeObject *__restrict self); /* {"a","b"} - {"b"}     -> {"a"} */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_and_t DCALL DeeType_RequireSetOperatorAnd_for_optimize(DeeTypeObject *__restrict self); /* {"a","b"} & {"a"}     -> {"a"} */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_xor_t DCALL DeeType_RequireSetOperatorXor_for_optimize(DeeTypeObject *__restrict self); /* {"a","b"} ^ {"a","c"} -> {"b","c"} */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_add_t DCALL DeeType_RequireSetOperatorInplaceAdd_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_sub_t DCALL DeeType_RequireSetOperatorInplaceSub_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_and_t DCALL DeeType_RequireSetOperatorInplaceAnd_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_xor_t DCALL DeeType_RequireSetOperatorInplaceXor_for_optimize(DeeTypeObject *__restrict self);
 
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_contains_t DCALL DeeType_RequireMapOperatorContains_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_getitem_t DCALL DeeType_RequireMapOperatorGetItem_for_optimize(DeeTypeObject *__restrict self);
@@ -317,6 +337,14 @@ PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_lo_t DCA
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCALL DeeType_RequireMapOperatorLe_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_RequireMapOperatorGr_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireMapOperatorGe_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_add_t DCALL DeeType_RequireMapOperatorAdd_for_optimize(DeeTypeObject *__restrict self); /* {"a":1} + {"b":2}       -> {"a":1,"b":2} */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_sub_t DCALL DeeType_RequireMapOperatorSub_for_optimize(DeeTypeObject *__restrict self); /* {"a":1,"b":2} - {"a"}   -> {"b":2} */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_and_t DCALL DeeType_RequireMapOperatorAnd_for_optimize(DeeTypeObject *__restrict self); /* {"a":1,"b":2} & {"a"}   -> {"a":1} */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_xor_t DCALL DeeType_RequireMapOperatorXor_for_optimize(DeeTypeObject *__restrict self); /* {"a":1,"b":2} ^ {"a":3} -> {"b":2} */
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_add_t DCALL DeeType_RequireMapOperatorInplaceAdd_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_sub_t DCALL DeeType_RequireMapOperatorInplaceSub_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_and_t DCALL DeeType_RequireMapOperatorInplaceAnd_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_xor_t DCALL DeeType_RequireMapOperatorInplaceXor_for_optimize(DeeTypeObject *__restrict self);
 
 #ifndef __INTELLISENSE__
 #define LOCAL_FOR_OPTIMIZE
@@ -429,6 +457,24 @@ DECL_END
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSetOperatorGe
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInv
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorAdd
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorSub
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorAnd
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorXor
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInplaceAdd
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInplaceSub
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInplaceAnd
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInplaceXor
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
 
 #define DEFINE_DeeType_RequireMapOperatorContains
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
@@ -500,12 +546,31 @@ DECL_END
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireMapOperatorGe
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorAdd
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorSub
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorAnd
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorXor
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorInplaceAdd
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorInplaceSub
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorInplaceAnd
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorInplaceXor
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
 
 DECL_BEGIN
 #undef LOCAL_FOR_OPTIMIZE
 #endif /* !__INTELLISENSE__ */
 
 
+#define OPTIMIZE_SET_OPERATOR(OperatorFoo, dst, tp_foo)      \
+	if (0 DeeSet_VariantsFor_##OperatorFoo(|| (tp_foo) == )) \
+		return DeeType_RequireSet##OperatorFoo##_for_optimize(dst)
 #define OPTIMIZE_SEQ_OPERATOR(OperatorFoo, dst, tp_foo)      \
 	if (0 DeeSeq_VariantsFor_##OperatorFoo(|| (tp_foo) == )) \
 		return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst)
@@ -543,6 +608,17 @@ DECL_BEGIN
 		switch (DeeType_GetSeqClass(dst)) {                             \
 		case Dee_SEQCLASS_SEQ:                                          \
 			return DeeType_RequireSeq##OperatorFoo##_for_optimize(dst); \
+		case Dee_SEQCLASS_MAP:                                          \
+			return DeeType_RequireMap##OperatorFoo##_for_optimize(dst); \
+		default: break;                                                 \
+		}                                                               \
+	}
+#define OPTIMIZE_SET_OR_MAP_OPERATOR(OperatorFoo, dst, tp_foo)          \
+	if (0 DeeSet_VariantsFor_##OperatorFoo(|| (tp_foo) == )             \
+	      DeeMap_VariantsFor_##OperatorFoo(|| (tp_foo) == )) {          \
+		switch (DeeType_GetSeqClass(dst)) {                             \
+		case Dee_SEQCLASS_SET:                                          \
+			return DeeType_RequireSet##OperatorFoo##_for_optimize(dst); \
 		case Dee_SEQCLASS_MAP:                                          \
 			return DeeType_RequireMap##OperatorFoo##_for_optimize(dst); \
 		default: break;                                                 \
@@ -920,10 +996,48 @@ DeeType_Optimize_tp_cmp(DeeTypeObject *__restrict dst,
 	return tp_cmp;
 }
 
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_inv_t DCALL
+DeeType_Optimize_tp_inv(DeeTypeObject *__restrict dst, DeeType_tp_inv_t tp_inv) {
+	OPTIMIZE_SET_OPERATOR(OperatorInv, dst, tp_inv);
+	return tp_inv;
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_add_t DCALL
+DeeType_Optimize_tp_add(DeeTypeObject *__restrict dst, DeeType_tp_add_t tp_add) {
+	OPTIMIZE_SET_OR_MAP_OPERATOR(OperatorAdd, dst, tp_add);
+	return tp_add;
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_sub_t DCALL
+DeeType_Optimize_tp_sub(DeeTypeObject *__restrict dst, DeeType_tp_sub_t tp_sub) {
+	OPTIMIZE_SET_OR_MAP_OPERATOR(OperatorSub, dst, tp_sub);
+	return tp_sub;
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_and_t DCALL
+DeeType_Optimize_tp_and(DeeTypeObject *__restrict dst, DeeType_tp_and_t tp_and) {
+	OPTIMIZE_SET_OR_MAP_OPERATOR(OperatorAnd, dst, tp_and);
+	return tp_and;
+}
+
+#define DeeType_Optimize_tp_or(self, tp_or) DeeType_Optimize_tp_add(self, tp_or)
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_xor_t DCALL
+DeeType_Optimize_tp_xor(DeeTypeObject *__restrict dst, DeeType_tp_xor_t tp_xor) {
+	OPTIMIZE_SET_OR_MAP_OPERATOR(OperatorXor, dst, tp_xor);
+	return tp_xor;
+}
+
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_inplace_add_t DCALL
 DeeType_Optimize_tp_inplace_add(DeeTypeObject *__restrict dst, DeeType_tp_inplace_add_t tp_inplace_add) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorInplaceAdd, dst, tp_inplace_add);
+	OPTIMIZE_SEQ_OR_SET_OR_MAP_OPERATOR(OperatorInplaceAdd, dst, tp_inplace_add);
 	return tp_inplace_add;
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_inplace_sub_t DCALL
+DeeType_Optimize_tp_inplace_sub(DeeTypeObject *__restrict dst, DeeType_tp_inplace_sub_t tp_inplace_sub) {
+	OPTIMIZE_SET_OR_MAP_OPERATOR(OperatorInplaceSub, dst, tp_inplace_sub);
+	return tp_inplace_sub;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_inplace_mul_t DCALL
@@ -932,7 +1046,20 @@ DeeType_Optimize_tp_inplace_mul(DeeTypeObject *__restrict dst, DeeType_tp_inplac
 	return tp_inplace_mul;
 }
 
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_inplace_and_t DCALL
+DeeType_Optimize_tp_inplace_and(DeeTypeObject *__restrict dst, DeeType_tp_inplace_and_t tp_inplace_and) {
+	OPTIMIZE_SET_OR_MAP_OPERATOR(OperatorInplaceAnd, dst, tp_inplace_and);
+	return tp_inplace_and;
+}
 
+#define DeeType_Optimize_tp_inplace_or(self, tp_inplace_or) \
+	DeeType_Optimize_tp_inplace_add(self, tp_inplace_or)
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_inplace_xor_t DCALL
+DeeType_Optimize_tp_inplace_xor(DeeTypeObject *__restrict dst, DeeType_tp_inplace_xor_t tp_inplace_xor) {
+	OPTIMIZE_SET_OR_MAP_OPERATOR(OperatorInplaceXor, dst, tp_inplace_xor);
+	return tp_inplace_xor;
+}
 
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 #define DeeType_Optimize_tp_bool(self, tp_bool)                                             tp_bool
@@ -990,8 +1117,18 @@ DeeType_Optimize_tp_inplace_mul(DeeTypeObject *__restrict dst, DeeType_tp_inplac
 #define DeeType_Optimize_tp_gr(self, tp_gr)                                                 tp_gr
 #define DeeType_Optimize_tp_ge(self, tp_ge)                                                 tp_ge
 #define DeeType_Optimize_tp_cmp(dst, tp_cmp)                                                tp_cmp
+#define DeeType_Optimize_tp_inv(self, tp_inv)                                               tp_inv
+#define DeeType_Optimize_tp_add(self, tp_add)                                               tp_add
+#define DeeType_Optimize_tp_sub(self, tp_sub)                                               tp_sub
+#define DeeType_Optimize_tp_and(self, tp_and)                                               tp_and
+#define DeeType_Optimize_tp_or(self, tp_or)                                                 tp_or
+#define DeeType_Optimize_tp_xor(self, tp_xor)                                               tp_xor
 #define DeeType_Optimize_tp_inplace_add(self, tp_inplace_add)                               tp_inplace_add
+#define DeeType_Optimize_tp_inplace_sub(self, tp_inplace_sub)                               tp_inplace_sub
 #define DeeType_Optimize_tp_inplace_mul(self, tp_inplace_mul)                               tp_inplace_mul
+#define DeeType_Optimize_tp_inplace_and(self, tp_inplace_and)                               tp_inplace_and
+#define DeeType_Optimize_tp_inplace_or(self, tp_inplace_or)                                 tp_inplace_or
+#define DeeType_Optimize_tp_inplace_xor(self, tp_inplace_xor)                               tp_inplace_xor
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 #define DeeType_Optimize_tp_asvector(self, tp_asvector)                 tp_asvector
@@ -1015,10 +1152,6 @@ DeeType_Optimize_tp_inplace_mul(DeeTypeObject *__restrict dst, DeeType_tp_inplac
 #define DeeType_Optimize_tp_double(self, tp_double)           tp_double
 #define DeeType_Optimize_tp_inc(self, tp_inc)                 tp_inc
 #define DeeType_Optimize_tp_dec(self, tp_dec)                 tp_dec
-#define DeeType_Optimize_tp_add(self, tp_add)                 tp_add
-#define DeeType_Optimize_tp_sub(self, tp_sub)                 tp_sub
-#define DeeType_Optimize_tp_inplace_sub(self, tp_inplace_sub) tp_inplace_sub
-#define DeeType_Optimize_tp_inv(self, tp_inv)                 tp_inv
 #define DeeType_Optimize_tp_pos(self, tp_pos)                 tp_pos
 #define DeeType_Optimize_tp_neg(self, tp_neg)                 tp_neg
 #define DeeType_Optimize_tp_mul(self, tp_mul)                 tp_mul
@@ -1026,17 +1159,11 @@ DeeType_Optimize_tp_inplace_mul(DeeTypeObject *__restrict dst, DeeType_tp_inplac
 #define DeeType_Optimize_tp_mod(self, tp_mod)                 tp_mod
 #define DeeType_Optimize_tp_shl(self, tp_shl)                 tp_shl
 #define DeeType_Optimize_tp_shr(self, tp_shr)                 tp_shr
-#define DeeType_Optimize_tp_and(self, tp_and)                 tp_and
-#define DeeType_Optimize_tp_or(self, tp_or)                   tp_or
-#define DeeType_Optimize_tp_xor(self, tp_xor)                 tp_xor
 #define DeeType_Optimize_tp_pow(self, tp_pow)                 tp_pow
 #define DeeType_Optimize_tp_inplace_div(self, tp_inplace_div) tp_inplace_div
 #define DeeType_Optimize_tp_inplace_mod(self, tp_inplace_mod) tp_inplace_mod
 #define DeeType_Optimize_tp_inplace_shl(self, tp_inplace_shl) tp_inplace_shl
 #define DeeType_Optimize_tp_inplace_shr(self, tp_inplace_shr) tp_inplace_shr
-#define DeeType_Optimize_tp_inplace_and(self, tp_inplace_and) tp_inplace_and
-#define DeeType_Optimize_tp_inplace_or(self, tp_inplace_or)   tp_inplace_or
-#define DeeType_Optimize_tp_inplace_xor(self, tp_inplace_xor) tp_inplace_xor
 #define DeeType_Optimize_tp_inplace_pow(self, tp_inplace_pow) tp_inplace_pow
 
 

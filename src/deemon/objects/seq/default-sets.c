@@ -17,16 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_SEQ_SET_C
-#define GUARD_DEEMON_OBJECTS_SEQ_SET_C 1
-
-#include "set.h"
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C
+#define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
@@ -35,42 +34,349 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
+#include "default-api.h"
+
+/**/
+#include "default-sets.h"
+
+#undef SSIZE_MIN
+#include <hybrid/limitcore.h>
+#define SSIZE_MIN __SSIZE_MIN__
 
 DECL_BEGIN
 
-/* Assert that we can use some common-proxy methods. */
-STATIC_ASSERT(sizeof(SetUnion) == sizeof(SetIntersection));
-STATIC_ASSERT(sizeof(SetUnion) == sizeof(SetDifference));
-STATIC_ASSERT(sizeof(SetUnion) == sizeof(SetSymmetricDifference));
-STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(SetIntersection, si_a));
-STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(SetIntersection, si_b));
-STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(SetDifference, sd_a));
-STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(SetDifference, sd_b));
-STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(SetSymmetricDifference, ssd_a));
-STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(SetSymmetricDifference, ssd_b));
-STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetIntersectionIterator, sii_intersect));
-STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetDifferenceIterator, sdi_diff));
-STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetSymmetricDifferenceIterator, ssd_set));
-STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(SetSymmetricDifferenceIterator, ssd_iter));
-STATIC_ASSERT(sizeof(SetUnionIterator) == sizeof(SetSymmetricDifferenceIterator));
-STATIC_ASSERT(sizeof(SetIntersectionIterator) == sizeof(SetDifferenceIterator));
-STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(SetDifferenceIterator, sdi_iter));
-STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_other) == offsetof(SetDifferenceIterator, sdi_other));
-#ifndef CONFIG_NO_THREADS
-STATIC_ASSERT(offsetof(SetUnionIterator, sui_lock) == offsetof(SetSymmetricDifferenceIterator, ssd_lock));
-#endif /* !CONFIG_NO_THREADS */
-STATIC_ASSERT(offsetof(SetUnionIterator, sui_in2nd) == offsetof(SetSymmetricDifferenceIterator, ssd_in2nd));
+
+
 
 
 /* ================================================================================ */
-/*   COMMON PROXY                                                                   */
+/*   SET INVERSION                                                                  */
 /* ================================================================================ */
-STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj1) ||
-              offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj2));
-STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
-              offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj2));
-#define proxy_fini  generic_proxy2_fini
-#define proxy_visit generic_proxy2_visit
+
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+invset_hash(SetInversion *__restrict self) {
+	return ~DeeSet_OperatorHash(self->si_set);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+invset_compare_eq(SetInversion *self, DeeObject *rhs) {
+	if (SetInversion_Check(rhs)) {
+		SetInversion *xrhs = (SetInversion *)rhs;
+		return DeeSeq_OperatorCompareEq(self->si_set, xrhs->si_set);
+	}
+	return 1; /* not equal */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+invset_trycompare_eq(SetInversion *self, DeeObject *rhs) {
+	if (SetInversion_Check(rhs)) {
+		SetInversion *xrhs = (SetInversion *)rhs;
+		return DeeSeq_OperatorTryCompareEq(self->si_set, xrhs->si_set);
+	}
+	return 1; /* not equal */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_lo(SetInversion *self, DeeObject *rhs) {
+	/* >> self.TRUE_SUBSET_OF(rhs) */
+	if (SetInversion_Check(rhs)) {
+		/* ~lhs < ~rhs   <===>   lhs > rhs */
+		SetInversion *xrhs = (SetInversion *)rhs;
+		return DeeSet_OperatorGr(self->si_set, xrhs->si_set);
+	}
+	return_false;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_le(SetInversion *self, DeeObject *rhs) {
+	/* >> self.SUBSET_OF_OR_EQUAL(rhs) */
+	if (SetInversion_Check(rhs)) {
+		/* ~lhs <= ~rhs   <===>   lhs >= rhs */
+		SetInversion *xrhs = (SetInversion *)rhs;
+		return DeeSet_OperatorGe(self->si_set, xrhs->si_set);
+	}
+	return_false;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_gr(SetInversion *self, DeeObject *rhs) {
+	/* >> self.TRUE_SUPERSET_OF(rhs) */
+	if (SetInversion_Check(rhs)) {
+		/* ~lhs > ~rhs   <===>   lhs < rhs */
+		SetInversion *xrhs = (SetInversion *)rhs;
+		return DeeSet_OperatorLo(self->si_set, xrhs->si_set);
+	}
+	return_true;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_ge(SetInversion *self, DeeObject *rhs) {
+	/* >> self.SUPERSET_OF_OR_EQUAL(rhs) */
+	if (SetInversion_Check(rhs)) {
+		/* ~lhs >= ~rhs   <===>   lhs <= rhs */
+		SetInversion *xrhs = (SetInversion *)rhs;
+		return DeeSet_OperatorLe(self->si_set, xrhs->si_set);
+	}
+	return_true;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+invset_ctor(SetInversion *__restrict self) {
+	self->si_set = Dee_EmptySet;
+	Dee_Incref(Dee_EmptySet);
+	return 0;
+}
+
+
+STATIC_ASSERT(offsetof(SetInversion, si_set) == offsetof(ProxyObject, po_obj));
+#define invset_init  generic_proxy_init
+#define invset_fini  generic_proxy_fini
+#define invset_visit generic_proxy_visit
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+invset_printrepr(SetInversion *__restrict self,
+                 dformatprinter printer, void *arg) {
+	if (DeeObject_Implements(self->si_set, &DeeSet_Type))
+		return DeeFormat_Printf(printer, arg, "~%r", self->si_set);
+	return DeeFormat_Printf(printer, arg, "Set.__inv__(%r)", self->si_set);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_contains(SetInversion *self, DeeObject *key) {
+	int result = DeeSet_OperatorContainsAsBool(self->si_set, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(!result);
+err:
+	return NULL;
+}
+
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+invset_iterself(SetInversion *__restrict self) {
+	/* Sorry, but it's impossible to enumerate a set containing (almost) everything */
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
+	return NULL;
+}
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+PRIVATE struct type_seq invset_seq = {
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	/* .tp_iter     = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterself,
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL
+};
+
+PRIVATE struct type_member tpconst invset_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__blacklist__", STRUCT_OBJECT, offsetof(SetInversion, si_set), "->?DSet"),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_cmp invset_cmp = {
+	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&invset_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&invset_compare_eq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&invset_trycompare_eq,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_lo,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_le,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_gr,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_ge,
+};
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+invset_getset(SetInversion *__restrict self) {
+	return_reference_(self->si_set);
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_operator_add(SetInversion *self, DeeObject *some_object) {
+	if (SetInversion_Check(some_object)) {
+		/* (~a | ~b)  <=>  ~(a & b) */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		DREF DeeObject *intersection;
+		intersection = DeeSet_OperatorAnd(self->si_set, xrhs->si_set);
+		if unlikely(!intersection)
+			goto err;
+		return (DREF DeeObject *)SetInversion_New_inherit(intersection);
+	} else {
+		/* (~a | b)  <=>  ~(a & ~b) */
+		DREF SetInversion *b_inv;
+		DREF SetIntersection *intersection;
+		b_inv = SetInversion_New(some_object);
+		if unlikely(!b_inv)
+			goto err;
+		intersection = SetIntersection_New_inherit_b(self->si_set, b_inv);
+		if unlikely(!intersection)
+			goto err;
+		return (DREF DeeObject *)SetInversion_New_inherit(intersection);
+	}
+	__builtin_unreachable();
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_operator_and(SetInversion *self, DeeObject *some_object);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_operator_sub(SetInversion *self, DeeObject *some_object) {
+	if (SetInversion_Check(some_object)) {
+		/* (~a - ~b)  <=>  (~a & b) */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		return invset_operator_and(self, xrhs->si_set);
+	} else {
+		/* (~a - b)  <=>  (~a & ~b)  <=>  ~(a | b) */
+		DREF SetUnion *su = SetUnion_New(self->si_set, some_object);
+		if unlikely(!su)
+			goto err;
+		return (DREF DeeObject *)SetInversion_New_inherit(su);
+	}
+	__builtin_unreachable();
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_operator_and(SetInversion *self, DeeObject *some_object) {
+	if (SetInversion_Check(some_object)) {
+		/* (~a & ~b)  <=>  (~a - b) */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		return invset_operator_sub(self, xrhs->si_set);
+	} else {
+		/* (~a & b)  <=>  (~a & b)  <=>  ~(a | ~b) */
+		DREF SetInversion *b_inv;
+		DREF SetUnion *su;
+		b_inv = SetInversion_New(some_object);
+		if unlikely(!b_inv)
+			goto err;
+		su = SetUnion_New_inherit_b(self->si_set, b_inv);
+		if unlikely(!su)
+			goto err;
+		return (DREF DeeObject *)SetInversion_New_inherit(su);
+	}
+	__builtin_unreachable();
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_operator_xor(SetInversion *self, DeeObject *some_object) {
+	/* (~a ^ b)  <=>  ~(a ^ b) */
+	DREF SetSymmetricDifference *ssd;
+	ssd = SetSymmetricDifference_New(self->si_set, some_object);
+	if unlikely(!ssd)
+		goto err;
+	return (DREF DeeObject *)SetInversion_New_inherit(ssd);
+err:
+	return NULL;
+}
+
+
+PRIVATE struct type_math invset_math = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_getset,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_operator_add,
+	/* .tp_sub         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_operator_sub,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL,
+	/* .tp_shr         = */ NULL,
+	/* .tp_and         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_operator_and,
+	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_operator_add,
+	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_operator_xor,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ NULL,
+	/* .tp_inplace_sub = */ NULL,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL,
+	/* .tp_inplace_shr = */ NULL,
+	/* .tp_inplace_and = */ NULL,
+	/* .tp_inplace_or  = */ NULL,
+	/* .tp_inplace_xor = */ NULL,
+	/* .tp_inplace_pow = */ NULL,
+};
+
+INTERN DeeTypeObject SetInversion_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_InverseSet",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(s:?DSet)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSet_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&invset_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&invset_init,
+				TYPE_FIXED_ALLOCATOR(SetInversion)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&invset_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&invset_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&invset_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ &invset_math,
+	/* .tp_cmp           = */ &invset_cmp,
+	/* .tp_seq           = */ &invset_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ invset_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
+
+/* A universal set is the inverse of an empty set */
+DDATDEF SetInversion DeeSet_UniversalInstance;
+PUBLIC SetInversion DeeSet_UniversalInstance = {
+	OBJECT_HEAD_INIT(&SetInversion_Type),
+	/* .si_set = */ Dee_EmptySet
+};
+
 
 
 
@@ -78,11 +384,18 @@ STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
 /* ================================================================================ */
 /*   SET UNION                                                                      */
 /* ================================================================================ */
+STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj2));
+#define su_fini  generic_proxy2_fini
+#define su_visit generic_proxy2_visit
+
 STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnionIterator, sui_union) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnionIterator, sui_iter) == offsetof(ProxyObject2, po_obj2));
-#define suiter_fini proxy_fini
+#define suiter_fini generic_proxy2_fini
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_get_iter(SetUnionIterator *__restrict self) {
@@ -98,6 +411,20 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_set_iter(SetUnionIterator *__restrict self,
                 DeeObject *__restrict iter) {
 	DREF DeeObject *old_iter;
+	/* TODO: This doesn't work reliably!
+	 * 2 threads could call this function on each other, and be
+	 * both be able to pass this check, just before proceeding
+	 * to assign each other's iterator and form a loop!
+	 *
+	 * TODO: Even easier:
+	 * >> global myIter;
+	 * >> class MySet { operator iter() -> myIter; }
+	 * >> local x = ({10, 20} as Set) | MySet();
+	 * >>
+	 * >> myIter = x.operator iter();
+	 * >> foreach (none: myIter); // Ooops -- reference loop :(
+	 * >> // Now: `((SetUnionIterator *)myIter)->sui_iter == myIter'
+	 */
 	if (DeeGC_ReferredBy(iter, (DeeObject *)self))
 		return err_reference_loop((DeeObject *)self, iter);
 	Dee_Incref(iter);
@@ -190,7 +517,7 @@ suiter_ctor(SetUnionIterator *__restrict self) {
 	                                                        : &SetSymmetricDifference_Type);
 	if unlikely(!self->sui_union)
 		goto err;
-	self->sui_iter = DeeObject_Iter(self->sui_union->su_a);
+	self->sui_iter = DeeSet_OperatorIter(self->sui_union->su_a);
 	if unlikely(!self->sui_iter)
 		goto err_union;
 	Dee_atomic_rwlock_init(&self->sui_lock);
@@ -209,7 +536,7 @@ suiter_init(SetUnionIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->sui_union, &SetUnion_Type))
 		goto err;
-	if ((self->sui_iter = DeeObject_Iter(self->sui_union->su_a)) == NULL)
+	if ((self->sui_iter = DeeSet_OperatorIter(self->sui_union->su_a)) == NULL)
 		goto err;
 	Dee_Incref(self->sui_union);
 	Dee_atomic_rwlock_init(&self->sui_lock);
@@ -235,14 +562,14 @@ read_from_iter:
 	Dee_Decref(iter);
 	if (is_second)
 		goto done;
-	if unlikely(result != ITER_DONE) {
-		if (result) {
+	if (result != ITER_DONE) {
+		if likely(result) {
 			int temp;
 
 			/* Check if the found item is also part of the second set.
 			 * If it is, don't yield it now, but yield it later, as
 			 * part of the enumeration of the second set. */
-			temp = DeeObject_ContainsAsBool(self->sui_union->su_b, result);
+			temp = DeeSet_OperatorContainsAsBool(self->sui_union->su_b, result);
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
@@ -269,7 +596,7 @@ read_from_iter:
 #endif /* !CONFIG_NO_THREADS */
 
 	/* Create the level #2 iterator. */
-	result = DeeObject_Iter(self->sui_union->su_b);
+	result = DeeSet_OperatorIter(self->sui_union->su_b);
 	if unlikely(!result)
 		goto done;
 	SetUnionIterator_LockWrite(self);
@@ -387,7 +714,8 @@ PRIVATE struct type_getset tpconst suiter_getsets[] = {
 INTERN DeeTypeObject SetUnionIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetUnionIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SetUnion)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(su?:?Ert:SetUnion)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -409,7 +737,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ NULL /* TODO */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&suiter_visit,
@@ -443,22 +771,9 @@ STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj2));
+#define su_init generic_proxy2_init
 #define su_copy generic_proxy2_copy_alias12
 #define su_deep generic_proxy2_deepcopy
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-su_init(SetUnion *__restrict self,
-        size_t argc, DeeObject *const *argv) {
-	self->su_a = Dee_EmptySet;
-	self->su_b = Dee_EmptySet;
-	if (DeeArg_Unpack(argc, argv, "|oo:_SetUnion", &self->su_a, &self->su_b))
-		goto err;
-	Dee_Incref(self->su_a);
-	Dee_Incref(self->su_b);
-	return 0;
-err:
-	return -1;
-}
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetUnionIterator *DCALL
 su_iter(SetUnion *__restrict self) {
@@ -466,7 +781,7 @@ su_iter(SetUnion *__restrict self) {
 	result = DeeObject_MALLOC(SetUnionIterator);
 	if unlikely(!result)
 		goto done;
-	result->sui_iter = DeeObject_Iter(self->su_a);
+	result->sui_iter = DeeSet_OperatorIter(self->su_a);
 	if unlikely(!result->sui_iter)
 		goto err_r;
 	Dee_atomic_rwlock_init(&result->sui_lock);
@@ -485,7 +800,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 su_contains(SetUnion *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int temp;
-	result = DeeObject_Contains(self->su_a, item);
+	result = DeeSet_OperatorContains(self->su_a, item);
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
@@ -496,7 +811,7 @@ su_contains(SetUnion *self, DeeObject *item) {
 	Dee_Decref_unlikely(result);
 
 	/* Check the second set, and forward the return value. */
-	result = DeeObject_Contains(self->su_b, item);
+	result = DeeSet_OperatorContains(self->su_b, item);
 done:
 	return result;
 err_r:
@@ -515,7 +830,7 @@ su_foreach_if_not_contained_in_cb(void *arg, DeeObject *elem) {
 	struct su_foreach_if_contained_in_data *data;
 	int contains;
 	data = (struct su_foreach_if_contained_in_data *)arg;
-	contains = DeeObject_ContainsAsBool(data->feicid_seq, elem);
+	contains = DeeSet_OperatorContainsAsBool(data->feicid_seq, elem);
 	if unlikely(contains < 0)
 		goto err;
 	if (contains)
@@ -530,7 +845,7 @@ su_foreach_if_contained_in_cb(void *arg, DeeObject *elem) {
 	struct su_foreach_if_contained_in_data *data;
 	int contains;
 	data = (struct su_foreach_if_contained_in_data *)arg;
-	contains = DeeObject_ContainsAsBool(data->feicid_seq, elem);
+	contains = DeeSet_OperatorContainsAsBool(data->feicid_seq, elem);
 	if unlikely(contains < 0)
 		goto err;
 	if (!contains)
@@ -543,18 +858,26 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
 su_foreach(SetUnion *__restrict self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t result;
-	result = DeeObject_Foreach(self->su_a, proc, arg);
+	result = DeeSet_OperatorForeach(self->su_a, proc, arg);
 	if likely(result >= 0) {
 		Dee_ssize_t temp;
 		struct su_foreach_if_contained_in_data data;
 		data.feicid_seq  = self->su_a;
 		data.feicid_proc = proc;
 		data.feicid_arg  = arg;
-		temp = DeeObject_Foreach(self->su_b, &su_foreach_if_not_contained_in_cb, &data);
+		temp = DeeSet_OperatorForeach(self->su_b, &su_foreach_if_not_contained_in_cb, &data);
 		if unlikely(temp < 0)
 			return temp;
 		result += temp;
 	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL 
+su_bool(SetUnion *__restrict self) {
+	int result = DeeSet_OperatorBool(self->su_a);
+	if likely(result == 0)
+		result = DeeSet_OperatorBool(self->su_b);
 	return result;
 }
 
@@ -580,7 +903,8 @@ PRIVATE struct type_member tpconst su_class_members[] = {
 INTERN DeeTypeObject SetUnion_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetUnion",
-	/* .tp_doc      = */ DOC("(a:?DSet=!S0,b:?DSet=!S0)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(a:?DSet,b:?DSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -595,7 +919,7 @@ INTERN DeeTypeObject SetUnion_Type = {
 				TYPE_FIXED_ALLOCATOR(SetUnion)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&su_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -603,12 +927,12 @@ INTERN DeeTypeObject SetUnion_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&su_bool,
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&su_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ NULL, /* TODO */
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ &su_seq,
 	/* .tp_iter_next     = */ NULL,
@@ -618,7 +942,7 @@ INTERN DeeTypeObject SetUnion_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ NULL, /* TODO */
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ su_class_members
@@ -630,6 +954,15 @@ INTERN DeeTypeObject SetUnion_Type = {
 /* ================================================================================ */
 /*   SET SYMMETRIC DIFFERENCE                                                       */
 /* ================================================================================ */
+
+STATIC_ASSERT(sizeof(SetUnionIterator) == sizeof(SetSymmetricDifferenceIterator));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetSymmetricDifferenceIterator, ssd_set));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(SetSymmetricDifferenceIterator, ssd_iter));
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(SetIntersectionIterator, sii_intersect));
+#ifndef CONFIG_NO_THREADS
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_lock) == offsetof(SetSymmetricDifferenceIterator, ssd_lock));
+#endif /* !CONFIG_NO_THREADS */
+STATIC_ASSERT(offsetof(SetUnionIterator, sui_in2nd) == offsetof(SetSymmetricDifferenceIterator, ssd_in2nd));
 #define ssditer_ctor    suiter_ctor
 #define ssditer_copy    suiter_copy
 #define ssditer_deep    suiter_deep
@@ -658,10 +991,10 @@ read_from_iter:
 		if (result) {
 			int temp;
 			/* Only yield the item if it's not contained in the other set. */
-			temp = DeeObject_ContainsAsBool(is_second
-			                          ? self->ssd_set->ssd_b
-			                          : self->ssd_set->ssd_a,
-			                          result);
+			temp = DeeSet_OperatorContainsAsBool(is_second
+			                                     ? self->ssd_set->ssd_b
+			                                     : self->ssd_set->ssd_a,
+			                                     result);
 			if (temp != 0) {
 				/* Error, or apart of second set. */
 				Dee_Decref(result);
@@ -688,7 +1021,7 @@ read_from_iter:
 #endif /* !CONFIG_NO_THREADS */
 
 	/* Create the level #2 iterator. */
-	result = DeeObject_Iter(self->ssd_set->ssd_b);
+	result = DeeSet_OperatorIter(self->ssd_set->ssd_b);
 	if unlikely(!result)
 		goto done;
 	SetSymmetricDifferenceIterator_LockWrite(self);
@@ -726,7 +1059,8 @@ PRIVATE struct type_member tpconst ssditer_members[] = {
 INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetSymmetricDifferenceIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SetSymmetricDifference)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(ssd?:?Ert:SetSymmetricDifference)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -748,7 +1082,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ NULL /* TODO */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ssditer_visit,
@@ -769,22 +1103,21 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_a) == offsetof(SetUnion, su_a) ||
+              offsetof(SetSymmetricDifference, ssd_a) == offsetof(SetUnion, su_a));
+STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_b) == offsetof(SetUnion, su_b) ||
+              offsetof(SetSymmetricDifference, ssd_b) == offsetof(SetUnion, su_b));
 #define ssd_ctor su_ctor
-#define ssd_copy su_copy
-#define ssd_deep su_deep
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-ssd_init(SetSymmetricDifference *__restrict self,
-         size_t argc, DeeObject *const *argv) {
-	self->ssd_a = Dee_EmptySet;
-	self->ssd_b = Dee_EmptySet;
-	if (DeeArg_Unpack(argc, argv, "|oo:_SetSymmetricDifference", &self->ssd_a, &self->ssd_b))
-		goto err;
-	Dee_Incref(self->ssd_a);
-	Dee_Incref(self->ssd_b);
-	return 0;
-err:
-	return -1;
-}
+
+STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_a) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetSymmetricDifference, ssd_a) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_b) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetSymmetricDifference, ssd_b) == offsetof(ProxyObject2, po_obj2));
+#define ssd_init  generic_proxy2_init
+#define ssd_copy  generic_proxy2_copy_alias12
+#define ssd_deep  generic_proxy2_deepcopy
+#define ssd_fini  generic_proxy2_fini
+#define ssd_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetSymmetricDifferenceIterator *DCALL
 ssd_iter(SetSymmetricDifference *__restrict self) {
@@ -792,7 +1125,7 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 	result = DeeObject_MALLOC(SetSymmetricDifferenceIterator);
 	if unlikely(!result)
 		goto done;
-	result->ssd_iter = DeeObject_Iter(self->ssd_a);
+	result->ssd_iter = DeeSet_OperatorIter(self->ssd_a);
 	if unlikely(!result->ssd_iter)
 		goto err_r;
 	Dee_atomic_rwlock_init(&result->ssd_lock);
@@ -811,10 +1144,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ssd_contains(SetSymmetricDifference *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int cona, conb;
-	cona = DeeObject_ContainsAsBool(self->ssd_a, item);
+	cona = DeeSet_OperatorContainsAsBool(self->ssd_a, item);
 	if unlikely(cona < 0)
 		goto err;
-	conb = DeeObject_ContainsAsBool(self->ssd_b, item);
+	conb = DeeSet_OperatorContainsAsBool(self->ssd_b, item);
 	if unlikely(conb < 0)
 		goto err;
 	result = DeeBool_For(!!cona ^ !!conb);
@@ -833,14 +1166,25 @@ ssd_foreach(SetSymmetricDifference *__restrict self, Dee_foreach_t proc, void *a
 	data.feicid_seq  = self->ssd_b;
 	data.feicid_proc = proc;
 	data.feicid_arg  = arg;
-	r1 = DeeObject_Foreach(self->ssd_a, &su_foreach_if_not_contained_in_cb, &data);
+	r1 = DeeSet_OperatorForeach(self->ssd_a, &su_foreach_if_not_contained_in_cb, &data);
 	if unlikely(r1 < 0)
 		return r1;
 	data.feicid_seq = self->ssd_a;
-	r2 = DeeObject_Foreach(self->ssd_b, &su_foreach_if_not_contained_in_cb, &data);
+	r2 = DeeSet_OperatorForeach(self->ssd_b, &su_foreach_if_not_contained_in_cb, &data);
 	if unlikely(r2 < 0)
 		return r2;
 	return r1 + r2;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ssd_bool(SetSymmetricDifference *__restrict self) {
+	/* `(a ^ b) != {}'    <=>    `a != b' */
+	int result = DeeSet_OperatorCompareEq(self->ssd_a, self->ssd_b);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return result == 0 ? 0 : 1;
+err:
+	return -1;
 }
 
 PRIVATE struct type_seq ssd_seq = {
@@ -865,7 +1209,8 @@ PRIVATE struct type_member tpconst ssd_class_members[] = {
 INTERN DeeTypeObject SetSymmetricDifference_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetSymmetricDifference",
-	/* .tp_doc      = */ DOC("(a:?DSet=!S0,b:?DSet=!S0)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(a:?DSet,b:?DSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -880,7 +1225,7 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 				TYPE_FIXED_ALLOCATOR(SetSymmetricDifference)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssd_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -888,13 +1233,13 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ssd_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ssd_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO */
 	/* .tp_seq           = */ &ssd_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -903,7 +1248,7 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ NULL, /* TODO */
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ ssd_class_members
@@ -931,7 +1276,7 @@ siiter_ctor(SetIntersectionIterator *__restrict self) {
 	                                                                   : &SetDifference_Type);
 	if unlikely(!self->sii_intersect)
 		goto err;
-	self->sii_iter = DeeObject_Iter(self->sii_intersect->si_a);
+	self->sii_iter = DeeSet_OperatorIter(self->sii_intersect->si_a);
 	if unlikely(!self->sii_iter)
 		goto err_isec;
 	self->sii_other = self->sii_intersect->si_b;
@@ -980,7 +1325,7 @@ siiter_init(SetIntersectionIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->sii_intersect, &SetIntersection_Type))
 		goto err;
-	self->sii_iter = DeeObject_Iter(self->sii_intersect->si_a);
+	self->sii_iter = DeeSet_OperatorIter(self->sii_intersect->si_a);
 	if unlikely(!self->sii_iter)
 		goto err;
 	Dee_Incref(self->sii_intersect);
@@ -1000,7 +1345,7 @@ again:
 		goto done;
 
 	/* Check if contained in the second set. */
-	temp = DeeObject_ContainsAsBool(self->sii_other, result);
+	temp = DeeSet_OperatorContainsAsBool(self->sii_other, result);
 	if (temp <= 0) {
 		Dee_Decref(result);
 		if (!temp) {
@@ -1030,7 +1375,8 @@ PRIVATE struct type_member tpconst siiter_members[] = {
 INTERN DeeTypeObject SetIntersectionIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetIntersectionIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SetIntersection)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(si?:?Ert:SetIntersection)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1052,7 +1398,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ NULL /* TODO */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&siiter_visit,
@@ -1073,22 +1419,21 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+STATIC_ASSERT(offsetof(SetIntersection, si_a) == offsetof(SetUnion, su_a) ||
+              offsetof(SetIntersection, si_a) == offsetof(SetUnion, su_a));
+STATIC_ASSERT(offsetof(SetIntersection, si_b) == offsetof(SetUnion, su_b) ||
+              offsetof(SetIntersection, si_b) == offsetof(SetUnion, su_b));
 #define si_ctor su_ctor
-#define si_copy su_copy
-#define si_deep su_deep
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-si_init(SetIntersection *__restrict self,
-        size_t argc, DeeObject *const *argv) {
-	self->si_a = Dee_EmptySet;
-	self->si_b = Dee_EmptySet;
-	if (DeeArg_Unpack(argc, argv, "|oo:_SetIntersection", &self->si_a, &self->si_b))
-		goto err;
-	Dee_Incref(self->si_a);
-	Dee_Incref(self->si_b);
-	return 0;
-err:
-	return -1;
-}
+
+STATIC_ASSERT(offsetof(SetIntersection, si_a) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetIntersection, si_a) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(SetIntersection, si_b) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(SetIntersection, si_b) == offsetof(ProxyObject2, po_obj2));
+#define si_init  generic_proxy2_init
+#define si_copy  generic_proxy2_copy_alias12
+#define si_deep  generic_proxy2_deepcopy
+#define si_fini  generic_proxy2_fini
+#define si_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetIntersectionIterator *DCALL
 si_iter(SetIntersection *__restrict self) {
@@ -1096,7 +1441,7 @@ si_iter(SetIntersection *__restrict self) {
 	result = DeeObject_MALLOC(SetIntersectionIterator);
 	if unlikely(!result)
 		goto done;
-	result->sii_iter = DeeObject_Iter(self->si_a);
+	result->sii_iter = DeeSet_OperatorIter(self->si_a);
 	if unlikely(!result->sii_iter)
 		goto err_r;
 	Dee_Incref(self);
@@ -1114,7 +1459,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 si_contains(SetIntersection *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int temp;
-	result = DeeObject_Contains(self->si_a, item);
+	result = DeeSet_OperatorContains(self->si_a, item);
 	if unlikely(!result)
 		goto done;
 	temp = DeeObject_Bool(result);
@@ -1125,7 +1470,7 @@ si_contains(SetIntersection *self, DeeObject *item) {
 	Dee_Decref(result);
 
 	/* Check the second set, and forward the return value. */
-	result = DeeObject_Contains(self->si_b, item);
+	result = DeeSet_OperatorContains(self->si_b, item);
 done:
 	return result;
 err_r:
@@ -1133,13 +1478,18 @@ err_r:
 	goto done;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 si_foreach(SetIntersection *__restrict self, Dee_foreach_t proc, void *arg) {
 	struct su_foreach_if_contained_in_data data;
 	data.feicid_seq  = self->si_b;
 	data.feicid_proc = proc;
 	data.feicid_arg  = arg;
-	return DeeObject_Foreach(self->si_a, &su_foreach_if_contained_in_cb, &data);
+	return DeeSet_OperatorForeach(self->si_a, &su_foreach_if_contained_in_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+si_bool(SetIntersection *__restrict self) {
+	return SetIntersection_NonEmpty(self->si_a, self->si_b);
 }
 
 PRIVATE struct type_seq si_seq = {
@@ -1164,7 +1514,8 @@ PRIVATE struct type_member tpconst si_class_members[] = {
 INTERN DeeTypeObject SetIntersection_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetIntersection",
-	/* .tp_doc      = */ DOC("(a:?DSet=!S0,b:?DSet=!S0)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(a:?DSet,b:?DSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1179,7 +1530,7 @@ INTERN DeeTypeObject SetIntersection_Type = {
 				TYPE_FIXED_ALLOCATOR(SetIntersection)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&si_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1187,12 +1538,12 @@ INTERN DeeTypeObject SetIntersection_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&si_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&si_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ NULL, /* TODO */
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ &si_seq,
 	/* .tp_iter_next     = */ NULL,
@@ -1202,7 +1553,7 @@ INTERN DeeTypeObject SetIntersection_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ NULL, /* TODO */
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ si_class_members
@@ -1215,6 +1566,9 @@ INTERN DeeTypeObject SetIntersection_Type = {
 /* ================================================================================ */
 /*   SET DIFFERENCE                                                                 */
 /* ================================================================================ */
+STATIC_ASSERT(sizeof(SetIntersectionIterator) == sizeof(SetDifferenceIterator));
+STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(SetDifferenceIterator, sdi_iter));
+STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_other) == offsetof(SetDifferenceIterator, sdi_other));
 #define sditer_ctor    siiter_ctor
 #define sditer_copy    siiter_copy
 #define sditer_deep    siiter_deep
@@ -1231,7 +1585,7 @@ again:
 	if (!ITER_ISOK(result))
 		goto done;
 	/* Check if contained in the second set. */
-	temp = DeeObject_ContainsAsBool(self->sdi_other, result);
+	temp = DeeSet_OperatorContainsAsBool(self->sdi_other, result);
 	if (temp != 0) {
 		Dee_Decref(result);
 		if (temp) {
@@ -1254,7 +1608,8 @@ PRIVATE struct type_member tpconst sditer_members[] = {
 INTERN DeeTypeObject SetDifferenceIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetDifferenceIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SetDifference)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(sdi?:?Ert:SetDifference)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1276,7 +1631,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ NULL /* TODO */
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sditer_visit,
@@ -1297,22 +1652,18 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+STATIC_ASSERT(offsetof(SetDifference, sd_a) == offsetof(SetUnion, su_a));
+STATIC_ASSERT(offsetof(SetDifference, sd_b) == offsetof(SetUnion, su_b));
 #define sd_ctor su_ctor
-#define sd_copy su_copy
-#define sd_deep su_deep
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sd_init(SetDifference *__restrict self,
-        size_t argc, DeeObject *const *argv) {
-	self->sd_a = Dee_EmptySet;
-	self->sd_b = Dee_EmptySet;
-	if (DeeArg_Unpack(argc, argv, "|oo:_SetDifference", &self->sd_a, &self->sd_b))
-		goto err;
-	Dee_Incref(self->sd_a);
-	Dee_Incref(self->sd_b);
-	return 0;
-err:
-	return -1;
-}
+
+STATIC_ASSERT(offsetof(SetDifference, sd_a) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(SetDifference, sd_b) == offsetof(ProxyObject2, po_obj2));
+#define sd_init  generic_proxy2_init
+#define sd_copy  generic_proxy2_copy_alias12
+#define sd_deep  generic_proxy2_deepcopy
+#define sd_fini  generic_proxy2_fini
+#define sd_visit generic_proxy2_visit
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetDifferenceIterator *DCALL
 sd_iter(SetDifference *__restrict self) {
@@ -1320,7 +1671,7 @@ sd_iter(SetDifference *__restrict self) {
 	result = DeeObject_MALLOC(SetDifferenceIterator);
 	if unlikely(!result)
 		goto done;
-	result->sdi_iter = DeeObject_Iter(self->sd_a);
+	result->sdi_iter = DeeSet_OperatorIter(self->sd_a);
 	if unlikely(!result->sdi_iter)
 		goto err_r;
 	result->sdi_diff  = self;
@@ -1339,7 +1690,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	int temp;
 
 	/* Check the primary set for the object. */
-	temp = DeeObject_ContainsAsBool(self->sd_a, item);
+	temp = DeeSet_OperatorContainsAsBool(self->sd_a, item);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -1349,7 +1700,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	/* The object is apart of the primary set.
 	 * -> Return true if it's not apart of the secondary set.
 	 * -> Return false otherwise. */
-	temp = DeeObject_ContainsAsBool(self->sd_b, item);
+	temp = DeeSet_OperatorContainsAsBool(self->sd_b, item);
 	if unlikely(temp < 0)
 		goto err;
 	return_bool_(!temp);
@@ -1363,7 +1714,12 @@ sd_foreach(SetDifference *__restrict self, Dee_foreach_t proc, void *arg) {
 	data.feicid_seq  = self->sd_b;
 	data.feicid_proc = proc;
 	data.feicid_arg  = arg;
-	return DeeObject_Foreach(self->sd_a, &su_foreach_if_not_contained_in_cb, &data);
+	return DeeSet_OperatorForeach(self->sd_a, &su_foreach_if_not_contained_in_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sd_bool(SetDifference *__restrict self) {
+	return SetDifference_NonEmpty(self->sd_a, self->sd_b);
 }
 
 PRIVATE struct type_seq sd_seq = {
@@ -1388,7 +1744,8 @@ PRIVATE struct type_member tpconst sd_class_members[] = {
 INTERN DeeTypeObject SetDifference_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SetDifference",
-	/* .tp_doc      = */ DOC("(a:?DSet=!S0,b:?DSet=!S0)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(a:?DSet,b:?DSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1403,7 +1760,7 @@ INTERN DeeTypeObject SetDifference_Type = {
 				TYPE_FIXED_ALLOCATOR(SetDifference)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&proxy_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sd_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
 		/* .tp_deepload    = */ NULL
@@ -1411,12 +1768,12 @@ INTERN DeeTypeObject SetDifference_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sd_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&proxy_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sd_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ NULL, /* TODO */
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ &sd_seq,
 	/* .tp_iter_next     = */ NULL,
@@ -1426,7 +1783,7 @@ INTERN DeeTypeObject SetDifference_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ NULL, /* TODO */
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ sd_class_members
@@ -1439,16 +1796,37 @@ INTERN DeeTypeObject SetDifference_Type = {
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_Invert(DeeObject *__restrict self) {
+	DREF SetInversion *result;
+	/* Just re-return the original set. */
+	if (SetInversion_CheckExact(self))
+		return_reference(SetInversion_GetSet(self));
+
+	/* Construct a new inverse-set wrapper. */
+	result = DeeObject_MALLOC(SetInversion);
+	if unlikely(!result)
+		goto done;
+	DeeObject_Init(result, &SetInversion_Type);
+	result->si_set = self;
+	Dee_Incref(self);
+done:
+	return (DREF DeeObject *)result;
+}
+
+
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSet_Union(DeeObject *lhs, DeeObject *rhs) {
+DeeSet_OperatorAdd(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
-	if (DeeSetInversion_CheckExact(lhs)) {
-		if (!DeeSetInversion_CheckExact(rhs)) {
-			/* Special case: `~a | b' --> `~(a & ~b)' */
-			if unlikely((rhs = DeeSet_Invert(rhs)) == NULL)
-				goto err;
-			temp = DeeSet_Intersection(DeeSetInversion_GetSet(lhs), rhs);
-			Dee_Decref(rhs);
+	if (SetInversion_CheckExact(lhs)) {
+		SetInversion *lhs_inv = (SetInversion *)lhs;
+		if (SetInversion_CheckExact(rhs)) {
+			SetInversion *rhs_inv = (SetInversion *)rhs;
+
+			/* Special case: `~a | ~b' --> `~(a & b)' */
+			temp = DeeSet_OperatorAnd(lhs_inv->si_set,
+			                           rhs_inv->si_set);
 			if unlikely(!temp)
 				goto err;
 			result = DeeSet_Invert(temp);
@@ -1456,20 +1834,22 @@ DeeSet_Union(DeeObject *lhs, DeeObject *rhs) {
 			goto done;
 		}
 
-		/* Special case: `~a | ~b' --> `~(a & b)' */
-		temp = DeeSet_Intersection(DeeSetInversion_GetSet(lhs),
-		                           DeeSetInversion_GetSet(rhs));
+		/* Special case: `~a | b' --> `~(a & ~b)' */
+		if unlikely((rhs = DeeSet_Invert(rhs)) == NULL)
+			goto err;
+		temp = DeeSet_OperatorAnd(lhs_inv->si_set, rhs);
+		Dee_Decref(rhs);
 		if unlikely(!temp)
 			goto err;
 		result = DeeSet_Invert(temp);
 		Dee_Decref(temp);
 		goto done;
 	}
-	if (DeeSetInversion_CheckExact(rhs)) {
+	if (SetInversion_CheckExact(rhs)) {
 		/* Special case: `a | ~b' --> `~(b & ~a)' */
 		if unlikely((lhs = DeeSet_Invert(lhs)) == NULL)
 			goto err;
-		temp = DeeSet_Intersection(DeeSetInversion_GetSet(rhs), lhs);
+		temp = DeeSet_OperatorAnd(SetInversion_GetSet(rhs), lhs);
 		Dee_Decref(lhs);
 		if unlikely(!temp)
 			goto err;
@@ -1498,13 +1878,13 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSet_Intersection(DeeObject *lhs, DeeObject *rhs) {
+DeeSet_OperatorAnd(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
-	if (DeeSetInversion_CheckExact(lhs)) {
-		if (DeeSetInversion_CheckExact(rhs)) {
+	if (SetInversion_CheckExact(lhs)) {
+		if (SetInversion_CheckExact(rhs)) {
 			/* Special case: `~a & ~b' -> `~(a | b)' */
-			temp = DeeSet_Intersection(DeeSetInversion_GetSet(lhs),
-			                           DeeSetInversion_GetSet(rhs));
+			temp = DeeSet_OperatorAnd(SetInversion_GetSet(lhs),
+			                           SetInversion_GetSet(rhs));
 			if unlikely(!temp)
 				goto err;
 			result = DeeSet_Invert(temp);
@@ -1524,7 +1904,7 @@ DeeSet_Intersection(DeeObject *lhs, DeeObject *rhs) {
 	result = (DREF DeeObject *)DeeObject_MALLOC(SetIntersection);
 	if unlikely(!result)
 		goto done;
-	ASSERT(!DeeSetInversion_CheckExact(lhs));
+	ASSERT(!SetInversion_CheckExact(lhs));
 	((SetIntersection *)result)->si_a = lhs;
 	((SetIntersection *)result)->si_b = rhs;
 	Dee_Incref(lhs);
@@ -1537,11 +1917,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSet_Difference(DeeObject *lhs, DeeObject *rhs) {
+DeeSet_OperatorSub(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
-	if (DeeSetInversion_CheckExact(lhs)) {
+	if (SetInversion_CheckExact(lhs)) {
 		/* Special case: `~a - b' -> `~(a | b)' */
-		temp = DeeSet_Union(DeeSetInversion_GetSet(lhs), rhs);
+		temp = DeeSet_OperatorAdd(SetInversion_GetSet(lhs), rhs);
 		if unlikely(!temp)
 			goto err;
 		result = DeeSet_Invert(temp);
@@ -1557,7 +1937,7 @@ DeeSet_Difference(DeeObject *lhs, DeeObject *rhs) {
 	result = (DREF DeeObject *)DeeObject_MALLOC(SetDifference);
 	if unlikely(!result)
 		goto done;
-	ASSERT(!DeeSetInversion_CheckExact(lhs));
+	ASSERT(!SetInversion_CheckExact(lhs));
 	((SetDifference *)result)->sd_a = lhs;
 	((SetDifference *)result)->sd_b = rhs;
 	Dee_Incref(lhs);
@@ -1570,7 +1950,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSet_SymmetricDifference(DeeObject *lhs, DeeObject *rhs) {
+DeeSet_OperatorXor(DeeObject *lhs, DeeObject *rhs) {
 	DREF SetSymmetricDifference *result;
 	if (DeeSet_CheckEmpty(lhs))
 		return_reference_(rhs);
@@ -1581,7 +1961,7 @@ DeeSet_SymmetricDifference(DeeObject *lhs, DeeObject *rhs) {
 	result = DeeObject_MALLOC(SetSymmetricDifference);
 	if unlikely(!result)
 		goto done;
-	ASSERT(!DeeSetInversion_CheckExact(lhs));
+	ASSERT(!SetInversion_CheckExact(lhs));
 	result->ssd_a = lhs;
 	result->ssd_b = rhs;
 	Dee_Incref(lhs);
@@ -1590,8 +1970,131 @@ DeeSet_SymmetricDifference(DeeObject *lhs, DeeObject *rhs) {
 done:
 	return (DREF DeeObject *)result;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+
+
+#define SET_CONTAINSANY_FOREACH_LHS__FOUND SSIZE_MIN
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+set_containsany_foreach_lhs_cb(void *arg, DeeObject *key) {
+	int is_contained = DeeSet_OperatorContainsAsBool((DeeObject *)arg, key);
+	if (is_contained != 0) {
+		if unlikely(is_contained < 0)
+			goto err;
+		return SET_CONTAINSANY_FOREACH_LHS__FOUND;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* >> for (local key: lhs) if (key in rhs) return true;
+ * >> return false; */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+set_containsany_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
+	Dee_ssize_t status;
+	status = DeeSet_OperatorForeach(lhs, &set_containsany_foreach_lhs_cb, rhs);
+	if (status == SET_CONTAINSANY_FOREACH_LHS__FOUND)
+		return 1;
+	if (status == 0)
+		return 0;
+	return -1;
+}
+
+
+#define SET_CONTAINSALL_FOREACH_LHS__MISSING SSIZE_MIN
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+set_containsall_foreach_lhs_cb(void *arg, DeeObject *key) {
+	int is_contained = DeeSet_OperatorContainsAsBool((DeeObject *)arg, key);
+	if (is_contained <= 0) {
+		if unlikely(is_contained < 0)
+			goto err;
+		return SET_CONTAINSALL_FOREACH_LHS__MISSING;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* >> for (local key: lhs) if (key !in rhs) return false;
+ * >> return true; */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+set_containsall_foreach_lhs(DeeObject *lhs, DeeObject *rhs) {
+	Dee_ssize_t status;
+	status = DeeSet_OperatorForeach(lhs, &set_containsall_foreach_lhs_cb, rhs);
+	if (status == SET_CONTAINSALL_FOREACH_LHS__MISSING)
+		return 0;
+	if (status == 0)
+		return 1;
+	return -1;
+}
+
+
+/*
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+SetUnion_NonEmpty(DeeObject *a, DeeObject *b) {
+	int result = DeeSet_OperatorBool(a);
+	if (result == 0)
+		result = DeeSet_OperatorBool(b);
+	return result;
+}
+*/
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+SetIntersection_NonEmpty(DeeObject *a, DeeObject *b) {
+	if (SetInversion_CheckExact(a)) {
+		SetInversion *xa = (SetInversion *)a;
+		/* `(~a & b) != {}'   <=>   `(b - a) != {}' */
+		return SetDifference_NonEmpty(b, xa->si_set);
+	} else if (SetInversion_CheckExact(b)) {
+		SetInversion *xb = (SetInversion *)b;
+		/* `(a & ~b) != {}'   <=>   `(a - b) != {}' */
+		return SetDifference_NonEmpty(a, xb->si_set);
+	} else {
+		size_t size_a, size_b;
+		size_a = DeeSet_OperatorSize(a);
+		if unlikely(size_a == (size_t)-1)
+			goto err;
+		size_b = DeeSet_OperatorSize(b);
+		if unlikely(size_b == (size_t)-1)
+			goto err;
+		if (size_a < size_b) {
+			/* >> for (local key: a) if (key in b) return true; */
+			return set_containsany_foreach_lhs(a, b);
+		} else {
+			/* >> for (local key: b) if (key in a) return true; */
+			return set_containsany_foreach_lhs(b, a);
+		}
+		__builtin_unreachable();
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+SetDifference_NonEmpty(DeeObject *a, DeeObject *b) {
+	if (SetInversion_CheckExact(a)) {
+		/* `(~a - b) != {}'   <=>   `true'
+		 * Reason: There is always an imaginary object
+		 *         in "a" that does not exist in "b" */
+		return 1;
+	} else if (SetInversion_CheckExact(b)) {
+		/* `(a - ~b) != {}'   <=>   `(a & b) != {}' */
+		SetInversion *xb = (SetInversion *)b;
+		return SetIntersection_NonEmpty(a, xb->si_set);
+	} else {
+		/* >> for (local key: a) if (key !in b) return true;
+		 * >> return false; */
+		int result = set_containsall_foreach_lhs(a, b);
+		if likely(result >= 0)
+			result = !result;
+		return result;
+	}
+	__builtin_unreachable();
+}
 
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_SEQ_SET_C */
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C */

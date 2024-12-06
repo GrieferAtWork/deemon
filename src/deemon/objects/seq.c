@@ -68,9 +68,14 @@
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
-/* TODO: Re-write all of the documentation for functions/operators to document how defaults work now. */
+
+/* Provide aliases for certain Set operators in Sequence */
+#undef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
+#define CONFIG_HAVE_SET_OPERATORS_IN_SEQ
 
 DECL_BEGIN
+
+/* TODO: Re-write all of the documentation for functions/operators to document how defaults work now. */
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset
@@ -2326,24 +2331,39 @@ err:
 	return NULL;
 }
 
+
 PRIVATE struct type_math seq_math = {
 	/* .tp_int32       = */ NULL,
 	/* .tp_int64       = */ NULL,
 	/* .tp_double      = */ NULL,
 	/* .tp_int         = */ NULL,
+#ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
+	/* .tp_inv         = */ &DeeSet_OperatorInv,
+#else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
 	/* .tp_inv         = */ NULL,
+#endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
 	/* .tp_pos         = */ NULL,
 	/* .tp_neg         = */ NULL,
 	/* .tp_add         = */ &DeeSeq_Concat,
+#ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
+	/* .tp_inv         = */ &DeeSet_OperatorSub,
+#else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
 	/* .tp_sub         = */ NULL,
+#endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
 	/* .tp_mul         = */ &seq_mul,
 	/* .tp_div         = */ NULL,
 	/* .tp_mod         = */ NULL,
 	/* .tp_shl         = */ NULL,
 	/* .tp_shr         = */ NULL,
+#ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
+	/* .tp_and         = */ &DeeSet_OperatorAnd,
+	/* .tp_or          = */ &DeeSet_OperatorAdd,
+	/* .tp_xor         = */ &DeeSet_OperatorXor,
+#else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
 	/* .tp_and         = */ NULL,
 	/* .tp_or          = */ NULL,
 	/* .tp_xor         = */ NULL,
+#endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
 	/* .tp_pow         = */ NULL,
 	/* .tp_inc         = */ NULL,
 	/* .tp_dec         = */ NULL,
@@ -5035,6 +5055,12 @@ PRIVATE struct type_member tpconst seq_class_members[] = {
 };
 
 
+#ifdef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
+#define IF_HAVE_SET_OPERATORS(x) x
+#else /* CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
+#define IF_HAVE_SET_OPERATORS(x) /* nothing */
+#endif /* !CONFIG_HAVE_SET_OPERATORS_IN_SEQ */
+
 /* `Sequence from deemon' */
 PUBLIC DeeTypeObject DeeSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -5380,6 +5406,26 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "{²}Default implementation provided if sub-class matches requirements"
 	                         "}\n"
 	                         "\n"
+
+	                         IF_HAVE_SET_OPERATORS("~->?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("Alias for ${(this as Set).operator ~ ()}. S.a. ?Aop:inv?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("\n")
+
+	                         IF_HAVE_SET_OPERATORS("sub->?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("Alias for ${(this as Set).operator - (other)}. S.a. ?Aop:sub?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("\n")
+
+	                         IF_HAVE_SET_OPERATORS("|->?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("Alias for ${(this as Set).operator | (other)}. S.a. ?Aop:or?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("\n")
+
+	                         IF_HAVE_SET_OPERATORS("&->?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("Alias for ${(this as Set).operator & (other)}. S.a. ?Aop:and?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("\n")
+
+	                         IF_HAVE_SET_OPERATORS("^->?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("Alias for ${(this as Set).operator ^ (other)}. S.a. ?Aop:xor?DSet\n")
+	                         IF_HAVE_SET_OPERATORS("\n")
 
 	                         "[:](start:?X2?N?Dint,end:?X2?N?Dint)->\n"
 	                         "Returns a sub-range of @this Sequence, spanning across all elements from @start to @end\n"

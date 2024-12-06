@@ -4547,7 +4547,7 @@ DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeObject_TypeAssertFailed2)(Dee
 #else /* __OPTIMIZE_SIZE__ */
 #undef DeeObject_AssertTypeOrAbstract
 #define DeeObject_AssertTypeOrAbstract(self, required_type) (DeeType_IsAbstract(required_type) ? 0 : DeeObject_AssertType(self, required_type))
-#define DeeObject_AssertTypeExact(self, required_type)      (unlikely(Dee_TYPE(self) == required_type ? 0 : DeeObject_TypeAssertFailed((DeeObject *)(self), required_type)))
+#define DeeObject_AssertTypeExact(self, required_type)      (unlikely(Dee_TYPE(self) == (required_type) ? 0 : DeeObject_TypeAssertFailed((DeeObject *)(self), required_type)))
 #endif /* !__OPTIMIZE_SIZE__ */
 
 

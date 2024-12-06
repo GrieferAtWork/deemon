@@ -797,6 +797,115 @@ err:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___inv__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":__inv__"))
+		goto err;
+	return DeeSet_OperatorInv(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___add__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__add__", &rhs))
+		goto err;
+	return DeeSet_OperatorAdd(self, rhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___sub__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__sub__", &rhs))
+		goto err;
+	return DeeSet_OperatorSub(self, rhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___and__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__and__", &rhs))
+		goto err;
+	return DeeSet_OperatorAnd(self, rhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___xor__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__xor__", &rhs))
+		goto err;
+	return DeeSet_OperatorXor(self, rhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___inplace_add__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__inplace_add__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely(DeeSet_OperatorInplaceAdd(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___inplace_sub__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__inplace_sub__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely(DeeSet_OperatorInplaceSub(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___inplace_and__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__inplace_and__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely(DeeSet_OperatorInplaceAnd(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___inplace_xor__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__inplace_xor__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely(DeeSet_OperatorInplaceXor(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
 
 
 
@@ -1286,6 +1395,107 @@ default_map___ge__(DeeObject *self, size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map___add__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__add__", &rhs))
+		goto err;
+	return DeeMap_OperatorAdd(self, rhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map___sub__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__sub__", &rhs))
+		goto err;
+	return DeeMap_OperatorSub(self, rhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map___and__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__and__", &rhs))
+		goto err;
+	return DeeMap_OperatorAnd(self, rhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map___xor__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__xor__", &rhs))
+		goto err;
+	return DeeMap_OperatorXor(self, rhs);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map___inplace_add__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__inplace_add__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely(DeeMap_OperatorInplaceAdd(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map___inplace_sub__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__inplace_sub__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely(DeeMap_OperatorInplaceSub(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map___inplace_and__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__inplace_and__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely(DeeMap_OperatorInplaceAnd(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_map___inplace_xor__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__inplace_xor__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely(DeeMap_OperatorInplaceXor(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref(self);
+err:
+	return NULL;
+}
+
 
 DECL_END
 

@@ -1429,7 +1429,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "}"),
 	TYPE_GETTER("nth", &numeric_get_nth,
 	            "->?Dstring\n"
-	            "Convert @this number into an integer and call :int.nth"),
+	            "Convert @this number into an integer and call ?Anth?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1793,18 +1793,18 @@ PRIVATE struct type_method tpconst numeric_methods[] = {
 	 * >> } */
 	TYPE_KWMETHOD(STR_tostr, &numeric_tostr,
 	              "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
-	              "Convert @this number into an integer and call :int.tostr\n"
+	              "Convert @this number into an integer and call ?Atostr?Dint\n"
 	              "TODO: This also needs handling for floats!"),
 	TYPE_KWMETHOD("hex", &numeric_hex, numeric_hex_doc),
 	TYPE_KWMETHOD("bin", &numeric_bin, numeric_bin_doc),
 	TYPE_KWMETHOD("oct", &numeric_oct, numeric_oct_doc),
 	TYPE_KWMETHOD("tobytes", &numeric_tobytes,
 	              "(length?:?.,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
-	              "Convert @this number into an integer and call :int.tobytes\n"
+	              "Convert @this number into an integer and call ?Atobytes?Dint\n"
 	              "TODO: This also needs handling for floats!"),
 	TYPE_KWMETHOD("bitcount", &numeric_bitcount,
 	              "(signed=!f)->?.\n"
-	              "Convert @this number into an integer and call :int.bitcount\n"
+	              "Convert @this number into an integer and call ?Abitcount?Dint\n"
 	              "TODO: This also needs handling for floats!"),
 	TYPE_METHOD("divmod", &numeric_divmod, numeric_divmod_doc),
 	TYPE_METHOD("nextafter", &numeric_nextafter,

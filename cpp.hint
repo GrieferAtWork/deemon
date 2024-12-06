@@ -1362,7 +1362,6 @@
 #define rodict_object                  Dee_rodict_object
 #define roset_item                     Dee_roset_item
 #define roset_object                   Dee_roset_object
-#define set_inversion_object           Dee_set_inversion_object
 #define string_object                  Dee_string_object
 #define string_utf                     Dee_string_utf
 #define super_object                   Dee_super_object

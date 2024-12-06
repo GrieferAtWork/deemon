@@ -113,8 +113,18 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_lo_
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_le_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_gr_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_ge_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tsc_operator_inv_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_add_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_sub_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_or_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_and_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *Dee_tsc_operator_xor_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_inplace_add_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_inplace_sub_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_inplace_mul_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_inplace_or_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_inplace_and_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_tsc_operator_inplace_xor_t)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_seq_foreach_reverse_t)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *Dee_tsc_seq_enumerate_index_reverse_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
@@ -580,11 +590,15 @@ struct Dee_type_seq_cache {
 	Dee_tsc_operator_le_t            tsc_set_operator_le;
 	Dee_tsc_operator_gr_t            tsc_set_operator_gr;
 	Dee_tsc_operator_ge_t            tsc_set_operator_ge;
-	/* TODO: Dee_tsc_operator_inplace_add_t tsc_set_operator_inplace_add; */
-	/* TODO: Dee_tsc_operator_inplace_sub_t tsc_set_operator_inplace_sub; */
-	/* TODO: Dee_tsc_operator_inplace_and_t tsc_set_operator_inplace_and; */
-	/* TODO: Dee_tsc_operator_inplace_or_t tsc_set_operator_inplace_or; */
-	/* TODO: Dee_tsc_operator_inplace_xor_t tsc_set_operator_inplace_xor; */
+	Dee_tsc_operator_inv_t           tsc_set_operator_inv;
+	Dee_tsc_operator_add_t           tsc_set_operator_add; /* {"a"} + {"b"}         -> {"a","b"} */
+	Dee_tsc_operator_sub_t           tsc_set_operator_sub; /* {"a","b"} - {"b"}     -> {"a"} */
+	Dee_tsc_operator_and_t           tsc_set_operator_and; /* {"a","b"} & {"a"}     -> {"a"} */
+	Dee_tsc_operator_xor_t           tsc_set_operator_xor; /* {"a","b"} ^ {"a","c"} -> {"b","c"} */
+	Dee_tsc_operator_inplace_add_t   tsc_set_operator_inplace_add;
+	Dee_tsc_operator_inplace_sub_t   tsc_set_operator_inplace_sub;
+	Dee_tsc_operator_inplace_and_t   tsc_set_operator_inplace_and;
+	Dee_tsc_operator_inplace_xor_t   tsc_set_operator_inplace_xor;
 
 	Dee_tsc_set_insert_t             tsc_set_insert;
 	union Dee_tsc_uslot              tsc_set_insert_data;
@@ -640,39 +654,44 @@ struct Dee_type_seq_cache {
 	Dee_tsc_operator_le_t                         tsc_map_operator_le;
 	Dee_tsc_operator_gr_t                         tsc_map_operator_gr;
 	Dee_tsc_operator_ge_t                         tsc_map_operator_ge;
-	/* TODO: Dee_tsc_operator_inplace_add_t tsc_set_operator_inplace_add; */
-	/* TODO: Dee_tsc_operator_inplace_or_t tsc_set_operator_inplace_or; */
+	Dee_tsc_operator_add_t                        tsc_map_operator_add; /* {"a":1} + {"b":2}       -> {"a":1,"b":2} */
+	Dee_tsc_operator_sub_t                        tsc_map_operator_sub; /* {"a":1,"b":2} - {"a"}   -> {"b":2} */
+	Dee_tsc_operator_and_t                        tsc_map_operator_and; /* {"a":1,"b":2} & {"a"}   -> {"a":1} */
+	Dee_tsc_operator_xor_t                        tsc_map_operator_xor; /* {"a":1,"b":2} ^ {"a":3} -> {"b":2} */
+	Dee_tsc_operator_inplace_add_t                tsc_map_operator_inplace_add;
+	Dee_tsc_operator_inplace_sub_t                tsc_map_operator_inplace_sub;
+	Dee_tsc_operator_inplace_and_t                tsc_map_operator_inplace_and;
+	Dee_tsc_operator_inplace_xor_t                tsc_map_operator_inplace_xor;
 
-	/* TODO: Map operators */
-	Dee_tsc_map_setold_t             tsc_map_setold;
-	union Dee_tsc_uslot              tsc_map_setold_data;
-	Dee_tsc_map_setold_ex_t          tsc_map_setold_ex;
-	union Dee_tsc_uslot              tsc_map_setold_ex_data;
-	Dee_tsc_map_setnew_t             tsc_map_setnew;
-	union Dee_tsc_uslot              tsc_map_setnew_data;
-	Dee_tsc_map_setnew_ex_t          tsc_map_setnew_ex;
-	union Dee_tsc_uslot              tsc_map_setnew_ex_data;
-	Dee_tsc_map_setdefault_t         tsc_map_setdefault;
-	union Dee_tsc_uslot              tsc_map_setdefault_data;
-	Dee_tsc_map_update_t             tsc_map_update;
-	union Dee_tsc_uslot              tsc_map_update_data;
-	Dee_tsc_map_remove_t             tsc_map_remove;
-	union Dee_tsc_uslot              tsc_map_remove_data;
-	Dee_tsc_map_removekeys_t         tsc_map_removekeys;
-	union Dee_tsc_uslot              tsc_map_removekeys_data;
-	Dee_tsc_map_pop_t                tsc_map_pop;
-	Dee_tsc_map_pop_with_default_t   tsc_map_pop_with_default;
-	union Dee_tsc_uslot              tsc_map_pop_data;
-	Dee_tsc_map_popitem_t            tsc_map_popitem;
-	union Dee_tsc_uslot              tsc_map_popitem_data;
-	Dee_tsc_map_keys_t               tsc_map_keys;
-	union Dee_tsc_uslot              tsc_map_keys_data;
-	Dee_tsc_map_values_t             tsc_map_values;
-	union Dee_tsc_uslot              tsc_map_values_data;
-	Dee_tsc_map_iterkeys_t           tsc_map_iterkeys;
-	union Dee_tsc_uslot              tsc_map_iterkeys_data;
-	Dee_tsc_map_itervalues_t         tsc_map_itervalues;
-	union Dee_tsc_uslot              tsc_map_itervalues_data;
+	Dee_tsc_map_setold_t                          tsc_map_setold;
+	union Dee_tsc_uslot                           tsc_map_setold_data;
+	Dee_tsc_map_setold_ex_t                       tsc_map_setold_ex;
+	union Dee_tsc_uslot                           tsc_map_setold_ex_data;
+	Dee_tsc_map_setnew_t                          tsc_map_setnew;
+	union Dee_tsc_uslot                           tsc_map_setnew_data;
+	Dee_tsc_map_setnew_ex_t                       tsc_map_setnew_ex;
+	union Dee_tsc_uslot                           tsc_map_setnew_ex_data;
+	Dee_tsc_map_setdefault_t                      tsc_map_setdefault;
+	union Dee_tsc_uslot                           tsc_map_setdefault_data;
+	Dee_tsc_map_update_t                          tsc_map_update;
+	union Dee_tsc_uslot                           tsc_map_update_data;
+	Dee_tsc_map_remove_t                          tsc_map_remove;
+	union Dee_tsc_uslot                           tsc_map_remove_data;
+	Dee_tsc_map_removekeys_t                      tsc_map_removekeys;
+	union Dee_tsc_uslot                           tsc_map_removekeys_data;
+	Dee_tsc_map_pop_t                             tsc_map_pop;
+	Dee_tsc_map_pop_with_default_t                tsc_map_pop_with_default;
+	union Dee_tsc_uslot                           tsc_map_pop_data;
+	Dee_tsc_map_popitem_t                         tsc_map_popitem;
+	union Dee_tsc_uslot                           tsc_map_popitem_data;
+	Dee_tsc_map_keys_t                            tsc_map_keys;
+	union Dee_tsc_uslot                           tsc_map_keys_data;
+	Dee_tsc_map_values_t                          tsc_map_values;
+	union Dee_tsc_uslot                           tsc_map_values_data;
+	Dee_tsc_map_iterkeys_t                        tsc_map_iterkeys;
+	union Dee_tsc_uslot                           tsc_map_iterkeys_data;
+	Dee_tsc_map_itervalues_t                      tsc_map_itervalues;
+	union Dee_tsc_uslot                           tsc_map_itervalues_data;
 };
 
 /* Destroy a lazily allocated sequence operator cache table. */
@@ -749,6 +768,15 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_lo_t DCAL
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCALL DeeType_RequireSetOperatorLe(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_RequireSetOperatorGr(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireSetOperatorGe(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inv_t DCALL DeeType_RequireSetOperatorInv(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_add_t DCALL DeeType_RequireSetOperatorAdd(DeeTypeObject *__restrict self); /* {"a"} + {"b"}         -> {"a","b"} */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_sub_t DCALL DeeType_RequireSetOperatorSub(DeeTypeObject *__restrict self); /* {"a","b"} - {"b"}     -> {"a"} */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_and_t DCALL DeeType_RequireSetOperatorAnd(DeeTypeObject *__restrict self); /* {"a","b"} & {"a"}     -> {"a"} */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_xor_t DCALL DeeType_RequireSetOperatorXor(DeeTypeObject *__restrict self); /* {"a","b"} ^ {"a","c"} -> {"b","c"} */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_add_t DCALL DeeType_RequireSetOperatorInplaceAdd(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_sub_t DCALL DeeType_RequireSetOperatorInplaceSub(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_and_t DCALL DeeType_RequireSetOperatorInplaceAnd(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_xor_t DCALL DeeType_RequireSetOperatorInplaceXor(DeeTypeObject *__restrict self);
 
 /* Map operators... */
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_contains_t DCALL DeeType_RequireMapOperatorContains(DeeTypeObject *__restrict self);
@@ -787,6 +815,14 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_lo_t DCAL
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_le_t DCALL DeeType_RequireMapOperatorLe(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_gr_t DCALL DeeType_RequireMapOperatorGr(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_ge_t DCALL DeeType_RequireMapOperatorGe(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_add_t DCALL DeeType_RequireMapOperatorAdd(DeeTypeObject *__restrict self); /* {"a":1} + {"b":2}       -> {"a":1,"b":2} */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_sub_t DCALL DeeType_RequireMapOperatorSub(DeeTypeObject *__restrict self); /* {"a":1,"b":2} - {"a"}   -> {"b":2} */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_and_t DCALL DeeType_RequireMapOperatorAnd(DeeTypeObject *__restrict self); /* {"a":1,"b":2} & {"a"}   -> {"a":1} */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_xor_t DCALL DeeType_RequireMapOperatorXor(DeeTypeObject *__restrict self); /* {"a":1,"b":2} ^ {"a":3} -> {"b":2} */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_add_t DCALL DeeType_RequireMapOperatorInplaceAdd(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_sub_t DCALL DeeType_RequireMapOperatorInplaceSub(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_and_t DCALL DeeType_RequireMapOperatorInplaceAnd(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tsc_operator_inplace_xor_t DCALL DeeType_RequireMapOperatorInplaceXor(DeeTypeObject *__restrict self);
 /*[[[end:seq_operators]]]*/
 
 /*
@@ -881,7 +917,7 @@ for (local seqClass, name: operatorNames) {
 #define DeeSeq_VariantsFor_OperatorForeachPair(cb)             cb(DeeSeq_OperatorForeachPair) cb((*(Dee_tsc_operator_foreach_pair_t)&DeeSeq_DefaultOperatorForeachWithError))
 #define DeeSeq_VariantsFor_OperatorEnumerate(cb)               cb(DeeSeq_OperatorEnumerate) cb((*(Dee_tsc_operator_enumerate_t)&DeeSeq_DefaultOperatorForeachWithEmpty)) cb(DeeSeq_DefaultEnumerateWithCounterAndForeach) cb((*(Dee_tsc_operator_enumerate_t)&DeeSeq_DefaultOperatorForeachWithError))
 #define DeeSeq_VariantsFor_OperatorEnumerateIndex(cb)          cb(DeeSeq_OperatorEnumerateIndex) cb(DeeSeq_DefaultOperatorEnumerateIndexWithEmpty) cb(DeeSeq_DefaultEnumerateIndexWithCounterAndIter) cb(DeeSeq_DefaultEnumerateIndexWithCounterAndForeachDefault) cb(DeeSeq_DefaultOperatorEnumerateIndexWithError)
-#define DeeSeq_VariantsFor_OperatorIterKeys(cb)                cb(DeeSeq_OperatorIterKeys) cb(DeeSeq_DefaultOperatorIterKeysWithEmpty) cb(DeeSeq_DefaultOperatorIterKeysWithSeqSize) cb(DeeSeq_DefaultOperatorIterKeysWithError)
+#define DeeSeq_VariantsFor_OperatorIterKeys(cb)                cb(DeeSeq_OperatorIterKeys) cb(DeeSeq_DefaultOperatorIterWithEmpty) cb(DeeSeq_DefaultOperatorIterKeysWithSeqSize) cb(DeeSeq_DefaultOperatorIterKeysWithError)
 #define DeeSeq_VariantsFor_OperatorBoundItem(cb)               cb(DeeSeq_OperatorBoundItem) cb(DeeSeq_DefaultOperatorBoundItemWithEmpty) cb(DeeSeq_DefaultOperatorBoundItemWithSeqBoundItemIndex) cb(DeeSeq_DefaultOperatorBoundItemWithError)
 #define DeeSeq_VariantsFor_OperatorHasItem(cb)                 cb(DeeSeq_OperatorHasItem) cb((*(Dee_tsc_operator_hasitem_t)&none_i2)) cb(DeeSeq_DefaultOperatorHasItemWithSeqHasItemIndex) cb(DeeSeq_DefaultOperatorHasItemWithError)
 #define DeeSeq_VariantsFor_OperatorSize(cb)                    cb(DeeSeq_OperatorSize) cb(DeeSeq_DefaultOperatorSizeWithEmpty) cb(DeeSeq_DefaultSizeWithForeachPair) cb(DeeSeq_DefaultSizeWithForeach) cb(DeeSeq_DefaultOperatorSizeWithError)
@@ -920,6 +956,15 @@ for (local seqClass, name: operatorNames) {
 #define DeeSet_VariantsFor_OperatorLe(cb)                      cb(DeeSet_OperatorLe) cb(DeeSet_DefaultOperatorLeWithEmpty) cb(DeeSet_DefaultLeWithForeachDefault) cb(DeeSet_DefaultOperatorLeWithError)
 #define DeeSet_VariantsFor_OperatorGr(cb)                      cb(DeeSet_OperatorGr) cb(DeeSet_DefaultOperatorGrWithEmpty) cb(DeeSet_DefaultGrWithForeachDefault) cb(DeeSet_DefaultOperatorGrWithError)
 #define DeeSet_VariantsFor_OperatorGe(cb)                      cb(DeeSet_OperatorGe) cb(DeeSeq_DefaultOperatorEqWithEmpty) cb(DeeSet_DefaultGeWithForeachDefault) cb(DeeSet_DefaultOperatorGeWithError)
+#define DeeSet_VariantsFor_OperatorInv(cb)                     cb(DeeSet_OperatorInv) cb(DeeSet_DefaultOperatorInvWithEmpty) cb(DeeSet_DefaultOperatorInvWithForeach) cb(DeeSet_DefaultOperatorInvWithError)
+#define DeeSet_VariantsFor_OperatorAdd(cb)                     cb(DeeSet_OperatorAdd) cb(DeeSet_DefaultOperatorAddWithEmpty) cb(DeeSet_DefaultOperatorAddWithForeach) cb(DeeSet_DefaultOperatorAddWithError)
+#define DeeSet_VariantsFor_OperatorSub(cb)                     cb(DeeSet_OperatorSub) cb(DeeSet_DefaultOperatorSubWithEmpty) cb(DeeSet_DefaultOperatorSubWithForeach) cb(DeeSet_DefaultOperatorSubWithError)
+#define DeeSet_VariantsFor_OperatorAnd(cb)                     cb(DeeSet_OperatorAnd) cb(DeeSet_DefaultOperatorSubWithEmpty) cb(DeeSet_DefaultOperatorAndWithForeach) cb(DeeSet_DefaultOperatorAndWithError)
+#define DeeSet_VariantsFor_OperatorXor(cb)                     cb(DeeSet_OperatorXor) cb(DeeSet_DefaultOperatorAddWithEmpty) cb(DeeSet_DefaultOperatorXorWithForeach) cb(DeeSet_DefaultOperatorXorWithError)
+#define DeeSet_VariantsFor_OperatorInplaceAdd(cb)              cb(DeeSet_OperatorInplaceAdd) cb(DeeSet_DefaultOperatorInplaceAddWithSetInsertAll) cb(DeeSet_DefaultOperatorInplaceAddWithError)
+#define DeeSet_VariantsFor_OperatorInplaceSub(cb)              cb(DeeSet_OperatorInplaceSub) cb(DeeSet_DefaultOperatorInplaceSubWithSetRemoveAll) cb(DeeSet_DefaultOperatorInplaceSubWithError)
+#define DeeSet_VariantsFor_OperatorInplaceAnd(cb)              cb(DeeSet_OperatorInplaceAnd) cb(DeeSet_DefaultOperatorInplaceAndWithForeachAndSetRemoveAll) cb(DeeSet_DefaultOperatorInplaceAndWithError)
+#define DeeSet_VariantsFor_OperatorInplaceXor(cb)              cb(DeeSet_OperatorInplaceXor) cb(DeeSet_DefaultOperatorInplaceXorWithForeachAndSetInsertAllAndSetRemoveAll) cb(DeeSet_DefaultOperatorInplaceXorWithError)
 #define DeeMap_VariantsFor_OperatorContains(cb)                cb(DeeMap_OperatorContains) cb(DeeSeq_DefaultOperatorContainsWithEmpty) cb(DeeMap_DefaultContainsWithForeachPair) cb(DeeMap_DefaultOperatorContainsWithError)
 #define DeeMap_VariantsFor_OperatorGetItem(cb)                 cb(DeeMap_OperatorGetItem) cb(DeeMap_DefaultOperatorGetItemWithEmpty) cb(DeeMap_DefaultGetItemWithForeachPair) cb(DeeMap_DefaultOperatorGetItemWithError)
 #define DeeMap_VariantsFor_OperatorDelItem(cb)                 cb(DeeMap_OperatorDelItem) cb(DeeMap_DefaultOperatorDelItemWithError)
@@ -955,6 +1000,14 @@ for (local seqClass, name: operatorNames) {
 #define DeeMap_VariantsFor_OperatorLe(cb)                      cb(DeeMap_OperatorLe) cb(DeeSet_DefaultOperatorLeWithEmpty) cb(DeeMap_DefaultLeWithForeachPairDefault) cb(DeeMap_DefaultOperatorLeWithError)
 #define DeeMap_VariantsFor_OperatorGr(cb)                      cb(DeeMap_OperatorGr) cb(DeeSet_DefaultOperatorGrWithEmpty) cb(DeeMap_DefaultGrWithForeachPairDefault) cb(DeeMap_DefaultOperatorGrWithError)
 #define DeeMap_VariantsFor_OperatorGe(cb)                      cb(DeeMap_OperatorGe) cb(DeeSeq_DefaultOperatorEqWithEmpty) cb(DeeMap_DefaultGeWithForeachPairDefault) cb(DeeMap_DefaultOperatorGeWithError)
+#define DeeMap_VariantsFor_OperatorAdd(cb)                     cb(DeeMap_OperatorAdd) cb(DeeMap_DefaultOperatorAddWithEmpty) cb(DeeMap_DefaultOperatorAddWithForeach) cb(DeeMap_DefaultOperatorAddWithError)
+#define DeeMap_VariantsFor_OperatorSub(cb)                     cb(DeeMap_OperatorSub) cb(DeeSet_DefaultOperatorSubWithEmpty) cb(DeeMap_DefaultOperatorSubWithForeach) cb(DeeMap_DefaultOperatorSubWithError)
+#define DeeMap_VariantsFor_OperatorAnd(cb)                     cb(DeeMap_OperatorAnd) cb(DeeSet_DefaultOperatorSubWithEmpty) cb(DeeMap_DefaultOperatorAndWithForeach) cb(DeeMap_DefaultOperatorAndWithError)
+#define DeeMap_VariantsFor_OperatorXor(cb)                     cb(DeeMap_OperatorXor) cb(DeeMap_DefaultOperatorAddWithEmpty) cb(DeeMap_DefaultOperatorXorWithForeach) cb(DeeMap_DefaultOperatorXorWithError)
+#define DeeMap_VariantsFor_OperatorInplaceAdd(cb)              cb(DeeMap_OperatorInplaceAdd) cb(DeeMap_DefaultOperatorInplaceAddWithMapUpdate) cb(DeeMap_DefaultOperatorInplaceAddWithError)
+#define DeeMap_VariantsFor_OperatorInplaceSub(cb)              cb(DeeMap_OperatorInplaceSub) cb(DeeMap_DefaultOperatorInplaceSubWithMapRemoveKeys) cb(DeeMap_DefaultOperatorInplaceSubWithError)
+#define DeeMap_VariantsFor_OperatorInplaceAnd(cb)              cb(DeeMap_OperatorInplaceAnd) cb(DeeMap_DefaultOperatorInplaceAndWithForeachAndMapRemoveKeys) cb(DeeMap_DefaultOperatorInplaceAndWithError)
+#define DeeMap_VariantsFor_OperatorInplaceXor(cb)              cb(DeeMap_OperatorInplaceXor) cb(DeeMap_DefaultOperatorInplaceXorWithForeachAndMapUpdatAndMapRemoveKeys) cb(DeeMap_DefaultOperatorInplaceXorWithError)
 /*[[[end]]]*/
 
 
@@ -1108,6 +1161,7 @@ INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeSeq_EnumerateWithRange(Dee
 #define DeeSeq_OperatorIter(self)                                  (*DeeType_RequireSeqOperatorIter(Dee_TYPE(self)))(self)
 #define DeeSeq_OperatorSizeOb(self)                                (*DeeType_RequireSeqOperatorSizeOb(Dee_TYPE(self)))(self)
 #define DeeSeq_OperatorContains(self, some_object)                 (*DeeType_RequireSeqOperatorContains(Dee_TYPE(self)))(self, some_object)
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorContainsAsBool)(DeeObject *self, DeeObject *some_object);
 #define DeeSeq_OperatorGetItem(self, index)                        (*DeeType_RequireSeqOperatorGetItem(Dee_TYPE(self)))(self, index)
 #define DeeSeq_OperatorDelItem(self, index)                        (*DeeType_RequireSeqOperatorDelItem(Dee_TYPE(self)))(self, index)
 #define DeeSeq_OperatorSetItem(self, index, value)                 (*DeeType_RequireSeqOperatorSetItem(Dee_TYPE(self)))(self, index, value)
@@ -1209,6 +1263,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObj
 #define DeeSet_OperatorIter                            DeeSeq_OperatorIter
 #define DeeSet_OperatorSizeOb                          DeeSeq_OperatorSizeOb
 #define DeeSet_OperatorContains                        DeeSeq_OperatorContains
+#define DeeSet_OperatorContainsAsBool                  DeeSeq_OperatorContainsAsBool
 #define DeeSet_OperatorForeach                         DeeSeq_OperatorForeach
 #define DeeSet_OperatorSize                            DeeSeq_OperatorSize
 #define DeeSet_OperatorSizeFast                        DeeSeq_OperatorSizeFast
@@ -1221,6 +1276,15 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObj
 #define DeeSet_OperatorLe(self, some_object)           (*DeeType_RequireSetOperatorLe(Dee_TYPE(self)))(self, some_object)
 #define DeeSet_OperatorGr(self, some_object)           (*DeeType_RequireSetOperatorGr(Dee_TYPE(self)))(self, some_object)
 #define DeeSet_OperatorGe(self, some_object)           (*DeeType_RequireSetOperatorGe(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorInv(self)                       (*DeeType_RequireSetOperatorInv(Dee_TYPE(self)))(self)
+#define DeeSet_OperatorAdd(self, some_object)          (*DeeType_RequireSetOperatorAdd(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorSub(self, some_object)          (*DeeType_RequireSetOperatorSub(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorAnd(self, some_object)          (*DeeType_RequireSetOperatorAnd(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorXor(self, some_object)          (*DeeType_RequireSetOperatorXor(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorInplaceAdd(p_self, some_object) (*DeeType_RequireSetOperatorInplaceAdd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeSet_OperatorInplaceSub(p_self, some_object) (*DeeType_RequireSetOperatorInplaceSub(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeSet_OperatorInplaceAnd(p_self, some_object) (*DeeType_RequireSetOperatorInplaceAnd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeSet_OperatorInplaceXor(p_self, some_object) (*DeeType_RequireSetOperatorInplaceXor(Dee_TYPE(*(p_self))))(p_self, some_object)
 INTDEF struct type_seq DeeSet_OperatorSeq;
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t (DCALL DeeSet_OperatorHash)(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorCompareEq)(DeeObject *self, DeeObject *some_object);
@@ -1232,6 +1296,17 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorLe)(DeeObje
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorGr)(DeeObject *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorGe)(DeeObject *self, DeeObject *some_object);
 INTDEF struct type_cmp DeeSet_OperatorCmp;
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSet_OperatorInv)(DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorAdd)(DeeObject *self, DeeObject *some_object); /* {"a"} + {"b"}         -> {"a","b"} */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorSub)(DeeObject *self, DeeObject *some_object); /* {"a","b"} - {"b"}     -> {"a"} */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorAnd)(DeeObject *self, DeeObject *some_object); /* {"a","b"} & {"a"}     -> {"a"} */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorXor)(DeeObject *self, DeeObject *some_object); /* {"a","b"} ^ {"a","c"} -> {"b","c"} */
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorInplaceSub)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorInplaceAnd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorInplaceXor)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF struct type_math DeeSet_OperatorMath;
+
 
 
 /* Generic map operators: treat "self" as a (possibly writable) map that
@@ -1253,6 +1328,7 @@ INTDEF struct type_cmp DeeSet_OperatorCmp;
 #define DeeMap_OperatorForeachPair                                          DeeSeq_OperatorForeachPair
 #define DeeMap_OperatorIterKeys                                             default_map_iterkeys
 #define DeeMap_OperatorContains(self, some_object)                          (*DeeType_RequireMapOperatorContains(Dee_TYPE(self)))(self, some_object)
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorContainsAsBool)(DeeObject *self, DeeObject *some_object);
 #define DeeMap_OperatorGetItem(self, index)                                 (*DeeType_RequireMapOperatorGetItem(Dee_TYPE(self)))(self, index)
 #define DeeMap_OperatorDelItem(self, index)                                 (*DeeType_RequireMapOperatorDelItem(Dee_TYPE(self)))(self, index)
 #define DeeMap_OperatorSetItem(self, index, value)                          (*DeeType_RequireMapOperatorSetItem(Dee_TYPE(self)))(self, index, value)
@@ -1288,6 +1364,14 @@ INTDEF struct type_cmp DeeSet_OperatorCmp;
 #define DeeMap_OperatorLe(self, some_object)                                (*DeeType_RequireMapOperatorLe(Dee_TYPE(self)))(self, some_object)
 #define DeeMap_OperatorGr(self, some_object)                                (*DeeType_RequireMapOperatorGr(Dee_TYPE(self)))(self, some_object)
 #define DeeMap_OperatorGe(self, some_object)                                (*DeeType_RequireMapOperatorGe(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorAdd(self, some_object)                               (*DeeType_RequireMapOperatorAdd(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorSub(self, some_object)                               (*DeeType_RequireMapOperatorSub(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorAnd(self, some_object)                               (*DeeType_RequireMapOperatorAnd(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorXor(self, some_object)                               (*DeeType_RequireMapOperatorXor(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorInplaceAdd(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceAdd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeMap_OperatorInplaceSub(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceSub(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeMap_OperatorInplaceAnd(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceAnd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeMap_OperatorInplaceXor(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceXor(Dee_TYPE(*(p_self))))(p_self, some_object)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorContains)(DeeObject *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorGetItem)(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorDelItem)(DeeObject *self, DeeObject *index);
@@ -1325,6 +1409,15 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorLe)(DeeObje
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorGr)(DeeObject *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorGe)(DeeObject *self, DeeObject *some_object);
 INTDEF struct type_cmp DeeMap_OperatorCmp;
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorAdd)(DeeObject *self, DeeObject *some_object); /* {"a":1} + {"b":2}       -> {"a":1,"b":2} */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorSub)(DeeObject *self, DeeObject *some_object); /* {"a":1,"b":2} - {"a"}   -> {"b":2} */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorAnd)(DeeObject *self, DeeObject *some_object); /* {"a":1,"b":2} & {"a"}   -> {"a":1} */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorXor)(DeeObject *self, DeeObject *some_object); /* {"a":1,"b":2} ^ {"a":3} -> {"b":2} */
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorInplaceSub)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorInplaceAnd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorInplaceXor)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF struct type_math DeeMap_OperatorMath;
 
 
 
@@ -1665,6 +1758,43 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorGrWit
 #define DeeSet_DefaultOperatorGeWithEmpty DeeSeq_DefaultOperatorEqWithEmpty /* ({} as Set) >= SOME_SEQ -- {} == SOME_SEQ -- SOME_SEQ.empty */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object);
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorInvWithEmpty(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorInvWithForeach(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorInvWithError(DeeObject *self);
+
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorAddWithEmpty(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorAddWithForeach(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorAddWithError(DeeObject *self, DeeObject *some_object);
+
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorSubWithEmpty(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorSubWithForeach(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorSubWithError(DeeObject *self, DeeObject *some_object);
+
+#define DeeSet_DefaultOperatorAndWithEmpty DeeSet_DefaultOperatorSubWithEmpty
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorAndWithForeach(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorAndWithError(DeeObject *self, DeeObject *some_object);
+
+#define DeeSet_DefaultOperatorXorWithEmpty DeeSet_DefaultOperatorAddWithEmpty
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorXorWithForeach(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultOperatorXorWithError(DeeObject *self, DeeObject *some_object);
+
+#define DeeSet_DefaultOperatorInplaceAddWithEmpty DeeSet_DefaultOperatorInplaceAddWithError
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultOperatorInplaceAddWithSetInsertAll(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultOperatorInplaceAddWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+
+#define DeeSet_DefaultOperatorInplaceSubWithEmpty DeeSet_DefaultOperatorInplaceSubWithError
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultOperatorInplaceSubWithSetRemoveAll(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultOperatorInplaceSubWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+
+#define DeeSet_DefaultOperatorInplaceAndWithEmpty DeeSet_DefaultOperatorInplaceAndWithError
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultOperatorInplaceAndWithForeachAndSetRemoveAll(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultOperatorInplaceAndWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+
+#define DeeSet_DefaultOperatorInplaceXorWithEmpty DeeSet_DefaultOperatorInplaceXorWithError
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultOperatorInplaceXorWithForeachAndSetInsertAllAndSetRemoveAll(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultOperatorInplaceXorWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+
+
 
 
 
@@ -1782,6 +1912,38 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorGrWit
 
 #define DeeMap_DefaultOperatorGeWithEmpty DeeSet_DefaultOperatorGeWithEmpty
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object);
+
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorAddWithEmpty(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorAddWithForeach(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorAddWithError(DeeObject *self, DeeObject *some_object);
+
+#define DeeMap_DefaultOperatorSubWithEmpty DeeSet_DefaultOperatorSubWithEmpty
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorSubWithForeach(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorSubWithError(DeeObject *self, DeeObject *some_object);
+
+#define DeeMap_DefaultOperatorAndWithEmpty DeeMap_DefaultOperatorSubWithEmpty
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorAndWithForeach(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorAndWithError(DeeObject *self, DeeObject *some_object);
+
+#define DeeMap_DefaultOperatorXorWithEmpty DeeMap_DefaultOperatorAddWithEmpty
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorXorWithForeach(DeeObject *self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeMap_DefaultOperatorXorWithError(DeeObject *self, DeeObject *some_object);
+
+#define DeeMap_DefaultOperatorInplaceAddWithEmpty DeeMap_DefaultOperatorInplaceAddWithError
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceAddWithMapUpdate(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceAddWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+
+#define DeeMap_DefaultOperatorInplaceSubWithEmpty DeeMap_DefaultOperatorInplaceSubWithError
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceSubWithMapRemoveKeys(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceSubWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+
+#define DeeMap_DefaultOperatorInplaceAndWithEmpty DeeMap_DefaultOperatorInplaceAndWithError
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceAndWithForeachAndMapRemoveKeys(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceAndWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+
+#define DeeMap_DefaultOperatorInplaceXorWithEmpty DeeMap_DefaultOperatorInplaceXorWithError
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceXorWithForeachAndMapUpdatAndMapRemoveKeys(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceXorWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 
 
 
@@ -2804,6 +2966,17 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___lo__(DeeObject *
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___le__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___gr__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___ge__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___inv__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___add__(DeeObject *self, size_t argc, DeeObject *const *argv); /* {"a"} + {"b"}         -> {"a","b"} */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___sub__(DeeObject *self, size_t argc, DeeObject *const *argv); /* {"a","b"} - {"b"}     -> {"a"} */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___and__(DeeObject *self, size_t argc, DeeObject *const *argv); /* {"a","b"} & {"a"}     -> {"a"} */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___xor__(DeeObject *self, size_t argc, DeeObject *const *argv); /* {"a","b"} ^ {"a","c"} -> {"b","c"} */
+#define default_set___or__ default_set___add__
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___inplace_add__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___inplace_sub__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___inplace_and__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___inplace_xor__(DeeObject *self, size_t argc, DeeObject *const *argv);
+#define default_set___inplace_or__ default_set___inplace_add__
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___contains__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___getitem__(DeeObject *self, size_t argc, DeeObject *const *argv);
@@ -2836,6 +3009,16 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___lo__(DeeObject *
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___le__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___gr__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___ge__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___add__(DeeObject *self, size_t argc, DeeObject *const *argv); /* {"a"} + {"b"}         -> {"a","b"} */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___sub__(DeeObject *self, size_t argc, DeeObject *const *argv); /* {"a","b"} - {"b"}     -> {"a"} */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___and__(DeeObject *self, size_t argc, DeeObject *const *argv); /* {"a","b"} & {"a"}     -> {"a"} */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___xor__(DeeObject *self, size_t argc, DeeObject *const *argv); /* {"a","b"} ^ {"a","c"} -> {"b","c"} */
+#define default_map___or__ default_map___add__
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_add__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_sub__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_and__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_xor__(DeeObject *self, size_t argc, DeeObject *const *argv);
+#define default_map___inplace_or__ default_map___inplace_add__
 
 
 

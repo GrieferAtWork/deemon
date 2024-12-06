@@ -310,7 +310,8 @@ Dee_type_seq_has_custom_tp_foreach(struct type_seq const *__restrict self) {
 INTERN WUNUSED NONNULL((1)) struct Dee_type_seq_cache *DCALL
 DeeType_TryRequireSeqCache(DeeTypeObject *__restrict self) {
 	struct Dee_type_seq_cache *sc;
-	ASSERT(self->tp_seq);
+	if unlikely(!self->tp_seq)
+		return NULL;
 	sc = self->tp_seq->_tp_seqcache;
 	if (sc)
 		return sc;
@@ -924,6 +925,24 @@ DECL_END
 #include "default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSetOperatorGe
 #include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInv
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorAdd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorSub
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorAnd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorXor
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInplaceAdd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInplaceSub
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInplaceAnd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorInplaceXor
+#include "default-api-require-operator-impl.c.inl"
 
 #define DEFINE_DeeType_RequireMapOperatorContains
 #include "default-api-require-operator-impl.c.inl"
@@ -994,6 +1013,22 @@ DECL_END
 #define DEFINE_DeeType_RequireMapOperatorGr
 #include "default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireMapOperatorGe
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorAdd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorSub
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorAnd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorXor
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorInplaceAdd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorInplaceSub
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorInplaceAnd
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireMapOperatorInplaceXor
 #include "default-api-require-operator-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 

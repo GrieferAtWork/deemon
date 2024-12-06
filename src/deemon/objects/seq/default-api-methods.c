@@ -77,7 +77,7 @@ err_api_vunsupportedf(char const *api, DeeObject *self, char const *method_forma
 	int result;
 	DREF DeeObject *message, *error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(unicode_printer_printf(&printer, "%s type %k does not support call: ", api, Dee_TYPE(self)) < 0)
+	if unlikely(unicode_printer_printf(&printer, "type %k does not support: %s.", Dee_TYPE(self), api) < 0)
 		goto err_printer;
 	if unlikely(unicode_printer_vprintf(&printer, method_format, args) < 0)
 		goto err_printer;

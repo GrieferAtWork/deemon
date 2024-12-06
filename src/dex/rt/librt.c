@@ -1458,11 +1458,25 @@ LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_nonempty_stub_set(void) {
 	DREF DeeRoSetObject *result;
 	result = DeeRoSet_NewWithHint(1);
-	if (result && DeeRoSet_Insert(&result, Dee_None))
+	if (likely(result) && unlikely(DeeRoSet_Insert(&result, Dee_None)))
 		Dee_Clear(result);
 	return (DREF DeeObject *)result;
 }
 
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_nonempty_stub_map(void) {
+	DREF DeeRoDictObject *result;
+	result = DeeRoDict_NewWithHint(1);
+	if (likely(result) && unlikely(DeeRoDict_Insert(&result, Dee_None, Dee_None)))
+		Dee_Clear(result);
+	return (DREF DeeObject *)result;
+}
+
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_SetInversion_impl_f(void) {
+	return get_type_of(DeeObject_Inv(librt_get_nonempty_stub_set()));
+}
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SetUnion_impl_f(void) {
@@ -1540,6 +1554,87 @@ err:
 	return NULL;
 }
 
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_MapUnion_impl_f(void) {
+	DREF DeeObject *a, *b, *c;
+	a = librt_get_nonempty_stub_map();
+	if unlikely(!a)
+		goto err;
+	b = librt_get_nonempty_stub_map();
+	if unlikely(!b)
+		goto err_a;
+	c = DeeObject_Or(a, b);
+	Dee_Decref(b);
+	Dee_Decref(a);
+	return get_type_of(c);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_MapSymmetricDifference_impl_f(void) {
+	DREF DeeObject *a, *b, *c;
+	a = librt_get_nonempty_stub_map();
+	if unlikely(!a)
+		goto err;
+	b = librt_get_nonempty_stub_map();
+	if unlikely(!b)
+		goto err_a;
+	c = DeeObject_Xor(a, b);
+	Dee_Decref(b);
+	Dee_Decref(a);
+	return get_type_of(c);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_MapIntersection_impl_f(void) {
+	DREF DeeObject *a, *b, *c;
+	a = librt_get_nonempty_stub_map();
+	if unlikely(!a)
+		goto err;
+	b = librt_get_nonempty_stub_map();
+	if unlikely(!b)
+		goto err_a;
+	c = DeeObject_And(a, b);
+	Dee_Decref(b);
+	Dee_Decref(a);
+	return get_type_of(c);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_MapDifference_impl_f(void) {
+	DREF DeeObject *a, *b, *c;
+	a = librt_get_nonempty_stub_map();
+	if unlikely(!a)
+		goto err;
+	b = librt_get_nonempty_stub_map();
+	if unlikely(!b)
+		goto err_a;
+	c = DeeObject_Sub(a, b);
+	Dee_Decref(b);
+	Dee_Decref(a);
+	return get_type_of(c);
+err_a:
+	Dee_Decref(a);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SetInversion_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_SetInversion_impl_f();
+}
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SetUnion_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SetUnion_impl_f();
@@ -1578,6 +1673,46 @@ librt_get_SetDifference_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SetDifferenceIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SetDifference_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapUnion_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MapUnion_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapUnionIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_MapUnion_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapSymmetricDifference_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MapSymmetricDifference_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapSymmetricDifferenceIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_MapSymmetricDifference_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapIntersection_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MapIntersection_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapIntersectionIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_MapIntersection_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapDifference_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MapDifference_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MapDifferenceIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_MapDifference_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2289,6 +2424,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_IterWithNextValue, &librt_get_IterWithNextValue
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithGetItemIndex, &librt_get_SeqReversedWithGetItemIndex_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithGetItemIndexFast, &librt_get_SeqReversedWithGetItemIndexFast_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithTryGetItemIndex, &librt_get_SeqReversedWithTryGetItemIndex_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SetInversion, &librt_get_SetInversion_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetUnion, &librt_get_SetUnion_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetUnionIterator, &librt_get_SetUnionIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetSymmetricDifference, &librt_get_SetSymmetricDifference_f, METHOD_FCONSTCALL);
@@ -2297,6 +2433,14 @@ PRIVATE DEFINE_CMETHOD(librt_get_SetIntersection, &librt_get_SetIntersection_f, 
 PRIVATE DEFINE_CMETHOD(librt_get_SetIntersectionIterator, &librt_get_SetIntersectionIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetDifference, &librt_get_SetDifference_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetDifferenceIterator, &librt_get_SetDifferenceIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapUnion, &librt_get_MapUnion_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapUnionIterator, &librt_get_MapUnionIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapSymmetricDifference, &librt_get_MapSymmetricDifference_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapSymmetricDifferenceIterator, &librt_get_MapSymmetricDifferenceIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapIntersection, &librt_get_MapIntersection_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapIntersectionIterator, &librt_get_MapIntersectionIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapDifference, &librt_get_MapDifference_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_MapDifferenceIterator, &librt_get_MapDifferenceIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ClassOperatorTable, &librt_get_ClassOperatorTable_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ClassOperatorTableIterator, &librt_get_ClassOperatorTableIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ClassAttribute, &librt_get_ClassAttribute_f, METHOD_FCONSTCALL);
@@ -2642,6 +2786,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "NullableTuple", (DeeObject *)&DeeNullableTuple_Type, MODSYM_FREADONLY },
 
 	/* Internal types used to drive set proxies */
+	{ "SetInversion", (DeeObject *)&librt_get_SetInversion, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SetInversion_Type */
 	{ "SetUnion", (DeeObject *)&librt_get_SetUnion, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SetUnion_Type */
 	{ "SetUnionIterator", (DeeObject *)&librt_get_SetUnionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SetUnionIterator_Type */
 	{ "SetSymmetricDifference", (DeeObject *)&librt_get_SetSymmetricDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SetSymmetricDifference_Type */
@@ -2650,7 +2795,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SetIntersectionIterator", (DeeObject *)&librt_get_SetIntersectionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* SetIntersectionIterator_Type */
 	{ "SetDifference", (DeeObject *)&librt_get_SetDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* SetDifference_Type */
 	{ "SetDifferenceIterator", (DeeObject *)&librt_get_SetDifferenceIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* SetDifferenceIterator_Type */
-	{ "SetInversion", (DeeObject *)&DeeSetInversion_Type, MODSYM_FREADONLY },
+	{ "MapUnion", (DeeObject *)&librt_get_MapUnion, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* MapUnion_Type */
+	{ "MapUnionIterator", (DeeObject *)&librt_get_MapUnionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* MapUnionIterator_Type */
+	{ "MapSymmetricDifference", (DeeObject *)&librt_get_MapSymmetricDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapSymmetricDifference_Type */
+	{ "MapSymmetricDifferenceIterator", (DeeObject *)&librt_get_MapSymmetricDifferenceIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapSymmetricDifferenceIterator_Type */
+	{ "MapIntersection", (DeeObject *)&librt_get_MapIntersection, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* MapIntersection_Type */
+	{ "MapIntersectionIterator", (DeeObject *)&librt_get_MapIntersectionIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },               /* MapIntersectionIterator_Type */
+	{ "MapDifference", (DeeObject *)&librt_get_MapDifference, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* MapDifference_Type */
+	{ "MapDifferenceIterator", (DeeObject *)&librt_get_MapDifferenceIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* MapDifferenceIterator_Type */
 
 	/* Internal types used to drive mapping proxies */
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
@@ -2897,6 +3049,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Special instances of non-singleton objects */
 	{ "Sequence_empty", Dee_EmptySeq, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty sequence singleton") },
 	{ "Set_empty", (DeeObject *)Dee_EmptySet, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty set singleton") },
+	{ "Set_universal", (DeeObject *)Dee_UniversalSet, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, universal set singleton") },
 	{ "Mapping_empty", (DeeObject *)Dee_EmptyMapping, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty mapping singleton") },
 	{ "RoDict_empty", (DeeObject *)Dee_EmptyRoDict, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("An empty instance of ?GRoDict") },
 	{ "Tuple_empty", (DeeObject *)Dee_EmptyTuple, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The empty tuple singleton $\"\"") },

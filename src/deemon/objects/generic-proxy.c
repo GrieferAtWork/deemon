@@ -156,7 +156,6 @@ generic_proxy2_fini(ProxyObject2 *__restrict self) {
 }
 
 
-
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy_bool(ProxyObject *__restrict self) {
 	return DeeObject_Bool(self->po_obj);

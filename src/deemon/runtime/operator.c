@@ -3834,10 +3834,8 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultLoWithForeachDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct set_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
-		goto err_other_no_contains;
 	data.sc_lfr_rhs       = other;
-	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	data.sc_lfr_rcontains = DeeType_RequireSeqOperatorContains(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -3851,8 +3849,6 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultLoWithForeachDefault,
 	return_true;
 missing_item:
 	return_false;
-err_other_no_contains:
-	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
 err:
 	return NULL;
 }
@@ -3864,10 +3860,8 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultLoWithForeachPairDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct map_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
-		goto err_other_no_getitem;
 	data.mc_lfr_rhs         = other;
-	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	data.mc_lfr_rtrygetitem = DeeType_RequireMapOperatorTryGetItem(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -3881,8 +3875,6 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultLoWithForeachPairDefault,
 	return_true;
 missing_item:
 	return_false;
-err_other_no_getitem:
-	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
 err:
 	return NULL;
 }
@@ -3927,10 +3919,8 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultLeWithForeachDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct set_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
-		goto err_other_no_contains;
 	data.sc_lfr_rhs       = other;
-	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	data.sc_lfr_rcontains = DeeType_RequireSeqOperatorContains(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -3939,8 +3929,6 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultLeWithForeachDefault,
 	return_true;
 missing_item:
 	return_false;
-err_other_no_contains:
-	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
 err:
 	return NULL;
 }
@@ -3951,10 +3939,8 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultLeWithForeachPairDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct map_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
-		goto err_other_no_getitem;
 	data.mc_lfr_rhs         = other;
-	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	data.mc_lfr_rtrygetitem = DeeType_RequireMapOperatorTryGetItem(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -3963,8 +3949,6 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultLeWithForeachPairDefault,
 	return_true;
 missing_item:
 	return_false;
-err_other_no_getitem:
-	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
 err:
 	return NULL;
 }
@@ -4008,10 +3992,8 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultGrWithForeachDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct set_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
-		goto err_other_no_contains;
 	data.sc_lfr_rhs       = other;
-	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	data.sc_lfr_rcontains = DeeType_RequireSeqOperatorContains(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -4020,8 +4002,6 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultGrWithForeachDefault,
 	return_false;
 missing_item:
 	return_true;
-err_other_no_contains:
-	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
 err:
 	return NULL;
 }
@@ -4032,10 +4012,8 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGrWithForeachPairDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct map_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
-		goto err_other_no_getitem;
 	data.mc_lfr_rhs         = other;
-	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	data.mc_lfr_rtrygetitem = DeeType_RequireMapOperatorTryGetItem(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -4044,8 +4022,6 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGrWithForeachPairDefault,
 	return_false;
 missing_item:
 	return_true;
-err_other_no_getitem:
-	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
 err:
 	return NULL;
 }
@@ -4090,16 +4066,14 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultGeWithForeachDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct set_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
-		goto err_other_no_contains;
 	data.sc_lfr_rhs       = other;
-	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	data.sc_lfr_rcontains = DeeType_RequireSeqOperatorContains(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "other" is missing some element of "self" */
-	rhs_size = DeeObject_Size(other);
+	rhs_size = DeeSeq_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -4107,8 +4081,6 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultGeWithForeachDefault,
 	return_false;
 missing_item:
 	return_true;
-err_other_no_contains:
-	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
 err:
 	return NULL;
 }
@@ -4120,16 +4092,14 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGeWithForeachPairDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct map_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
-		goto err_other_no_getitem;
 	data.mc_lfr_rhs         = other;
-	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	data.mc_lfr_rtrygetitem = DeeType_RequireMapOperatorTryGetItem(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "other" is missing some element of "self", or has a different value for it */
-	rhs_size = DeeObject_Size(other);
+	rhs_size = DeeSeq_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -4137,8 +4107,6 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGeWithForeachPairDefault,
 	return_false;
 missing_item:
 	return_true;
-err_other_no_getitem:
-	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
 err:
 	return NULL;
 }
@@ -4808,23 +4776,19 @@ DEFINE_INTERNAL_SET_OPERATOR(int, DefaultCompareEqWithForeachDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct set_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
-		goto err_other_no_contains;
 	data.sc_lfr_rhs       = other;
-	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	data.sc_lfr_rcontains = DeeType_RequireSeqOperatorContains(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
 	if (contains_status == -2)
 		return 1; /* "other" is missing some element of "self" */
-	rhs_size = DeeObject_Size(other);
+	rhs_size = DeeSeq_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status != rhs_size)
 		return 1; /* Sets have different sizes */
 	return 0;
-err_other_no_contains:
-	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4836,12 +4800,8 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultCompareEqWithForeachPairDefault,
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	struct map_compare__lhs_foreach__rhs__data data;
 	LOAD_TP_SELF;
-	if unlikely((!tp_other->tp_seq ||
-	             !tp_other->tp_seq->tp_trygetitem) &&
-	            !DeeType_InheritGetItem(tp_other))
-		goto err_other_no_getitem;
 	data.mc_lfr_rhs         = other;
-	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	data.mc_lfr_rtrygetitem = DeeType_RequireMapOperatorTryGetItem(tp_other);
 	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
 	if unlikely(contains_status == -1)
 		goto err;
@@ -4853,8 +4813,6 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultCompareEqWithForeachPairDefault,
 	if ((size_t)contains_status != rhs_size)
 		return 1; /* Maps have different sizes */
 	return 0;
-err_other_no_getitem:
-	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
 err:
 	return Dee_COMPARE_ERR;
 }

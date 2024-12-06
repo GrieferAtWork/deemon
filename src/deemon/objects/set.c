@@ -41,311 +41,12 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/default-api.h"
+#include "seq/default-sets.h"
 
 DECL_BEGIN
 
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-set_hash(DeeObject *__restrict self) {
-	/* TODO: DeeSet_DefaultHashWithForeachDefault() */
-	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	DREF DeeObject *iter, *elem;
-	iter = DeeObject_Iter(self);
-	if unlikely(!iter)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		/* Note how we don't use `Dee_HashCombine()' here!
-		 * That become order doesn't matter for sets. */
-		result ^= DeeObject_Hash(elem);
-		Dee_Decref(elem);
-	}
-	Dee_Decref(iter);
-	if unlikely(!elem)
-		goto err;
-	return result;
-err:
-	DeeError_Print("Unhandled error in `Set.operator hash'\n",
-	               ERROR_PRINT_DOHANDLE);
-	return DeeObject_HashGeneric(self);
-}
-
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-invset_hash(DeeObject *__restrict self) {
-	return ~set_hash(self); /* Return the inverse hash (we're an inverse set after all ;) ) */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-invset_eq(DeeObject *self, DeeObject *some_object) {
-	int result = DeeSet_IsSameSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-invset_ne(DeeObject *self, DeeObject *some_object) {
-	int result = DeeSet_IsSameSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(!result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-invset_lo(DeeObject *self, DeeObject *some_object) {
-	int result = DeeSet_IsTrueSubSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-invset_le(DeeObject *self, DeeObject *some_object) {
-	int result = DeeSet_IsSubSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-invset_gr(DeeObject *self, DeeObject *some_object) {
-	int result = DeeSet_IsTrueSubSet(some_object, self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-invset_ge(DeeObject *self, DeeObject *some_object) {
-	int result = DeeSet_IsSubSet(self, some_object);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSet_Invert(DeeObject *__restrict self) {
-	DREF DeeSetInversionObject *result;
-	/* Just re-return the original set. */
-	if (DeeSetInversion_CheckExact(self))
-		return_reference(DeeSetInversion_GetSet(self));
-
-	/* Construct a new inverse-set wrapper. */
-	result = DeeObject_MALLOC(DeeSetInversionObject);
-	if unlikely(!result)
-		goto done;
-	DeeObject_Init(result, &DeeSetInversion_Type);
-	result->si_set = self;
-	Dee_Incref(self);
-done:
-	return (DREF DeeObject *)result;
-}
-
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-invset_ctor(DeeSetInversionObject *__restrict self) {
-	self->si_set = Dee_EmptySet;
-	Dee_Incref(Dee_EmptySet);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-invset_init(DeeSetInversionObject *__restrict self,
-            size_t argc, DeeObject *const *argv) {
-	self->si_set = Dee_EmptySet;
-	if (DeeArg_Unpack(argc, argv, "|o:_InverseSet", &self->si_set))
-		goto err;
-	Dee_Incref(self->si_set);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1)) void DCALL
-invset_fini(DeeSetInversionObject *__restrict self) {
-	Dee_Decref(self->si_set);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-invset_visit(DeeSetInversionObject *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->si_set);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-invset_printrepr(DeeSetInversionObject *__restrict self,
-                 dformatprinter printer, void *arg) {
-	return DeeFormat_Printf(printer, arg, "~%r", self->si_set);
-}
-
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-invset_iterself(DeeSetInversionObject *__restrict self) {
-	/* Sorry, but it's impossible to enumerate a set containing (almost) everything */
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-invset_tpcontains(DeeSetInversionObject *self, DeeObject *key) {
-	int result = DeeObject_ContainsAsBool(self->si_set, key);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(!result);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_seq invset_seq = {
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-	/* .tp_iter     = */ NULL,
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterself,
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_tpcontains,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL
-};
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-invset_Iterator_get(DeeTypeObject *__restrict self) {
-	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
-	return NULL;
-}
-
-PRIVATE struct type_getset tpconst invset_class_getsets[] = {
-	TYPE_GETTER_NODOC(STR_Iterator, &invset_Iterator_get),
-	TYPE_GETSET_END
-};
-
-PRIVATE struct type_member tpconst invset_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__blacklist__", STRUCT_OBJECT, offsetof(DeeSetInversionObject, si_set), "->?DSet"),
-	TYPE_MEMBER_END
-};
-
-PRIVATE struct type_cmp invset_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&invset_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_ge,
-};
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-invset_getset(DeeSetInversionObject *__restrict self) {
-	return_reference_(self->si_set);
-}
-
-PRIVATE struct type_math invset_math = {
-	/* .tp_int32       = */ NULL,
-	/* .tp_int64       = */ NULL,
-	/* .tp_double      = */ NULL,
-	/* .tp_int         = */ NULL,
-	/* .tp_inv         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_getset,
-	/* .tp_pos         = */ NULL,
-	/* .tp_neg         = */ NULL,
-	/* .tp_add         = */ &DeeSet_Union,
-	/* .tp_sub         = */ &DeeSet_Difference,
-	/* .tp_mul         = */ NULL,
-	/* .tp_div         = */ NULL,
-	/* .tp_mod         = */ NULL,
-	/* .tp_shl         = */ NULL,
-	/* .tp_shr         = */ NULL,
-	/* .tp_and         = */ &DeeSet_Intersection,
-	/* .tp_or          = */ &DeeSet_Union,
-	/* .tp_xor         = */ &DeeSet_SymmetricDifference,
-	/* .tp_pow         = */ NULL,
-	/* .tp_inc         = */ NULL,
-	/* .tp_dec         = */ NULL,
-	/* .tp_inplace_add = */ NULL,
-	/* .tp_inplace_sub = */ NULL,
-	/* .tp_inplace_mul = */ NULL,
-	/* .tp_inplace_div = */ NULL,
-	/* .tp_inplace_mod = */ NULL,
-	/* .tp_inplace_shl = */ NULL,
-	/* .tp_inplace_shr = */ NULL,
-	/* .tp_inplace_and = */ NULL,
-	/* .tp_inplace_or  = */ NULL,
-	/* .tp_inplace_xor = */ NULL,
-	/* .tp_inplace_pow = */ NULL,
-};
-
-PUBLIC DeeTypeObject DeeSetInversion_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_InverseSet",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(set:?DSet)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSet_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&invset_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&invset_init,
-				TYPE_FIXED_ALLOCATOR(DeeSetInversionObject)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&invset_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
-		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&invset_printrepr
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&invset_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ &invset_math,
-	/* .tp_cmp           = */ &invset_cmp,
-	/* .tp_seq           = */ &invset_seq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ invset_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ invset_class_getsets,
-	/* .tp_class_members = */ NULL
-};
-
-
-
-
 /* Returns the number of items found in `lhs' if all of them appear in `rhs'.
  * Otherwise, return `-1' if some of them don't appear in `rhs'
  * Otherwise, return `-2' on error. */
@@ -357,6 +58,7 @@ set_issubset_impl(DeeObject *lhs, DeeObject *rhs) {
 	lhs_iter = DeeObject_Iter(lhs);
 	if unlikely(!lhs_iter)
 		goto err;
+	/* TODO: Use DeeObject_Foreach() */
 	while (ITER_ISOK(lhs_item = DeeObject_IterNext(lhs_iter))) {
 		/* Check if this item appears in `rhs' */
 		temp = DeeObject_ContainsAsBool(rhs, lhs_item);
@@ -383,13 +85,13 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs) {
-	if (DeeSetInversion_CheckExact(lhs)) {
+	if (SetInversion_CheckExact(lhs)) {
 		/* An inverse set can only ever be the sub-set of another inverse set. */
-		if (!DeeSetInversion_CheckExact(rhs))
+		if (!SetInversion_CheckExact(rhs))
 			return 0;
 		/* ~lhs <= ~rhs   <===>   rhs <= lhs */
-		return DeeSet_IsSubSet(DeeSetInversion_GetSet(rhs),
-		                       DeeSetInversion_GetSet(lhs));
+		return DeeSet_IsSubSet(SetInversion_GetSet(rhs),
+		                       SetInversion_GetSet(lhs));
 	} else {
 		dssize_t result = set_issubset_impl(lhs, rhs);
 		return unlikely(result == -2)
@@ -402,13 +104,13 @@ DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs) {
-	if (DeeSetInversion_CheckExact(lhs)) {
+	if (SetInversion_CheckExact(lhs)) {
 		/* An inverse set can only ever be the sub-set of another inverse set. */
-		if (!DeeSetInversion_CheckExact(rhs))
+		if (!SetInversion_CheckExact(rhs))
 			return 0;
 		/* ~lhs < ~rhs   <===>   rhs < lhs */
-		return DeeSet_IsTrueSubSet(DeeSetInversion_GetSet(rhs),
-		                           DeeSetInversion_GetSet(lhs));
+		return DeeSet_IsTrueSubSet(SetInversion_GetSet(rhs),
+		                           SetInversion_GetSet(lhs));
 	} else {
 		dssize_t result;
 		size_t rhs_size;
@@ -419,7 +121,7 @@ DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs) {
 			return 0;
 		/* Check the size of `rhs' to make sure
 		 * it contains more elements than `lhs' */
-		if (DeeSetInversion_CheckExact(rhs))
+		if (SetInversion_CheckExact(rhs))
 			return 1; /* Inverse sets have an infinite size. */
 		rhs_size = DeeObject_Size(rhs);
 		if unlikely(rhs_size == (size_t)-1)
@@ -434,14 +136,14 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_IsSameSet(DeeObject *lhs, DeeObject *rhs) {
 	dssize_t result;
 	size_t rhs_size;
-	if (DeeSetInversion_CheckExact(lhs)) {
+	if (SetInversion_CheckExact(lhs)) {
 		/* An inverse set can never equal a non-inverse set. */
-		if (!DeeSetInversion_CheckExact(rhs))
+		if (!SetInversion_CheckExact(rhs))
 			return 0;
-		lhs = DeeSetInversion_GetSet(lhs);
-		rhs = DeeSetInversion_GetSet(rhs);
+		lhs = SetInversion_GetSet(lhs);
+		rhs = SetInversion_GetSet(rhs);
 	}
-	if (DeeSetInversion_CheckExact(rhs))
+	if (SetInversion_CheckExact(rhs))
 		return 0; /* A regular set can never match an inverse set. */
 	result = set_issubset_impl(lhs, rhs);
 	if unlikely(result == -2)
@@ -462,17 +164,19 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_IsDisjoint(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *iter, *item;
 	int result = 1;
-	if (DeeSetInversion_CheckExact(lhs)) {
+	if (SetInversion_CheckExact(lhs)) {
 		/* 2 inverse sets can never be disjoint, because there's
 		 * always an imaginary object that is shared by both. */
-		if (DeeSetInversion_CheckExact(rhs))
+		if (SetInversion_CheckExact(rhs))
 			return 0;
 		/* If all elements from `rhs' are black-listed, then
 		 * our inverse set is disjoint from it, meaning that
 		 * `rhs' is a subset of our black-list. */
-		return DeeSet_IsSubSet(rhs, DeeSetInversion_GetSet(lhs));
+		return DeeSet_IsSubSet(rhs, SetInversion_GetSet(lhs));
 	}
+
 	/* Verify that no items from `lhs' appear in `rhs' */
+	/* TODO: Use DeeObject_Foreach() */
 	iter = DeeObject_Iter(lhs);
 	if unlikely(!iter)
 		goto err;
@@ -499,92 +203,8 @@ err:
 	return -1;
 }
 
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:difference", &other))
-		goto err;
-	return DeeSet_Difference(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_intersection(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:intersection", &other))
-		goto err;
-	return DeeSet_Intersection(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &other))
-		goto err;
-	result = DeeSet_IsDisjoint(self, other);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_union(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:union", &other))
-		goto err;
-	return DeeSet_Union(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_symmetric_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	if (DeeArg_Unpack(argc, argv, "o:symmetric_difference", &other))
-		goto err;
-	return DeeSet_SymmetricDifference(self, other);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_issubset(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o:issubset", &other))
-		goto err;
-	result = DeeSet_IsSubSet(self, other);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_issuperset(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o:issuperset", &other))
-		goto err;
-	result = DeeSet_IsSubSet(other, self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_sub(DeeObject **__restrict p_self,
+DeeSet_OperatorInplaceSub(DeeObject **__restrict p_self,
                 DeeObject *items) {
 	DeeObject *self = *p_self;
 	size_t i, size;
@@ -650,7 +270,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_intersection(DeeObject **__restrict p_self,
+DeeSet_OperatorInplaceAnd(DeeObject **__restrict p_self,
                          DeeObject *items) {
 	DeeObject *self = *p_self;
 	int result;
@@ -666,7 +286,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_union(DeeObject **__restrict p_self,
+DeeSet_OperatorInplaceAdd(DeeObject **__restrict p_self,
                   DeeObject *items) {
 	DREF DeeObject *callback_result;
 	callback_result = DeeObject_CallAttr(*p_self,
@@ -682,7 +302,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-set_inplace_symmetric_difference(DeeObject **__restrict p_self,
+DeeSet_OperatorInplaceXor(DeeObject **__restrict p_self,
                                  DeeObject *items) {
 	DeeObject *self = *p_self;
 	int result;
@@ -697,190 +317,7 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_math set_math = {
-	/* .tp_int32       = */ NULL,
-	/* .tp_int64       = */ NULL,
-	/* .tp_double      = */ NULL,
-	/* .tp_int         = */ NULL,
-	/* .tp_inv         = */ &DeeSet_Invert,
-	/* .tp_pos         = */ NULL,
-	/* .tp_neg         = */ NULL,
-	/* .tp_add         = */ &DeeSet_Union,
-	/* .tp_sub         = */ &DeeSet_Difference,
-	/* .tp_mul         = */ NULL,
-	/* .tp_div         = */ NULL,
-	/* .tp_mod         = */ NULL,
-	/* .tp_shl         = */ NULL,
-	/* .tp_shr         = */ NULL,
-	/* .tp_and         = */ &DeeSet_Intersection,
-	/* .tp_or          = */ &DeeSet_Union,
-	/* .tp_xor         = */ &DeeSet_SymmetricDifference,
-	/* .tp_pow         = */ NULL,
-	/* .tp_inc         = */ NULL,
-	/* .tp_dec         = */ NULL,
-	/* .tp_inplace_add = */ &set_inplace_union, /* TODO: Virtual: DeeSet_OperatorInplaceAdd */
-	/* .tp_inplace_sub = */ &set_inplace_sub, /* TODO: Virtual: DeeSet_OperatorInplaceSub */
-	/* .tp_inplace_mul = */ &set_inplace_mul, /* TODO: Delete operator (rather than behavior like `Sequence.operator *=', which is a no-op for sets) */
-	/* .tp_inplace_div = */ NULL,
-	/* .tp_inplace_mod = */ NULL,
-	/* .tp_inplace_shl = */ NULL,
-	/* .tp_inplace_shr = */ NULL,
-	/* .tp_inplace_and = */ &set_inplace_intersection, /* TODO: Virtual: DeeSet_OperatorInplaceAnd */
-	/* .tp_inplace_or  = */ &set_inplace_union, /* TODO: Virtual: DeeSet_OperatorInplaceOr */
-	/* .tp_inplace_xor = */ &set_inplace_symmetric_difference, /* TODO: Virtual: DeeSet_OperatorInplaceXor */
-	/* .tp_inplace_pow = */ NULL,
-};
 
-INTDEF struct type_method tpconst set_methods[];
-INTERN_TPCONST struct type_method tpconst set_methods[] = {
-	TYPE_METHOD("difference", &set_difference,
-	            "(to:?.)->?.\n"
-	            "Same as ${this.operator - (to)}"),
-	TYPE_METHOD("intersection", &set_intersection,
-	            "(with_:?.)->?.\n"
-	            "Same as ${this.operator & (with_)}"),
-	TYPE_METHOD("isdisjoint", &set_isdisjoint,
-	            "(with_:?.)->?Dbool\n"
-	            "Returns ?t if ${##(this & with_) == 0}\n"
-	            "In other words: If @this and @with_ have no items in common"),
-	TYPE_METHOD("union", &set_union,
-	            "(with_:?.)->?.\n"
-	            "Same as ${this.operator | (with_)}"),
-	TYPE_METHOD("symmetric_difference", &set_symmetric_difference,
-	            "(with_:?.)->?.\n"
-	            "Same as ${this.operator ^ (with_)}"),
-	TYPE_METHOD("issubset", &set_issubset,
-	            "(of:?.)->?Dbool\n"
-	            "Same as ${this.operator <= (of)}"),
-	TYPE_METHOD("issuperset", &set_issuperset,
-	            "(of:?.)->?Dbool\n"
-	            "Same as ${this.operator >= (of)}"),
-
-	/* Default functions for mutable sets */
-	TYPE_METHOD(STR_insert, &default_set_insert,
-	            "(key)->?Dbool\n"
-	            "Insert @key into @this set, returning !t if it was inserted and !f if it was already present"),
-	TYPE_METHOD(STR_remove, &default_set_remove,
-	            "(key)->?Dbool\n"
-	            "Remove @key from @this set, returning !t if it was removed and !f if it wasn't present"),
-	TYPE_METHOD(STR_insertall, &default_set_insertall,
-	            "(keys:?S?O)\n"
-	            "Insert all elements from @keys into @this set"),
-	TYPE_METHOD(STR_removeall, &default_set_removeall,
-	            "(keys:?S?O)\n"
-	            "Remove all elements from @keys from @this set"),
-	TYPE_METHOD(STR_unify, &default_set_unify,
-	            "(key)->\n"
-	            "Insert @key into @this set if it wasn't contained already, and "
-	            /**/ "return the (potential) copy of @key that is part of the set"),
-	TYPE_METHOD(STR_pop, &default_set_pop,
-	            "(def?)->\n"
-	            "#tValueError{Set is empty and no @def was given}\n"
-	            "Remove and return some random key from @this set. "
-	            /**/ "If the set is empty, return @def or throw :ValueError"),
-
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-	TYPE_METHOD("__hash__", &default_set___hash__,
-	            "->?Dint\n"
-	            "Alias for ${(this as Set).operator hash()}"),
-	TYPE_METHOD("__compare_eq__", &default_set___compare_eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Set).operator == (rhs)}"),
-	TYPE_METHOD("__trycompare_eq__", &default_set___trycompare_eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${deemon.equals(this as Set, rhs)}"),
-	TYPE_METHOD("__eq__", &default_set___eq__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Set) == (rhs)}"),
-	TYPE_METHOD("__ne__", &default_set___ne__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Set) != (rhs)}"),
-	TYPE_METHOD("__lo__", &default_set___lo__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Set) < (rhs)}"),
-	TYPE_METHOD("__le__", &default_set___le__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Set) <= (rhs)}"),
-	TYPE_METHOD("__gr__", &default_set___gr__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Set) > (rhs)}"),
-	TYPE_METHOD("__ge__", &default_set___ge__,
-	            "(rhs:?S?O)->?Dbool\n"
-	            "Alias for ${(this as Set) >= (rhs)}"),
-#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
-	TYPE_METHOD_END
-};
-
-INTDEF struct type_getset tpconst set_getsets[];
-INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
-	TYPE_GETTER(STR_frozen, &DeeRoSet_FromSequence,
-	            "->?#Frozen\n"
-	            "Returns a copy of @this ?., with all of its current elements frozen in place, "
-	            /**/ "constructing a snapshot of the set's current elements. - The actual type of "
-	            /**/ "set returned is implementation- and type- specific, and copying itself may "
-	            /**/ "either be done immediately, or as copy-on-write"),
-	/* TODO: "asseq->?DSequence"  -- alias for `this as Sequence' */
-	TYPE_GETSET_END
-};
-
-
-/*[[[deemon
-import define_Dee_HashStr from rt.gen.hash;
-print define_Dee_HashStr("Frozen");
-]]]*/
-#define Dee_HashStr__Frozen _Dee_HashSelectC(0xa7ed3902, 0x16013e56a91991ea)
-/*[[[end]]]*/
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-set_frozen_get(DeeTypeObject *__restrict self) {
-	int error;
-	DREF DeeTypeObject *result;
-	struct attribute_info info;
-	struct attribute_lookup_rules rules;
-	rules.alr_name       = "Frozen";
-	rules.alr_hash       = Dee_HashStr__Frozen;
-	rules.alr_decl       = NULL;
-	rules.alr_perm_mask  = ATTR_PERMGET | ATTR_IMEMBER;
-	rules.alr_perm_value = ATTR_PERMGET | ATTR_IMEMBER;
-	error = DeeObject_FindAttr(Dee_TYPE(self),
-	                           (DeeObject *)self,
-	                           &info,
-	                           &rules);
-	if unlikely(error < 0)
-		goto err;
-	if (error != 0)
-		return_reference_(&DeeRoSet_Type);
-	if (info.a_attrtype) {
-		result = info.a_attrtype;
-		Dee_Incref(result);
-	} else if (info.a_decl == (DeeObject *)&DeeSet_Type) {
-		result = &DeeRoSet_Type;
-		Dee_Incref(&DeeRoSet_Type);
-	} else {
-		if (info.a_doc) {
-			/* TODO: Use doc meta-information to determine the return type! */
-		}
-		/* Fallback: just tell the caller what they already know: a set will be returned... */
-		result = &DeeSet_Type;
-		Dee_Incref(&DeeSet_Type);
-	}
-	attribute_info_fini(&info);
-	return result;
-err:
-	return NULL;
-}
-
-
-PRIVATE struct type_getset tpconst set_class_getsets[] = {
-	TYPE_GETTER("Frozen", &set_frozen_get,
-	            "->?DType\n"
-	            "Returns the type of sequence returned by the ?#frozen property"),
-	TYPE_GETSET_END
-};
-
-
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_iterself(DeeObject *__restrict self) {
 	if unlikely(Dee_TYPE(self) == &DeeSet_Type) {
@@ -1017,135 +454,343 @@ PRIVATE struct type_cmp DeeSet_OperatorCmp = {
 	/* .tp_gr            = */ &DeeSet_OperatorGr,
 	/* .tp_ge            = */ &DeeSet_OperatorGe,
 };
+
+PRIVATE struct type_math DeeSet_OperatorMath = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ &DeeSet_OperatorInv,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ &DeeSet_OperatorAdd,
+	/* .tp_sub         = */ &DeeSet_OperatorSub,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL,
+	/* .tp_shr         = */ NULL,
+	/* .tp_and         = */ &DeeSet_OperatorAnd,
+	/* .tp_or          = */ &DeeSet_OperatorAdd,
+	/* .tp_xor         = */ &DeeSet_OperatorXor,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ &DeeSet_OperatorInplaceAdd,
+	/* .tp_inplace_sub = */ &DeeSet_OperatorInplaceSub,
+	/* .tp_inplace_mul = */ &set_inplace_mul,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL,
+	/* .tp_inplace_shr = */ NULL,
+	/* .tp_inplace_and = */ &DeeSet_OperatorInplaceAnd,
+	/* .tp_inplace_or  = */ &DeeSet_OperatorInplaceAdd,
+	/* .tp_inplace_xor = */ &DeeSet_OperatorInplaceXor,
+	/* .tp_inplace_pow = */ NULL,
+};
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	if (DeeArg_Unpack(argc, argv, "o:difference", &other))
+		goto err;
+	return DeeSet_OperatorSub(self, other);
+err:
+	return NULL;
+}
 
-/* TODO: insert(object item)->?Dbool
- *       >> // Option #1:
- *       >> return this.insertall([item]) != 0;
- *       >> // Option #2:
- *       >> if (item in this)
- *       >>     return false;
- *       >> this += [item];
- *       >> // Option #3:
- *       >> if (item in this)
- *       >>     return false;
- *       >> this |= [item];
- * TODO: insertall(items:?S?O)->?Dint
- *       >> local result = 0;
- *       >> for (local x: items) {
- *       >>     // Option #1:
- *       >>     if (this.insert([x]))
- *       >>         ++result;
- *       >>     // Option #2:
- *       >>     if (x in this)
- *       >>         continue;
- *       >>     this += [x];
- *       >>     // Option #3:
- *       >>     if (x in this)
- *       >>         continue;
- *       >>     this |= [x];
- *       >>     ++result;
- *       >> }
- *       >> return result;
- * TODO: remove(object item)->?Dbool
- *       >> // Option #1:
- *       >> return this.removeall([item]) != 0;
- *       >> // Option #2:
- *       >> if (item in this)
- *       >>     return false;
- *       >> this -= [item];
- *       >> return true;
- *       >> // Option #3:
- *       >> if (item in this)
- *       >>     return false;
- *       >> this &= ~([item] as Set from deemon);
- *       >> return true;
- * TODO: removeall(items:?S?O)->?Dint
- *       >> local result = 0;
- *       >> for (local x: items) {
- *       >>     // Option #1:
- *       >>     if (this.remove(x))
- *       >>         ++result;
- *       >>     // Option #2:
- *       >>     if (x in this)
- *       >>         continue;
- *       >>     this -= [x];
- *       >>     ++result;
- *       >>     // Option #3:
- *       >>     if (x in this)
- *       >>         continue;
- *       >>     this &= ~([x] as Set from deemon);
- *       >>     ++result;
- *       >> }
- *       >> return result;
- * TODO: clear(): none
- *       >> // Option #1:
- *       >> this := (Set from deemon)();
- *       >> // Option #2:
- *       >> this.removeall(this);
- *       >> // Option #3:
- *       >> this -= this;
- *       >> // Option #4:
- *       >> this &= ~this;
- *       >> // Option #5:
- *       >> this ^= this;
- *       >> // Option #6:
- *       >> for (local x: items)
- *       >>     this.remove(x);
- * TODO: operator += (items:?S?O)
- *       >> // Option #1:
- *       >> this |= items;
- *       >> // Option #2:
- *       >> this.insertall(items);
- *       >> // Option #3:
- *       >> for (local x: items) {
- *       >>     this.insert(x);
- *       >> }
- *       >> // Option #4:
- *       >> this := (this + items)
- *       >> return this;
- * TODO: operator |= (items:?S?O)
- *       >> // Option #1:
- *       >> this += items;
- *       >> // Option #2:
- *       >> this.insertall(items);
- *       >> // Option #3:
- *       >> for (local x: items) {
- *       >>     this.insert(x);
- *       >> }
- *       >> // Option #4:
- *       >> this := (this | items);
- *       >> return this;
- * TODO: operator &= (items:?S?O)
- *       >> if (items is <negated set>) {
- *       >>     // Option #1:
- *       >>     this -= ~items;
- *       >>     // Option #2:
- *       >>     this.removeall(~items);
- *       >>     // Option #3:
- *       >>     for (local x: ~items) {
- *       >>         this.remove(x];
- *       >>     }
- *       >> } else {
- *       >>     // Option #1:
- *       >>     this := (this & items);
- *       >> }
- *       >> return this;
- * TODO: operator := (items:?S?O)
- *       >> this.clear(); // s.a. default handling for clear()
- *       >> // Option #1:
- *       >> this += items;
- *       >> // Option #2:
- *       >> this.insertall(items);
- *       >> // Option #3:
- *       >> for (local x: items) {
- *       >>     this.insert(x);
- *       >> }
- *       >> // Option #4:
- *       >> this := (this | items);
- *       >> return this;
- */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_intersection(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	if (DeeArg_Unpack(argc, argv, "o:intersection", &other))
+		goto err;
+	return DeeSet_OperatorAnd(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_union(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	if (DeeArg_Unpack(argc, argv, "o:union", &other))
+		goto err;
+	return DeeSet_OperatorAdd(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_symmetric_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	if (DeeArg_Unpack(argc, argv, "o:symmetric_difference", &other))
+		goto err;
+	return DeeSet_OperatorXor(self, other);
+err:
+	return NULL;
+}
+
+
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+INTDEF WUNUSED NONNULL((1)) int DCALL si_bool(SetIntersection *__restrict self);
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int result;
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &rhs))
+		goto err;
+	result = SetIntersection_NonEmpty(self, rhs);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(!result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_issubset(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	if (DeeArg_Unpack(argc, argv, "o:issubset", &other))
+		goto err;
+	return DeeSet_OperatorLe(self, other);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_issuperset(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	if (DeeArg_Unpack(argc, argv, "o:issuperset", &other))
+		goto err;
+	return DeeSet_OperatorGe(self, other);
+err:
+	return NULL;
+}
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	int result;
+	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &other))
+		goto err;
+	result = DeeSet_IsDisjoint(self, other);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_issubset(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	int result;
+	if (DeeArg_Unpack(argc, argv, "o:issubset", &other))
+		goto err;
+	result = DeeSet_IsSubSet(self, other);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_issuperset(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *other;
+	int result;
+	if (DeeArg_Unpack(argc, argv, "o:issuperset", &other))
+		goto err;
+	result = DeeSet_IsSubSet(other, self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+PRIVATE struct type_method tpconst set_methods[] = {
+	TYPE_METHOD("difference", &set_difference,
+	            "(to:?.)->?.\n"
+	            "Same as ${(this as Set) - to}"),
+	TYPE_METHOD("intersection", &set_intersection,
+	            "(with_:?.)->?.\n"
+	            "Same as ${(this as Set) & with_}"),
+	TYPE_METHOD("isdisjoint", &set_isdisjoint,
+	            "(with_:?.)->?Dbool\n"
+	            "Returns ?t if ${!((this as Set) & with_)}\n"
+	            "In other words: If @this and @with_ have no items in common"),
+	TYPE_METHOD("union", &set_union,
+	            "(with_:?.)->?.\n"
+	            "Same as ${(this as Set) | with_}"),
+	TYPE_METHOD("symmetric_difference", &set_symmetric_difference,
+	            "(with_:?.)->?.\n"
+	            "Same as ${(this as Set) ^ with_}"),
+	TYPE_METHOD("issubset", &set_issubset,
+	            "(of:?.)->?Dbool\n"
+	            "Same as ${(this as Set) <= of}"),
+	TYPE_METHOD("issuperset", &set_issuperset,
+	            "(of:?.)->?Dbool\n"
+	            "Same as ${(this as Set) >= of}"),
+
+	/* Default functions for mutable sets */
+	TYPE_METHOD(STR_insert, &default_set_insert,
+	            "(key)->?Dbool\n"
+	            "Insert @key into @this set, returning !t if it was inserted and !f if it was already present"),
+	TYPE_METHOD(STR_remove, &default_set_remove,
+	            "(key)->?Dbool\n"
+	            "Remove @key from @this set, returning !t if it was removed and !f if it wasn't present"),
+	TYPE_METHOD(STR_insertall, &default_set_insertall,
+	            "(keys:?S?O)\n"
+	            "Insert all elements from @keys into @this set"),
+	TYPE_METHOD(STR_removeall, &default_set_removeall,
+	            "(keys:?S?O)\n"
+	            "Remove all elements from @keys from @this set"),
+	TYPE_METHOD(STR_unify, &default_set_unify,
+	            "(key)->\n"
+	            "Insert @key into @this set if it wasn't contained already, and "
+	            /**/ "return the (potential) copy of @key that is part of the set"),
+	TYPE_METHOD(STR_pop, &default_set_pop,
+	            "(def?)->\n"
+	            "#tValueError{Set is empty and no @def was given}\n"
+	            "Remove and return some random key from @this set. "
+	            /**/ "If the set is empty, return @def or throw :ValueError"),
+
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	TYPE_METHOD("__hash__", &default_set___hash__,
+	            "->?Dint\n"
+	            "Alias for ${(this as Set).operator hash()}"),
+	TYPE_METHOD("__compare_eq__", &default_set___compare_eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set).operator == (rhs)}"),
+	TYPE_METHOD("__trycompare_eq__", &default_set___trycompare_eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${deemon.equals(this as Set, rhs)}"),
+	TYPE_METHOD("__eq__", &default_set___eq__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) == rhs}"),
+	TYPE_METHOD("__ne__", &default_set___ne__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) != rhs}"),
+	TYPE_METHOD("__lo__", &default_set___lo__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) < rhs}"),
+	TYPE_METHOD("__le__", &default_set___le__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) <= rhs}"),
+	TYPE_METHOD("__gr__", &default_set___gr__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) > rhs}"),
+	TYPE_METHOD("__ge__", &default_set___ge__,
+	            "(rhs:?S?O)->?Dbool\n"
+	            "Alias for ${(this as Set) >= rhs}"),
+	TYPE_METHOD("__inv__", &default_set___inv__,
+	            "()->?DSet\n"
+	            "Alias for ${~(this as Set)}"),
+	TYPE_METHOD("__add__", &default_set___add__,
+	            "(rhs:?S?O)->?DSet\n"
+	            "Alias for ${(this as Set) + rhs}"),
+	TYPE_METHOD("__sub__", &default_set___sub__,
+	            "(rhs:?S?O)->?DSet\n"
+	            "Alias for ${(this as Set) - rhs}"),
+	TYPE_METHOD("__and__", &default_set___and__,
+	            "(rhs:?S?O)->?DSet\n"
+	            "Alias for ${(this as Set) & rhs}"),
+	TYPE_METHOD("__xor__", &default_set___xor__,
+	            "(rhs:?S?O)->?DSet\n"
+	            "Alias for ${(this as Set) ^ rhs}"),
+	TYPE_METHOD("__inplace_add__", &default_set___inplace_add__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Set) += rhs}"),
+	TYPE_METHOD("__inplace_sub__", &default_set___inplace_sub__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Set) -= rhs}"),
+	TYPE_METHOD("__inplace_and__", &default_set___inplace_and__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Set) &= rhs}"),
+	TYPE_METHOD("__inplace_xor__", &default_set___inplace_xor__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Set) ^= rhs}"),
+	TYPE_METHOD("__or__", &default_set___or__,
+	            "(rhs:?S?O)->?DSet\n"
+	            "Alias for ?#__and__"),
+	TYPE_METHOD("__inplace_or__", &default_set___inplace_or__,
+	            "(rhs:?S?O)->?DSet\n"
+	            "Alias for ?#__inplace_and__"),
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+	TYPE_METHOD_END
+};
+
+INTDEF struct type_getset tpconst set_getsets[];
+INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
+	TYPE_GETTER(STR_frozen, &DeeRoSet_FromSequence,
+	            "->?#Frozen\n"
+	            "Returns a copy of @this ?., with all of its current elements frozen in place, "
+	            /**/ "constructing a snapshot of the set's current elements. - The actual type of "
+	            /**/ "set returned is implementation- and type- specific, and copying itself may "
+	            /**/ "either be done immediately, or as copy-on-write"),
+	/* TODO: "asseq->?DSequence"  -- alias for `this as Sequence' */
+	TYPE_GETSET_END
+};
+
+
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("Frozen");
+]]]*/
+#define Dee_HashStr__Frozen _Dee_HashSelectC(0xa7ed3902, 0x16013e56a91991ea)
+/*[[[end]]]*/
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+set_frozen_get(DeeTypeObject *__restrict self) {
+	int error;
+	DREF DeeTypeObject *result;
+	struct attribute_info info;
+	struct attribute_lookup_rules rules;
+	rules.alr_name       = "Frozen";
+	rules.alr_hash       = Dee_HashStr__Frozen;
+	rules.alr_decl       = NULL;
+	rules.alr_perm_mask  = ATTR_PERMGET | ATTR_IMEMBER;
+	rules.alr_perm_value = ATTR_PERMGET | ATTR_IMEMBER;
+	error = DeeObject_FindAttr(Dee_TYPE(self),
+	                           (DeeObject *)self,
+	                           &info,
+	                           &rules);
+	if unlikely(error < 0)
+		goto err;
+	if (error != 0)
+		return_reference_(&DeeRoSet_Type);
+	if (info.a_attrtype) {
+		result = info.a_attrtype;
+		Dee_Incref(result);
+	} else if (info.a_decl == (DeeObject *)&DeeSet_Type) {
+		result = &DeeRoSet_Type;
+		Dee_Incref(&DeeRoSet_Type);
+	} else {
+		if (info.a_doc) {
+			/* TODO: Use doc meta-information to determine the return type! */
+		}
+		/* Fallback: just tell the caller what they already know: a set will be returned... */
+		result = &DeeSet_Type;
+		Dee_Incref(&DeeSet_Type);
+	}
+	attribute_info_fini(&info);
+	return result;
+err:
+	return NULL;
+}
+
+
+PRIVATE struct type_getset tpconst set_class_getsets[] = {
+	TYPE_GETTER("Frozen", &set_frozen_get,
+	            "->?DType\n"
+	            "Returns the type of sequence returned by the ?#frozen property"),
+	TYPE_GETSET_END
+};
+
 
 INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
@@ -1290,7 +935,7 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ &set_math,
+	/* .tp_math          = */ &DeeSet_OperatorMath,
 	/* .tp_cmp           = */ &DeeSet_OperatorCmp,
 	/* .tp_seq           = */ &DeeSet_OperatorSeq,
 	/* .tp_iter_next     = */ NULL,

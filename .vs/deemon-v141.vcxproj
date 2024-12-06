@@ -259,8 +259,10 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-enumerate.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-iterators.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-map-proxy.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-maps.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-reversed.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\default-sequences.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-sets.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\each-fastpass.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\each.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\filter.h" />
@@ -270,7 +272,6 @@
 		<ClInclude Include="..\src\deemon\objects\seq\range.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\repeat.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\segments.h" />
-		<ClInclude Include="..\src\deemon\objects\seq\set.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\smap.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\sort-impl.c.inl" />
@@ -448,8 +449,10 @@
 		<ClCompile Include="..\src\deemon\objects\seq\default-enumerate.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-iterators.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-map-proxy.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\default-maps.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-reversed.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\default-sequences.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\default-sets.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\each.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\fastseq.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\filter.c" />
@@ -459,7 +462,6 @@
 		<ClCompile Include="..\src\deemon\objects\seq\range.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\repeat.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\segments.c" />
-		<ClCompile Include="..\src\deemon\objects\seq\set.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\simpleproxy.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\smap.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\sort.c" />

@@ -959,6 +959,7 @@ EXPORTS
 	DeeObject_TryGetItemIndex@8=_DeeObject_TryGetItemIndex@8
 	DeeObject_TryGetItemStringHash@12=_DeeObject_TryGetItemStringHash@12
 	DeeObject_TryGetItemStringLenHash@16=_DeeObject_TryGetItemStringLenHash@16
+	DeeObject_TypeAssertFailed2@12=_DeeObject_TypeAssertFailed2@12
 	DeeObject_TypeAssertFailed@8=_DeeObject_TypeAssertFailed@8
 	DeeObject_UndoConstruction@8=_DeeObject_UndoConstruction@8
 	DeeObject_Unpack@12=_DeeObject_Unpack@12

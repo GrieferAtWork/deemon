@@ -25,9 +25,16 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/format.h>
+#include <deemon/map.h>
+#include <deemon/rodict.h>
+#include <deemon/roset.h>
+#include <deemon/set.h>
+#include <deemon/super.h>
 
 #include "../../runtime/operator-require.h"
 #include "default-sequences.h"
+#include "default-sets.h"
+#include "default-maps.h"
 #include "range.h"
 
 DECL_BEGIN
@@ -262,7 +269,7 @@ err:
 	return NULL;
 }
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultOperatorIterKeysWithError(DeeObject *__restrict self) {
 	err_seq_unsupportedf(self, "__iterkeys__()");
 	return NULL;
@@ -787,6 +794,16 @@ err:
 /* LINKED SEQUENCE OPERATORS                                            */
 /************************************************************************/
 
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeSeq_OperatorContainsAsBool)(DeeObject *self, DeeObject *some_object) {
+	DREF DeeObject *result = DeeSeq_OperatorContains(self, some_object);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
 INTERN WUNUSED NONNULL((1)) int
 (DCALL DeeSeq_OperatorBool)(DeeObject *__restrict self) {
 	return DeeSeq_OperatorBool(self);
@@ -1066,12 +1083,14 @@ INTERN struct type_cmp DeeSeq_OperatorCmp = {
 
 
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeSeq_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self, DeeObject *some_object) {
+(DCALL DeeSeq_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self,
+                                                                    DeeObject *some_object) {
 	return DeeSeq_OperatorInplaceAdd(p_self, some_object);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int
-(DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObject **__restrict p_self, DeeObject *some_object) {
+(DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObject **__restrict p_self,
+                                                                    DeeObject *some_object) {
 	return DeeSeq_OperatorInplaceMul(p_self, some_object);
 }
 
@@ -1214,6 +1233,258 @@ DeeSet_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object) {
 	return NULL;
 }
 
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorInvWithEmpty(DeeObject *self) {
+	(void)self;
+	return_reference_(Dee_UniversalSet);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorInvWithForeach(DeeObject *self) {
+	DREF SetInversion *result;
+	result = DeeObject_MALLOC(SetInversion);
+	if unlikely(!result)
+		goto done;
+	DeeObject_Init(result, &SetInversion_Type);
+	result->si_set = self;
+	Dee_Incref(self);
+done:
+	return (DREF DeeObject *)result;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorInvWithError(DeeObject *self) {
+	err_set_unsupportedf(self, "operator ~");
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorAddWithEmpty(DeeObject *self, DeeObject *some_object) {
+	(void)self;
+	if (DeeType_GetSeqClass(Dee_TYPE(some_object)) == Dee_SEQCLASS_SET)
+		return_reference_(some_object);
+	return DeeSuper_New(&DeeSet_Type, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorAddWithForeach(DeeObject *self, DeeObject *some_object) {
+	if (SetInversion_CheckExact(some_object)) {
+		/* Special case: `a | ~b' --> `~(~a & b)'
+		 * -> Keep the inversion on the outside, since it prevents enumeration. */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		DREF SetInversion *inv_lhs;
+		DREF SetIntersection *intersection;
+		if (DeeSet_CheckEmpty(xrhs->si_set))
+			return_reference_(self);
+		inv_lhs = SetInversion_New(self);
+		if unlikely(!inv_lhs)
+			goto err;
+		intersection = SetIntersection_New_inherit_b(inv_lhs, xrhs->si_set);
+		if unlikely(!intersection)
+			goto err;
+		return (DREF DeeObject *)SetInversion_New_inherit(intersection);
+	}
+	if (DeeSet_CheckEmpty(some_object))
+		return_reference_(self);
+	return (DREF DeeObject *)SetUnion_New(self, some_object);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorAddWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator + (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorSubWithEmpty(DeeObject *self, DeeObject *some_object) {
+	(void)some_object;
+	return_reference_(self);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorSubWithForeach(DeeObject *self, DeeObject *some_object) {
+	if (SetInversion_CheckExact(some_object)) {
+		/* Special case: `a - ~b' -> `a & b' */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		if (DeeSet_CheckEmpty(xrhs->si_set))
+			return_reference_(Dee_EmptySet); /* `a - ~{}' -> `{}' */
+		return (DREF DeeObject *)SetIntersection_New(self, xrhs->si_set);
+	}
+	if (DeeSet_CheckEmpty(some_object))
+		return_reference_(self); /* `a - {}' -> `a' */
+	return (DREF DeeObject *)SetDifference_New(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorSubWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator - (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorAndWithForeach(DeeObject *self, DeeObject *some_object) {
+	if (SetInversion_CheckExact(some_object)) {
+		/* Special case: `a & ~b' -> `a - b' */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		if (DeeSet_CheckEmpty(xrhs->si_set))
+			return_reference_(self); /* `a & ~{}' -> `a' */
+		return (DREF DeeObject *)SetDifference_New(self, xrhs->si_set);
+	}
+	if (DeeSet_CheckEmpty(some_object))
+		return_reference_(Dee_EmptySet); /* `a & {}' -> `{}' */
+	return (DREF DeeObject *)SetIntersection_New(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorAndWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator & (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorXorWithForeach(DeeObject *self, DeeObject *some_object) {
+	if (SetInversion_CheckExact(some_object)) {
+		/* Special case: `a ^ ~b' -> `~(a ^ b)'
+		 * -> Keep the inversion on the outside, since it prevents enumeration. */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		DREF SetSymmetricDifference *symdiff;
+		if (DeeSet_CheckEmpty(xrhs->si_set))
+			return (DREF DeeObject *)SetInversion_New(self); /* `a ^ ~{}' -> `~a' */
+		symdiff = SetSymmetricDifference_New(self, xrhs->si_set);
+		if unlikely(!symdiff)
+			goto err;
+		return (DREF DeeObject *)SetInversion_New_inherit(symdiff);
+	}
+	if (DeeSet_CheckEmpty(some_object))
+		return_reference_(self); /* `a ^ {}' -> `a' */
+	return (DREF DeeObject *)SetSymmetricDifference_New(self, some_object);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorXorWithError(DeeObject *self, DeeObject *some_object) {
+	err_set_unsupportedf(self, "operator ^ (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorInplaceAddWithSetInsertAll(DREF DeeObject **__restrict p_self,
+                                                 DeeObject *some_object) {
+	return DeeSet_InvokeInsertAll(*p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorInplaceAddWithError(DREF DeeObject **__restrict p_self,
+                                          DeeObject *some_object) {
+	return err_set_unsupportedf(*p_self, "operator += (%r)", some_object);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorInplaceSubWithSetRemoveAll(DREF DeeObject **__restrict p_self,
+                                                 DeeObject *some_object) {
+	if (SetInversion_CheckExact(some_object)) {
+		/* Special case: `a -= ~b' -> `a &= b' */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		return DeeSet_OperatorInplaceAnd(p_self, xrhs->si_set);
+	}
+	return DeeSet_InvokeRemoveAll(*p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorInplaceSubWithError(DREF DeeObject **__restrict p_self,
+                                          DeeObject *some_object) {
+	return err_set_unsupportedf(*p_self, "operator -= (%r)", some_object);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorInplaceAndWithForeachAndSetRemoveAll(DREF DeeObject **__restrict p_self,
+                                                           DeeObject *some_object) {
+	int result;
+	DREF SetDifference *keys_to_remove_proxy;
+	DREF DeeObject *keys_to_remove;
+	if (SetInversion_CheckExact(some_object)) {
+		/* Special case: `a &= ~b' -> `a -= b' */
+		SetInversion *xrhs = (SetInversion *)some_object;
+		if (DeeSet_CheckEmpty(xrhs->si_set))
+			return 0;
+		return DeeSet_OperatorInplaceSub(p_self, xrhs->si_set);
+	}
+	if (DeeSet_CheckEmpty(some_object))
+		return DeeSeq_InvokeClear(*p_self);
+
+	/* `a &= b' -> `a.removeall((a - b).frozen)' */
+	keys_to_remove_proxy = SetDifference_New(*p_self, some_object);
+	if unlikely(!keys_to_remove_proxy)
+		goto err;
+	keys_to_remove = DeeRoSet_FromSequence((DeeObject *)keys_to_remove_proxy);
+	Dee_Decref(keys_to_remove_proxy);
+	if unlikely(!keys_to_remove)
+		goto err;
+	result = DeeSet_InvokeRemoveAll(*p_self, keys_to_remove);
+	Dee_Decref(keys_to_remove);
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorInplaceAndWithError(DREF DeeObject **__restrict p_self,
+                                          DeeObject *some_object) {
+	return err_set_unsupportedf(*p_self, "operator &= (%r)", some_object);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorInplaceXorWithForeachAndSetInsertAllAndSetRemoveAll(DREF DeeObject **__restrict p_self,
+                                                                          DeeObject *some_object) {
+	DREF DeeObject *only_in_b_proxy;
+	DREF DeeObject *only_in_b;
+	if (DeeSet_CheckEmpty(some_object))
+		return 0;
+
+	/* >> a ^= b
+	 * <=>
+	 * >> local only_in_b = (b - a).frozen;
+	 * >> a.removeall(b);
+	 * >> a.insertall(only_in_b); */
+	only_in_b_proxy = DeeSet_OperatorSub(some_object, *p_self);
+	if unlikely(!only_in_b_proxy)
+		goto err;
+	only_in_b = DeeRoSet_FromSequence((DeeObject *)only_in_b_proxy);/* TODO: DeeSeq_InvokeFrozen */
+	Dee_Decref(only_in_b_proxy);
+	if unlikely(!only_in_b)
+		goto err;
+	if unlikely(DeeSet_InvokeRemoveAll(*p_self, some_object))
+		goto err_only_in_b;
+	if unlikely(DeeSet_InvokeInsertAll(*p_self, only_in_b))
+		goto err_only_in_b;
+	Dee_Decref(only_in_b);
+	return 0;
+err_only_in_b:
+	Dee_Decref(only_in_b);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_DefaultOperatorInplaceXorWithError(DREF DeeObject **__restrict p_self,
+                                          DeeObject *some_object) {
+	return err_set_unsupportedf(*p_self, "operator ^= (%r)", some_object);
+}
+
+
+
 INTERN WUNUSED NONNULL((1)) Dee_hash_t
 (DCALL DeeSet_OperatorHash)(DeeObject *__restrict self) {
 	return DeeSet_OperatorHash(self);
@@ -1271,6 +1542,95 @@ INTERN struct type_cmp DeeSet_OperatorCmp = {
 	/* .tp_gr            = */ &DeeSet_OperatorGr,
 	/* .tp_ge            = */ &DeeSet_OperatorGe,
 };
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeSet_OperatorInv)(DeeObject *self) {
+	return DeeSet_OperatorInv(self);
+}
+
+/* {"a"} + {"b"}         -> {"a","b"} */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorAdd)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorAdd(self, some_object);
+}
+
+/* {"a","b"} - {"b"}     -> {"a"} */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorSub)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorSub(self, some_object);
+}
+
+/* {"a","b"} & {"a"}     -> {"a"} */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorAnd)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorAnd(self, some_object);
+}
+
+/* {"a","b"} ^ {"a","c"} -> {"b","c"} */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSet_OperatorXor)(DeeObject *self, DeeObject *some_object) {
+	return DeeSet_OperatorXor(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int 
+(DCALL DeeSet_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self,
+                                  DeeObject *some_object) {
+	return DeeSet_OperatorInplaceAdd(p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int 
+(DCALL DeeSet_OperatorInplaceSub)(DREF DeeObject **__restrict p_self,
+                                  DeeObject *some_object) {
+	return DeeSet_OperatorInplaceSub(p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int 
+(DCALL DeeSet_OperatorInplaceAnd)(DREF DeeObject **__restrict p_self,
+                                  DeeObject *some_object) {
+	return DeeSet_OperatorInplaceAnd(p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int 
+(DCALL DeeSet_OperatorInplaceXor)(DREF DeeObject **__restrict p_self,
+                                  DeeObject *some_object) {
+	return DeeSet_OperatorInplaceXor(p_self, some_object);
+}
+
+INTERN struct type_math DeeSet_OperatorMath = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ &DeeSet_OperatorInv,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ &DeeSet_OperatorAdd,
+	/* .tp_sub         = */ &DeeSet_OperatorSub,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL,
+	/* .tp_shr         = */ NULL,
+	/* .tp_and         = */ &DeeSet_OperatorAnd,
+	/* .tp_or          = */ &DeeSet_OperatorAdd,
+	/* .tp_xor         = */ &DeeSet_OperatorXor,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ &DeeSet_OperatorInplaceAdd,
+	/* .tp_inplace_sub = */ &DeeSet_OperatorInplaceSub,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL,
+	/* .tp_inplace_shr = */ NULL,
+	/* .tp_inplace_and = */ &DeeSet_OperatorInplaceAnd,
+	/* .tp_inplace_or  = */ &DeeSet_OperatorInplaceAdd,
+	/* .tp_inplace_xor = */ &DeeSet_OperatorInplaceXor,
+	/* .tp_inplace_pow = */ NULL,
+};
+
+
 
 
 
@@ -1582,7 +1942,202 @@ DeeMap_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object) {
 }
 
 
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorAddWithEmpty(DeeObject *self, DeeObject *some_object) {
+	(void)self;
+	if (DeeType_GetSeqClass(Dee_TYPE(some_object)) == Dee_SEQCLASS_MAP)
+		return_reference_(some_object);
+	return DeeSuper_New(&DeeMapping_Type, some_object);
+}
 
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorAddWithForeach(DeeObject *self, DeeObject *some_object) {
+	if (DeeMap_CheckEmpty(some_object))
+		return_reference_(self);
+	return (DREF DeeObject *)MapUnion_New(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorAddWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator + (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorSubWithForeach(DeeObject *self, DeeObject *some_object) {
+	if (DeeSet_CheckEmpty(some_object))
+		return_reference_(self);
+	return (DREF DeeObject *)MapDifference_New(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorSubWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator - (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorAndWithForeach(DeeObject *self, DeeObject *some_object) {
+	if (DeeSet_CheckEmpty(some_object))
+		return_reference_(Dee_EmptyMapping);
+	return (DREF DeeObject *)MapIntersection_New(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorAndWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator & (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorXorWithForeach(DeeObject *self, DeeObject *some_object) {
+	if (DeeSet_CheckEmpty(some_object))
+		return_reference_(self);
+	return (DREF DeeObject *)MapSymmetricDifference_New(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeMap_DefaultOperatorXorWithError(DeeObject *self, DeeObject *some_object) {
+	err_map_unsupportedf(self, "operator ^ (%r)", some_object);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorInplaceAddWithMapUpdate(DREF DeeObject **__restrict p_self,
+                                              DeeObject *some_object) {
+	return DeeMap_InvokeUpdate(*p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorInplaceAddWithError(DREF DeeObject **__restrict p_self,
+                                          DeeObject *some_object) {
+	return err_map_unsupportedf(*p_self, "operator += (%r)", some_object);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorInplaceSubWithMapRemoveKeys(DREF DeeObject **__restrict p_self,
+                                                  DeeObject *some_object) {
+	return DeeMap_InvokeRemoveKeys(*p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorInplaceSubWithError(DREF DeeObject **__restrict p_self,
+                                          DeeObject *some_object) {
+	return err_map_unsupportedf(*p_self, "operator -= (%r)", some_object);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorInplaceAndWithForeachAndMapRemoveKeys(DREF DeeObject **__restrict p_self,
+                                                            DeeObject *some_object) {
+	int result;
+	DREF DeeObject *a_keys;
+	DREF DeeObject *a_keys_without_b_proxy;
+	DREF DeeObject *a_keys_without_b;
+	/* `a &= b' -> `a.removekeys(((a.keys as Set) - b).frozen)' */
+	a_keys = DeeMap_InvokeKeys(*p_self);
+	if unlikely(!a_keys)
+		goto err;
+	a_keys_without_b_proxy = DeeSet_OperatorSub(a_keys, some_object);
+	Dee_Decref(a_keys);
+	if unlikely(!a_keys_without_b_proxy)
+		goto err;
+	a_keys_without_b = DeeRoSet_FromSequence((DeeObject *)a_keys_without_b_proxy); /* TODO: DeeSeq_InvokeFrozen */
+	Dee_Decref(a_keys_without_b_proxy);
+	if unlikely(!a_keys_without_b)
+		goto err;
+	result = DeeMap_InvokeRemoveKeys(*p_self, a_keys_without_b);
+	Dee_Decref(a_keys_without_b);
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorInplaceAndWithError(DREF DeeObject **__restrict p_self,
+                                          DeeObject *some_object) {
+	return err_map_unsupportedf(*p_self, "operator &= (%r)", some_object);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorInplaceXorWithForeachAndMapUpdatAndMapRemoveKeys(DREF DeeObject **__restrict p_self,
+                                                                       DeeObject *some_object) {
+	/* >> a ^= b
+	 * <=>
+	 * >> local a_keys = (a as Mapping).keys;
+	 * >> local b_keys = (b as Mapping).keys;
+	 * >> local a_and_b_keys = (a_keys & b_keys).frozen;
+	 * >> a.removekeys(b_keys);
+	 * >> a.update((b as Mapping) - a_and_b_keys); */
+	int result;
+	DREF DeeObject *a_keys;
+	DREF DeeObject *b_keys;
+	DREF DeeObject *a_and_b_keys_proxy;
+	DREF DeeObject *a_and_b_keys;
+	DREF DeeObject *b_without_a_keys;
+	a_keys = DeeMap_InvokeKeys(*p_self);
+	if unlikely(!a_keys)
+		goto err;
+	b_keys = DeeMap_InvokeKeys(some_object);
+	if unlikely(!b_keys)
+		goto err_a_keys;
+	a_and_b_keys_proxy = DeeSet_OperatorAnd(a_keys, b_keys);
+	Dee_Decref(a_keys);
+	if unlikely(!a_and_b_keys_proxy)
+		goto err_b_keys;
+	a_and_b_keys = DeeRoSet_FromSequence(a_and_b_keys_proxy); /* TODO: DeeSeq_InvokeFrozen */
+	Dee_Decref(a_and_b_keys_proxy);
+	if unlikely(!a_and_b_keys)
+		goto err_b_keys;
+	result = DeeMap_InvokeRemoveKeys(*p_self, b_keys);
+	Dee_Decref(b_keys);
+	if unlikely(result)
+		goto err_a_and_b_keys;
+	b_without_a_keys = DeeMap_OperatorSub(some_object, a_and_b_keys);
+	Dee_Decref(a_and_b_keys);
+	if unlikely(!b_without_a_keys)
+		goto err;
+	result = DeeMap_InvokeUpdate(*p_self, b_without_a_keys);
+	Dee_Decref(b_without_a_keys);
+	return result;
+err_a_and_b_keys:
+	Dee_Decref(a_and_b_keys);
+err:
+	return -1;
+err_a_keys:
+	Dee_Decref(a_keys);
+	goto err;
+err_b_keys:
+	Dee_Decref(b_keys);
+	goto err;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeMap_DefaultOperatorInplaceXorWithError(DREF DeeObject **__restrict p_self,
+                                          DeeObject *some_object) {
+	return err_map_unsupportedf(*p_self, "operator ^= (%r)", some_object);
+}
+
+
+
+
+
+
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeMap_OperatorContainsAsBool)(DeeObject *self, DeeObject *some_object) {
+	DREF DeeObject *result = DeeMap_OperatorContains(self, some_object);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeMap_OperatorContains)(DeeObject *self, DeeObject *some_object) {
@@ -1822,6 +2377,89 @@ INTERN struct type_cmp DeeMap_OperatorCmp = {
 	/* .tp_gr            = */ &DeeMap_OperatorGr,
 	/* .tp_ge            = */ &DeeMap_OperatorGe,
 };
+
+/* {"a":1} + {"b":2}       -> {"a":1,"b":2} */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorAdd)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorAdd(self, some_object);
+}
+
+/* {"a":1,"b":2} - {"a"}   -> {"b":2} */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorSub)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorSub(self, some_object);
+}
+
+/* {"a":1,"b":2} & {"a"}   -> {"a":1} */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorAnd)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorAnd(self, some_object);
+}
+
+/* {"a":1,"b":2} ^ {"a":3} -> {"b":2} */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeMap_OperatorXor)(DeeObject *self, DeeObject *some_object) {
+	return DeeMap_OperatorXor(self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int 
+(DCALL DeeMap_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self,
+                                  DeeObject *some_object) {
+	return DeeMap_OperatorInplaceAdd(p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int 
+(DCALL DeeMap_OperatorInplaceSub)(DREF DeeObject **__restrict p_self,
+                                  DeeObject *some_object) {
+	return DeeMap_OperatorInplaceSub(p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int 
+(DCALL DeeMap_OperatorInplaceAnd)(DREF DeeObject **__restrict p_self,
+                                  DeeObject *some_object) {
+	return DeeMap_OperatorInplaceAnd(p_self, some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int 
+(DCALL DeeMap_OperatorInplaceXor)(DREF DeeObject **__restrict p_self,
+                                  DeeObject *some_object) {
+	return DeeMap_OperatorInplaceXor(p_self, some_object);
+}
+
+INTERN struct type_math DeeMap_OperatorMath = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ NULL,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ &DeeMap_OperatorAdd,
+	/* .tp_sub         = */ &DeeMap_OperatorSub,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL,
+	/* .tp_shr         = */ NULL,
+	/* .tp_and         = */ &DeeMap_OperatorAnd,
+	/* .tp_or          = */ &DeeMap_OperatorAdd,
+	/* .tp_xor         = */ &DeeMap_OperatorXor,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ &DeeMap_OperatorInplaceAdd,
+	/* .tp_inplace_sub = */ &DeeMap_OperatorInplaceSub,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL,
+	/* .tp_inplace_shr = */ NULL,
+	/* .tp_inplace_and = */ &DeeMap_OperatorInplaceAnd,
+	/* .tp_inplace_or  = */ &DeeMap_OperatorInplaceAdd,
+	/* .tp_inplace_xor = */ &DeeMap_OperatorInplaceXor,
+	/* .tp_inplace_pow = */ NULL,
+};
+
 
 DECL_END
 

@@ -108,49 +108,30 @@ DDATDEF DeeTypeObject DeeSet_Type; /* `Set from deemon' */
  *       Though this statically allocated instance is used by most
  *       internal sequence functions.
  * HINT: Any exact instance of `DeeSet_Type' should be considered stub/empty. */
-DDATDEF DeeObject      DeeSet_EmptyInstance;
+DDATDEF DeeObject DeeSet_EmptyInstance;
 #define Dee_EmptySet (&DeeSet_EmptyInstance)
 
-/* Check for a symbolic, empty set.
- * NOTE: This function isn't guarantied to capture any kind of empty set,
- *       only sets that are meant to symbolically represent any empty one. */
-#define DeeSet_CheckEmpty(x) DeeObject_InstanceOfExact(x, &DeeSet_Type)
+/* A universal instance of a generic set object (i.e. the set of everything in the universe).
+ * NOTE: This is _NOT_ a singleton. - Usercode may create more by calling `~Set()'. */
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C
+DDATDEF DeeObject DeeSet_UniversalInstance;
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C */
+#define Dee_UniversalSet (&DeeSet_UniversalInstance)
 
 
 #ifdef CONFIG_BUILDING_DEEMON
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_Invert(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_Union(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_Difference(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_Intersection(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_SymmetricDifference(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_OperatorAdd(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_OperatorSub(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_OperatorAnd(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_OperatorXor(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsSameSet(DeeObject *lhs, DeeObject *rhs);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsDisjoint(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_BUILDING_DEEMON */
-
-
-#ifdef DEE_SOURCE
-#define Dee_set_inversion_object set_inversion_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_set_inversion_object DeeSetInversionObject;
-struct Dee_set_inversion_object {
-	/* An inverse set, that is the symbolic set containing all
-	 * object, excluding those already contained within `si_set'
-	 * Since such a set cannot be iterated, working with it
-	 * requires some special operations, as well as special
-	 * support in some places, which is why it is exposed here.
-	 * In user-code, such a set is created through use of `operator ~()' */
-	Dee_OBJECT_HEAD
-	DREF DeeObject *si_set; /* [1..1][const] The underlying set. */
-};
-#define DeeSetInversion_GetSet(ob) (((DeeSetInversionObject *)Dee_REQUIRES_OBJECT(ob))->si_set)
-
-DDATDEF DeeTypeObject DeeSetInversion_Type;
-#define DeeSetInversion_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeSetInversion_Type) /* _InverseSet is final */
-#define DeeSetInversion_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeSetInversion_Type)
-
 
 DECL_END
 

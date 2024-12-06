@@ -528,6 +528,37 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Mapping) >= (rhs)}"),
 
+	TYPE_METHOD("__add__", &default_map___add__,
+	            "(rhs:?S?O)->?DMapping\n"
+	            "Alias for ${(this as Mapping) + rhs}"),
+	TYPE_METHOD("__sub__", &default_map___sub__,
+	            "(rhs:?S?O)->?DMapping\n"
+	            "Alias for ${(this as Mapping) - rhs}"),
+	TYPE_METHOD("__and__", &default_map___and__,
+	            "(rhs:?S?O)->?DMapping\n"
+	            "Alias for ${(this as Mapping) & rhs}"),
+	TYPE_METHOD("__xor__", &default_map___xor__,
+	            "(rhs:?S?O)->?DMapping\n"
+	            "Alias for ${(this as Mapping) ^ rhs}"),
+	TYPE_METHOD("__inplace_add__", &default_map___inplace_add__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Mapping) += rhs}"),
+	TYPE_METHOD("__inplace_sub__", &default_map___inplace_sub__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Mapping) -= rhs}"),
+	TYPE_METHOD("__inplace_and__", &default_map___inplace_and__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Mapping) &= rhs}"),
+	TYPE_METHOD("__inplace_xor__", &default_map___inplace_xor__,
+	            "(rhs:?S?O)->?.\n"
+	            "Alias for ${(this as Mapping) ^= rhs}"),
+	TYPE_METHOD("__or__", &default_map___or__,
+	            "(rhs:?S?O)->?DMapping\n"
+	            "Alias for ?#__and__"),
+	TYPE_METHOD("__inplace_or__", &default_map___inplace_or__,
+	            "(rhs:?S?O)->?DMapping\n"
+	            "Alias for ?#__inplace_and__"),
+
 	/* Old function names. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD("insert_all", &default_map_update,
@@ -1805,11 +1836,8 @@ PRIVATE struct type_cmp DeeMap_OperatorCmp = {
 	/* .tp_gr            = */ NULL,
 	/* .tp_ge            = */ NULL,
 };
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
-
-
-PRIVATE struct type_math map_math = {
+PRIVATE struct type_math DeeMap_OperatorMath = {
 	/* .tp_int32  = */ NULL,
 	/* .tp_int64  = */ NULL,
 	/* .tp_double = */ NULL,
@@ -1829,6 +1857,7 @@ PRIVATE struct type_math map_math = {
 	/* .tp_xor    = */ NULL, /* TODO: &DeeMap_SymmetricDifference */
 	/* .tp_pow    = */ NULL
 };
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 
@@ -2089,19 +2118,19 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "->?#Values\n"
 	            "Returns a ?DSequence that can be enumerated to view only the values of @this ?."),
 	TYPE_GETTER("items", &map_items,
-	            "->?S?O\n"
+	            "->?S?T2?O?O\n"
 	            "Returns a ?DSequence that can be enumerated to view the key-item "
 	            /**/ "pairs as 2-element sequences, the same way they could be viewed "
 	            /**/ "if @this ?. itself was being iterated\n"
 	            "Same as ${this as Sequence}"),
 	TYPE_GETTER("iterkeys", &default_map_iterkeys,
-	            "->?AIterator?#Keys\n"
+	            "->?#IterKeys\n"
 	            "Returns an iterator for ?#{keys}. Same as ${this.keys.operator iter()}"),
 	TYPE_GETTER("itervalues", &default_map_itervalues,
-	            "->?AIterator?#Values\n"
+	            "->?#IterValues\n"
 	            "Returns an iterator for ?#{values}. Same as ${this.values.operator iter()}"),
 	TYPE_GETTER("iteritems", &DeeObject_Iter,
-	            "->?DIterator\n"
+	            "->?#Iterator\n"
 	            "Returns an iterator for ?#{items}. Same as ${this.operator iter()}"),
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	TYPE_GETTER("keys", &map_keys,
@@ -2269,20 +2298,20 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	            "This member must be overwritten by sub-classes of ?."),
 	TYPE_GETTER("Frozen", &map_Frozen_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the #i:frozen property"),
+	            "Returns the type of sequence returned by the ?#i:frozen property"),
 #ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	TYPE_GETTER("Keys", &map_Keys_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the #i:keys property"),
+	            "Returns the type of sequence returned by the ?#i:keys property"),
 	TYPE_GETTER("Values", &map_Values_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the #i:values property"),
+	            "Returns the type of sequence returned by the ?#i:values property"),
 	TYPE_GETTER("IterKeys", &map_IterKeys_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the #i:iterkeys property"),
+	            "Returns the type of sequence returned by the ?#i:iterkeys property"),
 	TYPE_GETTER("IterValues", &map_IterValues_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the #i:itervalues property"),
+	            "Returns the type of sequence returned by the ?#i:itervalues property"),
 #endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	TYPE_GETSET_END
 };
@@ -2338,7 +2367,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	                         /**/ "type that wishes to implement a key-value protocol\n"
 	                         "An object derived from this class must implement ${operator iter}, "
 	                         /**/ "and preferrably (but optionally) or ${operator []} (getitem)\n"
-	                         "The abstract declaration of a mapping-like sequence is ${{{object, object}...}}\n"
+	                         "The abstract declaration of a mapping-like sequence is ${{Object: Object}} or ${{(Object, Object)...}}\n"
 	                         "\n"
 
 	                         "()\n"
@@ -2389,7 +2418,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ &map_math,
+	/* .tp_math          = */ &DeeMap_OperatorMath,
 	/* .tp_cmp           = */ &DeeMap_OperatorCmp,
 	/* .tp_seq           = */ &DeeMap_OperatorSeq,
 	/* .tp_iter_next     = */ NULL,

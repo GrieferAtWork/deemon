@@ -750,10 +750,16 @@
 		<ClInclude Include="..\src\deemon\objects\seq\default-map-proxy.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\default-maps.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-reversed.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\default-sequences.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\default-sets.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\each-fastpass.c.inl">
@@ -781,9 +787,6 @@
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\segments.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\set.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h">
@@ -1313,10 +1316,16 @@
 		<ClCompile Include="..\src\deemon\objects\seq\default-map-proxy.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\default-maps.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\default-reversed.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\default-sequences.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\default-sets.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\each.c">
@@ -1344,9 +1353,6 @@
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\segments.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\set.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\simpleproxy.c">

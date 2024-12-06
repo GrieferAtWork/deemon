@@ -79,6 +79,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy2_init(ProxyObject2 *__restri
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy2_visit(ProxyObject2 *__restrict self, dvisit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy2_fini(ProxyObject2 *__restrict self);
 
+INTDEF NONNULL((1)) int DCALL generic_proxy2_bool_1or2(ProxyObject2 *__restrict self);
 
 STATIC_ASSERT_MSG(offsetof(ProxyObject2, po_obj1) == offsetof(ProxyObject, po_obj),
                   "You're allowed to use everything below with `ProxyObject2', "

@@ -1,0 +1,92 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+function assertEqual(a, b) {
+	assert equals(a, b);
+	assert a == b;
+	assert b == a;
+	assert !(a != b);
+	assert !(b != a);
+}
+
+function assertEqualSet(a, b) {
+	assertEqual(a as Set, b);
+	assertEqual(a.reversed() as Set, b);
+}
+
+#if 1 /* Only works when "CONFIG_HAVE_SET_OPERATORS_IN_SEQ" wasn't disabled */
+#define S(...) {__VA_ARGS__}
+#else
+#define S(...) ({__VA_ARGS__} as Set)
+#endif
+
+/* For Sets... */
+
+assertEqualSet({10},           S(10, 20) & S(10));
+assertEqualSet({20},           S(10, 20) & S(20));
+assertEqualSet({},             S(10, 20) & S(30));
+assertEqualSet({10, 20},       S(10, 20) | S(10));
+assertEqualSet({10, 20},       S(10, 20) | S(20));
+assertEqualSet({10, 20, 30},   S(10, 20) | S(30));
+assertEqualSet({10, 20},       ((10, 20) as Set) + S(10));
+assertEqualSet({10, 20},       ((10, 20) as Set) + S(20));
+assertEqualSet({10, 20, 30},   ((10, 20) as Set) + S(30));
+#if 0 /* FIXME: This breaks because Tuple defines "operator +", and the runtime
+       *        substitutes "Tuple.operator -" as (Tuple.operator + (lhs, -rhs)),
+       *        rather than inheriting "Sequence.operator -"
+       * >> NotImplemented: Operator `deemon.Tuple.operator neg' is not implemented
+       */
+assertEqualSet({20},           S(10, 20) - S(10));
+assertEqualSet({10},           S(10, 20) - S(20));
+assertEqualSet({10, 20},       S(10, 20) - S(30));
+#else
+assertEqualSet({20},           ((10, 20) as Set) - S(10));
+assertEqualSet({10},           ((10, 20) as Set) - S(20));
+assertEqualSet({10, 20},       ((10, 20) as Set) - S(30));
+#endif
+assertEqualSet({20},           S(10, 20) & ~S(10));
+assertEqualSet({10},           S(10, 20) & ~S(20));
+assertEqualSet({10, 20},       S(10, 20) & ~S(30));
+assertEqualSet({20},           S(10, 20) ^ S(10));
+assertEqualSet({10},           S(10, 20) ^ S(20));
+assertEqualSet({10, 20, 30},   S(10, 20) ^ S(30));
+
+/* For Mappings... */
+assertEqual({"foo":"bar",20:10}, {"foo":"bar"}       + {20:10});
+assertEqual({"foo":"bar",20:10}, {"foo":"bar",20:10} + {20:"ignored"});
+assertEqual({"foo":"bar",20:10}, {"foo":"bar"}       | {20:10});
+assertEqual({"foo":"bar",20:10}, {"foo":"bar",20:10} | {20:"ignored"});
+assertEqual({"foo":"bar"},       {"foo":"bar",20:10} - {20});
+assertEqual({20:10},             {"foo":"bar",20:10} - {"foo"});
+assertEqual({20:10},             {"foo":"bar",20:10} & {20});
+assertEqual({"foo":"bar"},       {"foo":"bar",20:10} & {"foo"});
+assertEqual({"foo":"bar"},       {"foo":"bar",20:10} & ~S(20));
+assertEqual({20:10},             {"foo":"bar",20:10} & ~S("foo"));
+assertEqual({"foo":"bar"},       {"foo":"bar",20:10} & ~S(20));
+assertEqual({20:10},             {"foo":"bar",20:10} & ~S("foo"));
+assertEqual({"b":2},             {"a":1,"b":2}       ^ {"a":3});
+assertEqual({"a":1},             {"a":1,"b":2}       ^ {"b":3});
+assertEqual({"a":1,"b":2,"c":3}, {"a":1,"b":2}       ^ {"c":3});
+assertEqual({"b":2},             {"a":3}             ^ {"a":1,"b":2});
+assertEqual({"a":1},             {"b":3}             ^ {"a":1,"b":2});
+assertEqual({"a":1,"b":2,"c":3}, {"c":3}             ^ {"a":1,"b":2});
