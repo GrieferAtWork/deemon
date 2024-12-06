@@ -180,7 +180,7 @@ err:
 
 #define SetInversion_New_inherit(a) \
 	_SetInversion_New_inherit((DREF DeeObject *)Dee_REQUIRES_OBJECT(a))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetInversion *DCALL
+LOCAL WUNUSED NONNULL((1)) DREF SetInversion *DCALL
 _SetInversion_New_inherit(/*inherit(always)*/ DREF DeeObject *a) {
 	DREF SetInversion *result;
 	result = DeeObject_MALLOC(SetInversion);
