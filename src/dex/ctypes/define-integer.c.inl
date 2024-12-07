@@ -1333,6 +1333,7 @@ INTERN DeeSTypeObject TYPE_NAME = {
 		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ X(int_class_members),
+		/* .tp_method_hints  = */ NULL,
 		/* .tp_call_kw       = */ NULL,
 		/* .tp_mro           = */ ctypes_numeric_mro,
 	},

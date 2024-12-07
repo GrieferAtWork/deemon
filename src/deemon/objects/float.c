@@ -923,6 +923,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ float_class_getsets,
 	/* .tp_class_members = */ float_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ float_operators,

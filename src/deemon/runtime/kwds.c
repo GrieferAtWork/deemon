@@ -807,6 +807,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ kwds_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ kwds_operators,

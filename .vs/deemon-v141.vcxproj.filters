@@ -543,6 +543,9 @@
 		<ClInclude Include="..\include\deemon\mapfile.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\method-hints.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\module.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -1448,6 +1451,9 @@
 		<ClCompile Include="..\src\deemon\runtime\lock.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\method-hints.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\misc.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
@@ -1500,6 +1506,9 @@
 		<None Include="..\cpp.hint" />
 		<None Include="..\include\deemon\compiler\lexer.def">
 			<Filter>include\compiler</Filter>
+		</None>
+		<None Include="..\include\deemon\method-hints.def">
+			<Filter>include</Filter>
 		</None>
 		<None Include="..\src\deemon\compiler\asm\userdb.def">
 			<Filter>src\compiler\asm</Filter>

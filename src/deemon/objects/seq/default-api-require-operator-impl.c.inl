@@ -122,7 +122,7 @@
 //#define DEFINE_DeeType_RequireMapOperatorSub
 //#define DEFINE_DeeType_RequireMapOperatorAnd
 //#define DEFINE_DeeType_RequireMapOperatorXor
-#define DEFINE_DeeType_RequireMapOperatorInplaceAdd
+//#define DEFINE_DeeType_RequireMapOperatorInplaceAdd
 //#define DEFINE_DeeType_RequireMapOperatorInplaceSub
 //#define DEFINE_DeeType_RequireMapOperatorInplaceAnd
 //#define DEFINE_DeeType_RequireMapOperatorInplaceXor
@@ -677,9 +677,21 @@ DECL_BEGIN
 #define LOCAL_tsc_seq_operator_foo PP_CAT4(tsc_, LOCAL_seq, _, LOCAL_operator_foo)
 #endif /* !LOCAL_tsc_seq_operator_foo */
 
-#ifndef LOCAL_Dee_tsc_operator_foo_t
-#define LOCAL_Dee_tsc_operator_foo_t PP_CAT3(Dee_tsc_, LOCAL_operator_foo, _t)
-#endif /* !LOCAL_Dee_tsc_operator_foo_t */
+#ifndef LOCAL_TMH
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_TMH PP_CAT2(Dee_TMH_seq_, LOCAL_operator_foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_TMH PP_CAT2(Dee_TMH_set_, LOCAL_operator_foo)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_TMH PP_CAT2(Dee_TMH_map_, LOCAL_operator_foo)
+#else /* LOCAL_Dee_SEQCLASS == ... */
+#define LOCAL_TMH PP_CAT2(Dee_TMH_INVALID_LOCAL_Dee_SEQCLASS_, LOCAL_operator_foo)
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_TMH */
+
+#ifndef LOCAL_Dee_mh_seq_operator_foo_t
+#define LOCAL_Dee_mh_seq_operator_foo_t PP_CAT5(Dee_mh_, LOCAL_seq, _, LOCAL_operator_foo, _t)
+#endif /* !LOCAL_Dee_mh_seq_operator_foo_t */
 
 #ifndef LOCAL_DeeSeq_OperatorFoo
 #define LOCAL_DeeSeq_OperatorFoo PP_CAT4(Dee, LOCAL_Seq, _, LOCAL_OperatorFoo)
@@ -706,12 +718,21 @@ DECL_BEGIN
 #endif /* !LOCAL_DeeSeq_DefaultOperatorFooWithError */
 
 
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_tsc_operator_foo_t DCALL
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_mh_seq_operator_foo_t DCALL
 LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	(void)self;
+#ifdef LOCAL_TMH
+	{
+		/* Check if the type defines a custom hint for this operator. */
+		LOCAL_Dee_mh_seq_operator_foo_t hint;
+		hint = (LOCAL_Dee_mh_seq_operator_foo_t)DeeType_GetPrivateMethodHint(self, LOCAL_TMH);
+		if (hint != NULL)
+			return hint;
+	}
+#endif /* LOCAL_TMH */
 #ifdef DEFINE_DeeType_RequireSeqOperatorBool
 	if (DeeType_GetSeqClass(self) != Dee_SEQCLASS_NONE) {
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 #ifndef LOCAL_FOR_OPTIMIZE
 		if (DeeType_RequireBool(self))
 			return self->tp_cast.tp_bool;
@@ -750,7 +771,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_sizeob;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_size_t tsc_seq_operator_size;
+		Dee_mh_seq_operator_size_t tsc_seq_operator_size;
 		tsc_seq_operator_size = DeeType_RequireSeqOperatorSize(self);
 		if (tsc_seq_operator_size == &DeeSeq_DefaultOperatorSizeWithEmpty)
 			return &DeeSeq_DefaultOperatorSizeObWithEmpty;
@@ -773,7 +794,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	default: break;
 	}
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorContainsWithEmpty;
@@ -786,7 +807,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getitem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_getitem_index_t tsc_seq_operator_getitem_index;
+		Dee_mh_seq_operator_getitem_index_t tsc_seq_operator_getitem_index;
 		tsc_seq_operator_getitem_index = DeeType_RequireSeqOperatorGetItemIndex(self);
 		if (tsc_seq_operator_getitem_index == &DeeSeq_DefaultOperatorGetItemIndexWithEmpty)
 			return &DeeSeq_DefaultOperatorGetItemWithEmpty;
@@ -809,7 +830,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getrange;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_iter_t tsc_seq_operator_iter;
+		Dee_mh_seq_operator_iter_t tsc_seq_operator_iter;
 		tsc_seq_operator_iter = DeeType_RequireSeqOperatorIter(self);
 		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
 			return &DeeSeq_DefaultOperatorGetRangeWithEmpty;
@@ -842,7 +863,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_enumerate;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorEnumerateWithEmpty;
@@ -855,7 +876,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_iterkeys;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorIterKeysWithEmpty;
@@ -868,7 +889,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_enumerate_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorEnumerateIndexWithEmpty;
@@ -884,7 +905,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_bounditem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_bounditem_index_t tsc_seq_operator_bounditem_index;
+		Dee_mh_seq_operator_bounditem_index_t tsc_seq_operator_bounditem_index;
 		tsc_seq_operator_bounditem_index = DeeType_RequireSeqOperatorBoundItemIndex(self);
 		if (tsc_seq_operator_bounditem_index == &DeeSeq_DefaultOperatorBoundItemIndexWithEmpty)
 			return &DeeSeq_DefaultOperatorBoundItemWithEmpty;
@@ -897,7 +918,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_hasitem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_hasitem_index_t tsc_seq_operator_hasitem_index;
+		Dee_mh_seq_operator_hasitem_index_t tsc_seq_operator_hasitem_index;
 		tsc_seq_operator_hasitem_index = DeeType_RequireSeqOperatorHasItemIndex(self);
 		if (tsc_seq_operator_hasitem_index == &DeeSeq_DefaultOperatorHasItemIndexWithEmpty)
 			return &DeeSeq_DefaultOperatorHasItemWithEmpty;
@@ -910,7 +931,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_size;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorSizeWithEmpty;
@@ -934,7 +955,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getitem_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorGetItemIndexWithEmpty;
@@ -957,7 +978,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_bounditem_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_size_t tsc_seq_operator_size;
+		Dee_mh_seq_operator_size_t tsc_seq_operator_size;
 		tsc_seq_operator_size = DeeType_RequireSeqOperatorSize(self);
 		if (tsc_seq_operator_size == &DeeSeq_DefaultOperatorSizeWithEmpty)
 			return &DeeSeq_DefaultOperatorBoundItemIndexWithEmpty;
@@ -970,7 +991,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_hasitem_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_size_t tsc_seq_operator_size;
+		Dee_mh_seq_operator_size_t tsc_seq_operator_size;
 		tsc_seq_operator_size = DeeType_RequireSeqOperatorSize(self);
 		if (tsc_seq_operator_size == &DeeSeq_DefaultOperatorSizeWithEmpty)
 			return &DeeSeq_DefaultOperatorHasItemIndexWithEmpty;
@@ -983,7 +1004,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getrange_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_iter_t tsc_seq_operator_iter;
+		Dee_mh_seq_operator_iter_t tsc_seq_operator_iter;
 		tsc_seq_operator_iter = DeeType_RequireSeqOperatorIter(self);
 		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
 			return &DeeSeq_DefaultOperatorGetRangeIndexWithEmpty;
@@ -1006,7 +1027,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getrange_index_n;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_iter_t tsc_seq_operator_iter;
+		Dee_mh_seq_operator_iter_t tsc_seq_operator_iter;
 		tsc_seq_operator_iter = DeeType_RequireSeqOperatorIter(self);
 		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
 			return &DeeSeq_DefaultOperatorGetRangeIndexNWithEmpty;
@@ -1029,7 +1050,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_trygetitem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_trygetitem_index_t tsc_seq_operator_trygetitem_index;
+		Dee_mh_seq_operator_trygetitem_index_t tsc_seq_operator_trygetitem_index;
 		tsc_seq_operator_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(self);
 		if (tsc_seq_operator_trygetitem_index == &DeeSeq_DefaultOperatorTryGetItemIndexWithEmpty)
 			return &DeeSeq_DefaultOperatorTryGetItemWithEmpty;
@@ -1042,7 +1063,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_trygetitem_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorTryGetItemIndexWithEmpty;
@@ -1055,7 +1076,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorHashWithEmpty;
@@ -1068,7 +1089,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_compare_eq;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorCompareEqWithEmpty;
@@ -1081,7 +1102,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_compare;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorCompareWithEmpty;
@@ -1094,7 +1115,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_trycompare_eq;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSeq_DefaultOperatorTryCompareEqWithEmpty;
@@ -1107,7 +1128,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_eq;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_eq_t tsc_seq_operator_compare_eq;
+		Dee_mh_seq_operator_compare_eq_t tsc_seq_operator_compare_eq;
 		tsc_seq_operator_compare_eq = DeeType_RequireSeqOperatorCompareEq(self);
 		if (tsc_seq_operator_compare_eq == &DeeSeq_DefaultOperatorCompareEqWithEmpty)
 			return &DeeSeq_DefaultOperatorEqWithEmpty;
@@ -1120,7 +1141,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_ne;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_eq_t tsc_seq_operator_compare_eq;
+		Dee_mh_seq_operator_compare_eq_t tsc_seq_operator_compare_eq;
 		tsc_seq_operator_compare_eq = DeeType_RequireSeqOperatorCompareEq(self);
 		if (tsc_seq_operator_compare_eq == &DeeSeq_DefaultOperatorCompareEqWithEmpty)
 			return &DeeSeq_DefaultOperatorNeWithEmpty;
@@ -1133,7 +1154,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_lo;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_t tsc_seq_operator_compare;
+		Dee_mh_seq_operator_compare_t tsc_seq_operator_compare;
 		tsc_seq_operator_compare = DeeType_RequireSeqOperatorCompare(self);
 		if (tsc_seq_operator_compare == &DeeSeq_DefaultOperatorCompareWithEmpty)
 			return &DeeSeq_DefaultOperatorLoWithEmpty;
@@ -1146,7 +1167,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_le;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_t tsc_seq_operator_compare;
+		Dee_mh_seq_operator_compare_t tsc_seq_operator_compare;
 		tsc_seq_operator_compare = DeeType_RequireSeqOperatorCompare(self);
 		if (tsc_seq_operator_compare == &DeeSeq_DefaultOperatorCompareWithEmpty)
 			return &DeeSeq_DefaultOperatorLeWithEmpty;
@@ -1159,7 +1180,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_gr;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_t tsc_seq_operator_compare;
+		Dee_mh_seq_operator_compare_t tsc_seq_operator_compare;
 		tsc_seq_operator_compare = DeeType_RequireSeqOperatorCompare(self);
 		if (tsc_seq_operator_compare == &DeeSeq_DefaultOperatorCompareWithEmpty)
 			return &DeeSeq_DefaultOperatorGrWithEmpty;
@@ -1172,7 +1193,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_ge;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_t tsc_seq_operator_compare;
+		Dee_mh_seq_operator_compare_t tsc_seq_operator_compare;
 		tsc_seq_operator_compare = DeeType_RequireSeqOperatorCompare(self);
 		if (tsc_seq_operator_compare == &DeeSeq_DefaultOperatorCompareWithEmpty)
 			return &DeeSeq_DefaultOperatorGeWithEmpty;
@@ -1185,7 +1206,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_math->tp_inplace_add;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_seq_extend_t tsc_seq_extend;
+		Dee_mh_seq_extend_t tsc_seq_extend;
 		tsc_seq_extend = DeeType_RequireSeqExtend(self);
 		if (tsc_seq_extend != &DeeSeq_DefaultExtendWithError)
 			return &DeeSeq_DefaultOperatorInplaceAddWithTSCExtend;
@@ -1196,8 +1217,8 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_math->tp_inplace_mul;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_seq_extend_t tsc_seq_extend;
-		Dee_tsc_seq_clear_t tsc_seq_clear;
+		Dee_mh_seq_extend_t tsc_seq_extend;
+		Dee_mh_seq_clear_t tsc_seq_clear;
 		if ((tsc_seq_extend = DeeType_RequireSeqExtend(self)) != &DeeSeq_DefaultExtendWithError &&
 		    (tsc_seq_clear = DeeType_RequireSeqClear(self)) != &DeeSeq_DefaultClearWithError)
 			return &DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend;
@@ -1211,7 +1232,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorHashWithEmpty;
@@ -1233,7 +1254,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorCompareEqWithEmpty;
@@ -1249,7 +1270,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorTryCompareEqWithEmpty;
@@ -1265,7 +1286,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_eq_t tsc_seq_operator_compare_eq;
+		Dee_mh_seq_operator_compare_eq_t tsc_seq_operator_compare_eq;
 		tsc_seq_operator_compare_eq = DeeType_RequireSetOperatorCompareEq(self);
 		if (tsc_seq_operator_compare_eq == &DeeSet_DefaultOperatorCompareEqWithEmpty)
 			return &DeeSet_DefaultOperatorEqWithEmpty;
@@ -1281,7 +1302,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_eq_t tsc_seq_operator_compare_eq;
+		Dee_mh_seq_operator_compare_eq_t tsc_seq_operator_compare_eq;
 		tsc_seq_operator_compare_eq = DeeType_RequireSetOperatorCompareEq(self);
 		if (tsc_seq_operator_compare_eq == &DeeSet_DefaultOperatorCompareEqWithEmpty)
 			return &DeeSet_DefaultOperatorNeWithEmpty;
@@ -1294,7 +1315,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_lo;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorLoWithEmpty;
@@ -1307,7 +1328,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_le;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorLeWithEmpty;
@@ -1320,7 +1341,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_gr;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorGrWithEmpty;
@@ -1333,7 +1354,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_ge;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorGeWithEmpty;
@@ -1342,7 +1363,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorInv)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorInvWithEmpty;
@@ -1351,7 +1372,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorAdd)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorAddWithEmpty;
@@ -1360,7 +1381,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorSub)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorSubWithEmpty;
@@ -1369,7 +1390,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorAnd)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorAndWithEmpty;
@@ -1378,7 +1399,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorXor)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorXorWithEmpty;
@@ -1387,29 +1408,29 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorInplaceAdd)
 	{
-		Dee_tsc_set_insertall_t tsc_set_insertall;
+		Dee_mh_set_insertall_t tsc_set_insertall;
 		tsc_set_insertall = DeeType_RequireSetInsertAll(self);
 		if (tsc_set_insertall != &DeeSet_DefaultInsertAllWithError)
 			return &DeeSet_DefaultOperatorInplaceAddWithSetInsertAll;
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorInplaceSub)
 	{
-		Dee_tsc_set_removeall_t tsc_set_removeall;
+		Dee_mh_set_removeall_t tsc_set_removeall;
 		tsc_set_removeall = DeeType_RequireSetRemoveAll(self);
 		if (tsc_set_removeall != &DeeSet_DefaultRemoveAllWithError)
 			return &DeeSet_DefaultOperatorInplaceSubWithSetRemoveAll;
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorInplaceAnd)
 	{
-		Dee_tsc_set_removeall_t tsc_set_removeall;
+		Dee_mh_set_removeall_t tsc_set_removeall;
 		tsc_set_removeall = DeeType_RequireSetRemoveAll(self);
 		if (tsc_set_removeall != &DeeSet_DefaultRemoveAllWithError)
 			return &DeeSet_DefaultOperatorInplaceAndWithForeachAndSetRemoveAll;
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorInplaceXor)
 	{
-		Dee_tsc_set_insertall_t tsc_set_insertall;
-		Dee_tsc_set_removeall_t tsc_set_removeall;
+		Dee_mh_set_insertall_t tsc_set_insertall;
+		Dee_mh_set_removeall_t tsc_set_removeall;
 		if ((tsc_set_insertall = DeeType_RequireSetInsertAll(self)) != &DeeSet_DefaultInsertAllWithError &&
 		    (tsc_set_removeall = DeeType_RequireSetRemoveAll(self)) != &DeeSet_DefaultRemoveAllWithError)
 			return &DeeSet_DefaultOperatorInplaceXorWithForeachAndSetInsertAllAndSetRemoveAll;
@@ -1420,7 +1441,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_contains;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorContainsWithEmpty;
@@ -1433,7 +1454,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getitem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorGetItemWithEmpty;
@@ -1469,7 +1490,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_enumerate;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorEnumerateWithEmpty;
@@ -1482,7 +1503,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_enumerate_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorEnumerateIndexWithEmpty;
@@ -1495,7 +1516,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_bounditem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorBoundItemWithEmpty;
@@ -1508,7 +1529,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_hasitem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorHasItemWithEmpty;
@@ -1521,7 +1542,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getitem_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorGetItemIndexWithEmpty;
@@ -1546,7 +1567,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_bounditem_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorBoundItemIndexWithEmpty;
@@ -1559,7 +1580,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_hasitem_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorHasItemIndexWithEmpty;
@@ -1572,7 +1593,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_trygetitem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorTryGetItemWithEmpty;
@@ -1585,7 +1606,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_trygetitem_index;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorTryGetItemIndexWithEmpty;
@@ -1598,7 +1619,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_trygetitem_string_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorTryGetItemStringHashWithEmpty;
@@ -1611,7 +1632,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getitem_string_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorGetItemStringHashWithEmpty;
@@ -1636,7 +1657,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_bounditem_string_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorBoundItemStringHashWithEmpty;
@@ -1649,7 +1670,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_hasitem_string_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorHasItemStringHashWithEmpty;
@@ -1662,7 +1683,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_trygetitem_string_len_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorTryGetItemStringLenHashWithEmpty;
@@ -1675,7 +1696,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_getitem_string_len_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorGetItemStringLenHashWithEmpty;
@@ -1700,7 +1721,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_bounditem_string_len_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorBoundItemStringLenHashWithEmpty;
@@ -1713,7 +1734,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_seq->tp_hasitem_string_len_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorHasItemStringLenHashWithEmpty;
@@ -1726,7 +1747,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_compare_eq;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorCompareEqWithEmpty;
@@ -1739,7 +1760,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_trycompare_eq;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorTryCompareEqWithEmpty;
@@ -1752,7 +1773,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_eq;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_eq_t tsc_map_operator_compare_eq;
+		Dee_mh_seq_operator_compare_eq_t tsc_map_operator_compare_eq;
 		tsc_map_operator_compare_eq = DeeType_RequireMapOperatorCompareEq(self);
 		if (tsc_map_operator_compare_eq == &DeeMap_DefaultOperatorCompareEqWithEmpty)
 			return &DeeMap_DefaultOperatorEqWithEmpty;
@@ -1765,7 +1786,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_ne;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_compare_eq_t tsc_map_operator_compare_eq;
+		Dee_mh_seq_operator_compare_eq_t tsc_map_operator_compare_eq;
 		tsc_map_operator_compare_eq = DeeType_RequireMapOperatorCompareEq(self);
 		if (tsc_map_operator_compare_eq == &DeeMap_DefaultOperatorCompareEqWithEmpty)
 			return &DeeMap_DefaultOperatorNeWithEmpty;
@@ -1778,7 +1799,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_lo;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorLoWithEmpty;
@@ -1791,7 +1812,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_le;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorLeWithEmpty;
@@ -1804,7 +1825,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_gr;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorGrWithEmpty;
@@ -1817,7 +1838,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		return self->tp_cmp->tp_ge;
 #endif /* !LOCAL_FOR_OPTIMIZE */
 	{
-		Dee_tsc_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
+		Dee_mh_seq_operator_foreach_pair_t tsc_seq_operator_foreach_pair;
 		tsc_seq_operator_foreach_pair = DeeType_RequireSeqOperatorForeachPair(self);
 		if (tsc_seq_operator_foreach_pair == &DeeSeq_DefaultOperatorForeachPairWithEmpty)
 			return &DeeMap_DefaultOperatorGeWithEmpty;
@@ -1826,7 +1847,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireMapOperatorAdd)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeMap_DefaultOperatorAddWithEmpty;
@@ -1835,7 +1856,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireMapOperatorSub)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeMap_DefaultOperatorSubWithEmpty;
@@ -1844,7 +1865,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireMapOperatorAnd)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeMap_DefaultOperatorAndWithEmpty;
@@ -1853,7 +1874,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireMapOperatorXor)
 	{
-		Dee_tsc_operator_foreach_t tsc_seq_operator_foreach;
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
 		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeMap_DefaultOperatorXorWithEmpty;
@@ -1862,29 +1883,29 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	}
 #elif defined(DEFINE_DeeType_RequireMapOperatorInplaceAdd)
 	{
-		Dee_tsc_map_update_t tsc_map_update;
+		Dee_mh_map_update_t tsc_map_update;
 		tsc_map_update = DeeType_RequireMapUpdate(self);
 		if (tsc_map_update != &DeeMap_DefaultUpdateWithError)
 			return &DeeMap_DefaultOperatorInplaceAddWithMapUpdate;
 	}
 #elif defined(DEFINE_DeeType_RequireMapOperatorInplaceSub)
 	{
-		Dee_tsc_map_removekeys_t tsc_map_removekeys;
+		Dee_mh_map_removekeys_t tsc_map_removekeys;
 		tsc_map_removekeys = DeeType_RequireMapRemoveKeys(self);
 		if (tsc_map_removekeys != &DeeMap_DefaultRemoveKeysWithError)
 			return &DeeMap_DefaultOperatorInplaceSubWithMapRemoveKeys;
 	}
 #elif defined(DEFINE_DeeType_RequireMapOperatorInplaceAnd)
 	{
-		Dee_tsc_map_removekeys_t tsc_map_removekeys;
+		Dee_mh_map_removekeys_t tsc_map_removekeys;
 		tsc_map_removekeys = DeeType_RequireMapRemoveKeys(self);
 		if (tsc_map_removekeys != &DeeMap_DefaultRemoveKeysWithError)
 			return &DeeMap_DefaultOperatorInplaceAndWithForeachAndMapRemoveKeys;
 	}
 #elif defined(DEFINE_DeeType_RequireMapOperatorInplaceXor)
 	{
-		Dee_tsc_map_update_t tsc_map_update;
-		Dee_tsc_map_removekeys_t tsc_map_removekeys;
+		Dee_mh_map_update_t tsc_map_update;
+		Dee_mh_map_removekeys_t tsc_map_removekeys;
 		if ((tsc_map_update = DeeType_RequireMapUpdate(self)) != &DeeMap_DefaultUpdateWithError &&
 		    (tsc_map_removekeys = DeeType_RequireMapRemoveKeys(self)) != &DeeMap_DefaultRemoveKeysWithError)
 			return &DeeMap_DefaultOperatorInplaceXorWithForeachAndMapUpdatAndMapRemoveKeys;
@@ -1895,9 +1916,9 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 
 
 #ifndef LOCAL_FOR_OPTIMIZE
-INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_tsc_operator_foo_t DCALL
+INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_mh_seq_operator_foo_t DCALL
 LOCAL_DeeType_RequireSeqOperatorFoo(DeeTypeObject *__restrict self) {
-	LOCAL_Dee_tsc_operator_foo_t result;
+	LOCAL_Dee_mh_seq_operator_foo_t result;
 	struct Dee_type_seq_cache *sc;
 	struct Dee_type_seq *seq = self->tp_seq;
 	if likely(seq) {
@@ -1921,7 +1942,8 @@ LOCAL_DeeType_RequireSeqOperatorFoo(DeeTypeObject *__restrict self) {
 #endif /* !LOCAL_FOR_OPTIMIZE */
 
 #undef LOCAL_DeeSeq_OperatorFoo
-#undef LOCAL_Dee_tsc_operator_foo_t
+#undef LOCAL_TMH
+#undef LOCAL_Dee_mh_seq_operator_foo_t
 #undef LOCAL_tsc_seq_operator_foo
 #undef LOCAL_seq
 #undef LOCAL_SeqClass

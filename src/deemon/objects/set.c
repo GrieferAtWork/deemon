@@ -145,23 +145,23 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	            "Same as ${(this as Set) >= of}"),
 
 	/* Default functions for mutable sets */
-	TYPE_METHOD(STR_insert, &default_set_insert,
+	TYPE_METHOD(STR_insert, &DeeMH_set_insert,
 	            "(key)->?Dbool\n"
 	            "Insert @key into @this set, returning !t if it was inserted and !f if it was already present"),
-	TYPE_METHOD(STR_remove, &default_set_remove,
+	TYPE_METHOD(STR_remove, &DeeMH_set_remove,
 	            "(key)->?Dbool\n"
 	            "Remove @key from @this set, returning !t if it was removed and !f if it wasn't present"),
-	TYPE_METHOD(STR_insertall, &default_set_insertall,
+	TYPE_METHOD(STR_insertall, &DeeMH_set_insertall,
 	            "(keys:?S?O)\n"
 	            "Insert all elements from @keys into @this set"),
-	TYPE_METHOD(STR_removeall, &default_set_removeall,
+	TYPE_METHOD(STR_removeall, &DeeMH_set_removeall,
 	            "(keys:?S?O)\n"
 	            "Remove all elements from @keys from @this set"),
-	TYPE_METHOD(STR_unify, &default_set_unify,
+	TYPE_METHOD(STR_unify, &DeeMH_set_unify,
 	            "(key)->\n"
 	            "Insert @key into @this set if it wasn't contained already, and "
 	            /**/ "return the (potential) copy of @key that is part of the set"),
-	TYPE_METHOD(STR_pop, &default_set_pop,
+	TYPE_METHOD(STR_pop, &DeeMH_set_pop,
 	            "(def?)->\n"
 	            "#tValueError{Set is empty and no @def was given}\n"
 	            "Remove and return some random key from @this set. "
@@ -452,6 +452,7 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ set_class_getsets,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ set_operators,

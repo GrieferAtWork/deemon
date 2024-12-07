@@ -3077,6 +3077,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ dict_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ dict_operators,

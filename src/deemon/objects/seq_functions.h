@@ -25,42 +25,6 @@
 
 DECL_BEGIN
 
-/* TODO: All of this stuff here breaks when used on types with multiple bases.
- *
- * Solution:
- * - Instead of implementing (e.g.) "Sequence.find()" to check how it should be
- *   implemented every time it is used on a type, types should have a pointer to
- *   a NSI implementation cache region that contains function pointers describing
- *   how a specific NSI function should be used with a given type.
- * - The first time a function is then called, it should figure out how to implement
- *   itself, and then store a method pointer in the cache that will then simply be
- *   called as-is the next time the function is called.
- *
- * For reference, see the way `Sequence.operator iter()' operates.
- */
-#define has_noninherited_seqfield(tp, seq, field)       \
-	((seq)->field != NULL &&                            \
-	 (!DeeType_Base(tp) || !DeeType_Base(tp)->tp_seq || \
-	  DeeType_Base(tp)->tp_seq->field != (seq)->field))
-
-#define has_noninherited_field(tp, field) \
-	((tp)->field != NULL &&               \
-	 (!DeeType_Base(tp) || DeeType_Base(tp)->field != (tp)->field))
-
-#define is_noninherited_nsi(tp, seq, nsi) \
-	(!DeeType_Base(tp) || DeeType_Base(tp)->tp_seq != (seq))
-
-#define has_noninherited_getrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_getrange)
-#define has_noninherited_delrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_delrange)
-#define has_noninherited_setrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_setrange)
-#define has_noninherited_getitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_getitem)
-#define has_noninherited_delitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_delitem)
-#define has_noninherited_setitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_setitem)
-#define has_noninherited_size(tp, seq)     has_noninherited_seqfield(tp, seq, tp_sizeob)
-#define has_noninherited_bool(tp)          has_noninherited_field(tp, tp_cast.tp_bool)
-
-
-
 /* TODO: All of the following also needs to go eventually... */
 
 

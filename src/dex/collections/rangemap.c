@@ -1828,6 +1828,7 @@ INTERN DeeTypeObject RangeMapKeys_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ proxy_keys_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ rmapping_keys_mro
 };
@@ -2120,6 +2121,7 @@ INTERN DeeTypeObject RangeMapAsMap_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ proxy_asmap_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ rmapping_asmap_mro
 };

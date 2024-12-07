@@ -719,6 +719,7 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	/* .tp_class_methods = */ attr_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ attr_operators,

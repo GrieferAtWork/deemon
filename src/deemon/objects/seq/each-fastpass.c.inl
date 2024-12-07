@@ -1206,6 +1206,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ F(class_members),
+	/* .tp_method_hints  = */ NULL,
 #ifdef DEFINE_GETATTR
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&F(call_kw),
 #else /* DEFINE_GETATTR */

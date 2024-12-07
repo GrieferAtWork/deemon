@@ -190,6 +190,7 @@
 		<ClInclude Include="..\include\deemon\list.h" />
 		<ClInclude Include="..\include\deemon\map.h" />
 		<ClInclude Include="..\include\deemon\mapfile.h" />
+		<ClInclude Include="..\include\deemon\method-hints.h" />
 		<ClInclude Include="..\include\deemon\module.h" />
 		<ClInclude Include="..\include\deemon\mro.h" />
 		<ClInclude Include="..\include\deemon\none.h" />
@@ -493,6 +494,7 @@
 		<ClCompile Include="..\src\deemon\runtime\kwds.c" />
 		<ClCompile Include="..\src\deemon\runtime\kwlist.c" />
 		<ClCompile Include="..\src\deemon\runtime\lock.c" />
+		<ClCompile Include="..\src\deemon\runtime\method-hints.c" />
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />
 		<ClCompile Include="..\src\deemon\runtime\notify.c" />
@@ -516,6 +518,7 @@
 		<None Include="..\README.md" />
 		<None Include="..\cpp.hint" />
 		<None Include="..\include\deemon\compiler\lexer.def" />
+		<None Include="..\include\deemon\method-hints.def" />
 		<None Include="..\src\deemon\compiler\asm\userdb.def" />
 		<CustomBuild Include="..\src\deemon\execute\asm\altstack.ms-x64.S">
 			<FileType>Document</FileType>

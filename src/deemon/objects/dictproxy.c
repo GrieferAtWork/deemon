@@ -1068,6 +1068,7 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = { /* TODO: Shouldn't be PUBLIC */
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ dict_keys_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ dict_keys_mro
 };

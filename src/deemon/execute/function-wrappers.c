@@ -1502,6 +1502,11 @@ PRIVATE struct type_member tpconst funcsymbolsbyname_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_method tpconst funcsymbolsbyname_methods[] = {
+
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FunctionSymbolsByName",
@@ -1546,7 +1551,7 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ funcsymbolsbyname_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ funcsymbolsbyname_members,
 	/* .tp_class_methods = */ NULL,

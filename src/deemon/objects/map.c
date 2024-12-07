@@ -54,6 +54,11 @@
 
 DECL_BEGIN
 
+DOC_DEF(map_byhash_doc,
+        "(template:?O)->?S?T2?O?O\n"
+        "#ptemplate{The object who's hash should be used to search for collisions}"
+        "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
+        /**/ "key-value pairs, search for pairs where the key matches the hash of @template");
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_byhash(DeeObject *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
@@ -69,11 +74,23 @@ err:
 DOC_DEF(map_get_doc,
         "(key,def=!N)->\n"
         "#r{The value associated with @key or @def when @key has no value associated}");
-DOC_DEF(map_byhash_doc,
-        "(template:?O)->?S?T2?O?O\n"
-        "#ptemplate{The object who's hash should be used to search for collisions}"
-        "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
-        /**/ "key-value pairs, search for pairs where the key matches the hash of @template");
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+	DeeObject *key, *def = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
+		goto err;
+	result = DeeMap_OperatorTryGetItem(self, key);
+	if (result == ITER_DONE) {
+		Dee_Incref(def);
+		result = def;
+	}
+	return result;
+err:
+	return NULL;
+}
+
+
 DOC_DEF(map_setdefault_doc,
         "(key,def)->\n"
         "#r{The object currently assigned to @key}"
@@ -113,20 +130,20 @@ DOC_DEF(map_setnew_ex_doc,
 INTDEF struct type_method tpconst map_methods[];
 INTERN_TPCONST struct type_method tpconst map_methods[] = {
 	/* Default operations for all mappings. */
-	TYPE_METHOD(STR_get, &default_map_get, DOC_GET(map_get_doc)),
+	TYPE_METHOD(STR_get, &map_get, DOC_GET(map_get_doc)),
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
 
 	/* Default operations for modifiable mappings. */
-	TYPE_METHOD(STR_setold, &default_map_setold, DOC_GET(map_setold_doc)),
-	TYPE_METHOD(STR_setold_ex, &default_map_setold_ex, DOC_GET(map_setold_ex_doc)),
-	TYPE_METHOD(STR_setnew, &default_map_setnew, DOC_GET(map_setnew_doc)),
-	TYPE_METHOD(STR_setnew_ex, &default_map_setnew_ex, DOC_GET(map_setnew_ex_doc)),
-	TYPE_METHOD(STR_setdefault, &default_map_setdefault, DOC_GET(map_setdefault_doc)),
-	TYPE_METHOD(STR_update, &default_map_update, DOC_GET(map_update_doc)),
-	TYPE_METHOD(STR_remove, &default_map_remove, "(key)->?Dbool"),
-	TYPE_METHOD(STR_removekeys, &default_map_removekeys, "(keys:?S?O)"),
-	TYPE_METHOD(STR_pop, &default_map_pop, DOC_GET(map_pop_doc)),
-	TYPE_METHOD(STR_popitem, &default_map_popitem, DOC_GET(map_popitem_doc)),
+	TYPE_METHOD(STR_setold, &DeeMH_map_setold, DOC_GET(map_setold_doc)),
+	TYPE_METHOD(STR_setold_ex, &DeeMH_map_setold_ex, DOC_GET(map_setold_ex_doc)),
+	TYPE_METHOD(STR_setnew, &DeeMH_map_setnew, DOC_GET(map_setnew_doc)),
+	TYPE_METHOD(STR_setnew_ex, &DeeMH_map_setnew_ex, DOC_GET(map_setnew_ex_doc)),
+	TYPE_METHOD(STR_setdefault, &DeeMH_map_setdefault, DOC_GET(map_setdefault_doc)),
+	TYPE_METHOD(STR_update, &DeeMH_map_update, DOC_GET(map_update_doc)),
+	TYPE_METHOD(STR_remove, &DeeMH_map_remove, "(key)->?Dbool"),
+	TYPE_METHOD(STR_removekeys, &DeeMH_map_removekeys, "(keys:?S?O)"),
+	TYPE_METHOD(STR_pop, &DeeMH_map_pop, DOC_GET(map_pop_doc)),
+	TYPE_METHOD(STR_popitem, &DeeMH_map_popitem, DOC_GET(map_popitem_doc)),
 
 	TYPE_METHOD("__contains__", &default_map___contains__,
 	            "(item)->?Dbool\n"
@@ -255,7 +272,7 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 
 	/* Old function names. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_METHOD("insert_all", &default_map_update,
+	TYPE_METHOD("insert_all", &DeeMH_map_update,
 	            "(items:?S?T2?O?O)\n"
 	            "A deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
@@ -388,7 +405,7 @@ map_Iterator_get(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_Keys_get(DeeTypeObject *__restrict self) {
 	DREF DeeTypeObject *result = &DeeSet_Type;
-	Dee_tsc_map_keys_t tsc_map_keys = DeeType_RequireMapKeys(self);
+	Dee_mh_map_keys_t tsc_map_keys = DeeType_RequireMapKeys(self);
 	if (tsc_map_keys == &DeeMap_DefaultKeysWithMapIterKeys)
 		result = &DefaultSequence_MapKeys_Type;
 	return_reference_(result);
@@ -397,7 +414,7 @@ map_Keys_get(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_Values_get(DeeTypeObject *__restrict self) {
 	DREF DeeTypeObject *result = &DeeSeq_Type;
-	Dee_tsc_map_values_t tsc_map_values = DeeType_RequireMapValues(self);
+	Dee_mh_map_values_t tsc_map_values = DeeType_RequireMapValues(self);
 	if (tsc_map_values == &DeeMap_DefaultValuesWithMapIterValues)
 		result = &DefaultSequence_MapValues_Type;
 	return_reference_(result);
@@ -406,7 +423,7 @@ map_Values_get(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_IterKeys_get(DeeTypeObject *__restrict self) {
 	DREF DeeTypeObject *result = &DeeIterator_Type;
-	Dee_tsc_map_iterkeys_t tsc_map_iterkeys = DeeType_RequireMapIterKeys(self);
+	Dee_mh_map_iterkeys_t tsc_map_iterkeys = DeeType_RequireMapIterKeys(self);
 	if (tsc_map_iterkeys == &DeeObject_DefaultIterKeysWithEnumerate) {
 		/* TODO: Custom iterator type that uses "tp_enumerate" */
 	} else if (tsc_map_iterkeys == &DeeObject_DefaultIterKeysWithEnumerateIndex) {
@@ -425,7 +442,7 @@ map_IterKeys_get(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_IterValues_get(DeeTypeObject *__restrict self) {
 	DREF DeeTypeObject *result = &DeeIterator_Type;
-	Dee_tsc_map_itervalues_t tsc_map_itervalues = DeeType_RequireMapIterValues(self);
+	Dee_mh_map_itervalues_t tsc_map_itervalues = DeeType_RequireMapIterValues(self);
 	if (tsc_map_itervalues == &DeeMap_DefaultIterValuesWithIter) {
 		result = &DefaultIterator_WithNextValue;
 	}
@@ -589,6 +606,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ map_class_getsets,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ map_operators,

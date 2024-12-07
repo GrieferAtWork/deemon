@@ -237,6 +237,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 			/* .tp_class_methods = */ NULL,
 			/* .tp_class_getsets = */ NULL,
 			/* .tp_class_members = */ NULL,
+			/* .tp_method_hints  = */ NULL,
 			/* .tp_call_kw       = */ NULL,
 			/* .tp_mro           = */ function_mro
 		},

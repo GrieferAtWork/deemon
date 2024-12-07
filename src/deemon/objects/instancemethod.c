@@ -362,6 +362,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_callkw,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ im_operators,

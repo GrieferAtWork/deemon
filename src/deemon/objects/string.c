@@ -2257,6 +2257,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	/* .tp_class_methods = */ string_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ string_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ string_operators,

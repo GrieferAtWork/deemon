@@ -102,6 +102,7 @@ typedef __UINTPTR_TYPE__ uintptr_t;
 #define Dee_type_method            type_method
 #define Dee_type_getset            type_getset
 #define Dee_type_member            type_member
+#define Dee_type_method_hint       type_method_hint
 #define Dee_type_constructor       type_constructor
 #define Dee_type_cast              type_cast
 #define Dee_type_gc                type_gc
@@ -4031,6 +4032,7 @@ struct Dee_type_object {
 	struct Dee_type_method Dee_tpconst *tp_class_methods; /* [0..1] Class methods. */
 	struct Dee_type_getset Dee_tpconst *tp_class_getsets; /* [0..1] Class getsets. */
 	struct Dee_type_member Dee_tpconst *tp_class_members; /* [0..1] Class members (usually constants). */
+	struct Dee_type_method_hint Dee_tpconst *tp_method_hints; /* [0..1] Instance method hints (referenced by `tp_methods'; see `<deemon/method-hints.h>') */
 	/* [0..1] Same as `tp_call', but having support for keyword arguments. */
 	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
 	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,

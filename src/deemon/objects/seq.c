@@ -773,6 +773,24 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":popfront"))
+		goto err;
+	return DeeSeq_InvokePop(self, 0);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":popback"))
+		goto err;
+	return DeeSeq_InvokePop(self, -1);
+err:
+	return NULL;
+}
+
 
 
 #define DOC_throws_ValueError_if_empty \
@@ -786,7 +804,7 @@ err:
 
 INTDEF struct type_method tpconst seq_methods[];
 INTERN_TPCONST struct type_method tpconst seq_methods[] = {
-	TYPE_KWMETHOD(STR_reduce, &default_seq_reduce,
+	TYPE_KWMETHOD(STR_reduce, &DeeMH_seq_reduce,
 	              "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->\n"
 	              DOC_throws_ValueError_if_empty
 	              "Combines consecutive elements of @this Sequence by passing them as pairs of 2 to @combine, "
@@ -820,7 +838,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD("enumerate", &default_seq_enumerate,
+	TYPE_KWMETHOD("enumerate", &DeeMH_seq_enumerate,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?O\n"
 	              "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N\n"
 	              "Enumerate indices/keys and associated values of @this sequence\n"
@@ -909,7 +927,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}When @cb isn't given, filter for bound items and yield as ${(key, value)} pairs"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
 	              "}"),
-	TYPE_KWMETHOD(STR_sum, &default_seq_sum,
+	TYPE_KWMETHOD(STR_sum, &DeeMH_seq_sum,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N\n"
 	              "Returns the sum of all elements, or ?N if the Sequence is empty\n"
 	              "This, alongside ?Ajoin?Dstring is the preferred way of merging lists "
@@ -942,7 +960,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_any, &default_seq_any,
+	TYPE_KWMETHOD(STR_any, &DeeMH_seq_any,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              "Returns ?t if any element of @this Sequence evaluates to ?t\n"
 	              "If @this Sequence is empty, ?f is returned\n"
@@ -977,7 +995,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_all, &default_seq_all,
+	TYPE_KWMETHOD(STR_all, &DeeMH_seq_all,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "Returns ?t if all elements of @this Sequence evaluate to ?t\n"
@@ -1013,7 +1031,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_parity, &default_seq_parity,
+	TYPE_KWMETHOD(STR_parity, &DeeMH_seq_parity,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "Returns ?t or ?f indicative of the parity of Sequence elements that are ?t\n"
@@ -1053,7 +1071,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_min, &default_seq_min,
+	TYPE_KWMETHOD(STR_min, &DeeMH_seq_min,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N\n"
 	              DOC_param_key
 	              "Returns the smallest element of @this Sequence. If @this Sequence is empty, ?N is returned.\n"
@@ -1118,7 +1136,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_max, &default_seq_max,
+	TYPE_KWMETHOD(STR_max, &DeeMH_seq_max,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N\n"
 	              DOC_param_key
 	              "Returns the greatest element of @this Sequence. If @this Sequence is empty, ?N is returned.\n"
@@ -1183,7 +1201,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_count, &default_seq_count,
+	TYPE_KWMETHOD(STR_count, &DeeMH_seq_count,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1228,7 +1246,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_locate, &default_seq_locate,
+	TYPE_KWMETHOD(STR_locate, &DeeMH_seq_locate,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1277,7 +1295,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD(STR_rlocate, &default_seq_rlocate,
+	TYPE_KWMETHOD(STR_rlocate, &DeeMH_seq_rlocate,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1403,13 +1421,13 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "}"
 	            "}"),
 
-	TYPE_KWMETHOD(STR_contains, &default_seq_contains,
+	TYPE_KWMETHOD(STR_contains, &DeeMH_seq_contains,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Returns ?t if @this Sequence contains an element matching @item"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_startswith, &default_seq_startswith,
+	TYPE_KWMETHOD(STR_startswith, &DeeMH_seq_startswith,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1418,7 +1436,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "against @item, potentially through use of @{key}: ${key(first) == key(item)} or ${first == item}, "
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_endswith, &default_seq_endswith,
+	TYPE_KWMETHOD(STR_endswith, &DeeMH_seq_endswith,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1427,14 +1445,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "against @item, potentially through use of @{key}: ${key(last) == key(item)} or ${last == item}, "
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_find, &default_seq_find,
+	TYPE_KWMETHOD(STR_find, &DeeMH_seq_find,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Search for the first element matching @item and return its index. "
 	              /**/ "If no such element exists, return ${-1} instead"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_rfind, &default_seq_rfind,
+	TYPE_KWMETHOD(STR_rfind, &DeeMH_seq_rfind,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1573,48 +1591,48 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 
 	/* Functions for mutable sequences. */
-	TYPE_KWMETHOD(STR_reversed, &default_seq_reversed,
+	TYPE_KWMETHOD(STR_reversed, &DeeMH_seq_reversed,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence\n"
 	              "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_sorted, &default_seq_sorted,
+	TYPE_KWMETHOD(STR_sorted, &DeeMH_seq_sorted,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?DSequence\n"
 	              "Return a Sequence that contains all elements from @this Sequence, "
 	              /**/ "but sorted in ascending order, or in accordance to @key\n"
 	              "The point at which @this Sequence is enumerated is implementation-defined"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_insert, &default_seq_insert,
+	TYPE_KWMETHOD(STR_insert, &DeeMH_seq_insert,
 	              "(index:?Dint,item)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Insert the given @item under @index"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_insertall, &default_seq_insertall,
+	TYPE_KWMETHOD(STR_insertall, &DeeMH_seq_insertall,
 	              "(index:?Dint,items:?DSequence)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Insert all elements from @items at @index"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_append, &default_seq_append,
+	TYPE_METHOD(STR_append, &DeeMH_seq_append,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Append the given @item at the end of @this Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_extend, &default_seq_extend,
+	TYPE_METHOD(STR_extend, &DeeMH_seq_extend,
 	            "(items:?DSequence)\n"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Append all elements from @items at the end of @this Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_erase, &default_seq_erase,
+	TYPE_KWMETHOD(STR_erase, &DeeMH_seq_erase,
 	              "(index:?Dint,count=!1)\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
 	              "#tSequenceError{@this Sequence cannot be resized}"
 	              "Erase up to @count elements starting at @index"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_xchitem, &default_seq_xchitem,
+	TYPE_KWMETHOD(STR_xchitem, &DeeMH_seq_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "#tIntegerOverflow{The given @index is negative, or too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -1622,7 +1640,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "Exchange the @index'th element of @this Sequence with the given "
 	              /**/ "@value, returning the old element found under that index"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_pop, &default_seq_pop,
+	TYPE_KWMETHOD(STR_pop, &DeeMH_seq_pop,
 	              "(index=!-1)->\n"
 	              "#tIntegerOverflow{The given @index is too large}"
 	              "#tIndexError{The given @index is out of bounds}"
@@ -1630,79 +1648,79 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "Pop the @index'th element of @this Sequence and return it. When @index is lower "
 	              /**/ "than $0, add ${##this} prior to index selection"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_popfront, &default_seq_popfront,
+	TYPE_METHOD(STR_popfront, &seq_popfront,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Convenience wrapper for ${this.pop(0)}"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_popback, &default_seq_popback,
+	TYPE_METHOD(STR_popback, &seq_popback,
 	            "->\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Convenience wrapper for ${this.pop(-1)}"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_pushfront, &default_seq_pushfront,
+	TYPE_METHOD(STR_pushfront, &DeeMH_seq_pushfront,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Convenience wrapper for ?#insert at position $0"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_pushback, &default_seq_append,
+	TYPE_METHOD(STR_pushback, &DeeMH_seq_append,
 	            "(item)\n"
 	            "#tIndexError{The given @index is out of bounds}"
 	            "#tSequenceError{@this Sequence cannot be resized}"
 	            "Alias for ?#append"),
-	TYPE_KWMETHOD(STR_remove, &default_seq_remove,
+	TYPE_KWMETHOD(STR_remove, &DeeMH_seq_remove,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find the first instance of @item and remove it, returning ?t if an "
 	              /**/ "element got removed, or ?f if @item could not be found"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_rremove, &default_seq_rremove,
+	TYPE_KWMETHOD(STR_rremove, &DeeMH_seq_rremove,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find the last instance of @item and remove it, returning ?t if an "
 	              /**/ "element got removed, or ?f if @item could not be found"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_removeall, &default_seq_removeall,
+	TYPE_KWMETHOD(STR_removeall, &DeeMH_seq_removeall,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Find all instance of @item and remove them, returning the number of "
 	              /**/ "instances found (and consequently removed)"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_removeif, &default_seq_removeif,
+	TYPE_KWMETHOD(STR_removeif, &DeeMH_seq_removeif,
 	              "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Remove all elements within the given sub-range, for which ${should(item)} "
 	              /**/ "evaluates to ?t, and return the number of elements found (and consequently removed)"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_METHOD(STR_clear, &default_seq_clear,
+	TYPE_METHOD(STR_clear, &DeeMH_seq_clear,
 	            "()\n"
 	            "#tSequenceError{@this Sequence is immutable}"
 	            "Clear all elements from the Sequence"
 	            ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_resize, &default_seq_resize,
+	TYPE_KWMETHOD(STR_resize, &DeeMH_seq_resize,
 	              "(size:?Dint,filler=!N)\n"
 	              "#tSequenceError{@this Sequence isn't resizable}"
 	              "Resize @this Sequence to have a new length of @size "
 	              /**/ "items, using @filler to initialize newly added entries"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_fill, &default_seq_fill,
+	TYPE_KWMETHOD(STR_fill, &DeeMH_seq_fill,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Assign @filler to all elements within the given sub-range"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_reverse, &default_seq_reverse,
+	TYPE_KWMETHOD(STR_reverse, &DeeMH_seq_reverse,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
 	              "#tSequenceError{@this Sequence is immutable}"
 	              "Reverse the order of all elements within the given range"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_sort, &default_seq_sort,
+	TYPE_KWMETHOD(STR_sort, &DeeMH_seq_sort,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)\n"
 	              DOC_param_key
 	              "#tSequenceError{@this Sequence is immutable}"
@@ -1710,7 +1728,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              ""), /* TODO: Requirements|Implementation table */
 
 	/* Binary search API */
-	TYPE_KWMETHOD(STR_bfind, &default_seq_bfind,
+	TYPE_KWMETHOD(STR_bfind, &DeeMH_seq_bfind,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1732,14 +1750,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "#tValueError{The Sequence does not contain an item matching @item}"
 	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N."
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_bposition, &default_seq_bposition,
+	TYPE_KWMETHOD(STR_bposition, &DeeMH_seq_bposition,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
 	              /**/ "than ?N when @this doesn't contain any matching object"
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_brange, &default_seq_brange,
+	TYPE_KWMETHOD(STR_brange, &DeeMH_seq_brange,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1748,7 +1766,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "NOTE: The returned tuple is allowed to be an ASP, meaning that its elements may "
 	              /**/ "be calculated lazily, and are prone to change as the result of @this changing."
 	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_blocate, &default_seq_blocate,
+	TYPE_KWMETHOD(STR_blocate, &DeeMH_seq_blocate,
 	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N,defl?)->\n"
 	              DOC_param_item
 	              DOC_param_key
@@ -1958,7 +1976,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("transform", &seq_map,
 	            "(mapper:?DCallable)->?DSequence\n"
 	            "Deprecated alias for ?#map"),
-	TYPE_KWMETHOD("xch", &default_seq_xchitem,
+	TYPE_KWMETHOD("xch", &DeeMH_seq_xchitem,
 	              "(index:?Dint,value)->\n"
 	              "Deprecated alias for ?#xchitem (will be removed soon)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -2998,6 +3016,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_class_methods = */ seq_class_methods,
 	/* .tp_class_getsets = */ seq_class_getsets,
 	/* .tp_class_members = */ seq_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ seq_operators,

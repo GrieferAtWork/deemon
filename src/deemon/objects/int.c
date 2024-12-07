@@ -5131,6 +5131,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	/* .tp_class_methods = */ int_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ int_class_members,
+	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ int_operators,
