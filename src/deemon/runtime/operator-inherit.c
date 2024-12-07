@@ -163,8 +163,6 @@ Dee_type_seq_has_custom_tp_setitem_string_len_hash(struct type_seq const *__rest
 }
 
 /* Optimizations when inheriting certain operators. */
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeType_tp_bool_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeType_tp_iter_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeType_tp_sizeob_t)(DeeObject *__restrict self);
@@ -1061,81 +1059,10 @@ DeeType_Optimize_tp_inplace_xor(DeeTypeObject *__restrict dst, DeeType_tp_inplac
 	return tp_inplace_xor;
 }
 
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-#define DeeType_Optimize_tp_bool(self, tp_bool)                                             tp_bool
-#define DeeType_Optimize_tp_iter(self, tp_iter)                                             tp_iter
-#define DeeType_Optimize_tp_sizeob(self, tp_sizeob)                                         tp_sizeob
-#define DeeType_Optimize_tp_contains(self, tp_contains)                                     tp_contains
-#define DeeType_Optimize_tp_getitem(self, tp_getitem)                                       tp_getitem
-#define DeeType_Optimize_tp_delitem(self, tp_delitem)                                       tp_delitem
-#define DeeType_Optimize_tp_setitem(self, tp_setitem)                                       tp_setitem
-#define DeeType_Optimize_tp_getrange(self, tp_getrange)                                     tp_getrange
-#define DeeType_Optimize_tp_delrange(self, tp_delrange)                                     tp_delrange
-#define DeeType_Optimize_tp_setrange(self, tp_setrange)                                     tp_setrange
-#define DeeType_Optimize_tp_foreach(self, tp_foreach)                                       tp_foreach
-#define DeeType_Optimize_tp_foreach_pair(self, tp_foreach_pair)                             tp_foreach_pair
-#define DeeType_Optimize_tp_enumerate(self, tp_enumerate)                                   tp_enumerate
-#define DeeType_Optimize_tp_enumerate_index(self, tp_enumerate_index)                       tp_enumerate_index
-//efine DeeType_Optimize_tp_iterkeys(self, tp_iterkeys)                                     tp_iterkeys
-#define DeeType_Optimize_tp_bounditem(self, tp_bounditem)                                   tp_bounditem
-#define DeeType_Optimize_tp_hasitem(self, tp_hasitem)                                       tp_hasitem
-#define DeeType_Optimize_tp_size(self, tp_size)                                             tp_size
-#define DeeType_Optimize_tp_size_fast(self, tp_size_fast)                                   tp_size_fast
-#define DeeType_Optimize_tp_getitem_index(self, tp_getitem_index)                           tp_getitem_index
-#define DeeType_Optimize_tp_delitem_index(self, tp_delitem_index)                           tp_delitem_index
-#define DeeType_Optimize_tp_setitem_index(self, tp_setitem_index)                           tp_setitem_index
-#define DeeType_Optimize_tp_bounditem_index(self, tp_bounditem_index)                       tp_bounditem_index
-#define DeeType_Optimize_tp_hasitem_index(self, tp_hasitem_index)                           tp_hasitem_index
-#define DeeType_Optimize_tp_getrange_index(self, tp_getrange_index)                         tp_getrange_index
-#define DeeType_Optimize_tp_delrange_index(self, tp_delrange_index)                         tp_delrange_index
-#define DeeType_Optimize_tp_setrange_index(self, tp_setrange_index)                         tp_setrange_index
-#define DeeType_Optimize_tp_getrange_index_n(self, tp_getrange_index_n)                     tp_getrange_index_n
-#define DeeType_Optimize_tp_delrange_index_n(self, tp_delrange_index_n)                     tp_delrange_index_n
-#define DeeType_Optimize_tp_setrange_index_n(self, tp_setrange_index_n)                     tp_setrange_index_n
-#define DeeType_Optimize_tp_trygetitem(self, tp_trygetitem)                                 tp_trygetitem
-#define DeeType_Optimize_tp_trygetitem_index(self, tp_trygetitem_index)                     tp_trygetitem_index
-#define DeeType_Optimize_tp_trygetitem_string_hash(self, tp_trygetitem_string_hash)         tp_trygetitem_string_hash
-#define DeeType_Optimize_tp_getitem_string_hash(self, tp_getitem_string_hash)               tp_getitem_string_hash
-#define DeeType_Optimize_tp_delitem_string_hash(self, tp_delitem_string_hash)               tp_delitem_string_hash
-#define DeeType_Optimize_tp_setitem_string_hash(self, tp_setitem_string_hash)               tp_setitem_string_hash
-#define DeeType_Optimize_tp_bounditem_string_hash(self, tp_bounditem_string_hash)           tp_bounditem_string_hash
-#define DeeType_Optimize_tp_hasitem_string_hash(self, tp_hasitem_string_hash)               tp_hasitem_string_hash
-#define DeeType_Optimize_tp_trygetitem_string_len_hash(self, tp_trygetitem_string_len_hash) tp_trygetitem_string_len_hash
-#define DeeType_Optimize_tp_getitem_string_len_hash(self, tp_getitem_string_len_hash)       tp_getitem_string_len_hash
-#define DeeType_Optimize_tp_delitem_string_len_hash(self, tp_delitem_string_len_hash)       tp_delitem_string_len_hash
-#define DeeType_Optimize_tp_setitem_string_len_hash(self, tp_setitem_string_len_hash)       tp_setitem_string_len_hash
-#define DeeType_Optimize_tp_bounditem_string_len_hash(self, tp_bounditem_string_len_hash)   tp_bounditem_string_len_hash
-#define DeeType_Optimize_tp_hasitem_string_len_hash(self, tp_hasitem_string_len_hash)       tp_hasitem_string_len_hash
-#define DeeType_Optimize_tp_hash(self, tp_hash)                                             tp_hash
-#define DeeType_Optimize_tp_compare_eq(self, tp_compare_eq)                                 tp_compare_eq
-#define DeeType_Optimize_tp_compare(self, tp_compare)                                       tp_compare
-#define DeeType_Optimize_tp_trycompare_eq(self, tp_trycompare_eq)                           tp_trycompare_eq
-#define DeeType_Optimize_tp_eq(self, tp_eq)                                                 tp_eq
-#define DeeType_Optimize_tp_ne(self, tp_ne)                                                 tp_ne
-#define DeeType_Optimize_tp_lo(self, tp_lo)                                                 tp_lo
-#define DeeType_Optimize_tp_le(self, tp_le)                                                 tp_le
-#define DeeType_Optimize_tp_gr(self, tp_gr)                                                 tp_gr
-#define DeeType_Optimize_tp_ge(self, tp_ge)                                                 tp_ge
-#define DeeType_Optimize_tp_cmp(dst, tp_cmp)                                                tp_cmp
-#define DeeType_Optimize_tp_inv(self, tp_inv)                                               tp_inv
-#define DeeType_Optimize_tp_add(self, tp_add)                                               tp_add
-#define DeeType_Optimize_tp_sub(self, tp_sub)                                               tp_sub
-#define DeeType_Optimize_tp_and(self, tp_and)                                               tp_and
-#define DeeType_Optimize_tp_or(self, tp_or)                                                 tp_or
-#define DeeType_Optimize_tp_xor(self, tp_xor)                                               tp_xor
-#define DeeType_Optimize_tp_inplace_add(self, tp_inplace_add)                               tp_inplace_add
-#define DeeType_Optimize_tp_inplace_sub(self, tp_inplace_sub)                               tp_inplace_sub
-#define DeeType_Optimize_tp_inplace_mul(self, tp_inplace_mul)                               tp_inplace_mul
-#define DeeType_Optimize_tp_inplace_and(self, tp_inplace_and)                               tp_inplace_and
-#define DeeType_Optimize_tp_inplace_or(self, tp_inplace_or)                                 tp_inplace_or
-#define DeeType_Optimize_tp_inplace_xor(self, tp_inplace_xor)                               tp_inplace_xor
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
 #define DeeType_Optimize_tp_asvector(self, tp_asvector)                 tp_asvector
 #define DeeType_Optimize_tp_asvector_nothrow(self, tp_asvector_nothrow) tp_asvector_nothrow
 #define DeeType_Optimize_tp_unpack(self, tp_unpack)                     tp_unpack
 #define DeeType_Optimize_tp_unpack_ub(self, tp_unpack_ub)               tp_unpack_ub
-
 
 #define DeeType_Optimize_tp_deepload(self, tp_deepload)       tp_deepload
 #define DeeType_Optimize_tp_assign(self, tp_assign)           tp_assign

@@ -38,7 +38,6 @@
 
 #include "../../runtime/runtime_error.h"
 #include "range.h"
-#include "subrange.h"
 #include "svec.h"
 
 DECL_BEGIN
@@ -208,7 +207,6 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     /*[out]*/ size_t *__restrict p_length) {
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	struct foreach_seq_as_heap_vector_data data;
 	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
@@ -281,65 +279,6 @@ err_vector:
 	Dee_Free(data.sahvd_vector);
 err:
 	return NULL;
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-	struct foreach_seq_as_heap_vector_data data;
-	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
-	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		size_t i;
-		/* Optimization for fast-sequence-compatible objects. */
-		*p_length = data.sahvd_size;
-		data.sahvd_vector = Dee_objectlist_elemv_malloc(data.sahvd_size);
-		if unlikely(!data.sahvd_vector)
-			goto err;
-		if (DeeTuple_Check(self)) {
-			/* Further optimization: tuple can be memcpy'd */
-			ASSERT(data.sahvd_size == DeeTuple_SIZE(self));
-			return Dee_Movrefv(data.sahvd_vector, DeeTuple_ELEM(self), data.sahvd_size);
-		}
-		for (i = 0; i < data.sahvd_size; ++i) {
-			DREF DeeObject *elem;
-			elem = DeeFastSeq_GetItem_deprecated(self, i);
-			if unlikely(!elem) {
-				data.sahvd_size = i;
-				goto err_data;
-			}
-			data.sahvd_vector[i] = elem;
-		}
-		return data.sahvd_vector;
-	}
-
-	/* Use `DeeObject_Foreach()' */
-	data.sahvd_size   = 0;
-	data.sahvd_alloc  = 16;
-	data.sahvd_vector = Dee_objectlist_elemv_trymalloc(16);
-	if unlikely(!data.sahvd_vector) {
-		data.sahvd_alloc  = 1;
-		data.sahvd_vector = Dee_objectlist_elemv_malloc(1);
-		if unlikely(!data.sahvd_vector)
-			goto err;
-	}
-	if unlikely(DeeObject_Foreach(self, &foreach_seq_as_heap_vector_cb, &data))
-		goto err_data;
-	ASSERT(data.sahvd_size <= data.sahvd_alloc);
-
-	/* Free unused memory. */
-	if (data.sahvd_size < data.sahvd_alloc) {
-		DREF DeeObject **new_vector;
-		new_vector = Dee_objectlist_elemv_tryrealloc(data.sahvd_vector,
-		                                             data.sahvd_size);
-		if likely(new_vector)
-			data.sahvd_vector = new_vector;
-	}
-
-	/* Save the resulting length. */
-	*p_length = data.sahvd_size;
-	return data.sahvd_vector;
-err_data:
-	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
-	Dee_Free(data.sahvd_vector);
-err:
-	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 #ifdef Dee_MallocUsableSize
@@ -368,7 +307,6 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              /*[out]*/ size_t *__restrict p_allocated)
 #endif /* !Dee_MallocUsableSize */
 {
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	struct foreach_seq_as_heap_vector_data data;
 	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
@@ -431,62 +369,6 @@ err_vector:
 	Dee_Free(data.sahvd_vector);
 err:
 	return NULL;
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-	struct foreach_seq_as_heap_vector_data data;
-	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
-	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		size_t i;
-		/* Optimization for fast-sequence-compatible objects. */
-#ifndef Dee_MallocUsableSize
-		*p_allocated = data.sahvd_size;
-#endif /* !Dee_MallocUsableSize */
-		*p_length = data.sahvd_size;
-		data.sahvd_vector = Dee_objectlist_elemv_malloc(data.sahvd_size);
-		if unlikely(!data.sahvd_vector)
-			goto err;
-		if (DeeTuple_Check(self)) {
-			/* Further optimization: tuple can be memcpy'd */
-			ASSERT(data.sahvd_size == DeeTuple_SIZE(self));
-			return Dee_Movrefv(data.sahvd_vector, DeeTuple_ELEM(self), data.sahvd_size);
-		}
-		for (i = 0; i < data.sahvd_size; ++i) {
-			DREF DeeObject *elem;
-			elem = DeeFastSeq_GetItem_deprecated(self, i);
-			if unlikely(!elem) {
-				data.sahvd_size = i;
-				goto err_data;
-			}
-			data.sahvd_vector[i] = elem;
-		}
-		return data.sahvd_vector;
-	}
-
-	/* Use `DeeObject_Foreach()' */
-	data.sahvd_size   = 0;
-	data.sahvd_alloc  = 16;
-	data.sahvd_vector = Dee_objectlist_elemv_trymalloc(16);
-	if unlikely(!data.sahvd_vector) {
-		data.sahvd_alloc  = 1;
-		data.sahvd_vector = Dee_objectlist_elemv_malloc(1);
-		if unlikely(!data.sahvd_vector)
-			goto err;
-	}
-	if unlikely(DeeObject_Foreach(self, &foreach_seq_as_heap_vector_cb, &data))
-		goto err_data;
-	ASSERT(data.sahvd_size <= data.sahvd_alloc);
-
-	/* Save the resulting length, and allocation. */
-#ifndef Dee_MallocUsableSize
-	*p_allocated = data.sahvd_alloc;
-#endif /* !Dee_MallocUsableSize */
-	*p_length = data.sahvd_size;
-	return data.sahvd_vector;
-err_data:
-	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
-	Dee_Free(data.sahvd_vector);
-err:
-	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 
@@ -536,7 +418,6 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out*/ size_t *__restrict p_allocated)
 #endif /* !Dee_MallocUsableSize */
 {
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	struct foreach_seq_as_heap_vector_data data;
 	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
@@ -605,67 +486,6 @@ err_writeback:
 	goto done;
 err:
 	return (size_t)-1;
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-	Dee_ssize_t error;
-	struct foreach_seq_as_heap_vector_data data;
-	data.sahvd_vector = *p_vector;
-#ifdef Dee_MallocUsableSize
-	data.sahvd_alloc = Dee_objectlist_elemv_usable_size(data.sahvd_vector);
-#else /* Dee_MallocUsableSize */
-	data.sahvd_alloc = *p_allocated;
-#endif /* !Dee_MallocUsableSize */
-	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
-
-	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
-	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		/* Fast sequence optimizations. */
-		if (data.sahvd_size > data.sahvd_alloc) {
-			DREF DeeObject **new_vector;
-			new_vector = Dee_objectlist_elemv_realloc(data.sahvd_vector,
-			                                          data.sahvd_size);
-			if unlikely(!new_vector)
-				goto err;
-			data.sahvd_vector = new_vector;
-			*p_vector         = new_vector;
-#ifndef Dee_MallocUsableSize
-			*p_allocated = data.sahvd_size;
-#endif /* !Dee_MallocUsableSize */
-		}
-		if (DeeTuple_Check(self)) {
-			/* Further optimization: tuple can be memcpy'd */
-			ASSERT(data.sahvd_size == DeeTuple_SIZE(self));
-			Dee_Movrefv(data.sahvd_vector, DeeTuple_ELEM(self), data.sahvd_size);
-		} else {
-			size_t i;
-			for (i = 0; i < data.sahvd_size; ++i) {
-				DREF DeeObject *elem;
-				elem = DeeFastSeq_GetItem_deprecated(self, i);
-				if unlikely(!elem) {
-					data.sahvd_size = i;
-					goto err_writeback_data;
-				}
-				data.sahvd_vector[i] = elem; /* Inherit reference. */
-			}
-		}
-		return data.sahvd_size;
-	}
-
-	/* Use `DeeObject_Foreach()' */
-	data.sahvd_size = 0;
-	error = DeeObject_Foreach(self, &foreach_seq_as_heap_vector_cb, &data);
-	ASSERT(data.sahvd_size <= data.sahvd_alloc);
-	*p_vector = data.sahvd_vector;
-#ifndef Dee_MallocUsableSize
-	*p_allocated = data.sahvd_alloc;
-#endif /* !Dee_MallocUsableSize */
-	if unlikely(error)
-		goto err_writeback_data;
-	return data.sahvd_size;
-err_writeback_data:
-	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
-err:
-	return (size_t)-1;
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 
@@ -707,7 +527,6 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in*/ size_t offset)
 #endif /* !Dee_MallocUsableSize */
 {
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	struct foreach_seq_as_heap_vector_data data;
 	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
@@ -791,73 +610,6 @@ err_writeback:
 	goto done;
 err:
 	return (size_t)-1;
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-	Dee_ssize_t error;
-	struct foreach_seq_as_heap_vector_data data;
-	data.sahvd_vector = *p_vector;
-#ifdef Dee_MallocUsableSize
-	data.sahvd_alloc = Dee_objectlist_elemv_usable_size(data.sahvd_vector);
-#else /* Dee_MallocUsableSize */
-	data.sahvd_alloc = *p_allocated;
-#endif /* !Dee_MallocUsableSize */
-	ASSERT(data.sahvd_alloc >= offset);
-	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
-
-	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
-	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		/* Fast sequence optimizations. */
-		if (data.sahvd_size > (data.sahvd_alloc - offset)) {
-			DeeObject **new_vector;
-			data.sahvd_alloc = offset + data.sahvd_size;
-			new_vector = (DeeObject **)Dee_Reallocc(data.sahvd_vector,
-			                                        data.sahvd_alloc,
-			                                        sizeof(DeeObject *));
-			if unlikely(!new_vector)
-				goto err;
-			data.sahvd_vector = new_vector;
-			*p_vector         = new_vector;
-#ifndef Dee_MallocUsableSize
-			*p_allocated = data.sahvd_alloc;
-#endif /* !Dee_MallocUsableSize */
-		}
-		if (DeeTuple_Check(self)) {
-			/* Further optimization: tuple can be memcpy'd */
-			ASSERT(data.sahvd_size == DeeTuple_SIZE(self));
-			Dee_Movrefv(data.sahvd_vector + offset, DeeTuple_ELEM(self), data.sahvd_size);
-		} else {
-			size_t i;
-			for (i = 0; i < data.sahvd_size; ++i) {
-				DREF DeeObject *elem;
-				elem = DeeFastSeq_GetItem_deprecated(self, i);
-				if unlikely(!elem) {
-					data.sahvd_size = offset + i;
-					goto err_data;
-				}
-				data.sahvd_vector[offset + i] = elem; /* Inherit reference. */
-			}
-		}
-		return data.sahvd_size;
-	}
-
-	/* Use `DeeObject_Foreach()' */
-	data.sahvd_size = offset;
-	ASSERT(data.sahvd_size <= data.sahvd_alloc);
-	error = DeeObject_Foreach(self, &foreach_seq_as_heap_vector_cb, &data);
-	ASSERT(data.sahvd_size <= data.sahvd_alloc);
-	ASSERT(data.sahvd_size >= offset);
-	*p_vector = data.sahvd_vector;
-#ifndef Dee_MallocUsableSize
-	*p_allocated = data.sahvd_alloc;
-#endif /* !Dee_MallocUsableSize */
-	if unlikely(error)
-		goto err_data;
-	return data.sahvd_size - offset;
-err_data:
-	Dee_Decrefv(data.sahvd_vector + offset,
-	            data.sahvd_size - offset);
-err:
-	return (size_t)-1;
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 DECL_END

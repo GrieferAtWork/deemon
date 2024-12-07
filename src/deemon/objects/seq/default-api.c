@@ -43,10 +43,6 @@
 /**/
 #include "default-enumerate.h"
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-#include "../seq_functions.h"
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
 DECL_BEGIN
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_tsc_seq_trygetfirst_t DCALL DeeType_RequireSeqTryGetFirst_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self);

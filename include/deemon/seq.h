@@ -50,146 +50,12 @@ DECL_BEGIN
 
 
 
-/* TODO: Once `CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS' is done, re-write this documentation! */
-/* NOTE: There are no `DeeSeq_Check()' macros because they wouldn't make sense.
- *       Being derived from `DeeSeq_Type' is _NOT_ mandatory when writing a
- *       sequence class. The only thing that it does do is allow usercode
- *       to safely query whether or not an object implements all of the standard
- *       sequence functions.
- * Instead, a sequence object `ob' should be
- * detected using `DeeType_IsSequence(Dee_TYPE(ob))'.
- * The following things are required from sub-class of `Sequence':
+/* The following things are required from sub-class of `Sequence':
  *     - Must either implement `tp_iter' or `tp_sizeob' + `tp_getitem'
- * The following things are implemented by `Sequence':
- *     - Abstraction that automatically defines the following operators:
- *        - tp_iter
- *        - tp_sizeob
- *        - tp_contains
- *        - tp_getitem  (for integer-index argument only)
- *        - tp_getrange  (for integer-index argument only)
- *        - tp_eq  (Lexicographic element-wise compare with other iterables)
- *        - tp_ne  (...)
- *        - tp_lo
- *        - tp_le
- *        - tp_gr
- *        - tp_ge
- *        - tp_add  (Concat 2 sequences)
- *        - tp_mul  (Repeat a sequence some number of times)
- *        - tp_or   (Repeat the left sequence, then only yield elements from right not found in the left one as well)
- *        - tp_and  (Convert the left sequence into a set, then only yield elements from the right found in that set)
- *        - tp_repr (Surrounded by `{ ... }', print a comma-separated list of all elements)
- *        - tp_bool (Indicates if the sequence is non-empty)
- *     - Abstraction that automatically defines the following getsets:
- *        - `isempty: bool'       (Read-only; same as `tp_bool', but negated)
- *        - `isnonempty: bool'    (Read-only; same as `tp_bool')
- *        - `length: int'         (Read-only; same as `tp_sizeob')
- *        - `first: Object'       (Read-write; same as `tp_getitem(0)' / `tp_setitem(0)')
- *        - `last: Object'        (Read-write; same as `tp_getitem(length - 1)' / `tp_setitem(length - 1)')
- *        - `each: Sequence'      (Read-only; Proxy sequence for construction expressions to-be applied to each element)
- *        - `ids: {int...}'       (Read-only; Proxy sequence for object IDs for elements)
- *        - `types: {Type...}'    (Read-only; Proxy sequence for element types)
- *        - `classes: {Type...}'  (Read-only; Proxy sequence for element classes)
- *        - `isfrozen: bool'      (Read-only; returns true if the sequence is frozen)
- *        - `frozen: Sequence'    (Read-only; returns a frozen copy of the sequence)
- *     - Abstraction that automatically defines the following class getsets:
- *        - `Iterator: Type'
- *          Evaluates to the internally used iterator type when `DeeObject_Iter()' would
- *          return it. Otherwise, accessing this field raises an `Error.AttributeError'.
- *          The intention here is that a sub-class defining its own iterator should override
- *          this field in order to return its own type.
- *     - Abstraction that automatically defines the following methods:
- *        - `front(): Object'
- *        - `back(): Object'
- *        - `reduce(combine: Callable, init?): Object'
- *           - Call `combine()' on two consecutive objects, reusing the result as
- *             the first argument in the next call; return the final sum-style value.
- *             NOTE: When the sequence is empty, return `none'
- *        - `filter(keep: Callable): Sequence'
- *           - Same as `(for (local x: this) if (keep(x)) x)'
- *        - `sum(): Object'
- *           - Same as `reduce((a, b) -> a + b);' or `this + ...'
- *           - Preferred way to concat sequences containing strings:
- *              - `print ["foo", "bar", "foobar"].sum(); // "foobarfoobar"'
- *        - `any(): bool'
- *           - Same as `reduce((a, b) -> a || b, false);', but stop on the first `true'.
- *           - Same as `this || ...'
- *        - `all(): bool'
- *           - Same as `reduce((a, b) -> a && b, true);', but stop on the first `false'.
- *           - Same as `this && ...'
- *        - `parity(): bool'
- *           - Same as `((#this.filter(x -> !!x)) % 2) != 0'
- *        - `min(key: Callable = none): Object'
- *        - `max(key: Callable = none): Object'
- *        - `count(ob: Object, key: Callable = none): int'
- *        - `locate(ob: Object, key: Callable = none): Object'
- *        - `rlocate(ob: Object, key: Callable = none): Object'
- *        - `locateall(ob: Object, key: Callable = none): Sequence'
- *        - `transform(callable transformation): Sequence'
- *           - Invoke `transformation()' on all items and return a sequence of all the results.
- *           - Same as `(for (local x: this) transformation(x));'
- *        - `contains(ob: Object, key: Callable = none): bool'
- *           - Same as the `tp_contains' operator, but allows for a key function to be used.
- *        - `partition(ob: Object, key: Callable = none): (Sequence, (ob), Sequence)'
- *        - `rpartition(ob: Object, key: Callable = none): (Sequence, (ob), Sequence)'
- *        - `startswith(ob: Object, key: Callable = none): bool'
- *        - `endswith(ob: Object, key: Callable = none): bool'
- *        - `find(ob: Object, key: Callable = none): int'
- *        - `rfind(ob: Object, key: Callable = none): int'
- *        - `index(ob: Object, key: Callable = none): int'
- *        - `rindex(ob: Object, key: Callable = none): int'
- *        - `join(items: Sequence): Sequence'
- *        - `strip(ob: Object, key: Callable = none): Sequence'
- *        - `lstrip(ob: Object, key: Callable = none): Sequence'
- *        - `rstrip(ob: Object, key: Callable = none): Sequence'
- *        - `split(sep: Object, key: Callable = none): Sequence'
- *        - `reversed(): Sequence'
- *        - `sorted(key: Callable = none): Sequence'
- *        - `segments(segsize: int): Sequence'
- *        - `countseq(seq: Sequence, key: Callable = none): int'
- *        - `containsseq(seq: Sequence, key: Callable = none): bool'
- *        - `partitionseq(seq: Sequence, key: Callable = none): (Sequence, Sequence, Sequence)'
- *        - `rpartitionseq(seq: Sequence, key: Callable = none): (Sequence, Sequence, Sequence)'
- *        - `startswithseq(seq: Sequence, key: Callable = none): bool'
- *        - `endswithseq(seq: Sequence, key: Callable = none): bool'
- *        - `findseq(seq: Sequence, key: Callable = none): int'
- *        - `rfindseq(seq: Sequence, key: Callable = none): int'
- *        - `indexseq(seq: Sequence, key: Callable = none): int'
- *        - `rindexseq(seq: Sequence, key: Callable = none): int'
- *        - `stripseq(items: Sequence, key: Callable = none): Sequence'
- *        - `lstripseq(items: Sequence, key: Callable = none): Sequence'
- *        - `rstripseq(items: Sequence, key: Callable = none): Sequence'
- *        - `splitseq(sep_seq: Sequence, key: Callable = none): Sequence'
- *        - ... // More exist; please consult http://localhost:8080/modules/deemon/Sequence
- * Some operations (Such as `tp_add') will create instances of special objects
- * that will only start invoking underlying operators when worked with:
- * >> function foo() {
- * >>     print "In foo()";
- * >>     yield 10;
- * >> }
- * >> function bar() {
- * >>     print "In bar()";
- * >>     yield 20;
- * >> }
- * >> 
- * >> local combine = foo()+bar(); // Create a merged-sequence object
- * >> // At this point, neither function has started executing, yet.
- * >> for (local x: combine) {
- * >>      print x; // "In foo()", "10", "In bar()", "20"
- * >> }
- * Other operators/functions may also invoke iteration more than once.
- * Which operators/functions do this is intentionally
- * not revealed and is subject to change in the future.
- * Code expecting certain types of sequences (or mutable sequence for that)
- * should always perform an explicit cast to the desired sequence type:
- * >> local a = [5, 10, 20, 30, 5];
- * >> local b = a.strip(5);
- * >> for (local x: b)
- * >>     print x; // 10 20 30
- * >> print type b; // Undefined and subject to change
- * >> b = [b...]; // Explicit cast to list; same as `b = list(b);'
- * HINT: Instantiating `seq' as-is will yield `Dee_EmptySeq',
- *       which in return is re-used internally as a placeholder
- *       to represent an empty, general-purpose sequence. */
+ * Many things are implemented by `Sequence'.
+ * For a full list, see http://localhost:8080/modules/deemon/Sequence
+ *
+ * HINT: Instantiating `Sequence' as-is will return a copy of `Dee_EmptySeq' */
 DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon' */
 #define DeeSeq_Check(ob) DeeObject_Implements(ob, &DeeSeq_Type)
 
@@ -468,6 +334,12 @@ struct Dee_type_nsi {
 	;
 };
 
+/* Lookup the closest NSI descriptor for `tp', or return `NULL'
+ * if the top-most type implementing any sequence operator doesn't
+ * expose NSI functionality. */
+DFUNDEF WUNUSED NONNULL((1)) struct Dee_type_nsi const *DCALL
+DeeType_NSI(DeeTypeObject *__restrict tp); /* !!! DEPRECATED !!! */
+
 
 /*****************************************************************************************/
 /*                                                                                       */
@@ -527,12 +399,6 @@ DFUNDEF ATTR_CONST WUNUSED size_t DCALL
 DeeSeqRange_DoClamp_n(Dee_ssize_t start, size_t size);
 
 
-/* Lookup the closest NSI descriptor for `tp', or return `NULL'
- * if the top-most type implementing any sequence operator doesn't
- * expose NSI functionality. */
-DFUNDEF WUNUSED NONNULL((1)) struct Dee_type_nsi const *DCALL
-DeeType_NSI(DeeTypeObject *__restrict tp);
-
 /* Create new range sequence objects. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeRange_New(DeeObject *begin, DeeObject *end, DeeObject *step);
@@ -546,27 +412,6 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Any(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_All(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self);
-
-
-#ifdef CONFIG_BUILDING_DEEMON
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-
-/* @return: == -2: An error occurred.
- * @return: == -1: `self < some_object'
- * @return: == 0:  Objects compare as equal
- * @return: == 1:  `self > some_object' */
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_CompareIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);                      /* ITERATOR <=> VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareII(DeeObject *lhs, DeeObject *rhs);                                           /* ITERATOR <=> ITERATOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_CompareIS(DeeObject *lhs, DeeObject *rhs);                                           /* ITERATOR <=> SEQUENCE */
-
-/* @return: == -1: An error occurred.
- * @return: == 0:  Sequences differ
- * @return: == 1:  Sequences are equal */
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);          /* ITERATOR == VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqII(DeeObject *lhs, DeeObject *rhs);                               /* ITERATOR == ITERATOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIS(DeeObject *lhs, DeeObject *rhs);                               /* ITERATOR == SEQUENCE */
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-#endif /* CONFIG_BUILDING_DEEMON */
 
 
 /* Possible return values for `DeeType_GetSeqClass()' */

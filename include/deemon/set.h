@@ -118,21 +118,6 @@ DDATDEF DeeObject DeeSet_UniversalInstance;
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SETS_C */
 #define Dee_UniversalSet (&DeeSet_UniversalInstance)
 
-
-#ifdef CONFIG_BUILDING_DEEMON
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_Invert(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_OperatorAdd(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_OperatorSub(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_OperatorAnd(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_OperatorXor(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsSameSet(DeeObject *lhs, DeeObject *rhs);
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsDisjoint(DeeObject *lhs, DeeObject *rhs);
-#endif /* CONFIG_BUILDING_DEEMON */
-
 DECL_END
 
 #endif /* !GUARD_DEEMON_SET_H */

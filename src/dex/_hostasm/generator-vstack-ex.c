@@ -6239,40 +6239,6 @@ err:
 	return -1;
 }
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-/* self, index -> CHECKED(elem) */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-vcall_DeeFastSeq_GetItem(struct fungen *__restrict self,
-                         struct Dee_type_nsi const *__restrict nsi) {
-	struct fg_branch branch;
-	ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
-	if (nsi->nsi_seqlike.nsi_getitem_fast) {
-		DO(fg_vdup_at(self, 2));                   /* self, index, self */
-		DO(fg_vdup_at(self, 2));                   /* self, index, self, index */
-		DO(fg_vcallapi(self, nsi->nsi_seqlike.nsi_getitem_fast, VCALL_CC_RAWINTPTR, 2)); /* self, index, UNCHECKED(elem) */
-		DO(fg_vdup(self));                        /* self, index, UNCHECKED(elem), UNCHECKED(elem) */
-		DO(fg_vjz_enter_unlikely(self, &branch)); /* self, index, UNCHECKED(elem) */
-		EDO(err_branch, fg_vpop(self));           /* self, index */
-		EDO(err_branch, fg_vcallapi(self, &libhostasm_rt_err_unbound_index, VCALL_CC_EXCEPT, 2)); /* N/A */
-		DO(fg_vjx_leave_noreturn(self, &branch)); /* self, index, elem */
-		DO(fg_vrrot(self, 3));                    /* elem, self, index */
-		DO(fg_vpop(self));                        /* elem, self */
-		DO(fg_vpop(self));                        /* elem */
-		DO(fg_vdirect1(self));                    /* elem */
-		fg_vtop_direct_setref(self);
-		return 0;
-	}
-	ASSERT(nsi->nsi_seqlike.nsi_getitem);
-	return fg_vcallapi(self, nsi->nsi_seqlike.nsi_getitem,
-	                   VCALL_CC_OBJECT, 2);
-err_branch:
-	fg_branch_fini(&branch);
-err:
-	return -1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
-
 /* seq -> [elems...] */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
@@ -6368,52 +6334,6 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 				/* TODO: Incref every element where the consumer needs it to be a reference */
 				/* TODO: Release the lock from the list (if the list isn't ONEREF) */
 			}
-
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-			/* If "seqtype" implements "nsi_getsize_fast" (DeeFastSeq_GetSize_deprecated),
-			 * inline the relevant code from `DeeObject_Unpack()' */
-			if (seqtype->tp_seq &&
-			    seqtype->tp_seq->tp_nsi &&
-			    seqtype->tp_seq->tp_nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
-			    seqtype->tp_seq->tp_nsi->nsi_seqlike.nsi_getsize_fast) {
-				struct Dee_type_nsi const *nsi = seqtype->tp_seq->tp_nsi;
-				ASSERT(nsi->nsi_seqlike.nsi_getitem ||
-				       nsi->nsi_seqlike.nsi_getitem_fast);
-
-				/* NOTE: Here, we're *NOT* free to load in arbitrary order!
-				 *       If more than one element is unbound / causes an exception,
-				 *       then the actual error needs to be for the *first* (lowest)
-				 *       index where access causes a fault! */
-				DO(fg_vdup(self)); /* seq, seq */
-				DO(fg_vcallapi(self, nsi->nsi_seqlike.nsi_getsize_fast,
-				               VCALL_CC_RAWINTPTR, 1)); /* seq, size */
-				DO(vassert_unpack_size(self, n));       /* seq */
-				for (i = 0; i < n; ++i) {
-					/* TODO: For locations that don't end up being used, simply push none:
-					 * >> local a, none, b = foo.partition(",")...;
-					 *
-					 * ASM:
-					 * >> push   @foo
-					 * >> push   @","
-					 * >> callattr top, @"partition", #1
-					 * >> unpack pop, #3    // Don't actually need to load second value
-					 * >> pop    local @b
-					 * >> pop               // Second value is discarded without being used
-					 * >> pop    local @a
-					 */
-					if (i == n - 1) {
-						DO(fg_vlrot(self, n)); /* [items...], seq */
-					} else {
-						DO(fg_vdup_at(self, i + 1)); /* seq, [items...], seq */
-					}
-					DO(fg_vpush_immSIZ(self, i));            /* [seq], [items...], seq, i */
-					DO(vcall_DeeFastSeq_GetItem(self, nsi)); /* [seq], [items...], elem */
-				}                                            /* [seq], [items...] */
-				if (n == 0)
-					return fg_vpop(self);
-				return 0;
-			}
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 		}
 	}
 

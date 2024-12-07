@@ -455,7 +455,7 @@ local __objects = deemon.List {
 	/* 0x0189 */ deemon.Sequence.contains,
 	/* 0x018a */ net.socket,
 	/* 0x018b */ deemon.hasattr,
-	/* 0x018c */ none, /* TODO: SeqSubRangeIterator_Type (CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS) */
+	/* 0x018c */ rt.IterWithSizeAndGetItem, /* SeqSubRangeIterator_Type (lots of other types would match here also, but we can only set one) */
 	/* 0x018d */ none, /* DeeSocketFile_Type -- Sockets no longer implement the File protocol */
 	/* 0x018e */ none, /* DeeSocketFileTo_Type -- Sockets no longer implement the File protocol */
 	/* 0x018f */ rt.StringIterator, /* DeeWideStringIterator_Type */
