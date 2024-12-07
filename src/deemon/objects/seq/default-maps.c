@@ -464,7 +464,7 @@ STATIC_ASSERT(offsetof(MapUnionIterator, mui_iter) == offsetof(ProxyObject2, po_
               offsetof(MapUnionIterator, mui_iter) == offsetof(ProxyObject2, po_obj2));
 #define muiter_fini generic_proxy2_fini
 
-INTERN NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 muiter_clear(MapUnionIterator *__restrict self) {
 	DREF DeeObject *iter;
 	MapUnionIterator_LockWrite(self);
@@ -2298,7 +2298,7 @@ STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_in2nd) == offsetof(M
 #define msditer_set_in2nd muiter_set_in2nd
 #define msditer_getsets   muiter_getsets
 #else
-INTERN NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 msditer_clear(MapSymmetricDifferenceIterator *__restrict self) {
 	DREF DeeObject *iter;
 	MapSymmetricDifferenceIterator_LockWrite(self);

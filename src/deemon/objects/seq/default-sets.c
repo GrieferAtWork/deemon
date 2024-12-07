@@ -26,6 +26,8 @@
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/gc.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
@@ -33,7 +35,6 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-#include "../gc_inspect.h"
 #include "default-api.h"
 
 /**/
@@ -397,6 +398,21 @@ STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(ProxyObject2, po_
               offsetof(SetUnionIterator, sui_iter) == offsetof(ProxyObject2, po_obj2));
 #define suiter_fini generic_proxy2_fini
 
+PRIVATE NONNULL((1)) void DCALL
+suiter_clear(SetUnionIterator *__restrict self) {
+	DREF DeeObject *iter;
+	SetUnionIterator_LockWrite(self);
+	iter = self->sui_iter;
+	Dee_Incref(Dee_None);
+	self->sui_iter = Dee_None;
+	SetUnionIterator_LockEndWrite(self);
+	Dee_Decref(iter);
+}
+
+PRIVATE struct type_gc suiter_gc = {
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *))&suiter_clear
+};
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_get_iter(SetUnionIterator *__restrict self) {
 	DREF DeeObject *result;
@@ -411,25 +427,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_set_iter(SetUnionIterator *__restrict self,
                 DeeObject *__restrict iter) {
 	DREF DeeObject *old_iter;
-	/* TODO: This doesn't work reliably!
-	 * 2 threads could call this function on each other, and be
-	 * both be able to pass this check, just before proceeding
-	 * to assign each other's iterator and form a loop!
-	 *
-	 * TODO: Even easier:
-	 * >> global myIter;
-	 * >> class MySet { operator iter() -> myIter; }
-	 * >> local x = ({10, 20} as Set) | MySet();
-	 * >>
-	 * >> myIter = x.operator iter();
-	 * >> foreach (none: myIter); // Ooops -- reference loop :(
-	 * >> // Now: `((SetUnionIterator *)myIter)->sui_iter == myIter'
-	 */
-	if (DeeGC_ReferredBy(iter, (DeeObject *)self))
-		return err_reference_loop((DeeObject *)self, iter);
 	Dee_Incref(iter);
 	SetUnionIterator_LockRead(self);
-	old_iter       = self->sui_iter;
+	old_iter = self->sui_iter;
 	self->sui_iter = iter;
 	SetUnionIterator_LockEndRead(self);
 	Dee_Decref(old_iter);
@@ -716,7 +716,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 	/* .tp_name     = */ "_SetUnionIterator",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(su?:?Ert:SetUnion)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
@@ -727,7 +727,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&suiter_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&suiter_deep,
 				/* .tp_any_ctor  = */ (dfunptr_t)&suiter_init,
-				TYPE_FIXED_ALLOCATOR(SetUnionIterator)
+				TYPE_FIXED_ALLOCATOR_GC(SetUnionIterator)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&suiter_fini,
@@ -741,7 +741,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&suiter_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &suiter_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &suiter_cmp,
 	/* .tp_seq           = */ NULL,
@@ -778,9 +778,9 @@ STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
 PRIVATE WUNUSED NONNULL((1)) DREF SetUnionIterator *DCALL
 su_iter(SetUnion *__restrict self) {
 	DREF SetUnionIterator *result;
-	result = DeeObject_MALLOC(SetUnionIterator);
+	result = DeeGCObject_MALLOC(SetUnionIterator);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	result->sui_iter = DeeSet_OperatorIter(self->su_a);
 	if unlikely(!result->sui_iter)
 		goto err_r;
@@ -789,10 +789,10 @@ su_iter(SetUnion *__restrict self) {
 	result->sui_union = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &SetUnionIterator_Type);
-done:
-	return result;
+	return (DREF SetUnionIterator *)DeeGC_Track((DREF DeeObject *)result);
 err_r:
-	DeeObject_FREE(result);
+	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -969,6 +969,7 @@ STATIC_ASSERT(offsetof(SetUnionIterator, sui_in2nd) == offsetof(SetSymmetricDiff
 #define ssditer_init    suiter_init
 #define ssditer_fini    suiter_fini
 #define ssditer_visit   suiter_visit
+#define ssditer_gc      suiter_gc
 #define ssditer_cmp     suiter_cmp
 #define ssditer_getsets suiter_getsets
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1061,7 +1062,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 	/* .tp_name     = */ "_SetSymmetricDifferenceIterator",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(ssd?:?Ert:SetSymmetricDifference)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
@@ -1072,7 +1073,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&ssditer_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&ssditer_deep,
 				/* .tp_any_ctor  = */ (dfunptr_t)&ssditer_init,
-				TYPE_FIXED_ALLOCATOR(SetSymmetricDifferenceIterator)
+				TYPE_FIXED_ALLOCATOR_GC(SetSymmetricDifferenceIterator)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssditer_fini,
@@ -1086,7 +1087,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ssditer_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &ssditer_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &ssditer_cmp,
 	/* .tp_seq           = */ NULL,
@@ -1122,9 +1123,9 @@ STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_b) == offsetof(ProxyObject2, 
 PRIVATE WUNUSED NONNULL((1)) DREF SetSymmetricDifferenceIterator *DCALL
 ssd_iter(SetSymmetricDifference *__restrict self) {
 	DREF SetSymmetricDifferenceIterator *result;
-	result = DeeObject_MALLOC(SetSymmetricDifferenceIterator);
+	result = DeeGCObject_MALLOC(SetSymmetricDifferenceIterator);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	result->ssd_iter = DeeSet_OperatorIter(self->ssd_a);
 	if unlikely(!result->ssd_iter)
 		goto err_r;
@@ -1133,10 +1134,10 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 	result->ssd_set   = self;
 	Dee_Incref(self);
 	DeeObject_Init(result, &SetSymmetricDifferenceIterator_Type);
-done:
-	return result;
+	return (DREF SetSymmetricDifferenceIterator *)DeeGC_Track((DeeObject *)result);
 err_r:
-	DeeObject_FREE(result);
+	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 

@@ -55,6 +55,9 @@ assertEqualSet({10, 20, 30},   ((10, 20) as Set) + S(30));
        *        substitutes "Tuple.operator -" as (Tuple.operator + (lhs, -rhs)),
        *        rather than inheriting "Sequence.operator -"
        * >> NotImplemented: Operator `deemon.Tuple.operator neg' is not implemented
+       * Solution: This sort of substitution should only happen for types derived
+       *           from "Numeric", similar to how all the sequence stuff gets enabled
+       *           by inheriting from "Sequence"
        */
 assertEqualSet({20},           S(10, 20) - S(10));
 assertEqualSet({10},           S(10, 20) - S(20));
