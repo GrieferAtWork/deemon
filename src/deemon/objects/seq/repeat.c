@@ -28,6 +28,7 @@
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -39,7 +40,6 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-#include "../gc_inspect.h"
 #include "../seq_functions.h"
 
 #undef SSIZE_MAX
@@ -135,8 +135,23 @@ STATIC_ASSERT(offsetof(RepeatIterator, rpi_iter) == offsetof(ProxyObject2, po_ob
 #define repeatiter_fini  generic_proxy2_fini
 #define repeatiter_visit generic_proxy2_visit
 
+PRIVATE NONNULL((1)) void DCALL
+repeatiter_clear(RepeatIterator *__restrict self) {
+	DREF DeeObject *iter;
+	Dee_Incref(Dee_None);
+	RepeatIterator_LockWrite(self);
+	iter = self->rpi_iter;
+	self->rpi_iter = Dee_None;
+	RepeatIterator_LockEndWrite(self);
+	Dee_Decref(iter);
+}
+
+PRIVATE struct type_gc repeatiter_gc = {
+	/* .tp_gc = */ (void (DCALL *)(DeeObject *__restrict))&repeatiter_clear
+};
+
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-repeatiter_hash(RepeatIterator *self) {
+repeatiter_hash(RepeatIterator *__restrict self) {
 	Dee_hash_t result;
 	DREF DeeObject *my_iter;
 	result = REPEATITER_READ_NUM(self);
@@ -261,14 +276,11 @@ repeatiter_get_iter(RepeatIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-repeatiter_set_iter(RepeatIterator *__restrict self,
-                    DeeObject *__restrict value) {
+repeatiter_set_iter(RepeatIterator *self, DeeObject *value) {
 	DREF DeeObject *oldvalue;
-	if (DeeGC_ReferredBy(value, (DeeObject *)self))
-		return err_reference_loop((DeeObject *)self, value);
 	Dee_Incref(value);
 	RepeatIterator_LockWrite(self);
-	oldvalue      = self->rpi_iter;
+	oldvalue = self->rpi_iter;
 	self->rpi_iter = value;
 	RepeatIterator_LockEndWrite(self);
 	Dee_Decref(oldvalue);
@@ -315,7 +327,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRepeatIterator",
 	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqRepeat)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
@@ -326,7 +338,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&repeatiter_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&repeatiter_deep,
 				/* .tp_any_ctor  = */ (dfunptr_t)&repeatiter_init,
-				TYPE_FIXED_ALLOCATOR(RepeatIterator)
+				TYPE_FIXED_ALLOCATOR_GC(RepeatIterator)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&repeatiter_fini,
@@ -340,7 +352,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&repeatiter_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &repeatiter_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &repeatiter_cmp,
 	/* .tp_seq           = */ NULL,
@@ -411,9 +423,9 @@ STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(ProxyObject, po_obj));
 PRIVATE WUNUSED NONNULL((1)) DREF RepeatIterator *DCALL
 repeat_iter(Repeat *__restrict self) {
 	DREF RepeatIterator *result;
-	result = DeeObject_MALLOC(RepeatIterator);
+	result = DeeGCObject_MALLOC(RepeatIterator);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	result->rpi_iter = DeeObject_Iter(self->rp_seq);
 	if unlikely(!result->rpi_iter)
 		goto err_r;
@@ -422,10 +434,10 @@ repeat_iter(Repeat *__restrict self) {
 	Dee_atomic_rwlock_init(&result->rpi_lock);
 	Dee_Incref(self);
 	DeeObject_Init(result, &SeqRepeatIterator_Type);
-done:
-	return result;
+	return (DREF RepeatIterator *)DeeGC_Track((DREF DeeObject *)result);
 err_r:
-	DeeObject_FREE(result);
+	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
