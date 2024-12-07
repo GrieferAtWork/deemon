@@ -23,16 +23,17 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+/**/
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *sp_seq;  /* [1..1][const] The underlying sequence. */
+	PROXY_OBJECT_HEAD(sp_seq) /* [1..1][const] The underlying sequence. */
 } SeqSimpleProxy;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *si_iter; /* [1..1][const] The underlying iterator. */
+	PROXY_OBJECT_HEAD(si_iter) /* [1..1][const] The underlying iterator. */
 } SeqSimpleProxyIterator;
 
 

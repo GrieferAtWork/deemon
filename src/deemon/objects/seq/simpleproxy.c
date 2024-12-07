@@ -20,8 +20,6 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_SIMPLEPROXY_C
 #define GUARD_DEEMON_OBJECTS_SEQ_SIMPLEPROXY_C 1
 
-#include "simpleproxy.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -33,6 +31,11 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
+#include "default-api.h"
+
+/**/
+#include "simpleproxy.h"
 
 DECL_BEGIN
 
@@ -43,66 +46,21 @@ proxy_ctor(SeqSimpleProxy *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-proxy_copy(SeqSimpleProxy *__restrict self,
-           SeqSimpleProxy *__restrict other) {
-	self->sp_seq = other->sp_seq;
-	Dee_Incref(self->sp_seq);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-proxy_deep(SeqSimpleProxy *__restrict self,
-           SeqSimpleProxy *__restrict other) {
-	self->sp_seq = DeeObject_DeepCopy(other->sp_seq);
-	if unlikely(!self->sp_seq)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-proxy_init(SeqSimpleProxy *__restrict self,
-           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv,
-	                  self->ob_type == &SeqIds_Type
-	                  ? "o:_SeqIds"
-	                  : self->ob_type == &SeqTypes_Type
-	                    ? "o:_SeqTypes"
-	                    : "o:_SeqClasses",
-	                  &self->sp_seq))
-		goto err;
-	Dee_Incref(self->sp_seq);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1)) void DCALL
-proxy_fini(SeqSimpleProxy *__restrict self) {
-	Dee_Decref(self->sp_seq);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-proxy_visit(SeqSimpleProxy *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->sp_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-proxy_bool(SeqSimpleProxy *__restrict self) {
-	return DeeObject_Bool(self->sp_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-proxy_size(SeqSimpleProxy *__restrict self) {
-	return DeeObject_Size(self->sp_seq);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-proxy_size_fast(SeqSimpleProxy *__restrict self) {
-	return DeeObject_SizeFast(self->sp_seq);
-}
+STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) == offsetof(ProxyObject, po_obj));
+#define proxy_copy            generic_proxy_copy_alias
+#define proxy_deep            generic_proxy_deepcopy
+#define proxy_init            generic_proxy_init
+#define proxy_fini            generic_proxy_fini
+#define proxy_visit           generic_proxy_visit
+#define proxy_bool            generic_proxy_bool
+#define proxy_sizeob          generic_proxy_sizeob
+#define proxy_size            generic_proxy_size
+#define proxy_size_fast       generic_proxy_size_fast
+#define proxy_iterkeys        generic_proxy_iterkeys
+#define proxy_hasitem         generic_proxy_hasitem
+#define proxy_bounditem       generic_proxy_bounditem
+#define proxy_hasitem_index   generic_proxy_hasitem_index
+#define proxy_bounditem_index generic_proxy_bounditem_index
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqSimpleProxy *DCALL
 proxy_get_frozen(SeqSimpleProxy *__restrict self) {
@@ -143,7 +101,7 @@ ids_iter(SeqSimpleProxy *__restrict self) {
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->si_iter = DeeObject_Iter(self->sp_seq);
+	result->si_iter = DeeSeq_OperatorIter(self->sp_seq);
 	if unlikely(!result->si_iter)
 		goto err_r;
 	DeeObject_Init(result, &SeqIdsIterator_Type);
@@ -160,7 +118,7 @@ types_iter(SeqSimpleProxy *__restrict self) {
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->si_iter = DeeObject_Iter(self->sp_seq);
+	result->si_iter = DeeSeq_OperatorIter(self->sp_seq);
 	if unlikely(!result->si_iter)
 		goto err_r;
 	DeeObject_Init(result, &SeqTypesIterator_Type);
@@ -177,7 +135,7 @@ classes_iter(SeqSimpleProxy *__restrict self) {
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->si_iter = DeeObject_Iter(self->sp_seq);
+	result->si_iter = DeeSeq_OperatorIter(self->sp_seq);
 	if unlikely(!result->si_iter)
 		goto err_r;
 	DeeObject_Init(result, &SeqClassesIterator_Type);
@@ -189,10 +147,45 @@ err_r:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ids_getitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorGetItem(self->sp_seq, index);
+	if likely(elem) {
+		result = DeeInt_NewUIntptr(DeeObject_Id(elem));
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+types_getitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorGetItem(self->sp_seq, index);
+	if likely(elem) {
+		result = (DREF DeeObject *)Dee_TYPE(elem);
+		Dee_Incref(result);
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+classes_getitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorGetItem(self->sp_seq, index);
+	if likely(elem) {
+		result = (DREF DeeObject *)DeeObject_Class(elem);
+		Dee_Incref(result);
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ids_getitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
-	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
+	result = elem = DeeSeq_OperatorGetItemIndex(self->sp_seq, index);
 	if likely(elem) {
 		result = DeeInt_NewUIntptr(DeeObject_Id(elem));
 		Dee_Decref(elem);
@@ -203,7 +196,7 @@ ids_getitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 types_getitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
-	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
+	result = elem = DeeSeq_OperatorGetItemIndex(self->sp_seq, index);
 	if likely(elem) {
 		result = (DREF DeeObject *)Dee_TYPE(elem);
 		Dee_Incref(result);
@@ -215,8 +208,78 @@ types_getitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 classes_getitem_index(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
-	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
+	result = elem = DeeSeq_OperatorGetItemIndex(self->sp_seq, index);
 	if likely(elem) {
+		result = (DREF DeeObject *)DeeObject_Class(elem);
+		Dee_Incref(result);
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ids_trygetitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorTryGetItem(self->sp_seq, index);
+	if likely(ITER_ISOK(elem)) {
+		result = DeeInt_NewUIntptr(DeeObject_Id(elem));
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+types_trygetitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorTryGetItem(self->sp_seq, index);
+	if likely(ITER_ISOK(elem)) {
+		result = (DREF DeeObject *)Dee_TYPE(elem);
+		Dee_Incref(result);
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+classes_trygetitem(SeqSimpleProxy *__restrict self, DeeObject *index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorTryGetItem(self->sp_seq, index);
+	if likely(ITER_ISOK(elem)) {
+		result = (DREF DeeObject *)DeeObject_Class(elem);
+		Dee_Incref(result);
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ids_trygetitem_index(SeqSimpleProxy *__restrict self, size_t index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorTryGetItemIndex(self->sp_seq, index);
+	if likely(ITER_ISOK(elem)) {
+		result = DeeInt_NewUIntptr(DeeObject_Id(elem));
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+types_trygetitem_index(SeqSimpleProxy *__restrict self, size_t index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorTryGetItemIndex(self->sp_seq, index);
+	if likely(ITER_ISOK(elem)) {
+		result = (DREF DeeObject *)Dee_TYPE(elem);
+		Dee_Incref(result);
+		Dee_Decref(elem);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+classes_trygetitem_index(SeqSimpleProxy *__restrict self, size_t index) {
+	DREF DeeObject *result, *elem;
+	result = elem = DeeSeq_OperatorTryGetItemIndex(self->sp_seq, index);
+	if likely(ITER_ISOK(elem)) {
 		result = (DREF DeeObject *)DeeObject_Class(elem);
 		Dee_Incref(result);
 		Dee_Decref(elem);
@@ -235,7 +298,7 @@ ids_contains(SeqSimpleProxy *self, DeeObject *id_obj) {
 	uintptr_t id_value;
 	if (DeeObject_AsUIntptr(id_obj, &id_value))
 		goto err;
-	status = DeeObject_Foreach(self->sp_seq, &ids_contains_foreach_cb, (void *)id_value);
+	status = DeeSeq_OperatorForeach(self->sp_seq, &ids_contains_foreach_cb, (void *)id_value);
 	if unlikely(status == -1)
 		goto err;
 	return_bool_(status == 0);
@@ -254,7 +317,7 @@ types_contains(SeqSimpleProxy *self,
 	Dee_ssize_t status;
 	if unlikely(!DeeType_Check(typ))
 		return_false;
-	status = DeeObject_Foreach(self->sp_seq, &types_contains_foreach_cb, typ);
+	status = DeeSeq_OperatorForeach(self->sp_seq, &types_contains_foreach_cb, typ);
 	if unlikely(status == -1)
 		goto err;
 	return_bool_(status == 0);
@@ -273,7 +336,7 @@ classes_contains(SeqSimpleProxy *self,
 	Dee_ssize_t status;
 	if unlikely(!DeeType_Check(typ))
 		return_false;
-	status = DeeObject_Foreach(self->sp_seq, &classes_contains_foreach_cb, typ);
+	status = DeeSeq_OperatorForeach(self->sp_seq, &classes_contains_foreach_cb, typ);
 	if unlikely(status == -1)
 		goto err;
 	return_bool_(status == 0);
@@ -306,7 +369,7 @@ ids_foreach(SeqSimpleProxy *self, Dee_foreach_t proc, void *arg) {
 	struct proxy_foreach_data data;
 	data.pfd_proc = proc;
 	data.pfd_arg  = arg;
-	return DeeObject_Foreach(self->sp_seq, &ids_foreach_cb, &data);
+	return DeeSeq_OperatorForeach(self->sp_seq, &ids_foreach_cb, &data);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -321,7 +384,7 @@ types_foreach(SeqSimpleProxy *self, Dee_foreach_t proc, void *arg) {
 	struct proxy_foreach_data data;
 	data.pfd_proc = proc;
 	data.pfd_arg  = arg;
-	return DeeObject_Foreach(self->sp_seq, &types_foreach_cb, &data);
+	return DeeSeq_OperatorForeach(self->sp_seq, &types_foreach_cb, &data);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -336,7 +399,135 @@ classes_foreach(SeqSimpleProxy *self, Dee_foreach_t proc, void *arg) {
 	struct proxy_foreach_data data;
 	data.pfd_proc = proc;
 	data.pfd_arg  = arg;
-	return DeeObject_Foreach(self->sp_seq, &classes_foreach_cb, &data);
+	return DeeSeq_OperatorForeach(self->sp_seq, &classes_foreach_cb, &data);
+}
+
+struct proxy_enumerate_data {
+	Dee_enumerate_t ped_proc; /* [1..1] Underlying callback. */
+	void           *ped_arg;  /* [?..?] Cookie for `ped_proc' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ids_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	Dee_ssize_t result;
+	struct proxy_enumerate_data *data;
+	data = (struct proxy_enumerate_data *)arg;
+	if (value) {
+		value = DeeInt_NewUIntptr(DeeObject_Id(value));
+		if unlikely(!value)
+			goto err;
+		result = (*data->ped_proc)(data->ped_arg, key, value);
+		Dee_Decref(value);
+	} else {
+		result = (*data->ped_proc)(data->ped_arg, key, NULL);
+	}
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ids_enumerate(SeqSimpleProxy *self, Dee_enumerate_t proc, void *arg) {
+	struct proxy_enumerate_data data;
+	data.ped_proc = proc;
+	data.ped_arg  = arg;
+	return DeeSeq_OperatorEnumerate(self->sp_seq, &ids_enumerate_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+types_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct proxy_enumerate_data *data;
+	data = (struct proxy_enumerate_data *)arg;
+	return (*data->ped_proc)(data->ped_arg, key, value ? (DeeObject *)Dee_TYPE(value) : NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+types_enumerate(SeqSimpleProxy *self, Dee_enumerate_t proc, void *arg) {
+	struct proxy_enumerate_data data;
+	data.ped_proc = proc;
+	data.ped_arg  = arg;
+	return DeeSeq_OperatorEnumerate(self->sp_seq, &types_enumerate_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+classes_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct proxy_enumerate_data *data;
+	data = (struct proxy_enumerate_data *)arg;
+	return (*data->ped_proc)(data->ped_arg, key, value ? (DeeObject *)DeeObject_Class(value) : NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+classes_enumerate(SeqSimpleProxy *self, Dee_enumerate_t proc, void *arg) {
+	struct proxy_enumerate_data data;
+	data.ped_proc = proc;
+	data.ped_arg  = arg;
+	return DeeSeq_OperatorEnumerate(self->sp_seq, &classes_enumerate_cb, &data);
+}
+
+
+struct proxy_enumerate_index_data {
+	Dee_enumerate_index_t peid_proc; /* [1..1] Underlying callback. */
+	void                 *peid_arg;  /* [?..?] Cookie for `peid_proc' */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+ids_enumerate_index_cb(void *arg, size_t key, DeeObject *value) {
+	Dee_ssize_t result;
+	struct proxy_enumerate_index_data *data;
+	data = (struct proxy_enumerate_index_data *)arg;
+	if (value) {
+		value = DeeInt_NewUIntptr(DeeObject_Id(value));
+		if unlikely(!value)
+			goto err;
+		result = (*data->peid_proc)(data->peid_arg, key, value);
+		Dee_Decref(value);
+	} else {
+		result = (*data->peid_proc)(data->peid_arg, key, NULL);
+	}
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ids_enumerate_index(SeqSimpleProxy *self, Dee_enumerate_index_t proc,
+                    void *arg, size_t start, size_t end) {
+	struct proxy_enumerate_index_data data;
+	data.peid_proc = proc;
+	data.peid_arg  = arg;
+	return DeeSeq_OperatorEnumerateIndex(self->sp_seq, &ids_enumerate_index_cb, &data, start, end);
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+types_enumerate_index_cb(void *arg, size_t key, DeeObject *value) {
+	struct proxy_enumerate_index_data *data;
+	data = (struct proxy_enumerate_index_data *)arg;
+	return (*data->peid_proc)(data->peid_arg, key, value ? (DeeObject *)Dee_TYPE(value) : NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+types_enumerate_index(SeqSimpleProxy *self, Dee_enumerate_index_t proc,
+                      void *arg, size_t start, size_t end) {
+	struct proxy_enumerate_index_data data;
+	data.peid_proc = proc;
+	data.peid_arg  = arg;
+	return DeeSeq_OperatorEnumerateIndex(self->sp_seq, &types_enumerate_index_cb, &data, start, end);
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+classes_enumerate_index_cb(void *arg, size_t key, DeeObject *value) {
+	struct proxy_enumerate_index_data *data;
+	data = (struct proxy_enumerate_index_data *)arg;
+	return (*data->peid_proc)(data->peid_arg, key, value ? (DeeObject *)DeeObject_Class(value) : NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+classes_enumerate_index(SeqSimpleProxy *self, Dee_enumerate_index_t proc,
+                        void *arg, size_t start, size_t end) {
+	struct proxy_enumerate_index_data data;
+	data.peid_proc = proc;
+	data.peid_arg  = arg;
+	return DeeSeq_OperatorEnumerateIndex(self->sp_seq, &classes_enumerate_index_cb, &data, start, end);
 }
 
 
@@ -378,9 +569,9 @@ PRIVATE struct type_nsi tpconst classes_nsi = {
 
 PRIVATE struct type_seq ids_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ids_iter,
-	/* .tp_sizeob                     = */ NULL,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_sizeob,
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ids_contains,
-	/* .tp_getitem                    = */ NULL,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ids_getitem,
 	/* .tp_delitem                    = */ NULL,
 	/* .tp_setitem                    = */ NULL,
 	/* .tp_getrange                   = */ NULL,
@@ -389,27 +580,27 @@ PRIVATE struct type_seq ids_seq = {
 	/* .tp_nsi                        = */ &ids_nsi,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ids_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ NULL,
-	/* .tp_hasitem                    = */ NULL,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&ids_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&ids_enumerate_index,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *))&proxy_iterkeys,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size_fast,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ids_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ NULL,
 	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&proxy_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&proxy_hasitem_index,
 	/* .tp_getrange_index             = */ NULL,
 	/* .tp_delrange_index             = */ NULL,
 	/* .tp_setrange_index             = */ NULL,
 	/* .tp_getrange_index_n           = */ NULL,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ids_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ids_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
@@ -426,9 +617,9 @@ PRIVATE struct type_seq ids_seq = {
 
 PRIVATE struct type_seq types_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&types_iter,
-	/* .tp_sizeob                     = */ NULL,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_sizeob,
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&types_contains,
-	/* .tp_getitem                    = */ NULL,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&types_getitem,
 	/* .tp_delitem                    = */ NULL,
 	/* .tp_setitem                    = */ NULL,
 	/* .tp_getrange                   = */ NULL,
@@ -437,27 +628,27 @@ PRIVATE struct type_seq types_seq = {
 	/* .tp_nsi                        = */ &types_nsi,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&types_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ NULL,
-	/* .tp_hasitem                    = */ NULL,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&types_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&types_enumerate_index,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *))&proxy_iterkeys,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size_fast,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&types_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ NULL,
 	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&proxy_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&proxy_hasitem_index,
 	/* .tp_getrange_index             = */ NULL,
 	/* .tp_delrange_index             = */ NULL,
 	/* .tp_setrange_index             = */ NULL,
 	/* .tp_getrange_index_n           = */ NULL,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&types_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&types_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
@@ -474,9 +665,9 @@ PRIVATE struct type_seq types_seq = {
 
 PRIVATE struct type_seq classes_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&classes_iter,
-	/* .tp_sizeob                     = */ NULL,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_sizeob,
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&classes_contains,
-	/* .tp_getitem                    = */ NULL,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&classes_getitem,
 	/* .tp_delitem                    = */ NULL,
 	/* .tp_setitem                    = */ NULL,
 	/* .tp_getrange                   = */ NULL,
@@ -485,27 +676,27 @@ PRIVATE struct type_seq classes_seq = {
 	/* .tp_nsi                        = */ &classes_nsi,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&classes_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ NULL,
-	/* .tp_hasitem                    = */ NULL,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&classes_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&classes_enumerate_index,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *))&proxy_iterkeys,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size_fast,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&classes_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ NULL,
 	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&proxy_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&proxy_hasitem_index,
 	/* .tp_getrange_index             = */ NULL,
 	/* .tp_delrange_index             = */ NULL,
 	/* .tp_setrange_index             = */ NULL,
 	/* .tp_getrange_index_n           = */ NULL,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&classes_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&classes_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
@@ -689,17 +880,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-iter_copy(SeqSimpleProxyIterator *__restrict self,
-          SeqSimpleProxyIterator *__restrict other) {
-	self->si_iter = DeeObject_Copy(other->si_iter);
-	if unlikely(!self->si_iter)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iter_init(SeqSimpleProxyIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
@@ -728,41 +908,17 @@ err:
 	return -1;
 }
 
-STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) ==
-              offsetof(SeqSimpleProxyIterator, si_iter));
-#define iter_deep proxy_deep
-#define iter_fini proxy_fini
-#define iter_bool proxy_bool
-#define iter_visit proxy_visit
-
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-iter_hash(SeqSimpleProxyIterator *self) {
-	return DeeObject_Hash(self->si_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-iter_compare(SeqSimpleProxyIterator *self, SeqSimpleProxyIterator *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return DeeObject_Compare(self->si_iter, other->si_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-iter_compare_eq(SeqSimpleProxyIterator *self, SeqSimpleProxyIterator *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	return DeeObject_CompareEq(self->si_iter, other->si_iter);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE struct type_cmp iter_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&iter_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&iter_compare_eq,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&iter_compare,
-};
+STATIC_ASSERT(offsetof(SeqSimpleProxyIterator, si_iter) == offsetof(ProxyObject, po_obj));
+#define iter_copy          generic_proxy_copy_recursive
+#define iter_deep          generic_proxy_deepcopy
+#define iter_fini          generic_proxy_fini
+#define iter_visit         generic_proxy_visit
+#define iter_bool          generic_proxy_bool
+#define iter_hash          generic_proxy_hash_recursive
+#define iter_compare       generic_proxy_compare_recursive
+#define iter_compare_eq    generic_proxy_compare_eq_recursive
+#define iter_trycompare_eq generic_proxy_trycompare_eq_recursive
+#define iter_cmp           generic_proxy_cmp_recursive
 
 PRIVATE struct type_member tpconst iter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqSimpleProxyIterator, si_iter), "->?DIterator"),

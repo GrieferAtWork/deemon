@@ -27,8 +27,8 @@
 //#define DEFINE_DeeSeq_SortTryGetItemIndexWithKey
 #endif /* __INTELLISENSE__ */
 
-#if (defined(DEFINE_DeeSeq_SortVector) +             \
-     defined(DEFINE_DeeSeq_SortVectorWithKey) +      \
+#if (defined(DEFINE_DeeSeq_SortVector) +                  \
+     defined(DEFINE_DeeSeq_SortVectorWithKey) +           \
      defined(DEFINE_DeeSeq_SortGetItemIndexFast) +        \
      defined(DEFINE_DeeSeq_SortGetItemIndexFastWithKey) + \
      defined(DEFINE_DeeSeq_SortTryGetItemIndex) +         \
@@ -65,11 +65,9 @@ DECL_BEGIN
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeSeq_Sort... */
 
-#define F(x) PP_CAT3(LOCAL_DeeSeq_Sort, _impl__, x)
-
-#define LOCAL_mergesort_impl                F(mergesort_impl)
-#define LOCAL_mergesort_impl_with_key_cache F(mergesort_impl_with_key_cache)
-#define LOCAL_insertsort_impl               F(insertsort_impl)
+#define LOCAL_mergesort_impl                PP_CAT2(LOCAL_DeeSeq_Sort, _impl__mergesort_impl)
+#define LOCAL_mergesort_impl_with_key_cache PP_CAT2(LOCAL_DeeSeq_Sort, _impl__mergesort_impl_with_key_cache)
+#define LOCAL_insertsort_impl               PP_CAT2(LOCAL_DeeSeq_Sort, _impl__insertsort_impl)
 
 #ifdef LOCAL_HAS_KEY
 #define LOCAL__PARAM_KEY , DeeObject *key
@@ -576,7 +574,6 @@ err:
 #undef LOCAL_GETITEM_ISREF
 #undef LOCAL_mergesort_impl
 #undef LOCAL_insertsort_impl
-#undef F
 #undef LOCAL_DeeSeq_Sort
 #undef LOCAL_HAS_VECTOR
 #undef LOCAL_HAS_KEY

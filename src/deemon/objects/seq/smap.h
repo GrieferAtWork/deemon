@@ -39,7 +39,7 @@ typedef struct {
 	DeeObject *si_key;   /* [0..1][lock(WRITE_ONCE)] The key of this shared item. */
 	DeeObject *si_value; /* [?..1][valid_if(si_key)]
 	                      * [lock(WRITE_ONCE)] The value of this shared item. */
-	dhash_t    si_hash;  /* Hash of this key. */
+	Dee_hash_t si_hash;  /* Hash of this key. */
 } SharedItemEx;
 
 typedef struct {
