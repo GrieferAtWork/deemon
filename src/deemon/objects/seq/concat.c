@@ -495,6 +495,20 @@ cat_size(Cat *__restrict self) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+cat_size_fast(Cat *__restrict self) {
+	size_t i, result = 0;
+	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+		size_t temp = DeeObject_SizeFast(DeeTuple_GET(self, i));
+		if unlikely(temp == (size_t)-1)
+			return (size_t)-1;
+		if (OVERFLOW_UADD(result, temp, &result))
+			return (size_t)-1;
+		result += temp;
+	}
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_contains(Cat *self, DeeObject *search_item) {
 	size_t i;
@@ -637,9 +651,9 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&cat_size,
-	/* .tp_size_fast          = */ NULL,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&cat_size_fast,
 	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cat_getitem_index,
-	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&cat_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&cat_setitem_index,
 	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&cat_bounditem_index,
