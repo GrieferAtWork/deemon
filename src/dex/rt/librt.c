@@ -2663,7 +2663,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
 	  DOC("(base:?X3?N?DType?S?DType,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
 	      "#pmodule{The module that is declaring the class (and returned by ${return.__module__}). "
-	      /*     */ "When not given (or given as ?N), the type is not linked to a module.}"
+	      /*    */ "When not given (or given as ?N), the type is not linked to a module.}"
 	      "Construct a new class from a given @base type, as well as class @descriptor") },
 
 	/* Access of the arguments passed to the __MAIN__ module. */

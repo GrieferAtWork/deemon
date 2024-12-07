@@ -25,7 +25,9 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
@@ -35,14 +37,15 @@
 #include <deemon/util/lock.h>
 
 #include <hybrid/overflow.h>
-
-#include "concat.h"
 /**/
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
 #include "svec.h"
+
+/**/
+#include "concat.h"
 
 DECL_BEGIN
 
@@ -136,9 +139,26 @@ catiterator_fini(CatIterator *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 catiterator_visit(CatIterator *__restrict self, dvisit_t proc, void *arg) {
+	CatIterator_LockRead(self);
 	Dee_Visit(self->cti_curr);
+	CatIterator_LockEndRead(self);
 	Dee_Visit(self->cti_cat);
 }
+
+PRIVATE NONNULL((1)) void DCALL
+catiterator_clear(CatIterator *__restrict self) {
+	DREF DeeObject *iter;
+	Dee_Incref(Dee_None);
+	CatIterator_LockWrite(self);
+	self->cti_curr = Dee_None;
+	iter = self->cti_curr;
+	CatIterator_LockEndWrite(self);
+	Dee_Decref(iter);
+}
+
+PRIVATE struct type_gc catiterator_gc = {
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&catiterator_clear
+};
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_bool(CatIterator *__restrict self) {
@@ -327,7 +347,7 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqConcatIterator",
 	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqConcat)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
@@ -338,7 +358,7 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&catiterator_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&catiterator_deep,
 				/* .tp_any_ctor  = */ (dfunptr_t)&catiterator_init,
-				TYPE_FIXED_ALLOCATOR(CatIterator)
+				TYPE_FIXED_ALLOCATOR_GC(CatIterator)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&catiterator_fini,
@@ -352,7 +372,7 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&catiterator_visit,
-	/* .tp_gc            = */ NULL,
+	/* .tp_gc            = */ &catiterator_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &catiterator_cmp,
 	/* .tp_seq           = */ NULL,
@@ -378,9 +398,9 @@ INTDEF NONNULL((1, 2)) void DCALL tuple_visit(DeeTupleObject *__restrict self, d
 PRIVATE WUNUSED NONNULL((1)) DREF CatIterator *DCALL
 cat_iter(Cat *__restrict self) {
 	DREF CatIterator *result;
-	result = DeeObject_MALLOC(CatIterator);
+	result = DeeGCObject_MALLOC(CatIterator);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	ASSERT(DeeTuple_SIZE(self) != 0);
 	result->cti_curr = DeeObject_Iter(DeeTuple_GET(self, 0));
 	if unlikely(!result->cti_curr)
@@ -390,10 +410,10 @@ cat_iter(Cat *__restrict self) {
 	Dee_Incref(self);
 	Dee_atomic_rwlock_init(&result->cti_lock);
 	DeeObject_Init(result, &SeqConcatIterator_Type);
-done:
-	return result;
+	return (DREF CatIterator *)DeeGC_Track((DREF DeeObject *)result);
 err_r:
-	DeeObject_FREE(result);
+	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
