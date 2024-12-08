@@ -1477,7 +1477,8 @@ INTERN DeeTypeObject Deque_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ deq_class_members
+	/* .tp_class_members = */ deq_class_members,
+	/* .tp_method_hints  = */ deq_method_hints,
 };
 
 
