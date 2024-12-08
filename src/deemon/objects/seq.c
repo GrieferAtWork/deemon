@@ -36,6 +36,7 @@
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
+#include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -61,6 +62,7 @@
 #include "seq/segments.h"
 #include "seq/simpleproxy.h"
 #include "seq/svec.h"
+#include "seq/unique-iterator.h"
 #include "seq_functions.h"
 
 #undef SSIZE_MAX
@@ -693,6 +695,27 @@ seq_unpack(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	return (DREF DeeObject *)result;
 err_r:
 	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF UniqueSetWithKey *result;
+	DeeObject *key = NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:distinct", &key))
+		goto err;
+	if (!key)
+		return DeeSuper_New(&DeeSet_Type, self);
+	result = DeeObject_MALLOC(UniqueSetWithKey);
+	if unlikely(!result)
+		goto err;
+	result->uswk_key = key;
+	Dee_Incref(key);
+	result->uswk_seq = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &UniqueSetWithKey_Type);
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
@@ -1557,15 +1580,26 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "that the resulting sequence's size is either equal to @size, or lies within "
 	            /**/ "the (inclusive) bounds ${[minsize, maxsize]}"),
 
-	/* TODO: unique(key:?DCallable=!N)->?DSequence
-	 * Returns a generic Sequence proxy that contains all of the elements from @this Sequence,
-	 * however will only enumerate the first of n consecutive objects for which ${key(first) == key(nth)}
-	 * evaluates to true (essentially removing all duplicate, neighboring items)
-	 * When @key is none, the behavior is the same as though @key was `identity from functools'
-	 * >> local items = collect_items();
-	 * >> local unique_items = items.sorted(Object.id).unique(Object.id);
-	 * >> // `unique_items' now contains no object more than once
-	 */
+	TYPE_KWMETHOD("distinct", &seq_distinct,
+	              "(key?:?DCallable)->?DSet\n"
+	              DOC_param_key
+	              "When @key is not given, same as ${this as Set} (reminder: when enumerating "
+	              /**/ "items of a ?. casted into a ?DSet, deemon will ensure that every "
+	              /**/ "distinct element of the ?. is enumerate exactly once). Otherwise, "
+	              /**/ "returns a custom ?DSet proxy that only enumerates elements from @this "
+	              /**/ "for which ${key(elem)} returns a distinct result\n"
+	              "${"
+	              /**/ "function distinct(key?: Callable): Set {\n"
+	              /**/ "	if (key !is bound)\n"
+	              /**/ "		return this as Set;\n"
+	              /**/ "	local encountered = HashSet();\n"
+	              /**/ "	for (local item: this) {\n"
+	              /**/ "		local keyedItem = key(item);\n"
+	              /**/ "		if (encountered.insert(keyedItem))\n"
+	              /**/ "			yield item;\n"
+	              /**/ "	}\n"
+	              /**/ "}"
+	              "}"),
 
 	/* TODO: join(items: {Sequence...}): Sequence */
 	/* TODO: strip(item: Object, key: Callable = none): Sequence */

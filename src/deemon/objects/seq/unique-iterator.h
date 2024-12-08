@@ -26,6 +26,8 @@
 #include <deemon/object.h>
 #include <deemon/util/simple-hashset.h>
 
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
@@ -37,6 +39,24 @@ typedef struct {
 } UniqueIterator;
 
 INTDEF DeeTypeObject UniqueIterator_Type;
+
+typedef struct {
+	OBJECT_HEAD /* GC Object */
+	DREF DeeObject                     *uiwk_iter;        /* [1..1][const] Underlying iterator */
+	/* [1..1][const] Callback to load the next item from `uiwk_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *uiwk_tp_next)(DeeObject *self);
+	struct Dee_simple_hashset_with_lock uiwk_encountered; /* Set of objects previously encountered objects */
+	DREF DeeObject                     *uiwk_key;         /* [1..1][const] unique-ness filter keys */
+} UniqueIteratorWithKey;
+
+INTDEF DeeTypeObject UniqueIteratorWithKey_Type;
+
+typedef struct {
+	PROXY_OBJECT_HEAD2(uswk_seq, /* [1..1] Sequence being proxied */
+	                   uswk_key) /* [1..1] Key to apply to sequence elements prior to uniqueness-check */
+} UniqueSetWithKey;
+
+INTDEF DeeTypeObject UniqueSetWithKey_Type;
 
 DECL_END
 

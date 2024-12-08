@@ -137,6 +137,7 @@ print define_Dee_HashStr("split");
 print define_Dee_HashStr("splitlines");
 print define_Dee_HashStr("map");
 print define_Dee_HashStr("types");
+print define_Dee_HashStr("distinct");
 print define_Dee_HashStr("__SeqWithSizeAndGetItemIndex__");
 print define_Dee_HashStr("__SeqWithSizeAndGetItemIndexFast__");
 print define_Dee_HashStr("__SeqWithSizeAndTryGetItemIndex__");
@@ -229,6 +230,7 @@ print define_Dee_HashStr("__SeqReversedWithTryGetItemIndex__");
 #define Dee_HashStr__splitlines _Dee_HashSelectC(0xed695afd, 0xbac074bd124b8342)
 #define Dee_HashStr__map _Dee_HashSelectC(0xeb1d32c8, 0x6ed228005fef6a3)
 #define Dee_HashStr__types _Dee_HashSelectC(0x871b2836, 0xde8693a2d24930)
+#define Dee_HashStr__distinct _Dee_HashSelectC(0xe1eb56d, 0x9c50bb058e287b02)
 #define Dee_HashStr____SeqWithSizeAndGetItemIndex__ _Dee_HashSelectC(0xe4975d67, 0xe3253d16df5a36a)
 #define Dee_HashStr____SeqWithSizeAndGetItemIndexFast__ _Dee_HashSelectC(0xddb17763, 0x1d55f6c48f906dac)
 #define Dee_HashStr____SeqWithSizeAndTryGetItemIndex__ _Dee_HashSelectC(0x911583f1, 0xd68226b3a3ad80eb)
@@ -1359,9 +1361,32 @@ librt_get_UniqueIterator_Type_impl_f(void) {
 	return get_type_of((*DeeSet_Type.tp_seq->tp_iter)((DeeObject *)&non_empty_tuple));
 }
 
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_UniqueSetWithKey_impl_f(void) {
+	DeeObject *arg0 = (DeeObject *)&non_empty_tuple;
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&non_empty_tuple,
+	                                                "distinct", Dee_HashStr__distinct,
+	                                                1, &arg0));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_UniqueIteratorWithKey_impl_f(void) {
+	return get_iterator_of(librt_get_UniqueSetWithKey_impl_f());
+}
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_UniqueIterator_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_UniqueIterator_Type_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_UniqueIteratorWithKey_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_UniqueIteratorWithKey_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_UniqueSetWithKey_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_UniqueSetWithKey_impl_f();
 }
 
 
@@ -2333,6 +2358,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithGetItemIndex, &librt_get_SeqReve
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithGetItemIndexFast, &librt_get_SeqReversedWithGetItemIndexFast_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithTryGetItemIndex, &librt_get_SeqReversedWithTryGetItemIndex_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_UniqueIterator, &librt_get_UniqueIterator_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_UniqueIteratorWithKey, &librt_get_UniqueIteratorWithKey_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_UniqueSetWithKey, &librt_get_UniqueSetWithKey_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetInversion, &librt_get_SetInversion_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetUnion, &librt_get_SetUnion_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetUnionIterator, &librt_get_SetUnionIterator_f, METHOD_FCONSTCALL);
@@ -2669,6 +2696,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqReversedWithGetItemIndexFast", (DeeObject *)&librt_get_SeqReversedWithGetItemIndexFast, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DefaultReversed_WithGetItemIndexFast_Type */
 	{ "SeqReversedWithTryGetItemIndex", (DeeObject *)&librt_get_SeqReversedWithTryGetItemIndex, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* DefaultReversed_WithTryGetItemIndex_Type */
 	{ "UniqueIterator", (DeeObject *)&librt_get_UniqueIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* UniqueIterator_Type */
+	{ "UniqueIteratorWithKey", (DeeObject *)&librt_get_UniqueIteratorWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* UniqueIteratorWithKey_Type */
+	{ "UniqueSetWithKey", (DeeObject *)&librt_get_UniqueSetWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* UniqueSetWithKey_Type */
 
 	/* TODO: SeqRemoveWithRemoveIfPredicate             = SeqRemoveWithRemoveIfPredicate_Type */
 	/* TODO: SeqRemoveWithRemoveIfPredicateWithKey      = SeqRemoveWithRemoveIfPredicateWithKey_Type */
