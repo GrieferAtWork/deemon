@@ -31,6 +31,7 @@
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
@@ -1156,9 +1157,7 @@ PRIVATE struct type_seq deq_seq = {
 	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&deq_setitem_index,
 	/* .tp_bounditem_index            = */ NULL,
 	/* .tp_hasitem_index              = */ NULL,
-	/* XXX: range operators? (Also: Add a fallback delrange / setrange in `sequence' that calls
-	 *                              forward to member functions `insert(index:?Dint, ob)',
-	 *                             `erase(index:?Dint, count:?Dint = 1)') */
+	/* XXX: range operators? */
 	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
 	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
 	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL,
@@ -1203,30 +1202,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_pushfront(Deque *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:pushfront", &item))
-		goto err;
-	if (Deque_PushFront(self, item))
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_pushback(Deque *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:pushback", &item))
-		goto err;
-	if (Deque_PushBack(self, item))
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_popfront(Deque *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popfront"))
 		goto err;
@@ -1244,56 +1219,6 @@ err:
 	return NULL;
 }
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_insert(Deque *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "o:insert", &index, &item))
-		goto err;
-	if (Deque_Insert(self, index, item))
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_erase(Deque *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t index, count;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_count,
-	                    UNPuSIZ UNPuSIZ ":erase",
-	                    &index, &count))
-		goto err;
-	if unlikely(Deque_Erase(self, index, count))
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_xchitem(Deque *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return deq_xchitem_index(me, index, value);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_pop(Deque *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t index = -1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index, UNPdSIZ ":pop", &index))
-		goto err;
-	return Deque_Pops(self, index);
-err:
-	return NULL;
-}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_llrot(Deque *self, size_t argc, DeeObject *const *argv) {
@@ -1361,29 +1286,12 @@ deq_sizeof(Deque *self) {
 
 
 PRIVATE struct type_method tpconst deq_methods[] = {
-	TYPE_KWMETHOD_F("insert", &deq_insert, METHOD_FNOREFESCAPE,
-	                "(index:?Dint,ob)\n"
-	                "#tIntegerOverflow{@index is negative or too large}"
-	                "Insert the given object @ob at @index"),
-	TYPE_KWMETHOD_F("erase", &deq_erase, METHOD_FNOREFESCAPE,
-	                "(index:?Dint,num_items=!1)->?Dint\n"
-	                "#tIntegerOverflow{@index is negative or too large}"
-	                "#r{The actual number of erased items}"
-	                "Erase up to @num_items objects from @this deque, starting at @index"),
-	TYPE_KWMETHOD_F("xchitem", &deq_xchitem, METHOD_FNOREFESCAPE,
-	                "(index:?Dint,value)->\n"
-	                "#tIndexError{The given @index is out of bounds}"),
-	TYPE_KWMETHOD_F("pop", &deq_pop, METHOD_FNOREFESCAPE,
-	                "(index=!-1)->\n"
-	                "#tIntegerOverflow{@index is negative or too large}"
-	                "#r{The item that got removed}"
-	                "Pop (erase) the item located at @index and return it"),
-	TYPE_METHOD_F("pushfront", &deq_pushfront, METHOD_FNOREFESCAPE,
-	              "(ob)\n"
-	              "Insert the given object @ob at the front of @this deque"),
-	TYPE_METHOD_F("pushback", &deq_pushback, METHOD_FNOREFESCAPE,
-	              "(ob)\n"
-	              "Insert the given object @ob at the back of @this deque"),
+	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(seq_insert),
+	TYPE_METHOD_HINTREF(seq_erase),
+	TYPE_METHOD_HINTREF(seq_pop),
+	TYPE_METHOD_HINTREF(seq_pushfront),
+	TYPE_METHOD_HINTREF(seq_append),
 	TYPE_METHOD_F("popfront", &deq_popfront, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{@this deque is empty}"
@@ -1433,6 +1341,16 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	              /**/ "print repr x; /* { 10, 20, 50, 30, 40 } */"
 	              "}"),
 	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst deq_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_xchitem_index, &deq_xchitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_insert, &Deque_Insert, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_erase, &Deque_Erase, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_pop, &Deque_Pops, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_pushfront, &Deque_PushFront, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_append, &Deque_PushBack, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_getset tpconst deq_getsets[] = {
