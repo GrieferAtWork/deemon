@@ -2795,7 +2795,7 @@ struct Dee_type_attr {
 	 *       (As a matter of fact: it doesn't use DeeObject_Default* operators for
 	 *       any of this stuff since doing so would be slower due to the fact that
 	 *       it would add a whole ton of otherwise unnecessary DeeObject_T-checks)
-	 *       This means taht if you want to implement stuff below, you *MUST* also
+	 *       This means that if you want to implement stuff below, you *MUST* also
 	 *       implement the operators above like follows:
 	 *   - tp_findattr:                      Must also implement `tp_enumattr'
 	 *   - tp_hasattr:                       Must also implement `tp_getattr'

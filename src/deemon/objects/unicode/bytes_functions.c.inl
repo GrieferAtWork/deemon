@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/regex.h>
 #include <deemon/seq.h>
@@ -4890,22 +4891,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_xchitem(Bytes *self, size_t argc,
-              DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return bytes_xchitem_index(self, index, value);
-err:
-	return NULL;
-}
-
-
-
 INTDEF struct type_method tpconst bytes_methods[];
+INTDEF struct type_method_hint tpconst bytes_method_hints[];
 INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	/* TODO: Pretty much everything below is can be a constant expression when "!DeeBytes_WRITABLE(thisarg)" */
 	TYPE_KWMETHOD("decode", &string_decode,
@@ -6141,8 +6128,13 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	                "#tIndexError{No substring matching the given @pattern could be found}"
 	                "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
 
-	TYPE_KWMETHOD(STR_xchitem, &bytes_xchitem, "(index:?Dint,value)->"),
+	TYPE_METHOD_HINTREF(seq_xchitem),
 	TYPE_METHOD_END
+};
+
+INTERN_TPCONST struct type_method_hint tpconst bytes_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_xchitem_index, &bytes_xchitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 

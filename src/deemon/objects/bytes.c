@@ -1851,6 +1851,7 @@ PRIVATE struct type_operator const bytes_operators[] = {
 };
 
 INTDEF struct type_method tpconst bytes_methods[];
+INTDEF struct type_method_hint tpconst bytes_method_hints[];
 
 PUBLIC DeeTypeObject DeeBytes_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2066,7 +2067,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	/* .tp_class_methods = */ bytes_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ bytes_class_members,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ bytes_method_hints,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ bytes_operators,

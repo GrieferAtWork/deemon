@@ -586,6 +586,8 @@ DeeType_TryRequireSeqEnumerateIndexReverse(DeeTypeObject *__restrict self) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 DeeType_HasPrivateSeqEnumerateIndexReverse(DeeTypeObject *orig_type, DeeTypeObject *self) {
+	if (DeeType_GetPrivateMethodHint(self, Dee_TMH_seq_enumerate_index_reverse))
+		return true;
 	return DeeType_HasOperator(orig_type, OPERATOR_SIZE) &&
 	       DeeType_HasPrivateOperator(self, OPERATOR_GETITEM);
 }
