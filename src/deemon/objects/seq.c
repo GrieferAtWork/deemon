@@ -394,21 +394,11 @@ PRIVATE struct type_getset tpconst seq_class_getsets[] = {
 /* === General-purpose Sequence methods. === */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_at_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *index;
-	if (DeeArg_Unpack(argc, argv, "o:at", &index))
-		goto err;
-	return DeeObject_GetItem(self, index);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_empty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":empty"))
 		goto err;
-	result = DeeObject_Bool(self);
+	result = DeeSeq_OperatorBool(self);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result == 0);
@@ -417,23 +407,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_non_empty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int result;
-	if (DeeArg_Unpack(argc, argv, ":non_empty"))
-		goto err;
-	result = DeeObject_Bool(self);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result != 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_front_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":front"))
 		goto err;
-	return DeeObject_GetAttr(self, (DeeObject *)&str_first);
+	return DeeSeq_InvokeGetFirst(self);
 err:
 	return NULL;
 }
@@ -442,7 +419,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_back_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":back"))
 		goto err;
-	return DeeObject_GetAttr(self, (DeeObject *)&str_last);
+	return DeeSeq_InvokeGetLast(self);
 err:
 	return NULL;
 }
@@ -519,7 +496,7 @@ seq_distribute(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if unlikely(!segsize)
 		goto err_invalid_segsize;
-	mylen = DeeObject_Size(self);
+	mylen = DeeSeq_OperatorSize(self);
 	if unlikely(mylen == (size_t)-1)
 		goto err;
 	mylen += segsize - 1;
@@ -859,7 +836,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
-	TYPE_KWMETHOD("enumerate", &DeeMH_seq_enumerate,
+	TYPE_KWMETHOD(DeeMH_seq_enumerate_name, &DeeMH_seq_enumerate,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?O\n"
 	              "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N\n"
 	              "Enumerate indices/keys and associated values of @this sequence\n"
@@ -880,7 +857,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "});"
 	              "}\n"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${operator iterkeys}¹|${" /* TODO: Expose "operator iterkeys" to user-code */
+	              /**/ "${property iterkeys}¹³|${"
 	              /**/ /**/ "foreach (local key: Object.__iterkeys__(this)) {\n"
 	              /**/ /**/ "	local myItem\n"
 	              /**/ /**/ "	local status;\n"
@@ -947,6 +924,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "#L{"
 	              /**/ "{¹}When @cb isn't given, filter for bound items and yield as ${(key, value)} pairs"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
+	              /**/ "{³}Only when ?A__seqclass__?DType is ?DMapping|"
 	              "}"),
 	TYPE_KWMETHOD(STR_sum, &DeeMH_seq_sum,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N\n"
@@ -2021,13 +1999,13 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	TYPE_METHOD("empty", &seq_empty_deprecated,
 	            "->?Dbool\n"
 	            "Deprecated alias for ?#isempty"),
-	TYPE_METHOD("non_empty", &seq_non_empty_deprecated,
+	TYPE_METHOD("non_empty", &default_seq___bool__,
 	            "->?Dbool\n"
 	            "Deprecated alias for ?#isnonempty"),
-	TYPE_METHOD("at", &seq_at_deprecated,
+	TYPE_METHOD("at", &default_seq___getitem__,
 	            "(index:?Dint)->\n"
 	            "Deprecated alias for ${this[index]}"),
-	TYPE_METHOD(STR_get, &seq_at_deprecated,
+	TYPE_METHOD(STR_get, &default_seq___getitem__,
 	            "(index:?Dint)->\n"
 	            "Deprecated alias for ${this[index]}\n"
 	            "In older versions of deemon, this function (as well as ${operator []}) "
@@ -2068,7 +2046,7 @@ err:
 
 
 PRIVATE struct type_getset tpconst seq_getsets[] = {
-	TYPE_GETTER("length", &DeeObject_SizeOb, "->?Dint\nAlias for ${##this}"),
+	TYPE_GETTER("length", &DeeSeq_OperatorSizeOb, "->?Dint\nAlias for ${##(this as Sequence)}"),
 	TYPE_GETSET_BOUND(STR_first,
 	                  &default_seq_getfirst,
 	                  &default_seq_delfirst,
@@ -2371,7 +2349,8 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 generic_seq_assign(DeeObject *self, DeeObject *other) {
-	return DeeObject_SetRange(self, Dee_None, Dee_None, other);
+	/* TODO: Fully virtualize this operator */
+	return DeeSeq_OperatorSetRange(self, Dee_None, Dee_None, other);
 }
 
 
@@ -2380,6 +2359,7 @@ INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
 
 PRIVATE struct type_operator const seq_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0010_ADD, METHOD_FCONSTCALL),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ),
 	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ),
