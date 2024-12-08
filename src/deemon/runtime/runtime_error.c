@@ -315,6 +315,14 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unbound_key_int)(DeeObject *self, size_t key) {
+	ASSERT_OBJECT(self);
+	return DeeError_Throwf(&DeeError_UnboundItem,
+	                       "Key `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
+	                       key, Dee_TYPE(self), self);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_key_str)(DeeObject *self, char const *key) {
 	ASSERT_OBJECT(self);
 	return DeeError_Throwf(&DeeError_UnboundItem,

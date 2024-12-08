@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -53,12 +54,12 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_HAVE_strcmp
-#define CONFIG_HAVE_strcmp
-#undef strcmp
-#define strcmp dee_strcmp
-DeeSystem_DEFINE_strcmp(dee_strcmp)
-#endif /* !CONFIG_HAVE_strcmp */
+#ifndef CONFIG_HAVE_strcmpz
+#define CONFIG_HAVE_strcmpz
+#undef strcmpz
+#define strcmpz dee_strcmpz
+DeeSystem_DEFINE_strcmpz(dee_strcmpz)
+#endif /* !CONFIG_HAVE_strcmpz */
 
 /************************************************************************/
 /* FunctionStatics_Type                                                 */
@@ -476,39 +477,14 @@ err_temp:
 	return temp;
 }
 
-
-PRIVATE struct type_nsi tpconst funcstatics_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&funcstatics_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&funcstatics_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&funcstatics_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)&funcstatics_delitem_index,
-			/* .nsi_setitem      = */ (dfunptr_t)&funcstatics_setitem_index,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&funcstatics_getitem_index_fast,
-		}
-	}
+PRIVATE struct type_method tpconst funcstatics_methods[] = {
+	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_END
 };
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcstatics_xchitem(FunctionStatics *self, size_t argc,
-                    DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return funcstatics_xchitem_index(self, index, value);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_method tpconst funcstatics_methods[] = {
-	TYPE_KWMETHOD(STR_xchitem, &funcstatics_xchitem, "(index:?Dint,value)->"),
-	TYPE_METHOD_END
+PRIVATE struct type_method_hint tpconst funcstatics_method_hints[] = {
+	TYPE_METHOD_HINT(seq_xchitem_index, &funcstatics_xchitem_index),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_seq funcstatics_seq = {
@@ -521,7 +497,7 @@ PRIVATE struct type_seq funcstatics_seq = {
 	/* .tp_getrange           = */ NULL,
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &funcstatics_nsi,
+	/* .tp_nsi                = */ NULL,
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
@@ -598,7 +574,8 @@ INTERN DeeTypeObject FunctionStatics_Type = {
 	/* .tp_members       = */ funcstatics_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ funcstatics_class_members
+	/* .tp_class_members = */ funcstatics_class_members,
+	/* .tp_method_hints  = */ funcstatics_method_hints,
 };
 
 
@@ -1007,7 +984,7 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 /* Search for "name" in `self' and return its ID. If not found,
  * *NO* error is thrown, and `(uint16_t)-1' is returned. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) uint16_t DCALL
-DDI_GetRefIdByName(DeeDDIObject const *self, char const *name) {
+DDI_GetRefIdByName(DeeDDIObject const *self, char const *name, size_t len) {
 	/* Reference symbol name */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeDDI_Type);
 	if (self->d_exdat) {
@@ -1025,7 +1002,7 @@ DDI_GetRefIdByName(DeeDDIObject const *self, char const *name) {
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP8: {
 				uint8_t got_rid      = UNALIGNED_GETLE8(reader + 0);
 				char const *got_name = str_base + UNALIGNED_GETLE8(reader + 1);
-				if (strcmp(got_name, name) == 0)
+				if (strcmpz(got_name, name, len) == 0)
 					return got_rid;
 				reader += 1 + 1;
 			}	break;
@@ -1033,7 +1010,7 @@ DDI_GetRefIdByName(DeeDDIObject const *self, char const *name) {
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP16: {
 				uint16_t got_rid     = UNALIGNED_GETLE16(reader + 0);
 				char const *got_name = str_base + UNALIGNED_GETLE16(reader + 2);
-				if (strcmp(got_name, name) == 0)
+				if (strcmpz(got_name, name, len) == 0)
 					return got_rid;
 				reader += 2 + 2;
 			}	break;
@@ -1041,7 +1018,7 @@ DDI_GetRefIdByName(DeeDDIObject const *self, char const *name) {
 			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP32: {
 				uint16_t got_rid     = UNALIGNED_GETLE16(reader + 0);
 				char const *got_name = str_base + UNALIGNED_GETLE32(reader + 2);
-				if (strcmp(got_name, name) == 0)
+				if (strcmpz(got_name, name, len) == 0)
 					return got_rid;
 				reader += 2 + 4;
 			}	break;
@@ -1076,8 +1053,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) uint16_t DCALL
 FunctionSymbolsByName_GetRefIdByName(FunctionSymbolsByName const *self, DeeObject *key) {
 	uint16_t rid;
 	if (DeeString_Check(key)) {
-		char const *name = DeeString_STR(key);
-		rid = DDI_GetRefIdByName(self->fsbn_func->fo_code->co_ddi, name);
+		rid = DDI_GetRefIdByName(self->fsbn_func->fo_code->co_ddi,
+		                         DeeString_STR(key),
+		                         DeeString_SIZE(key));
 		if unlikely(rid < self->fsbn_rid_start)
 			goto err_no_such_key;
 	} else {
@@ -1096,95 +1074,20 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-funcsymbolsbyname_nsi_getsize(FunctionSymbolsByName *__restrict self) {
+funcsymbolsbyname_size(FunctionSymbolsByName *__restrict self) {
 	return self->fsbn_rid_end - self->fsbn_rid_start;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-funcsymbolsbyname_nsi_getdefault(FunctionSymbolsByName *self,
-                                 DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result;
-	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid;
-	if (DeeString_Check(key)) {
-		char const *name = DeeString_STR(key);
-		rid = DDI_GetRefIdByName(func->fo_code->co_ddi, name);
-		if unlikely(rid < self->fsbn_rid_start)
-			goto err_no_such_key;
-	} else {
-		if unlikely(DeeObject_AsUInt16(key, &rid))
-			goto err;
-		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
-			goto err_no_such_key;
-	}
-	if unlikely(rid >= self->fsbn_rid_end)
-		goto err_no_such_key;
-	DeeFunction_RefLockRead(func);
-	result = func->fo_refv[rid];
-	if unlikely(!ITER_ISOK(result)) {
-		DeeFunction_RefLockEndRead(func);
-		goto err_no_such_key;
-	}
-	Dee_Incref(result);
-	DeeFunction_RefLockEndRead(func);
-	return result;
-err_no_such_key:
-	if (defl != ITER_DONE)
-		Dee_Incref(defl);
-	return defl;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-funcsymbolsbyname_nsi_setdefault(FunctionSymbolsByName *self,
-                                 DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result;
-	DeeFunctionObject *func = self->fsbn_func;
-	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
-	if unlikely(rid == (uint16_t)-1)
-		goto err;
-	DeeFunction_RefLockRead(func);
-	result = func->fo_refv[rid];
-	if (ITER_ISOK(result)) {
-		Dee_Incref(result);
-		DeeFunction_RefLockEndRead(func);
-	} else {
-		if (!DeeFunction_RefLockUpgrade(func)) {
-			result = func->fo_refv[rid];
-			if (ITER_ISOK(result)) {
-				Dee_Incref(result);
-				DeeFunction_RefLockEndWrite(func);
-				goto done;
-			}
-		}
-		if unlikely(rid < func->fo_code->co_refc)
-			goto err_unlock_ro;
-		Dee_Incref_n(defl, 2);
-		func->fo_refv[rid] = defl;
-		result = defl;
-		DeeFunction_RefLockEndWrite(func);
-		DeeFutex_WakeAll(&func->fo_refv[rid]);
-	}
-done:
-	return result;
-err_unlock_ro:
-	DeeFunction_RefLockEndWrite(func);
-	err_readonly_key((DeeObject *)self, key);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-funcsymbolsbyname_nsi_updateold(FunctionSymbolsByName *self,
-                                DeeObject *key, DeeObject *value,
-                                DREF DeeObject **p_oldvalue) {
+funcsymbolsbyname_mh_setold_ex(FunctionSymbolsByName *self,
+                               DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	DeeFunctionObject *func = self->fsbn_func;
 	uint16_t rid;
 	if (DeeString_Check(key)) {
-		char const *name = DeeString_STR(key);
-		rid = DDI_GetRefIdByName(func->fo_code->co_ddi, name);
+		rid = DDI_GetRefIdByName(func->fo_code->co_ddi,
+		                         DeeString_STR(key),
+		                         DeeString_SIZE(key));
 		if unlikely(rid < self->fsbn_rid_start)
 			goto err_no_such_key;
 	} else {
@@ -1207,25 +1110,19 @@ funcsymbolsbyname_nsi_updateold(FunctionSymbolsByName *self,
 	func->fo_refv[rid] = value;
 	DeeFunction_RefLockEndWrite(func);
 	DeeFutex_WakeAll(&func->fo_refv[rid]);
-	if (p_oldvalue) {
-		*p_oldvalue = oldvalue; /* Inherit reference */
-	} else {
-		Dee_Decref(oldvalue);
-	}
-	return 1;
+	return oldvalue; /* Inherit reference */
 err_no_such_key:
-	return 0;
+	return ITER_DONE;
 err_unlock_ro:
 	DeeFunction_RefLockEndWrite(func);
 	err_readonly_key((DeeObject *)self, key);
 err:
-	return -1;
+	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-funcsymbolsbyname_nsi_insertnew(FunctionSymbolsByName *self,
-                                DeeObject *key, DeeObject *value,
-                                DREF DeeObject **p_oldvalue) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+funcsymbolsbyname_mh_setnew_ex(FunctionSymbolsByName *self,
+                               DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	DeeFunctionObject *func = self->fsbn_func;
 	uint16_t rid = FunctionSymbolsByName_GetRefIdByName(self, key);
@@ -1234,12 +1131,9 @@ funcsymbolsbyname_nsi_insertnew(FunctionSymbolsByName *self,
 	DeeFunction_RefLockWrite(func);
 	oldvalue = func->fo_refv[rid];
 	if (ITER_ISOK(oldvalue)) {
-		if (p_oldvalue) {
-			Dee_Incref(oldvalue);
-			*p_oldvalue = oldvalue;
-		}
+		Dee_Incref(oldvalue);
 		DeeFunction_RefLockEndWrite(func);
-		return 1;
+		return oldvalue;
 	}
 	if unlikely(rid < func->fo_code->co_refc)
 		goto err_unlock_ro;
@@ -1247,16 +1141,13 @@ funcsymbolsbyname_nsi_insertnew(FunctionSymbolsByName *self,
 	func->fo_refv[rid] = value;
 	DeeFunction_RefLockEndWrite(func);
 	DeeFutex_WakeAll(&func->fo_refv[rid]);
-	return 0;
+	return ITER_DONE;
 err_unlock_ro:
 	DeeFunction_RefLockEndWrite(func);
 	err_readonly_key((DeeObject *)self, key);
 err:
-	return -1;
+	return NULL;
 }
-
-#define funcsymbolsbyname_nsi_nextkey   funcsymbolsbynameiter_nextkey_with_unbound
-#define funcsymbolsbyname_nsi_nextvalue funcsymbolsbynameiter_nextvalue
 
 PRIVATE WUNUSED NONNULL((1)) DREF FunctionSymbolsByNameIterator *DCALL
 funcsymbolsbyname_iter(FunctionSymbolsByName *__restrict self) {
@@ -1276,7 +1167,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF FunctionSymbolsByNameIterator *DCALL
-funcsymbolsbyname_keysiter(FunctionSymbolsByName *__restrict self) {
+funcsymbolsbyname_iterkeys(FunctionSymbolsByName *__restrict self) {
 	DREF FunctionSymbolsByNameIterator *result;
 	result = DeeObject_MALLOC(FunctionSymbolsByNameIterator);
 	if unlikely(!result)
@@ -1297,8 +1188,9 @@ funcsymbolsbyname_contains(FunctionSymbolsByName *self,
                            DeeObject *key) {
 	uint16_t rid;
 	if (DeeString_Check(key)) {
-		char const *name = DeeString_STR(key);
-		rid = DDI_GetRefIdByName(self->fsbn_func->fo_code->co_ddi, name);
+		rid = DDI_GetRefIdByName(self->fsbn_func->fo_code->co_ddi,
+		                         DeeString_STR(key),
+		                         DeeString_SIZE(key));
 		if unlikely(rid < self->fsbn_rid_start)
 			goto err_no_such_key;
 	} else {
@@ -1336,6 +1228,96 @@ funcsymbolsbyname_getitem(FunctionSymbolsByName *self,
 	return result;
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+funcsymbolsbyname_trygetitem(FunctionSymbolsByName *self, DeeObject *key) {
+	DREF DeeObject *result;
+	DeeFunctionObject *func = self->fsbn_func;
+	uint16_t rid;
+	if (DeeString_Check(key)) {
+		rid = DDI_GetRefIdByName(func->fo_code->co_ddi,
+		                         DeeString_STR(key),
+		                         DeeString_SIZE(key));
+		if unlikely(rid < self->fsbn_rid_start)
+			goto err_no_such_key;
+	} else {
+		if unlikely(DeeObject_AsUInt16(key, &rid))
+			goto err;
+		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
+			goto err_no_such_key;
+	}
+	if unlikely(rid >= self->fsbn_rid_end)
+		goto err_no_such_key;
+	DeeFunction_RefLockRead(func);
+	result = func->fo_refv[rid];
+	if unlikely(!ITER_ISOK(result)) {
+		DeeFunction_RefLockEndRead(func);
+		goto err_no_such_key;
+	}
+	Dee_Incref(result);
+	DeeFunction_RefLockEndRead(func);
+	return result;
+err_no_such_key:
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbyname_bounditem(FunctionSymbolsByName *self, DeeObject *key) {
+	DeeFunctionObject *func = self->fsbn_func;
+	uint16_t rid;
+	if (DeeString_Check(key)) {
+		rid = DDI_GetRefIdByName(func->fo_code->co_ddi,
+		                         DeeString_STR(key),
+		                         DeeString_SIZE(key));
+		if unlikely(rid < self->fsbn_rid_start)
+			goto err_no_such_key;
+	} else {
+		if unlikely(DeeObject_AsUInt16(key, &rid))
+			goto err;
+		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
+			goto err_no_such_key;
+	}
+	if unlikely(rid >= self->fsbn_rid_end)
+		goto err_no_such_key;
+	DeeFunction_RefLockRead(func);
+	if unlikely(!ITER_ISOK(func->fo_refv[rid])) {
+		DeeFunction_RefLockEndRead(func);
+		return 0;
+	}
+	DeeFunction_RefLockEndRead(func);
+	return 1;
+err_no_such_key:
+	return -2;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbyname_hasitem(FunctionSymbolsByName *self, DeeObject *key) {
+	DeeFunctionObject *func = self->fsbn_func;
+	uint16_t rid;
+	if (DeeString_Check(key)) {
+		rid = DDI_GetRefIdByName(func->fo_code->co_ddi,
+		                         DeeString_STR(key),
+		                         DeeString_SIZE(key));
+		if unlikely(rid < self->fsbn_rid_start)
+			goto err_no_such_key;
+	} else {
+		if unlikely(DeeObject_AsUInt16(key, &rid))
+			goto err;
+		if unlikely(OVERFLOW_UADD(rid, self->fsbn_rid_start, &rid))
+			goto err_no_such_key;
+	}
+	if unlikely(rid >= self->fsbn_rid_end)
+		goto err_no_such_key;
+	return 1;
+err_no_such_key:
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1438,55 +1420,53 @@ STATIC_ASSERT(offsetof(FunctionSymbolsByName, fsbn_func) == offsetof(ProxyObject
 #define funcsymbolsbyname_fini  generic_proxy_fini
 #define funcsymbolsbyname_visit generic_proxy_visit
 
-PRIVATE struct type_nsi tpconst funcsymbolsbyname_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&funcsymbolsbyname_nsi_getsize,
-			/* .nsi_nextkey    = */ (dfunptr_t)&funcsymbolsbyname_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&funcsymbolsbyname_nsi_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&funcsymbolsbyname_nsi_getdefault,
-			/* .nsi_setdefault = */ (dfunptr_t)&funcsymbolsbyname_nsi_setdefault,
-			/* .nsi_updateold  = */ (dfunptr_t)&funcsymbolsbyname_nsi_updateold,
-			/* .nsi_insertnew  = */ (dfunptr_t)&funcsymbolsbyname_nsi_insertnew,
-		}
-	}
-};
-
 
 PRIVATE struct type_seq funcsymbolsbyname_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_iter,
-	/* .tp_sizeob             = */ NULL,
-	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_contains,
-	/* .tp_getitem            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_getitem,
-	/* .tp_delitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_delitem,
-	/* .tp_setitem            = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&funcsymbolsbyname_setitem,
-	/* .tp_getrange           = */ NULL,
-	/* .tp_delrange           = */ NULL,
-	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &funcsymbolsbyname_nsi,
-	/* .tp_foreach            = */ NULL,
-	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_enumerate          = */ NULL, /* TODO */
-	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_keysiter,
-	/* .tp_bounditem          = */ NULL,
-	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_nsi_getsize,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_nsi_getsize,
-	/* .tp_getitem_index      = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ NULL,
-	/* .tp_setitem_index      = */ NULL,
-	/* .tp_bounditem_index    = */ NULL,
-	/* .tp_hasitem_index      = */ NULL,
-	/* .tp_getrange_index     = */ NULL,
-	/* .tp_delrange_index     = */ NULL,
-	/* .tp_setrange_index     = */ NULL,
-	/* .tp_getrange_index_n   = */ NULL,
-	/* .tp_delrange_index_n   = */ NULL,
-	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&funcsymbolsbyname_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&funcsymbolsbyname_enumerate,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_iterkeys,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_size,
+	/* .tp_getitem_index              = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL, // TODO: (int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_delitem_index,
+	/* .tp_setitem_index              = */ NULL, // TODO: (int (DCALL *)(DeeObject *, size_t, DeeObject *))&funcsymbolsbyname_setitem_index,
+	/* .tp_bounditem_index            = */ NULL, // TODO: (int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_bounditem_index,
+	/* .tp_hasitem_index              = */ NULL, // TODO: (int (DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_hasitem_index,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_trygetitem,
+	/* .tp_trygetitem_index           = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ NULL, // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ NULL, // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&funcsymbolsbyname_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ NULL, // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ NULL, // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&funcsymbolsbyname_hasitem_string_len_hash,
 };
 
 PRIVATE struct type_member tpconst funcsymbolsbyname_class_members[] = {
@@ -1503,8 +1483,15 @@ PRIVATE struct type_member tpconst funcsymbolsbyname_members[] = {
 };
 
 PRIVATE struct type_method tpconst funcsymbolsbyname_methods[] = {
+	TYPE_METHOD_HINTREF(map_setold_ex),
+	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_END
+};
 
-	TYPE_MEMBER_END
+PRIVATE struct type_method_hint tpconst funcsymbolsbyname_method_hints[] = {
+	TYPE_METHOD_HINT(map_setold_ex, &funcsymbolsbyname_mh_setold_ex),
+	TYPE_METHOD_HINT(map_setnew_ex, &funcsymbolsbyname_mh_setnew_ex),
+	TYPE_METHOD_HINT_END
 };
 
 INTERN DeeTypeObject FunctionSymbolsByName_Type = {
@@ -1556,7 +1543,8 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	/* .tp_members       = */ funcsymbolsbyname_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ funcsymbolsbyname_class_members
+	/* .tp_class_members = */ funcsymbolsbyname_class_members,
+	/* .tp_method_hints  = */ funcsymbolsbyname_method_hints,
 };
 
 
@@ -2133,7 +2121,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-yfuncsymbolsbyname_nsi_getsize(YieldFunctionSymbolsByName *__restrict self) {
+yfuncsymbolsbyname_size(YieldFunctionSymbolsByName *__restrict self) {
 	size_t result;
 	result = self->yfsbn_nargs;
 	result += self->yfsbn_rid_end - self->yfsbn_rid_start;
@@ -2164,17 +2152,17 @@ STATIC_ASSERT(yfuncsymbol_isrid(yfuncsymbol_makeref(0)));
  * @return: YFUNCSYMBOL_INVALID: No such symbol "name" */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) yfuncsymbol_t DCALL
 YieldFunctionSymbolsByName_TryName2Sym(YieldFunctionSymbolsByName const *self,
-                                       char const *name) {
+                                       char const *name, size_t len) {
 	uint16_t i;
 	DeeCodeObject *code = self->yfsbn_yfunc->yf_func->fo_code;
 	if (code->co_keywords) {
 		for (i = 0; i < self->yfsbn_nargs; ++i) {
 			DeeStringObject *argi = code->co_keywords[i];
-			if (strcmp(DeeString_STR(argi), name) == 0)
+			if (strcmpz(DeeString_STR(argi), name, len) == 0)
 				return yfuncsymbol_makearg(i);
 		}
 	}
-	i = DDI_GetRefIdByName(code->co_ddi, name);
+	i = DDI_GetRefIdByName(code->co_ddi, name, len);
 	if (i >= self->yfsbn_rid_start && i < self->yfsbn_rid_end)
 		return yfuncsymbol_makeref(i);
 	return YFUNCSYMBOL_INVALID;
@@ -2188,8 +2176,11 @@ YieldFunctionSymbolsByName_TryKey2Sym(YieldFunctionSymbolsByName const *self,
                                       DeeObject *key) {
 	uint32_t index;
 	DeeCodeObject *code;
-	if (DeeString_Check(key))
-		return YieldFunctionSymbolsByName_TryName2Sym(self, DeeString_STR(key));
+	if (DeeString_Check(key)) {
+		return YieldFunctionSymbolsByName_TryName2Sym(self,
+		                                              DeeString_STR(key),
+		                                              DeeString_SIZE(key));
+	}
 	if (DeeObject_AsUIntX(key, &index))
 		goto err;
 	code = self->yfsbn_yfunc->yf_func->fo_code;
@@ -2248,60 +2239,8 @@ YieldFunction_TryGetSymbol(DeeYieldFunctionObject *self, yfuncsymbol_t sym) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-yfuncsymbolsbyname_nsi_getdefault(YieldFunctionSymbolsByName *self,
-                                  DeeObject *key, DeeObject *defl) {
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
-	if (symid != YFUNCSYMBOL_INVALID) {
-		DREF DeeObject *result;
-		if unlikely(symid == YFUNCSYMBOL_ERROR)
-			goto err;
-		result = YieldFunction_TryGetSymbol(self->yfsbn_yfunc, symid);
-		if (result != NULL)
-			return result;
-	}
-	if (defl != ITER_DONE)
-		Dee_Incref(defl);
-	return defl;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-yfuncsymbolsbyname_nsi_setdefault(YieldFunctionSymbolsByName *self,
-                                  DeeObject *key, DeeObject *defl) {
-	DeeFunctionObject *func;
-	DREF DeeObject *result;
-	yfuncsymbol_t symid = YieldFunctionSymbolsByName_Key2Sym(self, key);
-	uint16_t rid;
-	if unlikely(symid == YFUNCSYMBOL_ERROR)
-		goto err;
-	func = self->yfsbn_yfunc->yf_func;
-	if unlikely(!yfuncsymbol_isrid(symid) ||
-	            (rid = yfuncsymbol_asrid(symid)) < func->fo_code->co_refc) {
-		err_readonly_key((DeeObject *)self, key);
-		goto err;
-	}
-	DeeFunction_RefLockWrite(func);
-	result = func->fo_refv[rid];
-	if (ITER_ISOK(result)) {
-		Dee_Incref(result);
-		DeeFunction_RefLockEndWrite(func);
-		return result;
-	}
-	Dee_Incref_n(defl, 2);
-	func->fo_refv[rid] = defl;
-	DeeFunction_RefLockEndWrite(func);
-	DeeFutex_WakeAll(&func->fo_refv[rid]);
-	result = defl;
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-yfuncsymbolsbyname_nsi_updateold(YieldFunctionSymbolsByName *self,
-                                 DeeObject *key, DeeObject *value,
-                                 DREF DeeObject **p_oldvalue) {
+yfuncsymbolsbyname_mh_setold_ex(YieldFunctionSymbolsByName *self,
+                                DeeObject *key, DeeObject *value) {
 	DeeFunctionObject *func;
 	DREF DeeObject *oldvalue;
 	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
@@ -2309,7 +2248,7 @@ yfuncsymbolsbyname_nsi_updateold(YieldFunctionSymbolsByName *self,
 	if unlikely(symid == YFUNCSYMBOL_ERROR)
 		goto err;
 	if unlikely(symid == YFUNCSYMBOL_INVALID)
-		return 0;
+		return ITER_DONE;
 	func = self->yfsbn_yfunc->yf_func;
 	if unlikely(!yfuncsymbol_isrid(symid) ||
 	            (rid = yfuncsymbol_asrid(symid)) < func->fo_code->co_refc) {
@@ -2323,23 +2262,17 @@ yfuncsymbolsbyname_nsi_updateold(YieldFunctionSymbolsByName *self,
 		func->fo_refv[rid] = value;
 		DeeFunction_RefLockEndWrite(func);
 		DeeFutex_WakeAll(&func->fo_refv[rid]);
-		if (p_oldvalue) {
-			*p_oldvalue = oldvalue;
-		} else {
-			Dee_Decref(oldvalue);
-		}
-		return 1;
+		return oldvalue;
 	}
 	DeeFunction_RefLockEndWrite(func);
-	return 0;
+	return ITER_DONE;
 err:
-	return -1;
+	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-yfuncsymbolsbyname_nsi_insertnew(YieldFunctionSymbolsByName *self,
-                                 DeeObject *key, DeeObject *value,
-                                 DREF DeeObject **p_oldvalue) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+yfuncsymbolsbyname_mh_setnew_ex(YieldFunctionSymbolsByName *self,
+                                DeeObject *key, DeeObject *value) {
 	DeeFunctionObject *func;
 	DREF DeeObject *oldvalue;
 	yfuncsymbol_t symid = YieldFunctionSymbolsByName_Key2Sym(self, key);
@@ -2355,24 +2288,18 @@ yfuncsymbolsbyname_nsi_insertnew(YieldFunctionSymbolsByName *self,
 	DeeFunction_RefLockWrite(func);
 	oldvalue = func->fo_refv[rid];
 	if (ITER_ISOK(oldvalue)) {
-		if (p_oldvalue) {
-			Dee_Incref(oldvalue);
-			*p_oldvalue = oldvalue;
-		}
+		Dee_Incref(oldvalue);
 		DeeFunction_RefLockEndWrite(func);
-		return 1;
+		return oldvalue;
 	}
 	Dee_Incref(value);
 	func->fo_refv[rid] = value;
 	DeeFunction_RefLockEndWrite(func);
 	DeeFutex_WakeAll(&func->fo_refv[rid]);
-	return 0;
+	return ITER_DONE;
 err:
-	return -1;
+	return NULL;
 }
-
-#define yfuncsymbolsbyname_nsi_nextkey   yfuncsymbolsbynameiter_nextkey_with_unbound
-#define yfuncsymbolsbyname_nsi_nextvalue yfuncsymbolsbynameiter_nextvalue
 
 PRIVATE WUNUSED NONNULL((1)) DREF YieldFunctionSymbolsByNameIterator *DCALL
 yfuncsymbolsbyname_iter(YieldFunctionSymbolsByName *__restrict self) {
@@ -2433,9 +2360,57 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+yfuncsymbolsbyname_trygetitem(YieldFunctionSymbolsByName *self, DeeObject *key) {
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+	if (symid != YFUNCSYMBOL_INVALID) {
+		DREF DeeObject *result;
+		if unlikely(symid == YFUNCSYMBOL_ERROR)
+			goto err;
+		result = YieldFunction_TryGetSymbol(self->yfsbn_yfunc, symid);
+		if (result != NULL)
+			return result;
+	}
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+yfuncsymbolsbyname_bounditem(YieldFunctionSymbolsByName *self, DeeObject *key) {
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+	if (symid != YFUNCSYMBOL_INVALID) {
+		DREF DeeObject *result;
+		if unlikely(symid == YFUNCSYMBOL_ERROR)
+			goto err;
+		result = YieldFunction_TryGetSymbol(self->yfsbn_yfunc, symid);
+		if (result != NULL) {
+			Dee_Decref(result);
+			return 1;
+		}
+		return 0;
+	}
+	return -2;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+yfuncsymbolsbyname_hasitem(YieldFunctionSymbolsByName *self, DeeObject *key) {
+	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
+	if (symid != YFUNCSYMBOL_INVALID) {
+		if unlikely(symid == YFUNCSYMBOL_ERROR)
+			goto err;
+		return 1;
+	}
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 yfuncsymbolsbyname_setitem(YieldFunctionSymbolsByName *self,
-                          DeeObject *key, DeeObject *value) {
+                           DeeObject *key, DeeObject *value) {
 	uint16_t rid;
 	DeeFunctionObject *func;
 	DREF DeeObject *oldvalue;
@@ -2537,61 +2512,70 @@ yfuncsymbolsbyname_getfunc(YieldFunctionSymbolsByName *__restrict self) {
 }
 
 
-
-PRIVATE struct type_nsi tpconst yfuncsymbolsbyname_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&yfuncsymbolsbyname_nsi_getsize,
-			/* .nsi_nextkey    = */ (dfunptr_t)&yfuncsymbolsbyname_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&yfuncsymbolsbyname_nsi_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&yfuncsymbolsbyname_nsi_getdefault,
-			/* .nsi_setdefault = */ (dfunptr_t)&yfuncsymbolsbyname_nsi_setdefault,
-			/* .nsi_updateold  = */ (dfunptr_t)&yfuncsymbolsbyname_nsi_updateold,
-			/* .nsi_insertnew  = */ (dfunptr_t)&yfuncsymbolsbyname_nsi_insertnew,
-		}
-	}
-};
-
 PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iter,
-	/* .tp_sizeob             = */ NULL,
-	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_contains,
-	/* .tp_getitem            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_getitem,
-	/* .tp_delitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_delitem,
-	/* .tp_setitem            = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&yfuncsymbolsbyname_setitem,
-	/* .tp_getrange           = */ NULL,
-	/* .tp_delrange           = */ NULL,
-	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &yfuncsymbolsbyname_nsi,
-	/* .tp_foreach            = */ NULL,
-	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_enumerate          = */ NULL, /* TODO */
-	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iterkeys,
-	/* .tp_bounditem          = */ NULL,
-	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_nsi_getsize,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_nsi_getsize,
-	/* .tp_getitem_index      = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ NULL,
-	/* .tp_setitem_index      = */ NULL,
-	/* .tp_bounditem_index    = */ NULL,
-	/* .tp_hasitem_index      = */ NULL,
-	/* .tp_getrange_index     = */ NULL,
-	/* .tp_delrange_index     = */ NULL,
-	/* .tp_setrange_index     = */ NULL,
-	/* .tp_getrange_index_n   = */ NULL,
-	/* .tp_delrange_index_n   = */ NULL,
-	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&yfuncsymbolsbyname_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&yfuncsymbolsbyname_enumerate,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iterkeys,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_size,
+	/* .tp_getitem_index              = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&yfuncsymbolsbyname_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL, // TODO: (int (DCALL *)(DeeObject *, size_t))&yfuncsymbolsbyname_delitem_index,
+	/* .tp_setitem_index              = */ NULL, // TODO: (int (DCALL *)(DeeObject *, size_t, DeeObject *))&yfuncsymbolsbyname_setitem_index,
+	/* .tp_bounditem_index            = */ NULL, // TODO: (int (DCALL *)(DeeObject *, size_t))&yfuncsymbolsbyname_bounditem_index,
+	/* .tp_hasitem_index              = */ NULL, // TODO: (int (DCALL *)(DeeObject *, size_t))&yfuncsymbolsbyname_hasitem_index,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_trygetitem,
+	/* .tp_trygetitem_index           = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&yfuncsymbolsbyname_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&yfuncsymbolsbyname_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&yfuncsymbolsbyname_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ NULL, // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&yfuncsymbolsbyname_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ NULL, // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&yfuncsymbolsbyname_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ NULL, // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&yfuncsymbolsbyname_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ NULL, // TODO: (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&yfuncsymbolsbyname_hasitem_string_len_hash,
 };
 
 PRIVATE struct type_member tpconst yfuncsymbolsbyname_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &YieldFunctionSymbolsByNameIterator_Type),
 	TYPE_MEMBER_CONST(STR_KeysIterator, &YieldFunctionSymbolsByNameKeysIterator_Type),
 	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_method tpconst yfuncsymbolsbyname_methods[] = {
+	TYPE_METHOD_HINTREF(map_setold_ex),
+	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst yfuncsymbolsbyname_method_hints[] = {
+	TYPE_METHOD_HINT(map_setold_ex, &yfuncsymbolsbyname_mh_setold_ex),
+	TYPE_METHOD_HINT(map_setnew_ex, &yfuncsymbolsbyname_mh_setnew_ex),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_getset tpconst yfuncsymbolsbyname_getsets[] = {
@@ -2648,12 +2632,13 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ yfuncsymbolsbyname_methods,
 	/* .tp_getsets       = */ yfuncsymbolsbyname_getsets,
 	/* .tp_members       = */ yfuncsymbolsbyname_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ yfuncsymbolsbyname_class_members
+	/* .tp_class_members = */ yfuncsymbolsbyname_class_members,
+	/* .tp_method_hints  = */ yfuncsymbolsbyname_method_hints,
 };
 
 
@@ -2790,19 +2775,6 @@ STATIC_ASSERT(offsetof(FrameArgs, fa_code) == offsetof(ProxyObject2, po_obj1) ||
 #define frameargs_fini  generic_proxy2_fini
 #define frameargs_visit generic_proxy2_visit
 
-PRIVATE struct type_nsi tpconst frameargs_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&frameargs_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&frameargs_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&frameargs_getitem_index,
-		}
-	}
-};
-
-
 PRIVATE struct type_seq frameargs_seq = {
 	/* .tp_iter               = */ NULL,
 	/* .tp_sizeob             = */ NULL,
@@ -2813,7 +2785,7 @@ PRIVATE struct type_seq frameargs_seq = {
 	/* .tp_getrange           = */ NULL,
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &frameargs_nsi,
+	/* .tp_nsi                = */ NULL,
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
@@ -3099,37 +3071,14 @@ STATIC_ASSERT(offsetof(FrameLocals, fl_frame) == offsetof(ProxyObject, po_obj));
 #define framelocals_fini  generic_proxy_fini
 #define framelocals_visit generic_proxy_visit
 
-PRIVATE struct type_nsi tpconst framelocals_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&framelocals_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&framelocals_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&framelocals_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)&framelocals_delitem_index,
-			/* .nsi_setitem      = */ (dfunptr_t)&framelocals_setitem_index,
-		}
-	}
+PRIVATE struct type_method tpconst framelocals_methods[] = {
+	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_END
 };
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framelocals_xchitem(FrameLocals *self, size_t argc,
-                    DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return framelocals_xchitem_index(self, index, value);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_method tpconst framelocals_methods[] = {
-	TYPE_KWMETHOD(STR_xchitem, &framelocals_xchitem, "(index:?Dint,value)->"),
-	TYPE_METHOD_END
+PRIVATE struct type_method_hint tpconst framelocals_method_hints[] = {
+	TYPE_METHOD_HINT(seq_xchitem_index, &framelocals_xchitem_index),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_seq framelocals_seq = {
@@ -3142,7 +3091,7 @@ PRIVATE struct type_seq framelocals_seq = {
 	/* .tp_getrange           = */ NULL,
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &framelocals_nsi,
+	/* .tp_nsi                = */ NULL,
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
@@ -3220,7 +3169,8 @@ INTERN DeeTypeObject FrameLocals_Type = {
 	/* .tp_members       = */ framelocals_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ framelocals_method_hints,
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3397,22 +3347,8 @@ err:
 }
 
 
-PRIVATE struct type_nsi tpconst framestack_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&framestack_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&framestack_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&framestack_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)&framestack_setitem_index,
-		}
-	}
-};
-
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-framestack_insert_impl(FrameStack *self, size_t index, DeeObject *value) {
+framestack_mh_insert(FrameStack *self, size_t index, DeeObject *value) {
 	uint16_t stackc, stacka;
 	struct code_frame *frame;
 	DREF DeeObject **stackv;
@@ -3485,7 +3421,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framestack_pop_impl(FrameStack *self, Dee_ssize_t index) {
+framestack_mh_pop(FrameStack *self, Dee_ssize_t index) {
 	uint16_t stackc, i;
 	struct code_frame *frame;
 	DREF DeeObject **stackv;
@@ -3519,50 +3455,18 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framestack_insert(FrameStack *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "o:insert",
-	                    &index, &item))
-		goto err;
-	if unlikely(framestack_insert_impl(self, index, item))
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framestack_pop(FrameStack *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t index = -1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
-	                    "|" UNPdSIZ ":pop", &index))
-		goto err;
-	return framestack_pop_impl(self, index);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framestack_xchitem(FrameStack *self, size_t argc,
-                   DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return framestack_xchitem_index(self, index, value);
-err:
-	return NULL;
-}
-
 PRIVATE struct type_method tpconst framestack_methods[] = {
-	TYPE_KWMETHOD(STR_xchitem, &framestack_xchitem, "(index:?Dint,value)->"),
-	TYPE_KWMETHOD(STR_insert, &framestack_insert, "(index:?Dint,item)"),
-	TYPE_KWMETHOD(STR_pop, &framestack_pop, "(index=!-1)->"),
+	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(seq_insert),
+	TYPE_METHOD_HINTREF(seq_pop),
 	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst framestack_method_hints[] = {
+	TYPE_METHOD_HINT(seq_xchitem_index, &framestack_xchitem_index),
+	TYPE_METHOD_HINT(seq_insert, &framestack_mh_insert),
+	TYPE_METHOD_HINT(seq_pop, &framestack_mh_pop),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_getset tpconst framestack_getsets[] = {
@@ -3580,7 +3484,7 @@ PRIVATE struct type_seq framestack_seq = {
 	/* .tp_getrange           = */ NULL,
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &framestack_nsi,
+	/* .tp_nsi                = */ NULL,
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
@@ -3652,7 +3556,8 @@ INTERN DeeTypeObject FrameStack_Type = {
 	/* .tp_members       = */ framestack_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ framestack_method_hints
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4064,16 +3969,14 @@ err:
 }
 
 /* Assign a new "value" attached to "clid"
- * @param: clid_name: The name of `clid' (only for error messages)
  * @param: value:     The new value, or NULL to unbound the location.
  * @return: * :        The old value attached to "clid"
  * @return: ITER_DONE: The old value attached to "clid" used to be unbound
  * @return: NULL:      Error */
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 FrameSymbolsByName_XchCLidValue(FrameSymbolsByName *self,
                                 canonical_lid_t clid,
-                                DeeObject *clid_name,
-                                DeeObject *value) {
+                                /*0..1*/ DeeObject *value) {
 	DREF DeeObject *result = ITER_DONE;
 	struct code_frame const *frame;
 	struct canonical_lid_location loc;
@@ -4082,7 +3985,12 @@ FrameSymbolsByName_XchCLidValue(FrameSymbolsByName *self,
 		goto err;
 	if unlikely(!code_frame_get_clid_addr(frame, &loc, clid)) {
 		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-		err_unknown_key((DeeObject *)self, clid_name);
+		DREF DeeObject *name;
+		name = FrameSymbolsByName_GetCLidName(self, clid);
+		if unlikely(!name)
+			goto err;
+		err_unknown_key((DeeObject *)self, name);
+		Dee_Decref(name);
 		goto err;
 	}
 	if unlikely(!loc.cll_writable) {
@@ -4106,25 +4014,30 @@ FrameSymbolsByName_XchCLidValue(FrameSymbolsByName *self,
 		result = ITER_DONE;
 	DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
 	return result;
+	{
+		DREF DeeObject *name;
 err_ro:
-	err_readonly_key((DeeObject *)self, clid_name);
+		name = FrameSymbolsByName_GetCLidName(self, clid);
+		if unlikely(!name)
+			goto err;
+		err_readonly_key((DeeObject *)self, name);
+		Dee_Decref(name);
+	}
 err:
 	return NULL;
 }
 
 /* Same as `FrameSymbolsByName_XchCLidValue()', but automatically
  * inherits the reference to the old value.
- * @param: clid_name: The name of `clid' (only for error messages)
- * @param: value:     The new value, or NULL to unbound the location.
+ * @param: value: The new value, or NULL to unbound the location.
  * @return: 0 : Success
  * @return: -1: Error */
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 FrameSymbolsByName_SetCLidValue(FrameSymbolsByName *self,
                                 canonical_lid_t clid,
-                                DeeObject *clid_name,
-                                DeeObject *value) {
+                                /*0..1*/ DeeObject *value) {
 	DREF DeeObject *oldval;
-	oldval = FrameSymbolsByName_XchCLidValue(self, clid, clid_name, value);
+	oldval = FrameSymbolsByName_XchCLidValue(self, clid, value);
 	if (ITER_ISOK(oldval)) {
 		Dee_Decref_unlikely(oldval);
 		return 0;
@@ -4453,7 +4366,8 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
  * @return: (canonical_lid_t)-1: An error was thrown.
  * @return: (canonical_lid_t)-2: No symbol exists matching `name', or insufficient debug info */
 PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
-FrameSymbolsByName_TryName2LocId(FrameSymbolsByName *self, char const *name) {
+FrameSymbolsByName_TryName2LocId(FrameSymbolsByName *self,
+                                 char const *name, size_t len) {
 	DeeCodeObject *code = self->frsbn_func->fo_code;
 	uint16_t i;
 	canonical_lid_t result;
@@ -4466,14 +4380,14 @@ FrameSymbolsByName_TryName2LocId(FrameSymbolsByName *self, char const *name) {
 		for (i = 0; i < self->frsbn_nargs; ++i) {
 			DeeStringObject *arg_name = code->co_keywords[i];
 			ASSERT_OBJECT_TYPE_EXACT(arg_name, &DeeString_Type);
-			if (strcmp(DeeString_STR(arg_name), name) == 0)
+			if (strcmpz(DeeString_STR(arg_name), name, len) == 0)
 				return i;
 		}
 	}
 	result = code->co_argc_max;
 
 	/* Check for names of references/statics. */
-	i = DDI_GetRefIdByName(code->co_ddi, name);
+	i = DDI_GetRefIdByName(code->co_ddi, name, len);
 	if (i >= self->frsbn_rid_start && i < self->frsbn_rid_end)
 		return result + i;
 	result += code->co_refstaticc;
@@ -4505,7 +4419,7 @@ again_lock_frame:
 			for (i = 0; i < lc_count; ++i) {
 				char const *local_name;
 				local_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[i]);
-				if (local_name && strcmp(local_name, name) == 0) {
+				if (local_name && strcmpz(local_name, name, len) == 0) {
 					DeeFrame_LockEndRead((DeeObject *)self->frsbn_frame);
 					Dee_ddi_state_fini(&dds);
 					return result + i;
@@ -4514,7 +4428,7 @@ again_lock_frame:
 			for (i = 0; i < sp_count; ++i) {
 				char const *stack_name;
 				stack_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_spnamv[i]);
-				if (stack_name && strcmp(stack_name, name) == 0) {
+				if (stack_name && strcmpz(stack_name, name, len) == 0) {
 					DeeFrame_LockEndRead((DeeObject *)self->frsbn_frame);
 					Dee_ddi_state_fini(&dds);
 					return result + code->co_localc + i;
@@ -4532,6 +4446,47 @@ err:
 	return (canonical_lid_t)-1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
+FrameSymbolsByName_TryVerifyLocId(FrameSymbolsByName *self, size_t ulid) {
+	/* Check that "lid" can appear in "self" */
+	canonical_lid_t size;
+	DeeCodeObject *code;
+	code = self->frsbn_func->fo_code;
+	size = code->co_argc_max;
+	if (ulid < (size_t)size) {
+		uint16_t aid = (uint16_t)ulid;
+		if (aid >= self->frsbn_nargs)
+			goto err_bad_lid;
+	} else if ((size += code->co_refstaticc, ulid < (size_t)size)) {
+		uint16_t rid = (uint16_t)(ulid - code->co_argc_max);
+		if (rid < self->frsbn_rid_start)
+			goto err_bad_lid;
+		if (rid >= self->frsbn_rid_end)
+			goto err_bad_lid;
+	} else if ((size += code->co_localc, ulid < (size_t)size)) {
+		uint16_t lid = (uint16_t)(ulid - (code->co_argc_max + code->co_refstaticc));
+		if (lid >= self->frsbn_localc)
+			goto err_bad_lid;
+	} else if (ulid >= (size_t)(size + self->frsbn_stackc)) {
+		goto err_bad_lid;
+	}
+	return (canonical_lid_t)ulid;
+err_bad_lid:
+	return (canonical_lid_t)-2;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
+FrameSymbolsByName_VerifyLocId(FrameSymbolsByName *self, size_t lid) {
+	canonical_lid_t result;
+	result = FrameSymbolsByName_TryVerifyLocId(self, lid);
+	if unlikely(result == (canonical_lid_t)-2) {
+		result = (canonical_lid_t)DeeError_Throwf(&DeeError_KeyError,
+		                                          "Invalid location id %#" PRFxSIZ,
+		                                          lid);
+	}
+	return result;
+}
+
 /* Same as `FrameSymbolsByName_TryName2LocId()', but handles a generic object `key'
  * @return: * : The canonical location ID of `key'
  * @return: (canonical_lid_t)-1: An error was thrown.
@@ -4540,38 +4495,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
 FrameSymbolsByName_TryKey2LocId(FrameSymbolsByName *self, DeeObject *key) {
 	canonical_lid_t result;
 	if (DeeString_Check(key)) {
-		result = FrameSymbolsByName_TryName2LocId(self, DeeString_STR(key));
+		result = FrameSymbolsByName_TryName2LocId(self,
+		                                          DeeString_STR(key),
+		                                          DeeString_SIZE(key));
 	} else {
-		canonical_lid_t size;
-		DeeCodeObject *code;
 		if (DeeObject_AsUIntX(key, &result))
 			goto err;
-		/* Check that "result" can appear in "self" */
-		code = self->frsbn_func->fo_code;
-		size = code->co_argc_max;
-		if (result < size) {
-			uint16_t aid = (uint16_t)result;
-			if (aid >= self->frsbn_nargs)
-				goto err_bad_lid;
-		} else if ((size += code->co_refstaticc, result < size)) {
-			uint16_t rid = (uint16_t)(result - code->co_argc_max);
-			if (rid < self->frsbn_rid_start)
-				goto err_bad_lid;
-			if (rid >= self->frsbn_rid_end)
-				goto err_bad_lid;
-		} else if ((size += code->co_localc, result < size)) {
-			uint16_t lid = (uint16_t)(result - (code->co_argc_max + code->co_refstaticc));
-			if (lid >= self->frsbn_localc)
-				goto err_bad_lid;
-		} else if (result >= (size + self->frsbn_stackc)) {
-			goto err_bad_lid;
-		}
+		result = FrameSymbolsByName_TryVerifyLocId(self, result);
 	}
 	return result;
-err_bad_lid:
-	DeeError_Throwf(&DeeError_ValueError,
-	                "Invalid location id %#" PRFx32,
-	                result);
 err:
 	return (canonical_lid_t)-1;
 }
@@ -4602,79 +4534,8 @@ framesymbolsbyname_size(FrameSymbolsByName *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-framesymbolsbyname_nsi_getdefault(FrameSymbolsByName *self,
-                                  DeeObject *key, DeeObject *defl) {
-	canonical_lid_t clid = FrameSymbolsByName_TryKey2LocId(self, key);
-	if (clid != (canonical_lid_t)-2) {
-		DREF DeeObject *result;
-		if unlikely(clid == (canonical_lid_t)-1)
-			goto err;
-		result = FrameSymbolsByName_GetCLidValue(self, clid);
-		if (result != ITER_DONE)
-			return result;
-	}
-	if (defl != ITER_DONE)
-		Dee_Incref(defl);
-	return defl;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-framesymbolsbyname_nsi_setdefault(FrameSymbolsByName *self,
-                                  DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result;
-	struct code_frame *frame;
-	struct canonical_lid_location loc;
-	canonical_lid_t clid = FrameSymbolsByName_Key2LocId(self, key);
-	if unlikely(clid == (canonical_lid_t)-1)
-		goto err;
-	frame = DeeFrame_LockWrite((DeeObject *)self->frsbn_frame);
-	if unlikely(!frame)
-		goto err;
-	if unlikely(!code_frame_get_clid_addr(frame, &loc, clid)) {
-		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-		goto err_no_such_key;
-	}
-	if (loc.cll_isstatic) {
-		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-		DeeFunction_RefLockWrite(self->frsbn_func);
-		result = *loc.cll_ptr;
-		if (ITER_ISOK(result)) {
-			Dee_Incref(result);
-			DeeFunction_RefLockEndWrite(self->frsbn_func);
-		} else {
-			Dee_Incref_n(defl, 2);
-			*loc.cll_ptr = result = defl;
-			DeeFunction_RefLockEndWrite(self->frsbn_func);
-			DeeFutex_WakeAll(loc.cll_ptr);
-		}
-		goto done;
-	} else if (*loc.cll_ptr) {
-		result = *loc.cll_ptr;
-		Dee_Incref(result);
-	} else {
-		if unlikely(!loc.cll_writable) {
-			DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-			err_readonly_key((DeeObject *)self, key);
-			goto err;
-		}
-		Dee_Incref_n(defl, 2);
-		*loc.cll_ptr = result = defl;
-	}
-	DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-done:
-	return result;
-err_no_such_key:
-	err_unknown_key((DeeObject *)self, key);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-framesymbolsbyname_nsi_updateold(FrameSymbolsByName *self,
-                                 DeeObject *key, DeeObject *value,
-                                 DREF DeeObject **p_oldvalue) {
+framesymbolsbyname_mh_setold_ex(FrameSymbolsByName *self,
+                                DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	struct code_frame *frame;
 	struct canonical_lid_location loc;
@@ -4699,15 +4560,10 @@ framesymbolsbyname_nsi_updateold(FrameSymbolsByName *self,
 			*loc.cll_ptr = value;
 			DeeFunction_RefLockEndWrite(self->frsbn_func);
 			DeeFutex_WakeAll(loc.cll_ptr);
-			if (p_oldvalue) {
-				*p_oldvalue = oldvalue;
-			} else {
-				Dee_Decref(oldvalue);
-			}
-			return 1;
+			return oldvalue;
 		}
 		DeeFunction_RefLockEndWrite(self->frsbn_func);
-		return 0;
+		return ITER_DONE;
 	} else if ((oldvalue = *loc.cll_ptr) != NULL) {
 		if unlikely(!loc.cll_writable) {
 			DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
@@ -4717,27 +4573,21 @@ framesymbolsbyname_nsi_updateold(FrameSymbolsByName *self,
 		Dee_Incref(value);
 		*loc.cll_ptr = value;
 		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-		if (p_oldvalue) {
-			*p_oldvalue = oldvalue;
-		} else {
-			Dee_Decref(oldvalue);
-		}
-		return 1;
+		return oldvalue;
 	} else {
 		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-		return 0;
+		return ITER_DONE;
 	}
 	__builtin_unreachable();
 err_no_such_key:
-	return 0;
+	return ITER_DONE;
 err:
-	return -1;
+	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-framesymbolsbyname_nsi_insertnew(FrameSymbolsByName *self,
-                                 DeeObject *key, DeeObject *value,
-                                 DREF DeeObject **p_oldvalue) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+framesymbolsbyname_mh_setnew_ex(FrameSymbolsByName *self,
+                                DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
 	struct code_frame *frame;
 	struct canonical_lid_location loc;
@@ -4756,26 +4606,20 @@ framesymbolsbyname_nsi_insertnew(FrameSymbolsByName *self,
 		DeeFunction_RefLockWrite(self->frsbn_func);
 		oldvalue = *loc.cll_ptr;
 		if (ITER_ISOK(oldvalue)) {
-			if (p_oldvalue) {
-				*p_oldvalue = oldvalue;
-				Dee_Incref(oldvalue);
-			}
+			Dee_Incref(oldvalue);
 			DeeFunction_RefLockEndWrite(self->frsbn_func);
-			return 1;
+			return oldvalue;
 		}
 		Dee_Incref(value);
 		*loc.cll_ptr = value;
 		DeeFunction_RefLockEndWrite(self->frsbn_func);
 		DeeFutex_WakeAll(loc.cll_ptr);
-		return 0;
+		return ITER_DONE;
 	} else if (*loc.cll_ptr) {
-		if (p_oldvalue) {
-			oldvalue = *loc.cll_ptr;
-			*p_oldvalue = oldvalue;
-			Dee_Incref(oldvalue);
-		}
+		oldvalue = *loc.cll_ptr;
+		Dee_Incref(oldvalue);
 		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-		return 1;
+		return oldvalue;
 	} else {
 		if unlikely(!loc.cll_writable) {
 			DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
@@ -4785,17 +4629,14 @@ framesymbolsbyname_nsi_insertnew(FrameSymbolsByName *self,
 		Dee_Incref(value);
 		*loc.cll_ptr = value;
 		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
-		return 0;
+		return ITER_DONE;
 	}
 	__builtin_unreachable();
 err_no_such_key:
 	err_unknown_key((DeeObject *)self, key);
 err:
-	return -1;
+	return NULL;
 }
-
-#define framesymbolsbyname_nsi_nextkey   framesymbolsbynameiter_nextkey_with_unbound
-#define framesymbolsbyname_nsi_nextvalue framesymbolsbynameiter_nextvalue
 
 PRIVATE WUNUSED NONNULL((1)) DREF FrameSymbolsByNameIterator *DCALL
 framesymbolsbyname_iter(FrameSymbolsByName *__restrict self) {
@@ -4848,8 +4689,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-framesymbolsbyname_getitem(FrameSymbolsByName *self,
-                           DeeObject *key) {
+framesymbolsbyname_getitem(FrameSymbolsByName *self, DeeObject *key) {
 	DREF DeeObject *result;
 	canonical_lid_t clid = FrameSymbolsByName_Key2LocId(self, key);
 	if unlikely(clid == (canonical_lid_t)-1)
@@ -4864,21 +4704,223 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2 /*, 3*/)) int DCALL
-framesymbolsbyname_setitem(FrameSymbolsByName *self,
-                          DeeObject *key, DeeObject *value) {
-	canonical_lid_t clid = FrameSymbolsByName_Key2LocId(self, key);
-	if unlikely(clid == (canonical_lid_t)-1)
-		goto err;
-	return FrameSymbolsByName_SetCLidValue(self, clid, key, value);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+framesymbolsbyname_trygetitem(FrameSymbolsByName *self, DeeObject *key) {
+	canonical_lid_t clid = FrameSymbolsByName_TryKey2LocId(self, key);
+	if (clid != (canonical_lid_t)-2) {
+		if unlikely(clid == (canonical_lid_t)-1)
+			goto err;
+		return FrameSymbolsByName_GetCLidValue(self, clid);
+	}
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framesymbolsbyname_bounditem(FrameSymbolsByName *self, DeeObject *key) {
+	canonical_lid_t clid = FrameSymbolsByName_TryKey2LocId(self, key);
+	if (clid != (canonical_lid_t)-2) {
+		DREF DeeObject *result;
+		if unlikely(clid == (canonical_lid_t)-1)
+			goto err;
+		result = FrameSymbolsByName_GetCLidValue(self, clid);
+		if unlikely(!result)
+			goto err;
+		if (result == ITER_DONE)
+			return 0; /* Unbound */
+		Dee_Decref(result);
+		return 1; /* Bound */
+	}
+	return -2;
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-framesymbolsbyname_delitem(FrameSymbolsByName *self,
-                           DeeObject *key) {
+framesymbolsbyname_hasitem(FrameSymbolsByName *self, DeeObject *key) {
+	canonical_lid_t clid = FrameSymbolsByName_TryKey2LocId(self, key);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	return clid != (canonical_lid_t)-2 ? 1 : 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2 /*, 3*/)) int DCALL
+framesymbolsbyname_setitem(FrameSymbolsByName *self,
+                           DeeObject *key, DeeObject *value) {
+	canonical_lid_t clid = FrameSymbolsByName_Key2LocId(self, key);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	return FrameSymbolsByName_SetCLidValue(self, clid, value);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framesymbolsbyname_delitem(FrameSymbolsByName *self, DeeObject *key) {
 	return framesymbolsbyname_setitem(self, key, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+framesymbolsbyname_getitem_index(FrameSymbolsByName *self, size_t key) {
+	DREF DeeObject *result;
+	canonical_lid_t clid = FrameSymbolsByName_VerifyLocId(self, key);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	result = FrameSymbolsByName_GetCLidValue(self, clid);
+	if (result == ITER_DONE)
+		goto err_unbound;
+	return result;
+err_unbound:
+	err_unbound_key_int((DeeObject *)self, key);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+framesymbolsbyname_trygetitem_index(FrameSymbolsByName *self, size_t key) {
+	canonical_lid_t clid = FrameSymbolsByName_TryVerifyLocId(self, key);
+	if (clid != (canonical_lid_t)-2) {
+		if unlikely(clid == (canonical_lid_t)-1)
+			goto err;
+		return FrameSymbolsByName_GetCLidValue(self, clid);
+	}
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+framesymbolsbyname_bounditem_index(FrameSymbolsByName *self, size_t key) {
+	canonical_lid_t clid = FrameSymbolsByName_TryVerifyLocId(self, key);
+	if (clid != (canonical_lid_t)-2) {
+		DREF DeeObject *result;
+		if unlikely(clid == (canonical_lid_t)-1)
+			goto err;
+		result = FrameSymbolsByName_GetCLidValue(self, clid);
+		if unlikely(!result)
+			goto err;
+		if (result == ITER_DONE)
+			return 0; /* Unbound */
+		Dee_Decref(result);
+		return 1; /* Bound */
+	}
+	return -2;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+framesymbolsbyname_hasitem_index(FrameSymbolsByName *self, size_t key) {
+	canonical_lid_t clid = FrameSymbolsByName_TryVerifyLocId(self, key);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	return clid != (canonical_lid_t)-2 ? 1 : 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1 /*, 3*/)) int DCALL
+framesymbolsbyname_setitem_index(FrameSymbolsByName *self, size_t key, DeeObject *value) {
+	canonical_lid_t clid = FrameSymbolsByName_VerifyLocId(self, key);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	return FrameSymbolsByName_SetCLidValue(self, clid, value);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+framesymbolsbyname_delitem_index(FrameSymbolsByName *self, size_t key) {
+	return framesymbolsbyname_setitem_index(self, key, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+framesymbolsbyname_getitem_string_len_hash(FrameSymbolsByName *self,
+                                           char const *key, size_t keylen,
+                                           Dee_hash_t UNUSED(hash)) {
+	DREF DeeObject *result;
+	canonical_lid_t clid = FrameSymbolsByName_TryName2LocId(self, key, keylen);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	result = FrameSymbolsByName_GetCLidValue(self, clid);
+	if (result == ITER_DONE)
+		goto err_unbound;
+	return result;
+err_unbound:
+	err_unbound_key_str((DeeObject *)self, key);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+framesymbolsbyname_trygetitem_string_len_hash(FrameSymbolsByName *self,
+                                              char const *key, size_t keylen,
+                                              Dee_hash_t UNUSED(hash)) {
+	canonical_lid_t clid = FrameSymbolsByName_TryName2LocId(self, key, keylen);
+	if (clid != (canonical_lid_t)-2) {
+		if unlikely(clid == (canonical_lid_t)-1)
+			goto err;
+		return FrameSymbolsByName_GetCLidValue(self, clid);
+	}
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framesymbolsbyname_bounditem_string_len_hash(FrameSymbolsByName *self,
+                                             char const *key, size_t keylen,
+                                             Dee_hash_t UNUSED(hash)) {
+	canonical_lid_t clid = FrameSymbolsByName_TryName2LocId(self, key, keylen);
+	if (clid != (canonical_lid_t)-2) {
+		DREF DeeObject *result;
+		if unlikely(clid == (canonical_lid_t)-1)
+			goto err;
+		result = FrameSymbolsByName_GetCLidValue(self, clid);
+		if unlikely(!result)
+			goto err;
+		if (result == ITER_DONE)
+			return 0; /* Unbound */
+		Dee_Decref(result);
+		return 1; /* Bound */
+	}
+	return -2;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framesymbolsbyname_hasitem_string_len_hash(FrameSymbolsByName *self,
+                                           char const *key, size_t keylen,
+                                           Dee_hash_t UNUSED(hash)) {
+	canonical_lid_t clid = FrameSymbolsByName_TryName2LocId(self, key, keylen);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	return clid != (canonical_lid_t)-2 ? 1 : 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2 /*, 5*/)) int DCALL
+framesymbolsbyname_setitem_string_len_hash(FrameSymbolsByName *self,
+                                           char const *key, size_t keylen,
+                                           Dee_hash_t UNUSED(hash), DeeObject *value) {
+	canonical_lid_t clid = FrameSymbolsByName_TryName2LocId(self, key, keylen);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	return FrameSymbolsByName_SetCLidValue(self, clid, value);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framesymbolsbyname_delitem_string_len_hash(FrameSymbolsByName *self,
+                                           char const *key, size_t keylen,
+                                           Dee_hash_t hash) {
+	return framesymbolsbyname_setitem_string_len_hash(self, key, keylen, hash, NULL);
 }
 
 
@@ -4947,54 +4989,64 @@ STATIC_ASSERT(offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2,
 #define framesymbolsbyname_visit generic_proxy2_visit
 
 
-PRIVATE struct type_nsi tpconst framesymbolsbyname_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&framesymbolsbyname_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&framesymbolsbyname_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&framesymbolsbyname_nsi_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&framesymbolsbyname_nsi_getdefault,
-			/* .nsi_setdefault = */ (dfunptr_t)&framesymbolsbyname_nsi_setdefault,
-			/* .nsi_updateold  = */ (dfunptr_t)&framesymbolsbyname_nsi_updateold,
-			/* .nsi_insertnew  = */ (dfunptr_t)&framesymbolsbyname_nsi_insertnew,
-		}
-	}
+PRIVATE struct type_seq framesymbolsbyname_seq = {
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&framesymbolsbyname_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *, Dee_enumerate_t cb, void *arg))&framesymbolsbyname_enumerate,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_keysiter,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&framesymbolsbyname_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&framesymbolsbyname_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&framesymbolsbyname_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&framesymbolsbyname_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&framesymbolsbyname_hasitem_index,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&framesymbolsbyname_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL, /* DEFAULT! */
+	/* .tp_getitem_string_hash        = */ NULL, /* DEFAULT! */
+	/* .tp_delitem_string_hash        = */ NULL, /* DEFAULT! */
+	/* .tp_setitem_string_hash        = */ NULL, /* DEFAULT! */
+	/* .tp_bounditem_string_hash      = */ NULL, /* DEFAULT! */
+	/* .tp_hasitem_string_hash        = */ NULL, /* DEFAULT! */
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&framesymbolsbyname_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&framesymbolsbyname_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&framesymbolsbyname_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&framesymbolsbyname_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&framesymbolsbyname_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&framesymbolsbyname_hasitem_string_len_hash,
 };
 
-PRIVATE struct type_seq framesymbolsbyname_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_iter,
-	/* .tp_sizeob             = */ NULL,
-	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_contains,
-	/* .tp_getitem            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_getitem,
-	/* .tp_delitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_delitem,
-	/* .tp_setitem            = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&framesymbolsbyname_setitem,
-	/* .tp_getrange           = */ NULL,
-	/* .tp_delrange           = */ NULL,
-	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &framesymbolsbyname_nsi,
-	/* .tp_foreach            = */ NULL,
-	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_enumerate          = */ NULL, /* TODO */
-	/* .tp_enumerate_index    = */ NULL,
-	/* .tp_iterkeys           = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_keysiter,
-	/* .tp_bounditem          = */ NULL,
-	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_size,
-	/* .tp_getitem_index      = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ NULL,
-	/* .tp_setitem_index      = */ NULL,
-	/* .tp_bounditem_index    = */ NULL,
-	/* .tp_hasitem_index      = */ NULL,
-	/* .tp_getrange_index     = */ NULL,
-	/* .tp_delrange_index     = */ NULL,
-	/* .tp_setrange_index     = */ NULL,
-	/* .tp_getrange_index_n   = */ NULL,
-	/* .tp_delrange_index_n   = */ NULL,
-	/* .tp_setrange_index_n   = */ NULL,
+PRIVATE struct type_method tpconst framesymbolsbyname_methods[] = {
+	TYPE_METHOD_HINTREF(map_setold_ex),
+	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst framesymbolsbyname_method_hints[] = {
+	TYPE_METHOD_HINT(map_setold_ex, &framesymbolsbyname_mh_setold_ex),
+	TYPE_METHOD_HINT(map_setnew_ex, &framesymbolsbyname_mh_setnew_ex),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst framesymbolsbyname_class_members[] = {
@@ -5055,12 +5107,13 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ framesymbolsbyname_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ framesymbolsbyname_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ framesymbolsbyname_class_members
+	/* .tp_class_members = */ framesymbolsbyname_class_members,
+	/* .tp_method_hints  = */ framesymbolsbyname_method_hints,
 };
 
 

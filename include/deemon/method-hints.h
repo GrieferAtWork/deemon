@@ -115,7 +115,10 @@ struct Dee_type_method_hint {
 #define Dee_TYPE_METHOD_HINT_END { (enum Dee_tmh_id)0, 0, NULL }
 
 
-/* Link a type method in as part of a type's `tp_methods' array. */
+/* Link a type method in as part of a type's `tp_method_hints' array.
+ * Behavior is undefined/depends-on-the-method-in-question if a type
+ * defines a method as a hint reference, but fails to implement all
+ * method hints used by the hinted method attribute. */
 #define Dee_TYPE_METHOD_HINTREF(attr_name) \
 	{ DeeMH_##attr_name##_name,            \
 	  (Dee_objmethod_t)&DeeMH_##attr_name, \
