@@ -315,10 +315,14 @@ PRIVATE struct type_getset tpconst set_class_getsets[] = {
 };
 
 
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+
 INTDEF int DCALL none_i1(void *UNUSED(a));
 INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
 PRIVATE struct type_operator const set_operators[] = {
+//	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR), /* TODO: And THISELEM CONST_HASH+CONST_COMPARE_EQ */
 	TYPE_OPERATOR_FLAGS(OPERATOR_000D_INV, METHOD_FCONSTCALL),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0010_ADD, METHOD_FCONSTCALL),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0011_SUB, METHOD_FCONSTCALL),
@@ -447,9 +451,11 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL, /* TODO: "{ 10, 20, 30 } as Set" */
-		/* .tp_bool = */ &DeeSet_OperatorBool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ &DeeSet_OperatorBool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ &default_set_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,

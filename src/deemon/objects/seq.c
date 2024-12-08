@@ -239,9 +239,10 @@ foreach_seq_printrepr_cb(void *arg, DeeObject *elem) {
 	return result;
 }
 
-
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_seq_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
+default_seq_printrepr_impl(DeeObject *__restrict self,
+                           Dee_formatprinter_t printer, void *arg,
+                           Dee_mh_seq_operator_foreach_t seq_foreach) {
 #define DO(err, expr)                    \
 	do {                                 \
 		if unlikely((temp = (expr)) < 0) \
@@ -256,7 +257,7 @@ default_seq_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, v
 	data.fsprd_printer = printer;
 	data.fsprd_arg     = arg;
 	data.fsprd_first   = true;
-	DO(err, DeeObject_Foreach(self, &foreach_seq_printrepr_cb, &data));
+	DO(err, (*seq_foreach)(self, &foreach_seq_printrepr_cb, &data));
 	DO(err, data.fsprd_first ? DeeFormat_PRINT(printer, arg, "}")
 	                         : DeeFormat_PRINT(printer, arg, " }"));
 done:
@@ -264,6 +265,16 @@ done:
 err:
 	return temp;
 #undef DO
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return default_seq_printrepr_impl(self, printer, arg, DeeType_RequireSeqOperatorForeach(Dee_TYPE(self)));
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return default_seq_printrepr_impl(self, printer, arg, DeeType_RequireSetOperatorForeach(Dee_TYPE(self)));
 }
 
 

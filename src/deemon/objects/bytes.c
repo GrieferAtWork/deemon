@@ -27,6 +27,7 @@
 #include <deemon/bytes.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
