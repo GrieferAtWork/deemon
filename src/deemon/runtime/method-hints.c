@@ -30,8 +30,8 @@
 DECL_BEGIN
 
 #define Dee_DEFINE_TYPE_METHOD_HINT_ATTR(attr_name, method_name, wrapper_flags, doc, wrapper_params) \
-	PUBLIC_CONST char const DeeMHDefault_##attr_name##_doc[] = doc;                                  \
-	PUBLIC_CONST char const DeeMHDefault_##attr_name##_name[] = method_name;
+	PUBLIC_CONST char const DeeMH_##attr_name##_name[] = method_name;                                \
+	PUBLIC_CONST char const DeeMH_##attr_name##_doc[] = doc;
 #include "../../../include/deemon/method-hints.def"
 
 
@@ -281,7 +281,7 @@ PRIVATE require_tsc_cb_t tpconst require_tsc_table[] = {
 
 /* Returns a pointer to method hint's entry in `self->tp_method_hints' */
 PUBLIC ATTR_PURE WUNUSED Dee_funptr_t DCALL
-DeeType_GetPrivateMethodHint(DeeTypeObject *__restrict self, uintptr_t id) {
+DeeType_GetPrivateMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
 	struct type_method_hint const *hints = self->tp_method_hints;
 	if unlikely(!hints)
 		goto done;
@@ -300,7 +300,7 @@ done:
  * This function can also be used to query the optimized, internal
  * implementation of built-in sequence (TSC) functions. */
 PUBLIC ATTR_PURE WUNUSED Dee_funptr_t DCALL
-DeeType_GetMethodHint(DeeTypeObject *__restrict self, uintptr_t id) {
+DeeType_GetMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
 	Dee_funptr_t result;
 
 	/* Special handling for TSC (TypeSequenceCache) related method hints. */

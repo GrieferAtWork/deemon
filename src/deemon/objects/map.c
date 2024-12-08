@@ -88,44 +88,8 @@ err:
 }
 
 
-DOC_DEF(map_setdefault_doc,
-        "(key,def)->\n"
-        "#r{The object currently assigned to @key}"
-        "Lookup @key in @this ?. and return its value if found. "
-        /**/ "Otherwise, assign @def to @key and return it instead");
-DOC_DEF(map_pop_doc,
-        "(key)->\n"
-        "(key,def)->\n"
-        "#tKeyError{No @def was given and @key was not found}"
-        "Delete @key from @this ?. and return its previously assigned "
-        /**/ "value or @def when @key had no item associated");
-DOC_DEF(map_popitem_doc,
-        "->?T2?O?O\n"
-        "#r{A random pair key-value pair that has been removed}"
-        "#tValueError{@this ?. was empty}");
-DOC_DEF(map_update_doc,
-        "(items:?S?T2?O?O)\n"
-        "Iterate @items and unpack each element into 2 others, "
-        /**/ "using them as key and value to insert into @this ?.");
-DOC_DEF(map_setold_doc,
-        "(key,value)->?Dbool\n"
-        "#r{Indicative of @value having been assigned to @key}"
-        "Assign @value to @key, only succeeding when @key already existed to begin with");
-DOC_DEF(map_setnew_doc,
-        "(key,value)->?Dbool\n"
-        "#r{Indicative of @value having been assigned to @key}"
-        "Assign @value to @key, only succeeding when @key didn't exist before");
-DOC_DEF(map_setold_ex_doc,
-        "(key,value)->?T2?Dbool?O\n"
-        "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
-        "Same as ?#setold but also return the previously assigned value");
-DOC_DEF(map_setnew_ex_doc,
-        "(key,value)->?T2?Dbool?O\n"
-        "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
-        "Same as ?#setnew but return the previously assigned value on failure");
 
-INTDEF struct type_method tpconst map_methods[];
-INTERN_TPCONST struct type_method tpconst map_methods[] = {
+PRIVATE struct type_method tpconst map_methods[] = {
 	/* Default operations for all mappings. */
 	TYPE_METHOD(STR_get, &map_get,
 	            "(key,def=!N)->\n"
@@ -133,16 +97,43 @@ INTERN_TPCONST struct type_method tpconst map_methods[] = {
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
 
 	/* Default operations for modifiable mappings. */
-	TYPE_METHOD(STR_setold, &DeeMH_map_setold, DOC_GET(map_setold_doc)),
-	TYPE_METHOD(STR_setold_ex, &DeeMH_map_setold_ex, DOC_GET(map_setold_ex_doc)),
-	TYPE_METHOD(STR_setnew, &DeeMH_map_setnew, DOC_GET(map_setnew_doc)),
-	TYPE_METHOD(STR_setnew_ex, &DeeMH_map_setnew_ex, DOC_GET(map_setnew_ex_doc)),
-	TYPE_METHOD(STR_setdefault, &DeeMH_map_setdefault, DOC_GET(map_setdefault_doc)),
-	TYPE_METHOD(STR_update, &DeeMH_map_update, DOC_GET(map_update_doc)),
+	TYPE_METHOD(STR_setold, &DeeMH_map_setold,
+	            "(key,value)->?Dbool\n"
+	            "#r{Indicative of @value having been assigned to @key}"
+	            "Assign @value to @key, only succeeding when @key already existed to begin with"),
+	TYPE_METHOD(STR_setold_ex, &DeeMH_map_setold_ex,
+	            "(key,value)->?T2?Dbool?O\n"
+	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
+	            "Same as ?#setold but also return the previously assigned value"),
+	TYPE_METHOD(STR_setnew, &DeeMH_map_setnew,
+	            "(key,value)->?Dbool\n"
+	            "#r{Indicative of @value having been assigned to @key}"
+	            "Assign @value to @key, only succeeding when @key didn't exist before"),
+	TYPE_METHOD(STR_setnew_ex, &DeeMH_map_setnew_ex,
+	            "(key,value)->?T2?Dbool?O\n"
+	            "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
+	            "Same as ?#setnew but return the previously assigned value on failure"),
+	TYPE_METHOD(STR_setdefault, &DeeMH_map_setdefault,
+	            "(key,def)->\n"
+	            "#r{The object currently assigned to @key}"
+	            "Lookup @key in @this ?. and return its value if found. "
+	            /**/ "Otherwise, assign @def to @key and return it instead"),
+	TYPE_METHOD(STR_update, &DeeMH_map_update,
+	            "(items:?S?T2?O?O)\n"
+	            "Iterate @items and unpack each element into 2 others, "
+	            /**/ "using them as key and value to insert into @this ?."),
 	TYPE_METHOD(STR_remove, &DeeMH_map_remove, "(key)->?Dbool"),
 	TYPE_METHOD(STR_removekeys, &DeeMH_map_removekeys, "(keys:?S?O)"),
-	TYPE_METHOD(STR_pop, &DeeMH_map_pop, DOC_GET(map_pop_doc)),
-	TYPE_METHOD(STR_popitem, &DeeMH_map_popitem, DOC_GET(map_popitem_doc)),
+	TYPE_METHOD(STR_pop, &DeeMH_map_pop,
+	            "(key)->\n"
+	            "(key,def)->\n"
+	            "#tKeyError{No @def was given and @key was not found}"
+	            "Delete @key from @this ?. and return its previously assigned "
+	            /**/ "value or @def when @key had no item associated"),
+	TYPE_METHOD(STR_popitem, &DeeMH_map_popitem,
+	            "->?T2?O?O\n"
+	            "#r{A random pair key-value pair that has been removed}"
+	            "#tValueError{@this ?. was empty}"),
 
 	TYPE_METHOD("__contains__", &default_map___contains__,
 	            "(item)->?Dbool\n"

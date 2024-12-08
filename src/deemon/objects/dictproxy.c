@@ -764,11 +764,11 @@ err:
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_foreach(DeeDictObject *self, Dee_foreach_pair_t proc, void *arg);
+dict_foreach_pair(DeeDictObject *self, Dee_foreach_pair_t proc, void *arg);
 
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_items_foreach(DictProxy *self, Dee_foreach_pair_t proc, void *arg) {
-	return dict_foreach(self->dp_dict, proc, arg);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_items_foreach_pair(DictProxy *self, Dee_foreach_pair_t proc, void *arg) {
+	return dict_foreach_pair(self->dp_dict, proc, arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -859,7 +859,7 @@ PRIVATE struct type_seq dict_items_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_nsi                        = */ NULL,
-	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_items_foreach,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_items_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ NULL,

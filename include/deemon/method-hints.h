@@ -70,7 +70,7 @@ DECL_BEGIN
  *
  */
 
-enum {
+enum Dee_tmh_id {
 	/* !!! CAUTION !!! Method hint IDs are prone to arbitrarily change !!!
 	 *
 	 * Do not make use of these IDs if you're developing a DEX module and
@@ -99,13 +99,20 @@ enum {
 
 /* Used to declare type method hints in C */
 struct Dee_type_method_hint {
-	uintptr_t    tmh_id;   /* Method hint ID (one of `Dee_TMH_*') */
-	Dee_funptr_t tmh_func; /* [1..1] Method hint implementation (custom/type-specific) (NULL marks end-of-list) */
+	enum Dee_tmh_id tmh_id;    /* Method hint ID (one of `Dee_TMH_*') */
+	uint32_t        tmh_flags; /* Method flags (set of `Dee_METHOD_F*') */
+	Dee_funptr_t    tmh_func;  /* [1..1] Method hint implementation (custom/type-specific) (NULL marks end-of-list) */
 };
 
-#define Dee_TYPE_METHOD_HINT(func_name, func) \
-	{ Dee_TMH_##func_name, (Dee_funptr_t)Dee_REQUIRES_TYPE(DeeMH_##func_name##_t, func) }
-#define Dee_TYPE_METHOD_HINT_END { 0, NULL }
+#if 0 /* TODO: This, but don't assert pointer bases of arguments/return types */
+#define Dee_TYPE_METHOD_HINT_F(func_name, func, flags) \
+	{ Dee_TMH_##func_name, flags, (Dee_funptr_t)Dee_REQUIRES_TYPE(Dee_mh_##func_name##_t, func) }
+#else
+#define Dee_TYPE_METHOD_HINT_F(func_name, func, flags) \
+	{ Dee_TMH_##func_name, flags, (Dee_funptr_t)(func) }
+#endif
+#define Dee_TYPE_METHOD_HINT(func_name, func) Dee_TYPE_METHOD_HINT_F(func_name, func, 0)
+#define Dee_TYPE_METHOD_HINT_END { (enum Dee_tmh_id)0, 0, NULL }
 
 
 /* Link a type method in as part of a type's `tp_methods' array. */
@@ -118,13 +125,14 @@ struct Dee_type_method_hint {
 
 #ifdef DEE_SOURCE
 #define TYPE_METHOD_HINT     Dee_TYPE_METHOD_HINT
+#define TYPE_METHOD_HINT_F   Dee_TYPE_METHOD_HINT_F
 #define TYPE_METHOD_HINT_END Dee_TYPE_METHOD_HINT_END
 #define TYPE_METHOD_HINTREF  Dee_TYPE_METHOD_HINTREF
 #endif /* DEE_SOURCE */
 
 /* Returns a pointer to method hint's entry in `self->tp_method_hints' */
 DFUNDEF ATTR_PURE WUNUSED Dee_funptr_t DCALL
-DeeType_GetPrivateMethodHint(DeeTypeObject *__restrict self, uintptr_t id);
+DeeType_GetPrivateMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
 /* Same as `DeeType_GetPrivateMethodHint', but also searches the type's
  * MRO for all matches regarding attributes named "id", and returns the
@@ -133,7 +141,7 @@ DeeType_GetPrivateMethodHint(DeeTypeObject *__restrict self, uintptr_t id);
  * This function can also be used to query the optimized, internal
  * implementation of built-in sequence (TSC) functions. */
 DFUNDEF ATTR_PURE WUNUSED Dee_funptr_t DCALL
-DeeType_GetMethodHint(DeeTypeObject *__restrict self, uintptr_t id);
+DeeType_GetMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
 DECL_END
 

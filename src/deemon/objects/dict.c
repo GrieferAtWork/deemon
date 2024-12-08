@@ -31,6 +31,7 @@
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
@@ -2222,16 +2223,76 @@ err:
 }
 
 
-#define SETITEM_SETOLD 0 /* if_exists: *p_old_value = GET_OLD_VALUE(); SET_OLD_ITEM(); return 1;
-                          * else:      return 0; */
-#define SETITEM_SETNEW 1 /* if_exists: *p_old_value = GET_OLD_VALUE(); return 1;
-                          * else:      ADD_NEW_ITEM(); return 0; */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-dict_setitem_ex(Dict *self,
-                DeeObject *key,
-                DeeObject *value,
-                unsigned int mode,
-                DREF DeeObject **p_old_value) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+dict_mh_setold_ex(Dict *self, DeeObject *key, DeeObject *value) {
+	size_t mask;
+	struct dict_item *vector;
+	struct dict_item *first_dummy;
+	Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
+/*again_lock:*/
+	DeeDict_LockRead(self);
+again:
+	first_dummy = NULL;
+	vector      = self->d_elem;
+	mask        = self->d_mask;
+	perturb = i = hash & mask;
+	for (;; DeeDict_HashNx(i, perturb)) {
+		int error;
+		DREF DeeObject *item_key;
+		struct dict_item *item = &vector[i & mask];
+		if (!item->di_key) {
+			if (!first_dummy)
+				first_dummy = item;
+			break; /* Not found */
+		}
+		if (item->di_key == dummy) {
+			first_dummy = item;
+			continue;
+		}
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		item_key = item->di_key;
+		Dee_Incref(item_key);
+		DeeDict_LockEndRead(self);
+		/* Invoke the compare operator outside of any lock. */
+		error = DeeObject_TryCompareEq(key, item_key);
+		Dee_Decref(item_key);
+		if unlikely(error == Dee_COMPARE_ERR)
+			goto err; /* Error in compare operator. */
+		if (error == 0) {
+			DREF DeeObject *item_value;
+			/* Found an existing key. */
+			DeeDict_LockWrite(self);
+			/* Check if the Dict was modified. */
+			if (self->d_elem != vector ||
+			    self->d_mask != mask ||
+			    item->di_key != item_key) {
+				DeeDict_LockDowngrade(self);
+				goto again;
+			}
+			item_value = item->di_value;
+			Dee_Incref(key);
+			Dee_Incref(value);
+			item->di_key   = key;
+			item->di_value = value;
+			DeeDict_LockEndWrite(self);
+			return item_value; /* Inherit reference */
+		}
+		DeeDict_LockRead(self);
+		/* Check if the Dict was modified. */
+		if (self->d_elem != vector ||
+		    self->d_mask != mask ||
+		    item->di_key != item_key)
+			goto again;
+	}
+	DeeDict_LockEndRead(self);
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+dict_mh_setnew_ex(Dict *self, DeeObject *key, DeeObject *value) {
 	size_t mask;
 	struct dict_item *vector;
 	struct dict_item *first_dummy;
@@ -2269,41 +2330,16 @@ again:
 		if (error == 0) {
 			DREF DeeObject *item_value;
 			/* Found an existing key. */
-			if (mode == SETITEM_SETOLD) {
-				DeeDict_LockWrite(self);
-				/* Check if the Dict was modified. */
-				if (self->d_elem != vector ||
-				    self->d_mask != mask ||
-				    item->di_key != item_key) {
-					DeeDict_LockDowngrade(self);
-					goto again;
-				}
-				item_value = item->di_value;
-				Dee_Incref(key);
-				Dee_Incref(value);
-				item->di_key   = key;
-				item->di_value = value;
-				DeeDict_LockEndWrite(self);
-				if (p_old_value) {
-					*p_old_value = item_value; /* Inherit reference */
-				} else {
-					Dee_Decref(item_value);
-				}
-			} else {
-				DeeDict_LockRead(self);
-				/* Check if the Dict was modified. */
-				if (self->d_elem != vector ||
-				    self->d_mask != mask ||
-				    item->di_key != item_key)
-					goto again;
-				if (p_old_value) {
-					item_value = item->di_value;
-					Dee_Incref(item_value);
-					*p_old_value = item_value;
-				}
-				DeeDict_LockEndRead(self);
-			}
-			return 1;
+			DeeDict_LockRead(self);
+			/* Check if the Dict was modified. */
+			if (self->d_elem != vector ||
+			    self->d_mask != mask ||
+			    item->di_key != item_key)
+				goto again;
+			item_value = item->di_value;
+			Dee_Incref(item_value);
+			DeeDict_LockEndRead(self);
+			return item_value;
 		}
 		DeeDict_LockRead(self);
 		/* Check if the Dict was modified. */
@@ -2311,10 +2347,6 @@ again:
 		    self->d_mask != mask ||
 		    item->di_key != item_key)
 			goto again;
-	}
-	if (mode == SETITEM_SETOLD) {
-		DeeDict_LockEndRead(self);
-		return 0;
 	}
 #ifndef CONFIG_NO_THREADS
 	if (!DeeDict_LockUpgrade(self)) {
@@ -2347,7 +2379,7 @@ again:
 				dict_rehash(self, 1);
 		}
 		DeeDict_LockEndWrite(self);
-		return 0;
+		return ITER_DONE;
 	}
 	/* Rehash the Dict and try again. */
 	if (dict_rehash(self, 1)) {
@@ -2358,14 +2390,111 @@ again:
 	if (Dee_CollectMemory(1))
 		goto again_lock;
 err:
-	return -1;
+	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+dict_mh_setdefault(Dict *self, DeeObject *key, DeeObject *value) {
+	size_t mask;
+	struct dict_item *vector;
+	struct dict_item *first_dummy;
+	Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
+again_lock:
+	DeeDict_LockRead(self);
+again:
+	first_dummy = NULL;
+	vector      = self->d_elem;
+	mask        = self->d_mask;
+	perturb = i = hash & mask;
+	for (;; DeeDict_HashNx(i, perturb)) {
+		int error;
+		DREF DeeObject *item_key;
+		struct dict_item *item = &vector[i & mask];
+		if (!item->di_key) {
+			if (!first_dummy)
+				first_dummy = item;
+			break; /* Not found */
+		}
+		if (item->di_key == dummy) {
+			first_dummy = item;
+			continue;
+		}
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		item_key = item->di_key;
+		Dee_Incref(item_key);
+		DeeDict_LockEndRead(self);
+		/* Invoke the compare operator outside of any lock. */
+		error = DeeObject_TryCompareEq(key, item_key);
+		Dee_Decref(item_key);
+		if unlikely(error == Dee_COMPARE_ERR)
+			goto err; /* Error in compare operator. */
+		if (error == 0) {
+			DREF DeeObject *item_value;
+			/* Found an existing key. */
+			DeeDict_LockRead(self);
+			/* Check if the Dict was modified. */
+			if (self->d_elem != vector ||
+			    self->d_mask != mask ||
+			    item->di_key != item_key)
+				goto again;
+			item_value = item->di_value;
+			Dee_Incref(item_value);
+			DeeDict_LockEndRead(self);
+			return item_value;
+		}
+		DeeDict_LockRead(self);
+		/* Check if the Dict was modified. */
+		if (self->d_elem != vector ||
+		    self->d_mask != mask ||
+		    item->di_key != item_key)
+			goto again;
+	}
+#ifndef CONFIG_NO_THREADS
+	if (!DeeDict_LockUpgrade(self)) {
+		DeeDict_LockEndWrite(self);
+		SCHED_YIELD();
+		goto again_lock;
+	}
+#endif /* !CONFIG_NO_THREADS */
+	if ((first_dummy != NULL) &&
+	    (self->d_size + 1 < self->d_mask ||
+	     first_dummy->di_key != NULL)) {
+		bool wasdummy;
+		ASSERT(first_dummy != empty_dict_items);
+		ASSERT(!first_dummy->di_key ||
+		       first_dummy->di_key == dummy);
+		wasdummy = first_dummy->di_key != NULL;
+		if (wasdummy)
+			Dee_DecrefNokill(first_dummy->di_key);
+		/* Fill in the target slot. */
+		first_dummy->di_key   = key;
+		first_dummy->di_hash  = hash;
+		first_dummy->di_value = value;
+		Dee_Incref(key);
+		Dee_Incref_n(value, 2); /* `first_dummy->di_key', `return' */
+		++self->d_used;
+		if (!wasdummy) {
+			++self->d_size;
+			/* Try to keep the Dict vector big at least twice as big as the element count. */
+			if (self->d_size * 2 > self->d_mask)
+				dict_rehash(self, 1);
+		}
+		DeeDict_LockEndWrite(self);
+		return value;
+	}
+	/* Rehash the Dict and try again. */
+	if (dict_rehash(self, 1)) {
+		DeeDict_LockDowngrade(self);
+		goto again;
+	}
+	DeeDict_LockEndWrite(self);
+	if (Dee_CollectMemory(1))
+		goto again_lock;
+err:
+	return NULL;
+}
 
-/* Implemented in `dictproxy.c' */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_iter(DeeDictObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dictiterator_next_key(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dictiterator_next_value(DeeObject *__restrict self);
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -2379,40 +2508,8 @@ dict_sizeob(Dict *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-dict_nsi_setdefault(Dict *self, DeeObject *key, DeeObject *defl) {
-	DeeObject *old_value;
-	int error;
-	error = dict_setitem_ex(self, key, defl, SETITEM_SETNEW, &old_value);
-	if unlikely(error < 0)
-		goto err;
-	if (error == 1)
-		return old_value;
-	return_reference_(defl);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-dict_nsi_updateold(Dict *self, DeeObject *key,
-                   DeeObject *value, DREF DeeObject **p_oldvalue) {
-	return dict_setitem_ex(self, key, value, SETITEM_SETOLD, p_oldvalue);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-dict_nsi_insertnew(Dict *self, DeeObject *key,
-                   DeeObject *value, DREF DeeObject **p_oldvalue) {
-	int error;
-	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, p_oldvalue);
-	if unlikely(error < 0)
-		goto err;
-	return !error;
-err:
-	return -1;
-}
-
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_foreach(Dict *self, Dee_foreach_pair_t proc, void *arg) {
+dict_foreach_pair(Dict *self, Dee_foreach_pair_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	size_t i;
 	DeeDict_LockRead(self);
@@ -2439,22 +2536,9 @@ err:
 	return temp;
 }
 
+/* Implemented in `dictproxy.c' */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_iter(DeeDictObject *__restrict self);
 
-PRIVATE struct type_nsi tpconst dict_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&dict_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&dictiterator_next_key,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&dictiterator_next_value,
-			/* .nsi_getdefault = */ (dfunptr_t)NULL,
-			/* .nsi_setdefault = */ (dfunptr_t)&dict_nsi_setdefault,
-			/* .nsi_updateold  = */ (dfunptr_t)&dict_nsi_updateold,
-			/* .nsi_insertnew  = */ (dfunptr_t)&dict_nsi_insertnew
-		}
-	}
-};
 
 PRIVATE struct type_seq dict_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_iter,
@@ -2466,9 +2550,9 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &dict_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
-	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ NULL,
@@ -2657,42 +2741,52 @@ dict_values(DeeDictObject *__restrict self) {
 	return dict_newproxy(self, &DeeDictValues_Type);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_doclear(Dict *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dict_mh_clear(Dict *self) {
 	dict_clear(self);
-	return_none;
-err:
-	return NULL;
+	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_pop(Dict *self, size_t argc, DeeObject *const *argv) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_mh_pop(Dict *self, DeeObject *key) {
 	DREF DeeObject *result;
-	DeeObject *key, *def = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:pop", &key, &def))
-		goto err;
 	result = dict_popitem(self, key);
-	if (result == ITER_DONE) {
-		result = def;
-		if unlikely(!result) {
-			err_unknown_key((DeeObject *)self, key);
-		} else {
-			Dee_Incref(result);
-		}
+	if unlikely(result == ITER_DONE) {
+		err_unknown_key((DeeObject *)self, key);
+		result = NULL;
 	}
 	return result;
-err:
-	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-dict_popsomething(Dict *self, size_t argc, DeeObject *const *argv) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+dict_mh_pop_with_default(Dict *self, DeeObject *key, DeeObject *default_) {
+	DREF DeeObject *result;
+	result = dict_popitem(self, key);
+	if (result == ITER_DONE) {
+		Dee_Incref(default_);
+		result = default_;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_mh_remove(Dict *self, DeeObject *key) {
+	DREF DeeObject *result;
+	result = dict_popitem(self, key);
+	if (result == ITER_DONE)
+		return 0;
+	if unlikely(!result)
+		goto err;
+	Dee_Decref(result);
+	return 1; /* Removed! */
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_mh_popitem(Dict *__restrict self) {
 	DREF DeeTupleObject *result;
 	struct dict_item *iter;
-	if (DeeArg_Unpack(argc, argv, ":popitem"))
-		goto err;
 	/* Allocate a tuple which we're going to fill with some key-value pair. */
 	result = DeeTuple_NewUninitialized(2);
 	if unlikely(!result)
@@ -2701,8 +2795,7 @@ dict_popsomething(Dict *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!self->d_used) {
 		DeeDict_LockEndWrite(self);
 		DeeTuple_FreeUninitialized(result);
-		err_empty_sequence((DeeObject *)self);
-		goto err;
+		return_none;
 	}
 	iter = self->d_elem;
 	while (!iter->di_key || iter->di_key == dummy) {
@@ -2718,105 +2811,14 @@ dict_popsomething(Dict *self, size_t argc, DeeObject *const *argv) {
 	if (--self->d_used <= self->d_size / 3)
 		dict_rehash(self, -1);
 	DeeDict_LockEndWrite(self);
-	return result;
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setdefault(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value, *old_value;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setdefault", &key, &value))
-		goto err;
-	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, &old_value);
-	if unlikely(error < 0)
-		goto err;
-	if (error == 1)
-		return old_value;
-	return_reference_(value);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setold(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setold", &key, &value))
-		goto err;
-	error = dict_setitem_ex(self, key, value, SETITEM_SETOLD, NULL);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(error);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setnew(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setnew", &key, &value))
-		goto err;
-	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, NULL);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(!error);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setold_ex(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value, *old_value, *result;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setold_ex", &key, &value))
-		goto err;
-	error = dict_setitem_ex(self, key, value, SETITEM_SETOLD, &old_value);
-	if unlikely(error < 0)
-		goto err;
-	if (error == 1) {
-		result = DeeTuple_Pack(2, Dee_True, old_value);
-		Dee_Decref_unlikely(old_value);
-	} else {
-		result = DeeTuple_Pack(2, Dee_False, Dee_None);
-	}
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setnew_ex(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value, *old_value, *result;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setnew_ex", &key, &value))
-		goto err;
-	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, &old_value);
-	if unlikely(error < 0)
-		goto err;
-	if (error == 1) {
-		result = DeeTuple_Pack(2, Dee_False, old_value);
-		Dee_Decref(old_value);
-	} else {
-		result = DeeTuple_Pack(2, Dee_True, Dee_None);
-	}
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_update(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *items;
-	if (DeeArg_Unpack(argc, argv, "o:update", &items))
-		goto err;
-	if unlikely(DeeObject_ForeachPair(items, &dict_insert_sequence_foreach, self))
-		goto err;
-	return_none;
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dict_mh_update(Dict *self, DeeObject *items) {
+	return (int)DeeObject_ForeachPair(items, &dict_insert_sequence_foreach, self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2849,30 +2851,32 @@ err:
  * XXX: This would need to be implemented in "DeeMapping_Type"; not here
  */
 
-DOC_REF(map_pop_doc);
-DOC_REF(map_popitem_doc);
-DOC_REF(map_setdefault_doc);
-DOC_REF(map_setold_doc);
-DOC_REF(map_setnew_doc);
-DOC_REF(map_setold_ex_doc);
-DOC_REF(map_setnew_ex_doc);
-DOC_REF(map_update_doc);
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst dict_methods[] = {
-	TYPE_METHOD_F(STR_pop, &dict_pop, METHOD_FNOREFESCAPE, DOC_GET(map_pop_doc)),
-	TYPE_METHOD_F(STR_clear, &dict_doclear, METHOD_FNOREFESCAPE,
-	              "()\n"
-	              "Clear all values from @this ?."),
-	TYPE_METHOD_F("popitem", &dict_popsomething, METHOD_FNOREFESCAPE, DOC_GET(map_popitem_doc)),
-	TYPE_METHOD_F("setdefault", &dict_setdefault, METHOD_FNOREFESCAPE, DOC_GET(map_setdefault_doc)),
-	TYPE_METHOD_F("setold", &dict_setold, METHOD_FNOREFESCAPE, DOC_GET(map_setold_doc)),
-	TYPE_METHOD_F("setnew", &dict_setnew, METHOD_FNOREFESCAPE, DOC_GET(map_setnew_doc)),
-	TYPE_METHOD_F("setold_ex", &dict_setold_ex, METHOD_FNOREFESCAPE, DOC_GET(map_setold_ex_doc)),
-	TYPE_METHOD_F("setnew_ex", &dict_setnew_ex, METHOD_FNOREFESCAPE, DOC_GET(map_setnew_ex_doc)),
-	TYPE_METHOD_F("update", &dict_update, METHOD_FNOREFESCAPE, DOC_GET(map_update_doc)),
 	TYPE_KWMETHOD("byhash", &dict_byhash, DOC_GET(map_byhash_doc)),
+	TYPE_METHOD_HINTREF(seq_clear),
+	TYPE_METHOD_HINTREF(map_pop),
+	TYPE_METHOD_HINTREF(map_setold_ex),
+	TYPE_METHOD_HINTREF(map_setnew_ex),
+	TYPE_METHOD_HINTREF(map_setdefault),
+	TYPE_METHOD_HINTREF(map_popitem),
+	TYPE_METHOD_HINTREF(map_update),
+	TYPE_METHOD_HINTREF(map_remove),
 	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_clear, &dict_mh_clear, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setold_ex, &dict_mh_setold_ex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setnew_ex, &dict_mh_setnew_ex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setdefault, &dict_mh_setdefault, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_pop, &dict_mh_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_pop_with_default, &dict_mh_pop_with_default, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_popitem, &dict_mh_popitem, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_update, &dict_mh_update, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_remove, &dict_mh_remove, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -3011,7 +3015,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ dict_class_members,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ dict_method_hints,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ dict_operators,

@@ -406,6 +406,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setold_ex, "setold_ex", "(key,value)->?T2
  * @return: -1:   Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int , DCALL, map_setnew, (DeeObject *self, DeeObject *key, DeeObject *value))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setnew, "setnew", "(key,value)->?Dbool")
+
 /* @return: ITER_DONE: The value of `key' was set to `value' (the key didn't exist or used to be unbound)
  * @return: * :        The given `key' already exists (nothing was inserted; returned object is the already-present value)
  * @return: -1:        Error */
