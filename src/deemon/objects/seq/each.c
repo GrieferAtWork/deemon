@@ -2174,11 +2174,6 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-sew_nsi_fastsize(SeqEachBase *__restrict self) {
-	return DeeFastSeq_GetSize_deprecated(self->se_seq);
-}
-
 STATIC_ASSERT(offsetof(SeqEachBase, se_seq) == offsetof(ProxyObject, po_obj));
 #define sew_bounditem                 generic_proxy_bounditem
 #define sew_hasitem                   generic_proxy_hasitem
@@ -2265,19 +2260,6 @@ seo_trygetitem_string_len_hash(SeqEachOperator *self, char const *key, size_t ke
 	return result;
 }
 
-
-PRIVATE struct type_nsi tpconst seo_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&sew_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&sew_nsi_fastsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&seo_getitem_index,
-		}
-	}
-};
-
 PRIVATE struct type_seq seo_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seo_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
@@ -2288,7 +2270,7 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_delrange,
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
-	/* .tp_nsi                        = */ &seo_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
 	/* .tp_foreach_pair               = */ NULL, /* &DeeObject_DefaultForeachPairWithForeachs */
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&seo_enumerate,

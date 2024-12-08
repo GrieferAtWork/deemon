@@ -730,19 +730,6 @@ F(boundattr_string_len_hash)(STRUCT_TYPE *self,
 	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
 }
 
-
-PRIVATE struct type_nsi tpconst F(nsi) = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&sew_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&sew_nsi_fastsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&F(getitem_index),
-		}
-	}
-};
-
 PRIVATE struct type_seq F(seq) = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&F(iter),
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
@@ -753,7 +740,7 @@ PRIVATE struct type_seq F(seq) = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(delrange),
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&F(setrange),
-	/* .tp_nsi                        = */ &F(nsi),
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&F(foreach),
 	/* .tp_foreach_pair               = */ NULL, /* &DeeObject_DefaultForeachPairWithForeachs */
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&F(enumerate),

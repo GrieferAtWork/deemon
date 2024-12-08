@@ -1431,31 +1431,6 @@ bytes_asvector(Bytes *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	return size;
 }
 
-PRIVATE struct type_nsi tpconst bytes_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&bytes_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&bytes_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&bytes_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)&bytes_delitem_index,
-			/* .nsi_setitem      = */ (dfunptr_t)&bytes_setitem_index,
-#ifdef DeeInt_8bit
-			/* .nsi_getitem_fast = */ (dfunptr_t)&bytes_getitem_index_fast,
-#else /* DeeInt_8bit */
-			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-#endif /* !DeeInt_8bit */
-			/* .nsi_getrange     = */ (dfunptr_t)&bytes_getrange_index,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&bytes_getrange_index_n,
-			/* .nsi_delrange     = */ (dfunptr_t)&bytes_delrange_index,
-			/* .nsi_delrange_n   = */ (dfunptr_t)&bytes_delrange_index_n,
-			/* .nsi_setrange     = */ (dfunptr_t)&bytes_setrange_index,
-			/* .nsi_setrange_n   = */ (dfunptr_t)&bytes_setrange_index_n,
-		}
-	}
-};
-
 PRIVATE struct type_seq bytes_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -1466,7 +1441,7 @@ PRIVATE struct type_seq bytes_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &bytes_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bytes_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

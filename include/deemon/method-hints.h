@@ -104,13 +104,39 @@ struct Dee_type_method_hint {
 	Dee_funptr_t    tmh_func;  /* [1..1] Method hint implementation (custom/type-specific) (NULL marks end-of-list) */
 };
 
-#if 0 /* TODO: This, but don't assert pointer bases of arguments/return types */
+#ifdef __INTELLISENSE__
+/* c++ magic to assert that the function pointers passed to `Dee_TYPE_METHOD_HINT_F'
+ * and `Dee_TYPE_METHOD_HINT' are binary-compatible with whatever the resp. method
+ * hint expects for its prototype (but note that pointer bases can be exchanged for
+ * arbitrary types, meaning this doesn't fail if you use the real object types in
+ * function parameters). */
+extern "C++" {namespace __intern {
+template<class T1, class T2> struct __PRIVATE_binary_compatible { enum{_value=false}; };
+template<class T1, class T2> struct __PRIVATE_binary_compatible<T1 *, T2 *> { enum{_value=true}; };
+template<class T> struct __PRIVATE_binary_compatible<T, T> { enum{_value=true}; };
+template<> struct __PRIVATE_binary_compatible<void(), void()> { enum{_value=true}; };
+template<class A1, class A2> struct __PRIVATE_binary_compatible<void(A1), void(A2)>: __PRIVATE_binary_compatible<A1, A2> { };
+template<class A1, class... TARGS1, class A2, class... TARGS2>
+struct __PRIVATE_binary_compatible<void(A1, TARGS1...), void(A2, TARGS2...)> {
+	enum{_value = __PRIVATE_binary_compatible<A1, A2>::_value &&
+	              __PRIVATE_binary_compatible<void(TARGS1...), void(TARGS2...)>::_value};
+};
+template<class T> struct __PRIVATE_match_method_hint { static Dee_funptr_t _match(T); };
+template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCALL *)(TARGS1...)> {
+	template<class RT2, class... TARGS2>
+	static ::__intern::____INTELLISENSE_enableif<
+	::__intern::__PRIVATE_binary_compatible<RT1, RT2>::_value &&
+	::__intern::__PRIVATE_binary_compatible<void(TARGS1...), void(TARGS2...)>::_value,
+	Dee_funptr_t>::__type _match(RT2(DCALL *)(TARGS2...));
+};
+}}
+
 #define Dee_TYPE_METHOD_HINT_F(func_name, func, flags) \
-	{ Dee_TMH_##func_name, flags, (Dee_funptr_t)Dee_REQUIRES_TYPE(Dee_mh_##func_name##_t, func) }
-#else
+	{ Dee_TMH_##func_name, flags, ::__intern::__PRIVATE_match_method_hint<Dee_mh_##func_name##_t>::_match(func) }
+#else /* __INTELLISENSE__ */
 #define Dee_TYPE_METHOD_HINT_F(func_name, func, flags) \
 	{ Dee_TMH_##func_name, flags, (Dee_funptr_t)(func) }
-#endif
+#endif /* !__INTELLISENSE__ */
 #define Dee_TYPE_METHOD_HINT(func_name, func) Dee_TYPE_METHOD_HINT_F(func_name, func, 0)
 #define Dee_TYPE_METHOD_HINT_END { (enum Dee_tmh_id)0, 0, NULL }
 

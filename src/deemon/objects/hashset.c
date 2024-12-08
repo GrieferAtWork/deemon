@@ -20,7 +20,6 @@
 #ifndef GUARD_DEEMON_OBJECTS_HASHSET_C
 #define GUARD_DEEMON_OBJECTS_HASHSET_C 1
 
-#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -29,15 +28,17 @@
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
-#include <deemon/thread.h>
 #include <deemon/system-features.h> /* memcpyc(), ... */
+#include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
 #include <hybrid/sched/yield.h>
@@ -1870,16 +1871,6 @@ hashset_asvector_nothrow(HashSet *self, size_t dst_length, /*out*/ DREF DeeObjec
 	return result;
 }
 
-PRIVATE struct type_nsi tpconst hashset_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SET,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (dfunptr_t)&hashset_size,
-		}
-	}
-};
-
 PRIVATE struct type_seq hashset_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&hashset_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -1890,7 +1881,7 @@ PRIVATE struct type_seq hashset_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &hashset_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&hashset_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1948,11 +1939,9 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hashset_pop(HashSet *self, size_t argc, DeeObject *const *argv) {
+hashset_mh_pop(HashSet *self) {
 	size_t i;
 	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, ":pop"))
-		goto err;
 	DeeHashSet_LockWrite(self);
 	for (i = 0; i <= self->hs_mask; ++i) {
 		struct hashset_item *item = &self->hs_elem[i];
@@ -1974,82 +1963,15 @@ hashset_pop(HashSet *self, size_t argc, DeeObject *const *argv) {
 	DeeHashSet_LockEndWrite(self);
 	/* HashSet is already empty. */
 	err_empty_sequence((DeeObject *)self);
-err:
+/*err:*/
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hashset_doclear(HashSet *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+hashset_mh_clear(HashSet *self) {
 	hashset_clear(self);
-	return_none;
-err:
-	return NULL;
+	return 0;
 }
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hashset_insert(HashSet *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o:insert", &item))
-		goto err;
-	result = DeeHashSet_Insert((DeeObject *)self, item);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hashset_unify(HashSet *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:unify", &item))
-		goto err;
-	return DeeHashSet_Unify((DeeObject *)self, item);
-err:
-	return NULL;
-}
-
-#if (__SIZEOF_INT__ >= __SIZEOF_POINTER__ || \
-     (defined(__i386__) || defined(__x86_64__)))
-#define insert_callback DeeHashSet_Insert
-#else /* ... */
-PRIVATE dssize_t DCALL
-insert_callback(HashSet *__restrict self, DeeObject *item) {
-	return DeeHashSet_Insert((DeeObject *)self, item);
-}
-#endif /* !... */
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hashset_update(HashSet *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *items;
-	dssize_t result;
-	if (DeeArg_Unpack(argc, argv, "o:update", &items))
-		goto err;
-	result = DeeObject_Foreach(items, (Dee_foreach_t)&insert_callback, self);
-	if unlikely(result < 0)
-		goto err;
-	return DeeInt_NewSize((size_t)result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hashset_remove(HashSet *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o:remove", &item))
-		goto err;
-	result = DeeHashSet_Remove((DeeObject *)self, item);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 hashset_sizeof(HashSet *self) {
@@ -2061,48 +1983,40 @@ hashset_sizeof(HashSet *self) {
 
 
 PRIVATE struct type_method tpconst hashset_methods[] = {
-	TYPE_METHOD_F(STR_pop, &hashset_pop, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "#tValueError{The set is empty}"
-	              "Pop a random item from the set and return it"),
-	TYPE_METHOD_F(STR_clear, &hashset_doclear, METHOD_FNOREFESCAPE,
-	              "()\n"
-	              "Clear all items from the set"),
-	TYPE_METHOD_F("popitem", &hashset_pop, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "#tValueError{The set is empty}"
-	              "Pop a random item from the set and return it (alias for ?#pop)"),
-	TYPE_METHOD_F("unify", &hashset_unify, METHOD_FNOREFESCAPE,
-	              "(ob)->\n"
-	              "Insert @ob into the set if it wasn't inserted before, "
-	              /**/ "and re-return it, or the pre-existing instance"),
-	TYPE_METHOD_F(STR_insert, &hashset_insert, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Returns ?t if the object wasn't apart of the set before"),
-	TYPE_METHOD_F("update", &hashset_update, METHOD_FNOREFESCAPE,
-	              "(items:?S?O)->?Dint\n"
-	              "Insert all items from @items into @this set, and return the number of inserted items"),
-	TYPE_METHOD_F("insertall", &hashset_update, METHOD_FNOREFESCAPE,
-	              "(items:?S?O)->?Dint\n"
-	              "Alias for ?#update"),
-	TYPE_METHOD_F(STR_remove, &hashset_remove, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Returns ?t if the object was removed from the set"),
 	/* TODO: HashSet.byhash(template:?O)->?DSequence */
+	TYPE_METHOD_HINTREF(set_insert),
+	TYPE_METHOD_HINTREF(set_remove),
+	TYPE_METHOD_HINTREF(set_unify),
+	TYPE_METHOD_HINTREF(set_pop),
+	TYPE_METHOD_HINTREF(seq_clear),
+
 	/* Alternative function names. */
-	TYPE_METHOD_F("add", &hashset_insert, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Deprecated alias for ?#insert"),
-	TYPE_METHOD_F("discard", &hashset_remove, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Deprecated alias for ?#remove"),
+	TYPE_METHOD("add", &DeeMH_set_insert,
+	            "(ob)->?Dbool\n"
+	            "Deprecated alias for ?#insert"),
+	TYPE_METHOD("discard", &DeeMH_set_remove,
+	            "(ob)->?Dbool\n"
+	            "Deprecated alias for ?#remove"),
+	TYPE_METHOD("update", &DeeMH_set_insertall,
+	            "(items:?S?O)->?Dint\n"
+	            "Deprecated alias for ?#insertall"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	/* Old function names. */
-	TYPE_METHOD_F("insert_all", &hashset_update, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Deprecated alias for ?#update"),
+	TYPE_METHOD("insert_all", &DeeMH_set_insertall,
+	            "(ob)->?Dbool\n"
+	            "Deprecated alias for ?#insertall"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
 	TYPE_METHOD_END
+};
+
+
+PRIVATE struct type_method_hint tpconst hashset_method_hints[] = {
+	TYPE_METHOD_HINT_F(set_insert, &DeeHashSet_Insert, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_remove, &DeeHashSet_Remove, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_unify, &DeeHashSet_Unify, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_pop, &hashset_mh_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_clear, &hashset_mh_clear, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 
@@ -2253,7 +2167,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ hashset_class_members,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ hashset_method_hints,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ hashset_operators,

@@ -509,18 +509,6 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
 #define mapped_bounditem_string_len_hash generic_proxy_bounditem_string_len_hash
 #define mapped_hasitem_string_len_hash   generic_proxy_hasitem_string_len_hash
 
-PRIVATE struct type_nsi tpconst mapped_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&mapped_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getitem      = */ (dfunptr_t)&mapped_getitem_index,
-		}
-	}
-};
-
 PRIVATE struct type_seq mapped_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mapped_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mapped_sizeob,
@@ -531,7 +519,7 @@ PRIVATE struct type_seq mapped_seq = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&mapped_getrange,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &mapped_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&mapped_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&mapped_enumerate,

@@ -32,6 +32,7 @@
 #include <deemon/instancemethod.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
@@ -405,18 +406,6 @@ nope:
 	return ITER_DONE;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-cot_getitemdef(ClassOperatorTable *self,
-               DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result = cot_trygetitem(self, key);
-	if (result == ITER_DONE) {
-		result = defl;
-		if (result != ITER_DONE)
-			Dee_Incref(result);
-	}
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cot_foreach_pair(ClassOperatorTable *self, Dee_foreach_pair_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -452,22 +441,6 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_nsi tpconst cot_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&cot_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&coti_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&coti_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&cot_getitemdef,
-			/* .nsi_setdefault = */ (dfunptr_t)NULL,
-			/* .nsi_updateold  = */ (dfunptr_t)NULL,
-			/* .nsi_insertnew  = */ (dfunptr_t)NULL
-		}
-	}
-};
-
 PRIVATE struct type_seq cot_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -478,7 +451,7 @@ PRIVATE struct type_seq cot_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &cot_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cot_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,
@@ -851,17 +824,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-cat_getitemdef(ClassAttributeTable *self, DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result = cat_trygetitem(self, key);
-	if (result == ITER_DONE) {
-		result = defl;
-		if (result != ITER_DONE)
-			Dee_Incref(result);
-	}
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF ClassAttributeTable *DCALL
 cati_getseq(ClassAttributeTableIterator *__restrict self) {
 	DREF ClassAttributeTable *result;
@@ -1093,22 +1055,6 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 };
 
 
-PRIVATE struct type_nsi tpconst cat_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&cat_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&cati_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&cati_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&cat_getitemdef,
-			/* .nsi_setdefault = */ (dfunptr_t)NULL,
-			/* .nsi_updateold  = */ (dfunptr_t)NULL,
-			/* .nsi_insertnew  = */ (dfunptr_t)NULL
-		}
-	}
-};
-
 PRIVATE struct type_seq cat_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -1119,7 +1065,7 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &cat_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cat_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,
@@ -2570,37 +2516,14 @@ err_temp:
 	return temp;
 }
 
-PRIVATE struct type_nsi tpconst ot_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&ot_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&ot_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&ot_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)&ot_delitem_index,
-			/* .nsi_setitem      = */ (dfunptr_t)&ot_setitem_index,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&ot_getitem_index_fast,
-		}
-	}
+PRIVATE struct type_method tpconst ot_methods[] = {
+	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ot_xchitem(ObjectTable *self, size_t argc,
-           DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return ot_xchitem_index(self, index, value);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_method tpconst ot_methods[] = {
-	TYPE_KWMETHOD(STR_xchitem, &ot_xchitem, "(index:?Dint,value)->"),
-	TYPE_METHOD_END
+PRIVATE struct type_method_hint tpconst ot_method_hints[] = {
+	TYPE_METHOD_HINT(seq_xchitem_index, &ot_xchitem_index),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_seq ot_seq = {
@@ -2613,7 +2536,7 @@ PRIVATE struct type_seq ot_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &ot_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ot_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -2805,7 +2728,8 @@ INTERN DeeTypeObject ObjectTable_Type = {
 	/* .tp_members       = */ ot_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ ot_method_hints,
 };
 
 

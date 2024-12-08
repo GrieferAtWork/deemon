@@ -110,19 +110,6 @@ err:
 }
 
 
-PRIVATE struct type_nsi tpconst stringordinals_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&stringordinals_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getitem      = */ (dfunptr_t)&stringordinals_getitem_index,
-		}
-	}
-};
-
-
 PRIVATE struct type_seq stringordinals_seq = {
 	/* .tp_iter                       = */ NULL,
 	/* .tp_sizeob                     = */ NULL,
@@ -133,7 +120,7 @@ PRIVATE struct type_seq stringordinals_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &stringordinals_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

@@ -1257,17 +1257,6 @@ err:
 	return (size_t)-1;
 }
 
-#define rebfa_nsi refa_nsi
-PRIVATE struct type_nsi tpconst refa_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&refa_size,
-		}
-	}
-};
-
 PRIVATE struct type_seq refa_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refa_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -1278,7 +1267,7 @@ PRIVATE struct type_seq refa_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &refa_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1326,7 +1315,7 @@ PRIVATE struct type_seq rebfa_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &rebfa_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1483,7 +1472,6 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 #define regfa_bool    refa_bool
 #define regfa_visit   refa_visit
 #define regfa_size    refa_size
-#define regfa_nsi     refa_nsi
 #define regfa_members refa_members
 
 #define regbfa_ctor    refa_ctor
@@ -1491,7 +1479,6 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 #define regbfa_bool    refa_bool
 #define regbfa_visit   refa_visit
 #define regbfa_size    refa_size
-#define regbfa_nsi     refa_nsi
 #define regbfa_members refa_members
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
@@ -1536,7 +1523,7 @@ PRIVATE struct type_seq regfa_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &regfa_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1584,7 +1571,7 @@ PRIVATE struct type_seq regbfa_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &regbfa_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1731,7 +1718,6 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 #define rela_bool    refa_bool
 #define rela_members refa_members
 #define rela_size    refa_size
-#define rela_nsi     refa_nsi
 
 #define rebla_ctor    refa_ctor
 #define rebla_fini    refa_fini
@@ -1739,7 +1725,6 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 #define rebla_bool    refa_bool
 #define rebla_members refa_members
 #define rebla_size    refa_size
-#define rebla_nsi     refa_nsi
 
 PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
 rela_iter(ReSequence *__restrict self) {
@@ -1783,7 +1768,7 @@ PRIVATE struct type_seq rela_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &rela_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1831,7 +1816,7 @@ PRIVATE struct type_seq rebla_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &rebla_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -2052,17 +2037,6 @@ resp_size(ReSequence *__restrict self) {
 	return result;
 }
 
-#define rebsp_nsi resp_nsi
-PRIVATE struct type_nsi tpconst resp_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&resp_size,
-		}
-	}
-};
-
 PRIVATE struct type_seq resp_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&resp_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -2073,7 +2047,7 @@ PRIVATE struct type_seq resp_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &resp_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -2121,7 +2095,7 @@ PRIVATE struct type_seq rebsp_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &rebsp_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

@@ -72,18 +72,6 @@ err_bounds:
 	return NULL;
 }
 
-PRIVATE struct type_nsi tpconst rg_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&rg_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&rg_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&rg_getitem_index,
-		}
-	}
-};
-
 PRIVATE struct type_seq rg_seq = {
 	/* .tp_iter                       = */ NULL,
 	/* .tp_sizeob                     = */ NULL,
@@ -94,7 +82,7 @@ PRIVATE struct type_seq rg_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &rg_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -187,18 +175,6 @@ err_bounds:
 	return NULL;
 }
 
-PRIVATE struct type_nsi tpconst rss_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&rss_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&rss_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&rss_getitem_index,
-		}
-	}
-};
-
 PRIVATE struct type_seq rss_seq = {
 	/* .tp_iter                       = */ NULL,
 	/* .tp_sizeob                     = */ NULL,
@@ -209,7 +185,7 @@ PRIVATE struct type_seq rss_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &rss_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -247,18 +223,6 @@ PRIVATE struct type_seq rss_seq = {
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
-PRIVATE struct type_nsi tpconst rsb_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&rsb_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&rsb_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&rsb_getitem_index,
-		}
-	}
-};
-
 PRIVATE struct type_seq rsb_seq = {
 	/* .tp_iter                       = */ NULL,
 	/* .tp_sizeob                     = */ NULL,
@@ -269,7 +233,7 @@ PRIVATE struct type_seq rsb_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &rsb_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

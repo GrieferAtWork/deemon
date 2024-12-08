@@ -28,12 +28,13 @@
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
-#include <deemon/util/lock.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/lock.h>
 
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
@@ -559,45 +560,15 @@ err_temp:
 	return temp;
 }
 
-PRIVATE struct type_nsi tpconst rvec_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&rvec_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&rvec_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&rvec_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)&rvec_delitem_index,
-			/* .nsi_setitem      = */ (dfunptr_t)&rvec_setitem_index,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&rvec_getitem_index_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)&rvec_delrange_index,
-			/* .nsi_delrange_n   = */ (dfunptr_t)&rvec_delrange_index_n,
-			/* .nsi_setrange     = */ (dfunptr_t)&rvec_setrange_index,
-			/* .nsi_setrange_n   = */ (dfunptr_t)&rvec_setrange_index_n,
-		}
-	}
-};
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rvec_xchitem(RefVector *self, size_t argc,
-             DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return rvec_xchitem_index(self, index, value);
-err:
-	return NULL;
-}
-
 PRIVATE struct type_method tpconst rvec_methods[] = {
-	TYPE_KWMETHOD(STR_xchitem, &rvec_xchitem, "(index:?Dint,value)->"),
+	TYPE_METHOD_HINTREF(seq_xchitem),
 	TYPE_METHOD_END
 };
 
+PRIVATE struct type_method_hint tpconst rvec_method_hints[] = {
+	TYPE_METHOD_HINT(seq_xchitem_index, &rvec_xchitem_index),
+	TYPE_METHOD_HINT_END
+};
 
 PRIVATE struct type_seq rvec_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_iter,
@@ -609,7 +580,7 @@ PRIVATE struct type_seq rvec_seq = {
 	/* .tp_getrange                   = */ NULL, /* default */
 	/* .tp_delrange                   = */ NULL, /* default */
 	/* .tp_setrange                   = */ NULL, /* default */
-	/* .tp_nsi                        = */ &rvec_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rvec_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -740,7 +711,8 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_members       = */ rvec_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ rvec_class_members
+	/* .tp_class_members = */ rvec_class_members,
+	/* .tp_method_hints  = */ rvec_method_hints,
 };
 
 /* Construct a new reference-vector object that can be iterated
@@ -1094,23 +1066,8 @@ svec_asvector_nothrow(SharedVector *self, size_t dst_length, /*out*/ DREF DeeObj
 }
 
 
-PRIVATE struct type_nsi tpconst svec_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&svec_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&svec_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&svec_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&svec_getitem_index_fast,
-		}
-	}
-};
-
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-svec_find_impl(SharedVector *self, DeeObject *item, size_t start, size_t end) {
+svec_mh_find(SharedVector *self, DeeObject *item, size_t start, size_t end) {
 	size_t i = start;
 	SharedVector_LockRead(self);
 	for (; i < end && i < self->sv_length; ++i) {
@@ -1134,7 +1091,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-svec_find_with_key_impl(SharedVector *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+svec_mh_find_with_key(SharedVector *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	size_t i = start;
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
@@ -1164,7 +1121,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-svec_rfind_impl(SharedVector *self, DeeObject *item, size_t start, size_t end) {
+svec_mh_rfind(SharedVector *self, DeeObject *item, size_t start, size_t end) {
 	size_t i = end;
 	SharedVector_LockRead(self);
 	for (;;) {
@@ -1193,7 +1150,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-svec_rfind_with_key_impl(SharedVector *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+svec_mh_rfind_with_key(SharedVector *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	size_t i = end;
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
@@ -1225,51 +1182,20 @@ err_item:
 	Dee_Decref(item);
 err:
 	return (size_t)Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-svec_find(SharedVector *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:find",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? svec_find_with_key_impl(self, item, start, end, key)
-	         : svec_find_impl(self, item, start, end);
-	if unlikely(result == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-svec_rfind(SharedVector *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:rfind",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? svec_rfind_with_key_impl(self, item, start, end, key)
-	         : svec_rfind_impl(self, item, start, end);
-	if unlikely(result == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
 }
 
 PRIVATE struct type_method tpconst svec_methods[] = {
-	TYPE_KWMETHOD(STR_find, &svec_find, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
-	TYPE_KWMETHOD(STR_rfind, &svec_rfind, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
+	TYPE_METHOD_HINTREF(seq_find),
+	TYPE_METHOD_HINTREF(seq_rfind),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst svec_method_hints[] = {
+	TYPE_METHOD_HINT(seq_find, &svec_mh_find),
+	TYPE_METHOD_HINT(seq_find_with_key, &svec_mh_find_with_key),
+	TYPE_METHOD_HINT(seq_rfind, &svec_mh_rfind),
+	TYPE_METHOD_HINT(seq_rfind_with_key, &svec_mh_rfind_with_key),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_seq svec_seq = {
@@ -1282,7 +1208,7 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &svec_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&svec_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1430,7 +1356,8 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ svec_class_members
+	/* .tp_class_members = */ svec_class_members,
+	/* .tp_method_hints  = */ svec_method_hints,
 };
 
 

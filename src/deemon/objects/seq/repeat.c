@@ -553,19 +553,6 @@ err_temp:
 
 
 
-PRIVATE struct type_nsi tpconst repeat_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&repeat_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&repeat_size_fast,
-			/* .nsi_getitem      = */ (dfunptr_t)&repeat_getitem_index,
-		}
-	}
-};
-
-
 PRIVATE struct type_seq repeat_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -576,7 +563,7 @@ PRIVATE struct type_seq repeat_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &repeat_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&repeat_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&repeat_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,
@@ -1025,23 +1012,6 @@ repeatitem_asvector_nothrow(RepeatItem *self, size_t dst_length, /*out*/ DREF De
 }
 
 
-PRIVATE struct type_nsi tpconst repeatitem_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&repeatitem_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&repeatitem_size_fast,
-			/* .nsi_getitem      = */ (dfunptr_t)&repeatitem_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&repeatitem_getitem_index_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)&repeatitem_getrange_index,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&repeatitem_getrange_index_n,
-		}
-	}
-};
-
 PRIVATE struct type_seq repeatitem_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -1052,7 +1022,7 @@ PRIVATE struct type_seq repeatitem_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &repeatitem_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&repeatitem_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&repeatitem_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,

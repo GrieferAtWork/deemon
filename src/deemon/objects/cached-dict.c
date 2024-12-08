@@ -753,19 +753,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cdict_nsi_getdefault(CachedDict *self, DeeObject *key, DeeObject *def) {
-	DeeObject *result = cdict_trygetitemnr(self, key);
-	if (result == ITER_DONE) {
-		result = def;
-		if (result != ITER_DONE)
-			Dee_Incref(result);
-	} else if (result) {
-		Dee_Incref(result);
-	}
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 cdict_size(CachedDict *__restrict self) {
 	return DeeObject_Size(self->cd_map);
@@ -775,22 +762,6 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 cdict_size_fast(CachedDict *__restrict self) {
 	return DeeObject_SizeFast(self->cd_map);
 }
-
-PRIVATE struct type_nsi tpconst cdict_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&cdict_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)NULL,
-			/* .nsi_nextvalue  = */ (dfunptr_t)NULL,
-			/* .nsi_getdefault = */ (dfunptr_t)&cdict_nsi_getdefault,
-			/* .nsi_setdefault = */ (dfunptr_t)NULL,
-			/* .nsi_updateold  = */ (dfunptr_t)NULL,
-			/* .nsi_insertnew  = */ (dfunptr_t)NULL
-		}
-	}
-};
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 cdict_printrepr(CachedDict *__restrict self,
@@ -1020,7 +991,7 @@ PRIVATE struct type_seq cdict_seq = {
 	/* .tp_getrange                     = */ NULL,
 	/* .tp_delrange                     = */ NULL,
 	/* .tp_setrange                     = */ NULL,
-	/* .tp_nsi                          = */ &cdict_nsi,
+	/* .tp_nsi                          = */ NULL,
 	/* .tp_foreach                      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cdict_foreach,
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cdict_foreach_pair,
 	/* .tp_enumerate                    = */ NULL,
