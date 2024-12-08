@@ -111,12 +111,12 @@ PRIVATE struct type_cmp ss_cmp = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-ss_nsi_getsize(SlabStatObject *__restrict self) {
+ss_size(SlabStatObject *__restrict self) {
 	return self->st_stat.st_slabcount;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF SlabInfoObject *DCALL
-ss_nsi_getitem(SlabStatObject *__restrict self, size_t index) {
+ss_getitem_index(SlabStatObject *__restrict self, size_t index) {
 	DREF SlabInfoObject *result;
 	if unlikely(index >= self->st_stat.st_slabcount) {
 		DeeError_Throwf(&DeeError_IndexError,
@@ -135,69 +135,37 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF SlabStatIteratorObject *DCALL
-ss_iter(SlabStatObject *__restrict self) {
-	DREF SlabStatIteratorObject *result;
-	result = DeeObject_MALLOC(SlabStatIteratorObject);
-	if unlikely(!result)
-		goto done;
-	result->sti_stat  = self;
-	result->sti_index = 0;
-	Dee_Incref(self);
-	DeeObject_Init(result, &SlabStatIterator_Type);
-done:
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ss_size(SlabStatObject *__restrict self) {
-	return DeeInt_NewSize(self->st_stat.st_slabcount);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF SlabInfoObject *DCALL
-ss_getitem(SlabStatObject *self, DeeObject *index_ob) {
-	size_t index;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	return ss_nsi_getitem(self, index);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_nsi tpconst ss_nsi = {
-	/* .nsi_class = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&ss_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&ss_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&ss_nsi_getitem,
-		}
-	}
-};
-
 PRIVATE struct type_seq ss_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ss_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ss_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ss_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &ss_nsi
+	/* .tp_iter            = */ NULL,
+	/* .tp_sizeob          = */ NULL,
+	/* .tp_contains        = */ NULL,
+	/* .tp_getitem         = */ NULL,
+	/* .tp_delitem         = */ NULL,
+	/* .tp_setitem         = */ NULL,
+	/* .tp_getrange        = */ NULL,
+	/* .tp_delrange        = */ NULL,
+	/* .tp_setrange        = */ NULL,
+	/* .tp_nsi             = */ NULL,
+	/* .tp_foreach         = */ NULL,
+	/* .tp_foreach_pair    = */ NULL,
+	/* .tp_enumerate       = */ NULL,
+	/* .tp_enumerate_index = */ NULL,
+	/* .tp_iterkeys        = */ NULL,
+	/* .tp_bounditem       = */ NULL,
+	/* .tp_hasitem         = */ NULL,
+	/* .tp_size            = */ (size_t (DCALL *)(DeeObject *__restrict))&ss_size,
+	/* .tp_size_fast       = */ (size_t (DCALL *)(DeeObject *__restrict))&ss_size,
+	/* .tp_getitem_index   = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ss_getitem_index,
 };
 
 PRIVATE struct type_member tpconst ss_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator", &SlabStatIterator_Type),
 	TYPE_MEMBER_CONST("item", &SlabInfo_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ss_printrepr(SlabStatObject *__restrict UNUSED(self),
-             dformatprinter printer, void *arg) {
+             Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_PRINT(printer, arg, "import(\"rt\").SlabStat()");
 }
 
@@ -229,7 +197,7 @@ INTERN DeeTypeObject SlabStat_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ss_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ss_printrepr,
 
 	},
 	/* .tp_call          = */ NULL,
@@ -251,137 +219,20 @@ INTERN DeeTypeObject SlabStat_Type = {
 	/* .tp_class_members = */ ss_class_members
 };
 
-#define READ_INDEX(x) atomic_read(&(x)->sti_index)
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ssi_copy(SlabStatIteratorObject *__restrict self,
-         SlabStatIteratorObject *__restrict other) {
-	self->sti_index = READ_INDEX(other);
-	self->sti_stat  = other->sti_stat;
-	Dee_Incref(self->sti_stat);
-	return 0;
-}
 
 PRIVATE NONNULL((1)) void DCALL
-ssi_fini(SlabStatIteratorObject *__restrict self) {
-	Dee_Decref(self->sti_stat);
+si_fini(SlabInfoObject *__restrict self) {
+	Dee_Decref(self->si_stat);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-ssi_visit(SlabStatIteratorObject *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->sti_stat);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-ssi_bool(SlabStatIteratorObject *__restrict self) {
-	return READ_INDEX(self) < self->sti_stat->st_stat.st_slabcount;
-}
-
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-ssi_hash(SlabStatIteratorObject *self) {
-	return Dee_HashPointer(READ_INDEX(self));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ssi_compare(SlabStatIteratorObject *self, SlabStatIteratorObject *other) {
-	if (DeeObject_AssertTypeExact(other, &SlabStatIterator_Type))
-		goto err;
-	Dee_return_compareT(size_t, READ_INDEX(self),
-	                    /*   */ READ_INDEX(other));
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE struct type_cmp ssi_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&ssi_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&ssi_compare,
-};
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF SlabInfoObject *DCALL
-ssi_next(SlabStatIteratorObject *__restrict self) {
-	DREF SlabInfoObject *result;
-	size_t index;
-	for (;;) {
-		index = READ_INDEX(self);
-		if (index >= self->sti_stat->st_stat.st_slabcount)
-			return (DREF SlabInfoObject *)ITER_DONE;
-		if (atomic_cmpxch_weak_or_write(&self->sti_index, index, index + 1))
-			break;
-	}
-	result = DeeObject_MALLOC(SlabInfoObject);
-	if unlikely(!result)
-		goto done;
-	result->si_stat = self->sti_stat;
-	result->si_info = &result->si_stat->st_stat.st_slabs[index];
-	Dee_Incref(result->si_stat);
-	DeeObject_Init(result, &SlabInfo_Type);
-done:
-	return result;
+si_visit(SlabInfoObject *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->si_stat);
 }
 
 
-PRIVATE struct type_member tpconst ssi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SlabStatIteratorObject, sti_stat), "->?GSlabStat"),
-	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SlabStatIteratorObject, sti_stat)),
-	TYPE_MEMBER_END
-};
-
-INTERN DeeTypeObject SlabStatIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SlabStatIterator",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONLOOPING,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&ssi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(SlabStatIteratorObject)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ssi_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ssi_bool
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ssi_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &ssi_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssi_next,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ ssi_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
-};
-
-STATIC_ASSERT(offsetof(SlabStatIteratorObject, sti_stat) ==
-              offsetof(SlabInfoObject, si_stat));
-#define si_fini  ssi_fini
-#define si_visit ssi_visit
-
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-si_print(SlabInfoObject *__restrict self,
-         dformatprinter printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+si_print(SlabInfoObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg,
 	                        "size: %" PRFuSIZ ", "
 	                        "alloc: %" PRFuSIZ "/%" PRFuSIZ ", "
@@ -393,8 +244,8 @@ si_print(SlabInfoObject *__restrict self,
 	                        self->si_info->si_max_free);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-si_printrepr(SlabInfoObject *__restrict self, dformatprinter printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+si_printrepr(SlabInfoObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	size_t index = self->si_info - self->si_stat->st_stat.st_slabs;
 	return DeeFormat_Printf(printer, arg, "%r[%" PRFuSIZ "]", self->si_stat, index);
 }
@@ -509,8 +360,8 @@ INTERN DeeTypeObject SlabInfo_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&si_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&si_printrepr,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&si_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&si_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&si_visit,
