@@ -211,32 +211,36 @@ INTDEF NONNULL((1)) void DCALL Dee_membercache_fini(struct Dee_membercache *__re
 
 /* Try to insert a new caching point into the given Dee_membercache `self'.
  * @param: self: The cache to insert into.
- * @param: decl: The type providing the declaration. */
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addmethod(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addgetset(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addmember(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addattrib(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute *attrib);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancemethod(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancegetset(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstancemember(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL Dee_membercache_addinstanceattrib(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute *attrib);
+ * @param: decl: The type providing the declaration.
+ * @return:  2: Slot is being initialized by a different thread (not added)
+ * @return:  1: Slot already exists in cache (not added)
+ * @return:  0: Success
+ * @return: -1: OOM (NO error was thrown) */
+INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addmethod(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addgetset(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addmember(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addattrib(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute *attrib);
+INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addinstancemethod(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addinstancegetset(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addinstancemember(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) int DCALL Dee_membercache_addinstanceattrib(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute *attrib);
 
 #ifdef __INTELLISENSE__
 /* Cache an instance member (e.g. `tp_methods') in `tp_cache'. */
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
 /* Cache a class member (e.g. `tp_class_methods') in `tp_class_cache'. */
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheClassAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheClassMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheClassMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheClassAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
 /* Cache an instance member (e.g. `tp_methods') in `tp_class_cache'. */
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
-INTDEF NONNULL((1, 2, 4)) bool DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheInstanceMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *method);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheInstanceGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *getset);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheInstanceMember(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_member const *member);
+INTDEF NONNULL((1, 2, 4)) int DCALL DeeType_CacheInstanceAttrib(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct Dee_class_attribute const *__restrict attrib);
 #else /* __INTELLISENSE__ */
 #define DeeType_CacheMethod(self, decl, hash, method)         Dee_membercache_addmethod(&(self)->tp_cache, decl, hash, method)
 #define DeeType_CacheGetSet(self, decl, hash, getset)         Dee_membercache_addgetset(&(self)->tp_cache, decl, hash, getset)
@@ -1731,6 +1735,41 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL Dee_type_member_get(struct
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL Dee_type_member_bound(struct Dee_type_member const *desc, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_type_member_set(struct Dee_type_member const *desc, DeeObject *self, DeeObject *value);
 #define Dee_type_member_del(desc, self) Dee_type_member_set(desc, self, Dee_None)
+
+
+/* Try to add the specified attribute to the cache of "self".
+ * - If this fails due to OOM, return `-1', but DON'T throw an exception
+ * If the MRO cache already contains an entry for the named attribute:
+ * - Verify that the existing entry is for the same type of attribute (`MEMBERCACHE_*'),
+ *   such that it can be patched without having to alter `mcs_type' (since having to do
+ *   so would result in a non-resolvable race condition where another thread is currently
+ *   dereferencing the function pointers from the existing entry).
+ *   If this verification fails, return `1'.
+ *   - For `DeeTypeMRO_Patch*Method', it is also verified that both the
+ *     old and new function pointers share a common `TYPE_METHOD_FKWDS'.
+ * - If the type matches, the pre-existing cache entries pointers are patched such that
+ *   they will now reference those from the given parameters.
+ *   Note that for this purpose, this exchange is atomic for each individual function
+ *   pointer (but not all pointers as a whole) -- in the case of `DeeTypeMRO_Patch*GetSet',
+ *   another thread may invoke (e.g.) an out-dated `gs_del' after `gs_get' was already
+ *   patched.
+ *
+ * NOTE: Generally, only use these functions for self-optimizing methods in base-classes
+ *       that wish to skip certain type-dependent verification steps during future calls.
+ *       (e.g. `Sequence.first', `Mapping.keys')
+ *
+ * @param: old_*: [0..1] When non-NULL, use these values for compare-exchange operations.
+ *                       But also note that when there are many function pointers, some may
+ *                       be set, while others cannot be -- here, an attempt to exchange
+ *                       pointers is made for *all* pointers, and success is indicated if
+ *                       at least 1 pointer could be exchanged.
+ * @return:  1:   Failure (cache entry cannot be patched like this)
+ * @return:  0:   Success
+ * @return: -1:   Patching failed due to OOM (but no error was thrown!) */
+DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *new_method, /*0..1*/ struct type_method const *old_method);
+DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *new_getset, /*0..1*/ struct type_getset const *old_getset);
+DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_method const *new_method, /*0..1*/ struct type_method const *old_method);
+DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash, struct type_getset const *new_getset, /*0..1*/ struct type_getset const *old_getset);
 
 DECL_END
 

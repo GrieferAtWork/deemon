@@ -34,6 +34,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/kwds.h>
+#include <deemon/map.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -6213,56 +6214,181 @@ DeeMap_DefaultIterValuesWithError(DeeObject *self) {
 /* Deemon user-code wrappers                                            */
 /************************************************************************/
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("first");
+print define_Dee_HashStr("last");
+print define_Dee_HashStr("keys");
+print define_Dee_HashStr("values");
+print define_Dee_HashStr("iterkeys");
+print define_Dee_HashStr("itervalues");
+print define_Dee_HashStr("cb");
+print define_Dee_HashStr("start");
+print define_Dee_HashStr("end");
+]]]*/
+#define Dee_HashStr__first _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)
+#define Dee_HashStr__last _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)
+#define Dee_HashStr__keys _Dee_HashSelectC(0x97e36be1, 0x654d31bc4825131c)
+#define Dee_HashStr__values _Dee_HashSelectC(0x33b551c8, 0xf6e3e991b86d1574)
+#define Dee_HashStr__iterkeys _Dee_HashSelectC(0x62bd6adc, 0x535ac8ab28094ab3)
+#define Dee_HashStr__itervalues _Dee_HashSelectC(0xcb00bab3, 0xe9a89082a994930a)
+#define Dee_HashStr__cb _Dee_HashSelectC(0x75ffadba, 0x2501dbb50208b92e)
+#define Dee_HashStr__start _Dee_HashSelectC(0xa2ed6890, 0x80b621ce3c3982d5)
+#define Dee_HashStr__end _Dee_HashSelectC(0x37fb4a05, 0x6de935c204dc3d01)
+/*[[[end]]]*/
+
+
+/* Helper functions that (ab-)use the attribute cache system of types
+ * to inject the most optimized version of getsets into top-level objects:
+ * - Sequence.first
+ * - Sequence.last
+ * - Mapping.keys
+ * - Mapping.values
+ * - Mapping.iterkeys
+ * - Mapping.itervalues
+ */
+#ifdef __OPTIMIZE_SIZE__
+#define maybe_cache_optimized_seq_first_in_membercache(self)      (void)0
+#define maybe_cache_optimized_seq_last_in_membercache(self)       (void)0
+#define maybe_cache_optimized_map_keys_in_membercache(self)       (void)0
+#define maybe_cache_optimized_map_values_in_membercache(self)     (void)0
+#define maybe_cache_optimized_map_iterkeys_in_membercache(self)   (void)0
+#define maybe_cache_optimized_map_itervalues_in_membercache(self) (void)0
+#else /* __OPTIMIZE_SIZE__ */
+PRIVATE struct type_getset tpconst gs_default_seq_first =
+TYPE_GETSET_BOUND_NODOC(NULL, &default_seq_getfirst, &default_seq_delfirst,
+                        &default_seq_setfirst, &default_seq_boundfirst);
+PRIVATE NONNULL((1)) void DCALL
+maybe_cache_optimized_seq_first_in_membercache(DeeTypeObject *__restrict self) {
+	struct type_getset new_getset;
+	new_getset.gs_name  = STR_first;
+	new_getset.gs_get   = DeeType_RequireSeqGetFirst(self);
+	new_getset.gs_del   = DeeType_RequireSeqDelFirst(self);
+	new_getset.gs_set   = DeeType_RequireSeqSetFirst(self);
+	new_getset.gs_bound = DeeType_RequireSeqBoundFirst(self);
+	DeeTypeMRO_PatchGetSet(self, &DeeSeq_Type, Dee_HashStr__first,
+	                       &new_getset, &gs_default_seq_first);
+}
+
+PRIVATE struct type_getset tpconst gs_default_seq_last =
+TYPE_GETSET_BOUND_NODOC(NULL, &default_seq_getlast, &default_seq_dellast,
+                        &default_seq_setlast, &default_seq_boundlast);
+PRIVATE NONNULL((1)) void DCALL
+maybe_cache_optimized_seq_last_in_membercache(DeeTypeObject *__restrict self) {
+	struct type_getset new_getset;
+	new_getset.gs_name  = STR_last;
+	new_getset.gs_get   = DeeType_RequireSeqGetLast(self);
+	new_getset.gs_del   = DeeType_RequireSeqDelLast(self);
+	new_getset.gs_set   = DeeType_RequireSeqSetLast(self);
+	new_getset.gs_bound = DeeType_RequireSeqBoundLast(self);
+	DeeTypeMRO_PatchGetSet(self, &DeeSeq_Type, Dee_HashStr__last,
+	                       &new_getset, &gs_default_seq_last);
+}
+
+PRIVATE struct type_getset tpconst gs_default_map_keys =
+TYPE_GETTER_NODOC(NULL, &default_map_keys);
+PRIVATE NONNULL((1)) void DCALL
+maybe_cache_optimized_map_keys_in_membercache(DeeTypeObject *__restrict self) {
+	struct type_getset new_getset;
+	new_getset.gs_name  = STR_keys;
+	new_getset.gs_get   = DeeType_RequireMapKeys(self);
+	new_getset.gs_del   = NULL;
+	new_getset.gs_set   = NULL;
+	new_getset.gs_bound = NULL;
+	DeeTypeMRO_PatchGetSet(self, &DeeMapping_Type, Dee_HashStr__keys,
+	                       &new_getset, &gs_default_map_keys);
+}
+
+PRIVATE struct type_getset tpconst gs_default_map_values =
+TYPE_GETTER_NODOC(NULL, &default_map_values);
+PRIVATE NONNULL((1)) void DCALL
+maybe_cache_optimized_map_values_in_membercache(DeeTypeObject *__restrict self) {
+	struct type_getset new_getset;
+	new_getset.gs_name  = STR_values;
+	new_getset.gs_get   = DeeType_RequireMapValues(self);
+	new_getset.gs_del   = NULL;
+	new_getset.gs_set   = NULL;
+	new_getset.gs_bound = NULL;
+	DeeTypeMRO_PatchGetSet(self, &DeeMapping_Type, Dee_HashStr__values,
+	                       &new_getset, &gs_default_map_values);
+}
+
+PRIVATE struct type_getset tpconst gs_default_map_iterkeys =
+TYPE_GETTER_NODOC(NULL, &default_map_iterkeys);
+PRIVATE NONNULL((1)) void DCALL
+maybe_cache_optimized_map_iterkeys_in_membercache(DeeTypeObject *__restrict self) {
+	struct type_getset new_getset;
+	new_getset.gs_name  = STR_iterkeys;
+	new_getset.gs_get   = DeeType_RequireMapIterKeys(self);
+	new_getset.gs_del   = NULL;
+	new_getset.gs_set   = NULL;
+	new_getset.gs_bound = NULL;
+	DeeTypeMRO_PatchGetSet(self, &DeeMapping_Type, Dee_HashStr__iterkeys,
+	                       &new_getset, &gs_default_map_iterkeys);
+}
+
+PRIVATE struct type_getset tpconst gs_default_map_itervalues =
+TYPE_GETTER_NODOC(NULL, &default_map_itervalues);
+PRIVATE NONNULL((1)) void DCALL
+maybe_cache_optimized_map_itervalues_in_membercache(DeeTypeObject *__restrict self) {
+	struct type_getset new_getset;
+	new_getset.gs_name  = STR_itervalues;
+	new_getset.gs_get   = DeeType_RequireMapIterValues(self);
+	new_getset.gs_del   = NULL;
+	new_getset.gs_set   = NULL;
+	new_getset.gs_bound = NULL;
+	DeeTypeMRO_PatchGetSet(self, &DeeMapping_Type, Dee_HashStr__itervalues,
+	                       &new_getset, &gs_default_map_itervalues);
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default_seq_getfirst(DeeObject *__restrict self) {
+	maybe_cache_optimized_seq_first_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeGetFirst(self);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default_seq_boundfirst(DeeObject *__restrict self) {
+	maybe_cache_optimized_seq_first_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeBoundFirst(self);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default_seq_delfirst(DeeObject *__restrict self) {
+	maybe_cache_optimized_seq_first_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeDelFirst(self);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default_seq_setfirst(DeeObject *self, DeeObject *value) {
+	maybe_cache_optimized_seq_first_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeSetFirst(self, value);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default_seq_getlast(DeeObject *__restrict self) {
+	maybe_cache_optimized_seq_last_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeGetLast(self);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default_seq_boundlast(DeeObject *__restrict self) {
+	maybe_cache_optimized_seq_last_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeBoundLast(self);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default_seq_dellast(DeeObject *__restrict self) {
+	maybe_cache_optimized_seq_last_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeDelLast(self);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default_seq_setlast(DeeObject *self, DeeObject *value) {
+	maybe_cache_optimized_seq_last_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeSetLast(self, value);
 }
-
-/*[[[deemon
-import define_Dee_HashStr from rt.gen.hash;
-print define_Dee_HashStr("cb");
-print define_Dee_HashStr("start");
-print define_Dee_HashStr("end");
-]]]*/
-#define Dee_HashStr__cb _Dee_HashSelectC(0x75ffadba, 0x2501dbb50208b92e)
-#define Dee_HashStr__start _Dee_HashSelectC(0xa2ed6890, 0x80b621ce3c3982d5)
-#define Dee_HashStr__end _Dee_HashSelectC(0x37fb4a05, 0x6de935c204dc3d01)
-/*[[[end]]]*/
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 do_seq_enumerate_with_kw(DeeObject *self, size_t argc,
@@ -7366,21 +7492,25 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL default_map_keys)(DeeObject *self) {
+	maybe_cache_optimized_map_keys_in_membercache(Dee_TYPE(self));
 	return DeeMap_InvokeKeys(self);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL default_map_values)(DeeObject *self) {
+	maybe_cache_optimized_map_values_in_membercache(Dee_TYPE(self));
 	return DeeMap_InvokeValues(self);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL default_map_iterkeys)(DeeObject *self) {
+	maybe_cache_optimized_map_iterkeys_in_membercache(Dee_TYPE(self));
 	return DeeMap_InvokeIterKeys(self);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL default_map_itervalues)(DeeObject *self) {
+	maybe_cache_optimized_map_itervalues_in_membercache(Dee_TYPE(self));
 	return DeeMap_InvokeIterValues(self);
 }
 

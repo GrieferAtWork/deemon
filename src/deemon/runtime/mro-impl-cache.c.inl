@@ -906,7 +906,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #ifdef LOCAL_HAS_len
                                        size_t attrlen,
 #endif /* LOCAL_HAS_len */
-                                       dhash_t hash
+                                       Dee_hash_t hash
 #if defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
                                        , DeeObject *value
 #elif defined(LOCAL_IS_CALL) || defined(LOCAL_IS_CALL_KW)
@@ -974,7 +974,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #endif /* ... */
 
 	DREF struct Dee_membercache_table *table;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	if unlikely(!Dee_membercache_acquiretable(&tp_self->LOCAL_tp_cache, &table))
 		goto cache_miss;
 	perturb = i = Dee_membercache_table_hashst(table, LOCAL_hash);

@@ -41,6 +41,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/sched/yield.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
@@ -221,9 +222,11 @@ Dee_membercache_table_new(struct Dee_membercache_table const *old_table,
 
 
 /* Try to add a slot to the given member-cache table.
- * @return: true:  Success
- * @return: false: No more free slots (caller must allocate a new member-cache table) */
-PRIVATE NONNULL((1, 2)) bool DCALL
+ * @return:  2: Slot is being initialized by a different thread (not added)
+ * @return:  1: Slot already exists in cache (not added)
+ * @return:  0: Success
+ * @return: -1: No more free slots (caller must allocate a new member-cache table) */
+PRIVATE NONNULL((1, 2)) int DCALL
 Dee_membercache_table_addslot(struct Dee_membercache_table *__restrict self,
                               struct Dee_membercache_slot const *__restrict item,
                               bool allow_bad_hash_ratios) {
@@ -235,7 +238,7 @@ Dee_membercache_table_addslot(struct Dee_membercache_table *__restrict self,
 		size_t size = atomic_read(&self->mc_size);
 		if (allow_bad_hash_ratios ? (size * 1) >= self->mc_mask
 		                          : (size * 2) >= self->mc_mask)
-			return false; /* You should (or need to) allocate a new table. */
+			return -1; /* You should (or need to) allocate a new table. */
 		if (atomic_cmpxch_or_write(&self->mc_size, size, size + 1))
 			break;
 	}
@@ -269,7 +272,7 @@ again_search_slots:
 			 * our caller that their new element is already cached, even
 			 * if that *may* not actually be the case. */
 			atomic_dec(&self->mc_size);
-			return true;
+			return 2;
 		}
 #endif /* !CONFIG_NO_THREADS */
 
@@ -282,11 +285,11 @@ again_search_slots:
 		/* Already in cache!
 		 * -> Free the slot we allocated above and indicate success to our caller. */
 		atomic_dec(&self->mc_size);
-		return true;
+		return 1;
 	}
 
 	/* Not found. - Try to allocate this empty slot.
-	 * If it's no longer empty, */
+	 * If it's no longer empty, start over */
 	if (!atomic_cmpxch_or_write(&slot->mcs_type,
 	                            MEMBERCACHE_UNUSED,
 	                            MEMBERCACHE_UNINITIALIZED))
@@ -305,11 +308,54 @@ again_search_slots:
 	       COMPILER_OFFSETAFTER(struct Dee_membercache_slot, mcs_type));
 	COMPILER_WRITE_BARRIER(); /* The type-field must be written last! */
 	atomic_write(&slot->mcs_type, item->mcs_type);
-	return true;
+	return 0;
 }
 
 
-PRIVATE NONNULL((1, 2)) bool DCALL
+#ifndef Dee_DPRINT_IS_NOOP
+PRIVATE char const membercache_type_names[][16] = {
+	/* [MEMBERCACHE_UNUSED         ] = */ "??UNUSED",
+	/* [MEMBERCACHE_UNINITIALIZED  ] = */ "??UNINITIALIZED",
+	/* [MEMBERCACHE_METHOD         ] = */ "method",
+	/* [MEMBERCACHE_GETSET         ] = */ "getset",
+	/* [MEMBERCACHE_MEMBER         ] = */ "member",
+	/* [MEMBERCACHE_ATTRIB         ] = */ "attrib",
+	/* [MEMBERCACHE_INSTANCE_METHOD] = */ "instance_method",
+	/* [MEMBERCACHE_INSTANCE_GETSET] = */ "instance_getset",
+	/* [MEMBERCACHE_INSTANCE_MEMBER] = */ "instance_member",
+	/* [MEMBERCACHE_INSTANCE_ATTRIB] = */ "instance_attrib",
+};
+
+#define PRIVATE_IS_KNOWN_TYPETYPE(x) \
+	((x) == &DeeType_Type || (x) == &DeeFileType_Type)
+#define MEMBERCACHE_GETTYPENAME(x)                                                                 \
+	(PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_cache)->ob_type)         \
+	 ? COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_cache)->tp_name                                  \
+	 : PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_class_cache)->ob_type) \
+	   ? COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_class_cache)->tp_name                          \
+	   : "?")
+#define MEMBERCACHE_GETCLASSNAME(x)                                                                \
+	(PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_cache)->ob_type)         \
+	 ? "tp_cache"                                                                                  \
+	 : PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_class_cache)->ob_type) \
+	   ? "tp_class_cache"                                                                          \
+	   : "?")
+
+
+PRIVATE NONNULL((1, 2)) void DCALL
+Dee_membercache_addslot_log_success(struct Dee_membercache *__restrict self,
+                                    struct Dee_membercache_slot const *__restrict slot) {
+	Dee_DPRINTF("[RT] Cached %s `%s.%s' in `%s' (%s)\n",
+	            membercache_type_names[slot->mcs_type],
+	            slot->mcs_decl->tp_name, slot->mcs_attrib.a_name,
+	            MEMBERCACHE_GETTYPENAME(self),
+	            MEMBERCACHE_GETCLASSNAME(self));
+}
+#else /* !Dee_DPRINT_IS_NOOP */
+#define Dee_membercache_addslot_log_success(self, slot) (void)0
+#endif /* Dee_DPRINT_IS_NOOP */
+
+PRIVATE NONNULL((1, 2)) int DCALL
 Dee_membercache_addslot(struct Dee_membercache *__restrict self,
                         struct Dee_membercache_slot const *__restrict slot) {
 	DREF struct Dee_membercache_table *old_table;
@@ -319,14 +365,16 @@ Dee_membercache_addslot(struct Dee_membercache *__restrict self,
 	Dee_membercache_tabuse_inc(self);
 	old_table = atomic_read(&self->mc_table);
 	if (old_table != NULL) {
+		int status;
 		Dee_membercache_table_incref(old_table);
 		Dee_membercache_tabuse_dec(self);
 
 		/* Try to add the slot to an existing cache-table. */
 do_operate_with_old_table:
-		if (Dee_membercache_table_addslot(old_table, slot, false)) {
+		status = Dee_membercache_table_addslot(old_table, slot, false);
+		if (status >= 0) {
 			Dee_membercache_table_decref(old_table);
-			return true;
+			return status;
 		}
 	} else {
 		Dee_membercache_tabuse_dec(self);
@@ -339,11 +387,15 @@ do_operate_with_old_table:
 		/* Failed to create a new table -> try again to add to the
 		 * existing table, but ignore bad hash characteristics this
 		 * time around. */
-		bool result = false;
+		int result = -1;
 		if (old_table != NULL) {
 			/* It doesn't matter if this addslot() call succeeds or not... */
-			result = Dee_membercache_table_addslot(old_table, slot, true);
+			result = Dee_membercache_table_addslot(old_table, slot, true) >= 0;
 			Dee_membercache_table_decref(old_table);
+#ifndef Dee_DPRINT_IS_NOOP
+			if (result == 0)
+				Dee_membercache_addslot_log_success(self, slot);
+#endif /* !Dee_DPRINT_IS_NOOP */
 		}
 		return result;
 	}
@@ -389,29 +441,18 @@ do_operate_with_old_table:
 		membercache_list_lock_release();
 	}
 
-	return true;
+	Dee_membercache_addslot_log_success(self, slot);
+	return 0;
 }
 
 
 
-#define PRIVATE_IS_KNOWN_TYPETYPE(x) \
-	((x) == &DeeType_Type || (x) == &DeeFileType_Type)
-#define MEMBERCACHE_GETTYPENAME(x)                                                                 \
-	(PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_cache)->ob_type)         \
-	 ? COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_cache)->tp_name                                  \
-	 : PRIVATE_IS_KNOWN_TYPETYPE(COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_class_cache)->ob_type) \
-	   ? COMPILER_CONTAINER_OF(x, DeeTypeObject, tp_class_cache)->tp_name                          \
-	   : "?")
 
-
-INTERN NONNULL((1, 2, 4)) bool DCALL
+INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addmethod(struct Dee_membercache *self,
                           DeeTypeObject *decl, dhash_t hash,
                           struct type_method const *method) {
 	struct Dee_membercache_slot slot;
-	Dee_DPRINTF("[RT] Caching method `%s.%s' in `%s'\n",
-	            decl->tp_name, method->m_name,
-	            MEMBERCACHE_GETTYPENAME(self));
 	slot.mcs_type = MEMBERCACHE_METHOD;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
@@ -419,15 +460,12 @@ Dee_membercache_addmethod(struct Dee_membercache *self,
 	return Dee_membercache_addslot(self, &slot);
 }
 
-INTERN NONNULL((1, 2, 4)) bool DCALL
+INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstancemethod(struct Dee_membercache *self,
                                   DeeTypeObject *decl, dhash_t hash,
                                   struct type_method const *method) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);
-	Dee_DPRINTF("[RT] Caching instance_method `%s.%s' in `%s'\n",
-	            decl->tp_name, method->m_name,
-	            MEMBERCACHE_GETTYPENAME(self));
 	slot.mcs_type = MEMBERCACHE_INSTANCE_METHOD;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
@@ -435,14 +473,11 @@ Dee_membercache_addinstancemethod(struct Dee_membercache *self,
 	return Dee_membercache_addslot(self, &slot);
 }
 
-INTERN NONNULL((1, 2, 4)) bool DCALL
+INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addgetset(struct Dee_membercache *self,
                           DeeTypeObject *decl, dhash_t hash,
                           struct type_getset const *getset) {
 	struct Dee_membercache_slot slot;
-	Dee_DPRINTF("[RT] Caching getset `%s.%s' in `%s'\n",
-	            decl->tp_name, getset->gs_name,
-	            MEMBERCACHE_GETTYPENAME(self));
 	slot.mcs_type = MEMBERCACHE_GETSET;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
@@ -450,14 +485,11 @@ Dee_membercache_addgetset(struct Dee_membercache *self,
 	return Dee_membercache_addslot(self, &slot);
 }
 
-INTERN NONNULL((1, 2, 4)) bool DCALL
+INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstancegetset(struct Dee_membercache *self,
                                   DeeTypeObject *decl, dhash_t hash,
                                   struct type_getset const *getset) {
 	struct Dee_membercache_slot slot;
-	Dee_DPRINTF("[RT] Caching instance_getset `%s.%s' in `%s'\n",
-	            decl->tp_name, getset->gs_name,
-	            MEMBERCACHE_GETTYPENAME(self));
 	ASSERT(self != &decl->tp_cache);
 	slot.mcs_type = MEMBERCACHE_INSTANCE_GETSET;
 	slot.mcs_hash = hash;
@@ -466,14 +498,11 @@ Dee_membercache_addinstancegetset(struct Dee_membercache *self,
 	return Dee_membercache_addslot(self, &slot);
 }
 
-INTERN NONNULL((1, 2, 4)) bool DCALL
+INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addmember(struct Dee_membercache *self,
                           DeeTypeObject *decl, dhash_t hash,
                           struct type_member const *member) {
 	struct Dee_membercache_slot slot;
-	Dee_DPRINTF("[RT] Caching member `%s.%s' in `%s'\n",
-	            decl->tp_name, member->m_name,
-	            MEMBERCACHE_GETTYPENAME(self));
 	slot.mcs_type = MEMBERCACHE_MEMBER;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
@@ -481,14 +510,11 @@ Dee_membercache_addmember(struct Dee_membercache *self,
 	return Dee_membercache_addslot(self, &slot);
 }
 
-INTERN NONNULL((1, 2, 4)) bool DCALL
+INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstancemember(struct Dee_membercache *self,
                                   DeeTypeObject *decl, dhash_t hash,
                                   struct type_member const *member) {
 	struct Dee_membercache_slot slot;
-	Dee_DPRINTF("[RT] Caching instance_member `%s.%s' in `%s'\n",
-	            decl->tp_name, member->m_name,
-	            MEMBERCACHE_GETTYPENAME(self));
 	ASSERT(self != &decl->tp_cache);
 	slot.mcs_type = MEMBERCACHE_INSTANCE_MEMBER;
 	slot.mcs_hash = hash;
@@ -497,38 +523,30 @@ Dee_membercache_addinstancemember(struct Dee_membercache *self,
 	return Dee_membercache_addslot(self, &slot);
 }
 
-INTERN NONNULL((1, 2, 4)) bool DCALL
+INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addattrib(struct Dee_membercache *self,
                           DeeTypeObject *decl, dhash_t hash,
                           struct class_attribute *attrib) {
 	struct Dee_membercache_slot slot;
-	char const *name = DeeString_STR(attrib->ca_name);
-	Dee_DPRINTF("[RT] Caching attribute `%s.%s' in `%s'\n",
-	            decl->tp_name, name,
-	            MEMBERCACHE_GETTYPENAME(self));
 	slot.mcs_type          = MEMBERCACHE_ATTRIB;
 	slot.mcs_hash          = hash;
 	slot.mcs_decl          = decl;
-	slot.mcs_attrib.a_name = name;
+	slot.mcs_attrib.a_name = DeeString_STR(attrib->ca_name);
 	slot.mcs_attrib.a_attr = attrib;
 	slot.mcs_attrib.a_desc = DeeClass_DESC(decl);
 	return Dee_membercache_addslot(self, &slot);
 }
 
-INTERN NONNULL((1, 2, 4)) bool DCALL
+INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstanceattrib(struct Dee_membercache *self,
                                   DeeTypeObject *decl, dhash_t hash,
                                   struct class_attribute *attrib) {
 	struct Dee_membercache_slot slot;
-	char const *name = DeeString_STR(attrib->ca_name);
-	Dee_DPRINTF("[RT] Caching instance_attribute `%s.%s' in `%s'\n",
-	            decl->tp_name, name,
-	            MEMBERCACHE_GETTYPENAME(self));
 	ASSERT(self != &decl->tp_cache);
 	slot.mcs_type          = MEMBERCACHE_INSTANCE_ATTRIB;
 	slot.mcs_hash          = hash;
 	slot.mcs_decl          = decl;
-	slot.mcs_attrib.a_name = name;
+	slot.mcs_attrib.a_name = DeeString_STR(attrib->ca_name);
 	slot.mcs_attrib.a_attr = attrib;
 	slot.mcs_attrib.a_desc = DeeClass_DESC(decl);
 	return Dee_membercache_addslot(self, &slot);
@@ -546,6 +564,247 @@ Dee_membercache_addinstanceattrib(struct Dee_membercache *self,
 	 *(p_table) != NULL)
 #define Dee_membercache_releasetable(self, table) \
 	Dee_membercache_table_decref(table)
+
+/* Patch a member cache slot
+ * @return:  1: Slot cannot be patched like that
+ * @return:  0: Success
+ * @return: -1: No cache table allocated */
+PRIVATE NONNULL((1, 2, 3, 6, 7)) int DCALL
+Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
+                      char const *attr, Dee_hash_t hash, uintptr_t attr_type,
+                      bool (DCALL *do_patch)(struct Dee_membercache_slot *slot,
+                                             void const *new_data,
+                                             void const *old_data),
+                      void const *new_data, void const *old_data) {
+	int result = 1;
+	Dee_hash_t i, perturb;
+	DREF struct Dee_membercache_table *table;
+	if unlikely(!Dee_membercache_acquiretable(self, &table))
+		return -1;
+	perturb = i = Dee_membercache_table_hashst(table, hash);
+	for (;; Dee_membercache_table_hashnx(i, perturb)) {
+		struct Dee_membercache_slot *item;
+		uint16_t type;
+		item = Dee_membercache_table_hashit(table, i);
+		type = atomic_read(&item->mcs_type);
+		if (type == MEMBERCACHE_UNUSED)
+			break;
+		if (item->mcs_hash != hash)
+			continue;
+		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+			continue; /* Don't dereference uninitialized items! */
+		if (strcmp(item->mcs_name, attr) != 0)
+			continue;
+
+		/* Ensure that the attribute type matches. */
+		if (type != attr_type)
+			return 1;
+
+		/* Found it! -> now patch it */
+		if ((*do_patch)(item, new_data, old_data)) {
+			atomic_write(&item->mcs_decl, decl);
+			result = 0;
+			Dee_DPRINTF("[RT] Patched %s `%s.%s' in `%s' (%s)\n",
+			            membercache_type_names[attr_type],
+			            decl->tp_name, attr,
+			            MEMBERCACHE_GETTYPENAME(self),
+			            MEMBERCACHE_GETCLASSNAME(self));
+		}
+		break;
+	}
+	Dee_membercache_releasetable(self, table);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+do_patch_method(struct Dee_membercache_slot *slot, void const *new_data, void const *old_data) {
+	bool result = false;
+	struct type_method const *new_method = (struct type_method const *)new_data;
+	struct type_method const *old_method = (struct type_method const *)old_data;
+	if ((slot->mcs_method.m_flag & TYPE_METHOD_FKWDS) !=
+	    (new_method->m_flag & TYPE_METHOD_FKWDS))
+		return false;
+	if (old_method) {
+		result = atomic_cmpxch(&slot->mcs_method.m_func,
+		                       old_method->m_func,
+		                       new_method->m_func);
+	} else {
+		atomic_write(&slot->mcs_method.m_func, new_method->m_func);
+		result = true;
+	}
+	return result;
+}
+
+
+PRIVATE NONNULL((1, 2, 4)) int DCALL
+Dee_membercache_patchmethod(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash,
+                            struct type_method const *new_method,
+                            /*0..1*/ struct type_method const *old_method) {
+#ifdef CONFIG_NO_THREADS
+	int result = Dee_membercache_addmethod(self, decl, hash, new_method);
+#else  /* CONFIG_NO_THREADS */
+	int result;
+	while ((result = Dee_membercache_addmethod(self, decl, hash, new_method)) == 2)
+		SCHED_YIELD();
+#endif /* !CONFIG_NO_THREADS */
+	if (result > 0) {
+		/* Entry already exists (try to patch it) */
+		result = Dee_membercache_patch(self, decl, new_method->m_name, hash,
+		                               MEMBERCACHE_METHOD, &do_patch_method,
+		                               new_method, old_method);
+	}
+	return result;
+}
+
+PRIVATE NONNULL((1, 2, 4)) int DCALL
+Dee_membercache_patchinstancemethod(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash,
+                                    struct type_method const *new_method,
+                                    /*0..1*/ struct type_method const *old_method) {
+#ifdef CONFIG_NO_THREADS
+	int result = Dee_membercache_addinstancemethod(self, decl, hash, new_method);
+#else  /* CONFIG_NO_THREADS */
+	int result;
+	while ((result = Dee_membercache_addinstancemethod(self, decl, hash, new_method)) == 2)
+		SCHED_YIELD();
+#endif /* !CONFIG_NO_THREADS */
+	if (result > 0) {
+		/* Entry already exists (try to patch it) */
+		result = Dee_membercache_patch(self, decl, new_method->m_name, hash,
+		                               MEMBERCACHE_INSTANCE_METHOD, &do_patch_method,
+		                               new_method, old_method);
+	}
+	return result;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+do_patch_getset(struct Dee_membercache_slot *slot, void const *new_data, void const *old_data) {
+	bool result = false;
+	struct type_getset const *new_getset = (struct type_getset const *)new_data;
+	struct type_getset const *old_getset = (struct type_getset const *)old_data;
+	if (old_getset) {
+		if (atomic_cmpxch(&slot->mcs_getset.gs_get, old_getset->gs_get, new_getset->gs_get))
+			result = true;
+		if (atomic_cmpxch(&slot->mcs_getset.gs_del, old_getset->gs_del, new_getset->gs_del))
+			result = true;
+		if (atomic_cmpxch(&slot->mcs_getset.gs_set, old_getset->gs_set, new_getset->gs_set))
+			result = true;
+		if (atomic_cmpxch(&slot->mcs_getset.gs_bound, old_getset->gs_bound, new_getset->gs_bound))
+			result = true;
+	} else {
+		atomic_write(&slot->mcs_getset.gs_get, new_getset->gs_get);
+		atomic_write(&slot->mcs_getset.gs_del, new_getset->gs_del);
+		atomic_write(&slot->mcs_getset.gs_set, new_getset->gs_set);
+		atomic_write(&slot->mcs_getset.gs_bound, new_getset->gs_bound);
+		result = true;
+	}
+	return result;
+}
+
+
+PRIVATE NONNULL((1, 2, 4)) int DCALL
+Dee_membercache_patchgetset(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash,
+                            struct type_getset const *new_getset,
+                            /*0..1*/ struct type_getset const *old_getset) {
+#ifdef CONFIG_NO_THREADS
+	int result = Dee_membercache_addgetset(self, decl, hash, new_getset);
+#else  /* CONFIG_NO_THREADS */
+	int result;
+	while ((result = Dee_membercache_addgetset(self, decl, hash, new_getset)) == 2)
+		SCHED_YIELD();
+#endif /* !CONFIG_NO_THREADS */
+	if (result > 0) {
+		/* Entry already exists (try to patch it) */
+		result = Dee_membercache_patch(self, decl, new_getset->gs_name, hash,
+		                               MEMBERCACHE_GETSET, &do_patch_getset,
+		                               new_getset, old_getset);
+	}
+	return result;
+}
+
+PRIVATE NONNULL((1, 2, 4)) int DCALL
+Dee_membercache_patchinstancegetset(struct Dee_membercache *self, DeeTypeObject *decl, Dee_hash_t hash,
+                                    struct type_getset const *new_getset,
+                                    /*0..1*/ struct type_getset const *old_getset) {
+#ifdef CONFIG_NO_THREADS
+	int result = Dee_membercache_addinstancegetset(self, decl, hash, new_getset);
+#else  /* CONFIG_NO_THREADS */
+	int result;
+	while ((result = Dee_membercache_addinstancegetset(self, decl, hash, new_getset)) == 2)
+		SCHED_YIELD();
+#endif /* !CONFIG_NO_THREADS */
+	if (result > 0) {
+		/* Entry already exists (try to patch it) */
+		result = Dee_membercache_patch(self, decl, new_getset->gs_name, hash,
+		                               MEMBERCACHE_INSTANCE_GETSET, &do_patch_getset,
+		                               new_getset, old_getset);
+	}
+	return result;
+}
+
+
+
+/* Try to add the specified attribute to the cache of "self".
+ * - If this fails due to OOM, return `-1', but DON'T throw an exception
+ * If the MRO cache already contains an entry for the named attribute:
+ * - Verify that the existing entry is for the same type of attribute (`MEMBERCACHE_*'),
+ *   such that it can be patched without having to alter `mcs_type' (since having to do
+ *   so would result in a non-resolvable race condition where another thread is currently
+ *   dereferencing the function pointers from the existing entry).
+ *   If this verification fails, return `1'.
+ *   - For `DeeTypeMRO_Patch*Method', it is also verified that both the
+ *     old and new function pointers share a common `TYPE_METHOD_FKWDS'.
+ * - If the type matches, the pre-existing cache entries pointers are patched such that
+ *   they will now reference those from the given parameters.
+ *   Note that for this purpose, this exchange is atomic for each individual function
+ *   pointer (but not all pointers as a whole) -- in the case of `DeeTypeMRO_Patch*GetSet',
+ *   another thread may invoke (e.g.) an out-dated `gs_del' after `gs_get' was already
+ *   patched.
+ *
+ * NOTE: Generally, only use these functions for self-optimizing methods in base-classes
+ *       that wish to skip certain type-dependent verification steps during future calls.
+ *       (e.g. `Sequence.first', `Mapping.keys')
+ *
+ * @param: old_*: [0..1] When non-NULL, use these values for compare-exchange operations.
+ *                       But also note that when there are many function pointers, some may
+ *                       be set, while others cannot be -- here, an attempt to exchange
+ *                       pointers is made for *all* pointers, and success is indicated if
+ *                       at least 1 pointer could be exchanged.
+ * @return:  1:   Failure (cache entry cannot be patched like this)
+ * @return:  0:   Success
+ * @return: -1:   Patching failed due to OOM (but no error was thrown!) */
+
+PUBLIC NONNULL((1, 2, 4)) int DCALL
+DeeTypeMRO_PatchMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash,
+                       struct type_method const *new_method, /*0..1*/ struct type_method const *old_method) {
+	int result = Dee_membercache_patchmethod(&self->tp_cache, decl, hash, new_method, old_method);
+	if likely(result == 0)
+		result = Dee_membercache_patchinstancemethod(&self->tp_class_cache, decl, hash, new_method, old_method);
+	return result;
+}
+
+PUBLIC NONNULL((1, 2, 4)) int DCALL
+DeeTypeMRO_PatchGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash,
+                       struct type_getset const *new_getset, /*0..1*/ struct type_getset const *old_getset) {
+	int result = Dee_membercache_patchgetset(&self->tp_cache, decl, hash, new_getset, old_getset);
+	if likely(result == 0)
+		result = Dee_membercache_patchinstancegetset(&self->tp_class_cache, decl, hash, new_getset, old_getset);
+	return result;
+}
+
+PUBLIC NONNULL((1, 2, 4)) int DCALL
+DeeTypeMRO_PatchClassMethod(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash,
+                            struct type_method const *new_method, /*0..1*/ struct type_method const *old_method) {
+	return Dee_membercache_patchmethod(&self->tp_class_cache, decl, hash, new_method, old_method);
+}
+
+PUBLIC NONNULL((1, 2, 4)) int DCALL
+DeeTypeMRO_PatchClassGetSet(DeeTypeObject *self, DeeTypeObject *decl, Dee_hash_t hash,
+                            struct type_getset const *new_getset, /*0..1*/ struct type_getset const *old_getset) {
+	return Dee_membercache_patchgetset(&self->tp_class_cache, decl, hash, new_getset, old_getset);
+}
+
+
 
 #ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
 /* TODO: For binary compat:
