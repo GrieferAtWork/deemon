@@ -1088,29 +1088,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_get(CachedDict *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result;
-	DeeObject *key, *def = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		goto err;
-	result = cdict_trygetitemnr(self, key);
-	if unlikely(!result)
-		goto err;
-	if (result == ITER_DONE)
-		result = def;
-	Dee_Incref(result);
-	return result;
-err:
-	return NULL;
-}
-
-DOC_REF(map_get_doc);
-PRIVATE struct type_method tpconst cdict_methods[] = {
-	TYPE_METHOD_F(STR_get, &cdict_get, METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
-	TYPE_METHOD_END
-};
-
 PRIVATE struct type_gc tpconst cdict_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&cdict_clear
 };
@@ -1166,7 +1143,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ cdict_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL, /* TODO: "property cache: Mapping = { get() }" -- Proxy dict that operates on the cache only (but mustn't allow removing items from the cache). */
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,

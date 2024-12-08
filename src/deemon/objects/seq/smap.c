@@ -35,6 +35,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/overflow.h>
+
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -66,7 +68,7 @@ STATIC_ASSERT(sizeof(SharedMapIterator) == sizeof(SharedVectorIterator));
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-smap_nsi_nextkey(SharedMapIterator *__restrict self) {
+smapiter_nextkey(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_key;
 	SharedMap *map = self->smi_seq;
 	for (;;) {
@@ -92,7 +94,7 @@ smap_nsi_nextkey(SharedMapIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-smap_nsi_nextvalue(SharedMapIterator *__restrict self) {
+smapiter_nextvalue(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_value;
 	SharedMap *map = self->smi_seq;
 	for (;;) {
@@ -157,6 +159,62 @@ smapiter_next(SharedMapIterator *__restrict self) {
 done:
 	return result;
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+smapiter_nextpair(SharedMapIterator *__restrict self,
+                  DREF DeeObject *key_and_value[2]) {
+	SharedMap *map = self->smi_seq;
+	for (;;) {
+		size_t index;
+		SharedMap_LockRead(map);
+		index = atomic_read(&self->smi_index);
+		if (self->smi_index >= map->sm_length) {
+			SharedMap_LockEndRead(map);
+			return 1;
+		}
+		key_and_value[0] = map->sm_vector[index].si_key;
+		key_and_value[1] = map->sm_vector[index].si_value;
+
+		/* Acquire a reference to keep the item alive. */
+		Dee_Incref(key_and_value[0]);
+		Dee_Incref(key_and_value[1]);
+		SharedMap_LockEndRead(map);
+		if (atomic_cmpxch_weak_or_write(&self->smi_index, index, index + 1))
+			break;
+
+		/* If some other thread stole the index, drop their value. */
+		Dee_Decref(key_and_value[1]);
+		Dee_Decref(key_and_value[0]);
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+smapiter_advance(SharedMapIterator *__restrict self, size_t skip) {
+	size_t index, new_index;
+	SharedMap *map = self->smi_seq;
+	do {
+		index = atomic_read(&self->smi_index);
+		new_index = index + skip;
+		if (OVERFLOW_UADD(index, skip, &new_index))
+			new_index = (size_t)-1;
+		SharedMap_LockRead(map);
+		if (new_index >= map->sm_length)
+			new_index = map->sm_length;
+		SharedMap_LockEndRead(map);
+	} while (!atomic_cmpxch_weak_or_write(&self->smi_index, index, index + 1));
+	ASSERT(new_index >= index);
+	ASSERT((new_index - index) != (size_t)-1);
+	return new_index - index;
+}
+
+PRIVATE struct type_iterator smapiter_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&smapiter_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smapiter_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smapiter_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&smapiter_advance,
+};
+
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -231,7 +289,7 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 	/* .tp_cmp           = */ &smapiter_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smapiter_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ &smapiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -499,27 +557,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-smap_nsi_getdefault(SharedMap *self, DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result = smap_trygetitem(self, key);
-	if (result == ITER_DONE) {
-		result = defl;
-		if (result != ITER_DONE)
-			Dee_Incref(result);
-	}
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-smap_get(SharedMap *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *def = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		goto err;
-	return smap_nsi_getdefault(self, key, def);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 smap_size(SharedMap *__restrict self) {
 	return atomic_read(&self->sm_length);
@@ -717,19 +754,6 @@ not_found:
 }
 
 
-PRIVATE struct type_nsi tpconst smap_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&smap_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&smap_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&smap_nsi_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&smap_nsi_getdefault
-		}
-	}
-};
-
 PRIVATE struct type_seq smap_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -740,7 +764,7 @@ PRIVATE struct type_seq smap_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &smap_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&smap_foreach,
 	/* .tp_enumerate                  = */ NULL,
@@ -789,14 +813,6 @@ PRIVATE struct type_member tpconst smap_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-DOC_REF(map_get_doc);
-
-PRIVATE struct type_method tpconst smap_methods[] = {
-	TYPE_METHOD_F(STR_get, &smap_get, METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
-	/* TODO: _SharedMap.byhash(template:?O)->?DSequence */
-	TYPE_METHOD_END
-};
-
 PUBLIC DeeTypeObject DeeSharedMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SharedMap",
@@ -836,7 +852,7 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ smap_methods,
+	/* .tp_methods       = */ NULL, /* TODO: _SharedMap.byhash(template:?O)->?DSequence */
 	/* .tp_getsets       = */ smap_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,

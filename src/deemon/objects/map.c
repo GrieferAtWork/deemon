@@ -71,9 +71,6 @@ err:
 }
 
 
-DOC_DEF(map_get_doc,
-        "(key,def=!N)->\n"
-        "#r{The value associated with @key or @def when @key has no value associated}");
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
@@ -130,7 +127,9 @@ DOC_DEF(map_setnew_ex_doc,
 INTDEF struct type_method tpconst map_methods[];
 INTERN_TPCONST struct type_method tpconst map_methods[] = {
 	/* Default operations for all mappings. */
-	TYPE_METHOD(STR_get, &map_get, DOC_GET(map_get_doc)),
+	TYPE_METHOD(STR_get, &map_get,
+	            "(key,def=!N)->\n"
+	            "#r{The value associated with @key or @def when @key has no value associated}"),
 	TYPE_KWMETHOD("byhash", &map_byhash, DOC_GET(map_byhash_doc)),
 
 	/* Default operations for modifiable mappings. */

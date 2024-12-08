@@ -1776,60 +1776,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-dict_nsi_getdefault(DeeObject *self, DeeObject *key, DeeObject *def) {
-	size_t mask;
-	struct dict_item *vector;
-	Dee_hash_t i, perturb;
-	int error;
-	Dee_hash_t hash;
-	Dict *me = (Dict *)self;
-	hash = DeeObject_Hash(key);
-	DeeDict_LockRead(me);
-restart:
-	vector  = me->d_elem;
-	mask    = me->d_mask;
-	perturb = i = hash & mask;
-	for (;; DeeDict_HashNx(i, perturb)) {
-		DREF DeeObject *item_key, *item_value;
-		struct dict_item *item = &vector[i & mask];
-		if (!item->di_key)
-			break; /* Not found */
-		if (item->di_hash != hash)
-			continue; /* Non-matching hash */
-		if (item->di_key == dummy)
-			continue; /* Dummy key. */
-		item_key   = item->di_key;
-		item_value = item->di_value;
-		Dee_Incref(item_key);
-		Dee_Incref(item_value);
-		DeeDict_LockEndRead(me);
-
-		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCompareEq(key, item_key);
-		Dee_Decref(item_key);
-		if (error == 0)
-			return item_value; /* Found the item. */
-		Dee_Decref(item_value);
-		if unlikely(error == Dee_COMPARE_ERR)
-			goto err; /* Error in compare operator. */
-		DeeDict_LockRead(me);
-
-		/* Check if the Dict was modified. */
-		if (me->d_elem != vector ||
-		    me->d_mask != mask ||
-		    item->di_key != item_key ||
-		    item->di_value != item_value)
-			goto restart;
-	}
-	DeeDict_LockEndRead(me);
-	if (def != ITER_DONE)
-		Dee_Incref(def);
-	return def;
-err:
-	return NULL;
-}
-
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash, bool key_only) {
 	DREF DeeObject *result;
@@ -2502,7 +2448,7 @@ PRIVATE struct type_nsi tpconst dict_nsi = {
 			/* .nsi_getsize    = */ (dfunptr_t)&dict_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&dictiterator_next_key,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&dictiterator_next_value,
-			/* .nsi_getdefault = */ (dfunptr_t)&dict_nsi_getdefault,
+			/* .nsi_getdefault = */ (dfunptr_t)NULL,
 			/* .nsi_setdefault = */ (dfunptr_t)&dict_nsi_setdefault,
 			/* .nsi_updateold  = */ (dfunptr_t)&dict_nsi_updateold,
 			/* .nsi_insertnew  = */ (dfunptr_t)&dict_nsi_insertnew
@@ -2722,16 +2668,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_get(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *def = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		goto err;
-	return dict_nsi_getdefault((DeeObject *)self, key, def);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_pop(Dict *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *key, *def = NULL;
@@ -2913,7 +2849,6 @@ err:
  * XXX: This would need to be implemented in "DeeMapping_Type"; not here
  */
 
-DOC_REF(map_get_doc);
 DOC_REF(map_pop_doc);
 DOC_REF(map_popitem_doc);
 DOC_REF(map_setdefault_doc);
@@ -2925,7 +2860,6 @@ DOC_REF(map_update_doc);
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst dict_methods[] = {
-	TYPE_METHOD_F(STR_get, &dict_get, METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
 	TYPE_METHOD_F(STR_pop, &dict_pop, METHOD_FNOREFESCAPE, DOC_GET(map_pop_doc)),
 	TYPE_METHOD_F(STR_clear, &dict_doclear, METHOD_FNOREFESCAPE,
 	              "()\n"
