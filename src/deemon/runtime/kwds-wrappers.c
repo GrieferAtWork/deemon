@@ -119,28 +119,30 @@ nope:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-blvi_next(DeeBlackListKwdsIterator *__restrict self) {
-	DREF DeeObject *value, *result;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blvi_nextpair(DeeBlackListKwdsIterator *__restrict self,
+              DREF DeeObject *key_and_value[2]) {
+	DREF DeeObject *value;
 	struct kwds_entry *ent;
 	ent = blvi_nextiter(self);
 	if (!ent)
-		return ITER_DONE;
+		return 1;
 	DeeBlackListKwds_LockRead(self->blki_map);
 	if unlikely(!self->blki_map->blkd_argv) {
 		DeeBlackListKwds_LockEndRead(self->blki_map);
-		return ITER_DONE;
+		return 1;
 	}
 	value = self->blki_map->blkd_argv[ent->ke_index];
 	Dee_Incref(value);
 	DeeBlackListKwds_LockEndRead(self->blki_map);
-	result = DeeTuple_Pack(2, ent->ke_name, value);
-	Dee_Decref_unlikely(value);
-	return result;
+	Dee_Incref(ent->ke_name);
+	key_and_value[0] = (DREF DeeObject *)ent->ke_name;
+	key_and_value[1] = value;
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-blvi_nsi_nextkey(DeeBlackListKwdsIterator *__restrict self) {
+blvi_nextkey(DeeBlackListKwdsIterator *__restrict self) {
 	struct kwds_entry *ent;
 	ent = blvi_nextiter(self);
 	if (!ent)
@@ -149,7 +151,7 @@ blvi_nsi_nextkey(DeeBlackListKwdsIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-blvi_nsi_nextvalue(DeeBlackListKwdsIterator *__restrict self) {
+blvi_nextvalue(DeeBlackListKwdsIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct kwds_entry *ent;
 	ent = blvi_nextiter(self);
@@ -165,6 +167,13 @@ blvi_nsi_nextvalue(DeeBlackListKwdsIterator *__restrict self) {
 	DeeBlackListKwds_LockEndRead(self->blki_map);
 	return result;
 }
+
+PRIVATE struct type_iterator blvi_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&blvi_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blvi_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blvi_nextvalue,
+	/* .tp_advance   = */ NULL,
+};
 
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
@@ -227,8 +236,8 @@ INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &blvi_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blvi_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &blvi_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -733,38 +742,6 @@ err_temp:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-blv_nsi_getdefault(DeeBlackListKwdsObject *self, DeeObject *key, DeeObject *def) {
-	DREF DeeObject *result;
-	if unlikely(!DeeString_Check(key)) {
-		if (def != ITER_DONE)
-			Dee_Incref(def);
-		return def;
-	}
-	result = blv_trygetitemnr(self, key);
-	if (result == ITER_DONE) {
-		result = def;
-		if (result != ITER_DONE)
-			Dee_Incref(result);
-	} else if (result) {
-		Dee_Incref(result);
-	}
-	return result;
-}
-
-PRIVATE struct type_nsi tpconst blv_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&blv_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&blvi_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&blvi_nsi_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&blv_nsi_getdefault
-		}
-	}
-};
-
 PRIVATE struct type_seq blv_seq = {
 	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blv_iter,
 	/* .tp_sizeob                       = */ NULL,
@@ -775,7 +752,7 @@ PRIVATE struct type_seq blv_seq = {
 	/* .tp_getrange                     = */ NULL,
 	/* .tp_delrange                     = */ NULL,
 	/* .tp_setrange                     = */ NULL,
-	/* .tp_nsi                          = */ &blv_nsi,
+	/* .tp_nsi                          = */ NULL,
 	/* .tp_foreach                      = */ NULL,
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&blv_foreach_pair,
 	/* .tp_enumerate                    = */ NULL,
@@ -1136,84 +1113,67 @@ STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_map) == offsetof(ProxyObject2,
 #define blmi_fini  generic_proxy2_fini
 #define blmi_visit generic_proxy2_visit
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-blmi_next(DeeBlackListKwIterator *__restrict self) {
-	DREF DeeObject *result, *pair[2];
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+blmi_nextpair(DeeBlackListKwIterator *__restrict self,
+              DREF DeeObject *key_and_value[2]) {
+	int result;
 again:
-	result = DeeObject_IterNext(self->mi_iter);
-	if (!ITER_ISOK(result))
-		goto done;
-	if unlikely(DeeObject_Unpack(result, 2, pair))
-		goto err_r;
-	Dee_Decref(pair[1]);
-	if (DeeString_Check(pair[0]) &&
-	    DeeBlackListKw_IsBlackListed(self->mi_map, pair[0])) {
-		Dee_Decref(pair[0]);
-		Dee_Decref(result);
-		goto again;
+	result = DeeObject_IterNextPair(self->mi_iter, key_and_value);
+	if (ITER_ISOK(result)) {
+		if (DeeString_Check(key_and_value[0]) &&
+		    DeeBlackListKw_IsBlackListed(self->mi_map, key_and_value[0])) {
+			Dee_Decref(key_and_value[0]);
+			Dee_Decref(key_and_value[1]);
+			goto again;
+		}
 	}
-	Dee_Decref(pair[0]);
-done:
 	return result;
-err_r:
-	Dee_Decref(result);
-/*err:*/
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-blmi_nsi_nextkey(DeeBlackListKwIterator *__restrict self) {
-	DREF DeeObject *result, *pair[2];
+blmi_nextkey(DeeBlackListKwIterator *__restrict self) {
+	DREF DeeObject *result;
 again:
-	result = DeeObject_IterNext(self->mi_iter);
-	if (!ITER_ISOK(result))
-		goto done_r;
-	if unlikely(DeeObject_Unpack(result, 2, pair))
-		goto err_r;
-	Dee_Decref(pair[1]);
-	if (DeeString_Check(pair[0]) &&
-	    DeeBlackListKw_IsBlackListed(self->mi_map, pair[0])) {
-		Dee_Decref(pair[0]);
-		Dee_Decref(result);
-		goto again;
+	result = DeeObject_IterNextKey(self->mi_iter);
+	if (ITER_ISOK(result)) {
+		if (DeeString_Check(result) &&
+			DeeBlackListKw_IsBlackListed(self->mi_map, result)) {
+			Dee_Decref(result);
+			goto again;
+		}
 	}
-	Dee_Decref(result);
-	return pair[0];
-done_r:
 	return result;
-err_r:
-	Dee_Decref(result);
-/*err:*/
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-blmi_nsi_nextvalue(DeeBlackListKwIterator *__restrict self) {
-	DREF DeeObject *result, *pair[2];
+blmi_nextvalue(DeeBlackListKwIterator *__restrict self) {
+	int result;
+	DREF DeeObject *pair[2];
 again:
-	result = DeeObject_IterNext(self->mi_iter);
-	if (!ITER_ISOK(result))
-		goto done_r;
-	if unlikely(DeeObject_Unpack(result, 2, pair))
-		goto err_r;
+	result = DeeObject_IterNextPair(self->mi_iter, pair);
+	if unlikely(result != 0) {
+		if (result > 0)
+			return ITER_DONE;
+		goto err;
+	}
 	if (DeeString_Check(pair[0]) &&
 	    DeeBlackListKw_IsBlackListed(self->mi_map, pair[0])) {
 		Dee_Decref(pair[1]);
 		Dee_Decref(pair[0]);
-		Dee_Decref(result);
 		goto again;
 	}
 	Dee_Decref(pair[0]);
-	Dee_Decref(result);
 	return pair[1];
-done_r:
-	return result;
-err_r:
-	Dee_Decref(result);
-/*err:*/
+err:
 	return NULL;
 }
 
+PRIVATE struct type_iterator blmi_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&blmi_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blmi_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blmi_nextvalue,
+	/* .tp_advance   = */ NULL
+};
 
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject, po_obj));
 #define blmi_hash          generic_proxy_hash_recursive
@@ -1261,8 +1221,8 @@ INTERN DeeTypeObject DeeBlackListKwIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &blmi_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blmi_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &blmi_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -1571,23 +1531,6 @@ blkw_contains(DeeBlackListKwObject *self,
 	return DeeObject_Contains(self->blkw_kw, key);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-blkw_getdefault(DeeBlackListKwObject *self, DeeObject *key, DeeObject *def) {
-	DeeObject *result;
-	if unlikely(!DeeString_Check(key)) {
-return_def:
-		if (def != ITER_DONE)
-			Dee_Incref(def);
-		return def;
-	}
-	result = blkw_trygetitemnr(self, key);
-	if (result == ITER_DONE)
-		goto return_def;
-	if (result)
-		Dee_Incref(result);
-	return result;
-}
-
 struct blkw_foreach_pair_data {
 	DeeBlackListKwObject *bfp_self; /* [1..1] The blacklist controller. */
 	Dee_foreach_pair_t    bfp_proc; /* [1..1] Wrapped callback. */
@@ -1706,19 +1649,6 @@ blkw_hasitem_string_len_hash(DeeBlackListKwObject *__restrict self,
 }
 
 
-PRIVATE struct type_nsi tpconst blkw_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&blkw_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&blmi_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&blmi_nsi_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&blkw_getdefault
-		}
-	}
-};
-
 PRIVATE struct type_seq blkw_seq = {
 	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blkw_iter,
 	/* .tp_sizeob                       = */ NULL,
@@ -1729,7 +1659,7 @@ PRIVATE struct type_seq blkw_seq = {
 	/* .tp_getrange                     = */ NULL,
 	/* .tp_delrange                     = */ NULL,
 	/* .tp_setrange                     = */ NULL,
-	/* .tp_nsi                          = */ &blkw_nsi,
+	/* .tp_nsi                          = */ NULL,
 	/* .tp_foreach                      = */ NULL,
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&blkw_foreach_pair,
 	/* .tp_enumerate                    = */ NULL,

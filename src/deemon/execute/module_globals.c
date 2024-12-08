@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -1321,7 +1322,8 @@ modglobals_delitem_index(ModuleGlobals *self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-modglobals_enumerate_index(ModuleGlobals *__restrict self, Dee_enumerate_index_t proc,
+modglobals_enumerate_index(ModuleGlobals *__restrict self,
+                           Dee_enumerate_index_t proc,
                            void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *item;
@@ -1354,36 +1356,14 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_nsi tpconst modglobals_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&modglobals_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&modglobals_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&modglobals_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)&modglobals_delitem_index,
-			/* .nsi_setitem      = */ (dfunptr_t)&modglobals_setitem_index,
-		}
-	}
+PRIVATE struct type_method tpconst modglobals_methods[] = {
+	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-modglobals_xchitem(ModuleGlobals *self, size_t argc,
-                   DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return modglobals_xchitem_index(self, index, value);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_method tpconst modglobals_methods[] = {
-	TYPE_KWMETHOD(STR_xchitem, &modglobals_xchitem, "(index:?Dint,value)->"),
-	TYPE_METHOD_END
+PRIVATE struct type_method_hint tpconst modglobals_method_hints[] = {
+	TYPE_METHOD_HINT(seq_xchitem_index, &modglobals_xchitem_index),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_seq modglobals_seq = {
@@ -1396,7 +1376,7 @@ PRIVATE struct type_seq modglobals_seq = {
 	/* .tp_getrange           = */ NULL,
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &modglobals_nsi,
+	/* .tp_nsi                = */ NULL,
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
@@ -1463,7 +1443,8 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 	/* .tp_members       = */ modglobals_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ modglobals_method_hints,
 };
 
 

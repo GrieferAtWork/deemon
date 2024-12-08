@@ -3152,7 +3152,6 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self, unsigned int seqclas
 			self->tp_seq->tp_getrange                   = DeeType_Optimize_tp_getrange(self, base_seq->tp_getrange);
 			self->tp_seq->tp_delrange                   = DeeType_Optimize_tp_delrange(self, base_seq->tp_delrange);
 			self->tp_seq->tp_setrange                   = DeeType_Optimize_tp_setrange(self, base_seq->tp_setrange);
-			self->tp_seq->tp_nsi                        = base_seq->tp_nsi;
 			self->tp_seq->tp_foreach                    = DeeType_Optimize_tp_foreach(self, base_seq->tp_foreach);
 			self->tp_seq->tp_foreach_pair               = DeeType_Optimize_tp_foreach_pair(self, base_seq->tp_foreach_pair);
 			self->tp_seq->tp_enumerate                  = DeeType_Optimize_tp_enumerate(self, base_seq->tp_enumerate);
@@ -4517,49 +4516,6 @@ DeeType_InheritBuffer(DeeTypeObject *__restrict self) {
 		} else {
 			self->tp_buffer = base_buffer;
 		}
-		return true;
-	}
-	return false;
-}
-
-
-
-
-INTERN NONNULL((1)) bool DCALL
-DeeType_InheritNSI(DeeTypeObject *__restrict self) {
-	struct type_seq *base_seq;
-	DeeTypeMRO mro;
-	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
-	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-		base_seq = base->tp_seq;
-		if (base_seq == NULL || !base_seq->tp_nsi) {
-			if (!DeeType_InheritNSI(base))
-				continue;
-		}
-		if (self->tp_seq != NULL) /* Some other sequence interface has already been implemented! */
-			return false;
-		LOG_INHERIT(base, self, "<NSI>");
-		self->tp_seq = base->tp_seq;
-		return true;
-	}
-	return false;
-}
-
-INTERN NONNULL((1)) bool DCALL
-DeeType_InheritNII(DeeTypeObject *__restrict self) {
-	struct type_cmp *base_cmp;
-	DeeTypeMRO mro;
-	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
-	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-		base_cmp = base->tp_cmp;
-		if (base_cmp == NULL || !base_cmp->tp_nii) {
-			if (!DeeType_InheritNSI(base))
-				continue;
-		}
-		if (self->tp_cmp != NULL) /* Some other iterator-compare interface has already been implemented! */
-			return false;
-		LOG_INHERIT(base, self, "<NII>");
-		self->tp_cmp = base->tp_cmp;
 		return true;
 	}
 	return false;

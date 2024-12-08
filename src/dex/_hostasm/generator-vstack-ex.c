@@ -4053,12 +4053,14 @@ fg_vopgetitemdef(struct fungen *__restrict self) {
 		/* Optimizations when typeof(seq) is known */
 		if (DeeType_InheritOperator(seq_type, OPERATOR_GETITEM) &&
 		    seq_type->tp_seq && seq_type->tp_seq->tp_getitem) {
+#if 0 /* TODO: Re-write using `tp_trygetitem' (or even better: replace this function with `fg_voptrygetitem') */
 			struct type_nsi const *nsi = seq_type->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_getdefault != NULL) {
 				DO(fg_vnotoneref(self, 2));                                  /* seq, key_or_index, def */
 				DO(fg_vnotoneref_if_operator_at(self, OPERATOR_GETITEM, 3)); /* seq, key_or_index, def */
 				return fg_vcallapi(self, nsi->nsi_maplike.nsi_getdefault, VCALL_CC_OBJECT, 3); /* result */
 			}
+#endif
 
 			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
 #if 0 /* TODO: Inline this */

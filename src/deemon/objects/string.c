@@ -1661,23 +1661,6 @@ err_dst_iter:
 	return (size_t)-1;
 }
 
-PRIVATE struct type_nsi tpconst string_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&string_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&string_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&string_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)&string_getrange_index,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&string_getrange_index_n,
-		}
-	}
-};
-
 PRIVATE struct type_seq string_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_sizeob,
@@ -1688,7 +1671,7 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&string_getrange,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &string_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&string_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

@@ -341,23 +341,6 @@ PRIVATE struct type_cmp none_cmp = {
 	/* .tp_ge            = */ &none_eq,
 };
 
-PRIVATE struct type_nsi tpconst none_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&none_s1,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&none_s1,
-			/* .nsi_getitem      = */ (dfunptr_t)&none_2,
-			/* .nsi_delitem      = */ (dfunptr_t)NULL,
-			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)&none_3,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&none_2,
-		}
-	}
-};
-
 PRIVATE struct type_seq none_seq = {
 	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
 	/* .tp_sizeob                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
@@ -368,7 +351,7 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_getrange                     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_3,
 	/* .tp_delrange                     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
 	/* .tp_setrange                     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&none_i4,
-	/* .tp_nsi                          = */ &none_nsi,
+	/* .tp_nsi                          = */ NULL,
 	/* .tp_foreach                      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&none_s3, /* TODO: Infinite loop */
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&none_s3, /* TODO: Infinite loop */
 	/* .tp_enumerate                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&none_s3, /* TODO: Infinite loop */

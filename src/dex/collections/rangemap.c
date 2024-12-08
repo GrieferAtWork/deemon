@@ -453,7 +453,7 @@ rangemap_iterself(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-rangemap_nsi_getsize(DeeObject *__restrict self) {
+rangemap_size(DeeObject *__restrict self) {
 	size_t result = 0;
 	DREF DeeObject *iter, *item;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -482,16 +482,6 @@ err_iter:
 	Dee_Decref(iter);
 err:
 	return (size_t)-1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rangemap_size(DeeObject *__restrict self) {
-	size_t result = rangemap_nsi_getsize(self);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -545,7 +535,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rangemap_getitem_def(DeeObject *self, DeeObject *key, DeeObject *defl) {
+rangemap_trygetitem(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *iter, *item;
 	DREF DeeObject *item_data[3];
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -588,9 +578,7 @@ rangemap_getitem_def(DeeObject *self, DeeObject *key, DeeObject *defl) {
 		goto err_iter;
 	Dee_Decref(iter);
 return_defl:
-	if (defl != ITER_DONE)
-		Dee_Incref(defl);
-	return defl;
+	return ITER_DONE;
 err_iter:
 	Dee_Decref(iter);
 err:
@@ -620,19 +608,6 @@ rangemap_setitem(DeeObject *self, DeeObject *key, DeeObject *value) {
 	return DeeObject_SetRange(self, key, key, value);
 }
 
-PRIVATE struct type_nsi tpconst rangemap_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&rangemap_nsi_getsize,
-			/* .nsi_nextkey    = */ (dfunptr_t)NULL,
-			/* .nsi_nextvalue  = */ (dfunptr_t)NULL,
-			/* .nsi_getdefault = */ (dfunptr_t)&rangemap_getitem_def
-		}
-	}
-};
-
 
 PRIVATE struct type_cmp rangemap_cmp = {
 	/* .tp_hash          = */ NULL, /* TODO: &rangemap_hash, */
@@ -640,17 +615,51 @@ PRIVATE struct type_cmp rangemap_cmp = {
 };
 
 PRIVATE struct type_seq rangemap_seq = {
-	/* .tp_iter     = */ &rangemap_iterself,
-	/* .tp_sizeob   = */ &rangemap_size,
-	/* .tp_contains = */ &rangemap_contains,
-	/* .tp_getitem  = */ &rangemap_getitem,
-	/* .tp_delitem  = */ &rangemap_delitem,
-	/* .tp_setitem  = */ &rangemap_setitem,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &rangemap_nsi,
-	/* TODO: New operators */
+	/* .tp_iter                       = */ &rangemap_iterself,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ &rangemap_contains,
+	/* .tp_getitem                    = */ &rangemap_getitem,
+	/* .tp_delitem                    = */ &rangemap_delitem,
+	/* .tp_setitem                    = */ &rangemap_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL, // TODO: &rangemap_foreach,
+	/* .tp_foreach_pair               = */ NULL, // TODO: &rangemap_foreach_pair,
+	/* .tp_enumerate                  = */ NULL, // TODO: &rangemap_enumerate,
+	/* .tp_enumerate_index            = */ NULL, // TODO: &rangemap_enumerate_index,
+	/* .tp_iterkeys                   = */ NULL, // TODO: &rangemap_iterkeys,
+	/* .tp_bounditem                  = */ NULL, // TODO: &rangemap_bounditem,
+	/* .tp_hasitem                    = */ NULL, // TODO: &rangemap_hasitem,
+	/* .tp_size                       = */ &rangemap_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL, // TODO: &rangemap_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL, // TODO: &rangemap_getitem_index_fast,
+	/* .tp_delitem_index              = */ NULL, // TODO: &rangemap_delitem_index,
+	/* .tp_setitem_index              = */ NULL, // TODO: &rangemap_setitem_index,
+	/* .tp_bounditem_index            = */ NULL, // TODO: &rangemap_bounditem_index,
+	/* .tp_hasitem_index              = */ NULL, // TODO: &rangemap_hasitem_index,
+	/* .tp_getrange_index             = */ NULL, // TODO: &rangemap_getrange_index,
+	/* .tp_delrange_index             = */ NULL, // TODO: &rangemap_delrange_index,
+	/* .tp_setrange_index             = */ NULL, // TODO: &rangemap_setrange_index,
+	/* .tp_getrange_index_n           = */ NULL, // TODO: &rangemap_getrange_index_n,
+	/* .tp_delrange_index_n           = */ NULL, // TODO: &rangemap_delrange_index_n,
+	/* .tp_setrange_index_n           = */ NULL, // TODO: &rangemap_setrange_index_n,
+	/* .tp_trygetitem                 = */ &rangemap_trygetitem,
+	/* .tp_trygetitem_index           = */ NULL, // TODO: &rangemap_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL, // TODO: &rangemap_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ NULL, // TODO: &rangemap_getitem_string_hash,
+	/* .tp_delitem_string_hash        = */ NULL, // TODO: &rangemap_delitem_string_hash,
+	/* .tp_setitem_string_hash        = */ NULL, // TODO: &rangemap_setitem_string_hash,
+	/* .tp_bounditem_string_hash      = */ NULL, // TODO: &rangemap_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ NULL, // TODO: &rangemap_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash = */ NULL, // TODO: &rangemap_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ NULL, // TODO: &rangemap_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ NULL, // TODO: &rangemap_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ NULL, // TODO: &rangemap_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ NULL, // TODO: &rangemap_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ NULL, // TODO: &rangemap_hasitem_string_len_hash,
 };
 
 PRIVATE struct type_method tpconst rangemap_methods[] = {

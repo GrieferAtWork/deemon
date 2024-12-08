@@ -975,42 +975,6 @@ DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, Dee_operator_t name) 
 	return DeeType_GetOperatorOrigin(self, name) == self;
 }
 
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasPrivateNSI(DeeTypeObject const *__restrict self) {
-	struct type_nsi const *nsi;
-	DeeTypeObject *base;
-	DeeTypeMRO mro;
-	if unlikely(!self->tp_seq)
-		return false;
-	nsi = self->tp_seq->tp_nsi;
-	if unlikely(!nsi)
-		return false;
-	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-		if (base->tp_seq && base->tp_seq->tp_nsi == nsi)
-			return false;
-	}
-	return true;
-}
-
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasPrivateNII(DeeTypeObject const *__restrict self) {
-	struct type_nii const *nii;
-	DeeTypeObject *base;
-	DeeTypeMRO mro;
-	if unlikely(!self->tp_cmp)
-		return false;
-	nii = self->tp_cmp->tp_nii;
-	if unlikely(!nii)
-		return false;
-	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-		if (base->tp_cmp && base->tp_cmp->tp_nii == nii)
-			return false;
-	}
-	return true;
-}
-
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_FindOperatorGroupOrigin(DeeTypeObject const *__restrict self,
                                 ptrdiff_t const *offsetof_funptrv, size_t offsetof_funptrc) {
@@ -1972,8 +1936,6 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	case OPERATOR_GETRANGE:
 	case OPERATOR_DELRANGE:
 	case OPERATOR_SETRANGE:
-		if (!self->tp_seq)
-			DeeType_InheritNSI(self);
 		switch (name) {
 		case OPERATOR_ITER:
 			return (self->tp_seq && (self->tp_seq->tp_iter &&

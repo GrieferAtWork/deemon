@@ -82,7 +82,7 @@ do_DeeType_InheritUninheritable(DeeTypeObject *self,
 }
 
 #define DEFINE_TYPE_INHERIT_HOOK(name, impl)            \
-	INTERN NONNULL((1, 2, 3)) void DCALL                \
+	PRIVATE NONNULL((1, 2, 3)) void DCALL               \
 	name(DeeTypeObject *self, DeeTypeObject *type_type, \
 	     struct Dee_opinfo const *info) {               \
 		ASSERT(type_type == &DeeType_Type);             \
@@ -120,8 +120,6 @@ DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritSetItem, DeeType_InheritSetItem);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritGetRange, DeeType_InheritGetRange);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritDelRange, DeeType_InheritDelRange);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritSetRange, DeeType_InheritSetRange);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritNSI, DeeType_InheritNSI);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritNII, DeeType_InheritNII);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritWith, DeeType_InheritWith);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritBuffer, DeeType_InheritBuffer);
 #undef DEFINE_TYPE_INHERIT_HOOK

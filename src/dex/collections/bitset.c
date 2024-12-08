@@ -1545,16 +1545,6 @@ err:
 }
 
 
-PRIVATE struct type_nsi tpconst bs_nsi = {
-	/* .nsi_class = */ TYPE_SEQX_CLASS_SET,
-	/* .nsi_flags = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (dfunptr_t)&bs_size,
-		}
-	}
-};
-
 PRIVATE struct type_math bs_math = {
 	/* .tp_int32       = */ NULL,
 	/* .tp_int64       = */ NULL,
@@ -1613,7 +1603,7 @@ PRIVATE struct type_seq bs_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &bs_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bs_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -2187,16 +2177,6 @@ err:
 }
 
 
-PRIVATE struct type_nsi tpconst robs_nsi = {
-	/* .nsi_class = */ TYPE_SEQX_CLASS_SET,
-	/* .nsi_flags = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (dfunptr_t)&robs_nsi_getsize,
-		}
-	}
-};
-
 PRIVATE struct type_math robs_math = {
 	/* .tp_int32       = */ NULL,
 	/* .tp_int64       = */ NULL,
@@ -2255,7 +2235,7 @@ PRIVATE struct type_seq robs_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &robs_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&robs_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -3839,16 +3819,6 @@ err:
 	return -1;
 }
 
-PRIVATE struct type_nsi tpconst bsv_nsi = {
-	/* .nsi_class = */ TYPE_SEQX_CLASS_SET,
-	/* .nsi_flags = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (dfunptr_t)&bsv_size,
-		}
-	}
-};
-
 PRIVATE struct type_math bsv_math = {
 	/* .tp_int32       = */ NULL,
 	/* .tp_int64       = */ NULL,
@@ -3907,7 +3877,7 @@ PRIVATE struct type_seq bsv_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &bsv_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bsv_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

@@ -1208,8 +1208,6 @@ EXPORTS
 	DeeType_GetOperatorOrigin@8=_DeeType_GetOperatorOrigin@8
 	DeeType_GetPrivateMethodHint@8=_DeeType_GetPrivateMethodHint@8
 	DeeType_GetSeqClass@4=_DeeType_GetSeqClass@4
-	DeeType_HasPrivateNII@4=_DeeType_HasPrivateNII@4
-	DeeType_HasPrivateNSI@4=_DeeType_HasPrivateNSI@4
 	DeeType_HasPrivateOperator@8=_DeeType_HasPrivateOperator@8
 	DeeType_Implements@8=_DeeType_Implements@8
 	DeeType_InheritOperator@8=_DeeType_InheritOperator@8
@@ -1349,6 +1347,8 @@ EXPORTS
 	Dee_shared_rwlock_waitwrite_timed@12=_Dee_shared_rwlock_waitwrite_timed@12
 	Dee_shared_rwlock_write@4=_Dee_shared_rwlock_write@4
 	Dee_shared_rwlock_write_timed@12=_Dee_shared_rwlock_write_timed@12
+	Dee_simple_hashset_insert@8=_Dee_simple_hashset_insert@8
+	Dee_simple_hashset_with_lock_insert@8=_Dee_simple_hashset_with_lock_insert@8
 	Dee_type_member_bound@8=_Dee_type_member_bound@8
 	Dee_type_member_get@8=_Dee_type_member_get@8
 	Dee_type_member_set@12=_Dee_type_member_set@12

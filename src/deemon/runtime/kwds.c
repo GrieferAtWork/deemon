@@ -129,16 +129,17 @@ kwdsiter_bool(KwdsIterator *__restrict self) {
 	return 1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwds_nsi_nextitem(KwdsIterator *__restrict self) {
-	DREF DeeObject *value, *result;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+kwdsiter_nextpair(KwdsIterator *__restrict self,
+                 DREF DeeObject *key_and_value[2]) {
+	DREF DeeObject *value;
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
 		entry    = old_iter;
 		for (;;) {
 			if (entry >= self->ki_end)
-				return ITER_DONE;
+				return 1;
 			if (entry->ke_name)
 				break;
 			++entry;
@@ -149,15 +150,16 @@ kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 	value = DeeInt_NewSize(entry->ke_index);
 	if unlikely(!value)
 		goto err;
-	result = DeeTuple_Pack(2, entry->ke_name, value);
-	Dee_Decref_unlikely(value);
-	return result;
+	Dee_Incref(entry->ke_name);
+	key_and_value[0] = (DREF DeeObject *)entry->ke_name;
+	key_and_value[1] = value;
+	return 0;
 err:
-	return NULL;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwds_nsi_nextkey(KwdsIterator *__restrict self) {
+kwdsiter_nextkey(KwdsIterator *__restrict self) {
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
@@ -176,7 +178,7 @@ kwds_nsi_nextkey(KwdsIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
+kwdsiter_nextvalue(KwdsIterator *__restrict self) {
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
@@ -193,6 +195,37 @@ kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 	}
 	return DeeInt_NewSize(entry->ke_index);
 }
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+kwdsiter_advance(KwdsIterator *__restrict self, size_t step) {
+	size_t result;
+	for (;;) {
+		struct kwds_entry *old_iter, *new_iter;
+		result   = 0;
+		old_iter = atomic_read(&self->ki_iter);
+		new_iter    = old_iter;
+		for (; step; --step) {
+			for (;;) {
+				if (new_iter >= self->ki_end)
+					goto halt;
+				if ((new_iter++)->ke_name)
+					break;
+			}
+			++result;
+		}
+halt:
+		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, new_iter))
+			break;
+	}
+	return result;
+}
+
+PRIVATE struct type_iterator kwdsiter_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&kwdsiter_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwdsiter_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwdsiter_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&kwdsiter_advance,
+};
 
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
@@ -260,8 +293,8 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &kwdsiter_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwds_nsi_nextitem,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &kwdsiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -544,21 +577,6 @@ nope:
 	return_false;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-kwds_nsi_getdefault(Kwds *self, DeeObject *key, DeeObject *def) {
-	size_t index;
-	if (!DeeString_Check(key))
-		goto nope;
-	index = DeeKwds_IndexOf((DeeObject *)self, key);
-	if (index == (size_t)-1)
-		goto nope;
-	return DeeInt_NewSize(index);
-nope:
-	if (def != ITER_DONE)
-		Dee_Incref(def);
-	return def;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 kwds_foreach_pair(Kwds *self, Dee_foreach_pair_t proc, void *arg) {
 	Dee_hash_t i;
@@ -674,19 +692,6 @@ kwds_hasitem_string_len_hash(Kwds *self, char const *key, size_t keylen, Dee_has
 	return index != (size_t)-1 ? 1 : 0;
 }
 
-PRIVATE struct type_nsi tpconst kwds_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&kwds_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&kwds_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&kwds_nsi_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&kwds_nsi_getdefault
-		}
-	}
-};
-
 PRIVATE struct type_seq kwds_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwds_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -697,7 +702,7 @@ PRIVATE struct type_seq kwds_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &kwds_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&kwds_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,
@@ -945,16 +950,17 @@ kmapiter_bool(KmapIterator *__restrict self) {
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kmap_nsi_nextitem(KmapIterator *__restrict self) {
-	DeeObject *value;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+kmapiter_nextpair(KmapIterator *__restrict self,
+                  DREF DeeObject *key_and_value[2]) {
+	DREF DeeObject *value;
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
 		entry    = old_iter;
 		for (;;) {
 			if (entry >= self->ki_end)
-				return ITER_DONE;
+				return 1;
 			if (entry->ke_name)
 				break;
 			++entry;
@@ -965,11 +971,15 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 	DeeKwdsMapping_LockRead(self->ki_map);
 	value = self->ki_map->kmo_argv[entry->ke_index];
 	DeeKwdsMapping_LockEndRead(self->ki_map);
-	return DeeTuple_Pack(2, entry->ke_name, value);
+	Dee_Incref(value);
+	Dee_Incref(entry->ke_name);
+	key_and_value[0] = (DREF DeeObject *)entry->ke_name;
+	key_and_value[1] = value;
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kmap_nsi_nextkey(KmapIterator *__restrict self) {
+kmapiter_nextkey(KmapIterator *__restrict self) {
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
@@ -988,7 +998,7 @@ kmap_nsi_nextkey(KmapIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-kmap_nsi_nextvalue(KmapIterator *__restrict self) {
+kmapiter_nextvalue(KmapIterator *__restrict self) {
 	DREF DeeObject *value;
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
@@ -1010,6 +1020,17 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 	Dee_Incref(value);
 	return value;
 }
+
+STATIC_ASSERT(offsetof(KmapIterator, ki_iter) == offsetof(KwdsIterator, ki_iter));
+STATIC_ASSERT(offsetof(KmapIterator, ki_end) == offsetof(KwdsIterator, ki_end));
+#define kmapiter_advance kwdsiter_advance
+
+PRIVATE struct type_iterator kmapiter_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&kmapiter_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kmapiter_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kmapiter_nextvalue,
+	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&kmapiter_advance,
+};
 
 #define kmapiter_cmp     kwdsiter_cmp
 #define kmapiter_members kwdsiter_members
@@ -1051,8 +1072,8 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &kmapiter_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kmap_nsi_nextitem,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &kmapiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -1213,27 +1234,6 @@ kmap_contains(KwdsMapping *self, DeeObject *key) {
 	return_bool(index != (size_t)-1);
 nope:
 	return_false;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-kmap_nsi_getdefault(KwdsMapping *self, DeeObject *key, DeeObject *def) {
-	size_t index;
-	if (!DeeString_Check(key))
-		goto nope;
-	index = DeeKwds_IndexOf((DeeObject *)self->kmo_kwds, key);
-	if likely(index != (size_t)-1) {
-		DeeObject *result;
-		ASSERT(index < self->kmo_kwds->kw_size);
-		DeeKwdsMapping_LockRead(self);
-		result = self->kmo_argv[index];
-		DeeKwdsMapping_LockEndRead(self);
-		Dee_Incref(result);
-		return result;
-	}
-nope:
-	if (def != ITER_DONE)
-		Dee_Incref(def);
-	return def;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1473,19 +1473,6 @@ kmap_trygetitemnr_string_len_hash(DeeKwdsMappingObject *__restrict self,
 }
 
 
-PRIVATE struct type_nsi tpconst kmap_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&kmap_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&kmap_nsi_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&kmap_nsi_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&kmap_nsi_getdefault
-		}
-	}
-};
-
 PRIVATE struct type_seq kmap_seq = {
 	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kmap_iter,
 	/* .tp_sizeob                       = */ NULL,
@@ -1496,7 +1483,7 @@ PRIVATE struct type_seq kmap_seq = {
 	/* .tp_getrange                     = */ NULL,
 	/* .tp_delrange                     = */ NULL,
 	/* .tp_setrange                     = */ NULL,
-	/* .tp_nsi                          = */ &kmap_nsi,
+	/* .tp_nsi                          = */ NULL,
 	/* .tp_foreach                      = */ NULL,
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&kmap_foreach_pair,
 	/* .tp_enumerate                    = */ NULL,

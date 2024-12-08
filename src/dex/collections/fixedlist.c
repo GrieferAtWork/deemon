@@ -34,6 +34,7 @@
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/system-features.h>
@@ -714,27 +715,6 @@ err_temp:
 }
 
 
-PRIVATE struct type_nsi tpconst fl_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&fl_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&fl_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&fl_getitem_index,
-			/* .nsi_delitem      = */ (dfunptr_t)&fl_delitem_index,
-			/* .nsi_setitem      = */ (dfunptr_t)&fl_setitem_index,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&fl_getitem_index_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)&fl_getrange_index,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&fl_getrange_index_n,
-			/* .nsi_delrange     = */ (dfunptr_t)&fl_delrange_index,
-			/* .nsi_delrange_n   = */ (dfunptr_t)&fl_delrange_index_n,
-			/* .nsi_setrange     = */ (dfunptr_t)&fl_setrange_index,
-			/* .nsi_setrange_n   = */ (dfunptr_t)&fl_setrange_index_n,
-		}
-	}
-};
-
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 fl_xchitem_index(FixedList *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
@@ -758,7 +738,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_pop_impl(FixedList *__restrict self, Dee_ssize_t index) {
+fl_mh_pop(FixedList *__restrict self, Dee_ssize_t index) {
 	DREF DeeObject *result;
 	if (index < 0)
 		index += self->fl_size;
@@ -781,7 +761,7 @@ err_bounds:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-fl_find_impl(FixedList *self, DeeObject *item, size_t start, size_t end) {
+fl_mh_find(FixedList *self, DeeObject *item, size_t start, size_t end) {
 	if (end > self->fl_size)
 		end = self->fl_size;
 	for (; start < end; ++start) {
@@ -806,7 +786,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-fl_find_with_key_impl(FixedList *self, DeeObject *item,
+fl_mh_find_with_key(FixedList *self, DeeObject *item,
                       size_t start, size_t end, DeeObject *key) {
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
@@ -840,7 +820,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-fl_rfind_impl(FixedList *self, DeeObject *item, size_t start, size_t end) {
+fl_mh_rfind(FixedList *self, DeeObject *item, size_t start, size_t end) {
 	if (end > self->fl_size)
 		end = self->fl_size;
 	while (end > start) {
@@ -866,7 +846,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-fl_rfind_with_key_impl(FixedList *self, DeeObject *item,
+fl_mh_rfind_with_key(FixedList *self, DeeObject *item,
                          size_t start, size_t end, DeeObject *key) {
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
@@ -902,7 +882,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-fl_remove_impl(FixedList *self, DeeObject *item, size_t start, size_t end) {
+fl_mh_remove(FixedList *self, DeeObject *item, size_t start, size_t end) {
 	if (end > self->fl_size)
 		end = self->fl_size;
 	for (; start < end; ++start) {
@@ -940,8 +920,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
-fl_remove_with_key_impl(FixedList *self, DeeObject *item,
-                        size_t start, size_t end, DeeObject *key) {
+fl_mh_remove_with_key(FixedList *self, DeeObject *item,
+                      size_t start, size_t end, DeeObject *key) {
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
@@ -986,7 +966,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-fl_rremove_impl(FixedList *self, DeeObject *item, size_t start, size_t end) {
+fl_mh_rremove(FixedList *self, DeeObject *item, size_t start, size_t end) {
 	if (end > self->fl_size)
 		end = self->fl_size;
 	while (end > start) {
@@ -1025,8 +1005,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
-fl_rremove_with_key_impl(FixedList *self, DeeObject *item,
-                         size_t start, size_t end, DeeObject *key) {
+fl_mh_rremove_with_key(FixedList *self, DeeObject *item,
+                       size_t start, size_t end, DeeObject *key) {
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
@@ -1072,7 +1052,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-fl_removeall_impl(FixedList *self, DeeObject *item, size_t start, size_t end, size_t max) {
+fl_mh_removeall(FixedList *self, DeeObject *item,
+                size_t start, size_t end, size_t max) {
 	size_t result = 0;
 	if unlikely(!max)
 		return 0;
@@ -1115,8 +1096,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 6)) size_t DCALL
-fl_removeall_with_key_impl(FixedList *self, DeeObject *item, size_t start,
-                           size_t end, size_t max, DeeObject *key) {
+fl_mh_removeall_with_key(FixedList *self, DeeObject *item, size_t start,
+                         size_t end, size_t max, DeeObject *key) {
 	size_t result = 0;
 	if unlikely(!max)
 		return 0;
@@ -1165,8 +1146,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-fl_removeif_impl(FixedList *self, DeeObject *should,
-                 size_t start, size_t end, size_t max) {
+fl_mh_removeif(FixedList *self, DeeObject *should,
+               size_t start, size_t end, size_t max) {
 	size_t result = 0;
 	size_t i;
 	if unlikely(!max)
@@ -1214,7 +1195,7 @@ err:
 }
 
 PRIVATE ATTR_NOINLINE NONNULL((1, 4)) void DCALL
-fl_fill_fallback_impl(FixedList *self, size_t start, size_t count, DeeObject *filler) {
+fl_mh_fill_fallback(FixedList *self, size_t start, size_t count, DeeObject *filler) {
 	DREF DeeObject *old_values[32];
 	size_t old_values_count;
 again:
@@ -1233,13 +1214,13 @@ again:
 	Dee_Decrefv(old_values, old_values_count);
 }
 
-PRIVATE NONNULL((1, 4)) void DCALL
-fl_fill_impl(FixedList *self, size_t start, size_t end, DeeObject *filler) {
+PRIVATE NONNULL((1, 4)) int DCALL
+fl_mh_fill(FixedList *self, size_t start, size_t end, DeeObject *filler) {
 	DREF DeeObject **saved;
 	if (end > self->fl_size)
 		end = self->fl_size;
 	if unlikely(start >= end)
-		return;
+		return 0;
 	end -= start;
 	saved = (DREF DeeObject **)Dee_TryMallocac(end, sizeof(DREF DeeObject *));
 	Dee_Incref_n(filler, end);
@@ -1251,12 +1232,13 @@ fl_fill_impl(FixedList *self, size_t start, size_t end, DeeObject *filler) {
 		Dee_Decrefv(saved, end);
 		Dee_Freea(saved);
 	} else {
-		fl_fill_fallback_impl(self, start, end, filler);
+		fl_mh_fill_fallback(self, start, end, filler);
 	}
+	return 0;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-fl_reverse_impl(FixedList *self, size_t start, size_t end) {
+PRIVATE NONNULL((1)) int DCALL
+fl_mh_reverse(FixedList *self, size_t start, size_t end) {
 	DeeObject **lo, **hi;
 	if (end > self->fl_size)
 		end = self->fl_size;
@@ -1272,198 +1254,49 @@ fl_reverse_impl(FixedList *self, size_t start, size_t end) {
 		*hi   = temp;
 	}
 	FixedList_LockEndWrite(self);
+	return 0;
 }
 
 
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_find(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:find",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? fl_find_with_key_impl(self, item, start, end, key)
-	         : fl_find_impl(self, item, start, end);
-	if unlikely(result == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_rfind(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:rfind",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? fl_rfind_with_key_impl(self, item, start, end, key)
-	         : fl_rfind_impl(self, item, start, end);
-	if unlikely(result == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(result == (size_t)-1)
-		return_reference_(DeeInt_MinusOne);
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_clear(FixedList *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+fl_mh_clear(FixedList *self) {
 	fl_clear_impl(self);
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_xchitem(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t index;
-	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
-	                    UNPuSIZ "o:xchitem", &index, &value))
-		goto err;
-	return fl_xchitem_index(self, index, value);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_pop(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	Dee_ssize_t index = -1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
-	                    "|" UNPdSIZ ":pop", &index))
-		goto err;
-	return fl_pop_impl(self, index);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_remove(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int result;
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:remove",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? fl_remove_with_key_impl(self, item, start, end, key)
-	         : fl_remove_impl(self, item, start, end);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_rremove(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	int result;
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:rremove",
-	                    &item, &start, &end, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? fl_rremove_with_key_impl(self, item, start, end, key)
-	         : fl_rremove_impl(self, item, start, end);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_removeall(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_max_key,
-	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
-	                    &item, &start, &end, &max, &key))
-		goto err;
-	result = !DeeNone_Check(key)
-	         ? fl_removeall_with_key_impl(self, item, start, end, max, key)
-	         : fl_removeall_impl(self, item, start, end, max);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_removeif(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t result;
-	DeeObject *should;
-	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__should_start_end_max,
-	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ ":removeif",
-	                    &should, &start, &end, &max))
-		goto err;
-	result = fl_removeif_impl(self, should, start, end, max);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_fill(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_filler,
-	                    "|" UNPuSIZ UNPuSIZ "o:fill",
-	                    &start, &end, &filler))
-		goto err;
-	fl_fill_impl(self, start, end, filler);
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_reverse(FixedList *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
-	                    "|" UNPuSIZ UNPuSIZ ":reverse",
-	                    &start, &end))
-		goto err;
-	fl_reverse_impl(self, start, end);
-	return_none;
-err:
-	return NULL;
+	return 0;
 }
 
 PRIVATE struct type_method tpconst fl_methods[] = {
-	TYPE_KWMETHOD_F("find", &fl_find, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
-	TYPE_KWMETHOD_F("rfind", &fl_rfind, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
-	TYPE_KWMETHOD_F("xchitem", &fl_xchitem, METHOD_FNOREFESCAPE, "(index:?Dint,value)->"),
-	TYPE_KWMETHOD_F("pop", &fl_pop, METHOD_FNOREFESCAPE, "(index=!-1)->"),
-	TYPE_KWMETHOD_F("remove", &fl_remove, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD_F("rremove", &fl_rremove, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD_F("removeall", &fl_removeall, METHOD_FNOREFESCAPE, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
-	TYPE_KWMETHOD_F("removeif", &fl_removeif, METHOD_FNOREFESCAPE, "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint"),
-	TYPE_KWMETHOD_F("fill", &fl_fill, METHOD_FNOREFESCAPE, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)"),
-	TYPE_KWMETHOD_F("reverse", &fl_reverse, METHOD_FNOREFESCAPE, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"),
-	TYPE_METHOD_F("clear", &fl_clear, METHOD_FNOREFESCAPE, "()"),
+	TYPE_METHOD_HINTREF(seq_find),
+	TYPE_METHOD_HINTREF(seq_rfind),
+	TYPE_METHOD_HINTREF(seq_xchitem),
+	TYPE_METHOD_HINTREF(seq_remove),
+	TYPE_METHOD_HINTREF(seq_rremove),
+	TYPE_METHOD_HINTREF(seq_removeall),
+	TYPE_METHOD_HINTREF(seq_removeif),
+	TYPE_METHOD_HINTREF(seq_fill),
+	TYPE_METHOD_HINTREF(seq_reverse),
+	TYPE_METHOD_HINTREF(seq_clear),
 	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst fl_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_find, &fl_mh_find, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find_with_key, &fl_mh_find_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind, &fl_mh_rfind, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind_with_key, &fl_mh_rfind_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_xchitem_index, &fl_xchitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_pop, &fl_mh_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_remove, &fl_mh_remove, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_remove_with_key, &fl_mh_remove_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rremove, &fl_mh_rremove, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rremove_with_key, &fl_mh_rremove_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_removeall, &fl_mh_removeall, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_removeall_with_key, &fl_mh_removeall_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_removeif, &fl_mh_removeif, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_fill, &fl_mh_fill, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_reverse, &fl_mh_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_clear, &fl_mh_clear, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_seq fl_seq = {
@@ -1476,7 +1309,7 @@ PRIVATE struct type_seq fl_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &fl_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1656,7 +1489,7 @@ INTERN DeeTypeObject FixedList_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ fl_class_members,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ fl_method_hints,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ fl_operators,

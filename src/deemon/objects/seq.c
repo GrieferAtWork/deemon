@@ -162,10 +162,8 @@ empty_range:
 PUBLIC WUNUSED NONNULL((1)) struct type_nsi const *DCALL
 DeeType_NSI(DeeTypeObject *__restrict tp) {
 	ASSERT_OBJECT_TYPE(tp, &DeeType_Type);
-	do {
-		if (tp->tp_seq)
-			return tp->tp_seq->tp_nsi;
-	} while (DeeType_InheritNSI(tp));
+	if (tp->tp_seq)
+		return tp->tp_seq->tp_nsi;
 	return NULL;
 }
 
@@ -796,7 +794,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_front' */
 seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popfront"))
 		goto err;
@@ -805,7 +803,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* "INTERN" because aliased by `List.pop_back' */
 seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popback"))
 		goto err;

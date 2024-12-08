@@ -1118,11 +1118,7 @@ DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
 			result->c_getitem_tp = tp_iter;
 load_tp_size:
 			result->c_elem = NULL;
-			if (seq->tp_nsi) {
-				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
-				if unlikely(result->c_seqlen == (size_t)-1)
-					goto err_r;
-			} else {
+			{
 				DREF DeeObject *temp;
 				int error;
 				temp = (*seq->tp_sizeob)(self);
@@ -1291,11 +1287,7 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
 			result->c_getitem_tp = tp_iter;
 load_tp_size:
 			result->c_elem = NULL;
-			if (seq->tp_nsi) {
-				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
-				if unlikely(result->c_seqlen == (size_t)-1)
-					goto err_r;
-			} else {
+			{
 				DREF DeeObject *temp;
 				int error;
 				temp = (*seq->tp_sizeob)(self);
@@ -1455,11 +1447,7 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
 			result->c_getitem_tp = tp_iter;
 load_tp_size:
 			result->c_elem = NULL;
-			if (seq->tp_nsi) {
-				result->c_seqlen = (*seq->tp_nsi->nsi_common.nsi_getsize)(self);
-				if unlikely(result->c_seqlen == (size_t)-1)
-					goto err_r;
-			} else {
+			{
 				DREF DeeObject *temp;
 				int error;
 				temp = (*seq->tp_sizeob)(self);

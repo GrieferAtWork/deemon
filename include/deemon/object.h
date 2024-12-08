@@ -4245,10 +4245,6 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name);
  * operator has been inherited implicitly from a base-type of `self'. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, Dee_operator_t name);
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL /* TODO: Deprecated */
-DeeType_HasPrivateNSI(DeeTypeObject const *__restrict self);
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL /* TODO: Deprecated */
-DeeType_HasPrivateNII(DeeTypeObject const *__restrict self);
 
 /* Return the type from `self' inherited its operator `name'.
  * If `name' wasn't inherited, or isn't defined, simply re-return `self'.
@@ -4297,8 +4293,6 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict 
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);     /* tp_getrange, tp_getrange_index, tp_getrange_index_n */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);     /* tp_delrange, tp_delrange_index, tp_delrange_index_n */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);     /* tp_setrange, tp_setrange_index, tp_setrange_index_n */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritNSI(DeeTypeObject *__restrict self);          /* tp_nsi */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritNII(DeeTypeObject *__restrict self);          /* tp_nii */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);         /* tp_enter, tp_leave */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);       /* tp_getbuf, tp_putbuf, tp_buffer_flags */
 #else /* CONFIG_BUILDING_DEEMON */
@@ -4332,8 +4326,6 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict s
 #define DeeType_InheritGetRange(self)     DeeType_InheritOperator(self, OPERATOR_GETRANGE)
 #define DeeType_InheritDelRange(self)     DeeType_InheritOperator(self, OPERATOR_DELRANGE)
 #define DeeType_InheritSetRange(self)     DeeType_InheritOperator(self, OPERATOR_SETRANGE)
-#define DeeType_InheritNSI(self)          DeeType_InheritOperator(self, OPERATOR_ITER)
-#define DeeType_InheritNII(self)          DeeType_InheritOperator(self, OPERATOR_ITERNEXT)
 #define DeeType_InheritWith(self)         DeeType_InheritOperator(self, OPERATOR_ENTER)
 #define DeeType_InheritBuffer(self)       DeeType_InheritOperator(self, OPERATOR_GETBUF)
 #endif /* !CONFIG_BUILDING_DEEMON */
