@@ -71,6 +71,10 @@ DECL_BEGIN
  */
 
 enum {
+	/* !!! CAUTION !!! Method hint IDs are prone to arbitrarily change !!!
+	 *
+	 * Do not make use of these IDs if you're developing a DEX module and
+	 * wish to remain compatible with the deemon core across many version. */
 #define Dee_DEFINE_TYPE_METHOD_HINT_FUNC(attr, Treturn, cc, func_name, params) \
 	Dee_TMH_##func_name,
 #include "method-hints.def"
