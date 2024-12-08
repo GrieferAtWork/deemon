@@ -992,19 +992,6 @@ rodict_trygetitem_string_len_hash(DeeRoDictObject *__restrict self,
 	return ITER_DONE;
 }
 
-PRIVATE struct type_nsi tpconst rodict_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&rodict_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&rodictiterator_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&rodictiterator_nextvalue,
-		}
-	}
-};
-
-
 PRIVATE struct type_seq rodict_seq = {
 	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_iter,
 	/* .tp_sizeob                       = */ NULL,

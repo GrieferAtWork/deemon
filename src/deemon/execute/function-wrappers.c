@@ -4446,7 +4446,7 @@ err:
 	return (canonical_lid_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
+PRIVATE WUNUSED NONNULL((1)) canonical_lid_t DCALL
 FrameSymbolsByName_TryVerifyLocId(FrameSymbolsByName *self, size_t ulid) {
 	/* Check that "lid" can appear in "self" */
 	canonical_lid_t size;
@@ -4475,7 +4475,7 @@ err_bad_lid:
 	return (canonical_lid_t)-2;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) canonical_lid_t DCALL
+PRIVATE WUNUSED NONNULL((1)) canonical_lid_t DCALL
 FrameSymbolsByName_VerifyLocId(FrameSymbolsByName *self, size_t lid) {
 	canonical_lid_t result;
 	result = FrameSymbolsByName_TryVerifyLocId(self, lid);
