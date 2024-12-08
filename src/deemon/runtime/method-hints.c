@@ -87,6 +87,10 @@ typedef ATTR_PURE_T WUNUSED_T NONNULL_T((1)) Dee_funptr_t
 #define REQUIRE_TSC_seq_operator_ge                         DeeType_RequireSeqOperatorGe
 #define REQUIRE_TSC_seq_operator_inplace_add                DeeType_RequireSeqOperatorInplaceAdd
 #define REQUIRE_TSC_seq_operator_inplace_mul                DeeType_RequireSeqOperatorInplaceMul
+#define REQUIRE_TSC_set_operator_iter                       DeeType_RequireSetOperatorIter
+#define REQUIRE_TSC_set_operator_foreach                    DeeType_RequireSetOperatorForeach
+#define REQUIRE_TSC_set_operator_size                       DeeType_RequireSetOperatorSize
+#define REQUIRE_TSC_set_operator_sizeob                     DeeType_RequireSetOperatorSizeOb
 #define REQUIRE_TSC_set_operator_hash                       DeeType_RequireSetOperatorHash
 #define REQUIRE_TSC_set_operator_compare_eq                 DeeType_RequireSetOperatorCompareEq
 #define REQUIRE_TSC_set_operator_trycompare_eq              DeeType_RequireSetOperatorTryCompareEq

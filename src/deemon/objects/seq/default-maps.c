@@ -1100,13 +1100,13 @@ PRIVATE struct type_seq mi_seq = {
 	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
-PRIVATE struct type_member mi_members[] = {
+PRIVATE struct type_member tpconst mi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(MapIntersection, mi_map), "->?DMapping"),
 	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT, offsetof(MapIntersection, mi_keys), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member mi_class_members[] = {
+PRIVATE struct type_member tpconst mi_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &MapIntersectionIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1292,7 +1292,7 @@ PRIVATE struct type_iterator miiter_iterator = {
 	/* .tp_nextkey  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&miiter_nextkey,
 };
 
-PRIVATE struct type_member miiter_members[] = {
+PRIVATE struct type_member tpconst miiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapIntersectionIterator, mii_intersect), "->?Ert:MapIntersection"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapIntersectionIterator, mii_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT, offsetof(MapIntersectionIterator, mii_keys), "->?DSet"),
@@ -1528,14 +1528,14 @@ STATIC_ASSERT(offsetof(MapDifference, md_map) == offsetof(MapIntersection, mi_ma
 STATIC_ASSERT(offsetof(MapDifference, md_keys) == offsetof(MapIntersection, mi_keys));
 #define md_members mi_members
 #else
-PRIVATE struct type_member md_members[] = {
+PRIVATE struct type_member tpconst md_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(MapDifference, md_map), "->?DMapping"),
 	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT, offsetof(MapDifference, md_keys), "->?DSet"),
 	TYPE_MEMBER_END
 };
 #endif
 
-PRIVATE struct type_member md_class_members[] = {
+PRIVATE struct type_member tpconst md_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &MapDifferenceIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1658,7 +1658,7 @@ PRIVATE struct type_iterator mditer_iterator = {
 	/* .tp_nextkey  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mditer_nextkey,
 };
 
-PRIVATE struct type_member mditer_members[] = {
+PRIVATE struct type_member tpconst mditer_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapDifferenceIterator, mdi_diff), "->?Ert:MapDifference"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapDifferenceIterator, mdi_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT, offsetof(MapDifferenceIterator, mdi_keys), "->?DSet"),
@@ -2223,13 +2223,13 @@ PRIVATE struct type_seq msd_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&msd_hasitem_string_len_hash,
 };
 
-PRIVATE struct type_member msd_members[] = {
+PRIVATE struct type_member tpconst msd_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__map_a__", STRUCT_OBJECT, offsetof(MapSymmetricDifference, msd_a), "->?DMapping"),
 	TYPE_MEMBER_FIELD_DOC("__map_b__", STRUCT_OBJECT, offsetof(MapSymmetricDifference, msd_b), "->?DMapping"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member msd_class_members[] = {
+PRIVATE struct type_member tpconst msd_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &MapSymmetricDifferenceIterator_Type),
 	TYPE_MEMBER_END
 };

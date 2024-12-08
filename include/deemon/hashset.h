@@ -40,7 +40,7 @@ typedef struct Dee_hashset_object DeeHashSetObject;
 
 struct Dee_hashset_item {
 	DREF DeeObject *hsi_key;  /* [0..1][lock(:hs_lock)] Set item key. */
-	Dee_hash_t      hsi_hash; /* [valis_if(hsi_key)][lock(:hs_lock)] Hash of `hsi_key' (with a starting value of `0').
+	Dee_hash_t      hsi_hash; /* [valis_if(hsi_key)][lock(:hs_lock)] Hash of `hsi_key'.
 	                           * NOTE: Some random value when `hsi_key' is the dummy key. */
 };
 

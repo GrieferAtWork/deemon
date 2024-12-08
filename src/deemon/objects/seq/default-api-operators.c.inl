@@ -30,12 +30,14 @@
 #include <deemon/roset.h>
 #include <deemon/set.h>
 #include <deemon/super.h>
+#include <deemon/util/simple-hashset.h>
 
 #include "../../runtime/operator-require.h"
+#include "default-maps.h"
 #include "default-sequences.h"
 #include "default-sets.h"
-#include "default-maps.h"
 #include "range.h"
+#include "unique-iterator.h"
 
 DECL_BEGIN
 
@@ -1084,13 +1086,13 @@ INTERN struct type_cmp DeeSeq_OperatorCmp = {
 
 INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL DeeSeq_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self,
-                                                                    DeeObject *some_object) {
+                                  DeeObject *some_object) {
 	return DeeSeq_OperatorInplaceAdd(p_self, some_object);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int
 (DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObject **__restrict p_self,
-                                                                    DeeObject *some_object) {
+                                  DeeObject *some_object) {
 	return DeeSeq_OperatorInplaceMul(p_self, some_object);
 }
 
@@ -1103,6 +1105,138 @@ INTERN WUNUSED NONNULL((1, 2)) int
 /************************************************************************/
 /* SET                                                                  */
 /************************************************************************/
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorIterWithUniqueIter(DeeObject *__restrict self) {
+	DREF DeeObject *iter;
+	DREF UniqueIterator *result;
+	iter = DeeSeq_OperatorIter(self);
+	if unlikely(!iter)
+		goto err;
+	result = DeeGCObject_MALLOC(UniqueIterator);
+	if unlikely(!result)
+		goto err_iter;
+	result->ui_tp_next = Dee_TYPE(iter)->tp_iter_next;
+	if unlikely(!result->ui_tp_next) {
+		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(iter))) {
+			err_unimplemented_operator(Dee_TYPE(iter), OPERATOR_ITERNEXT);
+			goto err_iter_result;
+		}
+		result->ui_tp_next = Dee_TYPE(iter)->tp_iter_next;
+		ASSERT(result->ui_tp_next);
+	}
+	result->ui_iter = iter; /* Inherit reference */
+	Dee_simple_hashset_with_lock_init(&result->ui_encountered);
+	DeeObject_Init(result, &UniqueIterator_Type);
+	return DeeGC_Track((DREF DeeObject *)result);
+err_iter_result:
+	DeeGCObject_FREE(result);
+err_iter:
+	Dee_Decref(iter);
+err:
+	return NULL;
+}
+
+INTERN /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorIterWithError(DeeObject *__restrict self) {
+	err_set_unsupportedf(self, "operator iter");
+	return NULL;
+}
+
+struct default_set_foreach_unique_cb_data {
+	Dee_foreach_t dsfucd_cb;  /* [1..1] user-defined callback */
+	void         *dsfucd_arg; /* [?..?] Cookie for `dsfucd_cb' */
+};
+
+struct default_set_foreach_unique_data {
+	struct Dee_simple_hashset                 dsfud_encountered; /* Set of objects already encountered. */
+	struct default_set_foreach_unique_cb_data dsfud_cb;          /* Callback data */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_set_foreach_unique_cb(void *arg, DeeObject *item) {
+	int insert_status;
+	struct default_set_foreach_unique_data *data;
+	data = (struct default_set_foreach_unique_data *)arg;
+	insert_status = Dee_simple_hashset_insert(&data->dsfud_encountered, item);
+	if likely(insert_status > 0)
+		return (*data->dsfud_cb.dsfucd_cb)(data->dsfud_cb.dsfucd_arg, item);
+	return insert_status; /* error, or already-exists */
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeSet_DefaultOperatorForeachWithUniqueForeach(DeeObject *__restrict self,
+                                               Dee_foreach_t cb, void *arg) {
+	Dee_ssize_t result;
+	struct default_set_foreach_unique_data data;
+	data.dsfud_cb.dsfucd_cb  = cb;
+	data.dsfud_cb.dsfucd_arg = arg;
+	Dee_simple_hashset_init(&data.dsfud_encountered);
+	result = DeeSeq_OperatorForeach(self, &default_set_foreach_unique_cb, &data);
+	Dee_simple_hashset_fini(&data.dsfud_encountered);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeSet_DefaultOperatorForeachWithError(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
+	(void)cb;
+	(void)arg;
+	DeeSet_DefaultOperatorIterWithError(self);
+	return -1;
+}
+
+
+INTDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_size_with_foreach_cb(void *arg, DeeObject *elem);
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+DeeSet_DefaultOperatorSizeWithSetForeach(DeeObject *__restrict self) {
+	return (size_t)DeeSet_OperatorForeach(self, &default_size_with_foreach_cb, NULL);
+}
+
+INTERN /*WUNUSED*/ NONNULL((1)) size_t DCALL
+DeeSet_DefaultOperatorSizeWithError(DeeObject *__restrict self) {
+	return (size_t)err_set_unsupportedf(self, "operator size");
+}
+
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorSizeObWithSetSize(DeeObject *__restrict self) {
+	size_t result = DeeSet_OperatorSize(self);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSet_DefaultOperatorSizeObWithError(DeeObject *__restrict self) {
+	DeeSet_DefaultOperatorSizeWithError(self);
+	return NULL;
+}
+
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeSet_OperatorIter)(DeeObject *__restrict self) {
+	return DeeSet_OperatorIter(self);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t 
+(DCALL DeeSet_OperatorForeach)(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
+	return DeeSet_OperatorForeach(self, cb, arg);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t 
+(DCALL DeeSet_OperatorSize)(DeeObject *__restrict self) {
+	return DeeSet_OperatorSize(self);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeSet_OperatorSizeOb)(DeeObject *__restrict self) {
+	return DeeSet_OperatorSizeOb(self);
+}
+
 
 INTERN struct type_seq DeeSet_OperatorSeq = {
 	/* .tp_iter                       = */ &DeeSet_OperatorIter,
@@ -1123,7 +1257,7 @@ INTERN struct type_seq DeeSet_OperatorSeq = {
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ &DeeSet_OperatorSize,
-	/* .tp_size_fast                  = */ &DeeSet_OperatorSizeFast,
+	/* .tp_size_fast                  = */ NULL,
 	/* .tp_getitem_index              = */ NULL,
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ NULL,

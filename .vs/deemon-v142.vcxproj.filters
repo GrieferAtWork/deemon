@@ -648,6 +648,9 @@
 		<ClInclude Include="..\include\deemon\util\rlock.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\simple-hashset.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\weakref.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -808,6 +811,9 @@
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\typemro.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\unique-iterator.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq_functions.h">
@@ -1370,6 +1376,9 @@
 		<ClCompile Include="..\src\deemon\objects\seq\typemro.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\unique-iterator.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\set.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
@@ -1476,6 +1485,9 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\strings.c">

@@ -84,7 +84,7 @@ union Dee_tsc_uslot {
 struct Dee_type_seq_cache {
 #define Dee_DEFINE_TYPE_METHOD_HINT_FUNC(attr, Treturn, cc, func_name, params) \
 	Dee_mh_##func_name##_t tsc_##func_name;
-#include "../../../include/deemon/method-hints.def"
+#include "../../../../include/deemon/method-hints.def"
 
 	/* Extra callbacks for Sequence.first/last */
 	Dee_mh_seq_getfirst_t   tsc_seq_getfirst;
@@ -232,6 +232,10 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_inplac
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_inplace_mul_t DCALL DeeType_RequireSeqOperatorInplaceMul(DeeTypeObject *__restrict self);
 
 /* Set operators... */
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_iter_t DCALL DeeType_RequireSetOperatorIter(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_foreach_t DCALL DeeType_RequireSetOperatorForeach(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_size_t DCALL DeeType_RequireSetOperatorSize(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_sizeob_t DCALL DeeType_RequireSetOperatorSizeOb(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_hash_t DCALL DeeType_RequireSetOperatorHash(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_compare_eq_t DCALL DeeType_RequireSetOperatorCompareEq(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_trycompare_eq_t DCALL DeeType_RequireSetOperatorTryCompareEq(DeeTypeObject *__restrict self);
@@ -357,7 +361,7 @@ for (local seqClass, name: operatorNames) {
 	local impls = [f"Dee{seqClass}_Operator{name}"];
 	local i = 0, end = #data;
 	while (i < end) {
-		none, i = data.refind(r"\breturn\b", i)...;
+		none, i = data.refind(r"\breturn\s+&", i)...;
 		if (i is none)
 			break;
 		local exprEnd = data.find(";", i);
@@ -393,7 +397,7 @@ for (local seqClass, name: operatorNames) {
 #define DeeSeq_VariantsFor_OperatorIterKeys(cb)                cb(DeeSeq_OperatorIterKeys) cb(DeeSeq_DefaultOperatorIterWithEmpty) cb(DeeSeq_DefaultOperatorIterKeysWithSeqSize) cb(DeeSeq_DefaultOperatorIterKeysWithError)
 #define DeeSeq_VariantsFor_OperatorBoundItem(cb)               cb(DeeSeq_OperatorBoundItem) cb(DeeSeq_DefaultOperatorBoundItemWithEmpty) cb(DeeSeq_DefaultOperatorBoundItemWithSeqBoundItemIndex) cb(DeeSeq_DefaultOperatorBoundItemWithError)
 #define DeeSeq_VariantsFor_OperatorHasItem(cb)                 cb(DeeSeq_OperatorHasItem) cb((*(Dee_mh_seq_operator_hasitem_t)&none_i2)) cb(DeeSeq_DefaultOperatorHasItemWithSeqHasItemIndex) cb(DeeSeq_DefaultOperatorHasItemWithError)
-#define DeeSeq_VariantsFor_OperatorSize(cb)                    cb(DeeSeq_OperatorSize) cb(DeeSeq_DefaultOperatorSizeWithEmpty) cb(DeeSeq_DefaultSizeWithForeachPair) cb(DeeSeq_DefaultSizeWithForeach) cb(DeeSeq_DefaultOperatorSizeWithError)
+#define DeeSeq_VariantsFor_OperatorSize(cb)                    cb(DeeSeq_OperatorSize) cb(DeeSeq_DefaultOperatorSizeWithEmpty) cb(DeeSeq_DefaultSizeWithForeach) cb(DeeSeq_DefaultSizeWithForeachPair) cb(DeeSeq_DefaultOperatorSizeWithError)
 #define DeeSeq_VariantsFor_OperatorSizeFast(cb)                cb(DeeSeq_OperatorSizeFast) cb(DeeObject_DefaultSizeFastWithErrorNotFast)
 #define DeeSeq_VariantsFor_OperatorGetItemIndex(cb)            cb(DeeSeq_OperatorGetItemIndex) cb(DeeSeq_DefaultOperatorGetItemIndexWithEmpty) cb(DeeSeq_DefaultGetItemIndexWithForeachDefault) cb(DeeSeq_DefaultOperatorGetItemIndexWithError)
 #define DeeSeq_VariantsFor_OperatorDelItemIndex(cb)            cb(DeeSeq_OperatorDelItemIndex) cb(DeeSeq_DefaultOperatorDelItemIndexWithError)
@@ -420,7 +424,11 @@ for (local seqClass, name: operatorNames) {
 #define DeeSeq_VariantsFor_OperatorGe(cb)                      cb(DeeSeq_OperatorGe) cb(DeeSeq_DefaultOperatorGeWithEmpty) cb(DeeSeq_DefaultOperatorGeWithSeqCompare) cb(DeeSeq_DefaultOperatorGeWithError)
 #define DeeSeq_VariantsFor_OperatorInplaceAdd(cb)              cb(DeeSeq_OperatorInplaceAdd) cb(DeeSeq_DefaultOperatorInplaceAddWithTSCExtend) cb(DeeObject_DefaultInplaceAddWithAdd)
 #define DeeSeq_VariantsFor_OperatorInplaceMul(cb)              cb(DeeSeq_OperatorInplaceMul) cb(DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend) cb(DeeObject_DefaultInplaceMulWithMul)
-#define DeeSet_VariantsFor_OperatorHash(cb)                    cb(DeeSet_OperatorHash) cb(DeeSeq_DefaultOperatorHashWithEmpty) cb(DeeMap_DefaultHashWithForeachPairDefault) cb(DeeSet_DefaultHashWithForeachDefault) cb(DeeSeq_DefaultOperatorHashWithError)
+#define DeeSet_VariantsFor_OperatorIter(cb)                    cb(DeeSet_OperatorIter) cb(DeeSeq_DefaultOperatorIterWithEmpty) cb(DeeSet_DefaultOperatorIterWithUniqueIter) cb(DeeSet_DefaultOperatorIterWithError)
+#define DeeSet_VariantsFor_OperatorForeach(cb)                 cb(DeeSet_OperatorForeach) cb(DeeSeq_DefaultOperatorForeachWithEmpty) cb(DeeSet_DefaultOperatorForeachWithUniqueForeach) cb(DeeSet_DefaultOperatorForeachWithError)
+#define DeeSet_VariantsFor_OperatorSize(cb)                    cb(DeeSet_OperatorSize) cb(DeeSeq_DefaultOperatorSizeWithEmpty) cb(DeeSet_DefaultOperatorSizeWithSetForeach) cb(DeeSet_DefaultOperatorSizeWithError)
+#define DeeSet_VariantsFor_OperatorSizeOb(cb)                  cb(DeeSet_OperatorSizeOb) cb(DeeSeq_DefaultOperatorSizeObWithEmpty) cb(DeeSet_DefaultOperatorSizeObWithSetSize) cb(DeeSet_DefaultOperatorSizeObWithError)
+#define DeeSet_VariantsFor_OperatorHash(cb)                    cb(DeeSet_OperatorHash) cb(DeeSeq_DefaultOperatorHashWithEmpty) cb(DeeSet_DefaultHashWithForeachDefault) cb(DeeMap_DefaultHashWithForeachPairDefault) cb(DeeSeq_DefaultOperatorHashWithError)
 #define DeeSet_VariantsFor_OperatorCompareEq(cb)               cb(DeeSet_OperatorCompareEq) cb(DeeSeq_DefaultOperatorCompareWithEmpty) cb(DeeSet_DefaultCompareEqWithForeachDefault) cb(DeeSet_DefaultOperatorCompareEqWithError)
 #define DeeSet_VariantsFor_OperatorTryCompareEq(cb)            cb(DeeSet_OperatorTryCompareEq) cb(DeeSeq_DefaultOperatorTryCompareEqWithEmpty) cb(DeeSet_DefaultCompareEqWithForeachDefault) cb(DeeSet_DefaultOperatorTryCompareEqWithError)
 #define DeeSet_VariantsFor_OperatorEq(cb)                      cb(DeeSet_OperatorEq) cb(DeeSeq_DefaultOperatorEqWithEmpty) cb(DeeSet_DefaultOperatorEqWithSetCompareEq) cb(DeeSet_DefaultOperatorEqWithError)
@@ -733,13 +741,12 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObj
  * and wrap/modify operator invocation such that the object behaves as
  * though it was an indexable sequence. */
 #define DeeSet_OperatorBool                            DeeSeq_OperatorBool
-#define DeeSet_OperatorIter                            DeeSeq_OperatorIter
-#define DeeSet_OperatorSizeOb                          DeeSeq_OperatorSizeOb
 #define DeeSet_OperatorContains                        DeeSeq_OperatorContains
 #define DeeSet_OperatorContainsAsBool                  DeeSeq_OperatorContainsAsBool
-#define DeeSet_OperatorForeach                         DeeSeq_OperatorForeach
-#define DeeSet_OperatorSize                            DeeSeq_OperatorSize
-#define DeeSet_OperatorSizeFast                        DeeSeq_OperatorSizeFast
+#define DeeSet_OperatorIter(self)                      (*DeeType_RequireSetOperatorIter(Dee_TYPE(self)))(self)
+#define DeeSet_OperatorForeach(self, cb, arg)          (*DeeType_RequireSetOperatorForeach(Dee_TYPE(self)))(self, cb, arg)
+#define DeeSet_OperatorSize(self)                      (*DeeType_RequireSetOperatorSize(Dee_TYPE(self)))(self)
+#define DeeSet_OperatorSizeOb(self)                    (*DeeType_RequireSetOperatorSizeOb(Dee_TYPE(self)))(self)
 #define DeeSet_OperatorHash(self)                      (*DeeType_RequireSetOperatorHash(Dee_TYPE(self)))(self)
 #define DeeSet_OperatorCompareEq(self, some_object)    (*DeeType_RequireSetOperatorCompareEq(Dee_TYPE(self)))(self, some_object)
 #define DeeSet_OperatorTryCompareEq(self, some_object) (*DeeType_RequireSetOperatorTryCompareEq(Dee_TYPE(self)))(self, some_object)
@@ -758,6 +765,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObj
 #define DeeSet_OperatorInplaceSub(p_self, some_object) (*DeeType_RequireSetOperatorInplaceSub(Dee_TYPE(*(p_self))))(p_self, some_object)
 #define DeeSet_OperatorInplaceAnd(p_self, some_object) (*DeeType_RequireSetOperatorInplaceAnd(Dee_TYPE(*(p_self))))(p_self, some_object)
 #define DeeSet_OperatorInplaceXor(p_self, some_object) (*DeeType_RequireSetOperatorInplaceXor(Dee_TYPE(*(p_self))))(p_self, some_object)
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSet_OperatorIter)(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeSet_OperatorForeach)(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1)) size_t (DCALL DeeSet_OperatorSize)(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSet_OperatorSizeOb)(DeeObject *__restrict self);
 INTDEF struct type_seq DeeSet_OperatorSeq;
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t (DCALL DeeSet_OperatorHash)(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorCompareEq)(DeeObject *self, DeeObject *some_object);
@@ -1203,6 +1214,22 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorInplaceMulWithTSC
 /************************************************************************/
 /* Default Set Operators                                                */
 /************************************************************************/
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorIterWithUniqueIter(DeeObject *__restrict self);
+#define DeeSet_DefaultOperatorIterWithEmpty DeeSeq_DefaultOperatorIterWithEmpty
+INTDEF /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorIterWithError(DeeObject *__restrict self);
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSet_DefaultOperatorForeachWithUniqueForeach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
+#define DeeSet_DefaultOperatorForeachWithEmpty DeeSeq_DefaultOperatorForeachWithEmpty
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSet_DefaultOperatorForeachWithError(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
+
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSet_DefaultOperatorSizeWithSetForeach(DeeObject *__restrict self);
+#define DeeSet_DefaultOperatorSizeWithEmpty DeeSeq_DefaultOperatorSizeWithEmpty
+INTDEF /*WUNUSED*/ NONNULL((1)) size_t DCALL DeeSet_DefaultOperatorSizeWithError(DeeObject *__restrict self);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorSizeObWithSetSize(DeeObject *__restrict self);
+#define DeeSet_DefaultOperatorSizeObWithEmpty DeeSeq_DefaultOperatorSizeObWithEmpty
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorSizeObWithError(DeeObject *__restrict self);
+
 #define DeeSet_DefaultOperatorHashWithEmpty DeeSeq_DefaultOperatorHashWithEmpty
 #define DeeSet_DefaultOperatorHashWithError DeeSeq_DefaultOperatorHashWithError
 
@@ -2361,6 +2388,9 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___ge__(DeeObject *
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___inplace_add__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq___inplace_mul__(DeeObject *self, size_t argc, DeeObject *const *argv);
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___iter__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___size__(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___foreach__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___hash__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___compare_eq__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_set___trycompare_eq__(DeeObject *self, size_t argc, DeeObject *const *argv);

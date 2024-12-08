@@ -279,9 +279,10 @@ Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_blocate, "blocate", "(item,start=!0,end
 /************************************************************************/
 /* For `deemon.Set'                                                     */
 /************************************************************************/
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, set_operator_iter, (DeeObject *__restrict self)) /* TODO (iterate distinct items) */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, set_operator_foreach, (DeeObject *__restrict self, Dee_foreach_t cb, void *arg)) /* TODO (iterate distinct items) */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, set_operator_foreach_pair, (DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg)) /* TODO (iterate distinct items) */
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, set_operator_iter, (DeeObject *__restrict self))
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, set_operator_foreach, (DeeObject *__restrict self, Dee_foreach_t cb, void *arg))
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), size_t, DCALL, set_operator_size, (DeeObject *__restrict self))
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, set_operator_sizeob, (DeeObject *__restrict self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), Dee_hash_t, DCALL, set_operator_hash, (DeeObject *__restrict self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_operator_compare_eq, (DeeObject *self, DeeObject *some_object))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_operator_trycompare_eq, (DeeObject *self, DeeObject *some_object))

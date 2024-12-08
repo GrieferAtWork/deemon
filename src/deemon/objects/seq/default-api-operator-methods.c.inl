@@ -699,6 +699,41 @@ err:
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___iter__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":__iter__"))
+		goto err;
+	return DeeSet_OperatorIter(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___size__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":__size__"))
+		goto err;
+	return DeeSet_OperatorSizeOb(self);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default_set___foreach__(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	Dee_ssize_t status;
+	struct default_seq___foreach___data data;
+	if (DeeArg_Unpack(argc, argv, "o:__foreach__", &data.dsfd_cb))
+		goto err;
+	data.dsfd_res = NULL;
+	status = DeeSet_OperatorForeach(self, &default_seq___foreach___cb, &data);
+	if (status == DEFAULT_SEQ_FOREACH_STOP && data.dsfd_res)
+		return data.dsfd_res; /* Inherit reference */
+	if unlikely(status < 0)
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default_set___hash__(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	Dee_hash_t result;
 	if (DeeArg_Unpack(argc, argv, ":__hash__"))

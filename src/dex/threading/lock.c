@@ -1320,7 +1320,7 @@ rwlock_proxy_visit(DeeGenericRWLockProxyObject *__restrict self,
 	Dee_Visit(self->grwl_lock);
 }
 
-PRIVATE struct type_member rwlock_proxy_members[] = {
+PRIVATE struct type_member tpconst rwlock_proxy_members[] = {
 	TYPE_MEMBER_FIELD_DOC("rwlock", STRUCT_OBJECT, offsetof(DeeGenericRWLockProxyObject, grwl_lock), "->?GRWLock"),
 	TYPE_MEMBER_END
 };

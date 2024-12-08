@@ -839,7 +839,7 @@ PRIVATE struct type_method tpconst LOCAL_lockapi_methods[] = {
 #undef LOCAL_lockapi_members
 #else /* LOCAL_IS_RECURSIVE */
 #ifndef LOCAL_IS_ATOMIC_AS_SHARED
-PRIVATE struct type_member LOCAL_lockapi_members[] = {
+PRIVATE struct type_member tpconst LOCAL_lockapi_members[] = {
 #ifdef CONFIG_NO_THREADS
 	TYPE_MEMBER_FIELD_DOC(STR_acquired,
 	                      STRUCT_CONST | STRUCT_ATOMIC | STRUCT_BOOL(1),

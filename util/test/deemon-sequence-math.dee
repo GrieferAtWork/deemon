@@ -27,11 +27,14 @@ function assertEqual(a, b) {
 	assert b == a;
 	assert !(a != b);
 	assert !(b != a);
+	assert #a == #b;
 }
 
 function assertEqualSet(a, b) {
 	assertEqual(a as Set, b);
 	assertEqual(a.reversed() as Set, b);
+	assertEqual(a.sorted(), b.sorted()); /* This right here also asserts the unique-ness of keys in sets */
+	assertEqual(HashSet(a), b);
 }
 
 #if 1 /* Only works when "CONFIG_HAVE_SET_OPERATORS_IN_SEQ" wasn't disabled */

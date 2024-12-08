@@ -878,17 +878,17 @@ PRIVATE struct type_member tpconst ds_sgi_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member ds_sgi_class_members[] = {
+PRIVATE struct type_member tpconst ds_sgi_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeAndGetItemIndex_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member ds_sgif_class_members[] = {
+PRIVATE struct type_member tpconst ds_sgif_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeAndGetItemIndexFast_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member ds_stgi_class_members[] = {
+PRIVATE struct type_member tpconst ds_stgi_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeAndTryGetItemIndex_Type),
 	TYPE_MEMBER_END
 };
@@ -2101,12 +2101,12 @@ PRIVATE struct type_member tpconst ds_tsg_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member ds_sg_class_members[] = {
+PRIVATE struct type_member tpconst ds_sg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeObAndGetItem_Type),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member ds_tsg_class_members[] = {
+PRIVATE struct type_member tpconst ds_tsg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithTSizeAndGetItem_Type),
 	TYPE_MEMBER_END
 };
@@ -2743,7 +2743,7 @@ PRIVATE struct type_member tpconst ds_tial_members[] = {
 
 #if 1 /* Not always true, but is generally the case. */
 #define ds_tial_class_members ds_ial_class_members
-PRIVATE struct type_member ds_ial_class_members[] = {
+PRIVATE struct type_member tpconst ds_ial_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextAndLimit_Type),
 	TYPE_MEMBER_END
 };

@@ -167,6 +167,22 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	            "Remove and return some random key from @this set. "
 	            /**/ "If the set is empty, return @def or throw :ValueError"),
 
+	TYPE_METHOD("__iter__", &default_set___iter__,
+	            "->?DIterator\n"
+	            "Alias for ${(this as Set).operator iter()}"),
+	TYPE_METHOD("__size__", &default_set___size__,
+	            "->?Dint\n"
+	            "Alias for ${#(this as Set)}"),
+	TYPE_METHOD("__foreach__", &default_set___foreach__,
+	            "(cb)->\n"
+	            "Alias for:\n"
+	            "${"
+	            /**/ "for (local item: this as Set) {\n"
+	            /**/ "	local res = cb(item);\n"
+	            /**/ "	if (res !is none)\n"
+	            /**/ "		return res;\n"
+	            /**/ "}"
+	            "}"),
 	TYPE_METHOD("__hash__", &default_set___hash__,
 	            "->?Dint\n"
 	            "Alias for ${(this as Set).operator hash()}"),

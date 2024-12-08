@@ -29,7 +29,7 @@
 //#define DEFINE_DeeType_RequireSeqOperatorGetRange
 //#define DEFINE_DeeType_RequireSeqOperatorDelRange
 //#define DEFINE_DeeType_RequireSeqOperatorSetRange
-#define DEFINE_DeeType_RequireSeqOperatorForeach
+//#define DEFINE_DeeType_RequireSeqOperatorForeach
 //#define DEFINE_DeeType_RequireSeqOperatorForeachPair
 //#define DEFINE_DeeType_RequireSeqOperatorEnumerate
 //#define DEFINE_DeeType_RequireSeqOperatorEnumerateIndex
@@ -64,6 +64,10 @@
 //#define DEFINE_DeeType_RequireSeqOperatorInplaceAdd
 //#define DEFINE_DeeType_RequireSeqOperatorInplaceMul
 
+#define DEFINE_DeeType_RequireSetOperatorIter
+//#define DEFINE_DeeType_RequireSetOperatorForeach
+//#define DEFINE_DeeType_RequireSetOperatorSize
+//#define DEFINE_DeeType_RequireSetOperatorSizeOb
 //#define DEFINE_DeeType_RequireSetOperatorHash
 //#define DEFINE_DeeType_RequireSetOperatorCompareEq
 //#define DEFINE_DeeType_RequireSetOperatorTryCompareEq
@@ -173,6 +177,10 @@
      defined(DEFINE_DeeType_RequireSeqOperatorGe) +                      \
      defined(DEFINE_DeeType_RequireSeqOperatorInplaceAdd) +              \
      defined(DEFINE_DeeType_RequireSeqOperatorInplaceMul) +              \
+     defined(DEFINE_DeeType_RequireSetOperatorIter) +                    \
+     defined(DEFINE_DeeType_RequireSetOperatorForeach) +                 \
+     defined(DEFINE_DeeType_RequireSetOperatorSize) +                    \
+     defined(DEFINE_DeeType_RequireSetOperatorSizeOb) +                  \
      defined(DEFINE_DeeType_RequireSetOperatorHash) +                    \
      defined(DEFINE_DeeType_RequireSetOperatorCompareEq) +               \
      defined(DEFINE_DeeType_RequireSetOperatorTryCompareEq) +            \
@@ -385,6 +393,22 @@ DECL_BEGIN
 #elif defined(DEFINE_DeeType_RequireSeqOperatorInplaceMul)
 #define LOCAL_operator_foo     operator_inplace_mul
 #define LOCAL_OperatorFoo      OperatorInplaceMul
+#elif defined(DEFINE_DeeType_RequireSetOperatorIter)
+#define LOCAL_operator_foo     operator_iter
+#define LOCAL_OperatorFoo      OperatorIter
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_SET
+#elif defined(DEFINE_DeeType_RequireSetOperatorForeach)
+#define LOCAL_operator_foo     operator_foreach
+#define LOCAL_OperatorFoo      OperatorForeach
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_SET
+#elif defined(DEFINE_DeeType_RequireSetOperatorSize)
+#define LOCAL_operator_foo     operator_size
+#define LOCAL_OperatorFoo      OperatorSize
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_SET
+#elif defined(DEFINE_DeeType_RequireSetOperatorSizeOb)
+#define LOCAL_operator_foo     operator_sizeob
+#define LOCAL_OperatorFoo      OperatorSizeOb
+#define LOCAL_Dee_SEQCLASS     Dee_SEQCLASS_SET
 #elif defined(DEFINE_DeeType_RequireSetOperatorHash)
 #define LOCAL_operator_foo     operator_hash
 #define LOCAL_OperatorFoo      OperatorHash
@@ -1223,6 +1247,70 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		    (tsc_seq_clear = DeeType_RequireSeqClear(self)) != &DeeSeq_DefaultClearWithError)
 			return &DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend;
 	}
+#elif defined(DEFINE_DeeType_RequireSetOperatorIter)
+#ifndef LOCAL_FOR_OPTIMIZE
+	{
+		unsigned int sc = DeeType_GetSeqClass(self);
+		if ((sc == Dee_SEQCLASS_SET || sc == Dee_SEQCLASS_MAP) && DeeType_RequireIter(self))
+			return self->tp_seq->tp_iter;
+	}
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_mh_seq_operator_iter_t tsc_seq_operator_iter;
+		tsc_seq_operator_iter = DeeType_RequireSeqOperatorIter(self);
+		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
+			return &DeeSet_DefaultOperatorIterWithEmpty;
+		if (tsc_seq_operator_iter != &DeeSeq_DefaultOperatorIterWithError)
+			return &DeeSet_DefaultOperatorIterWithUniqueIter;
+	}
+#elif defined(DEFINE_DeeType_RequireSetOperatorForeach)
+#ifndef LOCAL_FOR_OPTIMIZE
+	{
+		unsigned int sc = DeeType_GetSeqClass(self);
+		if ((sc == Dee_SEQCLASS_SET || sc == Dee_SEQCLASS_MAP) && DeeType_RequireForeach(self))
+			return self->tp_seq->tp_foreach;
+	}
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
+		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
+		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
+			return &DeeSet_DefaultOperatorForeachWithEmpty;
+		if (tsc_seq_operator_foreach != &DeeSeq_DefaultOperatorForeachWithError)
+			return &DeeSet_DefaultOperatorForeachWithUniqueForeach;
+	}
+#elif defined(DEFINE_DeeType_RequireSetOperatorSize)
+#ifndef LOCAL_FOR_OPTIMIZE
+	{
+		unsigned int sc = DeeType_GetSeqClass(self);
+		if ((sc == Dee_SEQCLASS_SET || sc == Dee_SEQCLASS_MAP) && DeeType_RequireSize(self))
+			return self->tp_seq->tp_size;
+	}
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_mh_seq_operator_foreach_t tsc_seq_operator_foreach;
+		tsc_seq_operator_foreach = DeeType_RequireSeqOperatorForeach(self);
+		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
+			return &DeeSet_DefaultOperatorSizeWithEmpty;
+		if (tsc_seq_operator_foreach != &DeeSeq_DefaultOperatorForeachWithError)
+			return &DeeSet_DefaultOperatorSizeWithSetForeach;
+	}
+#elif defined(DEFINE_DeeType_RequireSetOperatorSizeOb)
+#ifndef LOCAL_FOR_OPTIMIZE
+	{
+		unsigned int sc = DeeType_GetSeqClass(self);
+		if ((sc == Dee_SEQCLASS_SET || sc == Dee_SEQCLASS_MAP) && DeeType_RequireSizeOb(self))
+			return self->tp_seq->tp_sizeob;
+	}
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_mh_set_operator_size_t tsc_set_operator_size;
+		tsc_set_operator_size = DeeType_RequireSetOperatorSize(self);
+		if (tsc_set_operator_size == &DeeSet_DefaultOperatorSizeWithEmpty)
+			return &DeeSet_DefaultOperatorSizeObWithEmpty;
+		if (tsc_set_operator_size != &DeeSet_DefaultOperatorSizeWithError)
+			return &DeeSet_DefaultOperatorSizeObWithSetSize;
+	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorHash)
 #ifndef LOCAL_FOR_OPTIMIZE
 	{
@@ -2002,6 +2090,10 @@ DECL_END
 #undef DEFINE_DeeType_RequireSeqOperatorGe
 #undef DEFINE_DeeType_RequireSeqOperatorInplaceAdd
 #undef DEFINE_DeeType_RequireSeqOperatorInplaceMul
+#undef DEFINE_DeeType_RequireSetOperatorIter
+#undef DEFINE_DeeType_RequireSetOperatorForeach
+#undef DEFINE_DeeType_RequireSetOperatorSize
+#undef DEFINE_DeeType_RequireSetOperatorSizeOb
 #undef DEFINE_DeeType_RequireSetOperatorHash
 #undef DEFINE_DeeType_RequireSetOperatorCompareEq
 #undef DEFINE_DeeType_RequireSetOperatorTryCompareEq

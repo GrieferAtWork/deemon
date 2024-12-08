@@ -225,6 +225,7 @@
 		<ClInclude Include="..\include\deemon\util\once.h" />
 		<ClInclude Include="..\include\deemon\util\rlock-utils.h" />
 		<ClInclude Include="..\include\deemon\util\rlock.h" />
+		<ClInclude Include="..\include\deemon\util\simple-hashset.h" />
 		<ClInclude Include="..\include\deemon\weakref.h" />
 		<ClInclude Include="..\src\deemon\Makefile" />
 		<ClInclude Include="..\src\deemon\cmdline.h" />
@@ -279,6 +280,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\sort.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\svec.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\typemro.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\unique-iterator.h" />
 		<ClInclude Include="..\src\deemon\objects\seq_functions.h" />
 		<ClInclude Include="..\src\deemon\objects\type-operators.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.c.inl" />
@@ -467,6 +469,7 @@
 		<ClCompile Include="..\src\deemon\objects\seq\sort.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\svec.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\typemro.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\unique-iterator.c" />
 		<ClCompile Include="..\src\deemon\objects\set.c" />
 		<ClCompile Include="..\src\deemon\objects\string.c" />
 		<ClCompile Include="..\src\deemon\objects\super.c" />
@@ -503,6 +506,7 @@
 		<ClCompile Include="..\src\deemon\runtime\operator.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator_info.c" />
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c" />
+		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c" />
 		<ClCompile Include="..\src\deemon\runtime\strings.c" />
 		<ClCompile Include="..\src\deemon\runtime\thread.c" />
 		<ClCompile Include="..\src\deemon\runtime\type_member.c" />

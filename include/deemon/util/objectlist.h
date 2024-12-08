@@ -22,6 +22,7 @@
 
 #include <stddef.h>
 
+#include "../alloc.h"
 #include "../api.h"
 #include "../gc.h"
 #include "../object.h"
@@ -86,18 +87,18 @@ struct Dee_objectlist {
 #ifdef DEE_OBJECTLIST_HAVE_ELEMA
 #define DEE_OBJECTLIST_INIT { NULL, 0, 0 }
 #define Dee_objectlist_init(self) \
-	((self)->ol_elemv = NULL, (self)->ol_elemc = (self)->ol_elema = 0)
-#define Dee_objectlist_cinit(self)         \
-	(Dee_ASSERT((self)->ol_elemv == NULL), \
-	 Dee_ASSERT((self)->ol_elemc == 0),    \
-	 Dee_ASSERT((self)->ol_elema == 0))
+	(void)((self)->ol_elemv = NULL, (self)->ol_elemc = (self)->ol_elema = 0)
+#define Dee_objectlist_cinit(self)               \
+	(void)(Dee_ASSERT((self)->ol_elemv == NULL), \
+	       Dee_ASSERT((self)->ol_elemc == 0),    \
+	       Dee_ASSERT((self)->ol_elema == 0))
 #else /* DEE_OBJECTLIST_HAVE_ELEMA */
 #define DEE_OBJECTLIST_INIT { NULL, 0 }
 #define Dee_objectlist_init(self) \
-	((self)->ol_elemv = NULL, (self)->ol_elemc = 0)
-#define Dee_objectlist_cinit(self)         \
-	(Dee_ASSERT((self)->ol_elemv == NULL), \
-	 Dee_ASSERT((self)->ol_elemc == 0))
+	(void)((self)->ol_elemv = NULL, (self)->ol_elemc = 0)
+#define Dee_objectlist_cinit(self)               \
+	(void)(Dee_ASSERT((self)->ol_elemv == NULL), \
+	       Dee_ASSERT((self)->ol_elemc == 0))
 #endif /* !DEE_OBJECTLIST_HAVE_ELEMA */
 
 /* Initialize `self' from the contents of a given `seq' */

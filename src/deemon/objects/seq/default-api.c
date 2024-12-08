@@ -904,6 +904,14 @@ DECL_END
 #define DEFINE_DeeType_RequireSeqOperatorInplaceMul
 #include "default-api-require-operator-impl.c.inl"
 
+#define DEFINE_DeeType_RequireSetOperatorIter
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorForeach
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorSize
+#include "default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorSizeOb
+#include "default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSetOperatorHash
 #include "default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSetOperatorCompareEq

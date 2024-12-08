@@ -281,6 +281,10 @@ PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_ge_t 
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_inplace_add_t DCALL DeeType_RequireSeqOperatorInplaceAdd_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_inplace_mul_t DCALL DeeType_RequireSeqOperatorInplaceMul_for_optimize(DeeTypeObject *__restrict self);
 
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_iter_t DCALL DeeType_RequireSetOperatorIter_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_foreach_t DCALL DeeType_RequireSetOperatorForeach_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_size_t DCALL DeeType_RequireSetOperatorSize_for_optimize(DeeTypeObject *__restrict self);
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_operator_sizeob_t DCALL DeeType_RequireSetOperatorSizeOb_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_hash_t DCALL DeeType_RequireSetOperatorHash_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_compare_eq_t DCALL DeeType_RequireSetOperatorCompareEq_for_optimize(DeeTypeObject *__restrict self);
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_operator_trycompare_eq_t DCALL DeeType_RequireSetOperatorTryCompareEq_for_optimize(DeeTypeObject *__restrict self);
@@ -437,6 +441,14 @@ DECL_END
 #define DEFINE_DeeType_RequireSeqOperatorInplaceMul
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 
+#define DEFINE_DeeType_RequireSetOperatorIter
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorForeach
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorSize
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
+#define DEFINE_DeeType_RequireSetOperatorSizeOb
+#include "../objects/seq/default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSetOperatorHash
 #include "../objects/seq/default-api-require-operator-impl.c.inl"
 #define DEFINE_DeeType_RequireSetOperatorCompareEq
@@ -636,13 +648,13 @@ DeeType_Optimize_tp_bool(DeeTypeObject *__restrict dst, DeeType_tp_bool_t tp_boo
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_iter_t DCALL
 DeeType_Optimize_tp_iter(DeeTypeObject *__restrict dst, DeeType_tp_iter_t tp_iter) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorIter, dst, tp_iter);
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorIter, dst, tp_iter);
 	return tp_iter;
 }
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_sizeob_t DCALL
 DeeType_Optimize_tp_sizeob(DeeTypeObject *__restrict dst, DeeType_tp_sizeob_t tp_sizeob) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorSizeOb, dst, tp_sizeob);
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorSizeOb, dst, tp_sizeob);
 	return tp_sizeob;
 }
 
@@ -690,7 +702,7 @@ DeeType_Optimize_tp_setrange(DeeTypeObject *__restrict dst, DeeType_tp_setrange_
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_foreach_t DCALL
 DeeType_Optimize_tp_foreach(DeeTypeObject *__restrict dst, DeeType_tp_foreach_t tp_foreach) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorForeach, dst, tp_foreach);
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorForeach, dst, tp_foreach);
 	return tp_foreach;
 }
 
@@ -732,7 +744,7 @@ DeeType_Optimize_tp_hasitem(DeeTypeObject *__restrict dst, DeeType_tp_hasitem_t 
 
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeType_tp_size_t DCALL
 DeeType_Optimize_tp_size(DeeTypeObject *__restrict dst, DeeType_tp_size_t tp_size) {
-	OPTIMIZE_SEQ_OPERATOR(OperatorSize, dst, tp_size);
+	OPTIMIZE_SEQ_OR_SET_OPERATOR(OperatorSize, dst, tp_size);
 	return tp_size;
 }
 
