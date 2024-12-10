@@ -5094,8 +5094,9 @@ DeeSet_DefaultInsertAllWithInplaceOr(DeeObject *self, DeeObject *keys) {
 }
 
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-#define set_insertall_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)DeeType_RequireSetInsert(Dee_TYPE(self)))
+#define set_insertall_foreach_cb_PTR ((Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)DeeType_RequireSetInsert(Dee_TYPE(self)))
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+#define set_insertall_foreach_cb_PTR &set_insertall_foreach_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 set_insertall_foreach_cb(void *arg, DeeObject *elem) {
 	return (Dee_ssize_t)DeeSet_InvokeInsert((DeeObject *)arg, elem);
@@ -5104,7 +5105,7 @@ set_insertall_foreach_cb(void *arg, DeeObject *elem) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_DefaultInsertAllWithSetInsert(DeeObject *self, DeeObject *keys) {
-	Dee_ssize_t status = DeeSeq_OperatorForeach(keys, &set_insertall_foreach_cb, self);
+	Dee_ssize_t status = DeeSeq_OperatorForeach(keys, set_insertall_foreach_cb_PTR, self);
 	return likely(status >= 0) ? 0 : -1;
 }
 #undef set_insertall_foreach_cb
@@ -5133,8 +5134,9 @@ DeeSet_DefaultRemoveAllWithInplaceSub(DeeObject *self, DeeObject *keys) {
 }
 
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-#define set_removeall_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)DeeType_RequireSetRemove(Dee_TYPE(self)))
+#define set_removeall_foreach_cb_PTR ((Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)DeeType_RequireSetRemove(Dee_TYPE(self)))
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+#define set_removeall_foreach_cb_PTR &set_removeall_foreach_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 set_removeall_foreach_cb(void *arg, DeeObject *elem) {
 	return (Dee_ssize_t)DeeSet_InvokeRemove((DeeObject *)arg, elem);
@@ -5143,10 +5145,10 @@ set_removeall_foreach_cb(void *arg, DeeObject *elem) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_DefaultRemoveAllWithSetRemove(DeeObject *self, DeeObject *keys) {
-	Dee_ssize_t status = DeeSeq_OperatorForeach(keys, &set_removeall_foreach_cb, self);
+	Dee_ssize_t status = DeeSeq_OperatorForeach(keys, set_removeall_foreach_cb_PTR, self);
 	return likely(status >= 0) ? 0 : -1;
 }
-#undef set_removeall_foreach_cb
+#undef set_removeall_foreach_cb_PTR
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSet_DefaultRemoveAllWithError(DeeObject *self, DeeObject *keys) {
@@ -5746,8 +5748,9 @@ DeeMap_DefaultUpdateWithInplaceOr(DeeObject *self, DeeObject *items) {
 }
 
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-#define map_update_foreach_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *, DeeObject *))(Dee_funptr_t)&DeeObject_SetItem)
+#define map_update_foreach_cb_PTR ((Dee_ssize_t (DCALL *)(void *, DeeObject *, DeeObject *))(Dee_funptr_t)&DeeObject_SetItem)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+#define map_update_foreach_cb_PTR &map_update_foreach_cb
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 map_update_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 	return (Dee_ssize_t)DeeObject_SetItem((DeeObject *)arg, key, value);
@@ -5756,7 +5759,7 @@ map_update_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeMap_DefaultUpdateWithSetItem(DeeObject *self, DeeObject *items) {
-	return (int)DeeObject_ForeachPair(items, &map_update_foreach_cb, self);
+	return (int)DeeObject_ForeachPair(items, map_update_foreach_cb_PTR, self);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -5845,9 +5848,11 @@ DeeMap_DefaultRemoveWithError(DeeObject *self, DeeObject *key) {
 /* Map.removekeys()                                                     */
 /************************************************************************/
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
-#define map_removekeys_foreach_delitem_cb (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)Dee_TYPE(self)->tp_seq->tp_delitem)
-#define map_removekeys_foreach_remove_cb  (*(Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)DeeType_RequireMapRemove(Dee_TYPE(self)))
+#define map_removekeys_foreach_delitem_cb_PTR ((Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)Dee_TYPE(self)->tp_seq->tp_delitem)
+#define map_removekeys_foreach_remove_cb_PTR  ((Dee_ssize_t (DCALL *)(void *, DeeObject *))(Dee_funptr_t)DeeType_RequireMapRemove(Dee_TYPE(self)))
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
+#define map_removekeys_foreach_delitem_cb_PTR &map_removekeys_foreach_delitem_cb
+#define map_removekeys_foreach_remove_cb_PTR  &map_removekeys_foreach_remove_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 map_removekeys_foreach_delitem_cb(void *arg, DeeObject *key) {
 	return (Dee_ssize_t)(*Dee_TYPE((DeeObject *)arg)->tp_seq->tp_delitem)((DeeObject *)arg, key);
@@ -5861,12 +5866,12 @@ map_removekeys_foreach_remove_cb(void *arg, DeeObject *key) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeMap_DefaultRemoveKeysWithDelItem(DeeObject *self, DeeObject *keys) {
-	return (int)DeeSeq_OperatorForeach(keys, &map_removekeys_foreach_delitem_cb, self);
+	return (int)DeeSeq_OperatorForeach(keys, map_removekeys_foreach_delitem_cb_PTR, self);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeMap_DefaultRemoveKeysWithMapRemove(DeeObject *self, DeeObject *keys) {
-	Dee_ssize_t result = DeeSeq_OperatorForeach(keys, &map_removekeys_foreach_remove_cb, self);
+	Dee_ssize_t result = DeeSeq_OperatorForeach(keys, map_removekeys_foreach_remove_cb_PTR, self);
 	if likely(result > 0)
 		result = 0;
 	return (int)result;

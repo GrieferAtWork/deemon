@@ -665,12 +665,17 @@ DeeType_RequireSeqMakeEnumeration_uncached(DeeTypeObject *__restrict self) {
 						return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
 					if (!DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index))
 						return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-					return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
+					if (!DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem))
+						return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
 				}
 			} else if (DeeType_HasOperator(self, OPERATOR_GETITEM)) {
-				return &DeeSeq_DefaultMakeEnumerationWithGetItemIndex;
+				if (!DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index) ||
+				    !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index) ||
+				    !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem))
+					return &DeeSeq_DefaultMakeEnumerationWithGetItemIndex;
 			}
-			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
+			if (!DeeType_IsDefaultIter(self->tp_seq->tp_iter))
+				return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
 		}
 		if (self->tp_seq->tp_enumerate != NULL &&
 		    self->tp_seq->tp_enumerate != self->tp_seq->tp_foreach_pair &&
@@ -680,7 +685,9 @@ DeeType_RequireSeqMakeEnumeration_uncached(DeeTypeObject *__restrict self) {
 		           !DeeType_IsDefaultEnumerateIndex(self->tp_seq->tp_enumerate_index)) {
 			return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
 		}
-		if (seqclass == Dee_SEQCLASS_MAP) {
+		if (seqclass == Dee_SEQCLASS_SEQ) {
+			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
+		} else if (seqclass == Dee_SEQCLASS_MAP) {
 			return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
 		} else if (seqclass == Dee_SEQCLASS_NONE) {
 			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;

@@ -1798,9 +1798,9 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		           seq_featureset_test(features, FEAT_tp_getitem) &&
 		           seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_iter = &DeeSeq_DefaultIterWithSizeObAndGetItem;
-		} else if (seq_featureset_test(features, FEAT_tp_getitem) &&
-		           seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_iter = &DeeSeq_DefaultIterWithGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_getitem) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_iter = seq_featureset_test(features, FEAT_tp_iterkeys) ? &DeeObject_DefaultIterWithIterKeysAndGetItem
+			                                                               : &DeeSeq_DefaultIterWithGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_foreach)) {
 			seq->tp_iter = &DeeObject_DefaultIterWithForeach;
 		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair)) {

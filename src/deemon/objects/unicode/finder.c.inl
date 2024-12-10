@@ -597,6 +597,11 @@ PRIVATE struct type_member tpconst sf_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_member tpconst scf_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &StringCaseFindIterator_Type),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject StringFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringFind",
@@ -686,7 +691,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 	/* .tp_members       = */ sf_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ sf_class_members
+	/* .tp_class_members = */ scf_class_members
 };
 
 

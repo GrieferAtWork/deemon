@@ -2433,7 +2433,7 @@ PUBLIC struct empty_tuple_object DeeTuple_Empty = {
 	&DeeTuple_Type,
 #ifdef CONFIG_TRACE_REFCHANGES
 	DEE_REFTRACKER_UNTRACKED,
-#endif
+#endif /* CONFIG_TRACE_REFCHANGES */
 	0
 };
 

@@ -310,8 +310,9 @@ err:
 }
 
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
-#define DeeRoSet_InsertSequence_foreach (*(Dee_foreach_t)&DeeRoSet_Insert)
+#define DeeRoSet_InsertSequence_foreach_PTR ((Dee_foreach_t)&DeeRoSet_Insert)
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+#define DeeRoSet_InsertSequence_foreach_PTR &DeeRoSet_InsertSequence_foreach
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeRoSet_InsertSequence_foreach(void *arg, DeeObject *elem) {
 	return DeeRoSet_Insert((RoSet **)arg, elem);
@@ -345,7 +346,7 @@ DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
 		/*result->rd_size = 0;*/
 		result->rs_mask = mask;
 		DeeObject_Init(result, &DeeRoSet_Type);
-		if unlikely(DeeObject_Foreach(sequence, &DeeRoSet_InsertSequence_foreach, &result))
+		if unlikely(DeeObject_Foreach(sequence, DeeRoSet_InsertSequence_foreach_PTR, &result))
 			goto err_r;
 	}
 	return (DREF DeeObject *)result;

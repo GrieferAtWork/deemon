@@ -309,7 +309,7 @@ PRIVATE struct type_math invset_math = {
 
 INTERN DeeTypeObject SetInversion_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_InverseSet",
+	/* .tp_name     = */ "_SetInversion",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(s:?DSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

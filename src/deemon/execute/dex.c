@@ -530,7 +530,7 @@ dex_visit(DeeDexObject *__restrict self,
 
 PUBLIC DeeTypeObject DeeDex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "dex",
+	/* .tp_name     = */ "_DexModule",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,

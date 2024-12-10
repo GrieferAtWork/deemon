@@ -5561,7 +5561,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeAndTryGetItemI
 	size_t size;
 	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
 	LOAD_TP_SELF;
-	ASSERT(!DeeType_IsDefaultGetItemIndex(tp_self->tp_seq->tp_getitem_index));
+	ASSERT(!DeeType_IsDefaultTryGetItemIndex(tp_self->tp_seq->tp_trygetitem_index));
 	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
@@ -5607,7 +5607,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithGetItemIndex,
 	DREF DefaultIterator_WithGetItemIndex *result;
 	LOAD_TP_SELF;
 	ASSERT(!DeeType_IsDefaultGetItemIndex(tp_self->tp_seq->tp_getitem_index));
-	result = DeeGCObject_MALLOC(DefaultIterator_WithGetItemIndex);
+	result = DeeObject_MALLOC(DefaultIterator_WithGetItemIndex);
 	if unlikely(!result)
 		goto err;
 	Dee_Incref(self);
@@ -5615,7 +5615,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithGetItemIndex,
 	result->digi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index;
 	result->digi_index            = 0;
 	DeeObject_Init(result, &DefaultIterator_WithGetItemIndex_Type);
-	return DeeGC_Track((DREF DeeObject *)result);
+	return (DREF DeeObject *)result;
 err:
 	return NULL;
 }
@@ -13153,7 +13153,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefa
 			tresult->dsti_seq      = self;
 			tresult->dsti_tp_titer = tp_titer;
 			tresult->dsti_start    = used_start;
-			tresult->dsti_limit     = (size_t)-1;
+			tresult->dsti_limit    = (size_t)-1;
 			tresult->dsti_tp_seq   = tp_self;
 			DeeObject_Init(tresult, &DefaultSequence_WithTIterAndLimit_Type);
 			return (DREF DeeObject *)tresult;

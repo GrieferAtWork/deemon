@@ -737,12 +737,12 @@ PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 ddi_printrepr(DeeDDIObject *__restrict self,
               dformatprinter printer, void *arg) {
 	(void)self;
-	return DeeFormat_Printf(printer, arg, "Ddi(TODO)");
+	return DeeFormat_Printf(printer, arg, "DDI(TODO)");
 }
 
 PUBLIC DeeTypeObject DeeDDI_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_Ddi",
+	/* .tp_name     = */ "_DDI",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

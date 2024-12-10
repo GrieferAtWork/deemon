@@ -1041,8 +1041,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 }
 
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
-#define file_printall_sp_foreach_cb (*(Dee_foreach_t)&DeeFile_PrintObjectSp)
+#define file_printall_sp_foreach_cb_PTR ((Dee_foreach_t)&DeeFile_PrintObjectSp)
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+#define file_printall_sp_foreach_cb_PTR &file_printall_sp_foreach_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 file_printall_sp_foreach_cb(void *arg, DeeObject *elem) {
 	return (Dee_ssize_t)DeeFile_PrintObjectSp((DeeObject *)arg, elem);
@@ -1051,7 +1052,7 @@ file_printall_sp_foreach_cb(void *arg, DeeObject *elem) {
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeFile_PrintAllSp)(DeeObject *self, DeeObject *ob) {
-	return (int)DeeObject_Foreach(ob, &file_printall_sp_foreach_cb, self);
+	return (int)DeeObject_Foreach(ob, file_printall_sp_foreach_cb_PTR, self);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int

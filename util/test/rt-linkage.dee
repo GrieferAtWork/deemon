@@ -1,0 +1,320 @@
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+#if __DEEMON_VARIANT__ == "gatw" && 0 /* FIXME: This test crashes under linux... :( */
+import rt;
+
+function assertRtTypeName(gName: string, tName: string = none) {
+	if (tName is none)
+		tName = "_" + gName;
+	local t = rt.operator . (gName);
+	assert t is Type;
+	local actualName = Type.__name__(t);
+	assert tName == actualName, f"rt.{gName}.__name__ == '{actualName}'";
+}
+
+assertRtTypeName("SeqCombinations");
+assertRtTypeName("SeqCombinationsIterator");
+assertRtTypeName("SeqRepeatCombinations");
+assertRtTypeName("SeqRepeatCombinationsIterator");
+assertRtTypeName("SeqPermutations");
+assertRtTypeName("SeqPermutationsIterator");
+assertRtTypeName("SeqSegments");
+assertRtTypeName("SeqSegmentsIterator");
+assertRtTypeName("SeqConcat");
+assertRtTypeName("SeqConcatIterator");
+assertRtTypeName("SeqFilter");
+assertRtTypeName("SeqFilterAsUnbound");
+assertRtTypeName("SeqFilterIterator");
+assertRtTypeName("SeqHashFilter");
+assertRtTypeName("SeqHashFilterIterator");
+assertRtTypeName("SeqLocator");
+assertRtTypeName("SeqLocatorIterator");
+assertRtTypeName("SeqMapped");
+assertRtTypeName("SeqMappedIterator");
+assertRtTypeName("SeqRange");
+assertRtTypeName("SeqRangeIterator");
+assertRtTypeName("SeqIntRange");
+assertRtTypeName("SeqIntRangeIterator");
+assertRtTypeName("SeqRepeat");
+assertRtTypeName("SeqRepeatIterator");
+assertRtTypeName("SeqItemRepeat");
+assertRtTypeName("SeqItemRepeatIterator");
+assertRtTypeName("SeqIds");
+assertRtTypeName("SeqIdsIterator");
+assertRtTypeName("SeqTypes");
+assertRtTypeName("SeqTypesIterator");
+assertRtTypeName("SeqClasses");
+assertRtTypeName("SeqClassesIterator");
+
+assertRtTypeName("SeqEach");
+assertRtTypeName("SeqEachOperator");
+assertRtTypeName("SeqEachOperatorIterator");
+assertRtTypeName("SeqEachGetAttr");
+assertRtTypeName("SeqEachGetAttrIterator");
+assertRtTypeName("SeqEachCallAttr");
+assertRtTypeName("SeqEachCallAttrIterator");
+assertRtTypeName("SeqEachCallAttrKw");
+assertRtTypeName("SeqEachCallAttrKwIterator");
+
+assertRtTypeName("SeqEnumWithSizeAndGetItemIndexFast");
+assertRtTypeName("SeqEnumWithSizeAndTryGetItemIndex");
+assertRtTypeName("SeqEnumWithSizeAndGetItemIndex");
+assertRtTypeName("SeqEnumWithSizeObAndGetItem");
+assertRtTypeName("SeqEnumWithSizeAndGetItemIndexFastAndFilter");
+assertRtTypeName("SeqEnumWithSizeAndTryGetItemIndexAndFilter");
+assertRtTypeName("SeqEnumWithSizeAndGetItemIndexAndFilter");
+assertRtTypeName("SeqEnumWithSizeObAndGetItemAndFilter");
+assertRtTypeName("SeqEnumWithGetItemIndex");
+assertRtTypeName("SeqEnumWithGetItemIndexAndFilter");
+assertRtTypeName("SeqEnumWithGetItemAndFilter");
+assertRtTypeName("SeqEnumWithIterKeysAndGetItem");
+assertRtTypeName("SeqEnumWithIterKeysAndGetItemAndFilter");
+assertRtTypeName("SeqEnumWithIterKeysAndTryGetItem");
+assertRtTypeName("SeqEnumWithIterKeysAndTryGetItemAndFilter");
+assertRtTypeName("SeqEnumWithIterAndCounter");
+assertRtTypeName("SeqEnumWithIterAndCounterAndFilter");
+assertRtTypeName("SeqEnumWithIterAndUnpackAndFilter");
+assertRtTypeName("SeqEnumWithEnumerate");
+assertRtTypeName("SeqEnumWithEnumerateIndex");
+assertRtTypeName("SeqEnumWithEnumerateAndFilter");
+
+assertRtTypeName("SeqWithSizeAndGetItemIndex");
+assertRtTypeName("SeqWithSizeAndGetItemIndexFast");
+assertRtTypeName("SeqWithSizeAndTryGetItemIndex");
+assertRtTypeName("SeqWithSizeAndGetItem");
+assertRtTypeName("SeqWithTSizeAndGetItem");
+assertRtTypeName("SeqWithIter");
+assertRtTypeName("SeqWithIterAndLimit");
+assertRtTypeName("SeqWithTIterAndLimit");
+
+assertRtTypeName("IterWithGetItemIndex");
+assertRtTypeName("IterWithGetItemIndexPair");
+assertRtTypeName("IterWithSizeAndGetItemIndex");
+assertRtTypeName("IterWithSizeAndGetItemIndexPair");
+assertRtTypeName("IterWithSizeAndGetItemIndexFast");
+assertRtTypeName("IterWithSizeAndGetItemIndexFastPair");
+assertRtTypeName("IterWithSizeAndTryGetItemIndex");
+assertRtTypeName("IterWithSizeAndTryGetItemIndexPair");
+assertRtTypeName("IterWithGetItem");
+assertRtTypeName("IterWithTGetItem");
+assertRtTypeName("IterWithSizeAndGetItem");
+assertRtTypeName("IterWithTSizeObAndGetItem");
+assertRtTypeName("IterWithNextAndLimit");
+assertRtTypeName("IterWithIterKeysAndGetItemForSeq");
+assertRtTypeName("IterWithIterKeysAndTGetItemForSeq");
+assertRtTypeName("IterWithIterKeysAndTryGetItemForSeq");
+assertRtTypeName("IterWithIterKeysAndTTryGetItemForSeq");
+assertRtTypeName("IterWithIterKeysAndGetItemForMap");
+assertRtTypeName("IterWithIterKeysAndTGetItemForMap");
+assertRtTypeName("IterWithIterKeysAndTryGetItemForMap");
+assertRtTypeName("IterWithIterKeysAndTTryGetItemForMap");
+assertRtTypeName("IterWithForeach");
+assertRtTypeName("IterWithForeachPair");
+assertRtTypeName("IterWithEnumerateMap");
+assertRtTypeName("IterWithEnumerateIndexSeq");
+assertRtTypeName("IterWithEnumerateSeq");
+assertRtTypeName("IterWithEnumerateIndexMap");
+assertRtTypeName("IterWithNextAndCounterPair");
+assertRtTypeName("IterWithNextAndCounterAndLimitPair");
+assertRtTypeName("IterWithNextAndUnpackFilter");
+assertRtTypeName("IterWithNextKey");
+assertRtTypeName("IterWithNextValue");
+
+assertRtTypeName("SeqReversedWithGetItemIndex");
+assertRtTypeName("SeqReversedWithGetItemIndexFast");
+assertRtTypeName("SeqReversedWithTryGetItemIndex");
+
+assertRtTypeName("UniqueIterator");
+assertRtTypeName("UniqueIteratorWithKey");
+assertRtTypeName("UniqueSetWithKey");
+
+assertRtTypeName("SetInversion");
+assertRtTypeName("SetUnion");
+assertRtTypeName("SetUnionIterator");
+assertRtTypeName("SetSymmetricDifference");
+assertRtTypeName("SetSymmetricDifferenceIterator");
+assertRtTypeName("SetIntersection");
+assertRtTypeName("SetIntersectionIterator");
+assertRtTypeName("SetDifference");
+assertRtTypeName("SetDifferenceIterator");
+assertRtTypeName("MapUnion");
+assertRtTypeName("MapUnionIterator");
+assertRtTypeName("MapSymmetricDifference");
+assertRtTypeName("MapSymmetricDifferenceIterator");
+assertRtTypeName("MapIntersection");
+assertRtTypeName("MapIntersectionIterator");
+assertRtTypeName("MapDifference");
+assertRtTypeName("MapDifferenceIterator");
+
+assertRtTypeName("MappingHashFilter");
+assertRtTypeName("MappingHashFilterIterator");
+assertRtTypeName("MappingByAttr");
+
+assertRtTypeName("SharedVector");
+assertRtTypeName("SharedVectorIterator");
+assertRtTypeName("SharedMap");
+assertRtTypeName("SharedMapIterator");
+assertRtTypeName("RefVector");
+assertRtTypeName("RefVectorIterator");
+
+assertRtTypeName("BytesFind");
+assertRtTypeName("BytesFindIterator");
+assertRtTypeName("BytesCaseFind");
+assertRtTypeName("BytesCaseFindIterator");
+assertRtTypeName("BytesSegments");
+assertRtTypeName("BytesSegmentsIterator");
+assertRtTypeName("BytesSplit");
+assertRtTypeName("BytesSplitIterator");
+assertRtTypeName("BytesCaseSplit");
+assertRtTypeName("BytesCaseSplitIterator");
+assertRtTypeName("BytesLineSplit");
+assertRtTypeName("BytesLineSplitIterator");
+
+assertRtTypeName("StringScan");
+assertRtTypeName("StringScanIterator");
+assertRtTypeName("StringFind");
+assertRtTypeName("StringFindIterator");
+assertRtTypeName("StringCaseFind");
+assertRtTypeName("StringCaseFindIterator");
+assertRtTypeName("StringOrdinals");
+assertRtTypeName("StringSegments");
+assertRtTypeName("StringSegmentsIterator");
+assertRtTypeName("StringSplit");
+assertRtTypeName("StringSplitIterator");
+assertRtTypeName("StringCaseSplit");
+assertRtTypeName("StringCaseSplitIterator");
+assertRtTypeName("StringLineSplit");
+assertRtTypeName("StringLineSplitIterator");
+
+assertRtTypeName("ReFindAll");
+assertRtTypeName("ReFindAllIterator");
+assertRtTypeName("RegFindAll");
+assertRtTypeName("RegFindAllIterator");
+assertRtTypeName("ReLocateAll");
+assertRtTypeName("ReLocateAllIterator");
+assertRtTypeName("ReSplit");
+assertRtTypeName("ReSplitIterator");
+assertRtTypeName("ReGroups");
+assertRtTypeName("ReSubStrings");
+assertRtTypeName("ReSubBytes");
+assertRtTypeName("ReBytesFindAll");
+assertRtTypeName("ReBytesFindAllIterator");
+assertRtTypeName("RegBytesFindAll");
+assertRtTypeName("RegBytesFindAllIterator");
+assertRtTypeName("ReBytesLocateAll");
+assertRtTypeName("ReBytesLocateAllIterator");
+assertRtTypeName("ReBytesSplit");
+assertRtTypeName("ReBytesSplitIterator");
+
+assertRtTypeName("ModuleExports");
+assertRtTypeName("ModuleExportsIterator");
+assertRtTypeName("ModuleGlobals");
+
+assertRtTypeName("ClassOperatorTable");
+assertRtTypeName("ClassOperatorTableIterator");
+assertRtTypeName("ClassAttribute");
+assertRtTypeName("ClassAttributeTable");
+assertRtTypeName("ClassAttributeTableIterator");
+assertRtTypeName("ObjectTable");
+assertRtTypeName("TypeMRO");
+assertRtTypeName("TypeMROIterator");
+assertRtTypeName("TypeBases");
+assertRtTypeName("TypeBasesIterator");
+
+assertRtTypeName("TypeOperators");
+assertRtTypeName("TypeOperatorsIterator");
+
+assertRtTypeName("GCSet");
+assertRtTypeName("GCSetIterator");
+
+assertRtTypeName("BlackListKwds");
+assertRtTypeName("BlackListKwdsIterator");
+assertRtTypeName("BlackListKw");
+assertRtTypeName("BlackListKwIterator");
+assertRtTypeName("CachedDict", "CachedDict");
+
+assertRtTypeName("DocKwds");
+assertRtTypeName("DocKwdsIterator");
+
+assertRtTypeName("InteractiveModule");
+assertRtTypeName("DexModule");
+assertRtTypeName("Compiler");
+assertRtTypeName("ClassDescriptor");
+assertRtTypeName("InstanceMember");
+assertRtTypeName("CMethod");
+assertRtTypeName("KwCMethod");
+assertRtTypeName("ObjMethod");
+assertRtTypeName("KwObjMethod");
+assertRtTypeName("ClassMethod");
+assertRtTypeName("KwClassMethod");
+assertRtTypeName("ClassProperty");
+assertRtTypeName("ClassMember");
+assertRtTypeName("FileType");
+assertRtTypeName("YieldFunction");
+assertRtTypeName("YieldFunctionIterator");
+assertRtTypeName("RoDict");
+assertRtTypeName("RoDictIterator");
+assertRtTypeName("RoSet");
+assertRtTypeName("RoSetIterator");
+assertRtTypeName("Kwds");
+assertRtTypeName("KwdsIterator");
+assertRtTypeName("KwdsMapping");
+assertRtTypeName("KwdsMappingIterator");
+assertRtTypeName("DDI");
+assertRtTypeName("IteratorPending");
+assertRtTypeName("IteratorFuture");
+
+assertRtTypeName("StringIterator");
+assertRtTypeName("BytesIterator");
+assertRtTypeName("ListIterator");
+assertRtTypeName("TupleIterator");
+assertRtTypeName("HashSetIterator");
+assertRtTypeName("TracebackIterator");
+
+assertRtTypeName("DictIterator");
+assertRtTypeName("DictProxy");
+assertRtTypeName("DictProxyIterator");
+assertRtTypeName("DictKeys");
+assertRtTypeName("DictKeysIterator");
+assertRtTypeName("DictItems");
+assertRtTypeName("DictItemsIterator");
+assertRtTypeName("DictValues");
+assertRtTypeName("DictValuesIterator");
+
+assertRtTypeName("Attribute", "Attribute");
+assertRtTypeName("EnumAttr", "enumattr");
+assertRtTypeName("EnumAttrIterator");
+
+assertRtTypeName("FunctionStatics");
+assertRtTypeName("FunctionStaticsIterator");
+assertRtTypeName("FunctionSymbolsByName");
+assertRtTypeName("FunctionSymbolsByNameIterator");
+assertRtTypeName("YieldFunctionSymbolsByName");
+assertRtTypeName("YieldFunctionSymbolsByNameIterator");
+assertRtTypeName("FrameArgs");
+assertRtTypeName("FrameLocals");
+assertRtTypeName("FrameStack");
+assertRtTypeName("FrameSymbolsByName");
+assertRtTypeName("FrameSymbolsByNameIterator");
+#endif /* __DEEMON_VARIANT__ == "gatw" */

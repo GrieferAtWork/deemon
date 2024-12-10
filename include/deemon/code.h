@@ -460,7 +460,7 @@ DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id); /* DDI symb
 	DeeCode_GetDDIString((DeeObject *)Dee_REQUIRES_OBJECT(x), \
 	                     ((DeeCodeObject *)(x))->co_ddi->d_start.dr_name)
 
-#define DeeDDI_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeDDI_Type) /* `_Ddi' is final. */
+#define DeeDDI_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeDDI_Type) /* `_DDI' is final. */
 #define DeeDDI_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeDDI_Type)
 DDATDEF DeeTypeObject DeeDDI_Type;
 

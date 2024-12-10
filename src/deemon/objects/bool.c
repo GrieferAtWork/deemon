@@ -74,9 +74,10 @@ bool_bool(DeeObject *__restrict self) {
 }
 
 #if __SIZEOF_INT__ == __SIZEOF_POINTER__
-#define bool_hash (*(dhash_t (DCALL *)(DeeObject *__restrict))&bool_bool)
+#define bool_hash_PTR ((Dee_hash_t (DCALL *)(DeeObject *__restrict))&bool_bool)
 #else /* __SIZEOF_INT__ == __SIZEOF_POINTER__ */
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+#define bool_hash_PTR &bool_hash
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bool_hash(DeeObject *__restrict self) {
 	return DeeBool_IsTrue(self);
 }
@@ -368,7 +369,7 @@ err:
 }
 
 PRIVATE struct type_cmp bool_cmp = {
-	/* .tp_hash          = */ &bool_hash,
+	/* .tp_hash          = */ bool_hash_PTR,
 	/* .tp_compare_eq    = */ &bool_compare_eq,
 	/* .tp_compare       = */ &bool_compare,
 	/* .tp_trycompare_eq = */ NULL,

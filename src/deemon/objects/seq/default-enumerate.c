@@ -3775,7 +3775,7 @@ INTERN DeeTypeObject DefaultEnumeration_WithEnumerate_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&de_we_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&de_we_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&de_we_init,
-				TYPE_FIXED_ALLOCATOR(DefaultEnumeration_WithIntRange)
+				TYPE_FIXED_ALLOCATOR(DefaultEnumeration_FullRange)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&de_we_fini,

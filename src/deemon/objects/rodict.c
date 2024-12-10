@@ -414,8 +414,9 @@ err:
 
 
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
-#define DeeRoDict_InsertSequence_foreach (*(Dee_foreach_pair_t)&DeeRoDict_Insert)
+#define DeeRoDict_InsertSequence_foreach_PTR ((Dee_foreach_pair_t)&DeeRoDict_Insert)
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+#define DeeRoDict_InsertSequence_foreach_PTR &DeeRoDict_InsertSequence_foreach
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 DeeRoDict_InsertSequence_foreach(void *arg, DeeObject *key, DeeObject *value) {
 	return DeeRoDict_Insert((RoDict **)arg, key, value);
@@ -449,7 +450,7 @@ DeeRoDict_FromSequence(DeeObject *__restrict sequence) {
 		/*result->rd_size = 0;*/
 		result->rd_mask = mask;
 		DeeObject_Init(result, &DeeRoDict_Type);
-		if unlikely(DeeObject_ForeachPair(sequence, &DeeRoDict_InsertSequence_foreach, &result))
+		if unlikely(DeeObject_ForeachPair(sequence, DeeRoDict_InsertSequence_foreach_PTR, &result))
 			goto err_r;
 	}
 	return (DREF DeeObject *)result;

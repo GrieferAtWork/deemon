@@ -215,8 +215,9 @@ PRIVATE NONNULL((1)) void DCALL
 hashset_fini(HashSet *__restrict self);
 
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
-#define hashset_insert_sequence_foreach (*(Dee_foreach_t)&DeeHashSet_Insert)
+#define hashset_insert_sequence_foreach_PTR ((Dee_foreach_t)&DeeHashSet_Insert)
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+#define hashset_insert_sequence_foreach_PTR &hashset_insert_sequence_foreach
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 hashset_insert_sequence_foreach(void *arg, DeeObject *key) {
 	return DeeHashSet_Insert((DeeObject *)arg, key);
@@ -270,7 +271,7 @@ hashset_init_sequence(HashSet *__restrict self,
 	self->hs_elem = empty_hashset_items;
 	Dee_atomic_rwlock_init(&self->hs_lock);
 	weakref_support_init(self);
-	if unlikely(DeeObject_Foreach(sequence, &hashset_insert_sequence_foreach, self) < 0)
+	if unlikely(DeeObject_Foreach(sequence, hashset_insert_sequence_foreach_PTR, self) < 0)
 		goto err_self;
 	return 0;
 err_self:

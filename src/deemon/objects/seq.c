@@ -1367,13 +1367,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
 
-	/* TODO: findall: "(item,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?Dint" */
-	/* TODO: findallof: "(items:?S?O,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?Dint" */
-	/* TODO: findany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N" */
-	/* TODO: rfindany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N" */
-	/* TODO: indexany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
-	/* TODO: rindexany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
-
 	TYPE_METHOD("filter", &seq_filter,
 	            "(keep:?DCallable)->?DSequence\n"
 	            "#pkeep{A key function which is called for each element of @this Sequence"
@@ -1588,11 +1581,57 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "}"
 	              "}"),
 
-	/* TODO: join(items: {Sequence...}): Sequence */
+	/* TODO: findall: "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
+	 * > Find not just the first, but all indices of @item */
+	/* TODO: findallseq(seq: Sequence, start: int = 0, end: int = -1, key: Callable = none): {int...} */
+
+	/* TODO: findseq(subseq: Sequence, key: Callable = none): int */
+	/* TODO: rfindseq(subseq: Sequence, key: Callable = none): int */
+	/* TODO: indexseq(subseq: Sequence, key: Callable = none): int */
+	/* TODO: rindexseq(subseq: Sequence, key: Callable = none): int */
+
+	/* TODO: findanyseq(seq: {Sequence...}, start: int = 0, end: int = -1, key: Callable = none): (int, int) | none */
+	/* TODO: rfindanyseq(seq: {Sequence...}, start: int = 0, end: int = -1, key: Callable = none): (int, int) | none */
+	/* TODO: indexanyseq(seq: {Sequence...}, start: int = 0, end: int = -1, key: Callable = none): (int, int) */
+	/* TODO: rindexanyseq(seq: {Sequence...}, start: int = 0, end: int = -1, key: Callable = none): (int, int) */
+
+	/* TODO: findallof: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
+	 * >> Return a (ascendingly sorted) sequence of all indices whose item is contained in @items */
+
+	/* TODO: findallofseq: "(items:?S?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?T2?Dint?Dint"
+	 * >> Return a (ascendingly sorted) sequence of all index-ranges whose starting index is contained in @items */
+
+	/* TODO: findany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"
+	 * >> Returns the first index of an element contained in @items
+	 * >> class _AnyEquals {
+	 * >>     public final member _items: {Object...};
+	 * >>     public final member _key: Callable;
+	 * >>     this = default;
+	 * >>     public operator == (item) -> _items.contains(_key(item));
+	 * >> }
+	 * >> function findany(items: {Object...}, start: int = 0, end: int = int.SIZE_MAX, key?: Callable): int {
+	 * >>     if (key !is bound)
+	 * >>         key = x -> x;
+	 * >>     return Sequence.find(this, _AnyEquals(items.map(key), key), start, end);
+	 * >> } */
+
+	/* TODO: rfindany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+	/* TODO: indexany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+	/* TODO: rindexany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+
+	/* TODO: join: "(seqs:?S?S?O)->?." */
+
 	/* TODO: strip(item: Object, key: Callable = none): Sequence */
+	/* TODO: stripseq(items: Sequence, key: Callable = none): Sequence */
+
 	/* TODO: lstrip(item: Object, key: Callable = none): Sequence */
+	/* TODO: lstripseq(items: Sequence, key: Callable = none): Sequence */
+
 	/* TODO: rstrip(item: Object, key: Callable = none): Sequence */
+	/* TODO: rstripseq(items: Sequence, key: Callable = none): Sequence */
+
 	/* TODO: split(sep: Object, key: Callable = none): Sequence */
+	/* TODO: splitseq(sep: Sequence, key: Callable = none): Sequence */
 
 	/* TODO: countseq(seq: Sequence, key: Callable = none): int */
 	/* TODO: partition(item: Object, key: Callable = none): (Sequence, (item), Sequence) */
@@ -1601,14 +1640,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	/* TODO: rpartitionseq(seq: Sequence, key: Callable = none): (Sequence, seq, Sequence) */
 	/* TODO: startswithseq(seq: Sequence, key: Callable = none): bool */
 	/* TODO: endswithseq(seq: Sequence, key: Callable = none): bool */
-	/* TODO: findseq(seq: Sequence, key: Callable = none): int */
-	/* TODO: rfindseq(seq: Sequence, key: Callable = none): int */
-	/* TODO: indexseq(seq: Sequence, key: Callable = none): int */
-	/* TODO: rindexseq(seq: Sequence, key: Callable = none): int */
-	/* TODO: stripseq(items: Sequence, key: Callable = none): Sequence */
-	/* TODO: lstripseq(items: Sequence, key: Callable = none): Sequence */
-	/* TODO: rstripseq(items: Sequence, key: Callable = none): Sequence */
-	/* TODO: splitseq(seq: Sequence, key: Callable = none): Sequence */
 
 
 	/* Functions for mutable sequences. */
@@ -2385,51 +2416,24 @@ PRIVATE struct type_operator const seq_operators[] = {
 };
 
 
-/* Use sequence class members to expose all of the default sequence/iterator types for use by `rt' */
 PRIVATE struct type_member tpconst seq_class_members[] = {
-	TYPE_MEMBER_CONST("__SeqWithSizeAndGetItemIndex__", &DefaultSequence_WithSizeAndGetItemIndex_Type),
-	TYPE_MEMBER_CONST("__SeqWithSizeAndGetItemIndexFast__", &DefaultSequence_WithSizeAndGetItemIndexFast_Type),
-	TYPE_MEMBER_CONST("__SeqWithSizeAndTryGetItemIndex__", &DefaultSequence_WithSizeAndTryGetItemIndex_Type),
-	TYPE_MEMBER_CONST("__SeqWithSizeAndGetItem__", &DefaultSequence_WithSizeAndGetItem_Type),
+	/* TODO: Deprecated -- remove these (librt should create custom scenarios for all of these) */
 	TYPE_MEMBER_CONST("__SeqWithTSizeAndGetItem__", &DefaultSequence_WithTSizeAndGetItem_Type),
 	TYPE_MEMBER_CONST("__SeqWithIter__", &DefaultSequence_WithIter_Type),
-	TYPE_MEMBER_CONST("__SeqWithIterAndLimit__", &DefaultSequence_WithIterAndLimit_Type),
 	TYPE_MEMBER_CONST("__SeqWithTIterAndLimit__", &DefaultSequence_WithTIterAndLimit_Type),
-	TYPE_MEMBER_CONST("__IterWithGetItemIndex__", &DefaultIterator_WithGetItemIndex_Type),
-	TYPE_MEMBER_CONST("__IterWithGetItemIndexPair__", &DefaultIterator_WithGetItemIndexPair_Type),
-	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndex__", &DefaultIterator_WithSizeAndGetItemIndex_Type),
-	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndexPair__", &DefaultIterator_WithSizeAndGetItemIndexPair_Type),
-	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndexFast__", &DefaultIterator_WithSizeAndGetItemIndexFast_Type),
-	TYPE_MEMBER_CONST("__IterWithSizeAndGetItemIndexFastPair__", &DefaultIterator_WithSizeAndGetItemIndexFastPair_Type),
-	TYPE_MEMBER_CONST("__IterWithSizeAndTryGetItemIndex__", &DefaultIterator_WithSizeAndTryGetItemIndex_Type),
-	TYPE_MEMBER_CONST("__IterWithSizeAndTryGetItemIndexPair__", &DefaultIterator_WithSizeAndTryGetItemIndexPair_Type),
-	TYPE_MEMBER_CONST("__IterWithGetItem__", &DefaultIterator_WithGetItem_Type),
 	TYPE_MEMBER_CONST("__IterWithTGetItem__", &DefaultIterator_WithTGetItem_Type),
-	TYPE_MEMBER_CONST("__IterWithSizeObAndGetItem__", &DefaultIterator_WithSizeObAndGetItem_Type),
 	TYPE_MEMBER_CONST("__IterWithTSizeObAndGetItem__", &DefaultIterator_WithTSizeAndGetItem_Type),
-	TYPE_MEMBER_CONST("__IterWithNextAndLimit__", &DefaultIterator_WithNextAndLimit_Type),
-	TYPE_MEMBER_CONST("__IterWithIterKeysAndGetItemForSeq__", &DefaultIterator_WithIterKeysAndGetItemSeq_Type),
 	TYPE_MEMBER_CONST("__IterWithIterKeysAndTGetItemForSeq__", &DefaultIterator_WithIterKeysAndTGetItemSeq_Type),
-	TYPE_MEMBER_CONST("__IterWithIterKeysAndTryGetItemForSeq__", &DefaultIterator_WithIterKeysAndTryGetItemSeq_Type),
 	TYPE_MEMBER_CONST("__IterWithIterKeysAndTTryGetItemForSeq__", &DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type),
-	TYPE_MEMBER_CONST("__IterWithIterKeysAndGetItemForMap__", &DefaultIterator_WithIterKeysAndGetItemMap_Type),
 	TYPE_MEMBER_CONST("__IterWithIterKeysAndTGetItemForMap__", &DefaultIterator_WithIterKeysAndTGetItemMap_Type),
-	TYPE_MEMBER_CONST("__IterWithIterKeysAndTryGetItemForMap__", &DefaultIterator_WithIterKeysAndTryGetItemMap_Type),
 	TYPE_MEMBER_CONST("__IterWithIterKeysAndTTryGetItemForMap__", &DefaultIterator_WithIterKeysAndTTryGetItemMap_Type),
+
 	TYPE_MEMBER_CONST("__IterWithForeach__", &DefaultIterator_WithForeach_Type),
 	TYPE_MEMBER_CONST("__IterWithForeachPair__", &DefaultIterator_WithForeachPair_Type),
 	TYPE_MEMBER_CONST("__IterWithEnumerateMap__", &DefaultIterator_WithEnumerateMap_Type),
 	TYPE_MEMBER_CONST("__IterWithEnumerateIndexSeq__", &DefaultIterator_WithEnumerateIndexSeq_Type),
 	TYPE_MEMBER_CONST("__IterWithEnumerateSeq__", &DefaultIterator_WithEnumerateSeq_Type),
 	TYPE_MEMBER_CONST("__IterWithEnumerateIndexMap__", &DefaultIterator_WithEnumerateIndexMap_Type),
-	TYPE_MEMBER_CONST("__IterWithNextAndCounterPair__", &DefaultIterator_WithNextAndCounterPair_Type),
-	TYPE_MEMBER_CONST("__IterWithNextAndCounterAndLimitPair__", &DefaultIterator_WithNextAndCounterAndLimitPair_Type),
-	TYPE_MEMBER_CONST("__IterWithNextAndUnpackFilter__", &DefaultIterator_WithNextAndUnpackFilter_Type),
-	TYPE_MEMBER_CONST("__IterWithNextKey__", &DefaultIterator_WithNextKey),
-	TYPE_MEMBER_CONST("__IterWithNextValue__", &DefaultIterator_WithNextValue),
-	TYPE_MEMBER_CONST("__SeqReversedWithGetItemIndex__", &DefaultReversed_WithGetItemIndex_Type),
-	TYPE_MEMBER_CONST("__SeqReversedWithGetItemIndexFast__", &DefaultReversed_WithGetItemIndexFast_Type),
-	TYPE_MEMBER_CONST("__SeqReversedWithTryGetItemIndex__", &DefaultReversed_WithTryGetItemIndex_Type),
 	TYPE_MEMBER_END
 };
 

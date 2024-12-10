@@ -1231,7 +1231,7 @@ Fi(init)(SeqEachIterator *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:_SeqEachCallAttrIterator", &self->ei_each))
 		goto err;
 #elif defined(DEFINE_CALLATTRKW)
-	if (DeeArg_Unpack(argc, argv, "o:_SeqEachCallAttrIteratorKw", &self->ei_each))
+	if (DeeArg_Unpack(argc, argv, "o:_SeqEachCallAttrKwIterator", &self->ei_each))
 		goto err;
 #else /* ... */
 #error "Unsupported mode"
@@ -1283,7 +1283,7 @@ INTERN DeeTypeObject ITERATOR_TYPE_OBJECT = {
 	/* .tp_name     = */ "_SeqEachCallAttrIterator",
 	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqEachCallAttr)"),
 #elif defined(DEFINE_CALLATTRKW)
-	/* .tp_name     = */ "_SeqEachCallAttrIteratorKw",
+	/* .tp_name     = */ "_SeqEachCallAttrKwIterator",
 	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqEachCallAttrKw)"),
 #else /* ... */
 #error "Unsupported mode"

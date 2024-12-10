@@ -67,11 +67,11 @@ PRIVATE char const question[] = "?" "?" "?" "?" "?" "?" "?";
 #define PRINT(s)    INVOKE((*printer)(arg, s, COMPILER_STRLEN(s)))
 #define printf(...) INVOKE(DeeFormat_Printf(printer, arg, __VA_ARGS__))
 
-PRIVATE dssize_t DCALL
-print_sp_transition(dformatprinter printer, void *arg,
+PRIVATE Dee_ssize_t DCALL
+print_sp_transition(Dee_formatprinter_t printer, void *arg,
                     uint16_t old_sp, uint16_t new_sp,
                     unsigned int sp_width) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	if (old_sp == new_sp) {
 		if (old_sp == (uint16_t)-1) {
 			print(whitespace, (sp_width * 2) + 7);
@@ -300,18 +300,37 @@ err:
 #define LINE_VERT      0x78
 #define CORNER_BOTTOM  0x6d
 #define LINE_HORI      0x71
-#define HAVE_PRINT_BOX 1
+
+#if 0
+#define ARROW_LEFT     '<'
+#define ARROW_RIGHT    '>'
+#define ARROW_UP       '^'
+#define ARROW_DOWN     'v'
+#endif
 
 PRIVATE unsigned char const corner_top[]    = { 0xe2, 0x94, 0x8c };
 PRIVATE unsigned char const line_vert[]     = { 0xe2, 0x94, 0x82 };
 PRIVATE unsigned char const corner_bottom[] = { 0xe2, 0x94, 0x94 };
 PRIVATE unsigned char const line_hori[]     = { 0xe2, 0x94, 0x80 };
 
-PRIVATE dssize_t DCALL
-print_box(dformatprinter printer, void *arg,
+#ifdef ARROW_LEFT
+PRIVATE unsigned char const arrow_left[]  = { 0xe2, 0x86, 0x90 };
+PRIVATE unsigned char const arrow_up[]    = { 0xe2, 0x86, 0x91 };
+PRIVATE unsigned char const arrow_right[] = { 0xe2, 0x86, 0x92 };
+PRIVATE unsigned char const arrow_down[]  = { 0xe2, 0x86, 0x93 };
+
+//PRIVATE unsigned char const arrow_left[]  = { 0xf0, 0x9f, 0xa2, 0x80 };
+//PRIVATE unsigned char const arrow_up[]    = { 0xf0, 0x9f, 0xa2, 0x81 };
+//PRIVATE unsigned char const arrow_right[] = { 0xf0, 0x9f, 0xa2, 0x82 };
+//PRIVATE unsigned char const arrow_down[]  = { 0xf0, 0x9f, 0xa2, 0x83 };
+#endif /* ARROW_LEFT */
+
+#define HAVE_PRINT_BOX 1
+PRIVATE Dee_ssize_t DCALL
+print_box(Dee_formatprinter_t printer, void *arg,
           unsigned char *__restrict text, size_t length) {
 	size_t i;
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	for (i = 0; i < length; ++i) {
 		switch (text[i]) {
 
@@ -330,6 +349,24 @@ print_box(dformatprinter printer, void *arg,
 		case LINE_HORI:
 			temp = (*printer)(arg, (char *)line_hori, COMPILER_LENOF(line_hori));
 			break;
+
+#ifdef ARROW_LEFT
+		case ARROW_LEFT:
+			temp = (*printer)(arg, (char *)arrow_left, COMPILER_LENOF(arrow_left));
+			break;
+
+		case ARROW_RIGHT:
+			temp = (*printer)(arg, (char *)arrow_right, COMPILER_LENOF(arrow_right));
+			break;
+
+		case ARROW_UP:
+			temp = (*printer)(arg, (char *)arrow_up, COMPILER_LENOF(arrow_up));
+			break;
+
+		case ARROW_DOWN:
+			temp = (*printer)(arg, (char *)arrow_down, COMPILER_LENOF(arrow_down));
+			break;
+#endif /* ARROW_LEFT */
 
 		default:
 			temp = (*printer)(arg, (char *)&text[i], 1);
@@ -356,17 +393,19 @@ err:
 #define LINE_HORI     '-'
 #endif
 
+#ifndef ARROW_LEFT
 #define ARROW_LEFT    '<'
 #define ARROW_RIGHT   '>'
 #define ARROW_UP      '^'
 #define ARROW_DOWN    'v'
+#endif /* !ARROW_LEFT */
 
 
-PRIVATE dssize_t DCALL
-textjumps_print(dformatprinter printer, void *arg,
+PRIVATE Dee_ssize_t DCALL
+textjumps_print(Dee_formatprinter_t printer, void *arg,
                 struct textjumps *__restrict self,
                 code_addr_t curr_uip, code_addr_t next_uip) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	size_t i, line_length;
 	bool has_origin          = false;
 	bool has_target          = false;
@@ -511,11 +550,11 @@ PRIVATE struct attributeflag const attributeflags[] = {
 	{ "classmem", CLASS_ATTRIBUTE_FCLASSMEM },
 };
 
-INTERN dssize_t DCALL
-libdisasm_printclassattribute(dformatprinter printer, void *arg,
+INTERN Dee_ssize_t DCALL
+libdisasm_printclassattribute(Dee_formatprinter_t printer, void *arg,
                               struct class_attribute *__restrict self,
                               char const *line_prefix, uint16_t addr_size) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	unsigned int i;
 	result = DeeFormat_Printf(printer, arg,
 	                          "%s        attribute %k, %" PRFu16,
@@ -567,11 +606,11 @@ libdisasm_get_operator_sname(Dee_operator_t operator_id) {
 }
 
 
-INTERN dssize_t DCALL
-libdisasm_printclass(dformatprinter printer, void *arg,
+INTERN Dee_ssize_t DCALL
+libdisasm_printclass(Dee_formatprinter_t printer, void *arg,
                      DeeClassDescriptorObject *__restrict self,
                      size_t const_index, char const *line_prefix) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	size_t i;
 	if (!line_prefix)
 		line_prefix = "";
@@ -680,15 +719,15 @@ PRIVATE struct codeflag const codeflag_names[] = {
 	 CODE_FCONSTRUCTOR)
 
 
-INTERN WUNUSED NONNULL((1, 3, 4)) dssize_t DCALL
-libdisasm_printcode(dformatprinter printer, void *arg,
+INTERN WUNUSED NONNULL((1, 3, 4)) Dee_ssize_t DCALL
+libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
                     instruction_t *instr_start,
                     instruction_t *instr_end,
                     DeeCodeObject *code,
                     char const *line_prefix,
                     unsigned int flags) {
 	struct textjumps jumps = { 0, 0, NULL };
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	uint16_t stacksz = 0, new_stacksz;
 	instruction_t *iter, *next;
 	instruction_t *start_addr = code ? code->co_code : instr_start;

@@ -245,8 +245,9 @@ dict_setitem(Dict *self, DeeObject *key, DeeObject *value);
 PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self);
 
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
-#define dict_insert_sequence_foreach (*(Dee_foreach_pair_t)&dict_setitem)
+#define dict_insert_sequence_foreach_PTR ((Dee_foreach_pair_t)&dict_setitem)
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+#define dict_insert_sequence_foreach_PTR &dict_insert_sequence_foreach
 PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 dict_insert_sequence_foreach(void *arg, DeeObject *key, DeeObject *value) {
 	return dict_setitem((Dict *)arg, key, value);
@@ -305,7 +306,7 @@ dict_init_sequence(Dict *__restrict self,
 	self->d_elem = empty_dict_items;
 	Dee_atomic_rwlock_init(&self->d_lock);
 	weakref_support_init(self);
-	if unlikely(DeeObject_ForeachPair(sequence, &dict_insert_sequence_foreach, self))
+	if unlikely(DeeObject_ForeachPair(sequence, dict_insert_sequence_foreach_PTR, self))
 		goto err_self;
 	return 0;
 err_self:
@@ -2818,7 +2819,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_mh_update(Dict *self, DeeObject *items) {
-	return (int)DeeObject_ForeachPair(items, &dict_insert_sequence_foreach, self);
+	return (int)DeeObject_ForeachPair(items, dict_insert_sequence_foreach_PTR, self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
