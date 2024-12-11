@@ -833,7 +833,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	{
 		Dl_info dli;
 		struct link_map *ptr_lm = NULL;
-		if (dladdr1(ptr, &dli, (void **)&ptr_lm, RTLD_DL_LINKMAP) == 0 && ptr_lm) {
+		if (dladdr1(ptr, &dli, (void **)&ptr_lm, RTLD_DL_LINKMAP) && ptr_lm) {
 			struct link_map *dex_lm;
 			DeeDexObject *iter;
 			dex_lock_read();
@@ -848,7 +848,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 			dex_lock_endread();
 
 			/* Check if it's the main module. */
-			if (dladdr1((void *)&DeeModule_FromStaticPointer, &dli, (void **)&dex_lm, RTLD_DL_LINKMAP) == 0 && dex_lm) {
+			if (dladdr1((void *)&DeeModule_FromStaticPointer, &dli, (void **)&dex_lm, RTLD_DL_LINKMAP) && dex_lm) {
 				if (ptr_lm == dex_lm) {
 					/* It is the deemon core. */
 					DREF DeeObject *result;
@@ -868,7 +868,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 	/* Compare object filenames. */
 	{
 		Dl_info dli;
-		if (dladdr(ptr, &dli) == 0 && dli.dli_fname) {
+		if (dladdr(ptr, &dli) && dli.dli_fname) {
 			Dl_info dex_dli;
 			DeeDexObject *iter;
 			dex_lock_read();
@@ -883,7 +883,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 					return (DREF DeeObject *)iter;
 				}
 #else /* CONFIG_HAVE_struct__link_map__l_name */
-				if (dladdr(iter->d_dex, &dex_dli) == 0 && dex_dli.dli_fname &&
+				if (dladdr(iter->d_dex, &dex_dli) && dex_dli.dli_fname &&
 				    Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
 					Dee_Incref((DeeModuleObject *)iter);
 					dex_lock_endread();
@@ -894,7 +894,7 @@ DeeModule_FromStaticPointer(void const *ptr) {
 			dex_lock_endread();
 
 			/* Check if it's the main module. */
-			if (dladdr((void *)&DeeModule_FromStaticPointer, &dex_dli) == 0 && dex_dli.dli_fname) {
+			if (dladdr((void *)&DeeModule_FromStaticPointer, &dex_dli) && dex_dli.dli_fname) {
 				if (Dl_info__dli_fname__equal(dli.dli_fname, dex_dli.dli_fname)) {
 					/* It is the deemon core. */
 					DREF DeeObject *result;
