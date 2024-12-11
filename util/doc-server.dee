@@ -913,7 +913,7 @@ function getPage(fp: File, path: string) {
 		}
 		return getModulesPage(fp);
 	}
-	throw Error(f"Missing page: {repr '/'.join(path)}");
+	throw FileNotFound(f"Missing page: {repr '/'.join(path)}");
 }
 
 
@@ -933,25 +933,29 @@ function clientThreadMain(con: socket) {
 					if (!command.startswith("GET") ||
 					     protocol !in ["HTTP/1.1", "HTTP/1.0"]) {
 						print "Bad command:", repr command;
-						fp << protocol << " 400 Bad Request\r\n";
-					} else {
-						command = command[3:#command - 8].strip();
-						local content;
-						local content_type = "text/html";
-						if (command == "/style.css") {
-							content = STYLE_CSS.encode("utf-8");
-							content_type = "text/css";
-						} else {
-							content = File.Writer();
-							getPage(content, command);
-							content = content.string.encode("utf-8");
-						}
-						fp << protocol << " 200 OK\r\n"
-							"Content-Length: " << #content << "\r\n"
-							"Content-Type: " << content_type << "; charset=UTF-8\r\n"
+						fp << protocol << " 405 Method Not Allowed\r\n"
+							"Content-Length: 0\r\n"
+							"Allow: GET\r\n"
 							"\r\n";
-						fp.write(content);
+						con.send(fp.string.encode("UTF-8"));
+						break;
 					}
+					command = command[3:#command - 8].strip();
+					local content;
+					local content_type = "text/html";
+					if (command == "/style.css") {
+						content = STYLE_CSS.encode("utf-8");
+						content_type = "text/css";
+					} else {
+						content = File.Writer();
+						getPage(content, command);
+						content = content.string.encode("utf-8");
+					}
+					fp << protocol << " 200 OK\r\n"
+						"Content-Length: " << #content << "\r\n"
+						"Content-Type: " << content_type << "; charset=UTF-8\r\n"
+						"\r\n";
+					fp.write(content);
 					con.send(fp.string.encode("UTF-8"));
 					if (protocol == "HTTP/1.0") {
 						/* Don't allow for connection re-use.
@@ -962,7 +966,11 @@ function clientThreadMain(con: socket) {
 				}
 			} catch (e...) {
 				local errorCode = 500;
-				if ({ AttributeError, FileNotFound }.each.baseof(type(e)) || ...) {
+				if (e is UnboundAttribute || e is UnboundItem) {
+					/* ... */
+				} else if (e is ValueError) {
+					errorCode = 400;
+				} else if ({ AttributeError, FileNotFound }.each.baseof(type(e)) || ...) {
 					errorCode = 404;
 				}
 				File.Writer outputFp;
