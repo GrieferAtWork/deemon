@@ -1241,8 +1241,7 @@ DeeCode_GetInfo(/*Code*/ DeeObject *__restrict self,
 
 
 
-#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
-#ifdef CONFIG_HAVE_CODE_METRICS
+#if defined(CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE) && defined(CONFIG_HAVE_CODE_METRICS)
 /* Get/set the threshold after which a code object
  * gets automatically recompiled into host assembly.
  *
@@ -1269,8 +1268,10 @@ INTDEF NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeFunction_OptimizeAndCallTuple
 INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeFunction_OptimizeAndThisCallTupleKw(DeeFunctionObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* CONFIG_BUILDING_DEEMON */
-#endif /* CONFIG_HAVE_CODE_METRICS */
-#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE && CONFIG_HAVE_CODE_METRICS */
+#define DeeCode_GetOptimizeCallThreshold()              ((size_t)-1)
+#define DeeCode_SetOptimizeCallThreshold(new_threshold) ((size_t)-1)
+#endif /* !CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE || !CONFIG_HAVE_CODE_METRICS */
 
 
 #ifndef CONFIG_BUILDING_DEEMON

@@ -892,7 +892,6 @@ set_file_module_global:
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
 				goto set_file_module_global;
-			Dee_Decref_likely(input_stream);
 			goto err_inputstream_r;
 		}
 		add_glob_module(result);
@@ -921,7 +920,6 @@ try_load_module_after_failure:
 			/* Try to collect some memory, then try again. */
 			if (Dee_CollectMemory(1))
 				goto set_file_module;
-			Dee_Decref_likely(input_stream);
 			goto err_inputstream_r;
 		}
 		modules_lock_endwrite();
@@ -940,15 +938,16 @@ load_module_after_failure:
 		Dee_Decref(input_stream);
 		if unlikely(error) {
 			DeeModule_FailLoading(result);
-			goto err_inputstream_r;
+			goto err_r;
 		}
 		DeeModule_DoneLoading(result);
 	}
 got_result:
 	return (DREF DeeObject *)result;
 err_inputstream_r:
-	Dee_Decref(result);
 	Dee_Decref(input_stream);
+err_r:
+	Dee_Decref(result);
 	goto err;
 err_modulepath_inputstream:
 	Dee_Decref(input_stream);
