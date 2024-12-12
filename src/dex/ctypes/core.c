@@ -1897,7 +1897,7 @@ DeeStruct_SetRange(DeeSTypeObject *tp_self, void *self,
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 	if ((tp_self->st_attr && tp_self->st_attr->st_getattr) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_SETATTR))
+	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_GETATTR))
 		return (*tp_self->st_attr->st_getattr)(tp_self, self, name);
 	return ITER_DONE;
 }
