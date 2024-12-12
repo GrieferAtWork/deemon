@@ -693,11 +693,13 @@ INTERN size_t DeeCode_OptimizeCallThreshold = DEFAULT_HOSTASM_RECOMPILE_CALL_THR
  *               optimize a function, and doing so fails because
  *               `_hostasm' can't be loaded, this value gets set
  *               automatically) */
+#undef DeeCode_GetOptimizeCallThreshold
 PUBLIC ATTR_PURE WUNUSED size_t DCALL
 DeeCode_GetOptimizeCallThreshold(void) {
 	return atomic_read(&DeeCode_OptimizeCallThreshold);
 }
 
+#undef DeeCode_SetOptimizeCallThreshold
 PUBLIC size_t DCALL
 DeeCode_SetOptimizeCallThreshold(size_t new_threshold) {
 	return atomic_xch(&DeeCode_OptimizeCallThreshold, new_threshold);
@@ -853,12 +855,14 @@ err:
  *               optimize a function, and doing so fails because
  *               `_hostasm' can't be loaded, this value gets set
  *               automatically) */
+#undef DeeCode_GetOptimizeCallThreshold
 PUBLIC ATTR_PURE WUNUSED size_t DCALL
 DeeCode_GetOptimizeCallThreshold(void) {
 	COMPILER_IMPURE();
 	return (size_t)-1;
 }
 
+#undef DeeCode_SetOptimizeCallThreshold
 PUBLIC size_t DCALL
 DeeCode_SetOptimizeCallThreshold(size_t new_threshold) {
 	(void)new_threshold;
