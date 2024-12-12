@@ -439,6 +439,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\posix-walklink.dee = ..\util\test\posix-walklink.dee
 		..\util\test\rt-classdescriptor-reprcopy.dee = ..\util\test\rt-classdescriptor-reprcopy.dee
 		..\util\test\rt-hash.dee = ..\util\test\rt-hash.dee
+		..\util\test\rt-linkage.dee = ..\util\test\rt-linkage.dee
 		..\util\test\threading-lock.dee = ..\util\test\threading-lock.dee
 		..\util\test\threading-once.dee = ..\util\test\threading-once.dee
 		..\util\test\time-time.dee = ..\util\test\time-time.dee
