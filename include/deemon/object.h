@@ -4182,7 +4182,7 @@ DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, Dee_operat
  * `DeeType_Type', whereas for `FILE_OPERATOR_READ', it would be `DeeFileType_Type'
  * @param: p_declaring_type_type: [0..1] When non-null, store the declaring type here.
  * @return: NULL: No such operator (`*p_declaring_type_type' is undefined) */
-DFUNDEF ATTR_PURE WUNUSED ATTR_OUT_OPT(3) NONNULL((1)) struct Dee_opinfo const *DCALL
+DFUNDEF WUNUSED ATTR_OUT_OPT(3) NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByIdEx(DeeTypeObject const *__restrict typetype, Dee_operator_t id,
                               DeeTypeObject **p_declaring_type_type);
 

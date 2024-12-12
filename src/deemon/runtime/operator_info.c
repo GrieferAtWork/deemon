@@ -138,7 +138,7 @@ next_base:
  * originates from `DeeType_Type', so in that case, `*p_declaring_type_type' is set to
  * `DeeType_Type', whereas for `FILE_OPERATOR_READ', it would be `DeeFileType_Type'
  * @param: p_declaring_type_type: [0..1] When non-null, store the declaring type here. */
-PUBLIC ATTR_PURE WUNUSED ATTR_OUT_OPT(3) NONNULL((1)) struct Dee_opinfo const *DCALL
+PUBLIC WUNUSED ATTR_OUT_OPT(3) NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByIdEx(DeeTypeObject const *__restrict typetype, Dee_operator_t id,
                               DeeTypeObject **p_declaring_type_type) {
 	if (p_declaring_type_type)
