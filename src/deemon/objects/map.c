@@ -360,7 +360,7 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "->?#Iterator\n"
 	            "Returns an iterator for ?#{items}. Same as ${this.operator iter()}"),
 	TYPE_GETTER("byattr", &MapByAttr_New,
-	            "->?Ert:MappingByAttr\n"
+	            "->?Ert:MapByAttr\n"
 	            "Construct a wrapper for @this mapping that behaves like a generic class object, "
 	            /**/ "such that any attribute address ${this.byattr.foo} behaves like ${this[\"foo\"]} "
 	            /**/ "(during all of $get, $del and $set).\n"

@@ -1261,7 +1261,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
 			return &DeeSet_DefaultOperatorIterWithEmpty;
 		if (tsc_seq_operator_iter != &DeeSeq_DefaultOperatorIterWithError)
-			return &DeeSet_DefaultOperatorIterWithUniqueIter;
+			return &DeeSet_DefaultOperatorIterWithDistinctIter;
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorForeach)
 #ifndef LOCAL_FOR_OPTIMIZE
@@ -1277,7 +1277,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		if (tsc_seq_operator_foreach == &DeeSeq_DefaultOperatorForeachWithEmpty)
 			return &DeeSet_DefaultOperatorForeachWithEmpty;
 		if (tsc_seq_operator_foreach != &DeeSeq_DefaultOperatorForeachWithError)
-			return &DeeSet_DefaultOperatorForeachWithUniqueForeach;
+			return &DeeSet_DefaultOperatorForeachWithDistinctForeach;
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorSize)
 #ifndef LOCAL_FOR_OPTIMIZE

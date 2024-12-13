@@ -145,9 +145,9 @@ assertRtTypeName("SeqReversedWithGetItemIndex");
 assertRtTypeName("SeqReversedWithGetItemIndexFast");
 assertRtTypeName("SeqReversedWithTryGetItemIndex");
 
-assertRtTypeName("UniqueIterator");
-assertRtTypeName("UniqueIteratorWithKey");
-assertRtTypeName("UniqueSetWithKey");
+assertRtTypeName("DistinctIterator");
+assertRtTypeName("DistinctIteratorWithKey");
+assertRtTypeName("DistinctSetWithKey");
 
 assertRtTypeName("SetInversion");
 assertRtTypeName("SetUnion");
@@ -167,9 +167,9 @@ assertRtTypeName("MapIntersectionIterator");
 assertRtTypeName("MapDifference");
 assertRtTypeName("MapDifferenceIterator");
 
-assertRtTypeName("MappingHashFilter");
-assertRtTypeName("MappingHashFilterIterator");
-assertRtTypeName("MappingByAttr");
+assertRtTypeName("MapHashFilter");
+assertRtTypeName("MapHashFilterIterator");
+assertRtTypeName("MapByAttr");
 
 assertRtTypeName("SharedVector");
 assertRtTypeName("SharedVectorIterator");

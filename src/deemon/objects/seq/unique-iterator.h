@@ -32,31 +32,31 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD /* GC Object */
-	DREF DeeObject                     *ui_iter;        /* [1..1][const] Underlying iterator */
-	/* [1..1][const] Callback to load the next item from `ui_iter'. */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *ui_tp_next)(DeeObject *self);
-	struct Dee_simple_hashset_with_lock ui_encountered; /* Set of objects previously encountered objects */
-} UniqueIterator;
+	DREF DeeObject                     *di_iter;        /* [1..1][const] Underlying iterator */
+	/* [1..1][const] Callback to load the next item from `di_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *di_tp_next)(DeeObject *self);
+	struct Dee_simple_hashset_with_lock di_encountered; /* Set of objects previously encountered objects */
+} DistinctIterator;
 
-INTDEF DeeTypeObject UniqueIterator_Type;
+INTDEF DeeTypeObject DistinctIterator_Type;
 
 typedef struct {
 	OBJECT_HEAD /* GC Object */
-	DREF DeeObject                     *uiwk_iter;        /* [1..1][const] Underlying iterator */
-	/* [1..1][const] Callback to load the next item from `uiwk_iter'. */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *uiwk_tp_next)(DeeObject *self);
-	struct Dee_simple_hashset_with_lock uiwk_encountered; /* Set of objects previously encountered objects */
-	DREF DeeObject                     *uiwk_key;         /* [1..1][const] unique-ness filter keys */
-} UniqueIteratorWithKey;
+	DREF DeeObject                     *diwk_iter;        /* [1..1][const] Underlying iterator */
+	/* [1..1][const] Callback to load the next item from `diwk_iter'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *diwk_tp_next)(DeeObject *self);
+	struct Dee_simple_hashset_with_lock diwk_encountered; /* Set of objects previously encountered objects */
+	DREF DeeObject                     *diwk_key;         /* [1..1][const] unique-ness filter keys */
+} DistinctIteratorWithKey;
 
-INTDEF DeeTypeObject UniqueIteratorWithKey_Type;
+INTDEF DeeTypeObject DistinctIteratorWithKey_Type;
 
 typedef struct {
-	PROXY_OBJECT_HEAD2(uswk_seq, /* [1..1] Sequence being proxied */
-	                   uswk_key) /* [1..1] Key to apply to sequence elements prior to uniqueness-check */
-} UniqueSetWithKey;
+	PROXY_OBJECT_HEAD2(dswk_seq, /* [1..1] Sequence being proxied */
+	                   dswk_key) /* [1..1] Key to apply to sequence elements prior to uniqueness-check */
+} DistinctSetWithKey;
 
-INTDEF DeeTypeObject UniqueSetWithKey_Type;
+INTDEF DeeTypeObject DistinctSetWithKey_Type;
 
 DECL_END
 

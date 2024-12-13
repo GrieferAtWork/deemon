@@ -146,7 +146,7 @@ byattr_printrepr(MapByAttr *__restrict self,
 
 INTERN DeeTypeObject MapByAttr_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_MappingByAttr",
+	/* .tp_name     = */ "_MapByAttr",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(map:?DMapping)"),
 	/* .tp_flags    = */ TP_FNORMAL,

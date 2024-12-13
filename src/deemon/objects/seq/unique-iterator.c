@@ -42,54 +42,54 @@
 DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-uqi_copy(UniqueIterator *__restrict self,
-         UniqueIterator *__restrict other) {
+uqi_copy(DistinctIterator *__restrict self,
+         DistinctIterator *__restrict other) {
 	int result;
-	result = Dee_simple_hashset_with_lock_copy(&self->ui_encountered,
-	                                           &other->ui_encountered);
+	result = Dee_simple_hashset_with_lock_copy(&self->di_encountered,
+	                                           &other->di_encountered);
 	if likely(result == 0) {
-		Dee_Incref(other->ui_iter);
-		self->ui_iter    = other->ui_iter;
-		self->ui_tp_next = other->ui_tp_next;
+		Dee_Incref(other->di_iter);
+		self->di_iter    = other->di_iter;
+		self->di_tp_next = other->di_tp_next;
 	}
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-uqi_init(UniqueIterator *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_UniqueIterator", &self->ui_iter))
+uqi_init(DistinctIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o:_DistinctIterator", &self->di_iter))
 		goto err;
-	self->ui_tp_next = Dee_TYPE(self->ui_iter)->tp_iter_next;
-	if unlikely(!self->ui_tp_next) {
-		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(self->ui_iter))) {
-			err_unimplemented_operator(Dee_TYPE(self->ui_iter), OPERATOR_ITERNEXT);
+	self->di_tp_next = Dee_TYPE(self->di_iter)->tp_iter_next;
+	if unlikely(!self->di_tp_next) {
+		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(self->di_iter))) {
+			err_unimplemented_operator(Dee_TYPE(self->di_iter), OPERATOR_ITERNEXT);
 			goto err;
 		}
-		self->ui_tp_next = Dee_TYPE(self->ui_iter)->tp_iter_next;
-		ASSERT(self->ui_tp_next);
+		self->di_tp_next = Dee_TYPE(self->di_iter)->tp_iter_next;
+		ASSERT(self->di_tp_next);
 	}
-	Dee_Incref(self->ui_iter);
-	Dee_simple_hashset_with_lock_init(&self->ui_encountered);
+	Dee_Incref(self->di_iter);
+	Dee_simple_hashset_with_lock_init(&self->di_encountered);
 	return 0;
 err:
 	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
-uqi_fini(UniqueIterator *__restrict self) {
-	Dee_Decref(self->ui_iter);
-	Dee_simple_hashset_with_lock_fini(&self->ui_encountered);
+uqi_fini(DistinctIterator *__restrict self) {
+	Dee_Decref(self->di_iter);
+	Dee_simple_hashset_with_lock_fini(&self->di_encountered);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-uqi_visit(UniqueIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->ui_iter);
-	Dee_simple_hashset_with_lock_visit(&self->ui_encountered, proc, arg);
+uqi_visit(DistinctIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->di_iter);
+	Dee_simple_hashset_with_lock_visit(&self->di_encountered, proc, arg);
 }
 
 PRIVATE NONNULL((1)) void DCALL
-uqi_clear(UniqueIterator *__restrict self) {
-	Dee_simple_hashset_with_lock_clear(&self->ui_encountered);
+uqi_clear(DistinctIterator *__restrict self) {
+	Dee_simple_hashset_with_lock_clear(&self->di_encountered);
 }
 
 PRIVATE struct type_gc uqi_gc = {
@@ -97,14 +97,14 @@ PRIVATE struct type_gc uqi_gc = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uqi_next(UniqueIterator *__restrict self) {
+uqi_next(DistinctIterator *__restrict self) {
 	DREF DeeObject *result;
 	for (;;) {
 		int exists;
-		result = (*self->ui_tp_next)(self->ui_iter);
+		result = (*self->di_tp_next)(self->di_iter);
 		if (!ITER_ISOK(result))
 			break;
-		exists = Dee_simple_hashset_with_lock_insert(&self->ui_encountered, result);
+		exists = Dee_simple_hashset_with_lock_insert(&self->di_encountered, result);
 		if (exists > 0)
 			break;
 		Dee_Decref(result);
@@ -122,18 +122,18 @@ err:
 }
 
 PRIVATE struct type_member tpconst uqiwk_members[] = {
-	TYPE_MEMBER_FIELD("__key__", STRUCT_OBJECT, offsetof(UniqueIteratorWithKey, uiwk_key)),
+	TYPE_MEMBER_FIELD("__key__", STRUCT_OBJECT, offsetof(DistinctIteratorWithKey, diwk_key)),
 #define uqi_members (uqiwk_members + 1)
-	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(UniqueIteratorWithKey, uiwk_iter)),
+	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(DistinctIteratorWithKey, diwk_iter)),
 	TYPE_MEMBER_FIELD("__num_encountered__", STRUCT_ATOMIC | STRUCT_CONST | STRUCT_SIZE_T,
-	                  offsetof(UniqueIteratorWithKey, uiwk_encountered.shswl_set.shs_size)),
+	                  offsetof(DistinctIteratorWithKey, diwk_encountered.shswl_set.shs_size)),
 	TYPE_MEMBER_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uqi_getseq(UniqueIterator *__restrict self) {
+uqi_getseq(DistinctIterator *__restrict self) {
 	DREF DeeObject *iter_seq, *result;
-	iter_seq = DeeObject_GetAttr(self->ui_iter, (DeeObject *)&str_seq);
+	iter_seq = DeeObject_GetAttr(self->di_iter, (DeeObject *)&str_seq);
 	if unlikely(!iter_seq)
 		goto err;
 	result = DeeSuper_New(&DeeSet_Type, iter_seq);
@@ -152,9 +152,9 @@ PRIVATE struct type_getset tpconst uqi_getsets[] = {
 	TYPE_GETSET_END
 };
 
-INTERN DeeTypeObject UniqueIterator_Type = {
+INTERN DeeTypeObject DistinctIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_UniqueIterator",
+	/* .tp_name     = */ "_DistinctIterator",
 	/* .tp_doc      = */ DOC("(objWithNext)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
@@ -167,7 +167,7 @@ INTERN DeeTypeObject UniqueIterator_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&uqi_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&uqi_init,
-				TYPE_FIXED_ALLOCATOR_GC(UniqueIterator)
+				TYPE_FIXED_ALLOCATOR_GC(DistinctIterator)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uqi_fini,
@@ -203,78 +203,78 @@ INTERN DeeTypeObject UniqueIterator_Type = {
 /************************************************************************/
 /* WITH KEY                                                             */
 /************************************************************************/
-STATIC_ASSERT(offsetof(UniqueIteratorWithKey, uiwk_iter) == offsetof(UniqueIterator, ui_iter));
-STATIC_ASSERT(offsetof(UniqueIteratorWithKey, uiwk_tp_next) == offsetof(UniqueIterator, ui_tp_next));
-STATIC_ASSERT(offsetof(UniqueIteratorWithKey, uiwk_encountered) == offsetof(UniqueIterator, ui_encountered));
+STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_iter) == offsetof(DistinctIterator, di_iter));
+STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_tp_next) == offsetof(DistinctIterator, di_tp_next));
+STATIC_ASSERT(offsetof(DistinctIteratorWithKey, diwk_encountered) == offsetof(DistinctIterator, di_encountered));
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-uqiwk_copy(UniqueIteratorWithKey *__restrict self,
-           UniqueIteratorWithKey *__restrict other) {
+uqiwk_copy(DistinctIteratorWithKey *__restrict self,
+           DistinctIteratorWithKey *__restrict other) {
 	int result;
-	result = Dee_simple_hashset_with_lock_copy(&self->uiwk_encountered,
-	                                           &other->uiwk_encountered);
+	result = Dee_simple_hashset_with_lock_copy(&self->diwk_encountered,
+	                                           &other->diwk_encountered);
 	if likely(result == 0) {
-		Dee_Incref(other->uiwk_iter);
-		self->uiwk_iter    = other->uiwk_iter;
-		self->uiwk_tp_next = other->uiwk_tp_next;
-		Dee_Incref(other->uiwk_key);
-		self->uiwk_key = other->uiwk_key;
+		Dee_Incref(other->diwk_iter);
+		self->diwk_iter    = other->diwk_iter;
+		self->diwk_tp_next = other->diwk_tp_next;
+		Dee_Incref(other->diwk_key);
+		self->diwk_key = other->diwk_key;
 	}
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-uqiwk_init(UniqueIteratorWithKey *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oo:_UniqueIteratorWithKey",
-	                  &self->uiwk_iter, &self->uiwk_key))
+uqiwk_init(DistinctIteratorWithKey *__restrict self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "oo:_DistinctIteratorWithKey",
+	                  &self->diwk_iter, &self->diwk_key))
 		goto err;
-	self->uiwk_tp_next = Dee_TYPE(self->uiwk_iter)->tp_iter_next;
-	if unlikely(!self->uiwk_tp_next) {
-		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(self->uiwk_iter))) {
-			err_unimplemented_operator(Dee_TYPE(self->uiwk_iter), OPERATOR_ITERNEXT);
+	self->diwk_tp_next = Dee_TYPE(self->diwk_iter)->tp_iter_next;
+	if unlikely(!self->diwk_tp_next) {
+		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(self->diwk_iter))) {
+			err_unimplemented_operator(Dee_TYPE(self->diwk_iter), OPERATOR_ITERNEXT);
 			goto err;
 		}
-		self->uiwk_tp_next = Dee_TYPE(self->uiwk_iter)->tp_iter_next;
-		ASSERT(self->uiwk_tp_next);
+		self->diwk_tp_next = Dee_TYPE(self->diwk_iter)->tp_iter_next;
+		ASSERT(self->diwk_tp_next);
 	}
-	Dee_Incref(self->uiwk_iter);
-	Dee_Incref(self->uiwk_key);
-	Dee_simple_hashset_with_lock_init(&self->uiwk_encountered);
+	Dee_Incref(self->diwk_iter);
+	Dee_Incref(self->diwk_key);
+	Dee_simple_hashset_with_lock_init(&self->diwk_encountered);
 	return 0;
 err:
 	return -1;
 }
 
 PRIVATE NONNULL((1)) void DCALL
-uqiwk_fini(UniqueIteratorWithKey *__restrict self) {
-	Dee_Decref(self->uiwk_iter);
-	Dee_simple_hashset_with_lock_fini(&self->uiwk_encountered);
-	Dee_Decref(self->uiwk_key);
+uqiwk_fini(DistinctIteratorWithKey *__restrict self) {
+	Dee_Decref(self->diwk_iter);
+	Dee_simple_hashset_with_lock_fini(&self->diwk_encountered);
+	Dee_Decref(self->diwk_key);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-uqiwk_visit(UniqueIteratorWithKey *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->uiwk_iter);
-	Dee_simple_hashset_with_lock_visit(&self->uiwk_encountered, proc, arg);
-	Dee_Visit(self->uiwk_key);
+uqiwk_visit(DistinctIteratorWithKey *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->diwk_iter);
+	Dee_simple_hashset_with_lock_visit(&self->diwk_encountered, proc, arg);
+	Dee_Visit(self->diwk_key);
 }
 
 #define uqiwk_clear uqi_clear
 #define uqiwk_gc    uqi_gc
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uqiwk_next(UniqueIteratorWithKey *__restrict self) {
+uqiwk_next(DistinctIteratorWithKey *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *keyed_result;
 	for (;;) {
 		int exists;
-		result = (*self->uiwk_tp_next)(self->uiwk_iter);
+		result = (*self->diwk_tp_next)(self->diwk_iter);
 		if (!ITER_ISOK(result))
 			break;
-		keyed_result = DeeObject_Call(self->uiwk_key, 1, &result);
+		keyed_result = DeeObject_Call(self->diwk_key, 1, &result);
 		if unlikely(!keyed_result)
 			goto err_r;
-		exists = Dee_simple_hashset_with_lock_insert(&self->uiwk_encountered, keyed_result);
+		exists = Dee_simple_hashset_with_lock_insert(&self->diwk_encountered, keyed_result);
 		Dee_Decref_unlikely(keyed_result);
 		if (exists > 0)
 			break;
@@ -294,20 +294,20 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF UniqueSetWithKey *DCALL
-uqiwk_getseq(UniqueIteratorWithKey *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DistinctSetWithKey *DCALL
+uqiwk_getseq(DistinctIteratorWithKey *__restrict self) {
 	DREF DeeObject *iter_seq;
-	DREF UniqueSetWithKey *result;
-	iter_seq = DeeObject_GetAttr(self->uiwk_iter, (DeeObject *)&str_seq);
+	DREF DistinctSetWithKey *result;
+	iter_seq = DeeObject_GetAttr(self->diwk_iter, (DeeObject *)&str_seq);
 	if unlikely(!iter_seq)
 		goto err;
-	result = DeeObject_MALLOC(UniqueSetWithKey);
+	result = DeeObject_MALLOC(DistinctSetWithKey);
 	if unlikely(!result)
 		goto err_iter_seq;
-	result->uswk_seq = iter_seq; /* Inherit reference */
-	result->uswk_key = self->uiwk_key;
-	Dee_Incref(self->uiwk_key);
-	DeeObject_Init(result, &UniqueSetWithKey_Type);
+	result->dswk_seq = iter_seq; /* Inherit reference */
+	result->dswk_key = self->diwk_key;
+	Dee_Incref(self->diwk_key);
+	DeeObject_Init(result, &DistinctSetWithKey_Type);
 	return result;
 err_iter_seq:
 	Dee_Decref(iter_seq);
@@ -317,14 +317,14 @@ err:
 
 PRIVATE struct type_getset tpconst uqiwk_getsets[] = {
 	TYPE_GETTER(STR_seq, &uqiwk_getseq,
-	            "->?Ert:UniqueSetWithKey"),
+	            "->?Ert:DistinctSetWithKey"),
 	/* TODO: "__encountered__->?DSet" (using a custom wrapper object) */
 	TYPE_GETSET_END
 };
 
-INTERN DeeTypeObject UniqueIteratorWithKey_Type = {
+INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_UniqueIteratorWithKey",
+	/* .tp_name     = */ "_DistinctIteratorWithKey",
 	/* .tp_doc      = */ DOC("(objWithNext,key:?DCallable)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
@@ -337,7 +337,7 @@ INTERN DeeTypeObject UniqueIteratorWithKey_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&uqiwk_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&uqiwk_init,
-				TYPE_FIXED_ALLOCATOR_GC(UniqueIteratorWithKey)
+				TYPE_FIXED_ALLOCATOR_GC(DistinctIteratorWithKey)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uqiwk_fini,
@@ -373,68 +373,68 @@ INTERN DeeTypeObject UniqueIteratorWithKey_Type = {
 /************************************************************************/
 /* UNIQUE SET W/ KEY                                                    */
 /************************************************************************/
-STATIC_ASSERT(offsetof(UniqueSetWithKey, uswk_seq) == offsetof(ProxyObject2, po_obj1) ||
-              offsetof(UniqueSetWithKey, uswk_seq) == offsetof(ProxyObject2, po_obj2));
-STATIC_ASSERT(offsetof(UniqueSetWithKey, uswk_key) == offsetof(ProxyObject2, po_obj1) ||
-              offsetof(UniqueSetWithKey, uswk_key) == offsetof(ProxyObject2, po_obj2));
-#define uswk_copy  generic_proxy2_copy_alias12
-#define uswk_deep  generic_proxy2_deepcopy
-#define uswk_fini  generic_proxy2_fini
-#define uswk_visit generic_proxy2_visit
+STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj2));
+#define dswk_copy  generic_proxy2_copy_alias12
+#define dswk_deep  generic_proxy2_deepcopy
+#define dswk_fini  generic_proxy2_fini
+#define dswk_visit generic_proxy2_visit
 
-STATIC_ASSERT(offsetof(UniqueSetWithKey, uswk_seq) == offsetof(ProxyObject2, po_obj1));
-STATIC_ASSERT(offsetof(UniqueSetWithKey, uswk_key) == offsetof(ProxyObject2, po_obj2));
-#define uswk_init generic_proxy2_init
+STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj2));
+#define dswk_init generic_proxy2_init
 
-PRIVATE WUNUSED NONNULL((1)) DREF UniqueIteratorWithKey *DCALL
-uswk_iter(UniqueSetWithKey *__restrict self) {
-	DREF UniqueIteratorWithKey *result;
-	result = DeeGCObject_MALLOC(UniqueIteratorWithKey);
+PRIVATE WUNUSED NONNULL((1)) DREF DistinctIteratorWithKey *DCALL
+dswk_iter(DistinctSetWithKey *__restrict self) {
+	DREF DistinctIteratorWithKey *result;
+	result = DeeGCObject_MALLOC(DistinctIteratorWithKey);
 	if unlikely(!result)
 		goto err;
-	result->uiwk_iter = DeeSeq_OperatorIter(self->uswk_seq);
-	if unlikely(!result->uiwk_iter)
+	result->diwk_iter = DeeSeq_OperatorIter(self->dswk_seq);
+	if unlikely(!result->diwk_iter)
 		goto err_r;
-	result->uiwk_tp_next = Dee_TYPE(result->uiwk_iter)->tp_iter_next;
-	if unlikely(!result->uiwk_tp_next) {
-		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(result->uiwk_iter))) {
-			err_unimplemented_operator(Dee_TYPE(result->uiwk_iter), OPERATOR_ITERNEXT);
+	result->diwk_tp_next = Dee_TYPE(result->diwk_iter)->tp_iter_next;
+	if unlikely(!result->diwk_tp_next) {
+		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(result->diwk_iter))) {
+			err_unimplemented_operator(Dee_TYPE(result->diwk_iter), OPERATOR_ITERNEXT);
 			goto err_r_iter;
 		}
-		result->uiwk_tp_next = Dee_TYPE(result->uiwk_iter)->tp_iter_next;
-		ASSERT(result->uiwk_tp_next);
+		result->diwk_tp_next = Dee_TYPE(result->diwk_iter)->tp_iter_next;
+		ASSERT(result->diwk_tp_next);
 	}
-	result->uiwk_key = self->uswk_key;
-	Dee_Incref(self->uswk_key);
-	Dee_simple_hashset_with_lock_init(&result->uiwk_encountered);
-	DeeObject_Init(result, &UniqueIteratorWithKey_Type);
-	return (DREF UniqueIteratorWithKey *)DeeGC_Track((DREF DeeObject *)result);
+	result->diwk_key = self->dswk_key;
+	Dee_Incref(self->dswk_key);
+	Dee_simple_hashset_with_lock_init(&result->diwk_encountered);
+	DeeObject_Init(result, &DistinctIteratorWithKey_Type);
+	return (DREF DistinctIteratorWithKey *)DeeGC_Track((DREF DeeObject *)result);
 err_r_iter:
-	Dee_Decref(result->uiwk_iter);
+	Dee_Decref(result->diwk_iter);
 err_r:
 	DeeGCObject_FREE(result);
 err:
 	return NULL;
 }
 
-PRIVATE struct type_seq uswk_seq = {
-	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uswk_iter,
+PRIVATE struct type_seq dswk_seq = {
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dswk_iter,
 };
 
-PRIVATE struct type_member tpconst uswk_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(UniqueSetWithKey, uswk_seq), "->?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__key__", STRUCT_OBJECT, offsetof(UniqueSetWithKey, uswk_key), "->?DCallable"),
+PRIVATE struct type_member tpconst dswk_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DistinctSetWithKey, dswk_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__key__", STRUCT_OBJECT, offsetof(DistinctSetWithKey, dswk_key), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member tpconst uswk_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &UniqueIteratorWithKey_Type),
+PRIVATE struct type_member tpconst dswk_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &DistinctIteratorWithKey_Type),
 	TYPE_MEMBER_END
 };
 
-INTERN DeeTypeObject UniqueSetWithKey_Type = {
+INTERN DeeTypeObject DistinctSetWithKey_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_UniqueSetWithKey",
+	/* .tp_name     = */ "_DistinctSetWithKey",
 	/* .tp_doc      = */ DOC("(objWithIter,key:?DCallable)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -444,13 +444,13 @@ INTERN DeeTypeObject UniqueSetWithKey_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&uswk_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&uswk_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&uswk_init,
-				TYPE_FIXED_ALLOCATOR(UniqueSetWithKey)
+				/* .tp_copy_ctor = */ (dfunptr_t)&dswk_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&dswk_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&dswk_init,
+				TYPE_FIXED_ALLOCATOR(DistinctSetWithKey)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uswk_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dswk_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -460,11 +460,11 @@ INTERN DeeTypeObject UniqueSetWithKey_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uswk_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dswk_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ &uswk_seq,
+	/* .tp_seq           = */ &dswk_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
@@ -472,10 +472,10 @@ INTERN DeeTypeObject UniqueSetWithKey_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ uswk_members,
+	/* .tp_members       = */ dswk_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ uswk_class_members
+	/* .tp_class_members = */ dswk_class_members
 };
 
 DECL_END

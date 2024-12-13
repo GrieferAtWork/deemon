@@ -687,20 +687,20 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF UniqueSetWithKey *result;
+	DREF DistinctSetWithKey *result;
 	DeeObject *key = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__key, "|o:distinct", &key))
 		goto err;
 	if (!key)
 		return DeeSuper_New(&DeeSet_Type, self);
-	result = DeeObject_MALLOC(UniqueSetWithKey);
+	result = DeeObject_MALLOC(DistinctSetWithKey);
 	if unlikely(!result)
 		goto err;
-	result->uswk_key = key;
+	result->dswk_key = key;
 	Dee_Incref(key);
-	result->uswk_seq = self;
+	result->dswk_seq = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &UniqueSetWithKey_Type);
+	DeeObject_Init(result, &DistinctSetWithKey_Type);
 	return (DREF DeeObject *)result;
 err:
 	return NULL;

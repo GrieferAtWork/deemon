@@ -318,8 +318,8 @@ for (local seqClass, name: operatorNames) {
 #define DeeSeq_VariantsFor_OperatorGe(cb)                      cb(DeeSeq_OperatorGe) cb(DeeSeq_DefaultOperatorGeWithEmpty) cb(DeeSeq_DefaultOperatorGeWithSeqCompare) cb(DeeSeq_DefaultOperatorGeWithError)
 #define DeeSeq_VariantsFor_OperatorInplaceAdd(cb)              cb(DeeSeq_OperatorInplaceAdd) cb(DeeSeq_DefaultOperatorInplaceAddWithTSCExtend) cb(DeeObject_DefaultInplaceAddWithAdd)
 #define DeeSeq_VariantsFor_OperatorInplaceMul(cb)              cb(DeeSeq_OperatorInplaceMul) cb(DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend) cb(DeeObject_DefaultInplaceMulWithMul)
-#define DeeSet_VariantsFor_OperatorIter(cb)                    cb(DeeSet_OperatorIter) cb(DeeSeq_DefaultOperatorIterWithEmpty) cb(DeeSet_DefaultOperatorIterWithUniqueIter) cb(DeeSet_DefaultOperatorIterWithError)
-#define DeeSet_VariantsFor_OperatorForeach(cb)                 cb(DeeSet_OperatorForeach) cb(DeeSeq_DefaultOperatorForeachWithEmpty) cb(DeeSet_DefaultOperatorForeachWithUniqueForeach) cb(DeeSet_DefaultOperatorForeachWithError)
+#define DeeSet_VariantsFor_OperatorIter(cb)                    cb(DeeSet_OperatorIter) cb(DeeSeq_DefaultOperatorIterWithEmpty) cb(DeeSet_DefaultOperatorIterWithDistinctIter) cb(DeeSet_DefaultOperatorIterWithError)
+#define DeeSet_VariantsFor_OperatorForeach(cb)                 cb(DeeSet_OperatorForeach) cb(DeeSeq_DefaultOperatorForeachWithEmpty) cb(DeeSet_DefaultOperatorForeachWithDistinctForeach) cb(DeeSet_DefaultOperatorForeachWithError)
 #define DeeSet_VariantsFor_OperatorSize(cb)                    cb(DeeSet_OperatorSize) cb(DeeSeq_DefaultOperatorSizeWithEmpty) cb(DeeSet_DefaultOperatorSizeWithSetForeach) cb(DeeSet_DefaultOperatorSizeWithError)
 #define DeeSet_VariantsFor_OperatorSizeOb(cb)                  cb(DeeSet_OperatorSizeOb) cb(DeeSeq_DefaultOperatorSizeObWithEmpty) cb(DeeSet_DefaultOperatorSizeObWithSetSize) cb(DeeSet_DefaultOperatorSizeObWithError)
 #define DeeSet_VariantsFor_OperatorHash(cb)                    cb(DeeSet_OperatorHash) cb(DeeSeq_DefaultOperatorHashWithEmpty) cb(DeeSet_DefaultHashWithForeachDefault) cb(DeeMap_DefaultHashWithForeachPairDefault) cb(DeeSeq_DefaultOperatorHashWithError)
@@ -983,11 +983,11 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorInplaceMulWithTSC
 /************************************************************************/
 /* Default Set Operators                                                */
 /************************************************************************/
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorIterWithUniqueIter(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorIterWithDistinctIter(DeeObject *__restrict self);
 #define DeeSet_DefaultOperatorIterWithEmpty DeeSeq_DefaultOperatorIterWithEmpty
 INTDEF /*WUNUSED*/ NONNULL((1)) DREF DeeObject *DCALL DeeSet_DefaultOperatorIterWithError(DeeObject *__restrict self);
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSet_DefaultOperatorForeachWithUniqueForeach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSet_DefaultOperatorForeachWithDistinctForeach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 #define DeeSet_DefaultOperatorForeachWithEmpty DeeSeq_DefaultOperatorForeachWithEmpty
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSet_DefaultOperatorForeachWithError(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 

@@ -72,7 +72,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 map_filteriterator_init(HashFilterIterator *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	HashFilter *filter;
-	if (DeeArg_Unpack(argc, argv, "o:_MappingHashFilterIterator", &filter))
+	if (DeeArg_Unpack(argc, argv, "o:_MapHashFilterIterator", &filter))
 		goto err;
 	if (DeeObject_AssertTypeExact(filter, &MapHashFilter_Type))
 		goto err;
@@ -214,7 +214,7 @@ PRIVATE struct type_getset tpconst seq_filteriterator_getsets[] = {
 };
 
 PRIVATE struct type_getset tpconst map_filteriterator_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &filteriterator_seq_get, METHOD_FNOREFESCAPE, "->?Ert:MappingHashFilter"),
+	TYPE_GETTER_F(STR_seq, &filteriterator_seq_get, METHOD_FNOREFESCAPE, "->?Ert:MapHashFilter"),
 	TYPE_GETSET_END
 };
 
@@ -272,8 +272,8 @@ INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 
 INTERN DeeTypeObject MapHashFilterIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_MappingHashFilterIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:MappingHashFilter)"),
+	/* .tp_name     = */ "_MapHashFilterIterator",
+	/* .tp_doc      = */ DOC("(seq?:?Ert:MapHashFilter)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -421,7 +421,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 map_filter_init(HashFilter *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_MappingHashFilter",
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_MapHashFilter",
 	                  &self->f_seq, &self->f_hash))
 		goto err;
 	self->f_seq = Dee_EmptySeq;
@@ -513,7 +513,7 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 
 INTERN DeeTypeObject MapHashFilter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_MappingHashFilter",
+	/* .tp_name     = */ "_MapHashFilter",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(seq:?DSequence,hash:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

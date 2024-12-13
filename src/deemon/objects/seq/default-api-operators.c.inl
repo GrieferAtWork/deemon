@@ -1107,27 +1107,27 @@ INTERN WUNUSED NONNULL((1, 2)) int
 /************************************************************************/
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSet_DefaultOperatorIterWithUniqueIter(DeeObject *__restrict self) {
+DeeSet_DefaultOperatorIterWithDistinctIter(DeeObject *__restrict self) {
 	DREF DeeObject *iter;
-	DREF UniqueIterator *result;
+	DREF DistinctIterator *result;
 	iter = DeeSeq_OperatorIter(self);
 	if unlikely(!iter)
 		goto err;
-	result = DeeGCObject_MALLOC(UniqueIterator);
+	result = DeeGCObject_MALLOC(DistinctIterator);
 	if unlikely(!result)
 		goto err_iter;
-	result->ui_tp_next = Dee_TYPE(iter)->tp_iter_next;
-	if unlikely(!result->ui_tp_next) {
+	result->di_tp_next = Dee_TYPE(iter)->tp_iter_next;
+	if unlikely(!result->di_tp_next) {
 		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(iter))) {
 			err_unimplemented_operator(Dee_TYPE(iter), OPERATOR_ITERNEXT);
 			goto err_iter_result;
 		}
-		result->ui_tp_next = Dee_TYPE(iter)->tp_iter_next;
-		ASSERT(result->ui_tp_next);
+		result->di_tp_next = Dee_TYPE(iter)->tp_iter_next;
+		ASSERT(result->di_tp_next);
 	}
-	result->ui_iter = iter; /* Inherit reference */
-	Dee_simple_hashset_with_lock_init(&result->ui_encountered);
-	DeeObject_Init(result, &UniqueIterator_Type);
+	result->di_iter = iter; /* Inherit reference */
+	Dee_simple_hashset_with_lock_init(&result->di_encountered);
+	DeeObject_Init(result, &DistinctIterator_Type);
 	return DeeGC_Track((DREF DeeObject *)result);
 err_iter_result:
 	DeeGCObject_FREE(result);
@@ -1165,7 +1165,7 @@ default_set_foreach_unique_cb(void *arg, DeeObject *item) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeSet_DefaultOperatorForeachWithUniqueForeach(DeeObject *__restrict self,
+DeeSet_DefaultOperatorForeachWithDistinctForeach(DeeObject *__restrict self,
                                                Dee_foreach_t cb, void *arg) {
 	Dee_ssize_t result;
 	struct default_set_foreach_unique_data data;
