@@ -2239,8 +2239,21 @@ librt_get_nonempty_stub_map(void) {
 
 
 LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_SetInversion_uncached_impl_f(void) {
+	DREF DeeObject *inverse;
+	DREF DeeObject *nonempty_set = librt_get_nonempty_stub_set();
+	if unlikely(!nonempty_set)
+		goto err;
+	inverse = DeeObject_Inv(nonempty_set);
+	Dee_Decref(nonempty_set);
+	return get_type_of(inverse);
+err:
+	return NULL;
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SetInversion_impl_f(void) {
-	return get_type_of(DeeObject_Inv(librt_get_nonempty_stub_set()));
+	return_cached(librt_get_SetInversion_uncached_impl_f());
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
