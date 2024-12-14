@@ -873,6 +873,16 @@ seq_parity_enumerate_with_key_cb(void *arg, size_t index, DeeObject *item) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultParityWithSeqCount(DeeObject *self) {
+	size_t count = DeeSeq_InvokeCount(self, Dee_True);
+	if unlikely(count == (size_t)-1)
+		goto err;
+	return count & 1;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DefaultParityWithSeqForeach(DeeObject *self) {
 	Dee_ssize_t foreach_status; /* foreach_status is the number of elements considered "true" */
 	foreach_status = DeeSeq_OperatorForeach(self, &seq_parity_foreach_cb, NULL);
@@ -888,6 +898,16 @@ DeeSeq_DefaultParityWithKeyWithSeqForeach(DeeObject *self, DeeObject *key) {
 	if (foreach_status > 1)
 		foreach_status = foreach_status & 1;
 	return (int)foreach_status;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DefaultParityWithRangeWithSeqCountWithRange(DeeObject *self, size_t start, size_t end) {
+	size_t count = DeeSeq_InvokeCountWithRange(self, Dee_True, start, end);
+	if unlikely(count == (size_t)-1)
+		goto err;
+	return count & 1;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL

@@ -1394,13 +1394,25 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 #elif defined(DEFINE_DeeType_RequireSeqAllWithRangeAndKey)
 	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqParity)
-	/* TODO: Parity with count */
+	{
+		Dee_mh_seq_count_t mh_seq_count;
+		mh_seq_count = DeeType_RequireSeqCount_private_uncached(orig_type, self);
+		if (mh_seq_count != NULL &&
+		    mh_seq_count != &DeeSeq_DefaultCountWithSeqForeach)
+			return &DeeSeq_DefaultParityWithSeqCount;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqParityWithKey)
-	/* TODO: Parity with count */
+	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqParityWithRange)
-	/* TODO: Parity with count */
+	{
+		Dee_mh_seq_count_with_range_t mh_seq_count_with_range;
+		mh_seq_count_with_range = DeeType_RequireSeqCountWithRange_private_uncached(orig_type, self);
+		if (mh_seq_count_with_range != NULL &&
+		    mh_seq_count_with_range != &DeeSeq_DefaultCountWithRangeWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultParityWithRangeWithSeqCountWithRange;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqParityWithRangeAndKey)
-	/* TODO: Parity with count */
+	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqReduce)
 	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqReduceWithInit)
