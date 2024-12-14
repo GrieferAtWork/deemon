@@ -32,6 +32,7 @@
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
@@ -103,16 +104,16 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udictiterator_next(UDictIterator *__restrict self) {
-	DREF DeeObject *result, *key, *value;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+udictiterator_nextpair(UDictIterator *__restrict self,
+                       DREF DeeObject *key_and_value[2]) {
 	struct udict_item *item, *end;
 	UDict *dict = self->udi_dict;
 	UDict_LockRead(dict);
 	end = dict->ud_elem + (dict->ud_mask + 1);
 	for (;;) {
 		struct udict_item *old_item;
-		item     = atomic_read(&self->udi_next);
+		item = atomic_read(&self->udi_next);
 		old_item = item;
 
 		/* Validate that the pointer is still located in-bounds. */
@@ -134,29 +135,18 @@ udictiterator_next(UDictIterator *__restrict self) {
 		if (atomic_cmpxch_weak_or_write(&self->udi_next, old_item, item + 1))
 			break;
 	}
-	key   = item->di_key;
-	value = item->di_value;
-	Dee_Incref(key);
-	Dee_Incref(value);
+	key_and_value[0] = item->di_key;
+	key_and_value[1] = item->di_value;
+	Dee_Incref(key_and_value[0]);
+	Dee_Incref(key_and_value[1]);
 	UDict_LockEndRead(dict);
-	result = (DREF DeeObject *)DeeTuple_NewUninitialized(2);
-	if unlikely(!result)
-		goto err_key_value;
-	DeeTuple_SET(result, 0, key);   /* Inherit reference */
-	DeeTuple_SET(result, 1, value); /* Inherit reference */
-	return result;
-err_key_value:
-	Dee_Decref(key);
-	Dee_Decref(value);
-	goto err;
+	return 0;
 dict_has_changed:
 	UDict_LockEndRead(dict);
-	err_changed_sequence((DeeObject *)dict);
-err:
-	return NULL;
+	return err_changed_sequence((DeeObject *)dict);
 iter_exhausted:
 	UDict_LockEndRead(dict);
-	return ITER_DONE;
+	return 1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -248,7 +238,12 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-
+PRIVATE struct type_iterator udictiterator_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&udictiterator_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udictiterator_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udictiterator_nextvalue,
+	/* .tp_advance   = */ NULL, // TODO: (size_t (DCALL *)(DeeObject *__restrict, size_t))&udictiterator_advance,
+};
 
 
 
@@ -290,8 +285,8 @@ INTERN DeeTypeObject UDictIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &udictiterator_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udictiterator_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &udictiterator_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -512,7 +507,7 @@ udict_deepload(UDict *__restrict self) {
 		goto err_items_v;
 	/* Insert all the copied items into the new map. */
 	for (i = 0; i < item_count; ++i) {
-		dhash_t j, perturb, hash;
+		Dee_hash_t j, perturb, hash;
 		hash    = UHASH(items[i].e_key);
 		perturb = j = hash & new_mask;
 		for (;; DeeDict_HashNx(j, perturb)) {
@@ -681,7 +676,7 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 		end = (iter = self->ud_elem) + (self->ud_mask + 1);
 		for (; iter < end; ++iter) {
 			struct udict_item *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 
 			/* Skip dummy keys. */
 			if (!iter->di_key || iter->di_key == dummy)
@@ -711,8 +706,8 @@ udict_rehash(UDict *__restrict self, int sizedir) {
 /* This one's basically your hasitem operator. */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 udict_contains(UDict *self, DeeObject *key) {
-	dhash_t i, perturb;
-	dhash_t hash = UHASH(key);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = UHASH(key);
 	UDict_LockRead(self);
 	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
@@ -732,8 +727,8 @@ udict_contains(UDict *self, DeeObject *key) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_bounditem(UDict *self, DeeObject *key) {
-	dhash_t i, perturb;
-	dhash_t hash = UHASH(key);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = UHASH(key);
 	UDict_LockRead(self);
 	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
@@ -752,8 +747,8 @@ udict_bounditem(UDict *self, DeeObject *key) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_hasitem(UDict *self, DeeObject *key) {
-	dhash_t i, perturb;
-	dhash_t hash = UHASH(key);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = UHASH(key);
 	UDict_LockRead(self);
 	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
@@ -773,8 +768,8 @@ udict_hasitem(UDict *self, DeeObject *key) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 udict_getitem(UDict *self, DeeObject *key) {
-	dhash_t i, perturb;
-	dhash_t hash = UHASH(key);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = UHASH(key);
 	UDict_LockRead(self);
 	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
@@ -798,8 +793,8 @@ udict_getitem(UDict *self, DeeObject *key) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 udict_trygetitem(UDict *self, DeeObject *key) {
-	dhash_t i, perturb;
-	dhash_t hash = UHASH(key);
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = UHASH(key);
 	UDict_LockRead(self);
 	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
@@ -821,37 +816,16 @@ udict_trygetitem(UDict *self, DeeObject *key) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-UDict_GetItemDef(UDict *self, DeeObject *key, DeeObject *def) {
-	dhash_t i, perturb;
-	dhash_t hash = UHASH(key);
-	UDict_LockRead(self);
-	perturb = i = hash & self->ud_mask;
-	for (;; UDict_HashNx(i, perturb)) {
-		struct udict_item *item;
-		item = &self->ud_elem[i & self->ud_mask];
-		if (USAME(item->di_key, key)) {
-			/* Found the item. */
-			DREF DeeObject *result;
-			result = item->di_value;
-			Dee_Incref(result);
-			UDict_LockEndRead(self);
-			return result;
-		}
-		if (!item->di_key)
-			break;
-	}
-	UDict_LockEndRead(self);
-	if (def != ITER_DONE)
-		Dee_Incref(def);
-	return def;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+udict_mh_clear(UDict *__restrict self) {
+	udict_clear(self);
+	return 0;
 }
 
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-udict_popitem(UDict *self, DeeObject *key, DeeObject *def) {
-	dhash_t i, perturb;
-	dhash_t hash = UHASH(key);
+udict_mh_pop(UDict *self, DeeObject *key) {
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = UHASH(key);
 	UDict_LockWrite(self);
 	perturb = i = hash & self->ud_mask;
 	for (;; UDict_HashNx(i, perturb)) {
@@ -875,24 +849,56 @@ udict_popitem(UDict *self, DeeObject *key, DeeObject *def) {
 			break;
 	}
 	UDict_LockEndWrite(self);
-	if (def)
-		return_reference_(def);
 	err_unknown_key((DeeObject *)self, key);
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+udict_mh_pop_with_default(UDict *self, DeeObject *key, DeeObject *def) {
+	Dee_hash_t i, perturb;
+	Dee_hash_t hash = UHASH(key);
+	UDict_LockWrite(self);
+	perturb = i = hash & self->ud_mask;
+	for (;; UDict_HashNx(i, perturb)) {
+		struct udict_item *item;
+		item = &self->ud_elem[i & self->ud_mask];
+		if (USAME(item->di_key, key)) {
+			/* Found the item. */
+			DREF DeeObject *result;
+			result = item->di_value;
+			Dee_Incref(dummy);
+			item->di_key   = dummy;
+			item->di_value = NULL;
+			ASSERT(self->ud_used);
+			if (--self->ud_used <= self->ud_size / 3)
+				udict_rehash(self, -1);
+			UDict_LockEndWrite(self);
+			Dee_DecrefNokill(key);
+			return result;
+		}
+		if (!item->di_key)
+			break;
+	}
+	UDict_LockEndWrite(self);
+	return_reference_(def);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_delitem(UDict *self, DeeObject *key) {
 	DREF DeeObject *pop_item;
-	pop_item = udict_popitem(self, key, NULL);
-	Dee_XDecref(pop_item);
-	return likely(pop_item) ? 0 : -1;
+	pop_item = udict_mh_pop_with_default(self, key, Dee_None);
+	if unlikely(!pop_item)
+		goto err;
+	Dee_Decref(pop_item);
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 udict_setitem(UDict *self, DeeObject *key, DeeObject *value) {
 	struct udict_item *first_dummy;
-	dhash_t i, perturb, hash = UHASH(key);
+	Dee_hash_t i, perturb, hash = UHASH(key);
 again:
 	UDict_LockWrite(self);
 again_locked:
@@ -949,18 +955,46 @@ again_locked:
 }
 
 
-#define SETITEM_SETOLD 0 /* if_exists: *p_old_value = GET_OLD_VALUE(); SET_OLD_ITEM(); return 1;
-                          * else:      return 0; */
-#define SETITEM_SETNEW 1 /* if_exists: *p_old_value = GET_OLD_VALUE(); return 1;
-                          * else:      ADD_NEW_ITEM(); return 0; */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-udict_setitem_ex(UDict *self,
-                 DeeObject *key,
-                 DeeObject *value,
-                 unsigned int mode,
-                 DREF DeeObject **p_old_value) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+udict_mh_setold_ex(UDict *self, DeeObject *key, DeeObject *value) {
 	struct udict_item *first_dummy;
-	dhash_t i, perturb, hash = UHASH(key);
+	Dee_hash_t i, perturb, hash = UHASH(key);
+/*again:*/
+	UDict_LockWrite(self);
+/*again_locked:*/
+	first_dummy = NULL;
+	perturb = i = hash & self->ud_mask;
+	for (;; UDict_HashNx(i, perturb)) {
+		struct udict_item *item;
+		item = &self->ud_elem[i & self->ud_mask];
+		if (!item->di_key) {
+			if (!first_dummy)
+				first_dummy = item;
+			break; /* Not found */
+		}
+		if (item->di_key == dummy) {
+			first_dummy = item;
+			continue;
+		}
+		if (USAME(item->di_key, key)) {
+			DREF DeeObject *item_value;
+			/* Found an existing key. */
+			item_value = item->di_value;
+			Dee_Incref(value);
+			item->di_value = value;
+			UDict_LockEndWrite(self);
+			return item_value; /* Inherit reference */
+		}
+	}
+	UDict_LockEndWrite(self);
+	return ITER_DONE;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+udict_mh_setnew_ex(UDict *self, DeeObject *key, DeeObject *value) {
+	struct udict_item *first_dummy;
+	Dee_hash_t i, perturb, hash = UHASH(key);
 again:
 	UDict_LockWrite(self);
 again_locked:
@@ -980,31 +1014,13 @@ again_locked:
 		}
 		if (USAME(item->di_key, key)) {
 			DREF DeeObject *item_value;
+
 			/* Found an existing key. */
-			if (mode == SETITEM_SETOLD) {
-				item_value = item->di_value;
-				Dee_Incref(value);
-				item->di_value = value;
-				UDict_LockEndWrite(self);
-				if (p_old_value) {
-					*p_old_value = item_value; /* Inherit reference */
-				} else {
-					Dee_Decref(item_value);
-				}
-			} else {
-				if (p_old_value) {
-					item_value = item->di_value;
-					Dee_Incref(item_value);
-					*p_old_value = item_value;
-				}
-				UDict_LockEndWrite(self);
-			}
-			return 1;
+			item_value = item->di_value;
+			Dee_Incref(item_value);
+			UDict_LockEndWrite(self);
+			return item_value;
 		}
-	}
-	if (mode == SETITEM_SETOLD) {
-		UDict_LockEndWrite(self);
-		return 0;
 	}
 	if (first_dummy && self->ud_size + 1 < self->ud_mask) {
 		ASSERT(first_dummy != empty_dict_items);
@@ -1012,6 +1028,7 @@ again_locked:
 		       first_dummy->di_key == dummy);
 		if (first_dummy->di_key)
 			Dee_DecrefNokill(first_dummy->di_key);
+
 		/* Fill in the target slot. */
 		first_dummy->di_key   = key;
 		first_dummy->di_value = value;
@@ -1019,57 +1036,27 @@ again_locked:
 		Dee_Incref(value);
 		++self->ud_used;
 		++self->ud_size;
+
 		/* Try to keep the Dict vector big at least twice as big as the element count. */
 		if (self->ud_size * 2 > self->ud_mask)
 			udict_rehash(self, 1);
 		UDict_LockEndWrite(self);
-		return 0;
+		return ITER_DONE;
 	}
+
 	/* Rehash the Dict and try again. */
 	if (udict_rehash(self, 1))
 		goto again_locked;
 	UDict_LockEndWrite(self);
 	if (Dee_CollectMemory(1))
 		goto again;
-	return -1;
+	return NULL;
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 udict_size(UDict *__restrict self) {
 	return atomic_read(&self->ud_used);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-udict_nsi_setdefault(UDict *self, DeeObject *key, DeeObject *defl) {
-	DeeObject *old_value;
-	int error;
-	error = udict_setitem_ex(self, key, defl, SETITEM_SETNEW, &old_value);
-	if unlikely(error < 0)
-		goto err;
-	if (error == 1)
-		return old_value;
-	return_reference_(defl);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-udict_nsi_updateold(UDict *self, DeeObject *key,
-                    DeeObject *value, DREF DeeObject **p_oldvalue) {
-	return udict_setitem_ex(self, key, value, SETITEM_SETOLD, p_oldvalue);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-udict_nsi_insertnew(UDict *self, DeeObject *key,
-                    DeeObject *value, DREF DeeObject **p_oldvalue) {
-	int error;
-	error = udict_setitem_ex(self, key, value, SETITEM_SETNEW, p_oldvalue);
-	if unlikely(error < 0)
-		goto err;
-	return !error;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1088,45 +1075,10 @@ done:
 
 
 
-
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_clearfun(UDict *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
-	udict_clear(self);
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_get(UDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *def = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		goto err;
-	return UDict_GetItemDef(self, key, def);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_pop(UDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *def = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:pop", &key, &def))
-		goto err;
-	return udict_popitem(self, key, def);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_popsomething(UDict *self, size_t argc, DeeObject *const *argv) {
+udict_mh_popitem(UDict *__restrict self) {
 	DREF DeeTupleObject *result;
 	struct udict_item *iter;
-	if (DeeArg_Unpack(argc, argv, ":popitem"))
-		goto err;
 	/* Allocate a tuple which we're going to fill with some key-value pair. */
 	result = DeeTuple_NewUninitialized(2);
 	if unlikely(!result)
@@ -1157,106 +1109,18 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_setdefault(UDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value = Dee_None, *old_value;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+udict_mh_update(UDict *self, DeeObject *items) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, "o|o:setdefault", &key, &value))
-		goto err;
-	error = udict_setitem_ex(self, key, value, SETITEM_SETNEW, &old_value);
-	if unlikely(error < 0)
-		goto err;
-	if (error == 1)
-		return old_value;
-	return_reference_(value);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_setold(UDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setold", &key, &value))
-		goto err;
-	error = udict_setitem_ex(self, key, value, SETITEM_SETOLD, NULL);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(error);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_setnew(UDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setnew", &key, &value))
-		goto err;
-	error = udict_setitem_ex(self, key, value, SETITEM_SETNEW, NULL);
-	if unlikely(error < 0)
-		goto err;
-	return_bool_(!error);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_setold_ex(UDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value, *old_value, *result;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setold_ex", &key, &value))
-		goto err;
-	error = udict_setitem_ex(self, key, value, SETITEM_SETOLD, &old_value);
-	if unlikely(error < 0)
-		goto err;
-	if (error == 1) {
-		result = DeeTuple_Pack(2, Dee_True, old_value);
-		Dee_Decref(old_value);
-	} else {
-		result = DeeTuple_Pack(2, Dee_False, Dee_None);
-	}
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_setnew_ex(UDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value, *old_value, *result;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "oo:setnew_ex", &key, &value))
-		goto err;
-	error = udict_setitem_ex(self, key, value, SETITEM_SETNEW, &old_value);
-	if unlikely(error < 0)
-		goto err;
-	if (error == 1) {
-		result = DeeTuple_Pack(2, Dee_False, old_value);
-		Dee_Decref(old_value);
-	} else {
-		result = DeeTuple_Pack(2, Dee_True, Dee_None);
-	}
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_update(UDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *items, *iterator;
-	int error;
-	if (DeeArg_Unpack(argc, argv, "o:update", &items))
-		goto err;
+	DREF DeeObject *iterator;
 	iterator = DeeObject_Iter(items);
 	if unlikely(!iterator)
 		goto err;
 	error = udict_insert_iterator(self, iterator);
 	Dee_Decref(iterator);
-	if unlikely(error)
-		goto err;
-	return_none;
+	return error;
 err:
-	return NULL;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1435,66 +1299,28 @@ PRIVATE struct type_member tpconst udict_class_members[] = {
 };
 
 PRIVATE struct type_method tpconst udict_methods[] = {
-	TYPE_METHOD_F("get", &udict_get, METHOD_FNOREFESCAPE,
-	              "(key,def=!N)->\n"
-	              "#r{The value associated with @key or @def when @key has no value associated}"),
-	TYPE_METHOD_F("pop", &udict_pop, METHOD_FNOREFESCAPE,
-	              "(key)->\n"
-	              "(key,def)->\n"
-	              "#tKeyError{No @def was given and @key was not found}"
-	              "Delete @key from @this and return its previously assigned value or @def when @key had no item associated"),
-	TYPE_METHOD_F("clear", &udict_clearfun, METHOD_FNOREFESCAPE,
-	              "()\n"
-	              "Clear all values from @this ?."),
-	TYPE_METHOD_F("popitem", &udict_popsomething, METHOD_FNOREFESCAPE,
-	              "->?T2?O?O\n"
-	              "#r{A random pair key-value pair that has been removed}"
-	              "#tValueError{@this ?. was empty}"),
-	TYPE_METHOD_F("setdefault", &udict_setdefault, METHOD_FNOREFESCAPE,
-	              "(key,def=!N)->\n"
-	              "#r{The object currently assigned to @key}"
-	              "Lookup @key in @this ?. and return its value if found. Otherwise, assign @def to @key and return it instead"),
-	TYPE_METHOD_F("setold", &udict_setold, METHOD_FNOREFESCAPE,
-	              "(key,value)->?Dbool\n"
-	              "#r{Indicative of @value having been assigned to @key}"
-	              "Assign @value to @key, only succeeding when @key already existed to begin with"),
-	TYPE_METHOD_F("setnew", &udict_setnew, METHOD_FNOREFESCAPE,
-	              "(key,value)->?Dbool\n"
-	              "#r{Indicative of @value having been assigned to @key}"
-	              "Assign @value to @key, only succeeding when @key didn't exist before"),
-	TYPE_METHOD_F("setold_ex", &udict_setold_ex, METHOD_FNOREFESCAPE,
-	              "(key,value)->?T2?Dbool?O\n"
-	              "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
-	              "Same as #setold but also return the previously assigned object"),
-	TYPE_METHOD_F("setnew_ex", &udict_setnew_ex, METHOD_FNOREFESCAPE,
-	              "(key,value)->?T2?Dbool?O\n"
-	              "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
-	              "Same as #setnew but return the previously assigned object on failure"),
-	TYPE_METHOD_F("update", &udict_update, METHOD_FNOREFESCAPE,
-	              "(items:?S?T2?O?O)\n"
-	              "Iterate @items and unpack each element into 2 others, using them as "
-	              /**/ "key and value to insert into @this ?."),
+	TYPE_METHOD_HINTREF(map_pop),
+	TYPE_METHOD_HINTREF(seq_clear),
+	TYPE_METHOD_HINTREF(map_popitem),
+	TYPE_METHOD_HINTREF(map_update),
+	TYPE_METHOD_HINTREF(map_setold_ex),
+	TYPE_METHOD_HINTREF(map_setnew_ex),
 	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst udict_methods_hints[] = {
+	TYPE_METHOD_HINT_F(seq_clear, &udict_mh_clear, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_pop, &udict_mh_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_pop_with_default, &udict_mh_pop_with_default, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_popitem, &udict_mh_popitem, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_update, &udict_mh_update, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setold_ex, &udict_mh_setold_ex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setnew_ex, &udict_mh_setnew_ex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_gc tpconst udict_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&udict_clear
-};
-
-PRIVATE struct type_nsi tpconst udict_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&udict_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&udictiterator_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&udictiterator_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&UDict_GetItemDef,
-			/* .nsi_setdefault = */ (dfunptr_t)&udict_nsi_setdefault,
-			/* .nsi_updateold  = */ (dfunptr_t)&udict_nsi_updateold,
-			/* .nsi_insertnew  = */ (dfunptr_t)&udict_nsi_insertnew
-		}
-	}
 };
 
 PRIVATE struct type_seq udict_seq = {
@@ -1507,7 +1333,7 @@ PRIVATE struct type_seq udict_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &udict_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&udict_foreach,
 	/* .tp_enumerate                  = */ NULL,
@@ -1593,7 +1419,8 @@ INTERN DeeTypeObject UDict_Type = {
 	/* .tp_members       = */ udict_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ udict_class_members
+	/* .tp_class_members = */ udict_class_members,
+	/* .tp_method_hints  = */ udict_methods_hints,
 };
 
 
@@ -1680,13 +1507,18 @@ iter_exhausted:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-urodictiterator_next(URoDictIterator *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+urodictiterator_nextpair(URoDictIterator *__restrict self,
+                         DREF DeeObject *key_and_value[2]) {
 	struct udict_item *item;
 	item = urodictiterator_nextitem(self);
 	if (!item)
-		return ITER_DONE;
-	return DeeTuple_NewVector(2, (DREF DeeObject **)item);
+		return 1;
+	key_and_value[0] = item->di_key;
+	key_and_value[1] = item->di_value;
+	Dee_Incref(key_and_value[0]);
+	Dee_Incref(key_and_value[1]);
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1707,6 +1539,12 @@ urodictiterator_nextvalue(URoDictIterator *__restrict self) {
 	return_reference_(item->di_value);
 }
 
+PRIVATE struct type_iterator urodictiterator_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&urodictiterator_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodictiterator_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodictiterator_nextvalue,
+	/* .tp_advance   = */ NULL, // TODO: (size_t (DCALL *)(DeeObject *__restrict, size_t))&urodictiterator_advance,
+};
 
 PRIVATE struct type_member tpconst urodictiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(URoDictIterator, urdi_dict), "->?AFrozen?GUniqueDict"),
@@ -1746,8 +1584,8 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &urodictiterator_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodictiterator_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &urodictiterator_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -2072,26 +1910,6 @@ urodict_size(URoDict *__restrict self) {
 	return self->urd_size;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-URoDict_GetItemDef(URoDict *self, DeeObject *key, DeeObject *def) {
-	size_t i, perturb, hash;
-	struct udict_item *item;
-	hash    = UHASH(key);
-	perturb = i = URoDict_HashSt(self, hash);
-	for (;; URoDict_HashNx(i, perturb)) {
-		item = URoDict_HashIt(self, i);
-		if (!item->di_key)
-			break;
-		if (!USAME(item->di_key, key))
-			continue;
-		/* Found it! */
-		return_reference_(item->di_value);
-	}
-	if (def != ITER_DONE)
-		Dee_Incref(def);
-	return def;
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF URoDictIterator *DCALL
 urodict_iter(URoDict *__restrict self) {
 	DREF URoDictIterator *result;
@@ -2206,20 +2024,6 @@ err_temp:
 }
 
 
-PRIVATE struct type_nsi tpconst urodict_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&urodict_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&urodictiterator_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&urodictiterator_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&URoDict_GetItemDef
-		}
-	}
-};
-
-
 PRIVATE struct type_seq urodict_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -2230,7 +2034,7 @@ PRIVATE struct type_seq urodict_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &urodict_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&urodict_foreach,
 	/* .tp_enumerate                  = */ NULL,
@@ -2269,16 +2073,6 @@ PRIVATE struct type_seq urodict_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-urodict_get(URoDict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *def = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		goto err;
-	return URoDict_GetItemDef(self, key, def);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 urodict_sizeof(URoDict *self) {
 	size_t result;
 	result = _Dee_MallococBufsize(offsetof(URoDict, urd_elem),
@@ -2287,13 +2081,6 @@ urodict_sizeof(URoDict *self) {
 	return DeeInt_NewSize(result);
 }
 
-
-PRIVATE struct type_method tpconst urodict_methods[] = {
-	TYPE_METHOD_F("get", &urodict_get, METHOD_FNOREFESCAPE,
-	              "(key,def=!N)->\n"
-	              "#r{The value associated with @key or @def when @key has no value associated}"),
-	TYPE_METHOD_END
-};
 
 PRIVATE struct type_getset tpconst urodict_getsets[] = {
 	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
@@ -2354,7 +2141,7 @@ INTERN DeeTypeObject URoDict_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ urodict_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ urodict_getsets,
 	/* .tp_members       = */ urodict_members,
 	/* .tp_class_methods = */ NULL,
