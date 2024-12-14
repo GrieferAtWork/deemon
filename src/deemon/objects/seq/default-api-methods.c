@@ -1821,6 +1821,11 @@ seq_contains_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_DefaultContainsWithSeqFind(DeeObject *self, DeeObject *item) {
+	return DeeSeq_DefaultContainsWithRangeWithSeqFind(self, item, 0, (size_t)-1);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultContainsWithForeach(DeeObject *self, DeeObject *item) {
 	Dee_ssize_t foreach_status;
 	foreach_status = DeeSeq_OperatorForeach(self, &seq_contains_foreach_cb, item);
@@ -1828,6 +1833,11 @@ DeeSeq_DefaultContainsWithForeach(DeeObject *self, DeeObject *item) {
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeSeq_DefaultContainsWithKeyWithSeqFindWithKey(DeeObject *self, DeeObject *item, DeeObject *key) {
+	return DeeSeq_DefaultContainsWithRangeAndKeyWithSeqFindWithKey(self, item, 0, (size_t)-1, key);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -1851,6 +1861,17 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_DefaultContainsWithRangeWithSeqFind(DeeObject *self, DeeObject *item,
+                                           size_t start, size_t end) {
+	size_t match = DeeSeq_InvokeFind(self, item, start, end);
+	if unlikely(match == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return match != (size_t)-1 ? 1 : 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultContainsWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *item,
                                                      size_t start, size_t end) {
 	Dee_ssize_t foreach_status;
@@ -1859,6 +1880,17 @@ DeeSeq_DefaultContainsWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject 
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+DeeSeq_DefaultContainsWithRangeAndKeyWithSeqFindWithKey(DeeObject *self, DeeObject *item,
+                                                        size_t start, size_t end, DeeObject *key) {
+	size_t match = DeeSeq_InvokeFindWithKey(self, item, start, end, key);
+	if unlikely(match == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return match != (size_t)-1 ? 1 : 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
