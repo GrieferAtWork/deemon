@@ -76,8 +76,6 @@
 
 DECL_BEGIN
 
-/* TODO: Re-write all of the documentation for functions/operators to document how defaults work now. */
-
 #ifndef NDEBUG
 #define DBG_memset (void)memset
 #else /* !NDEBUG */
@@ -821,18 +819,12 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "return value. If the Sequence consists of only 1 element, @combine is never invoked.\n"
 	              "When given, @init is used as the initial lhs-operand, rather than the first element of the Sequence\n"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function reduce}|${"
+	              /**/ "${function reduce}¹|${this.reduce(combine)}&"
+	              /**/ "${function reduce}²|${"
 	              /**/ /**/ "return start != 0 || end != int.SIZE_MAX ? this.reduce(combine, start, end)\n"
 	              /**/ /**/ "                                         : this.reduce(combine);"
 	              /**/ "}&"
-	              /**/ "${operator iter}¹|${"
-	              /**/ /**/ "for (local x: this)\n"
-	              /**/ /**/ "	init = init is bound ? combine(init, x) : x;\n"
-	              /**/ /**/ "if (init !is bound)\n"
-	              /**/ /**/ "	throw ValueError(...);\n"
-	              /**/ /**/ "return init;"
-	              /**/ "}&"
-	              /**/ "${operator size}, ${operator getitem}²|${"
+	              /**/ "?#enumerate³|${"
 	              /**/ /**/ "local result = init is bound ? Cell(init) : Cell();\n"
 	              /**/ /**/ "Sequence.enumerate(this, (none, value?) -\\> {\n"
 	              /**/ /**/ "	if (value is bound)\n"
@@ -845,7 +837,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}"
 	              "#L{"
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
-	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
+	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
+	              /**/ "{³}Only when ?#enumerate has a valid implementation for the given arguments"
 	              "}"),
 	TYPE_KWMETHOD(DeeMH_seq_enumerate_name, &DeeMH_seq_enumerate,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?O\n"
@@ -869,7 +862,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "}\n"
 	              "#T{Requirements|Implementation~"
 	              /**/ "${property iterkeys}¹³|${"
-	              /**/ /**/ "foreach (local key: Object.__iterkeys__(this)) {\n"
+	              /**/ /**/ "foreach (local key: Mapping.iterkeys(this)) {\n"
 	              /**/ /**/ "	local myItem\n"
 	              /**/ /**/ "	local status;\n"
 	              /**/ /**/ "	if (!(start <= key) || !(end > key))\n"
@@ -926,16 +919,18 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "		local status = cb(i, v);\n"
 	              /**/ /**/ "		if (status !is none)\n"
 	              /**/ /**/ "			return status;\n"
-	              /**/ /**/ "		break;\n"
+	              /**/ /**/ "		goto next_i;\n"
 	              /**/ /**/ "	}\n"
+	              /**/ /**/ "	break;\n"
+	              /**/ /**/ "next_i:;\n"
 	              /**/ /**/ "}\n"
 	              /**/ /**/ "return none;"
 	              /**/ "}"
 	              "}"
 	              "#L{"
-	              /**/ "{¹}When @cb isn't given, filter for bound items and yield as ${(key, value)} pairs"
+	              /**/ "{¹}When @cb isn't given, filter for bound items and yield as ${(key, value)} pairs|"
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
-	              /**/ "{³}Only when ?A__seqclass__?DType is ?DMapping|"
+	              /**/ "{³}Only when ?A__seqclass__?DType is ?DMapping"
 	              "}"),
 	TYPE_KWMETHOD(STR_sum, &DeeMH_seq_sum,
 	              "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N\n"
