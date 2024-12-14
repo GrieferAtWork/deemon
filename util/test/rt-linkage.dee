@@ -119,7 +119,7 @@ assertRtTypeName("IterWithSizeAndTryGetItemIndexPair");
 assertRtTypeName("IterWithGetItem");
 assertRtTypeName("IterWithTGetItem");
 assertRtTypeName("IterWithSizeAndGetItem");
-assertRtTypeName("IterWithTSizeObAndGetItem");
+assertRtTypeName("IterWithSizeObAndTGetItem");
 assertRtTypeName("IterWithNextAndLimit");
 assertRtTypeName("IterWithIterKeysAndGetItemForSeq");
 assertRtTypeName("IterWithIterKeysAndTGetItemForSeq");

@@ -35,6 +35,7 @@
 
 /**/
 #include "../../runtime/runtime_error.h"
+#include "../../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -1166,6 +1167,11 @@ PRIVATE struct type_getset tpconst di_g_getsets[] = {
 	TYPE_GETSET_END,
 };
 
+PRIVATE struct type_member tpconst di_g_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithTGetItem_Type),
+	TYPE_MEMBER_END,
+};
+
 INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithGetItem",
@@ -1209,7 +1215,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	/* .tp_members       = */ di_g_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ di_g_class_members
 };
 
 INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
@@ -1283,7 +1289,7 @@ INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
 
 /************************************************************************/
 /* DefaultIterator_WithSizeObAndGetItem_Type                              */
-/* DefaultIterator_WithTSizeAndGetItem_Type                             */
+/* DefaultIterator_WithSizeObAndTGetItem_Type                             */
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_seq) == offsetof(DefaultIterator_WithGetItem, dig_seq));
@@ -1291,12 +1297,12 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index) == offs
 #ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) == offsetof(DefaultIterator_WithGetItem, dig_lock));
 #endif /* !CONFIG_NO_THREADS */
-STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_seq) == offsetof(DefaultIterator_WithTSizeAndGetItem, ditsg_seq));
-STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index) == offsetof(DefaultIterator_WithTSizeAndGetItem, ditsg_index));
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_seq) == offsetof(DefaultIterator_WithSizeObAndTGetItem, distg_seq));
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index) == offsetof(DefaultIterator_WithSizeObAndTGetItem, distg_index));
 #ifndef CONFIG_NO_THREADS
-STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) == offsetof(DefaultIterator_WithTSizeAndGetItem, ditsg_lock));
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) == offsetof(DefaultIterator_WithSizeObAndTGetItem, distg_lock));
 #endif /* !CONFIG_NO_THREADS */
-STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_end) == offsetof(DefaultIterator_WithTSizeAndGetItem, ditsg_end));
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_end) == offsetof(DefaultIterator_WithSizeObAndTGetItem, distg_end));
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_sg_copy(DefaultIterator_WithSizeObAndGetItem *__restrict self,
@@ -1346,30 +1352,30 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-di_tsg_init(DefaultIterator_WithTSizeAndGetItem *__restrict self,
+di_tsg_init(DefaultIterator_WithSizeObAndTGetItem *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oooo:_IterWithTSizeObAndGetItem",
-	                  &self->ditsg_seq, &self->ditsg_tp_seq,
-	                  &self->ditsg_index, &self->ditsg_end))
+	if (DeeArg_Unpack(argc, argv, "oooo:_IterWithSizeObAndTGetItem",
+	                  &self->distg_seq, &self->distg_tp_seq,
+	                  &self->distg_index, &self->distg_end))
 		goto err;
-	if (DeeObject_AssertType(self->ditsg_tp_seq, &DeeType_Type))
+	if (DeeObject_AssertType(self->distg_tp_seq, &DeeType_Type))
 		goto err;
-	if (DeeObject_AssertTypeOrAbstract(self->ditsg_seq, self->ditsg_tp_seq))
+	if (DeeObject_AssertTypeOrAbstract(self->distg_seq, self->distg_tp_seq))
 		goto err;
-	if ((!self->ditsg_tp_seq->tp_seq || !self->ditsg_tp_seq->tp_seq->tp_getitem) &&
-	    !DeeType_InheritGetItem(self->ditsg_tp_seq))
+	if ((!self->distg_tp_seq->tp_seq || !self->distg_tp_seq->tp_seq->tp_getitem) &&
+	    !DeeType_InheritGetItem(self->distg_tp_seq))
 		goto err_no_getitem;
-	self->ditsg_tp_tgetitem = DeeType_MapDefaultGetItem(self->ditsg_tp_seq->tp_seq->tp_getitem, &,
-	                                                    self->ditsg_tp_seq->tp_seq->tp_getitem == &instance_getitem
+	self->distg_tp_tgetitem = DeeType_MapDefaultGetItem(self->distg_tp_seq->tp_seq->tp_getitem, &,
+	                                                    self->distg_tp_seq->tp_seq->tp_getitem == &instance_getitem
 	                                                    ? &instance_tgetitem
 	                                                    : &generic_tp_tgetitem);
-	Dee_atomic_lock_init(&self->ditsg_lock);
-	Dee_Incref(self->ditsg_seq);
-	Dee_Incref(self->ditsg_index);
-	Dee_Incref(self->ditsg_end);
+	Dee_atomic_lock_init(&self->distg_lock);
+	Dee_Incref(self->distg_seq);
+	Dee_Incref(self->distg_index);
+	Dee_Incref(self->distg_end);
 	return 0;
 err_no_getitem:
-	err_unimplemented_operator(self->ditsg_tp_seq, OPERATOR_GETITEM);
+	err_unimplemented_operator(self->distg_tp_seq, OPERATOR_GETITEM);
 err:
 	return -1;
 }
@@ -1406,17 +1412,17 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_tsg_copy(DefaultIterator_WithTSizeAndGetItem *__restrict self,
-            DefaultIterator_WithTSizeAndGetItem *__restrict other) {
-	self->ditsg_tp_seq = other->ditsg_tp_seq;
+di_tsg_copy(DefaultIterator_WithSizeObAndTGetItem *__restrict self,
+            DefaultIterator_WithSizeObAndTGetItem *__restrict other) {
+	self->distg_tp_seq = other->distg_tp_seq;
 	return di_sg_copy((DefaultIterator_WithSizeObAndGetItem *)self,
 	                  (DefaultIterator_WithSizeObAndGetItem *)other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_tsg_deepcopy(DefaultIterator_WithTSizeAndGetItem *__restrict self,
-                DefaultIterator_WithTSizeAndGetItem *__restrict other) {
-	self->ditsg_tp_seq = other->ditsg_tp_seq;
+di_tsg_deepcopy(DefaultIterator_WithSizeObAndTGetItem *__restrict self,
+                DefaultIterator_WithSizeObAndTGetItem *__restrict other) {
+	self->distg_tp_seq = other->distg_tp_seq;
 	return di_sg_deepcopy((DefaultIterator_WithSizeObAndGetItem *)self,
 	                      (DefaultIterator_WithSizeObAndGetItem *)other);
 }
@@ -1550,24 +1556,24 @@ err_new_index:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-di_tsg_iter_next(DefaultIterator_WithTSizeAndGetItem *__restrict self) {
+di_tsg_iter_next(DefaultIterator_WithSizeObAndTGetItem *__restrict self) {
 	DeeObject *old_index;
 	DREF DeeObject *new_index, *result;
 again:
-	DefaultIterator_WithTSizeAndGetItem_LockAcquire(self);
-	old_index = self->ditsg_index;
+	DefaultIterator_WithSizeObAndTGetItem_LockAcquire(self);
+	old_index = self->distg_index;
 	Dee_Incref(old_index);
-	DefaultIterator_WithTSizeAndGetItem_LockRelease(self);
+	DefaultIterator_WithSizeObAndTGetItem_LockRelease(self);
 	new_index = old_index; /* Inherit reference */
 	for (;;) {
-		int temp = DeeObject_CmpGeAsBool(new_index, self->ditsg_end);
+		int temp = DeeObject_CmpGeAsBool(new_index, self->distg_end);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err_new_index;
 			Dee_Decref(new_index);
 			return ITER_DONE;
 		}
-		result = (*self->ditsg_tp_tgetitem)(self->ditsg_tp_seq, self->ditsg_seq, new_index);
+		result = (*self->distg_tp_tgetitem)(self->distg_tp_seq, self->distg_seq, new_index);
 		if (result)
 			break;
 		if (DeeError_Catch(&DeeError_IndexError)) {
@@ -1581,15 +1587,15 @@ again:
 	}
 	if (DeeObject_Inc(&new_index))
 		goto err_new_index_result;
-	DefaultIterator_WithTSizeAndGetItem_LockAcquire(self);
-	if unlikely(self->ditsg_index != old_index) {
-		DefaultIterator_WithTSizeAndGetItem_LockRelease(self);
+	DefaultIterator_WithSizeObAndTGetItem_LockAcquire(self);
+	if unlikely(self->distg_index != old_index) {
+		DefaultIterator_WithSizeObAndTGetItem_LockRelease(self);
 		Dee_Decref(new_index);
 		Dee_Decref(result);
 		goto again;
 	}
-	self->ditsg_index = new_index; /* Inherit (x2) */
-	DefaultIterator_WithTSizeAndGetItem_LockRelease(self);
+	self->distg_index = new_index; /* Inherit (x2) */
+	DefaultIterator_WithSizeObAndTGetItem_LockRelease(self);
 	Dee_Decref(old_index);
 	return result;
 err_new_index_result:
@@ -1608,6 +1614,11 @@ err_new_index:
 
 #define di_sg_getsets  di_g_getsets
 #define di_tsg_getsets di_g_getsets
+
+PRIVATE struct type_member tpconst di_sg_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithSizeObAndTGetItem_Type),
+	TYPE_MEMBER_END
+};
 
 INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1652,7 +1663,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 	/* .tp_members       = */ di_sg_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ di_sg_class_members
 };
 
 INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
@@ -1701,9 +1712,9 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type = {
+INTERN DeeTypeObject DefaultIterator_WithSizeObAndTGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithTSizeObAndGetItem",
+	/* .tp_name     = */ "_IterWithSizeObAndTGetItem",
 	/* .tp_doc      = */ DOC("(objWithGetItem,objType:?DType,index,end)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
@@ -1716,7 +1727,7 @@ INTERN DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&di_tsg_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&di_tsg_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&di_tsg_init,
-				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithTSizeAndGetItem)
+				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithSizeObAndTGetItem)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_tsg_fini,
@@ -2478,6 +2489,11 @@ err_key:
 	return NULL;
 }
 
+PRIVATE struct type_member tpconst di_ikgis_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithIterKeysAndTGetItemSeq_Type),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndGetItemForSeq",
@@ -2521,7 +2537,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemSeq_Type = {
 	/* .tp_members       = */ di_ikgis_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ di_ikgis_class_members
 };
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type = {
@@ -2570,6 +2586,11 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemSeq_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+PRIVATE struct type_member tpconst di_iktrgis_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTryGetItemForSeq",
@@ -2613,7 +2634,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemSeq_Type = {
 	/* .tp_members       = */ di_iktrgis_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ di_iktrgis_class_members
 };
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
@@ -2662,6 +2683,11 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+PRIVATE struct type_member tpconst di_ikgim_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithIterKeysAndTGetItemMap_Type),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndGetItemForMap",
@@ -2706,7 +2732,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	/* .tp_members       = */ di_ikgim_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ di_ikgim_class_members
 };
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type = {
@@ -2756,6 +2782,11 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+PRIVATE struct type_member tpconst di_iktrgim_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithIterKeysAndTTryGetItemMap_Type),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTryGetItemForMap",
@@ -2800,7 +2831,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	/* .tp_members       = */ di_iktrgim_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ di_iktrgim_class_members
 };
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {

@@ -100,22 +100,22 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD /* GC Object */
-	DREF DeeObject   *ditsg_seq;    /* [1..1][const] The sequence being iterated. */
-	/* [1..1][const] Callback to load the `index'th element of `ditsg_seq'. */
-	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *ditsg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-	DREF DeeObject   *ditsg_index;  /* [1..1][lock(ditsg_lock)] Next index to enumerate. */
+	DREF DeeObject   *distg_seq;    /* [1..1][const] The sequence being iterated. */
+	/* [1..1][const] Callback to load the `index'th element of `distg_seq'. */
+	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *distg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+	DREF DeeObject   *distg_index;  /* [1..1][lock(distg_lock)] Next index to enumerate. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t ditsg_lock;   /* Lock for `ditsg_index' */
+	Dee_atomic_lock_t distg_lock;   /* Lock for `distg_index' */
 #endif /* !CONFIG_NO_THREADS */
-	DREF DeeObject   *ditsg_end;    /* [1..1][const] Iteration stop index. */
-	DeeTypeObject    *ditsg_tp_seq; /* [1..1][const] The type to pass to `ditsg_tp_tgetitem'. */
-} DefaultIterator_WithTSizeAndGetItem;
-#define DefaultIterator_WithTSizeAndGetItem_LockAvailable(self)  Dee_atomic_lock_available(&(self)->ditsg_lock)
-#define DefaultIterator_WithTSizeAndGetItem_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->ditsg_lock)
-#define DefaultIterator_WithTSizeAndGetItem_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->ditsg_lock)
-#define DefaultIterator_WithTSizeAndGetItem_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->ditsg_lock)
-#define DefaultIterator_WithTSizeAndGetItem_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->ditsg_lock)
-#define DefaultIterator_WithTSizeAndGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->ditsg_lock)
+	DREF DeeObject   *distg_end;    /* [1..1][const] Iteration stop index. */
+	DeeTypeObject    *distg_tp_seq; /* [1..1][const] The type to pass to `distg_tp_tgetitem'. */
+} DefaultIterator_WithSizeObAndTGetItem;
+#define DefaultIterator_WithSizeObAndTGetItem_LockAvailable(self)  Dee_atomic_lock_available(&(self)->distg_lock)
+#define DefaultIterator_WithSizeObAndTGetItem_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->distg_lock)
+#define DefaultIterator_WithSizeObAndTGetItem_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->distg_lock)
+#define DefaultIterator_WithSizeObAndTGetItem_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->distg_lock)
+#define DefaultIterator_WithSizeObAndTGetItem_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->distg_lock)
+#define DefaultIterator_WithSizeObAndTGetItem_LockRelease(self)    Dee_atomic_lock_release(&(self)->distg_lock)
 
 typedef struct {
 	PROXY_OBJECT_HEAD(dinl_iter)   /* [1..1][const] The underlying iterator */
@@ -157,7 +157,7 @@ INTDEF DeeTypeObject DefaultIterator_WithTGetItem_Type; /* DefaultIterator_WithT
 
 INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type;     /* DefaultIterator_WithSizeObAndGetItem */
 INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type; /* DefaultIterator_WithSizeObAndGetItem */
-INTDEF DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type;      /* DefaultIterator_WithTSizeAndGetItem */
+INTDEF DeeTypeObject DefaultIterator_WithSizeObAndTGetItem_Type;    /* DefaultIterator_WithSizeObAndTGetItem */
 
 INTDEF DeeTypeObject DefaultIterator_WithNextAndLimit_Type; /* DefaultIterator_WithNextAndLimit */
 

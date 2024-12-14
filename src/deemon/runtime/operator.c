@@ -5633,21 +5633,21 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeObAndGetItem,
 		DREF DeeObject *(DCALL *tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 		tp_tgetitem = tp_self->tp_seq->tp_getitem == &instance_getitem ? &instance_tgetitem : NULL;
 		if (tp_tgetitem) {
-			DREF DefaultIterator_WithTSizeAndGetItem *result;
-			result = DeeGCObject_MALLOC(DefaultIterator_WithTSizeAndGetItem);
+			DREF DefaultIterator_WithSizeObAndTGetItem *result;
+			result = DeeGCObject_MALLOC(DefaultIterator_WithSizeObAndTGetItem);
 			if unlikely(!result)
 				goto err_size_ob;
-			result->ditsg_index = DeeObject_NewDefault(Dee_TYPE(sizeob));
-			if unlikely(!result->ditsg_index) {
+			result->distg_index = DeeObject_NewDefault(Dee_TYPE(sizeob));
+			if unlikely(!result->distg_index) {
 				DeeGCObject_FREE(result);
 				goto err_size_ob;
 			}
 			Dee_Incref(self);
-			result->ditsg_seq         = self; /* Inherit reference */
-			result->ditsg_tp_tgetitem = tp_tgetitem;
-			result->ditsg_end         = sizeob; /* Inherit reference */
-			Dee_atomic_lock_init(&result->ditsg_lock);
-			DeeObject_Init(result, &DefaultIterator_WithTSizeAndGetItem_Type);
+			result->distg_seq         = self; /* Inherit reference */
+			result->distg_tp_tgetitem = tp_tgetitem;
+			result->distg_end         = sizeob; /* Inherit reference */
+			Dee_atomic_lock_init(&result->distg_lock);
+			DeeObject_Init(result, &DefaultIterator_WithSizeObAndTGetItem_Type);
 			return DeeGC_Track((DREF DeeObject *)result);
 		}
 	}
@@ -5697,7 +5697,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithGetItem,
 			result->ditg_seq         = self; /* Inherit reference */
 			result->ditg_tp_tgetitem = tp_tgetitem;
 			Dee_atomic_lock_init(&result->ditg_lock);
-			DeeObject_Init(result, &DefaultIterator_WithTSizeAndGetItem_Type);
+			DeeObject_Init(result, &DefaultIterator_WithSizeObAndTGetItem_Type);
 			return DeeGC_Track((DREF DeeObject *)result);
 		}
 	}

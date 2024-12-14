@@ -909,6 +909,9 @@ DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
 #ifndef STR_this_function
 #define STR_this_function "this_function"
 #endif /* !STR_this_function */
+#ifndef STR_Typed
+#define STR_Typed "Typed"
+#endif /* !STR_Typed */
 
 /* Some versions of GCC think that using DeeString_STR() on a static
  * string object will result in us reading from out-of-bounds memory,

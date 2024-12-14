@@ -196,7 +196,7 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 		} else if (tp_iter == &DeeSeq_DefaultIterWithGetItemIndex) {
 			result = &DefaultIterator_WithGetItemIndex_Type;
 		} else if (tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem) {
-			result = &DefaultIterator_WithSizeObAndGetItem_Type; /*or: DefaultIterator_WithTSizeAndGetItem_Type */
+			result = &DefaultIterator_WithSizeObAndGetItem_Type; /*or: DefaultIterator_WithSizeObAndTGetItem_Type */
 		} else if (tp_iter == &DeeSeq_DefaultIterWithGetItem) {
 			result = &DefaultIterator_WithGetItem_Type; /* or: DefaultIterator_WithTGetItem_Type */
 		} else if (tp_iter == &DeeMap_DefaultIterWithEnumerate) {
@@ -2418,15 +2418,7 @@ PRIVATE struct type_operator const seq_operators[] = {
 
 PRIVATE struct type_member tpconst seq_class_members[] = {
 	/* TODO: Deprecated -- remove these (librt should create custom scenarios for all of these) */
-	TYPE_MEMBER_CONST("__SeqWithTSizeAndGetItem__", &DefaultSequence_WithTSizeAndGetItem_Type),
 	TYPE_MEMBER_CONST("__SeqWithIter__", &DefaultSequence_WithIter_Type),
-	TYPE_MEMBER_CONST("__SeqWithTIterAndLimit__", &DefaultSequence_WithTIterAndLimit_Type),
-	TYPE_MEMBER_CONST("__IterWithTGetItem__", &DefaultIterator_WithTGetItem_Type),
-	TYPE_MEMBER_CONST("__IterWithTSizeObAndGetItem__", &DefaultIterator_WithTSizeAndGetItem_Type),
-	TYPE_MEMBER_CONST("__IterWithIterKeysAndTGetItemForSeq__", &DefaultIterator_WithIterKeysAndTGetItemSeq_Type),
-	TYPE_MEMBER_CONST("__IterWithIterKeysAndTTryGetItemForSeq__", &DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type),
-	TYPE_MEMBER_CONST("__IterWithIterKeysAndTGetItemForMap__", &DefaultIterator_WithIterKeysAndTGetItemMap_Type),
-	TYPE_MEMBER_CONST("__IterWithIterKeysAndTTryGetItemForMap__", &DefaultIterator_WithIterKeysAndTTryGetItemMap_Type),
 
 	TYPE_MEMBER_CONST("__IterWithForeach__", &DefaultIterator_WithForeach_Type),
 	TYPE_MEMBER_CONST("__IterWithForeachPair__", &DefaultIterator_WithForeachPair_Type),
@@ -2473,9 +2465,9 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "bool->\n"
 	                         "Returns ?t/?f indicative of @this Sequence being non-empty.\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator bool}|${return !!this;}&"
+	                         /**/ "${operator bool}¹|${return !!this;}&"
 	                         /**/ "${operator size}¹²|${return !!##this;}&"
-	                         /**/ "${operator iter}¹²|${"
+	                         /**/ "${operator iter}²|${"
 	                         /**/ /**/ "for (none: this)\n"
 	                         /**/ /**/ "	return true;\n"
 	                         /**/ /**/ "return false;"
@@ -2497,7 +2489,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "operator repr(fp) {\n"
 	                         /**/ "	print fp: \"{ \",\n"
 	                         /**/ "	local isFirst = true;\n"
-	                         /**/ "	for (local item: this) {\n"
+	                         /**/ "	for (local item: (this as Sequence)) {\n"
 	                         /**/ "		if (!isFirst)\n"
 	                         /**/ "			print fp: \", \",\n"
 	                         /**/ "		isFirst = false;\n"
@@ -2516,8 +2508,8 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "as how the sub-range is accessed (i.e. ${##(this + other)} will invoke ${(##this).operator int() + (#other).operator int()}).\n"
 	                         "${"
 	                         /**/ "operator + (other) {\n"
-	                         /**/ "	yield this...;\n"
-	                         /**/ "	yield other...;\n"
+	                         /**/ "	yield (this as Sequence)...;\n"
+	                         /**/ "	yield (other as Sequence)...;\n"
 	                         /**/ "}"
 	                         "}\n"
 	                         "\n"
@@ -2540,7 +2532,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "		throw Error.ValueError.ArithmeticError.IntegerOverflow();\n"
 	                         /**/ "	while (count) {\n"
 	                         /**/ "		--count;\n"
-	                         /**/ "		yield this...;\n"
+	                         /**/ "		yield (this as Sequence)...;\n"
 	                         /**/ "	}\n"
 	                         /**/ "}"
 	                         "}\n"
@@ -2549,8 +2541,8 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "hash->\n"
 	                         "Returns the hash of all items of @this ?.\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator hash}|${return this.operator hash();}&"
-	                         /**/ "${operator iter}¹²|${"
+	                         /**/ "${operator hash}¹|${return this.operator hash();}&"
+	                         /**/ "${operator iter}²|${"
 	                         /**/ /**/ "local result = 0; // DEE_HASHOF_EMPTY_SEQUENCE\n"
 	                         /**/ /**/ "for (local x: this)\n"
 	                         /**/ /**/ "	result = deemon.hash(result, x);\n"
@@ -2588,7 +2580,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "Returns ?t/?f indicative of a lexicographical comparison between @this and @other."
 	                         "#T{Requirements|Implementation~"
 	                         /**/ "${operator <=>}¹²|${return this <=> other;}&"
-	                         /**/ "${operator iter}¹²³|${"
+	                         /**/ "${operator iter}²³|${"
 	                         /**/ /**/ "local myIter = this.operator iter();\n"
 	                         /**/ /**/ "if (IMPL_OF_OPERATOR_ITER(other) == WITH_SIZE_AND_GETITEM) {\n"
 	                         /**/ /**/ "	local otSize = ##other;\n"
@@ -2709,7 +2701,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "#tUnboundItem{The item associated with @index is unbound}"
 	                         "Returns the @{index}th element of @this Sequence, as determinable by enumeration\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator getitem}|${return this[index];}&"
+	                         /**/ "${operator getitem}¹|${return this[index];}&"
 	                         /**/ "${operator iter}|${"
 	                         /**/ /**/ "local i = 0;\n"
 	                         /**/ /**/ "for (local v: this) {\n"
@@ -2720,13 +2712,16 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ /**/ "throw IndexError(...);"
 	                         /**/ "}"
 	                         "}"
+	                         "#L{"
+	                         /**/ "{¹}Only when ?A__seqclass__?DType is ?."
+	                         "}\n"
 	                         "\n"
 
 	                         "#->\n"
 	                         "Returns the length of @this Sequence, as determinable by enumeration\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator size}|${return #this;}&"
-	                         /**/ "${operator iter}¹²|${"
+	                         /**/ "${operator size}¹|${return #this;}&"
+	                         /**/ "${operator iter}²|${"
 	                         /**/ /**/ "local result = 0;\n"
 	                         /**/ /**/ "for (none: this)\n"
 	                         /**/ /**/ "	++result;\n"
@@ -2744,7 +2739,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "This operator is an alias for the #contains member function, "
 	                         /**/ "which allows the use of an additional key function\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator contains}|${return item in this;}&"
+	                         /**/ "${operator contains}¹|${return item in this;}&"
 	                         /**/ "${operator iter}|${"
 	                         /**/ /**/ "for (local x: this) {\n"
 	                         /**/ /**/ "	if (deemon.equals(item, x))\n"
@@ -2820,7 +2815,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "strategy used, based on which operators have been implemented by sub-classes, as well "
 	                         /**/ "as how the sub-range is accessed (i.e. ${this[10:20][3]} will invoke ${this[13]}).\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator getrange}|${return this[start:end];}&"
+	                         /**/ "${operator getrange}¹|${return this[start:end];}&"
 	                         /**/ "${operator getitem}, ${operator size}¹²|${"
 	                         /**/ /**/ "start, end = util.clamprange(start, end, ##this)...;\n"
 	                         /**/ /**/ "for (local i: [start:end]) {\n"
@@ -2833,7 +2828,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ /**/ "	}\n"
 	                         /**/ /**/ "}"
 	                         /**/ "}"
-	                         /**/ "${operator iter}, ${operator size}¹²|${"
+	                         /**/ "${operator iter}, ${operator size}²|${"
 	                         /**/ /**/ "start, end = util.clamprange(start, end, ##this)...;\n"
 	                         /**/ /**/ "local it = this.operator iter();\n"
 	                         /**/ /**/ "for (none: [:start]) {\n"
@@ -2905,7 +2900,10 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "Either remove (as per ?#erase) the item under @index (?#{op:size} changes), or mark "
 	                         /**/ "said item as unbound (?#{op:size} remains unchanged)\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator delitem}|${del this[index];}"
+	                         /**/ "${operator delitem}¹|${del this[index];}"
+	                         "}"
+	                         "#L{"
+	                         /**/ "{¹}Only when ?A__seqclass__?DType is ?."
 	                         "}\n"
 	                         "\n"
 
@@ -2914,7 +2912,10 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "#tIndexError{The given @index is out of bounds}"
 	                         "Set the value of @index to @value\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator setitem}|${this[index] = value;}"
+	                         /**/ "${operator setitem}¹|${this[index] = value;}"
+	                         "}"
+	                         "#L{"
+	                         /**/ "{¹}Only when ?A__seqclass__?DType is ?."
 	                         "}\n"
 	                         "\n"
 
@@ -2923,7 +2924,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "#tSequenceError{@this Sequence cannot be resized}"
 	                         "Delete, or unbind all items within the given range\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator delrange}|${del this[start:end];}&"
+	                         /**/ "${operator delrange}¹|${del this[start:end];}&"
 	                         /**/ "${operator setrange}¹²|${this[start:end] = none;}&"
 	                         /**/ "${operator size}, ${function erase}¹²|${"
 	                         /**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
@@ -2963,7 +2964,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "Note that unlike ?#{op:delrange}, this operator is required to resize the sequence, and "
 	                         /**/ "is not allowed to leave items unbound.\n"
 	                         "#T{Requirements|Implementation~"
-	                         /**/ "${operator setrange}|${this[start:end] = values;}&"
+	                         /**/ "${operator setrange}¹|${this[start:end] = values;}&"
 	                         /**/ "${operator size}, ${function erase}, ${function insertall}¹²|${"
 	                         /**/ /**/ "start, end = util.clamprange(start, end, ##this);\n"
 	                         /**/ /**/ "if (start < end)\n"

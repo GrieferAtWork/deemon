@@ -1351,23 +1351,23 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithTSizeAndGetItem *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeObAndTGetItem *DCALL
 ds_tsg_iter(DefaultSequence_WithTSizeAndGetItem *__restrict self) {
-	DREF DefaultIterator_WithTSizeAndGetItem *result;
-	result = DeeGCObject_MALLOC(DefaultIterator_WithTSizeAndGetItem);
+	DREF DefaultIterator_WithSizeObAndTGetItem *result;
+	result = DeeGCObject_MALLOC(DefaultIterator_WithSizeObAndTGetItem);
 	if unlikely(!result)
 		goto err;
 	Dee_Incref(self->dstsg_seq);
 	Dee_Incref(self->dstsg_start);
 	Dee_Incref(self->dstsg_end);
-	result->ditsg_seq         = self->dstsg_seq;
-	result->ditsg_tp_tgetitem = self->dstsg_tp_tgetitem;
-	result->ditsg_index       = self->dstsg_start;
-	result->ditsg_end         = self->dstsg_end;
-	result->ditsg_tp_seq      = self->dstsg_tp_seq;
-	Dee_atomic_lock_init(&result->ditsg_lock);
-	DeeObject_Init(result, &DefaultIterator_WithTSizeAndGetItem_Type);
-	return (DREF DefaultIterator_WithTSizeAndGetItem *)DeeGC_Track((DREF DeeObject *)result);
+	result->distg_seq         = self->dstsg_seq;
+	result->distg_tp_tgetitem = self->dstsg_tp_tgetitem;
+	result->distg_index       = self->dstsg_start;
+	result->distg_end         = self->dstsg_end;
+	result->distg_tp_seq      = self->dstsg_tp_seq;
+	Dee_atomic_lock_init(&result->distg_lock);
+	DeeObject_Init(result, &DefaultIterator_WithSizeObAndTGetItem_Type);
+	return (DREF DefaultIterator_WithSizeObAndTGetItem *)DeeGC_Track((DREF DeeObject *)result);
 err:
 	return NULL;
 }
@@ -2103,11 +2103,12 @@ PRIVATE struct type_member tpconst ds_tsg_members[] = {
 
 PRIVATE struct type_member tpconst ds_sg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeObAndGetItem_Type),
+	TYPE_MEMBER_CONST(STR_Typed, &DefaultSequence_WithTSizeAndGetItem_Type),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst ds_tsg_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithTSizeAndGetItem_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeObAndTGetItem_Type),
 	TYPE_MEMBER_END
 };
 
@@ -2741,16 +2742,16 @@ PRIVATE struct type_member tpconst ds_tial_members[] = {
 	TYPE_MEMBER_END
 };
 
-#if 1 /* Not always true, but is generally the case. */
-#define ds_tial_class_members ds_ial_class_members
 PRIVATE struct type_member tpconst ds_ial_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Typed, &DefaultSequence_WithTIterAndLimit_Type),
+#if 1 /* Not always true, but is generally the case. */
+#define ds_tial_class_members (ds_ial_class_members + 1)
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextAndLimit_Type),
-	TYPE_MEMBER_END
-};
 #else
 #define ds_tial_class_members NULL
-#define ds_ial_class_members  NULL
 #endif
+	TYPE_MEMBER_END
+};
 
 INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
