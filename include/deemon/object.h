@@ -5057,8 +5057,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringLenHash)(Dee
 #define DeeObject_BoundItemStringLen(self, key, keylen) DeeObject_BoundItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 
 /* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *other);
-DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc, /*inherit(on_success)*/ DREF DeeObject *const *argv);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(always)*/ DREF DeeObject *self, DeeObject *other);
+DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(always)*/ DREF DeeObject *self, size_t argc, /*inherit(always)*/ DREF DeeObject *const *argv);
 
 /* Print the given object to a format printer.
  * This is identical to printing the return value of `DeeObject_Str', but is quite

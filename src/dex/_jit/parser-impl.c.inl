@@ -3615,11 +3615,9 @@ again:
 		/* Expand expression */
 		JITLexer_Yield(self);
 #ifdef JIT_EVAL
-		new_result = (DREF DeeTupleObject *)DeeTuple_ConcatInherited((DREF DeeObject *)result, lhs);
-		if unlikely(!new_result)
-			goto err_r_lhs;
-		result = new_result;
-		Dee_Decref(lhs);
+		result = (DREF DeeTupleObject *)DeeTuple_ConcatInherited((DREF DeeObject *)result, lhs);
+		if unlikely(!result)
+			goto err;
 #endif /* JIT_EVAL */
 		if (self->jl_tok != ',')
 			break;
@@ -3664,6 +3662,9 @@ err_r_lhs:
 #endif /* JIT_EVAL */
 err_r:
 	DECREF(result);
+#ifdef JIT_EVAL
+err:
+#endif /* JIT_EVAL */
 	return ERROR;
 }
 

@@ -3919,11 +3919,12 @@ target_concat:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeObject_ConcatInherited,8)
 	ADJUST_CFA_OFFSET(-8)
+	sp_popref /*scratch=*/%ecx, /*safe_eax=*/1
 	testl  %eax, %eax
-	jz     .except
-	movl   %eax, SECOND /* Save the concat in the second slot. */
-	sp_popref %eax /* Pop the sequence that was appended */
+	jz     target_concat_extend__Lexcept_SP4
+	movl   %eax, TOP /* Save the concat-sequence. */
 	jmp    .disp
+
 target_extend:
 	lodsb  /* EAX = n_args */
 	leal   (,%eax,4), %ecx /* ECX = EAX*4 */
@@ -3939,13 +3940,16 @@ target_extend:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeObject_ExtendInherited,12) /* Extend the sequence. */
 	ADJUST_CFA_OFFSET(-12)
-	testl  %eax, %eax
-	jz     .except_x4 /* Check for errors. */
 	popl   SP        /* SP = new_sp */
 	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     target_concat_extend__Lexcept_SP4 /* Check for errors. */
 	movl   %eax, TOP /* Save the concat-sequence. */
 	jmp    .disp
 
+target_concat_extend__Lexcept_SP4:
+	subl   $4, SP
+	jmp    .except
 
 
 .macro define_unary_op target, function

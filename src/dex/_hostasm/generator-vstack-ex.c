@@ -6393,23 +6393,20 @@ fg_vopconcat(struct fungen *__restrict self) {
 	} else {
 		concat_inherited_api_function = (void const *)&DeeObject_ConcatInherited;
 	}
-	DO(fg_vswap(self));            /* rhs, lhs */
-	DO(fg_vref2(self, 2));         /* rhs, ref:lhs */
-	DO(fg_vnotoneref_at(self, 1)); /* rhs, ref:lhs */
-	DO(fg_vswap(self));            /* ref:lhs, rhs */
-	if (concat_inherited_api_function == (void const *)&DeeObject_ConcatInherited)
-		DO(fg_vnotoneref_at(self, 1));                                           /* ref:lhs, rhs */
-	DO(fg_vdup_at(self, 2));                                                     /* ref:lhs, rhs, lhs */
-	DO(fg_vswap(self));                                                          /* ref:lhs, lhs, rhs */
-	DO(fg_vcallapi(self, concat_inherited_api_function, VCALL_CC_RAWINTPTR, 2)); /* [ref]:lhs, UNCHECKED(result) */
-	ASSERT(fg_vtop_isdirect(self));                                              /* [ref]:lhs, UNCHECKED(result) */
-	DO(fg_gjz_except(self, fg_vtopdloc(self)));                                  /* noref:lhs, UNCHECKED(result) */
-	if (concat_inherited_api_function != (void const *)&DeeObject_ConcatInherited)
-		DO(fg_voneref_noalias(self));
-	DO(fg_vswap(self)); /* result, noref:lhs */
-	ASSERT(fg_vtop_direct_isref(self));
-	fg_vtop_direct_clearref(self); /* result, lhs */
-	return fg_vpop(self);          /* result */
+	DO(fg_vswap(self));                                                                /* rhs, lhs */
+	DO(fg_vref2(self, 2));                                                             /* rhs, ref:lhs */
+	DO(fg_vnotoneref_at(self, 1));                                                     /* rhs, ref:lhs */
+	DO(fg_vswap(self));                                                                /* ref:lhs, rhs */
+	DO(fg_vcallapi_ex(self, concat_inherited_api_function, VCALL_CC_RAWINTPTR, 2, 1)); /* [!ref]:lhs, UNCHECKED(result) */
+	DO(fg_vswap(self));                                                                /* UNCHECKED(result), [!ref]:lhs */
+	ASSERT(fg_vtop_isdirect(self));                                                    /* UNCHECKED(result), [!ref]:lhs */
+	fg_vtop_direct_clearref(self);                                                     /* UNCHECKED(result), lhs */
+	DO(fg_vpop(self));                                                                 /* UNCHECKED(result) */
+	ASSERT(fg_vtop_isdirect(self));                                                    /* UNCHECKED(result) */
+	DO(fg_gjz_except(self, fg_vtopdloc(self)));                                        /* result */
+	ASSERT(fg_vtop_isdirect(self));                                                    /* UNCHECKED(result), [!ref]:lhs */
+	fg_vtop_direct_setref(self);                                                       /* ref:result */
+	return 0;                                                                          /* ref:result */
 err:
 	return -1;
 }
@@ -6420,7 +6417,6 @@ fg_vopextend(struct fungen *__restrict self, vstackaddr_t n) {
 	vstackaddr_t i;
 	void const *extend_inherited_api_function;
 	DeeTypeObject *seq_type;
-	uint16_t old_seqflags;
 	for (i = 0; i < n; ++i) {
 		/* TODO: Don't create references here if `DeeSharedVector_NewShared()' gets used below! */
 		DO(fg_vlrot(self, n));
@@ -6441,62 +6437,28 @@ fg_vopextend(struct fungen *__restrict self, vstackaddr_t n) {
 	} else if (seq_type == &DeeList_Type) {
 		extend_inherited_api_function = (void const *)&DeeList_ExtendInherited;
 	} else if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
-		/* Inline the fallback from `DeeObject_ExtendInherited()' */
-		struct fungen_exceptinject_callvoidapi ij;
-		/* TODO: Use `DeeSharedVector_Decref()' if more than half of "elemv" are references. */
-		void const *api_decref = (void const *)&DeeSharedVector_DecrefNoGiftItems;
-		DO(fg_vpush_immSIZ(self, n));                                          /* [elems...], elemv, seq, elemc */
-		DO(fg_vlrot(self, 3));                                                 /* [elems...], seq, elemc, elemv */
-		DO(fg_vcallapi(self, &DeeSharedVector_NewShared, VCALL_CC_OBJECT, 2)); /* [elems...], seq, svec */
-		DO(fg_vdirect1(self));                                                 /* [elems...], seq, svec */
-		DO(fg_vsettyp_noalias(self, &DeeSharedVector_Type));                   /* [elems...], seq, svec */
-		fg_vtop_direct_clearref(self);                                         /* [elems...], seq, svec */
-		DO(fg_vswap(self));                                                    /* [elems...], svec, seq */
-		fg_xinject_push_callvoidapi(self, &ij, api_decref, 1);                 /* [elems...], svec, seq */
-		ij.fei_cva_base.fei_stack -= 1;                                                            /* [elems...], svec, seq */
-		if (api_decref == (void const *)&DeeSharedVector_Decref) {
-			struct memval *elemv = self->fg_state->ms_stackv + self->fg_state->ms_stackc - (2 + n);
-			for (i = 0; i < n; ++i) {
-				ASSERT(memval_isdirect(&elemv[i]));
-				ASSERT(memval_direct_isref(&elemv[i]));
-				memval_direct_clearref(&elemv[i]); /* Stolen by the shared vector */
-			}
-		}
-		DO(fg_vdup_at(self, 2));                                /* [elems...], svec, seq, svec */
-		DO(fg_vop(self, OPERATOR_ADD, 2, VOP_F_PUSHRES));       /* [elems...], svec, result */
-		fg_xinject_pop_callvoidapi(self, &ij);                  /* [elems...], svec, result */
-		DO(fg_vswap(self));                                     /* [elems...], result, svec */
-		ASSERT(!fg_vtop_direct_isref(self));                    /* [elems...], result, svec */
-		DO(fg_vcallapi(self, api_decref, VCALL_CC_VOID_NX, 1)); /* [elems...], result */
-		goto rotate_result_and_pop_elems;
+		/* TODO: Inline the fallback from `DeeObject_ExtendInherited()' */
 	}
-	DO(fg_vdirect1(self));         /* [elems...], elemv, seq */
-	DO(fg_vref2(self, n + 2));     /* [elems...], elemv, ref:seq */
+	DO(fg_vdirect1(self));          /* [ref:elems...], elemv, seq */
+	DO(fg_vref2(self, n + 2));      /* [ref:elems...], elemv, ref:seq */
 	if (extend_inherited_api_function == (void const *)&DeeObject_ExtendInherited)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ADD, 1)); /* [elems...], elemv, ref:seq */
-	DO(fg_vpush_immSIZ(self, n));  /* [elems...], elemv, ref:seq, elemc */
-	DO(fg_vlrot(self, 3));         /* [elems...], ref:seq, elemc, elemv */
-	old_seqflags = memval_direct_getobj(&fg_vtop(self)[-2])->mo_flags;
-	DO(fg_vcallapi_ex(self, extend_inherited_api_function, VCALL_CC_RAWINTPTR, 3, 0)); /* [[valid_if(!result)] elems...], [valid_if(!result)] ref:seq, elemc, elemv, UNCHECKED(result) */
-	ASSERT(fg_vtop_isdirect(self));
-	DO(fg_gjz_except(self, fg_vtopdloc(self))); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, result */
-	fg_vtop_direct_setref(self);   /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, ref:result */
-	if (extend_inherited_api_function != (void const *)&DeeObject_ExtendInherited)
-		memval_direct_getobj(fg_vtop(self))->mo_flags |= n ? MEMOBJ_F_ONEREF : (old_seqflags & MEMOBJ_F_ONEREF);
-	DO(fg_vrrot(self, 4));         /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq, elemc, elemv */
-	DO(fg_vpop(self));             /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq, elemc */
-	DO(fg_vpop(self));             /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq */
-	fg_vtop_direct_clearref(self); /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] seq */
-	DO(fg_vpop(self));             /* [[valid_if(false)] elems...], ref:result */
-rotate_result_and_pop_elems:       /* [[valid_if(false)] elems...], ref:result */
-	DO(fg_vrrot(self, n + 1));     /* ref:result, [[valid_if(false)] elems...] */
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ADD, 1)); /* [ref:elems...], elemv, ref:seq */
+	DO(fg_vpush_immSIZ(self, n));   /* [ref:elems...], elemv, ref:seq, elemc */
+	DO(fg_vlrot(self, 3));          /* [ref:elems...], ref:seq, elemc, elemv */
+	DO(fg_vcallapi_ex(self, extend_inherited_api_function, VCALL_CC_RAWINTPTR, 3, 2)); /* [ref:elems...], ref:seq, UNCHECKED(result) */
+	ASSERT(fg_vtop_isdirect(self)); /* [[invalid] elems...], [invalid] ref:seq, UNCHECKED(result) */
+	DO(fg_vrrot(self, n + 2));      /* UNCHECKED(result), [[invalid] elems...], [invalid] ref:seq */
+	ASSERT(fg_vtop_direct_isref(self));
+	fg_vtop_direct_clearref(self);
+	DO(fg_vpop(self));              /* UNCHECKED(result), [[invalid] elems...] */
 	for (i = 0; i < n; ++i) {
-		/* In the success-case, references were inherited! */
 		ASSERT(fg_vtop_direct_isref(self));
 		fg_vtop_direct_clearref(self);
 		DO(fg_vpop(self));
-	}
-	return 0; /* ref:result */
+	}                                           /* UNCHECKED(result) */
+	DO(fg_gjz_except(self, fg_vtopdloc(self))); /* result */
+	fg_vtop_direct_setref(self);                /* ref:result */
+	return 0;                                   /* ref:result */
 err:
 	return -1;
 }

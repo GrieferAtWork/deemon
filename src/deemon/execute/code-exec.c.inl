@@ -2102,10 +2102,12 @@ do_push_module:
 		TARGET(ASM_CONCAT, -2, +1) {
 			DREF DeeObject *temp;
 			temp = DeeObject_ConcatInherited(SECOND, FIRST);
-			if unlikely(!temp)
-				HANDLE_EXCEPT();
-			SECOND = temp;
 			POPREF();
+			if unlikely(!temp) {
+				--sp; /* Was also inherited in the error-case */
+				HANDLE_EXCEPT();
+			}
+			FIRST = temp;
 			DISPATCH();
 		}
 
@@ -2116,9 +2118,11 @@ do_push_module:
 			ASSERT_USAGE(-((int)n_args + 1), +1);
 			new_sp = sp - n_args;
 			temp   = DeeObject_ExtendInherited(new_sp[-1], n_args, new_sp);
-			if unlikely(!temp)
+			sp     = new_sp;
+			if unlikely(!temp) {
+				--sp; /* Was also inherited in the error-case */
 				HANDLE_EXCEPT();
-			sp  = new_sp;
+			}
 			TOP = temp;
 			DISPATCH();
 		}

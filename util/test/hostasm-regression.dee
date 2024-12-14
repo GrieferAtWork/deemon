@@ -54,8 +54,8 @@ global nonFinalGlobalNone = _hide(none);
 
 function hexec(expectedResult, args, func) {
 	//print("line:", Traceback()[1].line + 1);
-	local actualResult = try test_compile_and_run(func, args) catch (e...) e;
 	local actualResultNative = try func(args...) catch (e...) e;
+	local actualResult = try test_compile_and_run(func, args) catch (e...) e;
 	if (expectedResult is Callable && expectedResult !is Type) {
 		assert expectedResult(actualResult);
 		assert expectedResult(actualResultNative);

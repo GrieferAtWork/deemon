@@ -1092,6 +1092,8 @@ PRIVATE Dee_atomic_lock_t bad_refcnt_lock = DEE_ATOMIC_LOCK_INIT;
 #define bad_refcnt_lock_waitfor()    Dee_atomic_lock_waitfor(&bad_refcnt_lock)
 #define bad_refcnt_lock_release()    Dee_atomic_lock_release(&bad_refcnt_lock)
 
+INTDEF void DCALL assert_print_usercode_trace(void);
+
 PUBLIC NONNULL((1)) void DCALL
 DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	DeeTypeObject *type;
@@ -1108,6 +1110,7 @@ DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	}
 	Dee_DPRINTF("\n\n\n");
 	bad_refcnt_lock_release();
+	assert_print_usercode_trace();
 	Dee_BREAKPOINT();
 }
 
@@ -1127,6 +1130,7 @@ DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 	}
 	Dee_DPRINTF("\n\n\n");
 	bad_refcnt_lock_release();
+	assert_print_usercode_trace();
 	Dee_BREAKPOINT();
 }
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
@@ -1236,6 +1240,7 @@ again:
 			Dee_DPRINTF("type : <INVALID> - %p", type);
 		}
 		Dee_DPRINTF("\n\n\n");
+		assert_print_usercode_trace();
 		bad_refcnt_lock_release();
 		Dee_BREAKPOINT();
 	}

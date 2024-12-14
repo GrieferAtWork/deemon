@@ -449,13 +449,12 @@ err:
 /* Concat a list and some generic sequence,
  * inheriting a reference from `self' in the process. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeList_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self,
-                        DeeObject *sequence) {
+DeeList_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *sequence) {
 	DREF DeeObject *result;
 	if (!DeeObject_IsShared(self)) {
 		/* Simple case: can append onto the original list. */
 		if unlikely(DeeList_AppendSequence(self, sequence))
-			goto err;
+			goto err_self;
 		return self;
 	}
 
@@ -471,17 +470,18 @@ DeeList_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self,
 	result = DeeList_Copy(self);
 	Dee_Decref_unlikely(self);
 	if unlikely(!result)
-		goto err;
+		goto err_self;
 	if unlikely(DeeList_AppendSequence(result, sequence))
 		Dee_Clear(result);
 	return result;
-err:
+err_self:
+	Dee_Decref_unlikely(self);
 	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
-                        /*inherit(on_success)*/ DREF DeeObject *const *argv) {
+DeeList_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
+                        /*inherit(always)*/ DREF DeeObject *const *argv) {
 	List *me = (List *)self;
 	DREF List *result;
 	if (!DeeObject_IsShared(me)) {
@@ -506,7 +506,7 @@ do_realloc_vector:
 				}
 				if (Dee_CollectMemoryc(new_elema, sizeof(DREF DeeObject *)))
 					goto do_realloc_vector;
-				goto err;
+				goto err_me_argv;
 			}
 			result->l_list.ol_elemv  = new_elemv;
 			_DeeList_SetAlloc(result, new_elema);
@@ -521,7 +521,7 @@ do_realloc_vector:
 allocate_new_vector:
 		new_elemv = Dee_objectlist_elemv_malloc(list_size + argc);
 		if unlikely(!new_elemv)
-			goto err;
+			goto err_me_argv;
 		DeeList_LockRead(me);
 		if unlikely(DeeList_SIZE(me) != list_size) {
 			list_size = DeeList_SIZE(me);
@@ -537,7 +537,7 @@ allocate_new_vector:
 		if unlikely(!result) {
 			Dee_Decrefv(new_elemv, list_size);
 			Dee_objectlist_elemv_free(new_elemv);
-			goto err;
+			goto err_me_argv;
 		}
 		memcpyc(new_elemv + list_size, argv,
 		        argc, sizeof(DREF DeeObject *));
@@ -550,7 +550,9 @@ allocate_new_vector:
 		result = (DREF List *)DeeGC_Track((DeeObject *)result);
 	}
 	return (DREF DeeObject *)result;
-err:
+err_me_argv:
+	Dee_Decrefv(argv, argc);
+	Dee_Decref(me);
 	return NULL;
 }
 

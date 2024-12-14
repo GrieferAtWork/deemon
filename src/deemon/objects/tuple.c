@@ -905,199 +905,6 @@ DeeTuple_DecrefSymbolic(DeeObject *__restrict self) {
 	}
 }
 
-/* Append all elements from an iterator to a tuple.
- * @assume(DeeTuple_IsEmpty(self) || !DeeObject_IsShared(self)); */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL
-DeeTuple_Unshared_AppendIterator(/*inherit(on_success)*/ DREF Tuple *__restrict self,
-                                 DeeObject *__restrict iterator) {
-	DREF DeeObject *elem;
-	DREF Tuple *result;
-	size_t incfactor = 2;
-	size_t used_size = DeeTuple_SIZE(self);
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if (used_size == DeeTuple_SIZE(self)) {
-			/* Must increase the tuple's size. */
-			result = DeeTuple_ResizeUninitialized(self, used_size + incfactor);
-			if unlikely(!result) {
-				Dee_Decref(elem);
-				goto err;
-			}
-			self = result;
-			incfactor *= 2;
-		}
-		DeeTuple_SET(self, used_size, elem); /* Inherit reference. */
-		++used_size;
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	}
-	self = DeeTuple_TruncateUninitialized(self, used_size);
-	if unlikely(!elem)
-		goto err;
-	return self;
-err:
-	return NULL;
-}
-
-
-PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
-                         /*inherit(on_success)*/ DREF DeeObject *const *argv) {
-	DREF Tuple *me = (DREF Tuple *)self;
-	DREF Tuple *result;
-	ASSERT_OBJECT_TYPE_EXACT(me, &DeeTuple_Type);
-	if (!DeeObject_IsShared(me)) {
-		size_t old_size; /* Optimization: The old object can be re-used. */
-		old_size = DeeTuple_SIZE(me);
-		result   = DeeTuple_ResizeUninitialized(me, old_size + argc);
-		if unlikely(!result)
-			goto err;
-		memcpyc(result->t_elem + old_size, argv,
-		        argc, sizeof(DREF DeeObject *));
-	} else if unlikely(!argc) {
-		result = me; /* Inherit reference */
-	} else {
-		DREF DeeObject **iter;
-		size_t mylen = DeeTuple_SIZE(me);
-		result = DeeTuple_NewUninitialized(mylen + argc);
-		if unlikely(!result)
-			goto err;
-		iter = Dee_Movprefv(DeeTuple_ELEM(result), DeeTuple_ELEM(me), mylen);
-		memcpyc(iter, argv, argc, sizeof(DREF DeeObject *));
-		Dee_Decref_unlikely(me);
-	}
-	return (DREF DeeObject *)result;
-err:
-	return NULL;
-}
-
-/* Concat a tuple and some generic sequence,
- * inheriting a reference from `self' in the process. */
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self,
-                         DeeObject *sequence) {
-	DREF Tuple *me = (DREF Tuple *)self;
-	DREF Tuple *result;
-	size_t oldsize;
-	ASSERT_OBJECT_TYPE_EXACT(me, &DeeTuple_Type);
-	ASSERT_OBJECT(sequence);
-	oldsize = DeeTuple_SIZE(me);
-	if (!DeeObject_IsShared(me)) {
-		/* Re-use `me'. */
-		result = me;
-
-		/* Optimizations for specific types. */
-		if (DeeTuple_CheckExact(sequence)) {
-			DREF Tuple *new_result;
-			size_t addsize;
-			ASSERTF((DeeObject *)me != sequence, "This is only allowed when `self' is shared!");
-			addsize    = DeeTuple_SIZE(sequence);
-			new_result = DeeTuple_ResizeUninitialized(result, oldsize + addsize);
-			if unlikely(!new_result)
-				goto err;
-			result = new_result;
-			Dee_Movrefv(result->t_elem, DeeTuple_ELEM(sequence), addsize);
-			goto done;
-		}
-		if (DeeList_CheckExact(sequence)) {
-			DREF Tuple *new_result;
-			DeeListObject *seq = (DeeListObject *)sequence;
-			size_t lstsize = DeeList_SIZE_ATOMIC(seq);
-			if unlikely(!lstsize)
-				goto done;
-handle_list_size:
-			new_result = DeeTuple_ResizeUninitialized(result, oldsize + lstsize);
-			if unlikely(!new_result) {
-				ASSERT(!DeeObject_IsShared(result));
-				Dee_Decrefv(DeeTuple_ELEM(result), oldsize);
-				Dee_DecrefNokill(&DeeTuple_Type);
-				tuple_tp_free(result);
-				return NULL;
-			}
-			result = new_result;
-			COMPILER_READ_BARRIER();
-			DeeList_LockRead(seq);
-
-			/* Check if the list's size has changes in the mean time. */
-			if unlikely(lstsize != DeeList_SIZE(seq)) {
-				lstsize = DeeList_SIZE(seq);
-				DeeList_LockEndRead(seq);
-				goto handle_list_size;
-			}
-
-			/* Copy elements from the list. */
-			Dee_Movrefv(result->t_elem + oldsize,
-			            DeeList_ELEM(seq),
-			            lstsize);
-			DeeList_LockEndRead(seq);
-			goto done;
-		}
-	} else {
-		if (DeeTuple_CheckExact(sequence)) {
-			size_t addsize;
-			addsize = DeeTuple_SIZE(sequence);
-			result  = DeeTuple_NewUninitialized(oldsize + addsize);
-			if unlikely(!result)
-				goto err;
-			Dee_Movrefv(DeeTuple_ELEM(result),
-			            DeeTuple_ELEM(me),
-			            oldsize);
-			Dee_Movrefv(DeeTuple_ELEM(result) + oldsize,
-			            DeeTuple_ELEM(sequence),
-			            addsize);
-			Dee_Decref_unlikely(me);
-			goto done;
-		}
-		if (DeeList_CheckExact(sequence)) {
-			size_t lstsize;
-			DeeListObject *seq = (DeeListObject *)sequence;
-			lstsize = DeeList_SIZE_ATOMIC(seq);
-handle_list_size2:
-			result = DeeTuple_NewUninitialized(oldsize + lstsize);
-			if unlikely(!result)
-				goto err;
-			COMPILER_READ_BARRIER();
-			DeeList_LockRead(seq);
-			/* Make sure the list didn't change size in he mean time. */
-			if unlikely(lstsize != DeeList_SIZE(seq)) {
-				lstsize = DeeList_SIZE(seq);
-				goto handle_list_size2;
-			}
-			Dee_Movrefv(DeeTuple_ELEM(result) + oldsize,
-			            DeeList_ELEM(seq), lstsize);
-			DeeList_LockEndRead(seq);
-			Dee_Movrefv(DeeTuple_ELEM(result),
-			            DeeTuple_ELEM(me), oldsize);
-			Dee_Decref_unlikely(me);
-			goto done;
-		}
-
-		/* Copy the `me' tuple, so-as to allow us to modify it. */
-		result = (DREF Tuple *)DeeTuple_NewVector(oldsize, DeeTuple_ELEM(me));
-		Dee_Decref_unlikely(me);
-		if unlikely(!result)
-			goto err;
-	}
-	sequence = DeeObject_Iter(sequence);
-	if unlikely(!sequence)
-		goto err_result;
-	{
-		DREF Tuple *new_result;
-		new_result = DeeTuple_Unshared_AppendIterator(result, sequence);
-		Dee_Decref(sequence);
-		if unlikely(!new_result)
-			goto err_result;
-		result = new_result;
-	}
-done:
-	return (DREF DeeObject *)result;
-err_result:
-	if (result != me)
-		Dee_DecrefDokill(result);
-err:
-	return NULL;
-}
-
-
 
 
 
@@ -2223,6 +2030,131 @@ tuple_concat(Tuple *self, DeeObject *other) {
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
+	return NULL;
+}
+
+/* Concat a tuple and some generic sequence,
+ * inheriting a reference from `self' in the process. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *sequence) {
+	DREF Tuple *me = (DREF Tuple *)self;
+	DREF Tuple *result;
+	size_t other_sizehint, total_size;
+	DeeTypeObject *tp_sequence;
+	if unlikely(DeeObject_IsShared(me)) {
+		result = tuple_concat(me, sequence);
+		Dee_Decref_unlikely(me);
+		return (DREF DeeObject *)result;
+	}
+
+	tp_sequence = Dee_TYPE(sequence);
+	if unlikely(!(likely(tp_sequence->tp_seq && tp_sequence->tp_seq->tp_foreach) ||
+	              unlikely(DeeType_InheritIter(tp_sequence)))) {
+		err_unimplemented_operator(tp_sequence, OPERATOR_ITER);
+		goto err_me;
+	}
+
+	/* Try to get an idea of how large the final sequence will be. */
+	if (tp_sequence->tp_seq->tp_size_fast) {
+		other_sizehint = (*tp_sequence->tp_seq->tp_size_fast)(sequence);
+		if unlikely(other_sizehint == (size_t)-1)
+			other_sizehint = 8;
+	} else {
+		other_sizehint = 8;
+	}
+
+	/* Allocate an initial buffer. */
+	if (OVERFLOW_UADD(me->t_size, other_sizehint, &total_size))
+		total_size = (size_t)-1;
+	result = DeeTuple_TryResizeUninitialized(me, total_size);
+	if unlikely(!result) {
+		other_sizehint = 0;
+		total_size     = me->t_size;
+		result = DeeTuple_ResizeUninitialized(me, total_size);
+		if unlikely(!result)
+			goto err_me;
+	}
+
+	/* Check if the type supports the "tp_asvector" extension. */
+	if (tp_sequence->tp_seq->tp_asvector) {
+		size_t other_size;
+		for (;;) {
+			DREF Tuple *new_result;
+			other_size = (*tp_sequence->tp_seq->tp_asvector)(sequence, other_sizehint,
+			                                                 result->t_elem + me->t_size);
+			if (other_size <= other_sizehint)
+				break; /* Success! got the entire sequence */
+			/* Must allocate a larger buffer. */
+			if (OVERFLOW_UADD(me->t_size, other_size, &total_size))
+				total_size = (size_t)-1; /* Force downstream OOM */
+			new_result = DeeTuple_ResizeUninitialized(result, total_size);
+			if unlikely(!new_result)
+				goto err_r;
+			result         = new_result;
+			other_sizehint = other_size;
+		}
+		if (other_size < other_sizehint) {
+			total_size = me->t_size + other_size;
+			result = DeeTuple_TruncateUninitialized(result, total_size);
+		}
+	} else {
+		Dee_ssize_t fe_status;
+		struct tuple_concat_fe_data data;
+		ASSERT(tp_sequence->tp_seq->tp_foreach);
+		data.tcfed_result = result;
+		data.tcfed_offset = me->t_size;
+		fe_status = (*tp_sequence->tp_seq->tp_foreach)(sequence, &tuple_concat_fe_cb, &data);
+		ASSERT(data.tcfed_offset >= me->t_size);
+		result = data.tcfed_result;
+		ASSERT(fe_status <= 0);
+		if unlikely(fe_status) {
+			Dee_Decrefv(result->t_elem + me->t_size,
+			            data.tcfed_offset - me->t_size);
+			goto err_r;
+		}
+		total_size = data.tcfed_offset;
+		result = DeeTuple_TruncateUninitialized(result, total_size);
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+err_me:
+	Dee_Decref(me);
+	goto err;
+}
+
+PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
+                         /*inherit(always)*/ DREF DeeObject *const *argv) {
+	DREF Tuple *me = (DREF Tuple *)self;
+	DREF Tuple *result;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeTuple_Type);
+	if (!DeeObject_IsShared(me)) {
+		size_t old_size; /* Optimization: The old object can be re-used. */
+		old_size = DeeTuple_SIZE(me);
+		result   = DeeTuple_ResizeUninitialized(me, old_size + argc);
+		if unlikely(!result)
+			goto err_me_argv;
+		memcpyc(result->t_elem + old_size, argv,
+		        argc, sizeof(DREF DeeObject *));
+	} else if unlikely(!argc) {
+		result = me; /* Inherit reference */
+	} else {
+		DREF DeeObject **iter;
+		size_t mylen = DeeTuple_SIZE(me);
+		result = DeeTuple_NewUninitialized(mylen + argc);
+		if unlikely(!result)
+			goto err_me_argv;
+		iter = Dee_Movprefv(DeeTuple_ELEM(result), DeeTuple_ELEM(me), mylen);
+		memcpyc(iter, argv, argc, sizeof(DREF DeeObject *));
+		Dee_Decref_unlikely(me);
+	}
+	return (DREF DeeObject *)result;
+err_me_argv:
+	Dee_Decrefv(argv, argc);
+	Dee_Decref(me);
 	return NULL;
 }
 

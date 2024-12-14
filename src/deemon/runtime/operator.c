@@ -15503,7 +15503,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetRange,
 
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_ConcatInherited(DREF DeeObject *self, DeeObject *other) {
+DeeObject_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	if (DeeTuple_CheckExact(other)) {
 		size_t count = DeeTuple_SIZE(other);
@@ -15524,8 +15524,8 @@ DeeObject_ConcatInherited(DREF DeeObject *self, DeeObject *other) {
 }
 
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeObject_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
-                          /*inherit(on_success)*/ DREF DeeObject *const *argv) {
+DeeObject_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
+                          /*inherit(always)*/ DREF DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeObject *other;
 	if (DeeTuple_CheckExact(self))

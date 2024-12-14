@@ -2135,7 +2135,7 @@ err:
 }
 
 PRIVATE bool in_assert_print_usercode_trace = false;
-PRIVATE void DCALL assert_print_usercode_trace(void) {
+INTERN void DCALL assert_print_usercode_trace(void) {
 	/* Safety check: prevent recursion on double-assert */
 	if (!in_assert_print_usercode_trace) {
 		in_assert_print_usercode_trace = true;
