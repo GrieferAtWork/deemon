@@ -1085,7 +1085,7 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) LOCAL_Dee_mh_seq_foo_t DCALL
 LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeObject *self) {
 	unsigned int seqclass = DeeType_GetSeqClass(self);
 #ifndef LOCAL_WITHOUT_ATTRIBUTE
-	struct Dee_attrinfo attrinfo;
+	struct Dee_attrinfo info;
 #endif /* !LOCAL_WITHOUT_ATTRIBUTE */
 	(void)orig_type;
 	(void)seqclass;
@@ -1116,40 +1116,40 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		                                                LOCAL_CANONICAL_NAME_STR,
 		                                                LOCAL_CANONICAL_NAME_LENGTHOF,
 		                                                LOCAL_CANONICAL_NAME_Dee_HashStr,
-		                                                &attrinfo)) {
+		                                                &info)) {
 			struct Dee_type_seq_cache *sc = DeeType_TryRequireSeqCache(self);
 			if likely(sc) {
-				switch (attrinfo.ai_type) {
+				switch (info.ai_type) {
 
 #ifdef LOCAL_IS_GETSET
 				case Dee_ATTRINFO_GETSET: {
 #ifdef LOCAL_IS_GETSET_GET
-					if (attrinfo.ai_value.v_getset->gs_get != &LOCAL_default_seq_foo)
-						return attrinfo.ai_value.v_getset->gs_get;
+					if (info.ai_value.v_getset->gs_get != &LOCAL_default_seq_foo)
+						return info.ai_value.v_getset->gs_get;
 #elif defined(LOCAL_IS_GETSET_BOUND)
-					if (attrinfo.ai_value.v_getset->gs_bound != &LOCAL_default_seq_foo) 
-						return attrinfo.ai_value.v_getset->gs_bound;
+					if (info.ai_value.v_getset->gs_bound != &LOCAL_default_seq_foo) 
+						return info.ai_value.v_getset->gs_bound;
 #elif defined(LOCAL_IS_GETSET_DEL)
-					if (attrinfo.ai_value.v_getset->gs_del != &LOCAL_default_seq_foo)
-						return attrinfo.ai_value.v_getset->gs_del;
+					if (info.ai_value.v_getset->gs_del != &LOCAL_default_seq_foo)
+						return info.ai_value.v_getset->gs_del;
 #elif defined(LOCAL_IS_GETSET_SET)
-					if (attrinfo.ai_value.v_getset->gs_set != &LOCAL_default_seq_foo)
-						return attrinfo.ai_value.v_getset->gs_set;
+					if (info.ai_value.v_getset->gs_set != &LOCAL_default_seq_foo)
+						return info.ai_value.v_getset->gs_set;
 #endif /* ... */
 					return &LOCAL_DeeSeq_DefaultFooForEmpty;
 				}	break;
 
 				case Dee_ATTRINFO_ATTR:
 #if defined(LOCAL_IS_GETSET_GET) || defined(LOCAL_IS_GETSET_BOUND)
-					if ((attrinfo.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
+					if ((info.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
 					    /*                                */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM))
 #else /* LOCAL_IS_GETSET_GET || LOCAL_IS_GETSET_BOUND */
-					if ((attrinfo.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FREADONLY)) ==
+					if ((info.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FREADONLY)) ==
 					    /*                                */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM))
 #endif /* 1LOCAL_IS_GETSET_GET && !LOCAL_IS_GETSET_BOUND */
 					{
 						struct class_desc *desc = DeeClass_DESC(self);
-						uint16_t id = attrinfo.ai_value.v_attr->ca_addr;
+						uint16_t id = info.ai_value.v_attr->ca_addr;
 						DREF DeeObject *callback;
 						Dee_class_desc_lock_read(desc);
 #if defined(LOCAL_IS_GETSET_GET) || defined(LOCAL_IS_GETSET_BOUND)
@@ -1171,25 +1171,25 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 #else /* LOCAL_IS_GETSET */
 
 				case Dee_ATTRINFO_METHOD:
-					if ((Dee_funptr_t)attrinfo.ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo) {
+					if ((Dee_funptr_t)info.ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo) {
 #ifdef LOCAL_TMH
 						LOCAL_Dee_mh_seq_foo_t hint;
-						hint = (LOCAL_Dee_mh_seq_foo_t)DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, LOCAL_TMH);
+						hint = (LOCAL_Dee_mh_seq_foo_t)DeeType_GetPrivateMethodHint((DeeTypeObject *)info.ai_decl, LOCAL_TMH);
 						if (hint)
 							return hint;
 #endif /* LOCAL_TMH */
 						return &LOCAL_DeeSeq_DefaultFooForEmpty;
 					}
-					atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, attrinfo.ai_value.v_method->m_func);
-					if (attrinfo.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
+					atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, info.ai_value.v_method->m_func);
+					if (info.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
 						return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
 					return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
 
 				case Dee_ATTRINFO_ATTR:
-					if ((attrinfo.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
+					if ((info.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
 					    /*                                */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
 						struct class_desc *desc = DeeClass_DESC(self);
-						uint16_t id = attrinfo.ai_value.v_attr->ca_addr;
+						uint16_t id = info.ai_value.v_attr->ca_addr;
 						DREF DeeObject *callback;
 						Dee_class_desc_lock_read(desc);
 						callback = desc->cd_members[id];
@@ -1454,7 +1454,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	/* ... */
 	/* TODO: Count with Find (repeated) */
 #elif defined(DEFINE_DeeType_RequireSeqContains)
-	if (seqclass != Dee_SEQCLASS_MAP) {
+	if (seqclass == Dee_SEQCLASS_SEQ || seqclass == Dee_SEQCLASS_SET) {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_CONTAINS))
 			return &DeeSeq_DefaultContainsWithContains;
 	}
@@ -1532,10 +1532,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_SETRANGE) &&
 		    self->tp_seq->tp_setrange_index != &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndTSCEraseAndTSCInsertAll)
 			return &DeeSeq_DefaultInsertAllWithSetRangeIndex;
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_insert, 6, Dee_HashStr__insert, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_seq_insert ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_seq_insert)))
+		if (DeeType_HasPrivateCustomSeqInsert(self))
 			return &DeeSeq_DefaultInsertAllWithSeqInsert;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqPushFront)
@@ -1545,23 +1542,23 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		if (seqclass == Dee_SEQCLASS_SEQ) {
 			/* Check for "pushback()" */
 			if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_pushback, 8,
-			                                                Dee_HashStr__pushback, &attrinfo)) {
+			                                                Dee_HashStr__pushback, &info)) {
 				struct Dee_type_seq_cache *sc = DeeType_TryRequireSeqCache(self);
 				if likely(sc) {
-					switch (attrinfo.ai_type) {
+					switch (info.ai_type) {
 					case Dee_ATTRINFO_METHOD:
-						if ((Dee_funptr_t)attrinfo.ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo)
+						if ((Dee_funptr_t)info.ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo)
 							return &LOCAL_DeeSeq_DefaultFooForEmpty;
-						atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, attrinfo.ai_value.v_method->m_func);
-						if (attrinfo.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
+						atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, info.ai_value.v_method->m_func);
+						if (info.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
 							return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
 						return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
 					case Dee_ATTRINFO_ATTR:
-						ASSERT(attrinfo.ai_type == Dee_ATTRINFO_ATTR);
-						if ((attrinfo.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
+						ASSERT(info.ai_type == Dee_ATTRINFO_ATTR);
+						if ((info.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
 						    /*                                */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
 							struct class_desc *desc = DeeClass_DESC(self);
-							uint16_t id = attrinfo.ai_value.v_attr->ca_addr;
+							uint16_t id = info.ai_value.v_attr->ca_addr;
 							DREF DeeObject *callback;
 							Dee_class_desc_lock_read(desc);
 							callback = desc->cd_members[id];
@@ -1602,14 +1599,9 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 #elif defined(DEFINE_DeeType_RequireSeqExtend)
 	if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
 		if (DeeType_HasOperator(orig_type, OPERATOR_ITER)) {
-			if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_append, 6, Dee_HashStr__append, &attrinfo) &&
-			    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-			     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_seq_append ||
-			     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_seq_append)))
+			if (DeeType_HasPrivateCustomSeqAppend(self))
 				return &DeeSeq_DefaultExtendWithSeqAppend;
-			if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_pushback, 8, Dee_HashStr__pushback, &attrinfo) &&
-			    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-			     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_seq_append))
+			if (DeeType_HasPrivateCustomSeqPushBack(self))
 				return &DeeSeq_DefaultExtendWithSeqAppend;
 		}
 		if (seqclass == Dee_SEQCLASS_SEQ &&
@@ -1678,10 +1670,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* TODO */
 	} else {
 		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
-			if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_erase, 5, Dee_HashStr__erase, &attrinfo) &&
-			    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-			     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_seq_erase ||
-			     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_seq_erase)))
+			if (DeeType_HasPrivateCustomSeqErase(self))
 				return &DeeSeq_DefaultPopWithSizeAndGetItemIndexAndSeqErase;
 		}
 		if (seqclass == Dee_SEQCLASS_SEQ &&
@@ -1807,10 +1796,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			    tsc_seq_removeif != &DeeSeq_DefaultRemoveAllWithError)
 				return &DeeSeq_DefaultRemoveAllWithSeqRemoveIf;
 		}
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_seq_remove ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_seq_remove)))
+		if (DeeType_HasPrivateCustomSeqRemove(self))
 			return &DeeSeq_DefaultRemoveAllWithSeqRemove;
 		if (seqclass == Dee_SEQCLASS_SEQ &&
 		    DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM) &&
@@ -1834,10 +1820,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			    tsc_seq_removeif != &DeeSeq_DefaultRemoveAllWithError)
 				return &DeeSeq_DefaultRemoveAllWithKeyWithSeqRemoveIf;
 		}
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_seq_remove ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_seq_remove)))
+		if (DeeType_HasPrivateCustomSeqRemove(self))
 			return &DeeSeq_DefaultRemoveAllWithKeyWithSeqRemoveWithKey;
 		if (seqclass == Dee_SEQCLASS_SEQ &&
 		    DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM) &&
@@ -1854,15 +1837,9 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
 		/* TODO */
 	} else {
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_removeall, 9, Dee_HashStr__removeall, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_seq_removeall ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_seq_removeall)))
+		if (DeeType_HasPrivateCustomSeqRemoveAll(self))
 			return &DeeSeq_DefaultRemoveIfWithSeqRemoveAllWithKey;
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_seq_remove ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_seq_remove)))
+		if (DeeType_HasPrivateCustomSeqRemove(self))
 			return &DeeSeq_DefaultRemoveIfWithSeqRemoveAllWithKey;
 		if (seqclass == Dee_SEQCLASS_SEQ &&
 		    DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM) &&
@@ -2044,10 +2021,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* use insertall and "operator #" before/after */
 		if (DeeType_HasOperator(orig_type, OPERATOR_SIZE) &&
-		    DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_insertall, 9, Dee_HashStr__insertall, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_set_insertall ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_set_insertall)))
+		    DeeType_HasPrivateCustomSetInsertAll(self))
 			return &DeeSet_DefaultInsertWithSeqSizeAndSetInsertAll;
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
 		/* >> local x = Dict();
@@ -2074,10 +2048,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* use removeall and "operator #" before/after */
 		if (DeeType_HasOperator(orig_type, OPERATOR_SIZE) &&
-		    DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_removeall, 9, Dee_HashStr__removeall, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_set_removeall ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_set_removeall)))
+		    DeeType_HasPrivateCustomSetRemoveAll(self))
 			return &DeeSet_DefaultRemoveWithSeqSizeAndSeqRemoveAll;
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
 		/* >> local x = Dict(("foo", "bar"));
@@ -2197,10 +2168,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireMapSetOld)
 	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_setold_ex, 9, Dee_HashStr__setold_ex, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_map_setold_ex ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_map_setold_ex)))
+		if (DeeType_HasPrivateCustomMapSetOldEx(self))
 			return &DeeMap_DefaultSetOldWithMapSetOldEx;
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_SETITEM) &&
 		    DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
@@ -2237,20 +2205,14 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireMapSetNew)
 	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_setnew_ex, 9, Dee_HashStr__setnew_ex, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_map_setnew_ex ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_map_setnew_ex)))
+		if (DeeType_HasPrivateCustomMapSetNewEx(self))
 			return &DeeMap_DefaultSetNewWithMapSetNewEx;
 		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
 			struct type_seq *seq = orig_type->tp_seq;
 			ASSERT(seq->tp_bounditem);
 			ASSERT(seq->tp_trygetitem);
 			ASSERT(seq->tp_getitem);
-			if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_setdefault, 10, Dee_HashStr__setdefault, &attrinfo) &&
-			    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-			     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_map_setdefault ||
-			     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_map_setdefault))) {
+			if (DeeType_HasPrivateCustomMapSetDefault(self)) {
 				if (!DeeType_IsDefaultBoundItem(seq->tp_bounditem))
 					return &DeeMap_DefaultSetNewWithBoundItemAndMapSetDefault;
 				if (!DeeType_IsDefaultTryGetItem(seq->tp_trygetitem))
@@ -2276,10 +2238,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			ASSERT(seq->tp_bounditem);
 			ASSERT(seq->tp_trygetitem);
 			ASSERT(seq->tp_getitem);
-			if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_setdefault, 10, Dee_HashStr__setdefault, &attrinfo) &&
-			    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-			     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_map_setdefault ||
-			     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_map_setdefault))) {
+			if (DeeType_HasPrivateCustomMapSetDefault(self)) {
 				if (!DeeType_IsDefaultTryGetItem(seq->tp_trygetitem))
 					return &DeeMap_DefaultSetNewExWithTryGetItemAndMapSetDefault;
 				return &DeeMap_DefaultSetNewExWithGetItemAndMapSetDefault;
@@ -2296,22 +2255,16 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireMapSetDefault)
 	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_setnew_ex, 9, Dee_HashStr__setnew_ex, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_map_setnew_ex ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_map_setnew_ex)))
+		if (DeeType_HasPrivateCustomMapSetNewEx(self))
 			return &DeeMap_DefaultSetDefaultWithMapSetNewEx;
 		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
 			struct type_seq *seq = orig_type->tp_seq;
 			ASSERT(seq->tp_bounditem);
 			ASSERT(seq->tp_trygetitem);
 			ASSERT(seq->tp_getitem);
-			if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_setnew, 6, Dee_HashStr__setnew, &attrinfo) &&
-			    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-			     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_map_setnew ||
-			     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_map_setnew))) {
+			if (DeeType_HasPrivateCustomMapSetNew(self))
 				return &DeeMap_DefaultSetDefaultWithMapSetNewAndGetItem;
-			} else if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_SETITEM)) {
+			if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_SETITEM)) {
 				if (!DeeType_IsDefaultTryGetItem(seq->tp_trygetitem))
 					return &DeeMap_DefaultSetDefaultWithTryGetItemAndSetItem;
 				return &DeeMap_DefaultSetDefaultWithGetItemAndSetItem;
@@ -2341,10 +2294,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			if (DeeType_HasOperator(orig_type, OPERATOR_SIZE))
 				return &DeeMap_DefaultRemoveWithSizeAndDelItem;
 		}
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_removekeys, 10, Dee_HashStr__removekeys, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_map_removekeys ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_map_removekeys))) {
+		if (DeeType_HasPrivateCustomMapRemoveKeys(self)) {
 			if (DeeType_HasOperator(orig_type, OPERATOR_SIZE))
 				return &DeeMap_DefaultRemoveWithSizeAndMapRemoveKeys;
 		}
@@ -2357,10 +2307,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	if (seqclass == Dee_SEQCLASS_MAP) {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM))
 			return &DeeMap_DefaultRemoveKeysWithDelItem;
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_remove, 6, Dee_HashStr__remove, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&DeeMH_map_remove ||
-		     DeeType_GetPrivateMethodHint((DeeTypeObject *)attrinfo.ai_decl, Dee_TMH_map_remove)))
+		if (DeeType_HasPrivateCustomMapRemove(self))
 			return &DeeMap_DefaultRemoveKeysWithMapRemove;
 	} else if (seqclass == Dee_SEQCLASS_SET) {
 		/* TODO: Treat as ?S?T2?O?O and use foreach + `Set.remove' */
@@ -2437,9 +2384,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireMapIterKeys)
 	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_keys, 4, Dee_HashStr__keys, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_map_keys))
+		if (DeeType_HasPrivateCustomMapKeys(self))
 			return &DeeMap_DefaultIterKeysWithMapKeys;
 		if (self->tp_seq && self->tp_seq->tp_iterkeys)
 			return self->tp_seq->tp_iterkeys;
@@ -2448,9 +2393,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		return &DeeMap_DefaultIterKeysWithIter;
 #elif defined(DEFINE_DeeType_RequireMapIterValues)
 	if (seqclass == Dee_SEQCLASS_MAP) {
-		if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL, STR_values, 6, Dee_HashStr__values, &attrinfo) &&
-		    (attrinfo.ai_type != Dee_ATTRINFO_METHOD ||
-		     (Dee_funptr_t)attrinfo.ai_value.v_method->m_func != (Dee_funptr_t)&default_map_values))
+		if (DeeType_HasPrivateCustomMapValues(self))
 			return &DeeMap_DefaultIterValuesWithMapValues;
 	}
 	if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_ITER))

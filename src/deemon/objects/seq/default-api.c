@@ -277,6 +277,63 @@ PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_iterkeys_t DCA
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_itervalues_t DCALL DeeType_RequireMapIterValues_uncached(DeeTypeObject *__restrict self);
 
 
+/* Query for custom attributes */
+#define DeeType_HasPrivateCustomSeqInsert(self)     DeeType_HasPrivateCustomMethodOrHint(self, STR_insert, Dee_HashStr__insert, (Dee_objmethod_t)&DeeMH_seq_insert, Dee_TMH_seq_insert)
+#define DeeType_HasPrivateCustomSeqPushBack(self)   DeeType_HasPrivateCustomMethodOrHint(self, STR_pushback, Dee_HashStr__pushback, (Dee_objmethod_t)&DeeMH_seq_append, Dee_TMH_seq_append)
+#define DeeType_HasPrivateCustomSeqAppend(self)     DeeType_HasPrivateCustomMethodOrHint(self, STR_append, Dee_HashStr__append, (Dee_objmethod_t)&DeeMH_seq_append, Dee_TMH_seq_append)
+#define DeeType_HasPrivateCustomSeqErase(self)      DeeType_HasPrivateCustomMethodOrHint(self, STR_erase, Dee_HashStr__erase, (Dee_objmethod_t)&DeeMH_seq_erase, Dee_TMH_seq_erase)
+#define DeeType_HasPrivateCustomSeqRemoveAll(self)  DeeType_HasPrivateCustomMethodOrHint(self, STR_removeall, Dee_HashStr__removeall, (Dee_objmethod_t)&DeeMH_seq_removeall, Dee_TMH_seq_removeall)
+#define DeeType_HasPrivateCustomSeqRemove(self)     DeeType_HasPrivateCustomMethodOrHint(self, STR_remove, Dee_HashStr__remove, (Dee_objmethod_t)&DeeMH_seq_remove, Dee_TMH_seq_remove)
+#define DeeType_HasPrivateCustomSetInsertAll(self)  DeeType_HasPrivateCustomMethodOrHint(self, STR_insertall, Dee_HashStr__insertall, &DeeMH_set_insertall, Dee_TMH_set_insertall)
+#define DeeType_HasPrivateCustomSetRemoveAll(self)  DeeType_HasPrivateCustomMethodOrHint(self, STR_removeall, Dee_HashStr__removeall, &DeeMH_set_removeall, Dee_TMH_set_removeall)
+#define DeeType_HasPrivateCustomMapSetDefault(self) DeeType_HasPrivateCustomMethodOrHint(self, STR_setdefault, Dee_HashStr__setdefault, &DeeMH_map_setdefault, Dee_TMH_map_setdefault)
+#define DeeType_HasPrivateCustomMapSetNew(self)     DeeType_HasPrivateCustomMethodOrHint(self, STR_setnew, Dee_HashStr__setnew, &DeeMH_map_setnew, Dee_TMH_map_setnew)
+#define DeeType_HasPrivateCustomMapSetOld(self)     DeeType_HasPrivateCustomMethodOrHint(self, STR_setold, Dee_HashStr__setold, &DeeMH_map_setold, Dee_TMH_map_setold)
+#define DeeType_HasPrivateCustomMapSetNewEx(self)   DeeType_HasPrivateCustomMethodOrHint(self, STR_setnew_ex, Dee_HashStr__setnew_ex, &DeeMH_map_setnew_ex, Dee_TMH_map_setnew_ex)
+#define DeeType_HasPrivateCustomMapSetOldEx(self)   DeeType_HasPrivateCustomMethodOrHint(self, STR_setold_ex, Dee_HashStr__setold_ex, &DeeMH_map_setold_ex, Dee_TMH_map_setold_ex)
+#define DeeType_HasPrivateCustomMapRemoveKeys(self) DeeType_HasPrivateCustomMethodOrHint(self, STR_removekeys, Dee_HashStr__removekeys, &DeeMH_map_removekeys, Dee_TMH_map_removekeys)
+#define DeeType_HasPrivateCustomMapRemove(self)     DeeType_HasPrivateCustomMethodOrHint(self, STR_remove, Dee_HashStr__remove, &DeeMH_map_remove, Dee_TMH_map_remove)
+#define DeeType_HasPrivateCustomMapKeys(self)       DeeType_HasPrivateCustomGetter(self, STR_keys, Dee_HashStr__keys, &default_map_keys)
+#define DeeType_HasPrivateCustomMapValues(self)     DeeType_HasPrivateCustomGetter(self, STR_values, Dee_HashStr__values, &default_map_values)
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2, 4)) bool DCALL
+DeeType_HasPrivateCustomMethodOrHint(DeeTypeObject *__restrict self, char const *method_name,
+                                     Dee_hash_t method_name_hash, Dee_objmethod_t mh_default,
+                                     enum Dee_tmh_id mh_id) {
+	struct Dee_attrinfo info;
+	if (!DeeObject_TFindPrivateAttrInfoStringHash(self, NULL, method_name, method_name_hash, &info))
+		goto nope;
+	if (info.ai_type == Dee_ATTRINFO_METHOD) {
+		if (info.ai_value.v_method->m_func == mh_default) {
+			if (!DeeType_GetPrivateMethodHint((DeeTypeObject *)info.ai_decl, mh_id))
+				goto nope;
+		}
+	} else {
+		/* When it's some other kind of attribute -> always use it! */
+	}
+	return true;
+nope:
+	return false;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2, 4)) bool DCALL
+DeeType_HasPrivateCustomGetter(DeeTypeObject *__restrict self, char const *getset_name,
+                               Dee_hash_t getset_name_hash, Dee_getmethod_t mh_default) {
+	struct Dee_attrinfo info;
+	if (!DeeObject_TFindPrivateAttrInfoStringHash(self, NULL, getset_name, getset_name_hash, &info))
+		goto nope;
+	if (info.ai_type == Dee_ATTRINFO_GETSET) {
+		if (info.ai_value.v_getset->gs_get == mh_default)
+			goto nope;
+	} else {
+		/* When it's some other kind of attribute -> always use it! */
+	}
+	return true;
+nope:
+	return false;
+}
+
+
 /* Check if "self" provide a private implementation of "name",
  * and make sure that "orig_type" has inherited the operator
  * when that is the case. */

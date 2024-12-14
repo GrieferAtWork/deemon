@@ -148,12 +148,17 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCA
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_sum_with_range, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_sum, "sum", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N")
 
+/* @return: * : Count
+ * @return: (size_t)-1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_count, (DeeObject *self, DeeObject *item))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), size_t, DCALL, seq_count_with_key, (DeeObject *self, DeeObject *item, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_count_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_count_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_count, "count", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
 
+/* @return: 0 : Not contained
+ * @return: 1 : Is contained
+ * @return: -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_contains, (DeeObject *self, DeeObject *item))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq_contains_with_key, (DeeObject *self, DeeObject *item, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_contains_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
@@ -172,12 +177,18 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_rlocate_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rlocate, "rlocate", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->")
 
+/* @return: 0 : Does not start with
+ * @return: 1 : Does start with
+ * @return: -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_startswith, (DeeObject *self, DeeObject *item))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq_startswith_with_key, (DeeObject *self, DeeObject *item, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_startswith_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_startswith_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_startswith, "startswith", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
 
+/* @return: 0 : Does not end with
+ * @return: 1 : Does end with
+ * @return: -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_endswith, (DeeObject *self, DeeObject *item))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq_endswith_with_key, (DeeObject *self, DeeObject *item, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_endswith_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
