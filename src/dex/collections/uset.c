@@ -31,6 +31,7 @@
 #include <deemon/dict.h> /* DeeDict_Dummy */
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
@@ -57,10 +58,10 @@ PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL USet_InitEmpty(USet *__restrict self)
 PRIVATE NONNULL((1)) void DCALL USet_Fini(USet *__restrict self);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitCopy(USet *__restrict self, USet *__restrict other);
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitSequence(USet *__restrict self, DeeObject *__restrict sequence);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_Insert(USet *__restrict self, DeeObject *__restrict ob);
-LOCAL void DCALL USet_DoInsertTrackedUnlocked(USet *__restrict self, DREF DeeObject *__restrict ob);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_Remove(USet *__restrict self, DeeObject *__restrict ob);
-PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL USet_Contains(USet *__restrict self, DeeObject *__restrict ob);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL uset_mh_insert(USet *self, DeeObject *ob);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL uset_mh_remove(USet *self, DeeObject *ob);
+LOCAL NONNULL((1, 2)) void DCALL USet_DoInsertTrackedUnlocked(USet *self, DREF DeeObject *ob);
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL USet_Contains(USet *self, DeeObject *ob);
 
 
 INTDEF DeeTypeObject USet_Type;
@@ -287,8 +288,7 @@ USet_InitWithHint(USet *__restrict self, size_t size_hint) {
 }
 
 LOCAL NONNULL((1, 2)) void DCALL
-USet_DoInsertTrackedUnlocked(USet *__restrict self,
-                             DREF DeeObject *__restrict ob) {
+USet_DoInsertTrackedUnlocked(USet *self, DREF DeeObject *ob) {
 	dhash_t i, perturb;
 	perturb = i = UHASH(ob) & self->us_mask;
 	for (;; USet_HashNx(i, perturb)) {
@@ -384,8 +384,7 @@ uset_rehash(USet *__restrict self, int sizedir) {
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-USet_Remove(USet *__restrict self,
-            DeeObject *__restrict ob) {
+uset_mh_remove(USet *self, DeeObject *ob) {
 	size_t mask;
 	struct uset_item *vector;
 	dhash_t i, perturb;
@@ -426,8 +425,7 @@ restart:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-USet_Contains(USet *__restrict self,
-              DeeObject *__restrict ob) {
+USet_Contains(USet *self, DeeObject *ob) {
 	size_t mask;
 	dhash_t i, perturb;
 	USet_LockRead(self);
@@ -449,8 +447,7 @@ USet_Contains(USet *__restrict self,
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-USet_Insert(USet *__restrict self,
-            DeeObject *__restrict ob) {
+uset_mh_insert(USet *self, DeeObject *ob) {
 	struct uset_item *first_dummy;
 	size_t mask;
 	dhash_t i, perturb;
@@ -511,9 +508,18 @@ again:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+uset_mh_unify(USet *self, DeeObject *ob) {
+	int status = uset_mh_insert(self, ob);
+	if unlikely(status < 0)
+		goto err;
+	return_reference_(ob);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-USet_DoInsertNolock(USet *__restrict self,
-                    DeeObject *__restrict ob) {
+USet_DoInsertNolock(USet *self, DeeObject *ob) {
 	struct uset_item *first_dummy;
 	size_t mask;
 	dhash_t i, perturb;
@@ -1055,11 +1061,9 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uset_pop(USet *self, size_t argc, DeeObject *const *argv) {
+uset_mh_pop(USet *__restrict self) {
 	size_t i;
 	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, ":pop"))
-		goto err;
 	USet_LockWrite(self);
 	for (i = 0; i <= self->us_mask; ++i) {
 		struct uset_item *item = &self->us_elem[i];
@@ -1078,83 +1082,37 @@ uset_pop(USet *self, size_t argc, DeeObject *const *argv) {
 	USet_LockEndWrite(self);
 	/* Set is already empty. */
 	err_empty_sequence((DeeObject *)self);
-err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uset_doclear(USet *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":clear"))
-		goto err;
+uset_mh_pop_with_default(USet *self, DeeObject *def) {
+	size_t i;
+	DREF DeeObject *result;
+	USet_LockWrite(self);
+	for (i = 0; i <= self->us_mask; ++i) {
+		struct uset_item *item = &self->us_elem[i];
+		if ((result = item->usi_key) == NULL)
+			continue; /* Unused slot. */
+		if (result == dummy)
+			continue; /* Deleted slot. */
+		item->usi_key = dummy;
+		Dee_Incref(dummy);
+		ASSERT(self->us_used);
+		if (--self->us_used < self->us_size / 2)
+			uset_rehash(self, -1);
+		USet_LockEndWrite(self);
+		return result;
+	}
+	USet_LockEndWrite(self);
+	/* Set is already empty. */
+	return_reference_(def);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+uset_mh_clear(USet *__restrict self) {
 	uset_clear(self);
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uset_insert(USet *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o:insert", &item))
-		goto err;
-	result = USet_Insert(self, item);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uset_unify(USet *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:unify", &item))
-		goto err;
-	/* Since items are always unique, simply try to insert the given one! */
-	if (USet_Insert(self, item) < 0)
-		goto err;
-	return_reference_(item);
-err:
-	return NULL;
-}
-
-#if (__SIZEOF_INT__ >= __SIZEOF_POINTER__ || \
-     (defined(__i386__) || defined(__x86_64__)))
-#define insert_callback USet_Insert
-#else /* ... */
-PRIVATE dssize_t DCALL
-insert_callback(USet *__restrict self, DeeObject *item) {
-	return USet_Insert(self, item);
-}
-#endif /* !... */
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uset_update(USet *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *items;
-	dssize_t result;
-	if (DeeArg_Unpack(argc, argv, "o:update", &items))
-		goto err;
-	result = DeeObject_Foreach(items, (Dee_foreach_t)&insert_callback, self);
-	if unlikely(result < 0)
-		goto err;
-	return DeeInt_NewSize((size_t)result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uset_remove(USet *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	int result;
-	if (DeeArg_Unpack(argc, argv, "o:remove", &item))
-		goto err;
-	result = USet_Remove(self, item);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result);
-err:
-	return NULL;
+	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1202,16 +1160,6 @@ uset_asvector_nothrow(USet *self, size_t dst_length, /*out*/ DREF DeeObject **ds
 }
 
 
-PRIVATE struct type_nsi tpconst uset_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SET,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (dfunptr_t)&uset_size,
-		}
-	}
-};
-
 PRIVATE struct type_seq uset_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -1222,7 +1170,7 @@ PRIVATE struct type_seq uset_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &uset_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uset_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1263,38 +1211,22 @@ PRIVATE struct type_seq uset_seq = {
 };
 
 PRIVATE struct type_method tpconst uset_methods[] = {
-	TYPE_METHOD_F("pop", &uset_pop, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "#tValueError{The set is empty}"
-	              "Pop a random item from the set and return it"),
-	TYPE_METHOD_F("clear", &uset_doclear, METHOD_FNOREFESCAPE,
-	              "()\n"
-	              "Clear all items from the set"),
-	TYPE_METHOD_F("popitem", &uset_pop, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "#tValueError{The set is empty}"
-	              "Pop a random item from the set and return it (alias for ?#pop)"),
-	TYPE_METHOD_F("unify", &uset_unify, METHOD_FNOREFESCAPE,
-	              "(ob)->\n"
-	              "Insert @ob into the set if it wasn't inserted before, "
-	              "and re-return it, or the pre-existing instance"),
-	TYPE_METHOD_F("insert", &uset_insert, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Returns ?t if the object wasn't apart of the set before"),
-	TYPE_METHOD_F("update", &uset_update, METHOD_FNOREFESCAPE,
-	              "(items:?S?O)->?Dint\n"
-	              "Insert all items from @items into @this set, and return the number of inserted items"),
-	TYPE_METHOD_F("remove", &uset_remove, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Returns ?t if the object was removed from the set"),
-	/* Alternative function names. */
-	TYPE_METHOD_F("add", &uset_insert, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Deprecated alias for ?#insert"),
-	TYPE_METHOD_F("discard", &uset_remove, METHOD_FNOREFESCAPE,
-	              "(ob)->?Dbool\n"
-	              "Deprecated alias for ?#remove"),
+	TYPE_METHOD_HINTREF(set_pop),
+	TYPE_METHOD_HINTREF(seq_clear),
+	TYPE_METHOD_HINTREF(set_unify),
+	TYPE_METHOD_HINTREF(set_insert),
+	TYPE_METHOD_HINTREF(set_remove),
 	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst uset_method_hints[] = {
+	TYPE_METHOD_HINT_F(set_pop, &uset_mh_pop, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_pop_with_default, &uset_mh_pop_with_default, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_clear, &uset_mh_clear, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_insert, &uset_mh_insert, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_remove, &uset_mh_remove, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_unify, &uset_mh_unify, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_gc tpconst uset_gc = {
@@ -1382,7 +1314,8 @@ INTERN DeeTypeObject USet_Type = {
 	/* .tp_members       = */ uset_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ uset_class_members
+	/* .tp_class_members = */ uset_class_members,
+	/* .tp_method_hints  = */ uset_method_hints,
 };
 
 
@@ -1550,16 +1483,6 @@ err:
 	return temp;
 }
 
-PRIVATE struct type_nsi tpconst uroset_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SET,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (dfunptr_t)&uroset_size,
-		}
-	}
-};
-
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 URoSet_Contains(URoSet *__restrict self,
                 DeeObject *__restrict ob) {
@@ -1643,7 +1566,7 @@ PRIVATE struct type_seq uroset_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &uroset_nsi,
+	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uroset_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
