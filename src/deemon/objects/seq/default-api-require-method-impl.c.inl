@@ -1442,17 +1442,37 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 #elif defined(DEFINE_DeeType_RequireSeqsumWithRange)
 	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqCount)
-	/* ... */
-	/* TODO: Count with Find (repeated) */
+	{
+		Dee_mh_seq_find_t mh_seq_find;
+		mh_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
+		if (mh_seq_find != NULL &&
+		    mh_seq_find != &DeeSeq_DefaultFindWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultCountWithSeqFind;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqCountWithKey)
-	/* ... */
-	/* TODO: Count with Find (repeated) */
+	{
+		Dee_mh_seq_find_with_key_t mh_seq_find_with_key;
+		mh_seq_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
+		if (mh_seq_find_with_key != NULL &&
+		    mh_seq_find_with_key != &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultCountWithKeyWithSeqFindWithKey;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqCountWithRange)
-	/* ... */
-	/* TODO: Count with Find (repeated) */
+	{
+		Dee_mh_seq_find_t mh_seq_find;
+		mh_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
+		if (mh_seq_find != NULL &&
+		    mh_seq_find != &DeeSeq_DefaultFindWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultCountWithRangeWithSeqFind;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqCountWithRangeAndKey)
-	/* ... */
-	/* TODO: Count with Find (repeated) */
+	{
+		Dee_mh_seq_find_with_key_t mh_seq_find_with_key;
+		mh_seq_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
+		if (mh_seq_find_with_key != NULL &&
+		    mh_seq_find_with_key != &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultCountWithRangeAndKeyWithSeqFindWithKey;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqContains)
 	if (seqclass == Dee_SEQCLASS_SEQ || seqclass == Dee_SEQCLASS_SET) {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_CONTAINS))
