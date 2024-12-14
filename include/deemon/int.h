@@ -112,7 +112,7 @@ struct Dee_int_object {
 	((value) < 0                            \
 	 ? ((intmax_t)(value) == __INTMAX_MIN__ \
 	    ? __UINTMAX_MAX__                   \
-	    : (uintmax_t) - (intmax_t)(value))  \
+	    : (uintmax_t)(-(intmax_t)(value)))  \
 	 : (uintmax_t)(value))
 #define Dee_DEFINE_INT_1DIGIT(name, value)          \
 	struct {                                        \
@@ -148,7 +148,7 @@ struct Dee_int_object {
 		((value) < 0                                                             \
 		 ? ((intmax_t)(value) == __INTMAX_MIN__                                  \
 		    ? -2                                                                 \
-		    : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS) \
+		    : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << Dee_DIGIT_BITS) \
 		      ? -2                                                               \
 		      : -1)                                                              \
 		 : (value) > 0                                                           \
@@ -183,9 +183,9 @@ struct Dee_int_object {
 		((value) < 0                                                                 \
 		 ? ((intmax_t)(value) == __INTMAX_MIN__                                      \
 		    ? -3                                                                     \
-		    : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
+		    : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
 		      ? -3                                                                   \
-		      : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
+		      : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
 		        ? -2                                                                 \
 		        : -1)                                                                \
 		 : (value) > 0                                                               \
@@ -209,11 +209,11 @@ struct Dee_int_object {
 		(value) < 0                                                                   \
 		? ((intmax_t)(value) == __INTMAX_MIN__                                        \
 		   ? -4                                                                       \
-		   : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)   \
+		   : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)   \
 		     ? -4                                                                     \
-		     : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
+		     : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
 		       ? -3                                                                   \
-		       : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
+		       : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
 		         ? -2                                                                 \
 		         : -1)                                                                \
 		: (value) > 0                                                                 \
@@ -240,13 +240,13 @@ struct Dee_int_object {
 		(value) < 0                                                                     \
 		? ((intmax_t)(value) == __INTMAX_MIN__                                          \
 		   ? -5                                                                         \
-		   : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 4 * Dee_DIGIT_BITS)     \
+		   : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << 4 * Dee_DIGIT_BITS)     \
 		     ? -5                                                                       \
-		     : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)   \
+		     : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)   \
 		       ? -4                                                                     \
-		       : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
+		       : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
 		         ? -3                                                                   \
-		         : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
+		         : (uintmax_t)(-(intmax_t)(value)) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
 		           ? -2                                                                 \
 		           : -1)                                                                \
 		: (value) > 0                                                                   \

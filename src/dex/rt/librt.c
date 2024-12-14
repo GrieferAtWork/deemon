@@ -3508,6 +3508,23 @@ err:
 PRIVATE DEFINE_CMETHOD(librt_kw, &librt_kw_f, METHOD_FCONSTCALL);
 
 
+/* Define some magic constants that may be of interest to user-code. */
+/*[[[deemon
+import * from deemon;
+import * from rt.gen.dexutils;
+MODULE_NAME = "rt";
+
+include("constants.def");
+gi("HASHOF_EMPTY_SEQUENCE", "DEE_HASHOF_EMPTY_SEQUENCE");
+gi("HASHOF_UNBOUND_ITEM", "DEE_HASHOF_UNBOUND_ITEM");
+gi("HASHOF_RECURSIVE_ITEM", "DEE_HASHOF_RECURSIVE_ITEM");
+]]]*/
+#include "constants.def"
+/*[[[end]]]*/
+
+
+
+
 
 
 /* NOTE: At first glance, the combination of `MODSYM_FPROPERTY|MODSYM_FCONSTEXPR' may
@@ -4053,6 +4070,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FrameStack", (DeeObject *)&librt_get_FrameStack, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* FrameStack_Type */
 	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* FrameSymbolsByName_Type */
 	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* FrameSymbolsByName_Type */
+
+	/* Special constants */
+	RT_HASHOF_EMPTY_SEQUENCE_DEF
+	RT_HASHOF_UNBOUND_ITEM_DEF
+	RT_HASHOF_RECURSIVE_ITEM_DEF
 
 	{ NULL }
 };
