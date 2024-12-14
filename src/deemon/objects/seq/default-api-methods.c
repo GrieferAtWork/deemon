@@ -1693,6 +1693,27 @@ DeeSeq_DefaultCountWithSeqForeach(DeeObject *self, DeeObject *item) {
 	return (size_t)DeeSeq_OperatorForeach(self, &seq_count_foreach_cb, item);
 }
 
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_DefaultCountWithSetContains(DeeObject *self, DeeObject *item) {
+	int contains = DeeSet_OperatorContainsAsBool(self, item);
+	if unlikely(contains < 0)
+		goto err;
+	return contains ? 1 : 0;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_DefaultCountWithMapTryGetItem(DeeObject *self, DeeObject *item) {
+	int contains = DeeSeq_DefaultContainsWithMapTryGetItem(self, item);
+	if unlikely(contains < 0)
+		goto err;
+	ASSERT(contains == 0 || contains == 1);
+	return (size_t)contains;
+err:
+	return (size_t)Dee_COMPARE_ERR;
+}
+
 INTERN WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_DefaultCountWithKeyWithSeqFindWithKey(DeeObject *self, DeeObject *item, DeeObject *key) {
 	return DeeSeq_DefaultCountWithRangeAndKeyWithSeqFindWithKey(self, item, 0, (size_t)-1, key);
@@ -1833,6 +1854,33 @@ DeeSeq_DefaultContainsWithForeach(DeeObject *self, DeeObject *item) {
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_DefaultContainsWithMapTryGetItem(DeeObject *self, DeeObject *item) {
+	int compare;
+	DREF DeeObject *key_and_value[2];
+	DREF DeeObject *true_value;
+	if (DeeObject_Unpack(item, 2, key_and_value))
+		goto err_unpack;
+	true_value = DeeMap_OperatorTryGetItem(self, key_and_value[0]);
+	Dee_Decref(key_and_value[0]);
+	if unlikely(!true_value) {
+		Dee_Decref(key_and_value[1]);
+		goto err;
+	}
+	compare = DeeObject_TryCompareEq(key_and_value[1], true_value);
+	Dee_Decref(true_value);
+	Dee_Decref(key_and_value[1]);
+	if unlikely(compare == Dee_COMPARE_ERR)
+		goto err;
+	return compare == 0 ? 1 : 0;
+err_unpack:
+	if (DeeError_Catch(&DeeError_NotImplemented) ||
+	    DeeError_Catch(&DeeError_ValueError))
+		return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL

@@ -1442,6 +1442,13 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 #elif defined(DEFINE_DeeType_RequireSeqsumWithRange)
 	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqCount)
+	if (seqclass == Dee_SEQCLASS_SET) {
+		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_CONTAINS))
+			return &DeeSeq_DefaultCountWithSetContains;
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_GETITEM))
+			return &DeeSeq_DefaultCountWithMapTryGetItem;
+	}
 	{
 		Dee_mh_seq_find_t mh_seq_find;
 		mh_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
@@ -1477,6 +1484,9 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	if (seqclass == Dee_SEQCLASS_SEQ || seqclass == Dee_SEQCLASS_SET) {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_CONTAINS))
 			return &DeeSeq_DefaultContainsWithContains;
+	} else if (seqclass == Dee_SEQCLASS_MAP) {
+		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_GETITEM))
+			return &DeeSeq_DefaultContainsWithMapTryGetItem;
 	}
 	{
 		Dee_mh_seq_find_t mh_seq_find;
@@ -1788,7 +1798,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			tsc_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
 			if (tsc_seq_find == &DeeSeq_DefaultFindWithSeqEnumerateIndex)
 				return &DeeSeq_DefaultRemoveWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_seq_find)
+			if (tsc_seq_find != NULL)
 				return &DeeSeq_DefaultRemoveWithSeqFindAndDelItemIndex;
 			if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 				return &DeeSeq_DefaultRemoveWithSeqEnumerateIndexAndDelItemIndex;
@@ -1819,7 +1829,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			tsc_seq_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
 			if (tsc_seq_find_with_key == &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
 				return &DeeSeq_DefaultRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_seq_find_with_key)
+			if (tsc_seq_find_with_key != NULL)
 				return &DeeSeq_DefaultRemoveWithKeyWithSeqFindWithKeyAndDelItemIndex;
 			if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
 				return &DeeSeq_DefaultRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
@@ -1838,7 +1848,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex;
 			if (tsc_seq_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndex)
 				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_seq_rfind)
+			if (tsc_seq_rfind != NULL)
 				return &DeeSeq_DefaultRRemoveWithTSeqFindAndDelItemIndex;
 			if (DeeType_TryRequireSeqEnumerateIndexReverse(orig_type))
 				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex;
@@ -1859,7 +1869,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex;
 			if (tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndex)
 				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_seq_rfind_with_key)
+			if (tsc_seq_rfind_with_key != NULL)
 				return &DeeSeq_DefaultRRemoveWithKeyWithSeqRFindWithKeyAndDelItemIndex;
 			if (DeeType_TryRequireSeqEnumerateIndexReverse(orig_type))
 				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex;
@@ -2071,12 +2081,14 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireSeqBRange)
 	{
-		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_GETITEM) && DeeType_HasOperator(orig_type, OPERATOR_SIZE))
+		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_GETITEM) &&
+		    DeeType_HasOperator(orig_type, OPERATOR_SIZE))
 			return &DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqBRangeWithKey)
 	{
-		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_GETITEM) && DeeType_HasOperator(orig_type, OPERATOR_SIZE))
+		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_GETITEM) &&
+		    DeeType_HasOperator(orig_type, OPERATOR_SIZE))
 			return &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqBLocate)
