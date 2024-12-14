@@ -1512,13 +1512,37 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			return &DeeSeq_DefaultContainsWithRangeAndKeyWithSeqFindWithKey;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqLocate)
-	/* TODO: Locate with Find */
+	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+		Dee_mh_seq_find_t mh_seq_find;
+		mh_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
+		if (mh_seq_find != NULL &&
+		    mh_seq_find != &DeeSeq_DefaultFindWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultLocateWithSeqFindAndSeqGetItemIndex;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqLocateWithKey)
-	/* TODO: Locate with Find */
+	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+		Dee_mh_seq_find_with_key_t mh_seq_find_with_key;
+		mh_seq_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
+		if (mh_seq_find_with_key != NULL &&
+		    mh_seq_find_with_key != &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultLocateWithKeyWithSeqFindWithKeyAndSeqGetItemIndex;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqLocateWithRange)
-	/* TODO: Locate with Find */
+	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+		Dee_mh_seq_find_t mh_seq_find;
+		mh_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
+		if (mh_seq_find != NULL &&
+		    mh_seq_find != &DeeSeq_DefaultFindWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultLocateWithRangeWithSeqFindAndSeqGetItemIndex;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqLocateWithRangeAndKey)
-	/* TODO: Locate with Find */
+	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+		Dee_mh_seq_find_with_key_t mh_seq_find_with_key;
+		mh_seq_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
+		if (mh_seq_find_with_key != NULL &&
+		    mh_seq_find_with_key != &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultLocateWithRangeAndKeyWithSeqFindWithKeyAndSeqGetItemIndex;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqRLocateWithRange)
 	if (DeeType_HasPrivateSeqEnumerateIndexReverse(orig_type, self))
 		return &DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse;
