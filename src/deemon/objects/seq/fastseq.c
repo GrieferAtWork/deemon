@@ -64,26 +64,8 @@ STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST_DEPRECATED == (size_t)-1,
  * Sub-classes of these types are not fast-sequence-compatible. */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSize_deprecated(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self;
-	struct type_seq *seq;
-	struct type_nsi const *nsi;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
-	seq     = tp_self->tp_seq;
-	if (!seq)
-		goto nope;
-	nsi = seq->tp_nsi;
-	if (!nsi)
-		goto nope;
-	if (nsi->nsi_class != TYPE_SEQX_CLASS_SEQ)
-		goto nope;
-	if (!nsi->nsi_seqlike.nsi_getsize_fast)
-		goto nope;
-	ASSERT(nsi->nsi_seqlike.nsi_getitem ||
-	       nsi->nsi_seqlike.nsi_getitem_fast);
-	return (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
-nope:
-	return DEE_FASTSEQ_NOTFAST_DEPRECATED;
+	(void)self;
+	return (size_t)-1;
 }
 
 
@@ -94,26 +76,10 @@ nope:
  *          returned something other than `DEE_FASTSEQ_NOTFAST_DEPRECATED'. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFastSeq_GetItem_deprecated(DeeObject *__restrict self, size_t index) {
-	DeeTypeObject *tp_self;
-	struct type_seq *seq;
-	struct type_nsi const *nsi;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
-	seq     = tp_self->tp_seq;
-	ASSERT(seq != NULL);
-	nsi = seq->tp_nsi;
-	ASSERT(nsi != NULL);
-	ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
-	if (nsi->nsi_seqlike.nsi_getitem_fast) {
-		DREF DeeObject *result;
-		result = (*nsi->nsi_seqlike.nsi_getitem_fast)(self, index);
-		ASSERT(result != ITER_DONE);
-		if unlikely(!result)
-			err_unbound_index(self, index);
-		return result;
-	}
-	ASSERT(nsi->nsi_seqlike.nsi_getitem);
-	return (*nsi->nsi_seqlike.nsi_getitem)(self, index);
+	(void)self;
+	(void)index;
+	err_unbound_index(self, index);
+	return NULL;
 }
 
 

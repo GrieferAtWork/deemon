@@ -173,10 +173,11 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_VNewf(char const *__
 /* Concat a tuple and some generic sequence,
  * inheriting a reference from `self' in the process. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *sequence);
+DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self,
+                         /*inherit(always)*/ DREF DeeObject *sequence);
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
-                         /*inherit(on_success)*/ DREF DeeObject *const *argv);
+DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
+                         /*inherit(always)*/ DREF DeeObject *const *argv);
 
 DECL_END
 

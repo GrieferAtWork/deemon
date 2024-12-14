@@ -239,15 +239,6 @@ struct Dee_type_nsi {
 			Dee_funptr_t _unused_nsi_getsize;
 			Dee_funptr_t _unused_nsi_getsize_fast;
 			Dee_funptr_t _unused_nsi_getitem;
-			Dee_funptr_t _unused_nsi_delitem;
-			Dee_funptr_t _unused_nsi_setitem;
-			Dee_funptr_t _unused_nsi_getitem_fast;
-			Dee_funptr_t _unused_nsi_getrange;
-			Dee_funptr_t _unused_nsi_getrange_n;
-			Dee_funptr_t _unused_nsi_delrange;
-			Dee_funptr_t _unused_nsi_delrange_n;
-			Dee_funptr_t _unused_nsi_setrange;
-			Dee_funptr_t _unused_nsi_setrange_n;
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 			/* NOTE: If provided, these functions are only ever called as extensions to the
 			 *       regular sequence operators, meaning that if you implement `nsi_getsize',
@@ -268,21 +259,6 @@ struct Dee_type_nsi {
 			 *          least one of `nsi_getitem' or `nsi_getitem_fast' */
 			WUNUSED_T NONNULL_T((1))    size_t          (DCALL *nsi_getsize_fast)(DeeObject *__restrict self);
 			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getitem)(DeeObject *__restrict self, size_t index);
-			WUNUSED_T NONNULL_T((1))    int             (DCALL *nsi_delitem)(DeeObject *__restrict self, size_t index);
-			WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *nsi_setitem)(DeeObject *self, size_t index, DeeObject *value);
-
-			/* When `nsi_getitem_fast()' returns NULL, no error is thrown, and it means that the item is unbound.
-			 * @param: index: Always `< SOME_PAST_CALL((*nsi_getsize_fast)(self))'
-			 * @return: * :   A reference to the item at `index'
-			 * @return: NULL: The item at `index' isn't bound (NO ERROR IS THROWN IN THIS CASE) */
-			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getitem_fast)(DeeObject *__restrict self, size_t index);
-
-			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);
-			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getrange_n)(DeeObject *__restrict self, Dee_ssize_t start); /* end: Dee_None */
-			WUNUSED_T NONNULL_T((1))    int             (DCALL *nsi_delrange)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
-			WUNUSED_T NONNULL_T((1))    int             (DCALL *nsi_delrange_n)(DeeObject *self, Dee_ssize_t start); /* end: Dee_None */
-			WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *nsi_setrange)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
-			WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *nsi_setrange_n)(DeeObject *self, Dee_ssize_t start, DeeObject *values); /* end: Dee_None */
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 		}                   nsi_seqlike;
 

@@ -2109,85 +2109,118 @@ tuple_compare_eq(Tuple *self, DeeObject *other) {
 	return Dee_COMPARE_ERR;
 }
 
+struct tuple_concat_fe_data {
+	DREF Tuple *tcfed_result; /* [1..1] The resulting tuple. */
+	size_t      tcfed_offset; /* Offset of next element to write in `tcfed_result' */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+tuple_concat_fe_cb(void *arg, DeeObject *item) {
+	struct tuple_concat_fe_data *data;
+	data = (struct tuple_concat_fe_data *)arg;
+	if unlikely(data->tcfed_offset >= data->tcfed_result->t_size) {
+		/* Allocate a larger buffer. */
+		size_t new_size;
+		DREF Tuple *new_result;
+		if (OVERFLOW_UMUL(data->tcfed_result->t_size, 2, &new_size)) {
+			if (OVERFLOW_UADD(data->tcfed_result->t_size, 1, &new_size))
+				new_size = (size_t)-1;
+		}
+		new_result = DeeTuple_TryResizeUninitialized(data->tcfed_result, new_size);
+		if unlikely(!new_result) {
+			if (OVERFLOW_UADD(data->tcfed_result->t_size, 1, &new_size))
+				new_size = (size_t)-1;
+			new_result = DeeTuple_ResizeUninitialized(data->tcfed_result, new_size);
+			if unlikely(!new_result)
+				goto err;
+		}
+		data->tcfed_result = new_result;
+	}
+	data->tcfed_result->t_elem[data->tcfed_offset] = item;
+	Dee_Incref(item);
+	++data->tcfed_offset;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL
 tuple_concat(Tuple *self, DeeObject *other) {
-	DeeObject **dst;
-	DREF Tuple *result, *new_result;
-	DREF DeeObject *elem, *iterator;
-	size_t i, my_length, ot_length;
-	my_length = DeeTuple_SIZE(self);
-	if (my_length == 0)
-		return (DREF Tuple *)DeeTuple_FromSequence(other);
-	if (DeeTuple_Check(other)) {
-		ot_length = DeeTuple_SIZE(other);
-		if (ot_length == 0)
-			goto return_self;
-		result = DeeTuple_NewUninitialized(my_length + ot_length);
-		if unlikely(!result)
-			goto err;
-		Dee_Movrefv(DeeTuple_ELEM(result),
-		            DeeTuple_ELEM(self),
-		            my_length);
-		Dee_Movrefv(DeeTuple_ELEM(result) + my_length,
-		            DeeTuple_ELEM(other),
-		            ot_length);
-		goto done;
-	}
-	ot_length = DeeFastSeq_GetSize_deprecated(other);
-	if (ot_length != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		if (ot_length == 0)
-			goto return_self;
-		result = DeeTuple_NewUninitialized(my_length + ot_length);
-		if unlikely(!result)
-			goto err;
-		dst = Dee_Movprefv(DeeTuple_ELEM(result),
-		                   DeeTuple_ELEM(self),
-		                   my_length);
-		for (i = 0; i < ot_length; ++i) {
-			elem = DeeFastSeq_GetItem_deprecated(other, i);
-			if unlikely(!elem)
-				goto err_r;
-			*dst++ = elem; /* Inherit reference. */
-		}
-		goto done;
+	DREF Tuple *result;
+	size_t other_sizehint, total_size;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	if unlikely(!(likely(tp_other->tp_seq && tp_other->tp_seq->tp_foreach) ||
+	              unlikely(DeeType_InheritIter(tp_other)))) {
+		err_unimplemented_operator(tp_other, OPERATOR_ITER);
+		goto err;
 	}
 
-	/* Fallback: use iterator. */
-	result = DeeTuple_NewUninitialized(my_length + 8);
-	if unlikely(!result)
-		goto err;
-	dst = Dee_Movprefv(DeeTuple_ELEM(result),
-	                   DeeTuple_ELEM(self),
-	                   my_length);
-	iterator = DeeObject_Iter(other);
-	if unlikely(!iterator)
-		goto err_r;
-	ot_length = 0;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		ASSERT(my_length <= DeeTuple_SIZE(result));
-		if (my_length >= DeeTuple_SIZE(result)) {
-			new_result = DeeTuple_ResizeUninitialized(result, my_length * 2);
+	/* Try to get an idea of how large the final sequence will be. */
+	if (tp_other->tp_seq->tp_size_fast) {
+		other_sizehint = (*tp_other->tp_seq->tp_size_fast)(other);
+		if unlikely(other_sizehint == (size_t)-1)
+			other_sizehint = 8;
+	} else {
+		other_sizehint = 8;
+	}
+
+	/* Allocate an initial buffer. */
+	if (OVERFLOW_UADD(self->t_size, other_sizehint, &total_size))
+		total_size = (size_t)-1;
+	result = DeeTuple_TryNewUninitialized(total_size);
+	if unlikely(!result) {
+		other_sizehint = 0;
+		total_size     = self->t_size;
+		result = DeeTuple_NewUninitialized(total_size);
+		if unlikely(!result)
+			goto err;
+	}
+
+	/* Check if the type supports the "tp_asvector" extension. */
+	if (tp_other->tp_seq->tp_asvector) {
+		size_t other_size;
+		for (;;) {
+			DREF Tuple *new_result;
+			other_size = (*tp_other->tp_seq->tp_asvector)(other, other_sizehint,
+			                                              result->t_elem + self->t_size);
+			if (other_size <= other_sizehint)
+				break; /* Success! got the entire sequence */
+			/* Must allocate a larger buffer. */
+			if (OVERFLOW_UADD(self->t_size, other_size, &total_size))
+				total_size = (size_t)-1; /* Force downstream OOM */
+			new_result = DeeTuple_ResizeUninitialized(result, total_size);
 			if unlikely(!new_result)
 				goto err_r;
-			result = new_result;
+			result         = new_result;
+			other_sizehint = other_size;
 		}
-		ASSERT(my_length < DeeTuple_SIZE(result));
-		DeeTuple_SET(result, my_length, elem); /* Inherit reference. */
-		++my_length;
+		if (other_size < other_sizehint) {
+			total_size = self->t_size + other_size;
+			result = DeeTuple_TruncateUninitialized(result, total_size);
+		}
+	} else {
+		Dee_ssize_t fe_status;
+		struct tuple_concat_fe_data data;
+		ASSERT(tp_other->tp_seq->tp_foreach);
+		data.tcfed_result = result;
+		data.tcfed_offset = self->t_size;
+		fe_status = (*tp_other->tp_seq->tp_foreach)(other, &tuple_concat_fe_cb, &data);
+		ASSERT(data.tcfed_offset >= self->t_size);
+		result = data.tcfed_result;
+		ASSERT(fe_status <= 0);
+		if unlikely(fe_status) {
+			Dee_Decrefv(result->t_elem + self->t_size,
+			            data.tcfed_offset - self->t_size);
+			goto err_r;
+		}
+		total_size = data.tcfed_offset;
+		result = DeeTuple_TruncateUninitialized(result, total_size);
 	}
-	if unlikely(!elem)
-		goto err_r_iterator;
-	Dee_Decref(iterator);
-	result = DeeTuple_TruncateUninitialized(result, my_length);
-done:
+
+	/* Fill in elements inherited from `self' */
+	Dee_Movrefv(result->t_elem, self->t_elem, self->t_size);
 	return result;
-return_self:
-	return_reference_(self);
-err_r_iterator:
-	Dee_Decref(iterator);
 err_r:
-	Dee_Decrefv(DeeTuple_ELEM(result),
-	            (size_t)(dst - DeeTuple_ELEM(result)));
 	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
