@@ -2140,6 +2140,21 @@ err:
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_DefaultRLocateWithRangeWithSeqRFindAndSeqGetItemIndex(DeeObject *self, DeeObject *item,
+                                                             size_t start, size_t end) {
+	size_t match = DeeSeq_InvokeRFind(self, item, start, end);
+	if unlikely(match == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(match == (size_t)-1)
+		goto err_not_found;
+	return DeeSeq_OperatorGetItemIndex(self, match);
+err_not_found:
+	err_item_not_found(self, item);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *item,
                                                            size_t start, size_t end) {
 	Dee_ssize_t foreach_status;
@@ -2167,6 +2182,21 @@ DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *
 			return data.gsrlwf_result;
 		err_item_not_found(self, item);
 	}
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqRFindWithKeyAndSeqGetItemIndex(DeeObject *self, DeeObject *item,
+                                                                          size_t start, size_t end, DeeObject *key) {
+	size_t match = DeeSeq_InvokeRFindWithKey(self, item, start, end, key);
+	if unlikely(match == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(match == (size_t)-1)
+		goto err_not_found;
+	return DeeSeq_OperatorGetItemIndex(self, match);
+err_not_found:
+	err_item_not_found(self, item);
+err:
 	return NULL;
 }
 

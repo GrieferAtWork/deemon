@@ -1544,9 +1544,25 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			return &DeeSeq_DefaultLocateWithRangeAndKeyWithSeqFindWithKeyAndSeqGetItemIndex;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqRLocateWithRange)
+	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+		Dee_mh_seq_rfind_t mh_seq_rfind;
+		mh_seq_rfind = DeeType_RequireSeqRFind_private_uncached(orig_type, self);
+		if (mh_seq_rfind != NULL &&
+		    mh_seq_rfind != &DeeSeq_DefaultRFindWithSeqEnumerateIndex &&
+		    mh_seq_rfind != &DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse)
+			return &DeeSeq_DefaultRLocateWithRangeWithSeqRFindAndSeqGetItemIndex;
+	}
 	if (DeeType_HasPrivateSeqEnumerateIndexReverse(orig_type, self))
 		return &DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse;
 #elif defined(DEFINE_DeeType_RequireSeqRLocateWithRangeAndKey)
+	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+		Dee_mh_seq_rfind_with_key_t mh_seq_rfind_with_key;
+		mh_seq_rfind_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
+		if (mh_seq_rfind_with_key != NULL &&
+		    mh_seq_rfind_with_key != &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndex &&
+		    mh_seq_rfind_with_key != &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse)
+			return &DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqRFindWithKeyAndSeqGetItemIndex;
+	}
 	if (DeeType_HasPrivateSeqEnumerateIndexReverse(orig_type, self))
 		return &DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndexReverse;
 #elif defined(DEFINE_DeeType_RequireSeqStartsWith)
