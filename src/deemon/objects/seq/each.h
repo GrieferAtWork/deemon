@@ -98,8 +98,10 @@ typedef struct {
 #endif /* (!__OPTIMIZE_SIZE__ && !CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS) */
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
+#define CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
+#ifndef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #undef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
-//#define CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS /* TODO */
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
 /* Define to get dedicated `operator repr' for `Sequence.each[...]'
  * This actually degrades usability, since it prevents default repr

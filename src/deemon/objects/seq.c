@@ -846,7 +846,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "/* [0]: <unbound>          [1]: 10\n"
 	              /**/ " * [2]: <unbound>          [3]: 20 */\n"
 	              /**/ "x.enumerate((key, value?) -\\> {\n"
-	              /**/ "	print f\"[{repr key}]: {value is bound ? repr value : \"<unbound>\"}\"\n"
+	              /**/ "	print f\"[{repr key}]: {value is bound ? repr value : \"<unbound>\"}\";\n"
 	              /**/ "});"
 	              "}\n"
 	              "#T{Requirements|Implementation~"

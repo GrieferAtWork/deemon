@@ -3363,31 +3363,6 @@ DEFINE_SSW_BINARY(ssw_contains, OPERATOR_CONTAINS)
 DEFINE_SSW_BINARY(ssw_getitem, OPERATOR_GETITEM)
 DEFINE_SSW_TRINARY(ssw_getrange, OPERATOR_GETRANGE)
 
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-ss_trycompare_eq_cb(void *arg, DeeObject *elem) {
-	int result = DeeObject_TryCompareEq(elem, (DeeObject *)arg);
-	if unlikely(result == Dee_COMPARE_ERR)
-		goto err;
-	if (result != 0)
-		result = -2;
-	return result;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sso_trycompare_eq(SeqEachOperator *self, DeeObject *other) {
-	Dee_ssize_t result = seo_foreach(self, &ss_trycompare_eq_cb, other);
-	ASSERT(result == 0 || result == -1 || result == -2);
-	if (result == -2)
-		return 1;
-	if unlikely(result == -1)
-		goto err;
-	return 0;
-err:
-	return Dee_COMPARE_ERR;
-}
-
 PRIVATE struct type_math ssw_math = {
 	/* .tp_int32       = */ NULL,
 	/* .tp_int64       = */ NULL,
@@ -3421,6 +3396,31 @@ PRIVATE struct type_math ssw_math = {
 	/* .tp_inplace_xor = */ NULL,
 	/* .tp_inplace_pow = */ NULL
 };
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+ss_trycompare_eq_cb(void *arg, DeeObject *elem) {
+	int result = DeeObject_TryCompareEq(elem, (DeeObject *)arg);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	if (result != 0)
+		result = -2;
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sso_trycompare_eq(SeqEachOperator *self, DeeObject *other) {
+	Dee_ssize_t result = seo_foreach(self, &ss_trycompare_eq_cb, other);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == -2)
+		return 1;
+	if unlikely(result == -1)
+		goto err;
+	return 0;
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp sso_cmp = {
 	/* .tp_hash          = */ NULL,
@@ -3505,8 +3505,8 @@ PRIVATE struct type_seq sso_seq = {
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_nsi                        = */ NULL,
-	/* .tp_foreach                    = */ NULL,
-	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach, /* Needed for recursion! */
+	/* .tp_foreach_pair               = */ &DeeObject_DefaultForeachPairWithForeach,
 	/* .tp_enumerate                  = */ NULL,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ NULL,
@@ -3629,8 +3629,8 @@ PRIVATE struct type_attr sso_attr = {
 	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&sso_hasattr,
 	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&sso_boundattr,
 #ifdef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
-	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&sso_callattr,
-	/* .tp_callattr_kw                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&sso_callattr_kw,
+	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&ssw_callattr,
+	/* .tp_callattr_kw                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&ssw_callattr_kw,
 #else /* CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS */
 	/* .tp_callattr                      = */ NULL,
 	/* .tp_callattr_kw                   = */ NULL,
@@ -4133,14 +4133,6 @@ DECL_END
 #define DEFINE_SeqEachCallAttrKw
 #include "each-fastpass.c.inl"
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-#ifdef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
-//TODO:#define DEFINE_SeqEachGetAttr 1
-//TODO:#include "each-fastpass.c.inl"
-//TODO:#define DEFINE_SeqEachCallAttr 1
-//TODO:#include "each-fastpass.c.inl"
-//TODO:#define DEFINE_SeqEachCallAttrKw 1
-//TODO:#include "each-fastpass.c.inl"
-#endif /* CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS */
 #endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_EACH_C */
