@@ -3617,6 +3617,16 @@ seq_popfront(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL /* From `seq.c' */
 seq_popback(DeeObject *self, size_t argc, DeeObject *const *argv);
 
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+
+
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
+
 PRIVATE struct type_method tpconst list_methods[] = {
 	TYPE_METHOD_HINTREF(seq_extend),
 	TYPE_METHOD_HINTREF(seq_resize),
@@ -3654,13 +3664,17 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	TYPE_METHOD_F("reserve", &list_reserve, METHOD_FNOREFESCAPE,
 	              "(size:?Dint)\n"
 	              "Reserve (preallocate) memory for @size items\n"
-	              "Failures to pre-allocate memory are silently ignored, in which case ?#allocated will remain unchanged\n"
-	              "If @size is lower than the currently ?#allocated size, the function becomes a no-op"),
+	              "Failures to pre-allocate memory are silently ignored, "
+	              /**/ "in which case ?#allocated will remain unchanged\n"
+	              "If @size is lower than the currently ?#allocated size, "
+	              /**/ "the function becomes a no-op"),
 	TYPE_METHOD_F("shrink", &list_shrink, METHOD_FNOREFESCAPE,
 	              "()\n"
-	              "Release any pre-allocated, but unused memory, setting ?#allocated to the length of @this List"),
+	              "Release any pre-allocated, but unused memory, setting "
+	              /**/ "?#allocated to the length of @this List"),
 
 	/* Deprecated aliases / functions. */
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_KWMETHOD_F("remove_if", &DeeMH_seq_removeif, METHOD_FNOREFESCAPE,
 	                "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	                "Deprecated alias for ?#removeif"),
@@ -3685,11 +3699,16 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	TYPE_METHOD_F("shrink_to_fit", &list_shrink, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Deprecated alias for ?#shrink"),
-	/* TODO: DEE_METHODDEF_v100("sorted_insert", member(&_deelist_sorted_insert), DEE_DOC_AUTO),
-	 * TODO: DEE_METHODDEF_v100("fill", member(&_deelist_fill), DEE_DOC_AUTO),
-	 * TODO: DEE_METHODDEF_v100("unique", member(&_deelist_unique), DEE_DOC_AUTO),
-	 * TODO: DEE_METHODDEF_CONST_v100("tounique", member(&_deelist_tounique), DEE_DOC_AUTO),
+
+	TYPE_KWMETHOD("sorted_insert", &seq_binsert,
+	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)\n"
+	              "Deprecated alias for ?Abinsert?DSequence present only in ?."),
+	TYPE_KWMETHOD("tounique", &seq_distinct,
+	              "(key?:?DCallable)->?DSet\n"
+	              "Deprecated alias for ?Adistinct?DSequence present only in ?."),
+	/* TODO: DEE_METHODDEF_v100("unique", member(&_deelist_unique), DEE_DOC_AUTO),
 	 * TODO: DEE_METHODDEF_CONST_v100("extend_unique", member(&_deelist_extend_unique), DEE_DOC_AUTO), */
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_METHOD_END
 };
 

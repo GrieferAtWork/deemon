@@ -941,32 +941,6 @@ done:
 	return result;
 }
 
-#ifndef __OPTIMIZE_SIZE__
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-svec_contains(SharedVector *self, DeeObject *other) {
-	size_t index;
-	int temp;
-	SharedVector_LockRead(self);
-	for (index = 0; index < self->sv_length; ++index) {
-		DREF DeeObject *item;
-		item = self->sv_vector[index];
-		Dee_Incref(item);
-		SharedVector_LockEndRead(self);
-		temp = DeeObject_TryCompareEq(other, item);
-		Dee_Decref(item);
-		if unlikely(temp == Dee_COMPARE_ERR)
-			goto err;
-		if (temp == 0)
-			return_true;
-		SharedVector_LockRead(self);
-	}
-	SharedVector_LockEndRead(self);
-	return_false;
-err:
-	return NULL;
-}
-#endif /* !__OPTIMIZE_SIZE__ */
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 svec_size(SharedVector *__restrict self) {
 	ASSERT(self->sv_length != (size_t)-1);
@@ -1201,7 +1175,7 @@ PRIVATE struct type_method_hint tpconst svec_method_hints[] = {
 PRIVATE struct type_seq svec_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&svec_iter,
 	/* .tp_sizeob                     = */ NULL,
-	/* .tp_contains                   = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&svec_contains),
+	/* .tp_contains                   = */ NULL,
 	/* .tp_getitem                    = */ NULL,
 	/* .tp_delitem                    = */ NULL,
 	/* .tp_setitem                    = */ NULL,

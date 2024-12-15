@@ -683,7 +683,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+#ifdef CONFIG_NO_DEEMON_100_COMPAT
+PRIVATE
+#else /* CONFIG_NO_DEEMON_100_COMPAT */
+INTERN /* Needed for alias `List.unique' */
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DistinctSetWithKey *result;
 	DeeObject *key = NULL;
@@ -762,7 +767,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+#ifdef CONFIG_NO_DEEMON_100_COMPAT
+PRIVATE
+#else /* CONFIG_NO_DEEMON_100_COMPAT */
+INTERN /* Needed for alias `List.sorted_insert' */
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *item;
 	size_t index, start = 0, end = (size_t)-1;
@@ -1576,6 +1586,13 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "}"
 	              "}"),
 
+	/* TODO: locatefirst: "(pred:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
+	 *                    "Locate and return the first element such that ${pred(elem)} is true, or @def when no such element exists"
+	 * XXX: Check if it's possible to just replace "Sequence.locate" with this */
+	/* TODO: locatelast: "(pred:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
+	 *                   "Locate and return the last element such that ${pred(elem)} is true, or @def when no such element exists"
+	 * XXX: Check if it's possible to just replace "Sequence.rlocate" with this */
+
 	/* TODO: findall: "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
 	 * > Find not just the first, but all indices of @item */
 	/* TODO: findallseq(seq: Sequence, start: int = 0, end: int = -1, key: Callable = none): {int...} */
@@ -1934,9 +1951,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "return [:##(this as Sequence)].operator iter();\n"
 	            /**/ "\n"
 	            /**/ "// When indices can be unbound (enumerate bound indices)\n"
-	            /**/ "return (() -> {\n"
+	            /**/ "return (() -\\> {\n"
 	            /**/ "	local keys = [];\n"
-	            /**/ "	Sequence.enumerate(this, (key, ...) -> {\n"
+	            /**/ "	Sequence.enumerate(this, (key, ...) -\\> {\n"
 	            /**/ "		keys.append(key);\n"
 	            /**/ "	});\n"
 	            /**/ "	return keys;\n"
