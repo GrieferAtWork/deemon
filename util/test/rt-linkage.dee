@@ -75,6 +75,12 @@ assertRtTypeName("SeqEachCallAttrIterator");
 assertRtTypeName("SeqEachCallAttrKw");
 assertRtTypeName("SeqEachCallAttrKwIterator");
 
+assertRtTypeName("SeqSome");
+assertRtTypeName("SeqSomeOperator");
+assertRtTypeName("SeqSomeGetAttr");
+assertRtTypeName("SeqSomeCallAttr");
+assertRtTypeName("SeqSomeCallAttrKw");
+
 assertRtTypeName("SeqEnumWithSizeAndGetItemIndexFast");
 assertRtTypeName("SeqEnumWithSizeAndTryGetItemIndex");
 assertRtTypeName("SeqEnumWithSizeAndGetItemIndex");
