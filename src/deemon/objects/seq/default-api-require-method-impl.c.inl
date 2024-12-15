@@ -1758,10 +1758,17 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		break;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqPop)
-	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO */
-	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO */
+	if (seqclass == Dee_SEQCLASS_SET || seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO:
+		 * >> local item;
+		 * >> do {
+		 * >>     local used_index = index;
+		 * >>     if (used_index < 0)
+		 * >>         used_index = DeeSeqRange_Clamp_n(used_index, #(this as Sequence));
+		 * >>     item = (this as Sequence)[used_index];
+		 * >> } while (!Set.remove(this, item));
+		 * >> return item;
+		 */
 	} else {
 		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
 			if (DeeType_HasPrivateCustomSeqErase(self))
@@ -1775,9 +1782,23 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireSeqRemove)
 	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO */
+		/* TODO:
+		 * >> local index = Sequence.find(this, item, start, end);
+		 * >> if (index < 0)
+		 * >>     return false;
+		 * >> return Set.remove(this, item); */
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO */
+		/* TODO:
+		 * >> local key;
+		 * >> try {
+		 * >>     key, none = item...;
+		 * >> } catch (NotImplemented | ValueError) {
+		 * >>     return false;
+		 * >> }
+		 * >> local index = Sequence.find(this, item, start, end);
+		 * >> if (index < 0)
+		 * >>     return false;
+		 * >> return Mapping.remove(this, key); */
 	} else {
 		{
 			Dee_mh_seq_removeall_t tsc_seq_removeall;
@@ -1806,9 +1827,30 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 	}
 #elif defined(DEFINE_DeeType_RequireSeqRemoveWithKey)
 	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO */
+		/* TODO:
+		 * >> local true_item;
+		 * >> try {
+		 * >>     true_item = Sequence.locate(this, item, start, end, key);
+		 * >> } catch (ValueError) {
+		 * >>     return false;
+		 * >> }
+		 * >> return Set.remove(this, true_item); */
 	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO */
+		/* TODO:
+		 * >> local key, none;
+		 * >> try {
+		 * >>     key, none = item...;
+		 * >> } catch (NotImplemented | ValueError) {
+		 * >>     return false;
+		 * >> }
+		 * >> local true_item;
+		 * >> try {
+		 * >>     true_item = Sequence.locate(this, item, start, end, key);
+		 * >> } catch (ValueError) {
+		 * >>     return false;
+		 * >> }
+		 * >> local true_key, none = true_item...;
+		 * >> return Mapping.remove(this, true_key); */
 	} else {
 		{
 			Dee_mh_seq_removeall_with_key_t tsc_seq_removeall_with_key;
@@ -1836,52 +1878,42 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		}
 	}
 #elif defined(DEFINE_DeeType_RequireSeqRRemove)
-	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO */
-	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO */
-	} else {
-		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
-			Dee_mh_seq_rfind_t tsc_seq_rfind;
-			tsc_seq_rfind = DeeType_RequireSeqRFind_private_uncached(orig_type, self);
-			if (tsc_seq_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse)
-				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex;
-			if (tsc_seq_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndex)
-				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_seq_rfind != NULL)
-				return &DeeSeq_DefaultRRemoveWithTSeqFindAndDelItemIndex;
-			if (DeeType_TryRequireSeqEnumerateIndexReverse(orig_type))
-				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex;
-			if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
-				return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexAndDelItemIndex;
-		}
+	if (seqclass == Dee_SEQCLASS_SET || seqclass == Dee_SEQCLASS_MAP)
+		return DeeType_RequireSeqRemove_private_uncached(orig_type, self);
+	if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
+		Dee_mh_seq_rfind_t tsc_seq_rfind;
+		tsc_seq_rfind = DeeType_RequireSeqRFind_private_uncached(orig_type, self);
+		if (tsc_seq_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse)
+			return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex;
+		if (tsc_seq_rfind == &DeeSeq_DefaultRFindWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexAndDelItemIndex;
+		if (tsc_seq_rfind != NULL)
+			return &DeeSeq_DefaultRRemoveWithTSeqFindAndDelItemIndex;
+		if (DeeType_TryRequireSeqEnumerateIndexReverse(orig_type))
+			return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexReverseAndDelItemIndex;
+		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+			return &DeeSeq_DefaultRRemoveWithSeqEnumerateIndexAndDelItemIndex;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqRRemoveWithKey)
-	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO */
-	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO */
-	} else {
-		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
-			Dee_mh_seq_rfind_with_key_t tsc_seq_rfind_with_key;
-			tsc_seq_rfind_with_key = DeeType_RequireSeqRFindWithKey_private_uncached(orig_type, self);
-			if (tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse)
-				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex;
-			if (tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndex)
-				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
-			if (tsc_seq_rfind_with_key != NULL)
-				return &DeeSeq_DefaultRRemoveWithKeyWithSeqRFindWithKeyAndDelItemIndex;
-			if (DeeType_TryRequireSeqEnumerateIndexReverse(orig_type))
-				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex;
-			if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
-				return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
-		}
+	if (seqclass == Dee_SEQCLASS_SET || seqclass == Dee_SEQCLASS_MAP)
+		return DeeType_RequireSeqRemoveWithKey_private_uncached(orig_type, self);
+	if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM)) {
+		Dee_mh_seq_rfind_with_key_t tsc_seq_rfind_with_key;
+		tsc_seq_rfind_with_key = DeeType_RequireSeqRFindWithKey_private_uncached(orig_type, self);
+		if (tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse)
+			return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex;
+		if (tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndex)
+			return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
+		if (tsc_seq_rfind_with_key != NULL)
+			return &DeeSeq_DefaultRRemoveWithKeyWithSeqRFindWithKeyAndDelItemIndex;
+		if (DeeType_TryRequireSeqEnumerateIndexReverse(orig_type))
+			return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexReverseAndDelItemIndex;
+		if (DeeType_HasOperator(orig_type, OPERATOR_ITER) && orig_type->tp_seq->tp_enumerate_index)
+			return &DeeSeq_DefaultRRemoveWithKeyWithSeqEnumerateIndexAndDelItemIndex;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqRemoveAll)
-	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO */
-	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO */
+	if (seqclass == Dee_SEQCLASS_SET || seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO: >> return (this as Sequence).remove(item, start, end) ? 1 : 0; */
 	} else {
 		{
 			Dee_mh_seq_removeif_t tsc_seq_removeif;
@@ -1902,10 +1934,8 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			return &DeeSeq_DefaultRemoveAllWithSeqRemove;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqRemoveAllWithKey)
-	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO */
-	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO */
+	if (seqclass == Dee_SEQCLASS_SET || seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO: >> return (this as Sequence).remove(item, start, end, key) ? 1 : 0; */
 	} else {
 		{
 			Dee_mh_seq_removeif_t tsc_seq_removeif;
@@ -1926,10 +1956,8 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			return &DeeSeq_DefaultRemoveAllWithKeyWithSeqRemoveWithKey;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqRemoveIf)
-	if (seqclass == Dee_SEQCLASS_SET) {
-		/* TODO */
-	} else if (seqclass == Dee_SEQCLASS_MAP) {
-		/* TODO */
+	if (seqclass == Dee_SEQCLASS_SET || seqclass == Dee_SEQCLASS_MAP) {
+		/* TODO: &DeeSeq_DefaultRemoveIfWithSeqRemoveAllWithKey (once removeall for set/map is implemented) */
 	} else {
 		if (DeeType_HasPrivateCustomSeqRemoveAll(self))
 			return &DeeSeq_DefaultRemoveIfWithSeqRemoveAllWithKey;
@@ -2150,9 +2178,11 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* >> local x = Dict(("foo", "bar"));
 		 * >> (x as Set).remove(("foo", "bar")); // if (equals(x["foo"], "bar")) del x["foo"];
 		 * >> print repr x; // {} */
-		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM) &&
-		    DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM))
-			return &DeeSet_DefaultRemoveWithMapTryGetItemAndMapDelItem;
+		if (DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
+			if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_DELITEM))
+				return &DeeSet_DefaultRemoveWithMapTryGetItemAndMapDelItem;
+			/* TODO: Try using "Mapping.remove" */
+		}
 	} else {
 		/* >> local x = [10, 20, 30];
 		 * >> (x as Set).remove(30); // x.remove(30);  (using `DeeType_RequireSeqRemove')
