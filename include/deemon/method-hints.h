@@ -342,11 +342,8 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_contains_with_k
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_contains_with_range_t DCALL DeeType_RequireSeqContainsWithRange(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_contains_with_range_and_key_t DCALL DeeType_RequireSeqContainsWithRangeAndKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_locate_t DCALL DeeType_RequireSeqLocate(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_locate_with_key_t DCALL DeeType_RequireSeqLocateWithKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_locate_with_range_t DCALL DeeType_RequireSeqLocateWithRange(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_locate_with_range_and_key_t DCALL DeeType_RequireSeqLocateWithRangeAndKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_rlocate_with_range_t DCALL DeeType_RequireSeqRLocateWithRange(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_rlocate_with_range_and_key_t DCALL DeeType_RequireSeqRLocateWithRangeAndKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_startswith_t DCALL DeeType_RequireSeqStartsWith(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_startswith_with_key_t DCALL DeeType_RequireSeqStartsWithWithKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_startswith_with_range_t DCALL DeeType_RequireSeqStartsWithWithRange(DeeTypeObject *__restrict self);
@@ -391,8 +388,6 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_bposition_t DCA
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_bposition_with_key_t DCALL DeeType_RequireSeqBPositionWithKey(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_brange_t DCALL DeeType_RequireSeqBRange(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_brange_with_key_t DCALL DeeType_RequireSeqBRangeWithKey(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_blocate_t DCALL DeeType_RequireSeqBLocate(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_blocate_with_key_t DCALL DeeType_RequireSeqBLocateWithKey(DeeTypeObject *__restrict self);
 
 /* Set functions */
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_set_insert_t DCALL DeeType_RequireSetInsert(DeeTypeObject *__restrict self);
@@ -568,11 +563,8 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_popitem_t DCALL
 #define DeeType_RequireSeqContainsWithRange(self)               ((Dee_mh_seq_contains_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_contains_with_range))
 #define DeeType_RequireSeqContainsWithRangeAndKey(self)         ((Dee_mh_seq_contains_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_contains_with_range_and_key))
 #define DeeType_RequireSeqLocate(self)                          ((Dee_mh_seq_locate_t)DeeType_GetMethodHint(self, Dee_TMH_seq_locate))
-#define DeeType_RequireSeqLocateWithKey(self)                   ((Dee_mh_seq_locate_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_locate_with_key))
 #define DeeType_RequireSeqLocateWithRange(self)                 ((Dee_mh_seq_locate_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_locate_with_range))
-#define DeeType_RequireSeqLocateWithRangeAndKey(self)           ((Dee_mh_seq_locate_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_locate_with_range_and_key))
 #define DeeType_RequireSeqRLocateWithRange(self)                ((Dee_mh_seq_rlocate_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_rlocate_with_range))
-#define DeeType_RequireSeqRLocateWithRangeAndKey(self)          ((Dee_mh_seq_rlocate_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_rlocate_with_range_and_key))
 #define DeeType_RequireSeqStartsWith(self)                      ((Dee_mh_seq_startswith_t)DeeType_GetMethodHint(self, Dee_TMH_seq_startswith))
 #define DeeType_RequireSeqStartsWithWithKey(self)               ((Dee_mh_seq_startswith_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_startswith_with_key))
 #define DeeType_RequireSeqStartsWithWithRange(self)             ((Dee_mh_seq_startswith_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_startswith_with_range))
@@ -615,8 +607,6 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_popitem_t DCALL
 #define DeeType_RequireSeqBPositionWithKey(self)                ((Dee_mh_seq_bposition_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_bposition_with_key))
 #define DeeType_RequireSeqBRange(self)                          ((Dee_mh_seq_brange_t)DeeType_GetMethodHint(self, Dee_TMH_seq_brange))
 #define DeeType_RequireSeqBRangeWithKey(self)                   ((Dee_mh_seq_brange_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_brange_with_key))
-#define DeeType_RequireSeqBLocate(self)                         ((Dee_mh_seq_blocate_t)DeeType_GetMethodHint(self, Dee_TMH_seq_blocate))
-#define DeeType_RequireSeqBLocateWithKey(self)                  ((Dee_mh_seq_blocate_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_blocate_with_key))
 #define DeeType_RequireSetInsert(self)                          ((Dee_mh_set_insert_t)DeeType_GetMethodHint(self, Dee_TMH_set_insert))
 #define DeeType_RequireSetRemove(self)                          ((Dee_mh_set_remove_t)DeeType_GetMethodHint(self, Dee_TMH_set_remove))
 #define DeeType_RequireSetUnify(self)                           ((Dee_mh_set_unify_t)DeeType_GetMethodHint(self, Dee_TMH_set_unify))

@@ -64,11 +64,8 @@
 //#define DEFINE_DeeType_RequireSeqContainsWithRange
 //#define DEFINE_DeeType_RequireSeqContainsWithRangeAndKey
 //#define DEFINE_DeeType_RequireSeqLocate
-//#define DEFINE_DeeType_RequireSeqLocateWithKey
 //#define DEFINE_DeeType_RequireSeqLocateWithRange
-//#define DEFINE_DeeType_RequireSeqLocateWithRangeAndKey
 //#define DEFINE_DeeType_RequireSeqRLocateWithRange
-//#define DEFINE_DeeType_RequireSeqRLocateWithRangeAndKey
 //#define DEFINE_DeeType_RequireSeqStartsWith
 //#define DEFINE_DeeType_RequireSeqStartsWithWithKey
 //#define DEFINE_DeeType_RequireSeqStartsWithWithRange
@@ -111,8 +108,6 @@
 //#define DEFINE_DeeType_RequireSeqBPositionWithKey
 //#define DEFINE_DeeType_RequireSeqBRange
 //#define DEFINE_DeeType_RequireSeqBRangeWithKey
-//#define DEFINE_DeeType_RequireSeqBLocate
-//#define DEFINE_DeeType_RequireSeqBLocateWithKey
 //#define DEFINE_DeeType_RequireSetInsert
 //#define DEFINE_DeeType_RequireSetRemove
 //#define DEFINE_DeeType_RequireSetUnify
@@ -182,11 +177,8 @@
      defined(DEFINE_DeeType_RequireSeqContainsWithRange) +         \
      defined(DEFINE_DeeType_RequireSeqContainsWithRangeAndKey) +   \
      defined(DEFINE_DeeType_RequireSeqLocate) +                    \
-     defined(DEFINE_DeeType_RequireSeqLocateWithKey) +             \
      defined(DEFINE_DeeType_RequireSeqLocateWithRange) +           \
-     defined(DEFINE_DeeType_RequireSeqLocateWithRangeAndKey) +     \
      defined(DEFINE_DeeType_RequireSeqRLocateWithRange) +          \
-     defined(DEFINE_DeeType_RequireSeqRLocateWithRangeAndKey) +    \
      defined(DEFINE_DeeType_RequireSeqStartsWith) +                \
      defined(DEFINE_DeeType_RequireSeqStartsWithWithKey) +         \
      defined(DEFINE_DeeType_RequireSeqStartsWithWithRange) +       \
@@ -229,29 +221,27 @@
      defined(DEFINE_DeeType_RequireSeqBPositionWithKey) +          \
      defined(DEFINE_DeeType_RequireSeqBRange) +                    \
      defined(DEFINE_DeeType_RequireSeqBRangeWithKey) +             \
-     defined(DEFINE_DeeType_RequireSeqBLocate) +                   \
-     defined(DEFINE_DeeType_RequireSeqBLocateWithKey) +            \
-     defined(DEFINE_DeeType_RequireSetInsert) +                 \
-     defined(DEFINE_DeeType_RequireSetRemove) +                 \
-     defined(DEFINE_DeeType_RequireSetUnify) +                  \
-     defined(DEFINE_DeeType_RequireSetInsertAll) +              \
-     defined(DEFINE_DeeType_RequireSetRemoveAll) +              \
-     defined(DEFINE_DeeType_RequireSetPop) +                    \
-     defined(DEFINE_DeeType_RequireSetPopWithDefault) +         \
-     defined(DEFINE_DeeType_RequireMapSetOld) +                 \
-     defined(DEFINE_DeeType_RequireMapSetOldEx) +               \
-     defined(DEFINE_DeeType_RequireMapSetNew) +                 \
-     defined(DEFINE_DeeType_RequireMapSetNewEx) +               \
-     defined(DEFINE_DeeType_RequireMapSetDefault) +             \
-     defined(DEFINE_DeeType_RequireMapUpdate) +                 \
-     defined(DEFINE_DeeType_RequireMapRemove) +                 \
-     defined(DEFINE_DeeType_RequireMapRemoveKeys) +             \
-     defined(DEFINE_DeeType_RequireMapPop) +                    \
-     defined(DEFINE_DeeType_RequireMapPopWithDefault) +         \
-     defined(DEFINE_DeeType_RequireMapPopItem) +                \
-     defined(DEFINE_DeeType_RequireMapKeys) +                   \
-     defined(DEFINE_DeeType_RequireMapValues) +                 \
-     defined(DEFINE_DeeType_RequireMapIterKeys) +               \
+     defined(DEFINE_DeeType_RequireSetInsert) +                    \
+     defined(DEFINE_DeeType_RequireSetRemove) +                    \
+     defined(DEFINE_DeeType_RequireSetUnify) +                     \
+     defined(DEFINE_DeeType_RequireSetInsertAll) +                 \
+     defined(DEFINE_DeeType_RequireSetRemoveAll) +                 \
+     defined(DEFINE_DeeType_RequireSetPop) +                       \
+     defined(DEFINE_DeeType_RequireSetPopWithDefault) +            \
+     defined(DEFINE_DeeType_RequireMapSetOld) +                    \
+     defined(DEFINE_DeeType_RequireMapSetOldEx) +                  \
+     defined(DEFINE_DeeType_RequireMapSetNew) +                    \
+     defined(DEFINE_DeeType_RequireMapSetNewEx) +                  \
+     defined(DEFINE_DeeType_RequireMapSetDefault) +                \
+     defined(DEFINE_DeeType_RequireMapUpdate) +                    \
+     defined(DEFINE_DeeType_RequireMapRemove) +                    \
+     defined(DEFINE_DeeType_RequireMapRemoveKeys) +                \
+     defined(DEFINE_DeeType_RequireMapPop) +                       \
+     defined(DEFINE_DeeType_RequireMapPopWithDefault) +            \
+     defined(DEFINE_DeeType_RequireMapPopItem) +                   \
+     defined(DEFINE_DeeType_RequireMapKeys) +                      \
+     defined(DEFINE_DeeType_RequireMapValues) +                    \
+     defined(DEFINE_DeeType_RequireMapIterKeys) +                  \
      defined(DEFINE_DeeType_RequireMapIterValues)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* DEFINE_DeeType_RequireSeq... */
@@ -545,12 +535,6 @@ DECL_BEGIN
 #define LOCAL_foo                        locate
 #define LOCAL_Foo                        Locate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultLocateWithSeqForeach
-#elif defined(DEFINE_DeeType_RequireSeqLocateWithKey)
-#define LOCAL_foo                        locate_with_key
-#define LOCAL_Foo                        LocateWithKey
-#define LOCAL_Attr_foo                   locate
-#define LOCAL_Bar                        Locate
-#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultLocateWithKeyWithSeqForeach
 #define LOCAL_HAS_FOR_SEQ_SUFFIX
 #elif defined(DEFINE_DeeType_RequireSeqLocateWithRange)
 #define LOCAL_foo                        locate_with_range
@@ -559,26 +543,12 @@ DECL_BEGIN
 #define LOCAL_Bar                        Locate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultLocateWithRangeWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
-#elif defined(DEFINE_DeeType_RequireSeqLocateWithRangeAndKey)
-#define LOCAL_foo                        locate_with_range_and_key
-#define LOCAL_Foo                        LocateWithRangeAndKey
-#define LOCAL_Attr_foo                   locate
-#define LOCAL_Bar                        Locate
-#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultLocateWithRangeAndKeyWithSeqEnumerateIndex
-#define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqRLocateWithRange)
 #define LOCAL_foo                        rlocate_with_range
 #define LOCAL_Foo                        RLocateWithRange
 #define LOCAL_Attr_foo                   rlocate
 #define LOCAL_Bar                        RLocate
 #define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndex
-#define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
-#elif defined(DEFINE_DeeType_RequireSeqRLocateWithRangeAndKey)
-#define LOCAL_foo                        rlocate_with_range_and_key
-#define LOCAL_Foo                        RLocateWithRangeAndKey
-#define LOCAL_Attr_foo                   rlocate
-#define LOCAL_Bar                        RLocate
-#define LOCAL_DeeSeq_DefaultFooWithError DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndex
 #define LOCAL_ATTR_REQUIRED_SEQCLASS     Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqStartsWith)
 #define LOCAL_foo                        startswith
@@ -793,16 +763,6 @@ DECL_BEGIN
 #define LOCAL_Foo                    BRangeWithKey
 #define LOCAL_Attr_foo               brange
 #define LOCAL_Bar                    BRange
-#define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
-#elif defined(DEFINE_DeeType_RequireSeqBLocate)
-#define LOCAL_foo                    blocate
-#define LOCAL_Foo                    BLocate
-#define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
-#elif defined(DEFINE_DeeType_RequireSeqBLocateWithKey)
-#define LOCAL_foo                    blocate_with_key
-#define LOCAL_Foo                    BLocateWithKey
-#define LOCAL_Attr_foo               blocate
-#define LOCAL_Bar                    BLocate
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSetInsert)
 #define LOCAL_foo                    insert
@@ -1522,59 +1482,12 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			return &DeeSeq_DefaultContainsWithRangeAndKeyWithSeqFindWithKey;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqLocate)
-	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
-		Dee_mh_seq_find_t mh_seq_find;
-		mh_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
-		if (mh_seq_find != NULL &&
-		    mh_seq_find != &DeeSeq_DefaultFindWithSeqEnumerateIndex)
-			return &DeeSeq_DefaultLocateWithSeqFindAndSeqGetItemIndex;
-	}
-#elif defined(DEFINE_DeeType_RequireSeqLocateWithKey)
-	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
-		Dee_mh_seq_find_with_key_t mh_seq_find_with_key;
-		mh_seq_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
-		if (mh_seq_find_with_key != NULL &&
-		    mh_seq_find_with_key != &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
-			return &DeeSeq_DefaultLocateWithKeyWithSeqFindWithKeyAndSeqGetItemIndex;
-	}
+	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqLocateWithRange)
-	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
-		Dee_mh_seq_find_t mh_seq_find;
-		mh_seq_find = DeeType_RequireSeqFind_private_uncached(orig_type, self);
-		if (mh_seq_find != NULL &&
-		    mh_seq_find != &DeeSeq_DefaultFindWithSeqEnumerateIndex)
-			return &DeeSeq_DefaultLocateWithRangeWithSeqFindAndSeqGetItemIndex;
-	}
-#elif defined(DEFINE_DeeType_RequireSeqLocateWithRangeAndKey)
-	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
-		Dee_mh_seq_find_with_key_t mh_seq_find_with_key;
-		mh_seq_find_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
-		if (mh_seq_find_with_key != NULL &&
-		    mh_seq_find_with_key != &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex)
-			return &DeeSeq_DefaultLocateWithRangeAndKeyWithSeqFindWithKeyAndSeqGetItemIndex;
-	}
+	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqRLocateWithRange)
-	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
-		Dee_mh_seq_rfind_t mh_seq_rfind;
-		mh_seq_rfind = DeeType_RequireSeqRFind_private_uncached(orig_type, self);
-		if (mh_seq_rfind != NULL &&
-		    mh_seq_rfind != &DeeSeq_DefaultRFindWithSeqEnumerateIndex &&
-		    mh_seq_rfind != &DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse)
-			return &DeeSeq_DefaultRLocateWithRangeWithSeqRFindAndSeqGetItemIndex;
-	}
 	if (DeeType_HasPrivateSeqEnumerateIndexReverse(orig_type, self))
 		return &DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse;
-#elif defined(DEFINE_DeeType_RequireSeqRLocateWithRangeAndKey)
-	if (seqclass == Dee_SEQCLASS_SEQ && DeeType_HasOperator(orig_type, OPERATOR_GETITEM)) {
-		Dee_mh_seq_rfind_with_key_t mh_seq_rfind_with_key;
-		mh_seq_rfind_with_key = DeeType_RequireSeqFindWithKey_private_uncached(orig_type, self);
-		if (mh_seq_rfind_with_key != NULL &&
-		    mh_seq_rfind_with_key != &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndex &&
-		    mh_seq_rfind_with_key != &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse)
-			return &DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqRFindWithKeyAndSeqGetItemIndex;
-	}
-	if (DeeType_HasPrivateSeqEnumerateIndexReverse(orig_type, self))
-		return &DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndexReverse;
 #elif defined(DEFINE_DeeType_RequireSeqStartsWith)
 	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqStartsWithWithKey)
@@ -1830,7 +1743,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		/* TODO:
 		 * >> local true_item;
 		 * >> try {
-		 * >>     true_item = Sequence.locate(this, item, start, end, key);
+		 * >>     true_item = Sequence.locate(this, item, start, end, key); // FIXME: "locate" was changed
 		 * >> } catch (ValueError) {
 		 * >>     return false;
 		 * >> }
@@ -1845,7 +1758,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		 * >> }
 		 * >> local true_item;
 		 * >> try {
-		 * >>     true_item = Sequence.locate(this, item, start, end, key);
+		 * >>     true_item = Sequence.locate(this, item, start, end, key); // FIXME: "locate" was changed
 		 * >> } catch (ValueError) {
 		 * >>     return false;
 		 * >> }
@@ -2119,28 +2032,6 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		    DeeType_HasOperator(orig_type, OPERATOR_SIZE))
 			return &DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex;
 	}
-#elif defined(DEFINE_DeeType_RequireSeqBLocate)
-	{
-		Dee_mh_seq_bfind_t tsc_seq_bfind;
-		tsc_seq_bfind = DeeType_RequireSeqBFind_private_uncached(orig_type, self);
-		if (tsc_seq_bfind != NULL &&
-		    tsc_seq_bfind != &DeeSeq_DefaultBFindWithError) {
-			if (tsc_seq_bfind == &DeeSeq_DefaultBFindWithSizeAndTryGetItemIndex)
-				return &DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex;
-			return &DeeSeq_DefaultBLocateWithSeqBFindAndGetItemIndex;
-		}
-	}
-#elif defined(DEFINE_DeeType_RequireSeqBLocateWithKey)
-	{
-		Dee_mh_seq_bfind_with_key_t tsc_seq_bfind_with_key;
-		tsc_seq_bfind_with_key = DeeType_RequireSeqBFindWithKey_private_uncached(orig_type, self);
-		if (tsc_seq_bfind_with_key != NULL &&
-		    tsc_seq_bfind_with_key != &DeeSeq_DefaultBFindWithKeyWithError) {
-			if (tsc_seq_bfind_with_key == &DeeSeq_DefaultBFindWithKeyWithSizeAndTryGetItemIndex)
-				return &DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex;
-			return &DeeSeq_DefaultBLocateWithKeyWithSeqBFindWithKeyAndGetItemIndex;
-		}
-	}
 #elif defined(DEFINE_DeeType_RequireSetInsert)
 	if (seqclass == Dee_SEQCLASS_SET) {
 		/* use insertall and "operator #" before/after */
@@ -2212,7 +2103,7 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		tsc_append = DeeType_RequireSeqAppend_private_uncached(orig_type, self);
 		if (tsc_append != NULL &&
 		    tsc_append != &DeeSeq_DefaultAppendWithError)
-			return &DeeSet_DefaultUnifyWithSeqLocateAndSeqAppend;
+			return &DeeSet_DefaultUnifyWithSeqAppendAndSeqForeach;
 	}
 #elif defined(DEFINE_DeeType_RequireSetInsertAll)
 	if (seqclass == Dee_SEQCLASS_SET) {
@@ -2652,11 +2543,8 @@ DECL_END
 #undef DEFINE_DeeType_RequireSeqContainsWithRange
 #undef DEFINE_DeeType_RequireSeqContainsWithRangeAndKey
 #undef DEFINE_DeeType_RequireSeqLocate
-#undef DEFINE_DeeType_RequireSeqLocateWithKey
 #undef DEFINE_DeeType_RequireSeqLocateWithRange
-#undef DEFINE_DeeType_RequireSeqLocateWithRangeAndKey
 #undef DEFINE_DeeType_RequireSeqRLocateWithRange
-#undef DEFINE_DeeType_RequireSeqRLocateWithRangeAndKey
 #undef DEFINE_DeeType_RequireSeqStartsWith
 #undef DEFINE_DeeType_RequireSeqStartsWithWithKey
 #undef DEFINE_DeeType_RequireSeqStartsWithWithRange
@@ -2699,8 +2587,6 @@ DECL_END
 #undef DEFINE_DeeType_RequireSeqBPositionWithKey
 #undef DEFINE_DeeType_RequireSeqBRange
 #undef DEFINE_DeeType_RequireSeqBRangeWithKey
-#undef DEFINE_DeeType_RequireSeqBLocate
-#undef DEFINE_DeeType_RequireSeqBLocateWithKey
 #undef DEFINE_DeeType_RequireSetInsert
 #undef DEFINE_DeeType_RequireSetRemove
 #undef DEFINE_DeeType_RequireSetUnify

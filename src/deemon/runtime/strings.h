@@ -156,7 +156,6 @@ local STRINGS = {
 	"bfind",
 	"bposition",
 	"brange",
-	"blocate",
 
 	"unify",
 	"setold",
@@ -599,9 +598,6 @@ DEF_STRING(str_bposition, "bposition", 0xba99f013, 0xc8f6389c9f293cb2)
 #define Dee_HashStr__brange _Dee_HashSelectC(0xb132222e, 0xfed8bb16d0ac0dd2)
 DEF_STRING(str_brange, "brange", 0xb132222e, 0xfed8bb16d0ac0dd2)
 #define STR_brange DeeString_STR(&str_brange)
-#define Dee_HashStr__blocate _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e)
-DEF_STRING(str_blocate, "blocate", 0x7aa979d3, 0xbda91c237d69489e)
-#define STR_blocate DeeString_STR(&str_blocate)
 #define Dee_HashStr__unify _Dee_HashSelectC(0x3cce686e, 0x4c0c9bdcc8d95cc7)
 DEF_STRING(str_unify, "unify", 0x3cce686e, 0x4c0c9bdcc8d95cc7)
 #define STR_unify DeeString_STR(&str_unify)

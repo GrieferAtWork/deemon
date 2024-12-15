@@ -50,9 +50,11 @@ final local __builtin_seq_index = (Sequence from deemon).operator . ("index");
 final local __builtin_seq_rindex = (Sequence from deemon).operator . ("rindex");
 final local __builtin_seq_contains = (Sequence from deemon).operator . ("contains");
 final local __builtin_seq_count = (Sequence from deemon).operator . ("count");
-final local __builtin_seq_locate = (Sequence from deemon).operator . ("locate");
-final local __builtin_seq_rlocate = (Sequence from deemon).operator . ("rlocate");
-final local __builtin_seq_locate_all = (Sequence from deemon).operator . ("locateall");
+from ".m_builtins" import
+	__builtin_seq_locate = "seq_locate",
+	__builtin_seq_rlocate = "seq_rlocate",
+	__builtin_seq_locate_all = "seq_locateall"
+;
 final local __builtin_seq_transform = (Sequence from deemon).operator . ("transform");
 final local __builtin_seq_empty = (Sequence from deemon).operator . ("isempty");
 final local __builtin_seq_non_empty = (Sequence from deemon).operator . ("isnonempty");
@@ -63,5 +65,5 @@ final local __builtin_seq_at = (Sequence from deemon).operator . ("at");
 final local __builtin_seq_reversed = (Sequence from deemon).operator . ("reversed");
 final local __builtin_seq_sorted = (Sequence from deemon).operator . ("sorted");
 final local __builtin_seq_segments = (Sequence from deemon).operator . ("segments");
-#pragma pop_macro("from", "util", "import", "Sequence", "deemon", "operator", "final", "local")
+#pragma pop_macro("from", "import", "Sequence", "deemon", "operator", "final", "local")
 

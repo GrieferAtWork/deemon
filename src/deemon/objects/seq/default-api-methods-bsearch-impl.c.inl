@@ -25,8 +25,6 @@
 //#define DEFINE_DeeSeq_DefaultBPositionWithKeyWithSizeAndTryGetItemIndex
 //#define DEFINE_DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex
 #define DEFINE_DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex
-//#define DEFINE_DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex
-//#define DEFINE_DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeSeq_DefaultBFindWithSizeAndTryGetItemIndex) +            \
@@ -34,9 +32,7 @@
      defined(DEFINE_DeeSeq_DefaultBPositionWithSizeAndTryGetItemIndex) +        \
      defined(DEFINE_DeeSeq_DefaultBPositionWithKeyWithSizeAndTryGetItemIndex) + \
      defined(DEFINE_DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex) +           \
-     defined(DEFINE_DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex) +    \
-     defined(DEFINE_DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex) +          \
-     defined(DEFINE_DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex)) != 1
+     defined(DEFINE_DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* DEFINE_DeeSeq_DefaultB... */
 
@@ -64,13 +60,6 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultBFind DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex
 #define LOCAL_IS_RANGE
 #define LOCAL_HAS_KEY
-#elif defined(DEFINE_DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex)
-#define LOCAL_DeeSeq_DefaultBFind DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex
-#define LOCAL_IS_LOCATE
-#elif defined(DEFINE_DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex)
-#define LOCAL_DeeSeq_DefaultBFind DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex
-#define LOCAL_IS_LOCATE
-#define LOCAL_HAS_KEY
 #else /* DEFINE_DeeSeq_DefaultB... */
 #error "Invalid configuration"
 #endif /* !DEFINE_DeeSeq_DefaultB... */
@@ -78,9 +67,6 @@ DECL_BEGIN
 #if defined(LOCAL_IS_FIND) || defined(LOCAL_IS_POSITION)
 #define LOCAL_return_t   size_t
 #define LOCAL_return_ERR (size_t)Dee_COMPARE_ERR
-#elif defined(LOCAL_IS_LOCATE)
-#define LOCAL_return_t   DREF DeeObject *
-#define LOCAL_return_ERR NULL
 #else /* LOCAL_IS_FIND || LOCAL_IS_POSITION */
 #define LOCAL_return_t   int
 #define LOCAL_return_ERR (-1)
@@ -115,9 +101,6 @@ LOCAL_DeeSeq_DefaultBFind(DeeObject *self, DeeObject *item,
                           , size_t result_range[2]
 #endif /* LOCAL_IS_RANGE */
                           ) {
-#if defined(LOCAL_IS_LOCATE) && defined(LOCAL_HAS_KEY)
-	DeeObject *orig_item = item;
-#endif /* LOCAL_IS_LOCATE && LOCAL_HAS_KEY */
 	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
 	size_t selfsize = (*seq->tp_size)(self);
 	if unlikely(selfsize == (size_t)-1)
@@ -146,15 +129,9 @@ LOCAL_DeeSeq_DefaultBFind(DeeObject *self, DeeObject *item,
 				cmp_result = DeeObject_Compare(item, seq_item);
 #endif /* !LOCAL_HAS_KEY */
 
-#ifndef LOCAL_IS_LOCATE
 				Dee_Decref(seq_item);
-#endif /* !LOCAL_IS_LOCATE */
-				if unlikely(cmp_result == Dee_COMPARE_ERR) {
-#ifdef LOCAL_IS_LOCATE
-					Dee_Decref(seq_item);
-#endif /* !LOCAL_IS_LOCATE */
+				if unlikely(cmp_result == Dee_COMPARE_ERR)
 					goto err_item;
-				}
 			}
 			if (cmp_result < 0) {
 				end = mid;
@@ -172,11 +149,6 @@ LOCAL_DeeSeq_DefaultBFind(DeeObject *self, DeeObject *item,
 				Dee_Decref(item);
 #endif /* LOCAL_HAS_KEY */
 				return mid;
-#elif defined(LOCAL_IS_LOCATE)
-#ifdef LOCAL_HAS_KEY
-				Dee_Decref(item);
-#endif /* LOCAL_HAS_KEY */
-				return seq_item;
 #elif defined(LOCAL_IS_RANGE)
 				size_t result_range_start = mid;
 				size_t result_range_end   = mid + 1;
@@ -248,9 +220,6 @@ LOCAL_DeeSeq_DefaultBFind(DeeObject *self, DeeObject *item,
 #error "Invalid configuration"
 #endif /* !LOCAL_IS_... */
 			}
-#ifdef LOCAL_IS_LOCATE
-			Dee_Decref(seq_item);
-#endif /* !LOCAL_IS_LOCATE */
 
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
 		} while (start < end);
@@ -266,14 +235,6 @@ LOCAL_DeeSeq_DefaultBFind(DeeObject *self, DeeObject *item,
 	if unlikely(start == (size_t)-1 || start == (size_t)Dee_COMPARE_ERR)
 		goto err_item_overflow;
 	return start;
-#elif defined(LOCAL_IS_LOCATE)
-#ifdef LOCAL_HAS_KEY
-	err_item_not_found(self, orig_item);
-#else /* LOCAL_HAS_KEY */
-	err_item_not_found(self, item);
-#endif /* !LOCAL_HAS_KEY */
-	goto err;
-#define WANT_err
 #elif defined(LOCAL_IS_RANGE)
 	result_range[0] = start;
 	result_range[1] = end;
@@ -305,7 +266,6 @@ err:
 #undef LOCAL_IS_FIND
 #undef LOCAL_IS_POSITION
 #undef LOCAL_IS_RANGE
-#undef LOCAL_IS_LOCATE
 
 DECL_END
 
@@ -315,5 +275,3 @@ DECL_END
 #undef DEFINE_DeeSeq_DefaultBPositionWithKeyWithSizeAndTryGetItemIndex
 #undef DEFINE_DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex
 #undef DEFINE_DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex
-#undef DEFINE_DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex
-#undef DEFINE_DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex

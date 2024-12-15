@@ -86,6 +86,7 @@ local kw_lists = {
 	{"item", "start", "end"},
 	{"item", "start", "end", "key"},
 	{"item", "start", "end", "max", "key"},
+	{"match", "start", "end", "def"},
 	{"should", "start", "end", "max"},
 	{"size", "filler"},
 	{"start", "end", "values"},
@@ -199,6 +200,7 @@ DECLARE_KWLIST(kwlist__length_byteorder_signed, { KEX("length", 0xecef0c1, 0x299
 DECLARE_KWLIST(kwlist__lhs_rhs, { KEX("lhs", 0x4778c168, 0x4c6b9df6ea0934de), KEX("rhs", 0xc6d67ad, 0x7f4a7fedc9040cd3), KEND });
 DECLARE_KWLIST(kwlist__lookupmode, { KEX("lookupmode", 0x5919ca40, 0x2f6c38dd63e00f55), KEND });
 DECLARE_KWLIST(kwlist__mask_max, { KEX("mask", 0xc3b4302b, 0x933f153b40dd4379), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEND });
+DECLARE_KWLIST(kwlist__match_start_end_def, { KEX("match", 0x69faa058, 0xb0704984f0078f40), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("def", 0xf5797de2, 0x6cea9b604fa07583), KEND });
 DECLARE_KWLIST(kwlist__maxbytes_readall, { KEX("maxbytes", 0x3b196fc0, 0x93d3b3615fcacd4a), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEND });
 DECLARE_KWLIST(kwlist__message_inner, { KEX("message", 0x14820755, 0xbeaa4b97155366df), KEX("inner", 0x20e82985, 0x4f20d07bb803c1fe), KEND });
 DECLARE_KWLIST(kwlist__minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared, { KEX("minbytes", 0xa6327ad1, 0x36d31d85046534af), KEX("maxbytes", 0x3b196fc0, 0x93d3b3615fcacd4a), KEX("offset", 0xa97063e7, 0x2381bd4159ebe8a7), KEX("nulbytes", 0xf6256f, 0x164a29d88f8ebaa3), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEX("mustmmap", 0x720e751d, 0x10d9f32721af9f8d), KEX("mapshared", 0xcb3dd03e, 0xc9af3c3e0ad0fc85), KEND });

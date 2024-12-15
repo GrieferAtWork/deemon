@@ -479,7 +479,6 @@ EXPORTS
 	DeeMH_seq_any@16=_DeeMH_seq_any@16
 	DeeMH_seq_append@12=_DeeMH_seq_append@12
 	DeeMH_seq_bfind@16=_DeeMH_seq_bfind@16
-	DeeMH_seq_blocate@16=_DeeMH_seq_blocate@16
 	DeeMH_seq_bposition@16=_DeeMH_seq_bposition@16
 	DeeMH_seq_brange@16=_DeeMH_seq_brange@16
 	DeeMH_seq_clear@12=_DeeMH_seq_clear@12
@@ -1196,6 +1195,10 @@ EXPORTS
 	DeeTuple_VPackSymbolic@8=_DeeTuple_VPackSymbolic@8
 	DeeTuple_VTryPack@8=_DeeTuple_VTryPack@8
 	DeeTuple_VTryPackSymbolic@8=_DeeTuple_VTryPackSymbolic@8
+	DeeTypeMRO_PatchClassGetSet@20=_DeeTypeMRO_PatchClassGetSet@20
+	DeeTypeMRO_PatchClassMethod@20=_DeeTypeMRO_PatchClassMethod@20
+	DeeTypeMRO_PatchGetSet@20=_DeeTypeMRO_PatchGetSet@20
+	DeeTypeMRO_PatchMethod@20=_DeeTypeMRO_PatchMethod@20
 	DeeTypeType_GetOperatorById@8=_DeeTypeType_GetOperatorById@8
 	DeeTypeType_GetOperatorByIdEx@12=_DeeTypeType_GetOperatorByIdEx@12
 	DeeTypeType_GetOperatorByName@12=_DeeTypeType_GetOperatorByName@12

@@ -120,7 +120,6 @@ print define_Dee_HashStr("ubfilter");
 print define_Dee_HashStr("findall");
 print define_Dee_HashStr("future");
 print define_Dee_HashStr("ids");
-print define_Dee_HashStr("locateall");
 print define_Dee_HashStr("ordinals");
 print define_Dee_HashStr("pending");
 print define_Dee_HashStr("permutations");
@@ -181,7 +180,6 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 #define Dee_HashStr__findall _Dee_HashSelectC(0xa7064666, 0x73bffde4f31b16e5)
 #define Dee_HashStr__future _Dee_HashSelectC(0x5ca3159c, 0x8ab2926ab5959525)
 #define Dee_HashStr__ids _Dee_HashSelectC(0x3173a48f, 0x7cd9fae6cf17bb9f)
-#define Dee_HashStr__locateall _Dee_HashSelectC(0xd447ec, 0xc6a682da9d9f8345)
 #define Dee_HashStr__ordinals _Dee_HashSelectC(0x4237d4c5, 0x5459ba3a055d9b9a)
 #define Dee_HashStr__pending _Dee_HashSelectC(0xa318502a, 0x9f3f699bf5a1e785)
 #define Dee_HashStr__permutations _Dee_HashSelectC(0x923fbd44, 0x498779abec4910f6)
@@ -1028,27 +1026,6 @@ librt_get_SeqHashFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqHashFilterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return_cached(get_iterator_of(librt_get_SeqHashFilter_impl_f()));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqLocator_uncached_impl_f(void) {
-	DeeObject *argv[] = { Dee_None };
-	return get_type_of(DeeObject_CallAttrStringHash(&object_with_size_and_getitem_index, STR_AND_HASH(locateall), 1, argv));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqLocator_impl_f(void) {
-	return_cached(librt_get_SeqLocator_uncached_impl_f());
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqLocator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_SeqLocator_impl_f();
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqLocatorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return_cached(get_iterator_of(librt_get_SeqLocator_impl_f()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -3255,8 +3232,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqFilterAsUnbound, &librt_get_SeqFilterAsUnbou
 PRIVATE DEFINE_CMETHOD(librt_get_SeqFilterIterator, &librt_get_SeqFilterIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqHashFilter, &librt_get_SeqHashFilter_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqHashFilterIterator, &librt_get_SeqHashFilterIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqLocator, &librt_get_SeqLocator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqLocatorIterator, &librt_get_SeqLocatorIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqMapped, &librt_get_SeqMapped_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqMappedIterator, &librt_get_SeqMappedIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqRange, &librt_get_SeqRange_f, METHOD_FCONSTCALL);
@@ -3626,8 +3601,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqFilterIterator", (DeeObject *)&librt_get_SeqFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqFilterIterator_Type */
 	{ "SeqHashFilter", (DeeObject *)&librt_get_SeqHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqHashFilter_Type */
 	{ "SeqHashFilterIterator", (DeeObject *)&librt_get_SeqHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqHashFilterIterator_Type */
-	{ "SeqLocator", (DeeObject *)&librt_get_SeqLocator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* SeqLocator_Type */
-	{ "SeqLocatorIterator", (DeeObject *)&librt_get_SeqLocatorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqLocatorIterator_Type */
 	{ "SeqMapped", (DeeObject *)&librt_get_SeqMapped, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqMapped_Type */
 	{ "SeqMappedIterator", (DeeObject *)&librt_get_SeqMappedIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqMappedIterator_Type */
 	{ "SeqRange", (DeeObject *)&librt_get_SeqRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqRange_Type */

@@ -144,7 +144,6 @@ struct Dee_type_seq_cache {
 	union Dee_tsc_uslot tsc_seq_bfind_data;
 	union Dee_tsc_uslot tsc_seq_bposition_data;
 	union Dee_tsc_uslot tsc_seq_brange_data;
-	union Dee_tsc_uslot tsc_seq_blocate_data;
 	union Dee_tsc_uslot tsc_set_insert_data;
 	union Dee_tsc_uslot tsc_set_remove_data;
 	union Dee_tsc_uslot tsc_set_unify_data;
@@ -722,12 +721,9 @@ INTDEF struct type_math DeeMap_OperatorMath;
 #define DeeSeq_InvokeContainsWithKey(self, item, key)                         (*DeeType_RequireSeqContainsWithKey(Dee_TYPE(self)))(self, item, key)
 #define DeeSeq_InvokeContainsWithRange(self, item, start, end)                (*DeeType_RequireSeqContainsWithRange(Dee_TYPE(self)))(self, item, start, end)
 #define DeeSeq_InvokeContainsWithRangeAndKey(self, item, start, end, key)     (*DeeType_RequireSeqContainsWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeLocate(self, item)                                       (*DeeType_RequireSeqLocate(Dee_TYPE(self)))(self, item)
-#define DeeSeq_InvokeLocateWithKey(self, item, key)                           (*DeeType_RequireSeqLocateWithKey(Dee_TYPE(self)))(self, item, key)
-#define DeeSeq_InvokeLocateWithRange(self, item, start, end)                  (*DeeType_RequireSeqLocateWithRange(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeLocateWithRangeAndKey(self, item, start, end, key)       (*DeeType_RequireSeqLocateWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeRLocateWithRange(self, item, start, end)                 (*DeeType_RequireSeqRLocateWithRange(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeRLocateWithRangeAndKey(self, item, start, end, key)      (*DeeType_RequireSeqRLocateWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeLocate(self, match, def)                                 (*DeeType_RequireSeqLocate(Dee_TYPE(self)))(self, match, def)
+#define DeeSeq_InvokeLocateWithRange(self, match, start, end, def)            (*DeeType_RequireSeqLocateWithRange(Dee_TYPE(self)))(self, match, start, end, def)
+#define DeeSeq_InvokeRLocateWithRange(self, match, start, end, def)           (*DeeType_RequireSeqRLocateWithRange(Dee_TYPE(self)))(self, match, start, end, def)
 #define DeeSeq_InvokeStartsWith(self, item)                                   (*DeeType_RequireSeqStartsWith(Dee_TYPE(self)))(self, item)
 #define DeeSeq_InvokeStartsWithWithKey(self, item, key)                       (*DeeType_RequireSeqStartsWithWithKey(Dee_TYPE(self)))(self, item, key)
 #define DeeSeq_InvokeStartsWithWithRange(self, item, start, end)              (*DeeType_RequireSeqStartsWithWithRange(Dee_TYPE(self)))(self, item, start, end)
@@ -770,8 +766,6 @@ INTDEF struct type_math DeeMap_OperatorMath;
 #define DeeSeq_InvokeBPositionWithKey(self, item, start, end, key)            (*DeeType_RequireSeqBPositionWithKey(Dee_TYPE(self)))(self, item, start, end, key)
 #define DeeSeq_InvokeBRange(self, item, start, end, result_range)             (*DeeType_RequireSeqBRange(Dee_TYPE(self)))(self, item, start, end, result_range)
 #define DeeSeq_InvokeBRangeWithKey(self, item, start, end, key, result_range) (*DeeType_RequireSeqBRangeWithKey(Dee_TYPE(self)))(self, item, start, end, key, result_range)
-#define DeeSeq_InvokeBLocate(self, item, start, end)                          (*DeeType_RequireSeqBLocate(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeBLocateWithKey(self, item, start, end, key)              (*DeeType_RequireSeqBLocateWithKey(Dee_TYPE(self)))(self, item, start, end, key)
 
 /* Set functions */
 #define DeeSet_InvokeInsert(self, key)              (*DeeType_RequireSetInsert(Dee_TYPE(self)))(self, key)
@@ -1533,49 +1527,27 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeSeq_DefaultContainsWithRangeAndKe
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeSeq_DefaultContainsWithRangeAndKeyWithSeqFindWithKey(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeSeq_DefaultContainsWithRangeAndKeyWithSeqEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallAttrLocate(DeeObject *self, DeeObject *item);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataFunction(DeeObject *self, DeeObject *item);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataMethod(DeeObject *self, DeeObject *item);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataKwMethod(DeeObject *self, DeeObject *item);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithSeqFindAndSeqGetItemIndex(DeeObject *self, DeeObject *item);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithSeqForeach(DeeObject *self, DeeObject *item);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSeq(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithCallLocateDataFunctionForSeq(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithCallLocateDataMethodForSeq(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithCallLocateDataKwMethodForSeq(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSetOrMap(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithCallLocateDataFunctionForSetOrMap(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithCallLocateDataMethodForSetOrMap(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithCallLocateDataKwMethodForSetOrMap(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithSeqFindWithKeyAndSeqGetItemIndex(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithKeyWithSeqForeach(DeeObject *self, DeeObject *item, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithCallAttrLocate(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithCallLocateDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithCallLocateDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithCallLocateDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithSeqFindAndSeqGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeAndKeyWithCallAttrLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeAndKeyWithCallLocateDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeAndKeyWithCallLocateDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeAndKeyWithCallLocateDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeAndKeyWithSeqFindWithKeyAndSeqGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeAndKeyWithSeqEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallAttrLocateForSeq(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataFunctionForSeq(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataMethodForSeq(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataKwMethodForSeq(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallAttrLocateForSetOrMap(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataFunctionForSetOrMap(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataMethodForSetOrMap(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithCallLocateDataKwMethodForSetOrMap(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithSeqForeach(DeeObject *self, DeeObject *match, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithCallAttrLocate(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithCallLocateDataFunction(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithCallLocateDataMethod(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithCallLocateDataKwMethod(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithCallAttrRLocate(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithSeqRFindAndSeqGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeAndKeyWithCallAttrRLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeAndKeyWithCallRLocateDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeAndKeyWithCallRLocateDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeAndKeyWithCallRLocateDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqRFindWithKeyAndSeqGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithCallAttrRLocate(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataFunction(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataMethod(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataKwMethod(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def);
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultStartsWithWithCallAttrStartsWith(DeeObject *self, DeeObject *item);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultStartsWithWithCallStartsWithDataFunction(DeeObject *self, DeeObject *item);
@@ -1904,22 +1876,6 @@ INTDEF WUNUSED NONNULL((1, 2, 5, 6)) int DCALL DeeSeq_DefaultBRangeWithKeyWithCa
 INTDEF WUNUSED NONNULL((1, 2, 5, 6)) int DCALL DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]);
 INTDEF WUNUSED NONNULL((1, 2, 5, 6)) int DCALL DeeSeq_DefaultBRangeWithKeyWithError(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]);
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithCallAttrBLocate(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithCallBLocateDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithCallBLocateDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithCallBLocateDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithSeqBFindAndGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithError(DeeObject *self, DeeObject *item, size_t start, size_t end);
-
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithCallBLocateDataFunction(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithCallBLocateDataMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithCallBLocateDataKwMethod(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithSeqBFindWithKeyAndGetItemIndex(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeSeq_DefaultBLocateWithKeyWithError(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
-
 
 
 /************************************************************************/
@@ -1948,7 +1904,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithCall
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithCallUnifyDataMethod(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithCallUnifyDataKwMethod(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithSetInsertAndSeqForeach(DeeObject *self, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithSeqLocateAndSeqAppend(DeeObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithSeqAppendAndSeqForeach(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_DefaultUnifyWithError(DeeObject *self, DeeObject *key);
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultInsertAllWithCallAttrInsertAll(DeeObject *self, DeeObject *keys);

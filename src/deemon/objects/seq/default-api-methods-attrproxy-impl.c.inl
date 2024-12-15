@@ -107,13 +107,10 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultContainsWithKeyWithCallAttrContainsForSetOrMap     LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(ContainsWithKey, Contains, ForSetOrMap)
 #define LOCAL_DeeSeq_DefaultContainsWithRangeWithCallAttrContains              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(ContainsWithRange, Contains)
 #define LOCAL_DeeSeq_DefaultContainsWithRangeAndKeyWithCallAttrContains        LOCAL_DeeSeq_DefaultFooWithCallAttrBar(ContainsWithRangeAndKey, Contains)
-#define LOCAL_DeeSeq_DefaultLocateWithCallAttrLocate                           LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Locate, Locate)
-#define LOCAL_DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSeq              LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(LocateWithKey, Locate, ForSeq)
-#define LOCAL_DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSetOrMap         LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(LocateWithKey, Locate, ForSetOrMap)
+#define LOCAL_DeeSeq_DefaultLocateWithCallAttrLocateForSeq                     LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(Locate, Locate, ForSeq)
+#define LOCAL_DeeSeq_DefaultLocateWithCallAttrLocateForSetOrMap                LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(Locate, Locate, ForSetOrMap)
 #define LOCAL_DeeSeq_DefaultLocateWithRangeWithCallAttrLocate                  LOCAL_DeeSeq_DefaultFooWithCallAttrBar(LocateWithRange, Locate)
-#define LOCAL_DeeSeq_DefaultLocateWithRangeAndKeyWithCallAttrLocate            LOCAL_DeeSeq_DefaultFooWithCallAttrBar(LocateWithRangeAndKey, Locate)
 #define LOCAL_DeeSeq_DefaultRLocateWithRangeWithCallAttrRLocate                LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RLocateWithRange, RLocate)
-#define LOCAL_DeeSeq_DefaultRLocateWithRangeAndKeyWithCallAttrRLocate          LOCAL_DeeSeq_DefaultFooWithCallAttrBar(RLocateWithRangeAndKey, RLocate)
 #define LOCAL_DeeSeq_DefaultStartsWithWithCallAttrStartsWith                   LOCAL_DeeSeq_DefaultFooWithCallAttrBar(StartsWith, StartsWith)
 #define LOCAL_DeeSeq_DefaultStartsWithWithKeyWithCallAttrStartsWithForSeq      LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(StartsWithWithKey, StartsWith, ForSeq)
 #define LOCAL_DeeSeq_DefaultStartsWithWithKeyWithCallAttrStartsWithForSetOrMap LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(StartsWithWithKey, StartsWith, ForSetOrMap)
@@ -159,8 +156,6 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultBPositionWithKeyWithCallAttrBPosition              LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BPositionWithKey, BPosition)
 #define LOCAL_DeeSeq_DefaultBRangeWithCallAttrBRange                           LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BRange, BRange)
 #define LOCAL_DeeSeq_DefaultBRangeWithKeyWithCallAttrBRange                    LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BRangeWithKey, BRange)
-#define LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate                         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BLocate, BLocate)
-#define LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate                  LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BLocateWithKey, BLocate)
 #define LOCAL_DeeSet_DefaultInsertWithCallAttrInsert                           LOCAL_DeeSet_DefaultFooWithCallAttrBar(Insert, Insert)
 #define LOCAL_DeeSet_DefaultRemoveWithCallAttrRemove                           LOCAL_DeeSet_DefaultFooWithCallAttrBar(Remove, Remove)
 #define LOCAL_DeeSet_DefaultUnifyWithCallAttrUnify                             LOCAL_DeeSet_DefaultFooWithCallAttrBar(Unify, Unify)
@@ -649,47 +644,32 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultLocateWithCallAttrLocate(DeeObject *self, DeeObject *item) {
-	return LOCAL_DeeObject_CallAttr(self, tsc_seq_locate_data, &str_locate, 1, &item);
-}
-
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSeq(DeeObject *self, DeeObject *item, DeeObject *key) {
+LOCAL_DeeSeq_DefaultLocateWithCallAttrLocateForSeq(DeeObject *self, DeeObject *match, DeeObject *def) {
 	DeeObject *args[4];
-	args[0] = item;
+	args[0] = match;
 	args[1] = DeeInt_Zero;
 	args[2] = (DeeObject *)&Dee_int_SIZE_MAX;
-	args[3] = key;
+	args[3] = def;
 	return LOCAL_DeeObject_CallAttr(self, tsc_seq_locate_data, &str_locate, 4, args);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSetOrMap(DeeObject *self, DeeObject *item, DeeObject *key) {
-	DeeObject *args[4];
-	args[0] = item;
-	args[1] = key;
+LOCAL_DeeSeq_DefaultLocateWithCallAttrLocateForSetOrMap(DeeObject *self, DeeObject *match, DeeObject *def) {
+	DeeObject *args[2];
+	args[0] = match;
+	args[1] = def;
 	return LOCAL_DeeObject_CallAttr(self, tsc_seq_locate_data, &str_locate, 2, args);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultLocateWithRangeWithCallAttrLocate(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_locate_data, &str_locate, "o" PCKuSIZ PCKuSIZ, item, start, end);
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+LOCAL_DeeSeq_DefaultLocateWithRangeWithCallAttrLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *def) {
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_locate_data, &str_locate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, def);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultLocateWithRangeAndKeyWithCallAttrLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_locate_data, &str_locate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultRLocateWithRangeWithCallAttrRLocate(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_rlocate_data, &str_rlocate, "o" PCKuSIZ PCKuSIZ, item, start, end);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultRLocateWithRangeAndKeyWithCallAttrRLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_rlocate_data, &str_rlocate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
+LOCAL_DeeSeq_DefaultRLocateWithRangeWithCallAttrRLocate(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *def) {
+	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_rlocate_data, &str_rlocate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, def);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1324,18 +1304,6 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate(DeeObject *self, DeeObject *item,
-                                               size_t start, size_t end) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_blocate_data, &str_blocate, "o" PCKuSIZ PCKuSIZ, item, start, end);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate(DeeObject *self, DeeObject *item,
-                                                      size_t start, size_t end, DeeObject *key) {
-	return LOCAL_DeeObject_CallAttrf(self, tsc_seq_blocate_data, &str_blocate, "o" PCKuSIZ PCKuSIZ "o", item, start, end, key);
-}
-
 
 
 /************************************************************************/
@@ -1669,13 +1637,10 @@ LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self) {
 #undef LOCAL_DeeSeq_DefaultContainsWithKeyWithCallAttrContainsForSetOrMap
 #undef LOCAL_DeeSeq_DefaultContainsWithRangeWithCallAttrContains
 #undef LOCAL_DeeSeq_DefaultContainsWithRangeAndKeyWithCallAttrContains
-#undef LOCAL_DeeSeq_DefaultLocateWithCallAttrLocate
-#undef LOCAL_DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSeq
-#undef LOCAL_DeeSeq_DefaultLocateWithKeyWithCallAttrLocateForSetOrMap
+#undef LOCAL_DeeSeq_DefaultLocateWithCallAttrLocateForSeq
+#undef LOCAL_DeeSeq_DefaultLocateWithCallAttrLocateForSetOrMap
 #undef LOCAL_DeeSeq_DefaultLocateWithRangeWithCallAttrLocate
-#undef LOCAL_DeeSeq_DefaultLocateWithRangeAndKeyWithCallAttrLocate
 #undef LOCAL_DeeSeq_DefaultRLocateWithRangeWithCallAttrRLocate
-#undef LOCAL_DeeSeq_DefaultRLocateWithRangeAndKeyWithCallAttrRLocate
 #undef LOCAL_DeeSeq_DefaultStartsWithWithCallAttrStartsWith
 #undef LOCAL_DeeSeq_DefaultStartsWithWithKeyWithCallAttrStartsWithForSeq
 #undef LOCAL_DeeSeq_DefaultStartsWithWithKeyWithCallAttrStartsWithForSetOrMap
@@ -1721,8 +1686,6 @@ LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self) {
 #undef LOCAL_DeeSeq_DefaultBPositionWithKeyWithCallAttrBPosition
 #undef LOCAL_DeeSeq_DefaultBRangeWithCallAttrBRange
 #undef LOCAL_DeeSeq_DefaultBRangeWithKeyWithCallAttrBRange
-#undef LOCAL_DeeSeq_DefaultBLocateWithCallAttrBLocate
-#undef LOCAL_DeeSeq_DefaultBLocateWithKeyWithCallAttrBLocate
 #undef LOCAL_DeeSet_DefaultInsertWithCallAttrInsert
 #undef LOCAL_DeeSet_DefaultRemoveWithCallAttrRemove
 #undef LOCAL_DeeSet_DefaultUnifyWithCallAttrUnify

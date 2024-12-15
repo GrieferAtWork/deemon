@@ -79,17 +79,6 @@ assert seq.brange(31) == (8, 9);
 assert seq.brange(32) == (9, 10);
 assert seq.brange(33) == (10, 11);
 
-assert seq.blocate(11) == 11;
-assert seq.blocate(12) == 12;
-assert seq.blocate(13) == 13;
-assert seq.blocate(21) == 21;
-assert seq.blocate(22) == 22;
-assert seq.blocate(23) == 23;
-assert (try seq.blocate(24) catch (e...) e) is Error.ValueError;
-assert seq.blocate(31) == 31;
-assert seq.blocate(32) == 32;
-assert seq.blocate(33) == 33;
-
 assert seq.blocateall(11) == [11];
 assert seq.blocateall(12) == [12];
 assert seq.blocateall(13) == [13];

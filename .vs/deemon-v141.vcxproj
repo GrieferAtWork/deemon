@@ -269,7 +269,6 @@
 		<ClInclude Include="..\src\deemon\objects\seq\each.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\filter.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\hashfilter.h" />
-		<ClInclude Include="..\src\deemon\objects\seq\locateall.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\mapped.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\range.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\repeat.h" />
@@ -459,7 +458,6 @@
 		<ClCompile Include="..\src\deemon\objects\seq\fastseq.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\filter.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\hashfilter.c" />
-		<ClCompile Include="..\src\deemon\objects\seq\locateall.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\mapped.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\range.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\repeat.c" />

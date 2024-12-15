@@ -212,6 +212,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "include", "include", "{2360
 		..\lib\include\function = ..\lib\include\function
 		..\lib\include\gc = ..\lib\include\gc
 		..\lib\include\intrin = ..\lib\include\intrin
+		..\lib\include\m_builtins.dee = ..\lib\include\m_builtins.dee
 		..\lib\include\m_fs.dee = ..\lib\include\m_fs.dee
 		..\lib\include\m_fs_path.dee = ..\lib\include\m_fs_path.dee
 		..\lib\include\m_fs_posix.dee = ..\lib\include\m_fs_posix.dee

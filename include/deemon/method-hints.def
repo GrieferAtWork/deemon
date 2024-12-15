@@ -165,17 +165,15 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_co
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_contains_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_contains, "contains", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
 
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_locate, (DeeObject *self, DeeObject *item))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_locate_with_key, (DeeObject *self, DeeObject *item, DeeObject *key))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_locate_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_locate_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
-Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_locate, "locate", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->")
+/* Returns the first element (within the given range) where `match(elem)' is true. */
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_locate, (DeeObject *self, DeeObject *match, DeeObject *def))
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_locate_with_range, (DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def))
+Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_locate, "locate", "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]")
 
-/*Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_rlocate, (DeeObject *self, DeeObject *item))*/ /* Wouldn't make sense: for reverse, you need indices */
-/*Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_rlocate_with_key, (DeeObject *self, DeeObject *item, DeeObject *key))*/ /* Wouldn't make sense: for reverse, you need indices */
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_rlocate_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_rlocate_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
-Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rlocate, "rlocate", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->")
+/* Returns the last element (within the given range) where `match(elem)' is true. */
+/*Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_rlocate, (DeeObject *self, DeeObject *match, DeeObject *def))*/ /* Wouldn't make sense: for reverse, you need indices */
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_rlocate_with_range, (DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def))
+Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rlocate, "rlocate", "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]")
 
 /* @return: 0 : Does not start with
  * @return: 1 : Does start with
@@ -280,10 +278,6 @@ Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_bposition, "bposition", "(item,start=!0
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_brange, (DeeObject *self, DeeObject *item, size_t start, size_t end, size_t result_range[2]))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5, 6)), int, DCALL, seq_brange_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_brange, "brange", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?Dint")
-
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_blocate, (DeeObject *self, DeeObject *item, size_t start, size_t end))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_blocate_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
-Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_blocate, "blocate", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->")
 
 
 

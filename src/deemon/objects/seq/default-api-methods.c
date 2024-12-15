@@ -1973,35 +1973,18 @@ err:
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 seq_locate_foreach_cb(void *arg, DeeObject *item) {
-	DeeObject *elem_to_locate = *(DeeObject **)arg;
-	int temp = DeeObject_TryCompareEq(elem_to_locate, item);
-	if unlikely(temp == Dee_COMPARE_ERR)
-		return -1;
-	if (temp == 0) {
+	int match_result;
+	DREF DeeObject *match_result_ob;
+	DeeObject *match = *(DeeObject **)arg;
+	match_result_ob = DeeObject_Call(match, 1, &item);
+	if unlikely(!match_result_ob)
+		goto err;
+	match_result = DeeObject_BoolInherited(match_result_ob);
+	if unlikely(match_result < 0)
+		goto err;
+	if (match_result) {
 		Dee_Incref(item);
 		*(DeeObject **)arg = item;
-		return -2;
-	}
-	return 0;
-}
-
-struct seq_locate_with_key_data {
-	DeeObject *gslwk_kelem; /* [1..1] Keyed search element. */
-	DeeObject *gslwk_key;   /* [1..1][in] Search key predicate
-	                         * [1..1][out:DREF] Located element. */
-};
-
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_locate_with_key_foreach_cb(void *arg, DeeObject *item) {
-	int temp;
-	struct seq_locate_with_key_data *data;
-	data = (struct seq_locate_with_key_data *)arg;
-	temp = DeeObject_TryCompareKeyEq(data->gslwk_kelem, item, data->gslwk_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
-		goto err;
-	if (temp == 0) {
-		Dee_Incref(item);
-		data->gslwk_key = item;
 		return -2;
 	}
 	return 0;
@@ -2010,119 +1993,30 @@ err:
 }
 
 PRIVATE WUNUSED Dee_ssize_t DCALL
-seq_locate_enumerate_cb(void *arg, size_t index, DeeObject *item) {
+seq_locate_enumerate_index_cb(void *arg, size_t index, DeeObject *item) {
 	(void)index;
 	if (!item)
 		return 0;
 	return seq_locate_foreach_cb(arg, item);
 }
 
-PRIVATE WUNUSED Dee_ssize_t DCALL
-seq_locate_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
-	(void)index;
-	if (!item)
-		return 0;
-	return seq_locate_with_key_foreach_cb(arg, item);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultLocateWithSeqFindAndSeqGetItemIndex(DeeObject *self, DeeObject *item) {
-	return DeeSeq_DefaultLocateWithRangeWithSeqFindAndSeqGetItemIndex(self, item, 0, (size_t)-1);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultLocateWithSeqForeach(DeeObject *self, DeeObject *item) {
-	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_locate_foreach_cb, &item);
-	if likely(foreach_status == -2)
-		return item;
-	if (foreach_status == 0)
-		err_item_not_found(self, item);
-	return NULL;
-}
-
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeSeq_DefaultLocateWithKeyWithSeqFindWithKeyAndSeqGetItemIndex(DeeObject *self, DeeObject *item, DeeObject *key) {
-	return DeeSeq_DefaultLocateWithRangeAndKeyWithSeqFindWithKeyAndSeqGetItemIndex(self, item, 0, (size_t)-1, key);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeSeq_DefaultLocateWithKeyWithSeqForeach(DeeObject *self, DeeObject *item, DeeObject *key) {
+DeeSeq_DefaultLocateWithSeqForeach(DeeObject *self, DeeObject *match, DeeObject *def) {
 	Dee_ssize_t foreach_status;
-	struct seq_locate_with_key_data data;
-	data.gslwk_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gslwk_kelem)
-		goto err;
-	data.gslwk_key = key;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_locate_with_key_foreach_cb, &data);
-	Dee_Decref(data.gslwk_kelem);
+	foreach_status = DeeSeq_OperatorForeach(self, &seq_locate_foreach_cb, &match);
 	if likely(foreach_status == -2)
-		return data.gslwk_key;
-	if (foreach_status == 0)
-		err_item_not_found(self, item);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultLocateWithRangeWithSeqFindAndSeqGetItemIndex(DeeObject *self, DeeObject *item,
-                                                           size_t start, size_t end) {
-	size_t match = DeeSeq_InvokeFind(self, item, start, end);
-	if unlikely(match == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(match == (size_t)-1)
-		goto err_not_found;
-	return DeeSeq_OperatorGetItemIndex(self, match);
-err_not_found:
-	err_item_not_found(self, item);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *item,
-                                                   size_t start, size_t end) {
-	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_locate_enumerate_cb, &item, start, end);
-	if likely(foreach_status == -2)
-		return item;
-	if (foreach_status == 0)
-		err_item_not_found(self, item);
-	return NULL;
+		return match;
+	return_reference_(def);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeSeq_DefaultLocateWithRangeAndKeyWithSeqFindWithKeyAndSeqGetItemIndex(DeeObject *self, DeeObject *item,
-                                                                        size_t start, size_t end, DeeObject *key) {
-	size_t match = DeeSeq_InvokeFindWithKey(self, item, start, end, key);
-	if unlikely(match == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(match == (size_t)-1)
-		goto err_not_found;
-	return DeeSeq_OperatorGetItemIndex(self, match);
-err_not_found:
-	err_item_not_found(self, item);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeSeq_DefaultLocateWithRangeAndKeyWithSeqEnumerateIndex(DeeObject *self, DeeObject *item,
-                                                         size_t start, size_t end, DeeObject *key) {
+DeeSeq_DefaultLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *match,
+                                                   size_t start, size_t end, DeeObject *def) {
 	Dee_ssize_t foreach_status;
-	struct seq_locate_with_key_data data;
-	data.gslwk_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gslwk_kelem)
-		goto err;
-	data.gslwk_key = key;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_locate_with_key_enumerate_cb, &data, start, end);
-	Dee_Decref(data.gslwk_kelem);
+	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_locate_enumerate_index_cb, &match, start, end);
 	if likely(foreach_status == -2)
-		return data.gslwk_key;
-	if (foreach_status == 0)
-		err_item_not_found(self, item);
-err:
-	return NULL;
+		return match;
+	return_reference_(def);
 }
 
 
@@ -2134,24 +2028,28 @@ err:
 /* rlocate()                                                            */
 /************************************************************************/
 struct seq_rlocate_with_foreach_data {
-	DeeObject      *gsrlwf_elem;   /* [1..1] Element to search for. */
-	DREF DeeObject *gsrlwf_result; /* [0..1] Most recent match. */
+	DeeObject      *gsrlwf_match;  /* [1..1] Matching function. */
+	DREF DeeObject *gsrlwf_result; /* [1..1] Match result. */
 };
 
 PRIVATE WUNUSED Dee_ssize_t DCALL
 seq_rlocate_with_enumerate_cb(void *arg, size_t index, DeeObject *item) {
-	int temp;
+	int match_result;
+	DREF DeeObject *match_result_ob;
 	struct seq_rlocate_with_foreach_data *data;
 	(void)index;
 	if (!item)
 		return 0;
 	data = (struct seq_rlocate_with_foreach_data *)arg;
-	temp = DeeObject_TryCompareEq(data->gsrlwf_elem, item);
-	if unlikely(temp == Dee_COMPARE_ERR)
+	match_result_ob = DeeObject_Call(data->gsrlwf_match, 1, &item);
+	if unlikely(!match_result_ob)
 		goto err;
-	if (temp == 0) {
+	match_result = DeeObject_BoolInherited(match_result_ob);
+	if unlikely(match_result < 0)
+		goto err;
+	if (match_result) {
 		Dee_Incref(item);
-		Dee_XDecref(data->gsrlwf_result);
+		Dee_Decref(data->gsrlwf_result);
 		data->gsrlwf_result = item;
 	}
 	return 0;
@@ -2159,136 +2057,31 @@ err:
 	return -1;
 }
 
-struct seq_rlocate_with_key_and_foreach_data {
-	DeeObject      *gsrlwkf_kelem;  /* [1..1] Keyed element to search for. */
-	DREF DeeObject *gsrlwkf_result; /* [0..1] Most recent match. */
-	DeeObject      *gsrlwkf_key;    /* [1..1] Search key. */
-};
-
-PRIVATE WUNUSED Dee_ssize_t DCALL
-seq_rlocate_with_key_and_enumerate_cb(void *arg, size_t index, DeeObject *item) {
-	int temp;
-	struct seq_rlocate_with_key_and_foreach_data *data;
-	(void)index;
-	if (!item)
-		return 0;
-	data = (struct seq_rlocate_with_key_and_foreach_data *)arg;
-	temp = DeeObject_TryCompareKeyEq(data->gsrlwkf_kelem, item, data->gsrlwkf_key);
-	if unlikely(temp == Dee_COMPARE_ERR)
-		goto err;
-	if (temp == 0) {
-		Dee_Incref(item);
-		Dee_XDecref(data->gsrlwkf_result);
-		data->gsrlwkf_result = item;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultRLocateWithRangeWithSeqRFindAndSeqGetItemIndex(DeeObject *self, DeeObject *item,
-                                                             size_t start, size_t end) {
-	size_t match = DeeSeq_InvokeRFind(self, item, start, end);
-	if unlikely(match == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(match == (size_t)-1)
-		goto err_not_found;
-	return DeeSeq_OperatorGetItemIndex(self, match);
-err_not_found:
-	err_item_not_found(self, item);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *item,
-                                                           size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *match,
+                                                           size_t start, size_t end, DeeObject *def) {
 	Dee_ssize_t foreach_status;
 	Dee_mh_seq_enumerate_index_reverse_t op;
 	op = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
 	ASSERT(op);
-	foreach_status = (*op)(self, &seq_locate_enumerate_cb, &item, start, end);
+	foreach_status = (*op)(self, &seq_locate_enumerate_index_cb, &match, start, end);
 	if likely(foreach_status == -2)
-		return item;
-	if (foreach_status == 0)
-		err_item_not_found(self, item);
-	return NULL;
+		return match;
+	return_reference_(def);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *item,
-                                                    size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DeeSeq_DefaultRLocateWithRangeWithSeqEnumerateIndex(DeeObject *self, DeeObject *match,
+                                                    size_t start, size_t end, DeeObject *def) {
 	Dee_ssize_t foreach_status;
 	struct seq_rlocate_with_foreach_data data;
-	data.gsrlwf_elem   = item;
-	data.gsrlwf_result = NULL;
+	data.gsrlwf_match  = match;
+	data.gsrlwf_result = def;
+	Dee_Incref(def);
 	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_rlocate_with_enumerate_cb, &data, start, end);
-	if likely(foreach_status == 0) {
-		if (data.gsrlwf_result)
-			return data.gsrlwf_result;
-		err_item_not_found(self, item);
-	}
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqRFindWithKeyAndSeqGetItemIndex(DeeObject *self, DeeObject *item,
-                                                                          size_t start, size_t end, DeeObject *key) {
-	size_t match = DeeSeq_InvokeRFindWithKey(self, item, start, end, key);
-	if unlikely(match == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(match == (size_t)-1)
-		goto err_not_found;
-	return DeeSeq_OperatorGetItemIndex(self, match);
-err_not_found:
-	err_item_not_found(self, item);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndexReverse(DeeObject *self, DeeObject *item,
-                                                                 size_t start, size_t end, DeeObject *key) {
-	Dee_ssize_t foreach_status;
-	Dee_mh_seq_enumerate_index_reverse_t op;
-	struct seq_locate_with_key_data data;
-	data.gslwk_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gslwk_kelem)
-		goto err;
-	data.gslwk_key = key;
-	op = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
-	ASSERT(op);
-	foreach_status = (*op)(self, &seq_locate_with_key_enumerate_cb, &data, start, end);
-	Dee_Decref(data.gslwk_kelem);
-	if likely(foreach_status == -2)
-		return data.gslwk_key;
-	if (foreach_status == 0)
-		err_item_not_found(self, item);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeSeq_DefaultRLocateWithRangeAndKeyWithSeqEnumerateIndex(DeeObject *self, DeeObject *item,
-                                                          size_t start, size_t end, DeeObject *key) {
-	Dee_ssize_t foreach_status;
-	struct seq_rlocate_with_key_and_foreach_data data;
-	data.gsrlwkf_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gsrlwkf_kelem)
-		goto err;
-	data.gsrlwkf_key    = key;
-	data.gsrlwkf_result = NULL;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_rlocate_with_key_and_enumerate_cb,
-	                                               &data, start, end);
-	Dee_Decref(data.gsrlwkf_kelem);
-	if likely(foreach_status == 0) {
-		if (data.gsrlwkf_result)
-			return data.gsrlwkf_result;
-		err_item_not_found(self, item);
-	}
-err:
+	if likely(foreach_status == 0)
+		return data.gsrlwf_result;
+	Dee_Decref_unlikely(data.gsrlwf_result);
 	return NULL;
 }
 
@@ -4999,68 +4792,6 @@ DeeSeq_DefaultBRangeWithKeyWithError(DeeObject *self, DeeObject *item,
 
 
 
-/************************************************************************/
-/* blocate()                                                            */
-/************************************************************************/
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultBLocateWithSeqBFindAndGetItemIndex(DeeObject *self, DeeObject *item,
-                                                 size_t start, size_t end) {
-	size_t index = DeeSeq_InvokeBFind(self, item, start, end);
-	if unlikely(index == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(index == (size_t)-1)
-		goto err_not_found;
-	return (*Dee_TYPE(self)->tp_seq->tp_getitem_index)(self, index);
-err_not_found:
-	err_item_not_found(self, item);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_DefaultBLocateWithError(DeeObject *self, DeeObject *item,
-                               size_t start, size_t end) {
-	err_seq_unsupportedf(self, "blocate(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
-	return NULL;
-}
-
-
-
-
-
-
-/************************************************************************/
-/* blocate() (with key)                                                 */
-/************************************************************************/
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeSeq_DefaultBLocateWithKeyWithSeqBFindWithKeyAndGetItemIndex(DeeObject *self, DeeObject *item,
-                                                               size_t start, size_t end, DeeObject *key) {
-	size_t index = DeeSeq_InvokeBFindWithKey(self, item, start, end, key);
-	if unlikely(index == (size_t)Dee_COMPARE_ERR)
-		goto err;
-	if unlikely(index == (size_t)-1)
-		goto err_not_found;
-	return (*Dee_TYPE(self)->tp_seq->tp_getitem_index)(self, index);
-err_not_found:
-	err_item_not_found(self, item);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeSeq_DefaultBLocateWithKeyWithError(DeeObject *self, DeeObject *item,
-                                      size_t start, size_t end, DeeObject *key) {
-	err_seq_unsupportedf(self, "blocate(%r, %" PRFuSIZ ", %" PRFuSIZ ", %r)", item, start, end, key);
-	return NULL;
-}
-
-
-
-
-
-
 
 
 
@@ -5270,17 +5001,22 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSet_DefaultUnifyWithSeqLocateAndSeqAppend(DeeObject *self, DeeObject *key) {
-	DREF DeeObject *result = DeeSeq_InvokeLocate(self, key);
-	if (result)
-		return result;
-	if unlikely(!DeeError_Catch(&DeeError_ValueError))
-		goto err;
-	if unlikely(DeeSeq_InvokeAppend(self, key))
-		goto err;
-	return_reference_(key);
-err:
+DeeSet_DefaultUnifyWithSeqAppendAndSeqForeach(DeeObject *self, DeeObject *key) {
+	/* TODO */
+	(void)self;
+	(void)key;
+	DeeError_NOTIMPLEMENTED();
 	return NULL;
+//	DREF DeeObject *result = DeeSeq_InvokeLocate(self, key);
+//	if (result)
+//		return result;
+//	if unlikely(!DeeError_Catch(&DeeError_ValueError))
+//		goto err;
+//	if unlikely(DeeSeq_InvokeAppend(self, key))
+//		goto err;
+//	return_reference_(key);
+//err:
+//	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -7013,35 +6749,28 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeMH_seq_locate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
+	DeeObject *match, *def = Dee_None;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__match_start_end_def,
 	                    "o|" UNPuSIZ UNPuSIZ "o:locate",
-	                    &item, &start, &end, &key))
+	                    &match, &start, &end, &def))
 		goto err;
-	if (start == 0 && end == (size_t)-1) {
-		if (DeeNone_Check(key))
-			return DeeSeq_InvokeLocate(self, item);
-		return DeeSeq_InvokeLocateWithKey(self, item, key);
-	}
-	if (DeeNone_Check(key))
-		return DeeSeq_InvokeLocateWithRange(self, item, start, end);
-	return DeeSeq_InvokeLocateWithRangeAndKey(self, item, start, end, key);
+	if (start == 0 && end == (size_t)-1)
+		return DeeSeq_InvokeLocate(self, match, def);
+	return DeeSeq_InvokeLocateWithRange(self, match, start, end, def);
 err:
 	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeMH_seq_rlocate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
+	DeeObject *match, *def = Dee_None;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__match_start_end_def,
 	                    "o|" UNPuSIZ UNPuSIZ "o:rlocate",
-	                    &item, &start, &end, &key))
+	                    &match, &start, &end, &def))
 		goto err;
-	if (DeeNone_Check(key))
-		return DeeSeq_InvokeRLocateWithRange(self, item, start, end);
-	return DeeSeq_InvokeRLocateWithRangeAndKey(self, item, start, end, key);
+	return DeeSeq_InvokeRLocateWithRange(self, match, start, end, def);
 err:
 	return NULL;
 }
@@ -7476,21 +7205,6 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeMH_seq_blocate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:blocate",
-	                    &item, &start, &end, &key))
-		goto err;
-	return !DeeNone_Check(key)
-	       ? DeeSeq_InvokeBLocateWithKey(self, item, start, end, key)
-	       : DeeSeq_InvokeBLocate(self, item, start, end);
-err:
-	return NULL;
-}
-
 
 /* Default set function pointers (including ones for mutable sets). */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -7765,8 +7479,8 @@ PRIVATE struct type_method tpconst DeeMH_seq_methods[] = {
 	TYPE_KWMETHOD(STR_sum, &DeeMH_seq_sum, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N"),
 	TYPE_KWMETHOD(STR_count, &DeeMH_seq_count, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD(STR_contains, &DeeMH_seq_contains, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
-	TYPE_KWMETHOD(STR_locate, &DeeMH_seq_locate, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"),
-	TYPE_KWMETHOD(STR_rlocate, &DeeMH_seq_rlocate, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"),
+	TYPE_KWMETHOD(STR_locate, &DeeMH_seq_locate, "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]"),
+	TYPE_KWMETHOD(STR_rlocate, &DeeMH_seq_rlocate, "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]"),
 	TYPE_KWMETHOD(STR_startswith, &DeeMH_seq_startswith, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD(STR_endswith, &DeeMH_seq_endswith, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool"),
 	TYPE_KWMETHOD(STR_find, &DeeMH_seq_find, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
@@ -7795,7 +7509,6 @@ PRIVATE struct type_method tpconst DeeMH_seq_methods[] = {
 	TYPE_KWMETHOD(STR_bfind, &DeeMH_seq_bfind, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD(STR_bposition, &DeeMH_seq_bposition, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"),
 	TYPE_KWMETHOD(STR_brange, &DeeMH_seq_brange, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?Dint"),
-	TYPE_KWMETHOD(STR_blocate, &DeeMH_seq_blocate, "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->"),
 	TYPE_METHOD("__bool__", &default_seq___bool__, "->?Dbool"),
 	TYPE_METHOD("__iter__", &default_seq___iter__, "->?DIterator"),
 	TYPE_METHOD("__size__", &default_seq___size__, "->?Dint"),
@@ -7975,10 +7688,6 @@ DECL_END
 #define DEFINE_DeeSeq_DefaultBRangeWithSizeAndTryGetItemIndex
 #include "default-api-methods-bsearch-impl.c.inl"
 #define DEFINE_DeeSeq_DefaultBRangeWithKeyWithSizeAndTryGetItemIndex
-#include "default-api-methods-bsearch-impl.c.inl"
-#define DEFINE_DeeSeq_DefaultBLocateWithSizeAndTryGetItemIndex
-#include "default-api-methods-bsearch-impl.c.inl"
-#define DEFINE_DeeSeq_DefaultBLocateWithKeyWithSizeAndTryGetItemIndex
 #include "default-api-methods-bsearch-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 

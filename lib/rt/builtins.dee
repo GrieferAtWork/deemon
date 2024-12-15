@@ -48,6 +48,7 @@ import compat_util = ..include.m_util;
 import compat_util_attr = ..include.m_util_attr;
 import compat_math = ..include.m_math;
 import compat_gcc = ..include.__builtin_gcc;
+import compat_builtins = ..include.m_builtins;
 import compat_sys = ..include.m_sys;
 import compat_fs = ..include.m_fs;
 final local opt_win32 = try import("win32") catch (...) none;
@@ -498,9 +499,9 @@ local __objects = deemon.List {
 	/* 0x01b4 */ deemon.Sequence.index,
 	/* 0x01b5 */ deemon.Sequence.rindex,
 	/* 0x01b6 */ deemon.Sequence.count,
-	/* 0x01b7 */ deemon.Sequence.locate,
-	/* 0x01b8 */ deemon.Sequence.rlocate,
-	/* 0x01b9 */ deemon.Sequence.locateall,
+	/* 0x01b7 */ compat_builtins.seq_locate,
+	/* 0x01b8 */ compat_builtins.seq_rlocate,
+	/* 0x01b9 */ compat_builtins.seq_locateall,
 	/* 0x01ba */ deemon.Sequence.transform,
 	/* 0x01bb */ deemon.Sequence.isempty,
 	/* 0x01bc */ deemon.Sequence.isnonempty,

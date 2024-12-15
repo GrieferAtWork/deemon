@@ -48,8 +48,6 @@ assertRtTypeName("SeqFilterAsUnbound");
 assertRtTypeName("SeqFilterIterator");
 assertRtTypeName("SeqHashFilter");
 assertRtTypeName("SeqHashFilterIterator");
-assertRtTypeName("SeqLocator");
-assertRtTypeName("SeqLocatorIterator");
 assertRtTypeName("SeqMapped");
 assertRtTypeName("SeqMappedIterator");
 assertRtTypeName("SeqRange");

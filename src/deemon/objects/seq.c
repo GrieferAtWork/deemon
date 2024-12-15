@@ -56,7 +56,6 @@
 #include "seq/each.h"
 #include "seq/filter.h"
 #include "seq/hashfilter.h"
-#include "seq/locateall.h"
 #include "seq/mapped.h"
 #include "seq/repeat.h"
 #include "seq/segments.h"
@@ -450,26 +449,6 @@ seq_ubfilter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:ubfilter", &pred_keep))
 		goto err;
 	return DeeSeq_FilterAsUnbound(self, pred_keep);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_locateall(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *elem, *key = Dee_None;
-	DREF DeeObject *result;
-	if (DeeArg_Unpack(argc, argv, "o|o:locateall", &elem, &key))
-		goto err;
-	if (DeeNone_Check(key)) {
-		result = DeeSeq_LocateAll(self, elem, NULL);
-	} else {
-		elem = DeeObject_Call(key, 1, &elem);
-		if unlikely(!elem)
-			goto err;
-		result = DeeSeq_LocateAll(self, elem, key);
-		Dee_Decref(elem);
-	}
-	return result;
 err:
 	return NULL;
 }
@@ -1238,8 +1217,8 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "key = key ?? x -\\> x;\n"
 	              /**/ /**/ "local result = 0;\n"
 	              /**/ /**/ "local keyedItem = key(item);\n"
-	              /**/ /**/ "for (local myItem: this) {\n"
-	              /**/ /**/ "	if (deemon.equals(keyedItem, key(myItem)))\n"
+	              /**/ /**/ "for (local item: this) {\n"
+	              /**/ /**/ "	if (deemon.equals(keyedItem, key(item)))\n"
 	              /**/ /**/ "		++result;\n"
 	              /**/ /**/ "}\n"
 	              /**/ /**/ "return result;"
@@ -1262,114 +1241,76 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
 	              "}"),
 	TYPE_KWMETHOD(STR_locate, &DeeMH_seq_locate,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->\n"
-	              DOC_param_item
-	              DOC_param_key
-	              DOC_throws_ValueError_if_not_found
-	              "Returns the first item equal to @item\n"
+	              "(match:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
+	              "Locate and return the first element such that ${match(elem)} "
+	              /**/ "is true, or @def when no such element exists\n"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function locate}|${"
-	              /**/ /**/ "if (key is none) {\n"
-	              /**/ /**/ "	return start != 0 || end != int.SIZE_MAX ? this.locate(item, start, end)\n"
-	              /**/ /**/ "	                                         : this.locate(item);\n"
-	              /**/ /**/ "} else if (start != 0 || end != int.SIZE_MAX) {\n"
-	              /**/ /**/ "	return this.locate(item, start, end, key);\n"
-	              /**/ /**/ "} else if (type(this).__seqclass__ == Sequence) {\n"
-	              /**/ /**/ "	return this.locate(item, 0, int.SIZE_MAX, key);\n"
-	              /**/ /**/ "} else {\n"
-	              /**/ /**/ "	return this.locate(item, key);\n"
-	              /**/ /**/ "}\n"
-	              /**/ "}&"
+	              /**/ "${function locate}²|${this.locate(item, start, end, def)}&"
+	              /**/ "${function locate}¹³|${this.locate(item, def)}&"
 	              /**/ "${operator iter}¹|${"
-	              /**/ /**/ "key = key ?? x -\\> x;\n"
-	              /**/ /**/ "local keyedItem = key(item);\n"
-	              /**/ /**/ "for (local myItem: this) {\n"
-	              /**/ /**/ "	if (deemon.equals(keyedItem, key(myItem)))\n"
-	              /**/ /**/ "		return myItem;\n"
+	              /**/ /**/ "for (local item: this) {\n"
+	              /**/ /**/ "	if (match(item))\n"
+	              /**/ /**/ "		return item;\n"
 	              /**/ /**/ "}\n"
-	              /**/ /**/ "throw ValueError(...);"
+	              /**/ /**/ "return def;"
 	              /**/ "}&"
 	              /**/ "${operator size}, ${operator getitem}²|${"
-	              /**/ /**/ "key = key ?? x -\\> x;\n"
-	              /**/ /**/ "local result = Cell();\n"
-	              /**/ /**/ "local keyedItem = key(item);\n"
+	              /**/ /**/ "local result = Cell(def);\n"
 	              /**/ /**/ "local ok = Sequence.enumerate(this, (none, value?) -\\> {\n"
-	              /**/ /**/ "	if (value is bound) {\n"
-	              /**/ /**/ "		if (deemon.equals(keyedItem, key(value))) {\n"
-	              /**/ /**/ "			result.value = value;\n"
-	              /**/ /**/ "			return true;\n"
-	              /**/ /**/ "		}\n"
+	              /**/ /**/ "	if (value is bound && match(value)) {\n"
+	              /**/ /**/ "		result.value = value;\n"
+	              /**/ /**/ "		return true;\n"
 	              /**/ /**/ "	}\n"
 	              /**/ /**/ "}, start, end);\n"
-	              /**/ /**/ "if (ok !is none)\n"
-	              /**/ /**/ "	return result.value;\n"
-	              /**/ /**/ "throw ValueError(...);"
+	              /**/ /**/ "return result.value;"
 	              /**/ "}"
 	              "}"
 	              "#L{"
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
-	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
+	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
+	              /**/ "{³}Only when ?A__seqclass__?DType is ?DSet or ?DMapping"
 	              "}"),
 	TYPE_KWMETHOD(STR_rlocate, &DeeMH_seq_rlocate,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->\n"
-	              DOC_param_item
-	              DOC_param_key
-	              DOC_throws_ValueError_if_not_found
-	              "Returns the last item equal to @item\n"
+	              "(match:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
+	              "Locate and return the last element such that ${match(elem)} "
+	              /**/ "is true, or @def when no such element exists\n"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function rlocate}|${"
-	              /**/ /**/ "if (key is none) {\n"
-	              /**/ /**/ "	return start != 0 || end != int.SIZE_MAX ? this.rlocate(item, start, end)\n"
-	              /**/ /**/ "	                                         : this.rlocate(item);\n"
-	              /**/ /**/ "} else if (start != 0 || end != int.SIZE_MAX) {\n"
-	              /**/ /**/ "	return this.rlocate(item, start, end, key);\n"
-	              /**/ /**/ "} else if (type(this).__seqclass__ == Sequence) {\n"
-	              /**/ /**/ "	return this.rlocate(item, 0, int.SIZE_MAX, key);\n"
-	              /**/ /**/ "} else {\n"
-	              /**/ /**/ "	return this.rlocate(item, key);\n"
-	              /**/ /**/ "}\n"
-	              /**/ "}&"
+	              /**/ "${function locate}²|${this.locate(item, start, end, def)}&"
+	              /**/ "${function locate}¹³|${this.locate(item, def)}&"
 	              /**/ "${operator iter}¹|${"
-	              /**/ /**/ "key = key ?? x -\\> x;\n"
-	              /**/ /**/ "local keyedItem = key(item);\n"
-	              /**/ /**/ "local result;\n"
-	              /**/ /**/ "for (local myItem: this) {\n"
-	              /**/ /**/ "	if (deemon.equals(keyedItem, key(myItem)))\n"
-	              /**/ /**/ "		result = myItem;\n"
+	              /**/ /**/ "local result = def;\n"
+	              /**/ /**/ "for (local item: this) {\n"
+	              /**/ /**/ "	if (match(item))\n"
+	              /**/ /**/ "		result = item;\n"
 	              /**/ /**/ "}\n"
-	              /**/ /**/ "if (result is bound)\n"
-	              /**/ /**/ "	return result;\n"
-	              /**/ /**/ "throw ValueError(...);"
+	              /**/ /**/ "return result;"
 	              /**/ "}&"
 	              /**/ "${operator size}, ${operator getitem}²|${"
-	              /**/ /**/ "key = key ?? x -\\> x;\n"
 	              /**/ /**/ "local realSize = ##this;\n"
 	              /**/ /**/ "if (end > realSize)\n"
 	              /**/ /**/ "	end = realSize;\n"
 	              /**/ /**/ "if (start > end)\n"
 	              /**/ /**/ "	start = end;\n"
-	              /**/ /**/ "local result;\n"
-	              /**/ /**/ "local keyedItem = key(item);\n"
+	              /**/ /**/ "local result = def;\n"
 	              /**/ /**/ "for (local i: [start: end]) {\n"
-	              /**/ /**/ "	local myItem;\n"
+	              /**/ /**/ "	local item;\n"
 	              /**/ /**/ "	try {\n"
-	              /**/ /**/ "		myItem = this[index];\n"
+	              /**/ /**/ "		item = this[index];\n"
 	              /**/ /**/ "	} catch (UnboundItem) {\n"
 	              /**/ /**/ "		continue;\n"
 	              /**/ /**/ "	} catch (IndexError) {\n"
 	              /**/ /**/ "		break;\n"
 	              /**/ /**/ "	}\n"
-	              /**/ /**/ "	if (deemon.equals(keyedItem, key(myItem)))\n"
-	              /**/ /**/ "		result = myItem;\n"
+	              /**/ /**/ "	if (match(item))\n"
+	              /**/ /**/ "		result = item;\n"
 	              /**/ /**/ "}\n"
-	              /**/ /**/ "if (result is bound)\n"
-	              /**/ /**/ "	return result;\n"
-	              /**/ /**/ "throw ValueError(...);"
+	              /**/ /**/ "return result;"
 	              /**/ "}"
 	              "}"
 	              "#L{"
 	              /**/ "{¹}Only when @start/@end aren't given or describe the entire sequence|"
-	              /**/ "{²}Only when ?A__seqclass__?DType is ?."
+	              /**/ "{²}Only when ?A__seqclass__?DType is ?.|"
+	              /**/ "{³}Only when ?A__seqclass__?DType is ?DSet or ?DMapping"
 	              "}"),
 
 	TYPE_METHOD("filter", &seq_filter,
@@ -1403,29 +1344,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "function map(mapper: Callable): Sequence {\n"
 	            /**/ "	for (local x: this)\n"
 	            /**/ "		yield mapper(x);\n"
-	            /**/ "}"
-	            "}"),
-
-	TYPE_METHOD("locateall", &seq_locateall,
-	            /* TODO: "(item,start:?Dint,end:?Dint,key:?DCallable=!N)->?S?O\n" */
-	            "(item,key:?DCallable=!N)->?S?O\n"
-	            DOC_param_item
-	            DOC_param_key
-	            "Returns a Sequence of items equal to @item\n"
-	            "${"
-	            /**/ "function locateall(item: Object, key: Callable): Sequence {\n"
-	            /**/ "	import Error from deemon;\n"
-	            /**/ "	if (key !is none)\n"
-	            /**/ "		item = key(item);\n"
-	            /**/ "	for (local x: this) {\n"
-	            /**/ "		if (key !is none) {\n"
-	            /**/ "			if (item == key(x))\n"
-	            /**/ "				yield x;\n"
-	            /**/ "		} else {\n"
-	            /**/ "			if (item == x)\n"
-	            /**/ "				yield x;\n"
-	            /**/ "		}\n"
-	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
 
@@ -1585,13 +1503,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	}\n"
 	              /**/ "}"
 	              "}"),
-
-	/* TODO: locatefirst: "(pred:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
-	 *                    "Locate and return the first element such that ${pred(elem)} is true, or @def when no such element exists"
-	 * XXX: Check if it's possible to just replace "Sequence.locate" with this */
-	/* TODO: locatelast: "(pred:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]\n"
-	 *                   "Locate and return the last element such that ${pred(elem)} is true, or @def when no such element exists"
-	 * XXX: Check if it's possible to just replace "Sequence.rlocate" with this */
 
 	/* TODO: findall: "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
 	 * > Find not just the first, but all indices of @item */
@@ -1829,13 +1740,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "the lower and upper bound of indices for elements from @this matching @item.\n"
 	              "NOTE: The returned tuple is allowed to be an ASP, meaning that its elements may "
 	              /**/ "be calculated lazily, and are prone to change as the result of @this changing."
-	              ""), /* TODO: Requirements|Implementation table */
-	TYPE_KWMETHOD(STR_blocate, &DeeMH_seq_blocate,
-	              "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N,defl?)->\n"
-	              DOC_param_item
-	              DOC_param_key
-	              "#tValueError{The Sequence does not contain an item matching @item}"
-	              "Same as ?#bfind, but return the matching item, rather than its index"
 	              ""), /* TODO: Requirements|Implementation table */
 
 	TYPE_KWMETHOD("blocateall", &seq_blocateall,
