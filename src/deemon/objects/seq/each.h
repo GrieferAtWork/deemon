@@ -144,40 +144,55 @@ typedef struct {
 INTDEF DeeTypeObject SeqEach_Type;
 INTDEF DeeTypeObject SeqEachOperator_Type;
 INTDEF DeeTypeObject SeqEachOperatorIterator_Type;
+INTDEF DeeTypeObject SeqSome_Type;
+INTDEF DeeTypeObject SeqSomeOperator_Type;
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 INTDEF DeeTypeObject SeqEachGetAttr_Type;
+INTDEF DeeTypeObject SeqSomeGetAttr_Type;
 INTDEF DeeTypeObject SeqEachGetAttrIterator_Type;
 INTDEF DeeTypeObject SeqEachCallAttr_Type;
+INTDEF DeeTypeObject SeqSomeCallAttr_Type;
 INTDEF DeeTypeObject SeqEachCallAttrIterator_Type;
 INTDEF DeeTypeObject SeqEachCallAttrKw_Type;
+INTDEF DeeTypeObject SeqSomeCallAttrKw_Type;
 INTDEF DeeTypeObject SeqEachCallAttrKwIterator_Type;
 #define DeeType_IsSeqEachWrapper(self)  \
 	((self) == &SeqEachOperator_Type || \
 	 (self) == &SeqEachGetAttr_Type ||  \
 	 (self) == &SeqEachCallAttr_Type || \
 	 (self) == &SeqEachCallAttrKw_Type)
+#define DeeType_IsSeqSomeWrapper(self)  \
+	((self) == &SeqSomeOperator_Type || \
+	 (self) == &SeqSomeGetAttr_Type ||  \
+	 (self) == &SeqSomeCallAttr_Type || \
+	 (self) == &SeqSomeCallAttrKw_Type)
 #else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-#define DeeType_IsSeqEachWrapper(self)  \
-	((self) == &SeqEachGetAttr_Type ||  \
-	 (self) == &SeqEachCallAttr_Type || \
-	 (self) == &SeqEachCallAttrKw_Type)
+#define DeeType_IsSeqEachWrapper(self) ((self) == &SeqEachOperator_Type)
+#define DeeType_IsSeqSomeWrapper(self) ((self) == &SeqSomeOperator_Type)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 /* Hooks for callattr() invocation. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttr(DeeObject *__restrict self, DeeObject *__restrict attr, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringHash(DeeObject *__restrict self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLenHash(DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrKw(DeeObject *__restrict self, DeeObject *__restrict attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringHashKw(DeeObject *__restrict self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLenHashKw(DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttr(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringHash(DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLenHash(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrKw(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringHashKw(DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLenHashKw(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttr(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringHash(DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringLenHash(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrKw(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringHashKw(DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringLenHashKw(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
 
 /* Construct an each-wrapper for `self' */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Each(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Some(DeeObject *__restrict self);
 
 
 

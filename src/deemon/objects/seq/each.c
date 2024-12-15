@@ -539,13 +539,13 @@ se_setattr_string_len_hash(SeqEachBase *self, char const *attr,
 
 struct se_hasattr_string_hash_data {
 	char const *shashd_attr;
-	dhash_t     shashd_hash;
+	Dee_hash_t     shashd_hash;
 };
 
 struct se_hasattr_string_len_hash_data {
 	char const *shaslhd_attr;
 	size_t      shaslhd_attrlen;
-	dhash_t     shaslhd_hash;
+	Dee_hash_t     shaslhd_hash;
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -638,7 +638,7 @@ se_hasattr(SeqEachBase *self, DeeObject *attr) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_hasattr_string_hash(SeqEachBase *self,
-                       char const *attr, dhash_t hash) {
+                       char const *attr, Dee_hash_t hash) {
 	Dee_ssize_t status;
 	struct se_hasattr_string_hash_data data;
 	data.shashd_attr = attr;
@@ -655,7 +655,7 @@ se_hasattr_string_hash(SeqEachBase *self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_hasattr_string_len_hash(SeqEachBase *self, char const *attr,
-                           size_t attrlen, dhash_t hash) {
+                           size_t attrlen, Dee_hash_t hash) {
 	Dee_ssize_t status;
 	struct se_hasattr_string_len_hash_data data;
 	data.shaslhd_attr    = attr;
@@ -687,7 +687,7 @@ se_boundattr(SeqEachBase *self, DeeObject *attr) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_boundattr_string_hash(SeqEachBase *self,
-                         char const *attr, dhash_t hash) {
+                         char const *attr, Dee_hash_t hash) {
 	Dee_ssize_t status;
 	struct se_hasattr_string_hash_data data;
 	data.shashd_attr = attr;
@@ -706,7 +706,7 @@ se_boundattr_string_hash(SeqEachBase *self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 se_boundattr_string_len_hash(SeqEachBase *self, char const *attr,
-                             size_t attrlen, dhash_t hash) {
+                             size_t attrlen, Dee_hash_t hash) {
 	Dee_ssize_t status;
 	struct se_hasattr_string_len_hash_data data;
 	data.shaslhd_attr    = attr;
@@ -1235,6 +1235,25 @@ DeeSeq_Each(DeeObject *__restrict self) {
 	DeeObject_Init(result, &SeqEach_Type);
 done:
 	return (DREF DeeObject *)result;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Some(DeeObject *__restrict self) {
+#if 0 /* TODO */
+	DREF SeqEachBase *result;
+	result = DeeObject_MALLOC(SeqEachBase);
+	if unlikely(!result)
+		goto done;
+	result->se_seq = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &SeqSome_Type);
+done:
+	return (DREF DeeObject *)result;
+#else
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+#endif
 }
 
 
@@ -1994,7 +2013,7 @@ seo_hasattr(SeqEachOperator *self, DeeObject *attr) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_hasattr_string_hash(SeqEachOperator *__restrict self,
-                        char const *__restrict attr, dhash_t hash) {
+                        char const *__restrict attr, Dee_hash_t hash) {
 	Dee_ssize_t status;
 	struct se_hasattr_string_hash_data data;
 	data.shashd_attr = attr;
@@ -2012,7 +2031,7 @@ seo_hasattr_string_hash(SeqEachOperator *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_hasattr_string_len_hash(SeqEachOperator *__restrict self,
                             char const *__restrict attr,
-                            size_t attrlen, dhash_t hash) {
+                            size_t attrlen, Dee_hash_t hash) {
 	Dee_ssize_t status;
 	struct se_hasattr_string_len_hash_data data;
 	data.shaslhd_attr    = attr;
@@ -2044,7 +2063,7 @@ seo_boundattr(SeqEachOperator *__restrict self, DeeObject *__restrict attr) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_boundattr_string_hash(SeqEachOperator *__restrict self,
-                          char const *__restrict attr, dhash_t hash) {
+                          char const *__restrict attr, Dee_hash_t hash) {
 	Dee_ssize_t status;
 	struct se_hasattr_string_hash_data data;
 	data.shashd_attr = attr;
@@ -2064,7 +2083,7 @@ seo_boundattr_string_hash(SeqEachOperator *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seo_boundattr_string_len_hash(SeqEachOperator *__restrict self,
                               char const *__restrict attr,
-                              size_t attrlen, dhash_t hash) {
+                              size_t attrlen, Dee_hash_t hash) {
 	Dee_ssize_t status;
 	struct se_hasattr_string_len_hash_data data;
 	data.shaslhd_attr    = attr;
@@ -2571,8 +2590,8 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeqEach_CallAttr(DeeObject *__restrict self,
-                    DeeObject *__restrict attr,
+DeeSeqEach_CallAttr(DeeObject *self,
+                    DeeObject *attr,
                     size_t argc,
                     DeeObject *const *argv) {
 	DREF SeqEachCallAttr *result;
@@ -2592,8 +2611,8 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
-                      DeeObject *__restrict attr,
+DeeSeqEach_CallAttrKw(DeeObject *self,
+                      DeeObject *attr,
                       size_t argc,
                       DeeObject *const *argv,
                       DeeObject *kw) {
@@ -2619,8 +2638,8 @@ done:
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeqEach_CallAttrStringHash(DeeObject *__restrict self,
-                              char const *__restrict attr, dhash_t hash,
+DeeSeqEach_CallAttrStringHash(DeeObject *self,
+                              char const *__restrict attr, Dee_hash_t hash,
                               size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
@@ -2638,8 +2657,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeqEach_CallAttrStringLenHash(DeeObject *__restrict self,
-                                 char const *__restrict attr, size_t attrlen, dhash_t hash,
+DeeSeqEach_CallAttrStringLenHash(DeeObject *self,
+                                 char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
                                  size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
@@ -2657,8 +2676,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeqEach_CallAttrStringHashKw(DeeObject *__restrict self,
-                                char const *__restrict attr, dhash_t hash,
+DeeSeqEach_CallAttrStringHashKw(DeeObject *self,
+                                char const *__restrict attr, Dee_hash_t hash,
                                 size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
@@ -2677,8 +2696,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeqEach_CallAttrStringLenHashKw(DeeObject *__restrict self,
-                                   char const *__restrict attr, size_t attrlen, dhash_t hash,
+DeeSeqEach_CallAttrStringLenHashKw(DeeObject *self,
+                                   char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
                                    size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
@@ -2701,11 +2720,11 @@ DECL_END
 
 #ifndef __INTELLISENSE__
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-#define DEFINE_GETATTR 1
+#define DEFINE_SeqEachGetAttr 1
 #include "each-fastpass.c.inl"
-#define DEFINE_CALLATTR 1
+#define DEFINE_SeqEachCallAttr 1
 #include "each-fastpass.c.inl"
-#define DEFINE_CALLATTRKW 1
+#define DEFINE_SeqEachCallAttrKw 1
 #include "each-fastpass.c.inl"
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 #endif /* !__INTELLISENSE__ */

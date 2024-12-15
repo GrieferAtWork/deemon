@@ -1506,64 +1506,39 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* TODO: findall: "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
 	 * > Find not just the first, but all indices of @item */
-	/* TODO: findallseq(seq: Sequence, start: int = 0, end: int = -1, key: Callable = none): {int...} */
+	/* TODO: findallseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): {int...} */
 
-	/* TODO: findseq(subseq: Sequence, key: Callable = none): int */
-	/* TODO: rfindseq(subseq: Sequence, key: Callable = none): int */
-	/* TODO: indexseq(subseq: Sequence, key: Callable = none): int */
-	/* TODO: rindexseq(subseq: Sequence, key: Callable = none): int */
+	/* TODO: findseq(subseq: Sequence | rt.SeqSome, key: Callable = none): (int, int) | none */
+	/* TODO: rfindseq(subseq: Sequence | rt.SeqSome, key: Callable = none): (int, int) | none */
 
-	/* TODO: findanyseq(seq: {Sequence...}, start: int = 0, end: int = -1, key: Callable = none): (int, int) | none */
-	/* TODO: rfindanyseq(seq: {Sequence...}, start: int = 0, end: int = -1, key: Callable = none): (int, int) | none */
-	/* TODO: indexanyseq(seq: {Sequence...}, start: int = 0, end: int = -1, key: Callable = none): (int, int) */
-	/* TODO: rindexanyseq(seq: {Sequence...}, start: int = 0, end: int = -1, key: Callable = none): (int, int) */
-
-	/* TODO: findallof: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
-	 * >> Return a (ascendingly sorted) sequence of all indices whose item is contained in @items */
-
-	/* TODO: findallofseq: "(items:?S?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?T2?Dint?Dint"
-	 * >> Return a (ascendingly sorted) sequence of all index-ranges whose starting index is contained in @items */
-
-	/* TODO: findany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint"
-	 * >> Returns the first index of an element contained in @items
-	 * >> class _AnyEquals {
-	 * >>     public final member _items: {Object...};
-	 * >>     public final member _key: Callable;
-	 * >>     this = default;
-	 * >>     public operator == (item) -> _items.contains(_key(item));
-	 * >> }
-	 * >> function findany(items: {Object...}, start: int = 0, end: int = int.SIZE_MAX, key?: Callable): int {
-	 * >>     if (key !is bound)
-	 * >>         key = x -> x;
-	 * >>     return Sequence.find(this, _AnyEquals(items.map(key), key), start, end);
-	 * >> } */
-
-	/* TODO: rfindany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
-	/* TODO: indexany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
-	/* TODO: rindexany: "(items:?S?O,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+	/* TODO: indexseq(subseq: Sequence | rt.SeqSome, key: Callable = none): (int, int) */
+	/* TODO: rindexseq(subseq: Sequence | rt.SeqSome, key: Callable = none): (int, int) */
 
 	/* TODO: join: "(seqs:?S?S?O)->?." */
 
 	/* TODO: strip(item: Object, key: Callable = none): Sequence */
-	/* TODO: stripseq(items: Sequence, key: Callable = none): Sequence */
+	/* TODO: sstrip(subseq: Sequence, key: Callable = none): Sequence */
 
 	/* TODO: lstrip(item: Object, key: Callable = none): Sequence */
-	/* TODO: lstripseq(items: Sequence, key: Callable = none): Sequence */
+	/* TODO: lsstrip(subseq: Sequence, key: Callable = none): Sequence */
 
 	/* TODO: rstrip(item: Object, key: Callable = none): Sequence */
-	/* TODO: rstripseq(items: Sequence, key: Callable = none): Sequence */
+	/* TODO: rsstrip(subseq: Sequence, key: Callable = none): Sequence */
 
-	/* TODO: split(sep: Object, key: Callable = none): Sequence */
-	/* TODO: splitseq(sep: Sequence, key: Callable = none): Sequence */
+	/* TODO: split(item: Object, key: Callable = none): Sequence */
+	/* TODO: splitseq(subseq: Sequence | rt.SeqSome, key: Callable = none): Sequence */
 
-	/* TODO: countseq(seq: Sequence, key: Callable = none): int */
-	/* TODO: partition(item: Object, key: Callable = none): (Sequence, (item), Sequence) */
-	/* TODO: rpartition(item: Object, key: Callable = none): (Sequence, (item), Sequence) */
-	/* TODO: partitionseq(seq: Sequence, key: Callable = none): (Sequence, seq, Sequence) */
-	/* TODO: rpartitionseq(seq: Sequence, key: Callable = none): (Sequence, seq, Sequence) */
-	/* TODO: startswithseq(seq: Sequence, key: Callable = none): bool */
-	/* TODO: endswithseq(seq: Sequence, key: Callable = none): bool */
+	/* TODO: countseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = SIZE_MAX, key: Callable = none): int */
 
+	/* TODO: partition(item: Object, start: int = 0, end: int = SIZE_MAX, key: Callable = none): (Sequence, item, Sequence) */
+	/* TODO: partitionseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = SIZE_MAX, key: Callable = none): (Sequence, subseq, Sequence) */
+
+	/* TODO: rpartition(item: Object, start: int = 0, end: int = SIZE_MAX, key: Callable = none): (Sequence, item, Sequence) */
+	/* TODO: rpartitionseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = SIZE_MAX, key: Callable = none): (Sequence, subseq, Sequence) */
+
+	/* TODO: startswithseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = SIZE_MAX, key: Callable = none): bool */
+
+	/* TODO: endswithseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = SIZE_MAX, key: Callable = none): bool */
 
 	/* Functions for mutable sequences. */
 	TYPE_KWMETHOD(STR_reversed, &DeeMH_seq_reversed,
@@ -2132,6 +2107,43 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            /**/ "lists.each[0] = 8;          /* No need for (or way to) expand in this case */\n"
 	            /**/ "del lists.each[0];          /* No need for (or way to) expand in this case */"
 	            "}"),
+	TYPE_GETTER("some", &DeeSeq_Some,
+	            "->?Ert:SeqSome\n"
+	            "Returns a custom proxy object that chains and forwards operators applied to it to "
+	            /**/ "all of the items of @this ?., until a ${opreator bool} is used, at which point "
+	            /**/ "!t is returned if at least one item exists in the original sequence that matches "
+	            /**/ "the constructed condition:\n"
+	            "${"
+	            /**/ "local seq = { 1, 5, 9, 11 };\n"
+	            /**/ "if (seq.some > 10) {\n"
+	            /**/ "	...\n"
+	            /**/ "}\n"
+	            /**/ "\n"
+	            /**/ "/* Same as: */\n"
+	            /**/ "if (Sequence.any(seq.each > 10)) {\n"
+	            /**/ "	...\n"
+	            /**/ "}\n"
+	            /**/ "\n"
+	            /**/ "/* Similar to (assuming that `seq' doesn't contain `none') */\n"
+	            /**/ "if (seq.locate(x -> x > 10) !is none) {\n"
+	            /**/ "	...\n"
+	            /**/ "}"
+	            "}\n"
+	            "Also useful when wanting to find the first/last of a set of objects within some sequence. "
+	            /**/ "?. has no #Cfindany/#Cfind_first_of/etc. function because the same can be done like this:\n"
+	            "${"
+	            /**/ "local seq = { 1, 7, 13, 5, 99, 3 };\n"
+	            /**/ "print seq.find({ 5, 7 }.some);  /* 1 */\n"
+	            /**/ "print seq.rfind({ 5, 7 }.some); /* 3 */\n"
+	            /**/ "\n"
+	            /**/ "/* Similar to (except `seq' is only enumerated once) */\n"
+	            /**/ "print (for (local x: { 5, 7 }) seq.find(x)) < ...;  /* 1 -- (would break if `seq' didn't contain both 5 and 7) */\n"
+	            /**/ "print (for (local x: { 5, 7 }) seq.rfind(x)) > ...; /* 3 */"
+	            "}\n"
+	            "This works because ?#find and similar functions always perform comparisons with the "
+	            /**/ "item being searched on the left-hand-side, meaning *its* compare operators are "
+	            /**/ "invoked in order to determine equality. As such, ${(seq.some == foo).operator bool()} "
+	            /**/ "has been programmed to return the same as ${(foo in seq).operator bool()}"),
 	TYPE_GETTER("ids", &SeqIds_New,
 	            "->?S?Dint\n"
 	            "Returns a special proxy object for accessing the ids of Sequence elements\n"
@@ -2158,6 +2170,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("isnonempty", &seq_get_isnonempty,
 	            "->?Dbool\n"
 	            "Alias for ?#{op:bool}"),
+
 	/* TODO: itemtype->?DType
 	 *       Check if the type of @this overrides the ?#ItemType class attribute.
 	 *       If so, return its value; else, return the common base-class of all
