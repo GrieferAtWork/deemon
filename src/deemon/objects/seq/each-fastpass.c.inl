@@ -778,7 +778,7 @@ PRIVATE struct type_seq LOCAL_seX(seq) = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(setrange),
 	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&LOCAL_seX(foreach),
-	/* .tp_foreach_pair               = */ NULL, /* &DeeObject_DefaultForeachPairWithForeach */
+	/* .tp_foreach_pair               = */ &DeeObject_DefaultForeachPairWithForeach,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&LOCAL_seX(enumerate),
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&LOCAL_seX(enumerate_index),
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE

@@ -2171,6 +2171,12 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            "->?Dbool\n"
 	            "Alias for ?#{op:bool}"),
 
+	/* TODO: flatten->?DSequence
+	 *       Flatten a sequence of sequences into a flat sequence:
+	 *       >> local x = { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} };
+	 *       >> print repr x.flatten; // { 0, 1, 2, 5, 7, 9, 1, 10, 1 }
+	 */
+
 	/* TODO: itemtype->?DType
 	 *       Check if the type of @this overrides the ?#ItemType class attribute.
 	 *       If so, return its value; else, return the common base-class of all

@@ -38,10 +38,10 @@ assert !(x.some == 58);
 assert x.some != 8, "Because there is some element that is non-equal to '8'";
 
 /* Assert that non-equality of "some" element works properly */
-assert ({0, 8}.some != 8);
-assert ({8, 0}.some != 8);
+assert (({0, 8}.some != 8));
+assert (({8, 0}.some != 8));
 assert !({8, 8}.some != 8);
-assert !({8}.some != 8);
+assert !({8   }.some != 8);
 
 /* Assert that sequence operators work with ".some" */
 assert ((10 in { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} }.some));
@@ -54,7 +54,25 @@ assert ({ {0, 1, 2}, {5, 7, 9}, {1, 10, 1} }.some.contains(10));
 assert !{ {0, 1, 2}, {5, 7, 9}, {1, 10, 1} }.some.contains(11);
 
 /* Assert that attribute properties work with ".some" */
-assert (({ {}, {1}, {1, 2} }.some.length == 0));
-assert (({ {}, {1}, {1, 2} }.some.length == 1));
-assert (({ {}, {1}, {1, 2} }.some.length == 2));
-assert !({ {}, {1}, {1, 2} }.some.length == 3);
+assert (({ {}, {42}, {42, 43} }.some.length == 0));
+assert (({ {}, {42}, {42, 43} }.some.length == 1));
+assert (({ {}, {42}, {42, 43} }.some.length == 2));
+assert !({ {}, {42}, {42, 43} }.some.length == 3);
+
+/* Assert that boolean property merging (via &&) works
+ * for ".each".
+ *
+ * Note that because "operator <=>" is implemented via
+ * sequence compare for anything but first-level each-
+ * wrappers, we have to write "x.__eq__(y)" instead of
+ * "x == y"
+ *
+ * s.a. `CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE' */
+assert !({ {}, {42}, {42, 43} }.each.length.__eq__(0));
+assert !({ {}, {42}, {42, 43} }.each.length.__ne__(0));
+assert !({ {}, {42}, {42, 43} }.each.length.__eq__(1));
+assert !({ {}, {42}, {42, 43} }.each.length.__ne__(1));
+assert !({ {}, {42}, {42, 43} }.each.length.__eq__(2));
+assert !({ {}, {42}, {42, 43} }.each.length.__ne__(2));
+assert !({ {}, {42}, {42, 43} }.each.length.__eq__(3));
+assert (({ {}, {42}, {42, 43} }.each.length.__ne__(3)));
