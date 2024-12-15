@@ -92,8 +92,28 @@ public:
 
 public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(HashSet from deemon).printCxxApi(templateParameters: { "T" });]]]*/
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (insert)(DeeObject *key) {
+		DeeObject *args[1];
+		args[0] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "insert", _Dee_HashSelectC(0x71d74a66, 0x5e168c86241590d7), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *key) {
+		DeeObject *args[1];
+		args[0] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<T> (unify)(DeeObject *key) {
+		DeeObject *args[1];
+		args[0] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "unify", _Dee_HashSelectC(0x3cce686e, 0x4c0c9bdcc8d95cc7), 1, args));
+	}
 	WUNUSED Ref<T> (pop)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelectC(0x960361ff, 0x666fb01461b0a0eb), 0, NULL));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<T> (pop)(DeeObject *def) {
+		DeeObject *args[1];
+		args[0] = def;
+		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelectC(0x960361ff, 0x666fb01461b0a0eb), 1, args));
 	}
 	void (clear)() {
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "clear", _Dee_HashSelectC(0x7857faae, 0x22a34b6f82b3b83c), 0, NULL)));
@@ -101,30 +121,10 @@ public:
 	WUNUSED Ref<T> (popitem)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "popitem", _Dee_HashSelectC(0x40b249f3, 0x131a404a88439bc0), 0, NULL));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<T> (unify)(DeeObject *ob) {
+	WUNUSED NONNULL_CXX((1)) Ref<T> (popitem)(DeeObject *def) {
 		DeeObject *args[1];
-		args[0] = ob;
-		return inherit(DeeObject_CallAttrStringHash(this, "unify", _Dee_HashSelectC(0x3cce686e, 0x4c0c9bdcc8d95cc7), 1, args));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (insert)(DeeObject *ob) {
-		DeeObject *args[1];
-		args[0] = ob;
-		return inherit(DeeObject_CallAttrStringHash(this, "insert", _Dee_HashSelectC(0x71d74a66, 0x5e168c86241590d7), 1, args));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (update)(DeeObject *items) {
-		DeeObject *args[1];
-		args[0] = items;
-		return inherit(DeeObject_CallAttrStringHash(this, "update", _Dee_HashSelectC(0xdf8e9237, 0x41c79529f2460018), 1, args));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (insertall)(DeeObject *items) {
-		DeeObject *args[1];
-		args[0] = items;
-		return inherit(DeeObject_CallAttrStringHash(this, "insertall", _Dee_HashSelectC(0xbf9bc3a9, 0x4f85971d093a27f2), 1, args));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *ob) {
-		DeeObject *args[1];
-		args[0] = ob;
-		return inherit(DeeObject_CallAttrStringHash(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), 1, args));
+		args[0] = def;
+		return inherit(DeeObject_CallAttrStringHash(this, "popitem", _Dee_HashSelectC(0x40b249f3, 0x131a404a88439bc0), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (add)(DeeObject *ob) {
 		DeeObject *args[1];
@@ -135,6 +135,11 @@ public:
 		DeeObject *args[1];
 		args[0] = ob;
 		return inherit(DeeObject_CallAttrStringHash(this, "discard", _Dee_HashSelectC(0x60249e06, 0xc8fe11c3fc0b52e6), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (update)(DeeObject *items) {
+		DeeObject *args[1];
+		args[0] = items;
+		return inherit(DeeObject_CallAttrStringHash(this, "update", _Dee_HashSelectC(0xdf8e9237, 0x41c79529f2460018), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (insert_all)(DeeObject *ob) {
 		DeeObject *args[1];

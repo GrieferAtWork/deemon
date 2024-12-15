@@ -60,16 +60,13 @@ public:
 
 public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(Dict from deemon).printCxxApi(templateParameters: {"Key", "Value"});]]]*/
-	WUNUSED NONNULL_CXX((1)) Ref<Value> (get)(DeeObject *key) {
+	WUNUSED NONNULL_CXX((1)) Ref<Sequence<_AbstractTuple<Key, Value> > > (byhash)(DeeObject *template_) {
 		DeeObject *args[1];
-		args[0] = key;
-		return inherit(DeeObject_CallAttrStringHash(this, "get", _Dee_HashSelectC(0x3b6d35a2, 0x7c8e1568eac4979f), 1, args));
+		args[0] = template_;
+		return inherit(DeeObject_CallAttrStringHash(this, "byhash", _Dee_HashSelectC(0x7b5277ce, 0x773c8074445a28d9), 1, args));
 	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<Value> (get)(DeeObject *key, DeeObject *def) {
-		DeeObject *args[2];
-		args[0] = key;
-		args[1] = def;
-		return inherit(DeeObject_CallAttrStringHash(this, "get", _Dee_HashSelectC(0x3b6d35a2, 0x7c8e1568eac4979f), 2, args));
+	void (clear)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "clear", _Dee_HashSelectC(0x7857faae, 0x22a34b6f82b3b83c), 0, NULL)));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Value> (pop)(DeeObject *key) {
 		DeeObject *args[1];
@@ -81,35 +78,6 @@ public:
 		args[0] = key;
 		args[1] = def;
 		return inherit(DeeObject_CallAttrStringHash(this, "pop", _Dee_HashSelectC(0x960361ff, 0x666fb01461b0a0eb), 2, args));
-	}
-	void (clear)() {
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "clear", _Dee_HashSelectC(0x7857faae, 0x22a34b6f82b3b83c), 0, NULL)));
-	}
-	WUNUSED Ref<_AbstractTuple<Key, Value> > (popitem)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "popitem", _Dee_HashSelectC(0x40b249f3, 0x131a404a88439bc0), 0, NULL));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<Value> (setdefault)(DeeObject *key) {
-		DeeObject *args[1];
-		args[0] = key;
-		return inherit(DeeObject_CallAttrStringHash(this, "setdefault", _Dee_HashSelectC(0x947d5cce, 0x7cbcb4f64ace9cbc), 1, args));
-	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<Value> (setdefault)(DeeObject *key, DeeObject *def) {
-		DeeObject *args[2];
-		args[0] = key;
-		args[1] = def;
-		return inherit(DeeObject_CallAttrStringHash(this, "setdefault", _Dee_HashSelectC(0x947d5cce, 0x7cbcb4f64ace9cbc), 2, args));
-	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (setold)(DeeObject *key, DeeObject *value) {
-		DeeObject *args[2];
-		args[0] = key;
-		args[1] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "setold", _Dee_HashSelectC(0xb02a28d9, 0xe69353d27a45da0c), 2, args));
-	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (setnew)(DeeObject *key, DeeObject *value) {
-		DeeObject *args[2];
-		args[0] = key;
-		args[1] = value;
-		return inherit(DeeObject_CallAttrStringHash(this, "setnew", _Dee_HashSelectC(0xb6040b2, 0xde8a8697e7aca93d), 2, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2)) Ref<_AbstractTuple<deemon::bool_, Value> > (setold_ex)(DeeObject *key, DeeObject *value) {
 		DeeObject *args[2];
@@ -123,15 +91,24 @@ public:
 		args[1] = value;
 		return inherit(DeeObject_CallAttrStringHash(this, "setnew_ex", _Dee_HashSelectC(0x3f694391, 0x104d84a2d9986bc5), 2, args));
 	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<Value> (setdefault)(DeeObject *key, DeeObject *value) {
+		DeeObject *args[2];
+		args[0] = key;
+		args[1] = value;
+		return inherit(DeeObject_CallAttrStringHash(this, "setdefault", _Dee_HashSelectC(0x947d5cce, 0x7cbcb4f64ace9cbc), 2, args));
+	}
+	WUNUSED Ref<_AbstractTuple<Key, Value> > (popitem)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "popitem", _Dee_HashSelectC(0x40b249f3, 0x131a404a88439bc0), 0, NULL));
+	}
 	NONNULL_CXX((1)) void (update)(DeeObject *items) {
 		DeeObject *args[1];
 		args[0] = items;
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "update", _Dee_HashSelectC(0xdf8e9237, 0x41c79529f2460018), 1, args)));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<Sequence<_AbstractTuple<Key, Value> > > (byhash)(DeeObject *template_) {
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (remove)(DeeObject *key) {
 		DeeObject *args[1];
-		args[0] = template_;
-		return inherit(DeeObject_CallAttrStringHash(this, "byhash", _Dee_HashSelectC(0x7b5277ce, 0x773c8074445a28d9), 1, args));
+		args[0] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "remove", _Dee_HashSelectC(0x3d2727dd, 0xe9f313a03e2051a), 1, args));
 	}
 	class _Wrap_keys
 		: public deemon::detail::ConstGetRefProxy<_Wrap_keys, Sequence<Key> > {

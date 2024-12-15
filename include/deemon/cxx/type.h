@@ -142,10 +142,10 @@ public:
 		args[0] = other;
 		return inherit(DeeObject_CallAttrStringHash(this, "baseof", _Dee_HashSelectC(0xe19d38f6, 0xe38a0484abc9bda3), 1, args));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (derivedfrom)(DeeObject *other) {
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (extends)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
-		return inherit(DeeObject_CallAttrStringHash(this, "derivedfrom", _Dee_HashSelectC(0xbfe72a33, 0x74a32a2fdaec5b52), 1, args));
+		return inherit(DeeObject_CallAttrStringHash(this, "extends", _Dee_HashSelectC(0x7e2f0d24, 0x82d4dfb036a5b738), 1, args));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (implements)(DeeObject *other) {
 		DeeObject *args[1];
@@ -312,6 +312,11 @@ public:
 	WUNUSED NONNULL_CXX((2)) Ref<Object> (setinstanceattr)(char const *name, DeeObject *value) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "setinstanceattr", _Dee_HashSelectC(0xe46629d1, 0xf2c9ff5c9104ece0), "so", name, value));
 	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (derivedfrom)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "derivedfrom", _Dee_HashSelectC(0xbfe72a33, 0x74a32a2fdaec5b52), 1, args));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (same_or_derived_from)(DeeObject *other) {
 		DeeObject *args[1];
 		args[0] = other;
@@ -433,6 +438,23 @@ public:
 		}
 	};
 	WUNUSED _Wrap___class__ (__class__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___seqclass__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___seqclass__, Object> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___seqclass__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__seqclass__", _Dee_HashSelectC(0xf7f40c9d, 0xb36e7599478968f2));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__seqclass__", _Dee_HashSelectC(0xf7f40c9d, 0xb36e7599478968f2)));
+		}
+	};
+	WUNUSED _Wrap___seqclass__ (__seqclass__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___issingleton__
