@@ -1992,6 +1992,9 @@ PRIVATE struct type_method tpconst hashset_methods[] = {
 	TYPE_METHOD_HINTREF(seq_clear),
 
 	/* Alternative function names. */
+	TYPE_METHOD(STR_popitem, &DeeMH_set_pop,
+	            "(def?)->\n"
+	            "Deprecated alias for ?#pop"),
 	TYPE_METHOD("add", &DeeMH_set_insert,
 	            "(ob)->?Dbool\n"
 	            "Deprecated alias for ?#insert"),
