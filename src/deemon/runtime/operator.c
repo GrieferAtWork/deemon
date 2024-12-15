@@ -15797,6 +15797,11 @@ DEFINE_OPERATOR(int, SetRange,
 
 
 
+/* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
+ * @return: 1 : Item is bound.
+ * @return: 0 : Item isn't bound. (`UnboundItem' was caught internally)
+ * @return: -1: An error occurred.
+ * @return: -2: Item doesn't exist (`KeyError' or `IndexError' were caught). */
 DEFINE_OPERATOR(int, BoundItem,
                 (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;

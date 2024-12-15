@@ -19,12 +19,32 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-local SEQ = { "Foo", "bAr" };
+local x = { 8, 19, 41, 57 };
 
-assert true === ("foo" !in SEQ);
-assert true === ("bar" !in SEQ);
-assert true === ("baz" !in SEQ);
+assert 1 == x.find(19);
+assert 2 == x.find(41);
+assert 1 == x.find({19, 41}.some);
 
-assert true === ("foo"  in SEQ.each.lower());
-assert true === ("bar"  in SEQ.each.lower());
-assert true === ("baz" !in SEQ.each.lower());
+assert 1 == x.rfind(19);
+assert 2 == x.rfind(41);
+assert 2 == x.rfind({19, 41}.some);
+
+assert x.some == 8;
+assert x.some == 19;
+assert x.some == 41;
+assert x.some == 57;
+assert !(x.some == 58);
+
+assert x.some != 8, "Because there is some element that is non-equal to '8'";
+
+/* Assert that non-equality of "some" element works properly */
+assert ({0, 8}.some != 8);
+assert ({8, 0}.some != 8);
+assert !({8, 8}.some != 8);
+assert !({8}.some != 8);
+
+
+assert 10  in { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} }.some;
+assert 11 !in { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} }.some;
+
+

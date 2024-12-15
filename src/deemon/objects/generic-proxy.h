@@ -100,6 +100,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_bounditem(ProxyObject *se
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_hasitem_index(ProxyObject *__restrict self, size_t index);                   /* DeeObject_HasItemIndex(self->po_obj, index) */
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_bounditem_index(ProxyObject *__restrict self, size_t index);                 /* DeeObject_BoundItemIndex(self->po_obj, index) */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy_contains(ProxyObject *self, DeeObject *item);                 /* DeeObject_Contains(self->po_obj, item) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL generic_proxy_getrange(ProxyObject *self, DeeObject *start, DeeObject *end); /* DeeObject_GetRange(self->po_obj, start, end) */
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy_getitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                             /* DeeObject_GetItemStringHash(self->po_obj, key, hash) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_delitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                                         /* DeeObject_DelItemStringHash(self->po_obj, key, hash) */
@@ -111,6 +112,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_delitem_string_len_hash(P
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL generic_proxy_setitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value); /* DeeObject_SetItemStringHash(Lenself->po_obj, key, hash, keylen, value) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_hasitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);                      /* DeeObject_HasItemStringLenHash(self->po_obj, key, keylen, hash) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_bounditem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);                    /* DeeObject_BoundItemStringLenHash(self->po_obj, key, keylen, hash) */
+
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_seq_bool(ProxyObject *__restrict self); /* DeeSeq_OperatorBool(self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy_seq_size(ProxyObject *__restrict self); /* DeeSeq_OperatorSize(self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy_seq_sizeob(ProxyObject *__restrict self); /* DeeSeq_OperatorSizeOb(self->po_obj) */
 
 /*INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy_hash_id(ProxyObject *self);*/
 

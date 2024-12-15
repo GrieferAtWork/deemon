@@ -19,9 +19,9 @@
  */
 #ifdef __INTELLISENSE__
 #include "each.c"
-//#define DEFINE_SeqEachGetAttr 1
-//#define DEFINE_SeqEachCallAttr 1
-#define DEFINE_SeqEachCallAttrKw 1
+#define DEFINE_SeqEachGetAttr
+//#define DEFINE_SeqEachCallAttr
+//#define DEFINE_SeqEachCallAttrKw
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/map.h>
@@ -31,6 +31,8 @@
 #define LOCAL_seX(x)               sea_##x
 #define LOCAL_seXi(x)              seai_##x
 #define LOCAL_SeqEach              SeqEachGetAttr
+#define LOCAL_SeqEach_Type_NAME    "SeqEachGetAttr"
+#define LOCAL_SeqEach_Type_FLAGS   (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY)
 #define LOCAL_SeqEach_Type         SeqEachGetAttr_Type
 #define LOCAL_SeqSome_Type         SeqSomeGetAttr_Type
 #define LOCAL_SeqEachIterator_Type SeqEachGetAttrIterator_Type
@@ -38,6 +40,8 @@
 #define LOCAL_ssX(x)               ssc_##x
 #define LOCAL_seX(x)               sec_##x
 #define LOCAL_seXi(x)              seci_##x
+#define LOCAL_SeqEach_Type_NAME    "SeqEachCallAttr"
+#define LOCAL_SeqEach_Type_FLAGS   (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY | TP_FVARIABLE)
 #define LOCAL_SeqEach              SeqEachCallAttr
 #define LOCAL_SeqEach_Type         SeqEachCallAttr_Type
 #define LOCAL_SeqSome_Type         SeqSomeCallAttr_Type
@@ -46,6 +50,8 @@
 #define LOCAL_ssX(x)               ssk_##x
 #define LOCAL_seX(x)               sek_##x
 #define LOCAL_seXi(x)              seki_##x
+#define LOCAL_SeqEach_Type_NAME    "SeqEachCallAttrKw"
+#define LOCAL_SeqEach_Type_FLAGS   (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY | TP_FVARIABLE)
 #define LOCAL_SeqEach              SeqEachCallAttrKw
 #define LOCAL_SeqEach_Type         SeqEachCallAttrKw_Type
 #define LOCAL_SeqSome_Type         SeqSomeCallAttrKw_Type
@@ -58,114 +64,66 @@
 DECL_BEGIN
 
 #ifdef DEFINE_SeqEachGetAttr
-PRIVATE WUNUSED DREF DeeObject *DCALL
-LOCAL_seX(getitem_for_inplace)(LOCAL_SeqEach *__restrict self,
-                               DREF DeeObject **__restrict p_baseelem,
-                               size_t index) {
-	DREF DeeObject *result, *baseelem;
-	baseelem = DeeObject_GetItemIndex(self->se_seq, index);
-	if unlikely(!baseelem)
+struct LOCAL_seX(inplace_foreach_data) {
+	struct string_object *sifd_attr;
+	int (DCALL           *sifd_op)(DREF DeeObject **__restrict p_self, DeeObject *other);
+	DeeObject            *sifd_other;
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+LOCAL_seX(inplace_foreach_cb)(void *arg, DeeObject *elem) {
+	int result;
+	DREF DeeObject *elem_value;
+	struct LOCAL_seX(inplace_foreach_data) *data;
+	data = (struct LOCAL_seX(inplace_foreach_data) *)arg;
+	elem_value = DeeObject_GetAttr(elem, (DeeObject *)data->sifd_attr);
+	if unlikely(!elem_value)
 		goto err;
-#ifdef DEFINE_SeqEachGetAttr
-	result = DeeObject_GetAttr(baseelem,
-	                           (DeeObject *)self->sg_attr);
-#else /* DEFINE_SeqEachGetAttr */
-#error "Unsupported mode"
-#endif /* !DEFINE_SeqEachGetAttr */
-	if unlikely(!result)
-		goto err_baseelem;
-	*p_baseelem = baseelem;
+	if unlikely((*data->sifd_op)(&elem_value, data->sifd_other))
+		goto err_elem_value;
+	result = DeeObject_SetAttr(elem, (DeeObject *)data->sifd_attr, elem_value);
+	Dee_Decref(elem_value);
 	return result;
-err_baseelem:
-	Dee_Decref(baseelem);
+err_elem_value:
+	Dee_Decref(elem_value);
 err:
-	return NULL;
+	return -1;
 }
 
-#ifdef DEFINE_SeqEachGetAttr
-#define sea_setitem_for_inplace(self, baseelem, value) \
-	DeeObject_SetAttr(baseelem, (DeeObject *)(self)->sg_attr, value)
-#else /* DEFINE_SeqEachGetAttr */
-#error "Unsupported mode"
-#endif /* !DEFINE_SeqEachGetAttr */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(inplace)(LOCAL_SeqEach *self,
+                   int (DCALL *op)(DREF DeeObject **__restrict p_self, DeeObject *other),
+                   DeeObject *other) {
+	struct LOCAL_seX(inplace_foreach_data) data;
+	data.sifd_attr  = self->sg_attr;
+	data.sifd_op    = op;
+	data.sifd_other = other;
+	return (int)DeeSeq_OperatorForeach(self->se_seq, &LOCAL_seX(inplace_foreach_cb), &data);
+}
 
-
-#define DEFINE_SEA_UNARY_INPLACE(name, func, op)                      \
-	PRIVATE WUNUSED NONNULL((1)) int DCALL                            \
-	name(LOCAL_SeqEach **__restrict p_self) {                         \
-		size_t i, size;                                               \
-		LOCAL_SeqEach *seq = *p_self;                                 \
-		DREF DeeObject *elem, *baseelem;                              \
-		size = DeeObject_Size(seq->se_seq);                           \
-		if unlikely(size == (size_t)-1)                               \
-			goto err;                                                 \
-		for (i = 0; i < size; ++i) {                                  \
-			elem = LOCAL_seX(getitem_for_inplace)(seq, &baseelem, i); \
-			if unlikely(!elem) {                                      \
-				if (DeeError_Catch(&DeeError_UnboundItem))            \
-					continue;                                         \
-				goto err;                                             \
-			}                                                         \
-			if (func(&elem))                                          \
-				goto err_elem;                                        \
-			if (LOCAL_seX(setitem_for_inplace)(seq, baseelem, elem))  \
-				goto err_elem;                                        \
-			Dee_Decref(baseelem);                                     \
-			Dee_Decref(elem);                                         \
-		}                                                             \
-		return 0;                                                     \
-	err_elem:                                                         \
-		Dee_Decref(baseelem);                                         \
-		Dee_Decref(elem);                                             \
-	err:                                                              \
-		return -1;                                                    \
+#define DEFINE_SEA_BINARY_INPLACE(name, func)                   \
+	PRIVATE NONNULL((1, 2)) int DCALL                           \
+	name(LOCAL_SeqEach **__restrict p_self, DeeObject *other) { \
+		return LOCAL_seX(inplace)(*p_self, &func, other);       \
 	}
+PRIVATE NONNULL((1)) int DCALL LOCAL_seX(inc)(LOCAL_SeqEach **__restrict p_self) {
+	return LOCAL_seX(inplace)(*p_self, &inplace_inc_wrapper, NULL);
+}
+PRIVATE NONNULL((1)) int DCALL LOCAL_seX(dec)(LOCAL_SeqEach **__restrict p_self) {
+	return LOCAL_seX(inplace)(*p_self, &inplace_dec_wrapper, NULL);
+}
 
-#define DEFINE_SEA_BINARY_INPLACE(name, func, op)                     \
-	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                         \
-	name(LOCAL_SeqEach **__restrict p_self, DeeObject *other) {       \
-		size_t i, size;                                               \
-		LOCAL_SeqEach *seq = *p_self;                                 \
-		DREF DeeObject *elem, *baseelem;                              \
-		size = DeeObject_Size(seq->se_seq);                           \
-		if unlikely(size == (size_t)-1)                               \
-			goto err;                                                 \
-		for (i = 0; i < size; ++i) {                                  \
-			elem = LOCAL_seX(getitem_for_inplace)(seq, &baseelem, i); \
-			if unlikely(!elem) {                                      \
-				if (DeeError_Catch(&DeeError_UnboundItem))            \
-					continue;                                         \
-				goto err;                                             \
-			}                                                         \
-			if (func(&elem, other))                                   \
-				goto err_elem;                                        \
-			if (LOCAL_seX(setitem_for_inplace)(seq, baseelem, elem))  \
-				goto err_elem;                                        \
-			Dee_Decref(baseelem);                                     \
-			Dee_Decref(elem);                                         \
-		}                                                             \
-		return 0;                                                     \
-	err_elem:                                                         \
-		Dee_Decref(baseelem);                                         \
-		Dee_Decref(elem);                                             \
-	err:                                                              \
-		return -1;                                                    \
-	}
-
-DEFINE_SEA_UNARY_INPLACE(LOCAL_seX(inc), DeeObject_Inc, OPERATOR_INC)
-DEFINE_SEA_UNARY_INPLACE(LOCAL_seX(dec), DeeObject_Dec, OPERATOR_DEC)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_add), DeeObject_InplaceAdd, OPERATOR_INPLACE_ADD)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_sub), DeeObject_InplaceSub, OPERATOR_INPLACE_SUB)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_mul), DeeObject_InplaceMul, OPERATOR_INPLACE_MUL)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_div), DeeObject_InplaceDiv, OPERATOR_INPLACE_DIV)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_mod), DeeObject_InplaceMod, OPERATOR_INPLACE_MOD)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_shl), DeeObject_InplaceShl, OPERATOR_INPLACE_SHL)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_shr), DeeObject_InplaceShr, OPERATOR_INPLACE_SHR)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_and), DeeObject_InplaceAnd, OPERATOR_INPLACE_AND)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_or), DeeObject_InplaceOr, OPERATOR_INPLACE_OR)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_xor), DeeObject_InplaceXor, OPERATOR_INPLACE_XOR)
-DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_pow), DeeObject_InplacePow, OPERATOR_INPLACE_POW)
-#undef DEFINE_SEA_UNARY_INPLACE
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_add), DeeObject_InplaceAdd)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_sub), DeeObject_InplaceSub)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_mul), DeeObject_InplaceMul)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_div), DeeObject_InplaceDiv)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_mod), DeeObject_InplaceMod)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_shl), DeeObject_InplaceShl)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_shr), DeeObject_InplaceShr)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_and), DeeObject_InplaceAnd)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_or), DeeObject_InplaceOr)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_xor), DeeObject_InplaceXor)
+DEFINE_SEA_BINARY_INPLACE(LOCAL_seX(inplace_pow), DeeObject_InplacePow)
 #undef DEFINE_SEA_BINARY_INPLACE
 #endif /* DEFINE_SeqEachGetAttr */
 
@@ -267,105 +225,16 @@ LOCAL_seX(transform)(LOCAL_SeqEach *self, DeeObject *elem) {
 #ifdef DEFINE_SeqEachGetAttr
 	return DeeObject_GetAttr(elem, (DeeObject *)self->sg_attr);
 #elif defined(DEFINE_SeqEachCallAttr)
-	return DeeObject_CallAttr(elem,
-	                          (DeeObject *)self->sg_attr,
-	                          self->sg_argc,
-	                          self->sg_argv);
+	return DeeObject_CallAttr(elem, (DeeObject *)self->sg_attr, self->sg_argc, self->sg_argv);
 #elif defined(DEFINE_SeqEachCallAttrKw)
-	return DeeObject_CallAttrKw(elem,
-	                            (DeeObject *)self->sg_attr,
-	                            self->sg_argc,
-	                            self->sg_argv,
-	                            self->sg_kw);
+	return DeeObject_CallAttrKw(elem, (DeeObject *)self->sg_attr, self->sg_argc, self->sg_argv, self->sg_kw);
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */
 }
 
-LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-LOCAL_seX(transform_inherit)(LOCAL_SeqEach *self,
-                     /*inherit(always)*/ DREF DeeObject *elem) {
-	DREF DeeObject *result;
-	result = LOCAL_seX(transform)(self, elem);
-	Dee_Decref(elem);
-	return result;
-}
-
-PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
-LOCAL_seX(getitem)(LOCAL_SeqEach *self, DeeObject *index) {
-	DREF DeeObject *result;
-	result = DeeObject_GetItem(self->se_seq, index);
-	if likely(result)
-		result = LOCAL_seX(transform_inherit)(self, result);
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-LOCAL_seX(getitem_index)(LOCAL_SeqEach *__restrict self, size_t index) {
-	DREF DeeObject *result;
-	result = DeeObject_GetItemIndex(self->se_seq, index);
-	if likely(result)
-		result = LOCAL_seX(transform_inherit)(self, result);
-	return result;
-}
-
-PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
-LOCAL_seX(trygetitem)(LOCAL_SeqEach *self, DeeObject *index) {
-	DREF DeeObject *result;
-	result = DeeObject_TryGetItem(self->se_seq, index);
-	if likely(ITER_ISOK(result))
-		result = LOCAL_seX(transform_inherit)(self, result);
-	return result;
-}
-
-PRIVATE NONNULL((1)) WUNUSED DREF DeeObject *DCALL
-LOCAL_seX(trygetitem_index)(LOCAL_SeqEach *self, size_t index) {
-	DREF DeeObject *result;
-	result = DeeObject_TryGetItemIndex(self->se_seq, index);
-	if likely(ITER_ISOK(result))
-		result = LOCAL_seX(transform_inherit)(self, result);
-	return result;
-}
-
-PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
-LOCAL_seX(getitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t hash) {
-	DREF DeeObject *result;
-	result = DeeObject_GetItemStringHash(self->se_seq, key, hash);
-	if likely(result)
-		result = LOCAL_seX(transform_inherit)(self, result);
-	return result;
-}
-
-PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
-LOCAL_seX(trygetitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t hash) {
-	DREF DeeObject *result;
-	result = DeeObject_TryGetItemStringHash(self->se_seq, key, hash);
-	if likely(ITER_ISOK(result))
-		result = LOCAL_seX(transform_inherit)(self, result);
-	return result;
-}
-
-PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
-LOCAL_seX(getitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	DREF DeeObject *result;
-	result = DeeObject_GetItemStringLenHash(self->se_seq, key, keylen, hash);
-	if likely(result)
-		result = LOCAL_seX(transform_inherit)(self, result);
-	return result;
-}
-
-PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
-LOCAL_seX(trygetitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	DREF DeeObject *result;
-	result = DeeObject_TryGetItemStringLenHash(self->se_seq, key, keylen, hash);
-	if likely(ITER_ISOK(result))
-		result = LOCAL_seX(transform_inherit)(self, result);
-	return result;
-}
-
-
 struct LOCAL_seX(foreach_data) {
-	LOCAL_SeqEach   *seXfd_me;   /* [1..1] The related seq-each operator */
+	LOCAL_SeqEach *seXfd_me;   /* [1..1] The related seq-each operator */
 	Dee_foreach_t  seXfd_proc; /* [1..1] User-defined callback */
 	void          *seXfd_arg;  /* [?..?] User-defined cookie */
 };
@@ -395,9 +264,9 @@ LOCAL_seX(foreach)(LOCAL_SeqEach *self, Dee_foreach_t proc, void *arg) {
 }
 
 struct LOCAL_seX(enumerate_data) {
-	LOCAL_SeqEach     *seXed_me;   /* [1..1] The related seq-each operator */
-	Dee_enumerate_t  seXed_proc; /* [1..1] User-defined callback */
-	void            *seXed_arg;  /* [?..?] User-defined cookie */
+	LOCAL_SeqEach  *seXed_me;   /* [1..1] The related seq-each operator */
+	Dee_enumerate_t seXed_proc; /* [1..1] User-defined callback */
+	void           *seXed_arg;  /* [?..?] User-defined cookie */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -427,7 +296,7 @@ LOCAL_seX(enumerate)(LOCAL_SeqEach *__restrict self, Dee_enumerate_t proc, void 
 }
 
 struct LOCAL_seX(enumerate_index_data) {
-	LOCAL_SeqEach          *seXeid_me;   /* [1..1] The related seq-each operator */
+	LOCAL_SeqEach        *seXeid_me;   /* [1..1] The related seq-each operator */
 	Dee_enumerate_index_t seXeid_proc; /* [1..1] User-defined callback */
 	void                 *seXeid_arg;  /* [?..?] User-defined cookie */
 };
@@ -451,13 +320,24 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 LOCAL_seX(enumerate_index)(LOCAL_SeqEach *__restrict self, Dee_enumerate_index_t proc,
-                   void *arg, size_t start, size_t end) {
+                           void *arg, size_t start, size_t end) {
 	struct LOCAL_seX(enumerate_index_data) data;
 	data.seXeid_me   = self;
 	data.seXeid_proc = proc;
 	data.seXeid_arg  = arg;
 	return DeeObject_EnumerateIndex(self->se_seq, &LOCAL_seX(enumerate_index_cb),
 	                                &data, start, end);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+LOCAL_seX(bool)(LOCAL_SeqEach *__restrict self) {
+	Dee_ssize_t result = LOCAL_seX(foreach)(self, &se_foreach_bool_cb, NULL);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == -2)
+		return 0;
+	if (result == 0)
+		return 1;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -489,7 +369,8 @@ LOCAL_seX(delitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t 
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_seX(delitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t keylen, Dee_hash_t hash) {
+LOCAL_seX(delitem_string_len_hash)(LOCAL_SeqEach *self, char const *key,
+                                   size_t keylen, Dee_hash_t hash) {
 	struct se_foreach_delitem_string_len_hash_data data;
 	data.sfedislh_key    = key;
 	data.sfedislh_keylen = keylen;
@@ -514,7 +395,8 @@ LOCAL_seX(setitem_index)(LOCAL_SeqEach *self, size_t index, DeeObject *value) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
-LOCAL_seX(setitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t hash, DeeObject *value) {
+LOCAL_seX(setitem_string_hash)(LOCAL_SeqEach *self, char const *key,
+                               Dee_hash_t hash, DeeObject *value) {
 	struct se_foreach_setitem_string_hash_data data;
 	data.sfesish_key   = key;
 	data.sfesish_hash  = hash;
@@ -523,7 +405,8 @@ LOCAL_seX(setitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t 
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
-LOCAL_seX(setitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
+LOCAL_seX(setitem_string_len_hash)(LOCAL_SeqEach *self, char const *key,
+                                   size_t keylen, Dee_hash_t hash, DeeObject *value) {
 	struct se_foreach_setitem_string_len_hash_data data;
 	data.sfesislh_key    = key;
 	data.sfesislh_keylen = keylen;
@@ -551,12 +434,12 @@ LOCAL_seX(delrange_index)(LOCAL_SeqEach *self, Dee_ssize_t start, Dee_ssize_t en
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(delrange_index_n)(LOCAL_SeqEach *self, Dee_ssize_t start) {
 	return (int)LOCAL_seX(foreach)(self, &se_foreach_delrange_index_n_cb,
-	                       (void *)(uintptr_t)(size_t)start);
+	                               (void *)(uintptr_t)(size_t)start);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 LOCAL_seX(setrange)(LOCAL_SeqEach *self, DeeObject *start,
-            DeeObject *end, DeeObject *value) {
+                    DeeObject *end, DeeObject *value) {
 	struct se_foreach_setrange_data data;
 	data.sfesr_start = start;
 	data.sfesr_end   = end;
@@ -582,6 +465,62 @@ LOCAL_seX(setrange_index_n)(LOCAL_SeqEach *self, Dee_ssize_t start, DeeObject *v
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(bounditem)(LOCAL_SeqEach *self, DeeObject *index) {
+	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_bounditem_foreach_cb, index));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(hasitem)(LOCAL_SeqEach *self, DeeObject *index) {
+	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasitem_foreach_cb, index));
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+LOCAL_seX(bounditem_index)(LOCAL_SeqEach *self, size_t index) {
+	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_bounditem_index_foreach_cb,
+	                                                 (void *)(uintptr_t)index));
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+LOCAL_seX(hasitem_index)(LOCAL_SeqEach *self, size_t index) {
+	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasitem_index_foreach_cb,
+	                                               (void *)(uintptr_t)index));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(bounditem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t hash) {
+	struct se_bounditem_string_hash_foreach_data data;
+	data.ssbishfd_key  = key;
+	data.ssbishfd_hash = hash;
+	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_bounditem_string_hash_foreach_cb, &data));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(hasitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t hash) {
+	struct se_bounditem_string_hash_foreach_data data;
+	data.ssbishfd_key  = key;
+	data.ssbishfd_hash = hash;
+	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasitem_string_hash_foreach_cb, &data));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(bounditem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	struct se_bounditem_string_len_hash_foreach_data data;
+	data.ssbislhfd_key    = key;
+	data.ssbislhfd_keylen = keylen;
+	data.ssbislhfd_hash   = hash;
+	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_bounditem_string_len_hash_foreach_cb, &data));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(hasitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	struct se_bounditem_string_len_hash_foreach_data data;
+	data.ssbislhfd_key    = key;
+	data.ssbislhfd_keylen = keylen;
+	data.ssbislhfd_hash   = hash;
+	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasitem_string_len_hash_foreach_cb, &data));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(delattr)(LOCAL_SeqEach *self, DeeObject *attr) {
 	return (int)LOCAL_seX(foreach)(self, &se_foreach_delattr_cb, attr);
 }
@@ -596,7 +535,7 @@ LOCAL_seX(delattr_string_hash)(LOCAL_SeqEach *self, char const *attr, Dee_hash_t
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(delattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr,
-                           size_t attrlen, Dee_hash_t hash) {
+                                   size_t attrlen, Dee_hash_t hash) {
 	struct se_foreach_delattr_string_len_hash_data data;
 	data.sfedslh_attr    = attr;
 	data.sfedslh_attrlen = attrlen;
@@ -614,7 +553,7 @@ LOCAL_seX(setattr)(LOCAL_SeqEach *self, DeeObject *attr, DeeObject *value) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 LOCAL_seX(setattr_string_hash)(LOCAL_SeqEach *self, char const *attr,
-                       Dee_hash_t hash, DeeObject *value) {
+                               Dee_hash_t hash, DeeObject *value) {
 	struct se_foreach_setattr_string_hash_data data;
 	data.sfessh_attr  = attr;
 	data.sfessh_hash  = hash;
@@ -624,8 +563,8 @@ LOCAL_seX(setattr_string_hash)(LOCAL_SeqEach *self, char const *attr,
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 LOCAL_seX(setattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr,
-                           size_t attrlen, Dee_hash_t hash,
-                           DeeObject *value) {
+                                   size_t attrlen, Dee_hash_t hash,
+                                   DeeObject *value) {
 	struct se_foreach_setattr_string_len_hash_data data;
 	data.sfesslh_attr    = attr;
 	data.sfesslh_attrlen = attrlen;
@@ -635,152 +574,273 @@ LOCAL_seX(setattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_seX(hasattr)(LOCAL_SeqEach *self, DeeObject *attr) {
-	Dee_ssize_t status = LOCAL_seX(foreach)(self, &se_foreach_hasattr_cb, attr);
-	ASSERT(status <= 0);
-	if (status == 0)
-		return 1; /* All elements have the attribute */
-	if (status == -2)
-		return 0; /* Attribute doesn't exist for some element */
-	ASSERT(status == -1);
-	return (int)status; /* Error (-1) */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_seX(hasattr_string_hash)(LOCAL_SeqEach *self,
-                       char const *attr, Dee_hash_t hash) {
-	Dee_ssize_t status;
-	struct se_hasattr_string_hash_data data;
-	data.shashd_attr = attr;
-	data.shashd_hash = hash;
-	status           = LOCAL_seX(foreach)(self, &se_foreach_hasattr_string_hash_cb, &data);
-	ASSERT(status <= 0);
-	if (status == 0)
-		return 1; /* All elements have the attribute */
-	if (status == -2)
-		return 0; /* Attribute doesn't exist for some element */
-	ASSERT(status == -1);
-	return (int)status; /* Error (-1) */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_seX(hasattr_string_len_hash)(LOCAL_SeqEach *self,
-                           char const *attr,
-                           size_t attrlen, Dee_hash_t hash) {
-	Dee_ssize_t status;
-	struct se_hasattr_string_len_hash_data data;
-	data.shaslhd_attr    = attr;
-	data.shaslhd_attrlen = attrlen;
-	data.shaslhd_hash    = hash;
-	status               = LOCAL_seX(foreach)(self, &se_foreach_hasattr_string_len_hash_cb, &data);
-	ASSERT(status <= 0);
-	if (status == 0)
-		return 1; /* All elements have the attribute */
-	if (status == -2)
-		return 0; /* Attribute doesn't exist for some element */
-	ASSERT(status == -1);
-	return (int)status; /* Error (-1) */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_seX(boundattr)(LOCAL_SeqEach *self, DeeObject *attr) {
-	Dee_ssize_t status = LOCAL_seX(foreach)(self, &se_foreach_boundattr_cb, attr);
-	ASSERT(status <= 0);
-	if (status == 0)
-		return 1; /* All elements have the attribute */
-	if (status == -4)
-		return 0; /* Attribute isn't bound for some element */
-	if (status == -3)
-		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
-	ASSERT(status == -1 || status == -2);
-	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_boundattr_foreach_cb, attr));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_seX(boundattr_string_hash)(LOCAL_SeqEach *self,
-                         char const *attr, Dee_hash_t hash) {
-	Dee_ssize_t status;
-	struct se_hasattr_string_hash_data data;
-	data.shashd_attr = attr;
-	data.shashd_hash = hash;
-	status           = LOCAL_seX(foreach)(self, &se_foreach_boundattr_string_hash_cb, &data);
-	ASSERT(status <= 0);
-	if (status == 0)
-		return 1; /* All elements have the attribute */
-	if (status == -4)
-		return 0; /* Attribute isn't bound for some element */
-	if (status == -3)
-		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
-	ASSERT(status == -1 || status == -2);
-	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+LOCAL_seX(hasattr)(LOCAL_SeqEach *self, DeeObject *attr) {
+	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasattr_foreach_cb, attr));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_seX(boundattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr,
-                             size_t attrlen, Dee_hash_t hash) {
-	Dee_ssize_t status;
-	struct se_hasattr_string_len_hash_data data;
-	data.shaslhd_attr    = attr;
-	data.shaslhd_attrlen = attrlen;
-	data.shaslhd_hash    = hash;
-	status = LOCAL_seX(foreach)(self, &se_foreach_boundattr_string_len_hash_cb, &data);
-	ASSERT(status <= 0);
-	if (status == 0)
-		return 1; /* All elements have the attribute */
-	if (status == -4)
-		return 0; /* Attribute isn't bound for some element */
-	if (status == -3)
-		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
-	ASSERT(status == -1 || status == -2);
-	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+LOCAL_seX(boundattr_string_hash)(LOCAL_SeqEach *self, char const *attr, Dee_hash_t hash) {
+	struct se_boundattr_string_hash_foreach_data data;
+	data.ssbashfd_attr = attr;
+	data.ssbashfd_hash = hash;
+	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_boundattr_string_hash_foreach_cb, &data));
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(hasattr_string_hash)(LOCAL_SeqEach *self, char const *attr, Dee_hash_t hash) {
+	struct se_boundattr_string_hash_foreach_data data;
+	data.ssbashfd_attr = attr;
+	data.ssbashfd_hash = hash;
+	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasattr_string_hash_foreach_cb, &data));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(boundattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	struct se_boundattr_string_len_hash_foreach_data data;
+	data.ssbaslhfd_attr    = attr;
+	data.ssbaslhfd_attrlen = attrlen;
+	data.ssbaslhfd_hash    = hash;
+	return seqeach_map_from_bound(LOCAL_seX(foreach)(self, &se_boundattr_string_len_hash_foreach_cb, &data));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+LOCAL_seX(hasattr_string_len_hash)(LOCAL_SeqEach *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	struct se_boundattr_string_len_hash_foreach_data data;
+	data.ssbaslhfd_attr    = attr;
+	data.ssbaslhfd_attrlen = attrlen;
+	data.ssbaslhfd_hash    = hash;
+	return seqeach_map_from_has(LOCAL_seX(foreach)(self, &se_hasattr_string_len_hash_foreach_cb, &data));
+}
+
+
+
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_seX(transform_inherit)(LOCAL_SeqEach *self, /*inherit(always)*/ DREF DeeObject *elem) {
+	DREF DeeObject *result;
+	result = LOCAL_seX(transform)(self, elem);
+	Dee_Decref(elem);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_seX(getitem)(LOCAL_SeqEach *self, DeeObject *index) {
+	DREF DeeObject *result = DeeObject_GetItem(self->se_seq, index);
+	if likely(result)
+		result = LOCAL_seX(transform_inherit)(self, result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF LOCAL_SeqEach *DCALL
+LOCAL_seX(wraprange)(LOCAL_SeqEach *self, /*inherit(always)*/ DREF DeeObject *base) {
+	DREF LOCAL_SeqEach *result;
+#ifdef DEFINE_SeqEachGetAttr
+	result = DeeObject_MALLOC(LOCAL_SeqEach);
+#else /* DEFINE_SeqEachGetAttr */
+	result = (DREF LOCAL_SeqEach *)DeeObject_Mallocc(offsetof(LOCAL_SeqEach, sg_argv),
+	                                                 self->sg_argc, sizeof(DREF DeeObject *));
+#endif /* !DEFINE_SeqEachGetAttr */
+	if unlikely(!result)
+		goto err_base;
+	result->se_seq  = base; /* Inherit reference. */
+	result->sg_attr = self->sg_attr;
+	Dee_Incref(self->sg_attr);
+#ifdef DEFINE_SeqEachCallAttrKw
+	result->sg_kw = self->sg_kw;
+	Dee_Incref(self->sg_kw);
+#endif /* DEFINE_SeqEachCallAttrKw */
+#if defined(DEFINE_SeqEachCallAttr) || defined(DEFINE_SeqEachCallAttrKw)
+	result->sg_argc = self->sg_argc;
+	Dee_Movrefv(result->sg_argv, self->sg_argv, self->sg_argc);
+#endif /* DEFINE_SeqEachCallAttr || DEFINE_SeqEachCallAttrKw */
+	DeeObject_Init(result, &LOCAL_SeqEach_Type);
+	return result;
+err_base:
+	Dee_Decref(base);
+/*err:*/
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF LOCAL_SeqEach *DCALL
+LOCAL_seX(getrange)(LOCAL_SeqEach *self, DeeObject *start, DeeObject *end) {
+	DREF DeeObject *base = DeeObject_GetRange(self->se_seq, start, end);
+	if unlikely(!base)
+		goto err;
+	return LOCAL_seX(wraprange)(self, base);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_seX(getitem_index)(LOCAL_SeqEach *self, size_t index) {
+	DREF DeeObject *result = DeeObject_GetItemIndex(self->se_seq, index);
+	if likely(result)
+		result = LOCAL_seX(transform_inherit)(self, result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF LOCAL_SeqEach *DCALL
+LOCAL_seX(getrange_index)(LOCAL_SeqEach *self, Dee_ssize_t start, Dee_ssize_t end) {
+	DREF DeeObject *base = DeeObject_GetRangeIndex(self->se_seq, start, end);
+	if unlikely(!base)
+		goto err;
+	return LOCAL_seX(wraprange)(self, base);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF LOCAL_SeqEach *DCALL
+LOCAL_seX(getrange_index_n)(LOCAL_SeqEach *self, Dee_ssize_t start) {
+	DREF DeeObject *base = DeeObject_GetRangeIndexN(self->se_seq, start);
+	if unlikely(!base)
+		goto err;
+	return LOCAL_seX(wraprange)(self, base);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_seX(trygetitem)(LOCAL_SeqEach *self, DeeObject *index) {
+	DREF DeeObject *result = DeeObject_TryGetItem(self->se_seq, index);
+	if likely(ITER_ISOK(result))
+		result = LOCAL_seX(transform_inherit)(self, result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_seX(trygetitem_index)(LOCAL_SeqEach *self, size_t index) {
+	DREF DeeObject *result = DeeObject_TryGetItemIndex(self->se_seq, index);
+	if likely(ITER_ISOK(result))
+		result = LOCAL_seX(transform_inherit)(self, result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_seX(trygetitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t hash) {
+	DREF DeeObject *result = DeeObject_TryGetItemStringHash(self->se_seq, key, hash);
+	if likely(ITER_ISOK(result))
+		result = LOCAL_seX(transform_inherit)(self, result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_seX(getitem_string_hash)(LOCAL_SeqEach *self, char const *key, Dee_hash_t hash) {
+	DREF DeeObject *result = DeeObject_GetItemStringHash(self->se_seq, key, hash);
+	if likely(result)
+		result = LOCAL_seX(transform_inherit)(self, result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_seX(trygetitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	DREF DeeObject *result = DeeObject_TryGetItemStringLenHash(self->se_seq, key, keylen, hash);
+	if likely(ITER_ISOK(result))
+		result = LOCAL_seX(transform_inherit)(self, result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL_seX(getitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	DREF DeeObject *result = DeeObject_GetItemStringLenHash(self->se_seq, key, keylen, hash);
+	if likely(result)
+		result = LOCAL_seX(transform_inherit)(self, result);
+	return result;
+}
+
+#endif /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+
 
 PRIVATE struct type_seq LOCAL_seX(seq) = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&LOCAL_seX(iter),
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
-	/* .tp_contains                   = */ &DeeSeq_DefaultContainsWithForeachDefault,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_contains,
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(getitem),
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_getitem,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(delitem),
 	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(setitem),
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(getrange),
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(delrange),
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(setrange),
 	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&LOCAL_seX(foreach),
-	/* .tp_foreach_pair               = */ NULL, /* &DeeObject_DefaultForeachPairWithForeachs */
+	/* .tp_foreach_pair               = */ NULL, /* &DeeObject_DefaultForeachPairWithForeach */
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&LOCAL_seX(enumerate),
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&LOCAL_seX(enumerate_index),
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iterkeys,
-	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_bounditem,
-	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_hasitem,
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_iterkeys                   = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(bounditem),
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(hasitem),
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sew_size,
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_size                       = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&sew_size_fast,
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&LOCAL_seX(getitem_index),
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_getitem_index              = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&LOCAL_seX(delitem_index),
 	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&LOCAL_seX(setitem_index),
-	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&sew_bounditem_index,
-	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&sew_hasitem_index,
-	/* .tp_getrange_index             = */ NULL, /* &sew_getrange_index */
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&LOCAL_seX(bounditem_index),
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&LOCAL_seX(hasitem_index),
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&LOCAL_seX(getrange_index),
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_getrange_index             = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&LOCAL_seX(delrange_index),
 	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&LOCAL_seX(setrange_index),
-	/* .tp_getrange_index_n           = */ NULL, /* &sew_getrange_index_n */
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&LOCAL_seX(getrange_index_n),
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_getrange_index_n           = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&LOCAL_seX(delrange_index_n),
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&LOCAL_seX(setrange_index_n),
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(trygetitem),
 	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&LOCAL_seX(trygetitem_index),
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&LOCAL_seX(trygetitem_string_hash),
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&LOCAL_seX(getitem_string_hash),
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&LOCAL_seX(delitem_string_hash),
 	/* .tp_setitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&LOCAL_seX(setitem_string_hash),
-	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&sew_bounditem_string_hash,
-	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&sew_hasitem_string_hash,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&LOCAL_seX(bounditem_string_hash),
+	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&LOCAL_seX(hasitem_string_hash),
+#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&LOCAL_seX(trygetitem_string_len_hash),
 	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&LOCAL_seX(getitem_string_len_hash),
+#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&LOCAL_seX(delitem_string_len_hash),
 	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&LOCAL_seX(setitem_string_len_hash),
-	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&sew_bounditem_string_len_hash,
-	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&sew_hasitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&LOCAL_seX(bounditem_string_len_hash),
+	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&LOCAL_seX(hasitem_string_len_hash),
 };
 
 PRIVATE struct type_member tpconst LOCAL_seX(members)[] = {
@@ -913,9 +973,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seX(init)(LOCAL_SeqEach *__restrict self,
                 size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oo:_SeqEachGetAttr",
-	                  &self->se_seq,
-	                  &self->sg_attr))
+	if (DeeArg_Unpack(argc, argv, "oo:_" LOCAL_SeqEach_Type_NAME,
+	                  &self->se_seq, &self->sg_attr))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->sg_attr, &DeeString_Type))
 		goto err;
@@ -1015,16 +1074,21 @@ LOCAL_seX(init)(size_t argc, DeeObject *const *argv) {
 	DeeStringObject *attr;
 	DeeObject *seq;
 	DeeObject *args = Dee_EmptyTuple;
-#ifdef DEFINE_SeqEachCallAttr
-	if (DeeArg_Unpack(argc, argv, "oo|o:_SeqEachCallAttr", &seq, &attr, &args))
-		goto err;
-#elif defined(DEFINE_SeqEachCallAttrKw)
+#ifdef DEFINE_SeqEachCallAttrKw
 	DeeObject *kw = Dee_EmptyMapping;
-	if (DeeArg_Unpack(argc, argv, "oo|oo:_SeqEachCallAttrKw", &seq, &attr, &args, &kw))
+#endif /* DEFINE_SeqEachCallAttrKw */
+	if (DeeArg_Unpack(argc, argv,
+	                  "oo|o"
+#ifdef DEFINE_SeqEachCallAttrKw
+	                  "o"
+#endif /* DEFINE_SeqEachCallAttrKw */
+	                  ":_" LOCAL_SeqEach_Type_NAME,
+	                  &seq, &attr, &args
+#ifdef DEFINE_SeqEachCallAttrKw
+	                  , &kw
+#endif /* DEFINE_SeqEachCallAttrKw */
+	                  ))
 		goto err;
-#else /* ... */
-#error "Unsupported mode"
-#endif /* !... */
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
@@ -1116,33 +1180,26 @@ PRIVATE struct type_attr LOCAL_seX(attr) = {
 
 INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_" LOCAL_SeqEach_Type_NAME,
 #ifdef DEFINE_SeqEachGetAttr
-	/* .tp_name     = */ "_SeqEachGetAttr",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(seq:?DSequence,attr:?Dstring)"),
-#define TYPE_FLAGS (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY)
-	/* .tp_flags    = */ TYPE_FLAGS,
 #elif defined(DEFINE_SeqEachCallAttr)
-	/* .tp_name     = */ "_SeqEachCallAttr",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(seq:?DSequence,attr:?Dstring,args=!T0)"),
-#define TYPE_FLAGS (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY | TP_FVARIABLE)
-	/* .tp_flags    = */ TYPE_FLAGS,
 #elif defined(DEFINE_SeqEachCallAttrKw)
-	/* .tp_name     = */ "_SeqEachCallAttrKw",
 	/* .tp_doc      = */ DOC("()\n"
 	                         "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?M?Dstring?O=!T0)"),
-#define TYPE_FLAGS (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY | TP_FVARIABLE)
-	/* .tp_flags    = */ TYPE_FLAGS,
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */
+	/* .tp_flags    = */ LOCAL_SeqEach_Type_FLAGS,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* Not a sequence type! (can't have stuff like "find()", etc.) */
 	/* .tp_init = */ {
 		{
-#if !(TYPE_FLAGS & TP_FVARIABLE)
+#if !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE)
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_seX(ctor),
 				/* .tp_copy_ctor = */ (dfunptr_t)&LOCAL_seX(copy),
@@ -1150,7 +1207,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_seX(init),
 				TYPE_FIXED_ALLOCATOR(LOCAL_SeqEach)
 			}
-#else /* !(TYPE_FLAGS & TP_FVARIABLE) */
+#else /* !(LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE) */
 			/* .tp_var = */ {
 				/* .tp_ctor      = */ (dfunptr_t)&LOCAL_seX(ctor),
 				/* .tp_copy_ctor = */ (dfunptr_t)&LOCAL_seX(copy),
@@ -1158,7 +1215,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 				/* .tp_any_ctor  = */ (dfunptr_t)&LOCAL_seX(init),
 				/* .tp_free      = */ (dfunptr_t)NULL
 			}
-#endif /* TYPE_FLAGS & TP_FVARIABLE */
+#endif /* LOCAL_SeqEach_Type_FLAGS & TP_FVARIABLE */
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&LOCAL_seX(fini),
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(assign),
@@ -1167,7 +1224,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
-		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&LOCAL_seX(bool),
 		/* .tp_print     = */ NULL,
 #ifdef CONFIG_HAVE_SEQEACH_OPERATOR_REPR
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&LOCAL_seX(printrepr),
@@ -1204,7 +1261,6 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 #endif /* !DEFINE_SeqEachGetAttr */
 };
 
-#undef TYPE_FLAGS
 
 
 
@@ -1227,18 +1283,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 LOCAL_seXi(init)(SeqEachIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-#ifdef DEFINE_SeqEachGetAttr
-	if (DeeArg_Unpack(argc, argv, "o:_SeqEachGetAttrIterator", &self->ei_each))
+	if (DeeArg_Unpack(argc, argv, "o:_" LOCAL_SeqEach_Type_NAME "Iterator", &self->ei_each))
 		goto err;
-#elif defined(DEFINE_SeqEachCallAttr)
-	if (DeeArg_Unpack(argc, argv, "o:_SeqEachCallAttrIterator", &self->ei_each))
-		goto err;
-#elif defined(DEFINE_SeqEachCallAttrKw)
-	if (DeeArg_Unpack(argc, argv, "o:_SeqEachCallAttrKwIterator", &self->ei_each))
-		goto err;
-#else /* ... */
-#error "Unsupported mode"
-#endif /* !... */
 	if (DeeObject_AssertTypeExact(self->ei_each, &LOCAL_SeqEach_Type))
 		goto err;
 	self->ei_iter = DeeObject_Iter(self->ei_each->se_seq);
@@ -1252,15 +1298,7 @@ err:
 
 #ifndef CONFIG_NO_DOC
 PRIVATE struct type_member tpconst LOCAL_seXi(members)[] = {
-#ifdef DEFINE_SeqEachGetAttr
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachGetAttr"),
-#elif defined(DEFINE_SeqEachCallAttr)
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachCallAttr"),
-#elif defined(DEFINE_SeqEachCallAttrKw)
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachCallAttrKw"),
-#else /* ... */
-#error "Unsupported mode"
-#endif /* !... */
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:" LOCAL_SeqEach_Type_NAME),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
@@ -1270,8 +1308,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 LOCAL_seXi(next)(SeqEachIterator *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_IterNext(self->ei_iter);
-	if likely(ITER_ISOK(result))
-		result = LOCAL_seX(transform_inherit)((LOCAL_SeqEach *)self->ei_each, result);
+	if likely(ITER_ISOK(result)) {
+		DREF DeeObject *new_result;
+		new_result = LOCAL_seX(transform)((LOCAL_SeqEach *)self->ei_each, result);
+		Dee_Decref(result);
+		result = new_result;
+	}
 	return result;
 }
 
@@ -1279,18 +1321,8 @@ LOCAL_seXi(next)(SeqEachIterator *__restrict self) {
 
 INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-#ifdef DEFINE_SeqEachGetAttr
-	/* .tp_name     = */ "_SeqEachGetAttrIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqEachGetAttr)"),
-#elif defined(DEFINE_SeqEachCallAttr)
-	/* .tp_name     = */ "_SeqEachCallAttrIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqEachCallAttr)"),
-#elif defined(DEFINE_SeqEachCallAttrKw)
-	/* .tp_name     = */ "_SeqEachCallAttrKwIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqEachCallAttrKw)"),
-#else /* ... */
-#error "Unsupported mode"
-#endif /* !... */
+	/* .tp_name     = */ "_" LOCAL_SeqEach_Type_NAME "Iterator",
+	/* .tp_doc      = */ DOC("(seq?:?Ert:" LOCAL_SeqEach_Type_NAME ")"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1344,6 +1376,8 @@ DECL_END
 #undef LOCAL_SeqEach_Type
 #undef LOCAL_SeqSome_Type
 #undef LOCAL_SeqEach
+#undef LOCAL_SeqEach_Type_FLAGS
+#undef LOCAL_SeqEach_Type_NAME
 #undef LOCAL_seXi
 #undef LOCAL_seX
 #undef LOCAL_ssX

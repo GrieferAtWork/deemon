@@ -21,9 +21,11 @@
 #define GUARD_DEEMON_OBJECTS_GENERIC_PROXY_C 1
 
 #include <deemon/api.h>
+#include <deemon/method-hints.h>
 #include <deemon/object.h>
 
 #include "../runtime/runtime_error.h"
+#include "seq/default-api.h"
 
 /**/
 #include "generic-proxy.h"
@@ -227,6 +229,12 @@ generic_proxy_contains(ProxyObject *self, DeeObject *item) {
 	return DeeObject_Contains(self->po_obj, item);
 }
 
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+generic_proxy_getrange(ProxyObject *self, DeeObject *start, DeeObject *end) {
+	return DeeObject_GetRange(self->po_obj, start, end);
+}
+
+
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_proxy_getitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash) {
 	return DeeObject_GetItemStringHash(self->po_obj, key, hash);
@@ -281,6 +289,11 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy_bounditem_string_len_hash(ProxyObject *self, char const *key,
                                         size_t keylen, Dee_hash_t hash) {
 	return DeeObject_BoundItemStringLenHash(self->po_obj, key, keylen, hash);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy_seq_bool(ProxyObject *__restrict self) {
+	return DeeSeq_OperatorBool(self->po_obj);
 }
 
 /*

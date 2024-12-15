@@ -98,6 +98,8 @@ typedef struct {
 #endif /* (!__OPTIMIZE_SIZE__ && !CONFIG_NO_SEQEACH_ATTRIBUTE_OPTIMIZATIONS) */
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
+#undef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
+//#define CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS /* TODO */
 
 /* Define to get dedicated `operator repr' for `Sequence.each[...]'
  * This actually degrades usability, since it prevents default repr
@@ -116,8 +118,29 @@ typedef struct {
 #endif
 
 
-#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+/* When defined, `SeqEachOperator_Type' (and types related to
+ * `CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS') define the
+ * following operators in compliance with "Sequence":
+ * - operator size()
+ * - operator getitem()
+ * - operator getrange()
+ * - operator contains()
+ * - operator hash()
+ * - operator <=> ()
+ * - operator iterkeys()
+ *
+ * When not defined, those operators produce more SeqEach
+ * wrappers, just like `SeqEach_Type' does (iow: this config
+ * does not affect the first .each-step, which always allows
+ * use of *any* operator)
+ */
+#undef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+#define CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 
+
+
+
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 /* Special proxies for commonly used operators. */
 typedef struct {
 	SEQ_EACH_HEAD
@@ -149,28 +172,32 @@ INTDEF DeeTypeObject SeqSomeOperator_Type;
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 INTDEF DeeTypeObject SeqEachGetAttr_Type;
-INTDEF DeeTypeObject SeqSomeGetAttr_Type;
 INTDEF DeeTypeObject SeqEachGetAttrIterator_Type;
 INTDEF DeeTypeObject SeqEachCallAttr_Type;
-INTDEF DeeTypeObject SeqSomeCallAttr_Type;
 INTDEF DeeTypeObject SeqEachCallAttrIterator_Type;
 INTDEF DeeTypeObject SeqEachCallAttrKw_Type;
-INTDEF DeeTypeObject SeqSomeCallAttrKw_Type;
 INTDEF DeeTypeObject SeqEachCallAttrKwIterator_Type;
 #define DeeType_IsSeqEachWrapper(self)  \
 	((self) == &SeqEachOperator_Type || \
 	 (self) == &SeqEachGetAttr_Type ||  \
 	 (self) == &SeqEachCallAttr_Type || \
 	 (self) == &SeqEachCallAttrKw_Type)
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+#define DeeType_IsSeqEachWrapper(self) ((self) == &SeqEachOperator_Type)
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+
+#ifdef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
+INTDEF DeeTypeObject SeqSomeGetAttr_Type;
+INTDEF DeeTypeObject SeqSomeCallAttr_Type;
+INTDEF DeeTypeObject SeqSomeCallAttrKw_Type;
 #define DeeType_IsSeqSomeWrapper(self)  \
 	((self) == &SeqSomeOperator_Type || \
 	 (self) == &SeqSomeGetAttr_Type ||  \
 	 (self) == &SeqSomeCallAttr_Type || \
 	 (self) == &SeqSomeCallAttrKw_Type)
-#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-#define DeeType_IsSeqEachWrapper(self) ((self) == &SeqEachOperator_Type)
+#else /* CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS */
 #define DeeType_IsSeqSomeWrapper(self) ((self) == &SeqSomeOperator_Type)
-#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+#endif /* !CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS */
 
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
@@ -181,20 +208,26 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLe
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrKw(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringHashKw(DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLenHashKw(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+
+#ifdef CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS
+/* Hooks for callattr() invocation. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttr(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringHash(DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringLenHash(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrKw(DeeObject *self, DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringHashKw(DeeObject *self, char const *__restrict attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringLenHashKw(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+#endif /* CONFIG_HAVE_SEQSOME_ATTRIBUTE_OPTIMIZATIONS */
 
 
 /* Construct an each-wrapper for `self' */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Each(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Some(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Each(DeeObject *__restrict self);
 
-
+/* Construct a some-wrapper for `self' */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Some(DeeObject *__restrict self);
 
 DECL_END
 
