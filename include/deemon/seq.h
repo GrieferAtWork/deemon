@@ -602,6 +602,30 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
                                          /*in*/ size_t offset);
 #endif /* Dee_MallocUsableSize */
 
+
+
+
+/************************************************************************/
+/* Type for `Sequence.some'                                             */
+/************************************************************************/
+typedef struct {
+	Dee_OBJECT_HEAD
+	DREF DeeObject *se_seq; /* [1..1][const] The sequence being wrapped. */
+} DeeSeqSomeObject;
+#define DeeSeqSome_GetSeq(self) ((DeeSeqSomeObject const *)Dee_REQUIRES_OBJECT(self))->se_seq
+
+DDATDEF DeeTypeObject DeeSeqSome_Type;
+#define DeeSeqSome_Check(self)      DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
+#define DeeSeqSome_CheckExact(self) DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
+
+/* Construct a some-wrapper for `self' */
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Some(DeeObject *__restrict self);
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeSeq_Some(self) DeeObject_NewPack(&DeeSeqSome_Type, 1, self)
+#endif /* !CONFIG_BUILDING_DEEMON */
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_SEQ_H */

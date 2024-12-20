@@ -1949,7 +1949,7 @@ PRIVATE struct type_attr ss_attr = {
 	/* .tp_findattr_info_string_len_hash = */ NULL
 };
 
-INTERN DeeTypeObject SeqSome_Type = {
+PUBLIC DeeTypeObject DeeSeqSome_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqSome",
 	/* .tp_doc      = */ DOC("(seq:?DSequence)"),
@@ -2020,23 +2020,21 @@ done:
 	return (DREF DeeObject *)result;
 }
 
+
+STATIC_ASSERT(sizeof(DeeSeqSomeObject) == sizeof(SeqEachBase));
+STATIC_ASSERT(offsetof(DeeSeqSomeObject, se_seq) == offsetof(SeqEachBase, se_seq));
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Some(DeeObject *__restrict self) {
-#if 1 /* TODO */
 	DREF SeqEachBase *result;
 	result = DeeObject_MALLOC(SeqEachBase);
 	if unlikely(!result)
 		goto done;
 	result->se_seq = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SeqSome_Type);
+	DeeObject_Init(result, &DeeSeqSome_Type);
 done:
 	return (DREF DeeObject *)result;
-#else
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-#endif
 }
 
 

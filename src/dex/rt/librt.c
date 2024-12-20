@@ -115,7 +115,6 @@ print define_Dee_HashStr("casesplit");
 print define_Dee_HashStr("classes");
 print define_Dee_HashStr("combinations");
 print define_Dee_HashStr("each");
-print define_Dee_HashStr("some");
 print define_Dee_HashStr("filter");
 print define_Dee_HashStr("ubfilter");
 print define_Dee_HashStr("findall");
@@ -1275,71 +1274,34 @@ librt_get_SeqEachCallAttrKwIterator_Type_f(size_t UNUSED(argc), DeeObject *const
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqSome_stub_instance(void) {
-	return_cached(DeeObject_GetAttrStringHash(&object_with_size_and_getitem_index, STR_AND_HASH(some)));
-}
+PRIVATE DeeSeqSomeObject SeqSome_stub_instance = {
+	OBJECT_HEAD_INIT(&DeeSeqSome_Type),
+	/* .se_seq = */ Dee_EmptyTuple
+};
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSomeOperator_stub_instance(void) {
-	DREF DeeObject *result;
-	result = librt_get_SeqSome_stub_instance();
-	if likely(result) {
-		DREF DeeObject *temp;
-		temp = DeeObject_Pos(result);
-		Dee_Decref(result);
-		result = temp;
-	}
-	return result;
+	return DeeObject_Pos((DeeObject *)&SeqSome_stub_instance);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSomeGetAttr_stub_instance(void) {
-	DREF DeeObject *result;
-	result = librt_get_SeqSome_stub_instance();
-	if likely(result) {
-		DREF DeeObject *temp;
-		temp = DeeObject_GetAttr(result, (DeeObject *)&str_Iterator);
-		Dee_Decref(result);
-		result = temp;
-	}
-	return result;
+	return DeeObject_GetAttr((DeeObject *)&SeqSome_stub_instance, (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSomeCallAttr_stub_instance(void) {
-	DREF DeeObject *result;
-	result = librt_get_SeqSome_stub_instance();
-	if likely(result) {
-		DREF DeeObject *temp;
-		temp = DeeObject_CallAttr(result, (DeeObject *)&str_Iterator, 0, NULL);
-		Dee_Decref(result);
-		result = temp;
-	}
-	return result;
+	return DeeObject_CallAttr((DeeObject *)&SeqSome_stub_instance,
+	                          (DeeObject *)&str_Iterator, 0, NULL);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSomeCallAttrKw_stub_instance(void) {
-	DREF DeeObject *result;
-	result = librt_get_SeqSome_stub_instance();
-	if likely(result) {
-		DREF DeeObject *temp;
-		temp = DeeObject_CallAttrKw(result, (DeeObject *)&str_Iterator,
-		                            0,
-		                            NULL,
-		                            Dee_EmptyMapping);
-		Dee_Decref(result);
-		result = temp;
-	}
-	return result;
+	return DeeObject_CallAttrKw((DeeObject *)&SeqSome_stub_instance,
+	                            (DeeObject *)&str_Iterator, 0, NULL,
+	                            Dee_EmptyMapping);
 }
 
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqSome_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return_cached(get_type_of(librt_get_SeqSome_stub_instance()));
-}
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSomeOperator_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
@@ -3346,7 +3308,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttr, &librt_get_SeqEachCallAttr_Typ
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrIterator, &librt_get_SeqEachCallAttrIterator_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrKw, &librt_get_SeqEachCallAttrKw_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEachCallAttrKwIterator, &librt_get_SeqEachCallAttrKwIterator_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_SeqSome, &librt_get_SeqSome_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeOperator, &librt_get_SeqSomeOperator_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeGetAttr, &librt_get_SeqSomeGetAttr_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSomeCallAttr, &librt_get_SeqSomeCallAttr_Type_f, METHOD_FCONSTCALL);
@@ -3724,7 +3685,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqEachCallAttrKwIterator", (DeeObject *)&librt_get_SeqEachCallAttrKwIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* SeqEachCallAttrKwIterator_Type */
 
 	/* Seq-some wrapper types. */
-	{ "SeqSome", (DeeObject *)&librt_get_SeqSome, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SeqSome_Type */
+	{ "SeqSome", (DeeObject *)&DeeSeqSome_Type, MODSYM_FREADONLY },
 	{ "SeqSomeOperator", (DeeObject *)&librt_get_SeqSomeOperator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqSomeOperator_Type */
 	{ "SeqSomeGetAttr", (DeeObject *)&librt_get_SeqSomeGetAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                               /* SeqSomeGetAttr_Type */
 	{ "SeqSomeCallAttr", (DeeObject *)&librt_get_SeqSomeCallAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqSomeCallAttr_Type */

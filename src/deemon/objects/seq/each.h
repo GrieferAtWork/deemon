@@ -169,7 +169,6 @@ typedef struct {
 INTDEF DeeTypeObject SeqEach_Type;
 INTDEF DeeTypeObject SeqEachOperator_Type;
 INTDEF DeeTypeObject SeqEachOperatorIterator_Type;
-INTDEF DeeTypeObject SeqSome_Type;
 INTDEF DeeTypeObject SeqSomeOperator_Type;
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
@@ -226,10 +225,6 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeqSome_CallAttrStringLe
 /* Construct an each-wrapper for `self' */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Each(DeeObject *__restrict self);
-
-/* Construct a some-wrapper for `self' */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Some(DeeObject *__restrict self);
 
 DECL_END
 
