@@ -64,6 +64,8 @@ assertRtTypeName("SeqTypes");
 assertRtTypeName("SeqTypesIterator");
 assertRtTypeName("SeqClasses");
 assertRtTypeName("SeqClassesIterator");
+assertRtTypeName("SeqFlat");
+assertRtTypeName("SeqFlatIterator");
 
 assertRtTypeName("SeqEach");
 assertRtTypeName("SeqEachOperator");

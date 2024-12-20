@@ -113,6 +113,7 @@ print define_Dee_HashStr("byhash");
 print define_Dee_HashStr("casefindall");
 print define_Dee_HashStr("casesplit");
 print define_Dee_HashStr("classes");
+print define_Dee_HashStr("flatten");
 print define_Dee_HashStr("combinations");
 print define_Dee_HashStr("each");
 print define_Dee_HashStr("filter");
@@ -173,9 +174,9 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 #define Dee_HashStr__casefindall _Dee_HashSelectC(0x68f0403d, 0x2aa76ae718f34e43)
 #define Dee_HashStr__casesplit _Dee_HashSelectC(0x8d4e9c87, 0x69205bfad60e0e61)
 #define Dee_HashStr__classes _Dee_HashSelectC(0x75e5899b, 0xc75d2d970415e4a0)
+#define Dee_HashStr__flatten _Dee_HashSelectC(0x6790c1a3, 0x3eb59c1a2ed05257)
 #define Dee_HashStr__combinations _Dee_HashSelectC(0x184d9b51, 0x3e5802b7656c4900)
 #define Dee_HashStr__each _Dee_HashSelectC(0x9de8b13d, 0x374e052f37a5e158)
-#define Dee_HashStr__some _Dee_HashSelectC(0x26cbddcc, 0x52f55bde7d810221)
 #define Dee_HashStr__filter _Dee_HashSelectC(0x3110088a, 0x32e04884df75b1c1)
 #define Dee_HashStr__ubfilter _Dee_HashSelectC(0x9f55cd0c, 0xa457507f0faa4d80)
 #define Dee_HashStr__findall _Dee_HashSelectC(0xa7064666, 0x73bffde4f31b16e5)
@@ -1165,6 +1166,21 @@ librt_get_SeqClasses_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqClassesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return_cached(get_iterator_of(librt_get_SeqClasses_impl_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqFlat_impl_f(void) {
+	return_cached(get_type_of(DeeObject_GetAttrStringHash(&object_with_size_and_getitem_index, STR_AND_HASH(flatten))));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqFlat_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_SeqFlat_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqFlatIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return_cached(get_iterator_of(librt_get_SeqFlat_impl_f()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -3299,6 +3315,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqTypes, &librt_get_SeqTypes_f, METHOD_FCONSTC
 PRIVATE DEFINE_CMETHOD(librt_get_SeqTypesIterator, &librt_get_SeqTypesIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqClasses, &librt_get_SeqClasses_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqClassesIterator, &librt_get_SeqClassesIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqFlat, &librt_get_SeqFlat_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqFlatIterator, &librt_get_SeqFlatIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEach, &librt_get_SeqEach_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEachOperator, &librt_get_SeqEachOperator_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqEachOperatorIterator, &librt_get_SeqEachOperatorIterator_Type_f, METHOD_FCONSTCALL);
@@ -3672,6 +3690,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqTypesIterator", (DeeObject *)&librt_get_SeqTypesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* SeqTypesIterator_Type */
 	{ "SeqClasses", (DeeObject *)&librt_get_SeqClasses, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* SeqClasses_Type */
 	{ "SeqClassesIterator", (DeeObject *)&librt_get_SeqClassesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqClassesIterator_Type */
+	{ "SeqFlat", (DeeObject *)&librt_get_SeqFlat, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SeqFlat_Type */
+	{ "SeqFlatIterator", (DeeObject *)&librt_get_SeqFlatIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqFlatIterator_Type */
 
 	/* Seq-each wrapper types. */
 	{ "SeqEach", (DeeObject *)&librt_get_SeqEach, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                             /* SeqEach_Type */
