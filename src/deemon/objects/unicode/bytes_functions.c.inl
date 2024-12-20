@@ -106,6 +106,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 		self->n_data = DeeBytes_DATA(ob);
 		self->n_size = DeeBytes_SIZE(ob);
 	} else {
+		/* TODO: Support for SeqSome */
+
 		/* Convert to an integer (to-be used as a single byte). */
 		if (DeeObject_AsUIntX(ob, self->_n_buf))
 			goto err;
