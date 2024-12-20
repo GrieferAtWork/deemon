@@ -155,6 +155,9 @@ assertRtTypeName("DistinctIterator");
 assertRtTypeName("DistinctIteratorWithKey");
 assertRtTypeName("DistinctSetWithKey");
 
+assertRtTypeName("CachedSeqWithIter");
+assertRtTypeName("CachedSeqWithIterIterator");
+
 assertRtTypeName("SetInversion");
 assertRtTypeName("SetUnion");
 assertRtTypeName("SetUnionIterator");

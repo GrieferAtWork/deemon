@@ -116,6 +116,7 @@ print define_Dee_HashStr("classes");
 print define_Dee_HashStr("flatten");
 print define_Dee_HashStr("combinations");
 print define_Dee_HashStr("each");
+print define_Dee_HashStr("cached");
 print define_Dee_HashStr("filter");
 print define_Dee_HashStr("ubfilter");
 print define_Dee_HashStr("findall");
@@ -177,6 +178,7 @@ print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 #define Dee_HashStr__flatten _Dee_HashSelectC(0x6790c1a3, 0x3eb59c1a2ed05257)
 #define Dee_HashStr__combinations _Dee_HashSelectC(0x184d9b51, 0x3e5802b7656c4900)
 #define Dee_HashStr__each _Dee_HashSelectC(0x9de8b13d, 0x374e052f37a5e158)
+#define Dee_HashStr__cached _Dee_HashSelectC(0x915e175e, 0xddfd408a14eae4b4)
 #define Dee_HashStr__filter _Dee_HashSelectC(0x3110088a, 0x32e04884df75b1c1)
 #define Dee_HashStr__ubfilter _Dee_HashSelectC(0x9f55cd0c, 0xa457507f0faa4d80)
 #define Dee_HashStr__findall _Dee_HashSelectC(0xa7064666, 0x73bffde4f31b16e5)
@@ -2261,6 +2263,26 @@ librt_get_DistinctSetWithKey_f(size_t UNUSED(argc), DeeObject *const *UNUSED(arg
 }
 
 
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_CachedSeqWithIter_impl_f(void) {
+	return_cached(get_type_of(DeeObject_GetAttrStringHash(&object_with_iter_and_size, STR_AND_HASH(cached))));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_CachedSeqWithIterIterator_impl_f(void) {
+	return_cached(get_iterator_of(librt_get_CachedSeqWithIter_impl_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_CachedSeqWithIter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_CachedSeqWithIter_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_CachedSeqWithIterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_CachedSeqWithIterIterator_impl_f();
+}
+
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -3397,6 +3419,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqReversedWithTryGetItemIndex, &librt_get_SeqR
 PRIVATE DEFINE_CMETHOD(librt_get_DistinctIterator, &librt_get_DistinctIterator_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_DistinctIteratorWithKey, &librt_get_DistinctIteratorWithKey_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_DistinctSetWithKey, &librt_get_DistinctSetWithKey_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_CachedSeqWithIter, &librt_get_CachedSeqWithIter_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_CachedSeqWithIterIterator, &librt_get_CachedSeqWithIterIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetInversion, &librt_get_SetInversion_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetUnion, &librt_get_SetUnion_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SetUnionIterator, &librt_get_SetUnionIterator_f, METHOD_FCONSTCALL);
@@ -3787,6 +3811,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "DistinctIterator", (DeeObject *)&librt_get_DistinctIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* DistinctIterator_Type */
 	{ "DistinctIteratorWithKey", (DeeObject *)&librt_get_DistinctIteratorWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* DistinctIteratorWithKey_Type */
 	{ "DistinctSetWithKey", (DeeObject *)&librt_get_DistinctSetWithKey, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* DistinctSetWithKey_Type */
+
+	/* Default sequence cache types */
+	{ "CachedSeqWithIter", (DeeObject *)&librt_get_CachedSeqWithIter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* CachedSeq_WithIter_Type */
+	{ "CachedSeqWithIterIterator", (DeeObject *)&librt_get_CachedSeqWithIterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* CachedSeq_WithIter_Iterator_Type */
 
 	/* TODO: SeqRemoveWithRemoveIfPredicate             = SeqRemoveWithRemoveIfPredicate_Type */
 	/* TODO: SeqRemoveWithRemoveIfPredicateWithKey      = SeqRemoveWithRemoveIfPredicateWithKey_Type */
