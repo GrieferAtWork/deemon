@@ -55,6 +55,7 @@
 #include "seq/default-sequences.h"
 #include "seq/each.h"
 #include "seq/filter.h"
+#include "seq/flat.h"
 #include "seq/hashfilter.h"
 #include "seq/mapped.h"
 #include "seq/repeat.h"
@@ -2170,12 +2171,43 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("isnonempty", &seq_get_isnonempty,
 	            "->?Dbool\n"
 	            "Alias for ?#{op:bool}"),
+	TYPE_GETTER("flatten", &DeeSeq_Flat,
+	            "->?Ert:SeqFlat\n"
+	            "Flatten a sequence ${{{T...}...}} to ${{T...}}:"
+	            "${"
+	            /**/ "local x = { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} };\n"
+	            /**/ "print repr x.flatten; /* { 0, 1, 2, 5, 7, 9, 1, 10, 1 } */"
+	            "}"),
 
-	/* TODO: flatten->?DSequence
-	 *       Flatten a sequence of sequences into a flat sequence:
-	 *       >> local x = { {0, 1, 2}, {5, 7, 9}, {1, 10, 1} };
-	 *       >> print repr x.flatten; // { 0, 1, 2, 5, 7, 9, 1, 10, 1 }
-	 */
+	/* TODO: Implement this one similar to how "first" and "last" are implement (iow: using `struct Dee_type_seq_cache') */
+	/* TODO: Variants of this need to be added for `Set' and `Mapping' */
+//TODO:	TYPE_GETTER("cached", &DeeSeq_InvokeCached,
+//TODO:	            "->?.\n"
+//TODO:	            "Returns a sequence that is a lazily-populated, read-only proxy of @this ?{.}.\n"
+//TODO:	            "As such, ?#cached behaves similar to ?#frozen, except that the rather than"
+//TODO:	            /**/ "evaluating the elements of the sequence immediately, said evaluation will"
+//TODO:	            /**/ "happen the first time elements are accessed. Additionally, there is no"
+//TODO:	            /**/ "requirement that changes to the original sequence won't propagate into the"
+//TODO:	            /**/ "\"cached\" sequence (even after the cache may have been populated).\n"
+//TODO:	            "The only difference between some $seq and ${seq.cached} is that the later"
+//TODO:	            /**/ "will allow for #B{O(1)} access to elements after an initial access, and"
+//TODO:	            /**/ "that any side-effects of accessing some element will happen exactly once.\n"
+//TODO:	            "In practice, this means that ?Acached?DTuple and ?Acached?DList will just"
+//TODO:	            /**/ "re-return the tuple/list, but for most other sequences, a proxy is returned"
+//TODO:	            /**/ "that will do one of the following:"
+//TODO:	            "#L-{"
+//TODO:	            /**/ "If @this's ?A__seqclass__?DType is ?. and implement ${operator []} and ${operator size},"
+//TODO:	            /**/ /**/ "the cache lazily computes its size the first time it is accessed, and elements"
+//TODO:	            /**/ /**/ "are saved into an internal buffer which is re-used during repeated calls|"
+//TODO:	            /**/ "If @this's ?A__seqclass__?DType is ?. and only implement ${operator []}, the same thing"
+//TODO:	            /**/ /**/ "happens, except that the size is determined by accessing+caching elements"
+//TODO:	            /**/ /**/ "until the underlying sequence's ${operator []} returns :IndexError|"
+//TODO:	            /**/ "If @this implements ${operator iter}, that operator is invoked the first time"
+//TODO:	            /**/ /**/ "the size- or an element of the cache is accessed, then proceeds to yield from"
+//TODO:	            /**/ /**/ "that iterator and cache its results until the requested index is reached. (In"
+//TODO:	            /**/ /**/ "the case of the returned cache's size being accessed, the cache is populated"
+//TODO:	            /**/ /**/ "fully)"
+//TODO:	            "}"),
 
 	/* TODO: itemtype->?DType
 	 *       Check if the type of @this overrides the ?#ItemType class attribute.

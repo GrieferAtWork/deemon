@@ -1788,6 +1788,48 @@ err:
 	return NULL;
 }
 
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* Needed by "seq/flat.c" */
+tuple_mh_foreach_reverse(DeeTupleObject *__restrict self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* Needed by "seq/flat.c" */
+tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_enumerate_index_t proc,
+                                 void *arg, size_t start, size_t end);
+
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+tuple_mh_foreach_reverse(DeeTupleObject *__restrict self,
+                         Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i = self->t_size;
+	while (i) {
+		--i;
+		temp = (*proc)(arg, self->t_elem[i]);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
+#define nullable_tuple_mh_enumerate_index_reverse tuple_mh_enumerate_index_reverse
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_enumerate_index_t proc,
+                                 void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	if (end > self->t_size)
+		end = self->t_size;
+	while (end > start) {
+		--end;
+		temp = (*proc)(arg, start, self->t_elem[end]);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
 
 PRIVATE struct type_method tpconst tuple_methods[] = {
 	TYPE_METHOD_HINTREF(seq_find),
@@ -1797,6 +1839,8 @@ PRIVATE struct type_method tpconst tuple_methods[] = {
 };
 
 PRIVATE struct type_method_hint tpconst tuple_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &tuple_mh_foreach_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &tuple_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_find, &tuple_mh_find, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_find_with_key, &tuple_mh_find_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_rfind, &tuple_mh_rfind, METHOD_FNOREFESCAPE),
@@ -2104,7 +2148,7 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 		data.tcfed_result = result;
 		data.tcfed_offset = me->t_size;
 		fe_status = (*tp_sequence->tp_seq->tp_foreach)(sequence, &tuple_concat_fe_cb, &data);
-		ASSERT(data.tcfed_offset >= me->t_size);
+		ASSERTF(data.tcfed_offset >= me->t_size, "%Iu >= %Iu", data.tcfed_offset, me->t_size);
 		result = data.tcfed_result;
 		ASSERT(fe_status <= 0);
 		if unlikely(fe_status) {
@@ -2620,6 +2664,31 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&nullable_tuple_unpack_ub,
 };
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+nullable_tuple_mh_foreach_reverse(DeeTupleObject *__restrict self,
+                                  Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i = self->t_size;
+	while (i) {
+		--i;
+		if (self->t_elem[i]) {
+			temp = (*proc)(arg, self->t_elem[i]);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE struct type_method_hint tpconst nullable_tuple_method_hints[] = {
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &nullable_tuple_mh_foreach_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &nullable_tuple_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_method tpconst nullable_tuple_class_methods[] = {
 	TYPE_METHOD("unpack", &nullable_tuple_unpack,
 	            "(num:?Dint,seq:?S?O)->?.\n"
@@ -2701,7 +2770,7 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 	/* .tp_class_methods = */ nullable_tuple_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ nullable_tuple_class_members,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ nullable_tuple_method_hints,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ nullable_tuple_operators,

@@ -366,7 +366,8 @@ DeeType_TryRequireSeqCache(DeeTypeObject *__restrict self) {
 			return self->tp_seq->_tp_seqcache;
 		}
 
-		/* Don't treat "sc" as a memory leak if it isn't freed. */
+		/* Don't treat "sc" as a memory leak if it isn't freed (which
+		 * will probably be the case when "self" is statically allocated). */
 		sc = (struct Dee_type_seq_cache *)Dee_UntrackAlloc(sc);
 	}
 	return sc;
@@ -560,6 +561,7 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_mh_seq_foreach_reverse_t DCALL
 DeeType_TryRequireSeqForeachReverse(DeeTypeObject *__restrict self) {
+	Dee_mh_seq_foreach_reverse_t result;
 	struct Dee_type_seq *seq = self->tp_seq;
 	if likely(seq) {
 		struct Dee_type_seq_cache *sc;
@@ -567,34 +569,36 @@ DeeType_TryRequireSeqForeachReverse(DeeTypeObject *__restrict self) {
 		if likely(sc && sc->tsc_seq_foreach_reverse)
 			return sc->tsc_seq_foreach_reverse;
 	}
-	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
-		Dee_mh_seq_foreach_reverse_t result = NULL;
-		if (DeeType_RequireSize(self) && DeeType_RequireGetItem(self)) {
-			bool has_size = !DeeType_IsDefaultSize(self->tp_seq->tp_size);
-			if (has_size && self->tp_seq->tp_getitem_index_fast) {
-				result = &DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndexFast;
-			} else if (has_size && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)) {
-				result = &DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndex;
-			} else if (has_size && !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index)) {
-				result = &DeeSeq_DefaultForeachReverseWithSizeAndTryGetItemIndex;
-			} else if (!DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob) &&
-			           !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem)) {
-				result = &DeeSeq_DefaultForeachReverseWithSizeObAndGetItem;
+	result = (Dee_mh_seq_foreach_reverse_t)DeeType_GetPrivateMethodHint(self, Dee_TMH_seq_foreach_reverse);
+	if (!result) {
+		if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
+			if (DeeType_RequireSize(self) && DeeType_RequireGetItem(self)) {
+				bool has_size = !DeeType_IsDefaultSize(self->tp_seq->tp_size);
+				if (has_size && self->tp_seq->tp_getitem_index_fast) {
+					result = &DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndexFast;
+				} else if (has_size && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)) {
+					result = &DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndex;
+				} else if (has_size && !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index)) {
+					result = &DeeSeq_DefaultForeachReverseWithSizeAndTryGetItemIndex;
+				} else if (!DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob) &&
+				           !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem)) {
+					result = &DeeSeq_DefaultForeachReverseWithSizeObAndGetItem;
+				}
 			}
 		}
-		if (result) {
-			struct Dee_type_seq_cache *sc;
-			sc = DeeType_TryRequireSeqCache(self);
-			if likely(sc)
-				atomic_write(&sc->tsc_seq_foreach_reverse, result);
-		}
-		return result;
 	}
-	return NULL; /* Not possible... */
+	if (result) {
+		struct Dee_type_seq_cache *sc;
+		sc = DeeType_TryRequireSeqCache(self);
+		if likely(sc)
+			atomic_write(&sc->tsc_seq_foreach_reverse, result);
+	}
+	return result;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_mh_seq_enumerate_index_reverse_t DCALL
 DeeType_TryRequireSeqEnumerateIndexReverse(DeeTypeObject *__restrict self) {
+	Dee_mh_seq_enumerate_index_reverse_t result;
 	struct Dee_type_seq *seq = self->tp_seq;
 	if likely(seq) {
 		struct Dee_type_seq_cache *sc;
@@ -602,30 +606,31 @@ DeeType_TryRequireSeqEnumerateIndexReverse(DeeTypeObject *__restrict self) {
 		if likely(sc && sc->tsc_seq_enumerate_index_reverse)
 			return sc->tsc_seq_enumerate_index_reverse;
 	}
-	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
-		Dee_mh_seq_enumerate_index_reverse_t result = NULL;
-		if (DeeType_RequireSize(self) && DeeType_RequireGetItem(self)) {
-			bool has_size = !DeeType_IsDefaultSize(self->tp_seq->tp_size);
-			if (has_size && self->tp_seq->tp_getitem_index_fast) {
-				result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndexFast;
-			} else if (has_size && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)) {
-				result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndex;
-			} else if (has_size && !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index)) {
-				result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex;
-			} else if (!DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob) &&
-			           !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem)) {
-				result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem;
+	result = (Dee_mh_seq_enumerate_index_reverse_t)DeeType_GetPrivateMethodHint(self, Dee_TMH_seq_enumerate_index_reverse);
+	if (!result) {
+		if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ) {
+			if (DeeType_RequireSize(self) && DeeType_RequireGetItem(self)) {
+				bool has_size = !DeeType_IsDefaultSize(self->tp_seq->tp_size);
+				if (has_size && self->tp_seq->tp_getitem_index_fast) {
+					result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndexFast;
+				} else if (has_size && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)) {
+					result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndex;
+				} else if (has_size && !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index)) {
+					result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex;
+				} else if (!DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob) &&
+				           !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem)) {
+					result = &DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem;
+				}
 			}
 		}
-		if (result) {
-			struct Dee_type_seq_cache *sc;
-			sc = DeeType_TryRequireSeqCache(self);
-			if likely(sc)
-				atomic_write(&sc->tsc_seq_enumerate_index_reverse, result);
-		}
-		return result;
 	}
-	return NULL; /* Not possible... */
+	if (result) {
+		struct Dee_type_seq_cache *sc;
+		sc = DeeType_TryRequireSeqCache(self);
+		if likely(sc)
+			atomic_write(&sc->tsc_seq_enumerate_index_reverse, result);
+	}
+	return result;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
