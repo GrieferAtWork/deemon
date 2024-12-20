@@ -1082,6 +1082,7 @@ PRIVATE struct type_method tpconst rodict_methods[] = {
 
 PRIVATE struct type_getset tpconst rodict_getsets[] = {
 	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER_F("__sizeof__", &rodict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };

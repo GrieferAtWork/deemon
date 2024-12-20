@@ -29,6 +29,7 @@
 //#define DEFINE_DeeType_RequireSeqBoundLast
 //#define DEFINE_DeeType_RequireSeqDelLast
 //#define DEFINE_DeeType_RequireSetLast
+#define DEFINE_DeeType_RequireCached
 //#define DEFINE_DeeType_RequireSeqAny
 //#define DEFINE_DeeType_RequireSeqAnyWithKey
 //#define DEFINE_DeeType_RequireSeqAnyWithRange
@@ -84,7 +85,7 @@
 //#define DEFINE_DeeType_RequireSeqPushFront
 //#define DEFINE_DeeType_RequireSeqAppend
 //#define DEFINE_DeeType_RequireSeqExtend
-#define DEFINE_DeeType_RequireSeqXchItemIndex
+//#define DEFINE_DeeType_RequireSeqXchItemIndex
 //#define DEFINE_DeeType_RequireSeqClear
 //#define DEFINE_DeeType_RequireSeqPop
 //#define DEFINE_DeeType_RequireSeqRemove
@@ -142,6 +143,7 @@
      defined(DEFINE_DeeType_RequireSeqBoundLast) +                 \
      defined(DEFINE_DeeType_RequireSeqDelLast) +                   \
      defined(DEFINE_DeeType_RequireSetLast) +                      \
+     defined(DEFINE_DeeType_RequireCached) +                       \
      defined(DEFINE_DeeType_RequireSeqAny) +                       \
      defined(DEFINE_DeeType_RequireSeqAnyWithKey) +                \
      defined(DEFINE_DeeType_RequireSeqAnyWithRange) +              \
@@ -320,6 +322,13 @@ DECL_BEGIN
 #define LOCAL_IS_GETSET_SET
 #define LOCAL_default_seq_foo default_seq_setlast
 #define LOCAL_NO_TMH
+#elif defined(DEFINE_DeeType_RequireCached)
+#define LOCAL_foo      cached
+#define LOCAL_Foo      Cached
+#define LOCAL_IS_GETSET_GET
+#define LOCAL_default_seq_foo default_seq_cached
+#define LOCAL_NO_TMH
+#define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqAny)
 #define LOCAL_foo                        any
 #define LOCAL_Foo                        Any
@@ -1337,6 +1346,28 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 			}
 		}
 	}
+#elif defined(DEFINE_DeeType_RequireCached)
+	if (seqclass == Dee_SEQCLASS_SEQ) {
+		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_GETITEM)) {
+			ASSERT(self->tp_seq);
+			ASSERT(self->tp_seq->tp_getitem);
+			ASSERT(self->tp_seq->tp_getitem_index);
+			if (self->tp_seq->tp_size && !DeeType_IsDefaultSize(self->tp_seq->tp_size))
+				return &DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItemIndex;
+			if (self->tp_seq->tp_sizeob && !DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob))
+				return &DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem;
+			if ((self->tp_seq->tp_getitem && !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem)) ||
+			    (self->tp_seq->tp_getitem_index && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)))
+				return &DeeSeq_DefaultCachedWithSeqGetItem; /* custom getitem. */
+			if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_ITER))
+				return &DeeSeq_DefaultCachedWithSeqIter; /* custom iter/foreach/etc. */
+			if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_SIZE))
+				return &DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem;
+			return &DeeSeq_DefaultCachedWithSeqGetItem;
+		}
+	}
+	if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_ITER))
+		return &DeeSeq_DefaultCachedWithSeqIter;
 #elif defined(DEFINE_DeeType_RequireSeqAny)
 	/* ... */
 #elif defined(DEFINE_DeeType_RequireSeqAnyWithKey)
@@ -2508,6 +2539,7 @@ DECL_END
 #undef DEFINE_DeeType_RequireSeqBoundLast
 #undef DEFINE_DeeType_RequireSeqDelLast
 #undef DEFINE_DeeType_RequireSetLast
+#undef DEFINE_DeeType_RequireCached
 #undef DEFINE_DeeType_RequireSeqAny
 #undef DEFINE_DeeType_RequireSeqAnyWithKey
 #undef DEFINE_DeeType_RequireSeqAnyWithRange

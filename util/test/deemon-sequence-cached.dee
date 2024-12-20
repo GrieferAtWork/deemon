@@ -1,0 +1,68 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+
+global hits = [];
+
+function producer() {
+	hits.append(1);
+	yield 10;
+	hits.append(2);
+	yield 20;
+	hits.append(3);
+	yield 30;
+	hits.append(4);
+	yield 40;
+	hits.append(5);
+}
+
+local items = producer().cached;
+assert hits == {};
+
+assert items[0] == 10;
+assert items[0] == 10;
+assert hits == {1};
+
+assert items[2] == 30;
+assert items[2] == 30;
+assert hits == {1,2,3};
+
+assert items[1] == 20;
+assert items[1] == 20;
+assert hits == {1,2,3};
+
+assert items[3] == 40;
+assert items[3] == 40;
+assert hits == {1,2,3,4};
+
+assert #items == 4;
+assert #items == 4;
+assert hits == {1,2,3,4,5};
+
+assert (try items[4] catch (e...) e) is IndexError;
+assert (try items[4] catch (e...) e) is IndexError;
+assert hits == {1,2,3,4,5};
+
+assert items == {10,20,30,40};
+assert items == {10,20,30,40};
+assert hits == {1,2,3,4,5};

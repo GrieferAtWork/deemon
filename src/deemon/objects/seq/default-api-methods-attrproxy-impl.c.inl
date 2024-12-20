@@ -65,6 +65,7 @@ DECL_BEGIN
 #define LOCAL_DeeSeq_DefaultBoundLastWithCallAttrGetLast                       LOCAL_DeeSeq_DefaultFooWithCallAttrBar(BoundLast, GetLast)
 #define LOCAL_DeeSeq_DefaultDelLastWithCallAttrDelLast                         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(DelLast, DelLast)
 #define LOCAL_DeeSeq_DefaultSetLastWithCallAttrSetLast                         LOCAL_DeeSeq_DefaultFooWithCallAttrBar(SetLast, SetLast)
+#define LOCAL_DeeSeq_DefaultCachedWithCallAttrCached                           LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Cached, Cached)
 #define LOCAL_DeeSeq_DefaultAnyWithCallAttrAny                                 LOCAL_DeeSeq_DefaultFooWithCallAttrBar(Any, Any)
 #define LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSeq                    LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(AnyWithKey, Any, ForSeq)
 #define LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSetOrMap               LOCAL_DeeSeq_DefaultFooWithCallAttrBar_(AnyWithKey, Any, ForSetOrMap)
@@ -1561,6 +1562,11 @@ LOCAL_DeeSeq_DefaultSetLastWithCallAttrSetLast(DeeObject *self, DeeObject *value
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+LOCAL_DeeSeq_DefaultCachedWithCallAttrCached(DeeObject *__restrict self) {
+	return LOCAL_DeeObject_GetAttr(self, tsc_seq_cached_data, &str_cached);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 LOCAL_DeeMap_DefaultKeysWithCallAttrKeys(DeeObject *self) {
 	return LOCAL_DeeObject_GetAttr(self, tsc_map_keys_data, &str_keys);
 }
@@ -1596,6 +1602,7 @@ LOCAL_DeeMap_DefaultIterValuesWithCallAttrIterValues(DeeObject *self) {
 #undef LOCAL_DeeSeq_DefaultBoundLastWithCallAttrBoundLast
 #undef LOCAL_DeeSeq_DefaultDelLastWithCallAttrDelLast
 #undef LOCAL_DeeSeq_DefaultSetLastWithCallAttrSetLast
+#undef LOCAL_DeeSeq_DefaultCachedWithCallAttrCached
 #undef LOCAL_DeeSeq_DefaultAnyWithCallAttrAny
 #undef LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSeq
 #undef LOCAL_DeeSeq_DefaultAnyWithKeyWithCallAttrAnyForSetOrMap

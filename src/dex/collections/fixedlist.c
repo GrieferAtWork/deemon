@@ -1357,6 +1357,7 @@ fl_sizeof(FixedList *self) {
 
 PRIVATE struct type_getset tpconst fl_getsets[] = {
 	TYPE_GETTER_F("__sizeof__", &fl_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 

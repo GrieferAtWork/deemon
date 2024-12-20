@@ -1855,6 +1855,7 @@ PRIVATE struct type_getset tpconst tuple_getsets[] = {
 	TYPE_GETTER_F_NODOC(STR_last, &tuple_last, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL),
 #define nullable_tuple_getsets (tuple_getsets + 2)
 	TYPE_GETTER_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
+	TYPE_GETTER_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };

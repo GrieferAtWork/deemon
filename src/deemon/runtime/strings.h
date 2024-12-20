@@ -188,6 +188,7 @@ local STRINGS = {
 	"__module__",
 	"first",
 	"last",
+	"cached",
 
 	"size",
 	"filename",
@@ -685,6 +686,9 @@ DEF_STRING(str_first, "first", 0xa9f0e818, 0x9d12a485470a29a7)
 #define Dee_HashStr__last _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)
 DEF_STRING(str_last, "last", 0x185a4f9a, 0x760894ca6d41e4dc)
 #define STR_last DeeString_STR(&str_last)
+#define Dee_HashStr__cached _Dee_HashSelectC(0x915e175e, 0xddfd408a14eae4b4)
+DEF_STRING(str_cached, "cached", 0x915e175e, 0xddfd408a14eae4b4)
+#define STR_cached DeeString_STR(&str_cached)
 #define Dee_HashStr__size _Dee_HashSelectC(0xed8917fa, 0x3fe8023bdf261c0f)
 DEF_STRING(str_size, "size", 0xed8917fa, 0x3fe8023bdf261c0f)
 #define STR_size DeeString_STR(&str_size)

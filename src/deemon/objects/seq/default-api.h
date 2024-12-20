@@ -68,6 +68,9 @@ typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_mh_seq_boundlast_t)(DeeObject *
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_mh_seq_dellast_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_mh_seq_setlast_t)(DeeObject *self, DeeObject *value);
 
+/* Returns an auto-caching variant of the sequence (s.a. "cached-seq.h") */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_seq_cached_t)(DeeObject *__restrict self);
+
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_map_keys_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_map_values_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_map_iterkeys_t)(DeeObject *__restrict self);
@@ -96,6 +99,10 @@ struct Dee_type_seq_cache {
 	Dee_mh_seq_dellast_t    tsc_seq_dellast;
 	Dee_mh_seq_setlast_t    tsc_seq_setlast;
 
+	/* Extra callbacks for Sequence.cached */
+	Dee_mh_seq_cached_t     tsc_seq_cached;
+
+	/* Extra callbacks for Mapping.keys/values/iterkeys/itervalues */
 	Dee_mh_map_keys_t       tsc_map_keys;
 	Dee_mh_map_values_t     tsc_map_values;
 	Dee_mh_map_iterkeys_t   tsc_map_iterkeys;
@@ -107,6 +114,7 @@ struct Dee_type_seq_cache {
 	union Dee_tsc_uslot tsc_seq_getlast_data;
 	union Dee_tsc_uslot tsc_seq_dellast_data;
 	union Dee_tsc_uslot tsc_seq_setlast_data;
+	union Dee_tsc_uslot tsc_seq_cached_data;
 	union Dee_tsc_uslot tsc_seq_any_data;
 	union Dee_tsc_uslot tsc_seq_all_data;
 	union Dee_tsc_uslot tsc_seq_parity_data;
@@ -188,6 +196,7 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_getlast_t DCALL
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_boundlast_t DCALL DeeType_RequireSeqBoundLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_dellast_t DCALL DeeType_RequireSeqDelLast(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_setlast_t DCALL DeeType_RequireSeqSetLast(DeeTypeObject *__restrict self);
+INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_cached_t DCALL DeeType_RequireSeqCached(DeeTypeObject *__restrict self);
 
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_keys_t DCALL DeeType_RequireMapKeys(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_values_t DCALL DeeType_RequireMapValues(DeeTypeObject *__restrict self);
@@ -687,6 +696,7 @@ INTDEF struct type_math DeeMap_OperatorMath;
 #define DeeSeq_InvokeBoundLast(self)                                          (*DeeType_RequireSeqBoundLast(Dee_TYPE(self)))(self)
 #define DeeSeq_InvokeDelLast(self)                                            (*DeeType_RequireSeqDelLast(Dee_TYPE(self)))(self)
 #define DeeSeq_InvokeSetLast(self, v)                                         (*DeeType_RequireSeqSetLast(Dee_TYPE(self)))(self, v)
+#define DeeSeq_InvokeCached(self)                                             (*DeeType_RequireSeqCached(Dee_TYPE(self)))(self)
 #define DeeSeq_InvokeAny(self)                                                (*DeeType_RequireSeqAny(Dee_TYPE(self)))(self)
 #define DeeSeq_InvokeAnyWithKey(self, key)                                    (*DeeType_RequireSeqAnyWithKey(Dee_TYPE(self)))(self, key)
 #define DeeSeq_InvokeAnyWithRange(self, start, end)                           (*DeeType_RequireSeqAnyWithRange(Dee_TYPE(self)))(self, start, end)
@@ -1298,6 +1308,15 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithCallSetLastDat
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSizeAndSetItemIndex(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithSizeAndSetItem(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultSetLastWithError(DeeObject *self, DeeObject *value);
+
+/* Implementations for `Sequence.cached' */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithCallAttrCached(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithCallCachedDataFunction(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqIter(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithError(DeeObject *__restrict self);
 
 
 /* Functions that need additional variants for sequence sub-types that don't have indices (sets, maps) */
@@ -2081,10 +2100,12 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_seq_getlast(DeeObject 
 INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_boundlast(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default_seq_dellast(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default_seq_setlast(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL default_seq_cached)(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL default_map_keys)(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL default_map_values)(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL default_map_iterkeys)(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL default_map_itervalues)(DeeObject *self);
+#define default_seq_cached(self)     DeeSeq_InvokeCached(self)
 #define default_map_keys(self)       DeeMap_InvokeKeys(self)
 #define default_map_values(self)     DeeMap_InvokeValues(self)
 #define default_map_iterkeys(self)   DeeMap_InvokeIterKeys(self)

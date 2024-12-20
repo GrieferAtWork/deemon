@@ -47,6 +47,7 @@
 #include <hybrid/overflow.h>
 
 /**/
+#include "cached-seq.h"
 #include "default-iterators.h"
 #include "default-map-proxy.h"
 #include "default-reversed.h"
@@ -6206,6 +6207,7 @@ print define_Dee_HashStr("end");
  * to inject the most optimized version of getsets into top-level objects:
  * - Sequence.first
  * - Sequence.last
+ * - Sequence.cached
  * - Mapping.keys
  * - Mapping.values
  * - Mapping.iterkeys
@@ -6214,6 +6216,7 @@ print define_Dee_HashStr("end");
 #ifdef __OPTIMIZE_SIZE__
 #define maybe_cache_optimized_seq_first_in_membercache(self)      (void)0
 #define maybe_cache_optimized_seq_last_in_membercache(self)       (void)0
+#define maybe_cache_optimized_seq_cached_in_membercache(self)     (void)0
 #define maybe_cache_optimized_map_keys_in_membercache(self)       (void)0
 #define maybe_cache_optimized_map_values_in_membercache(self)     (void)0
 #define maybe_cache_optimized_map_iterkeys_in_membercache(self)   (void)0
@@ -6247,6 +6250,20 @@ maybe_cache_optimized_seq_last_in_membercache(DeeTypeObject *__restrict self) {
 	new_getset.gs_bound = DeeType_RequireSeqBoundLast(self);
 	DeeTypeMRO_PatchGetSet(self, &DeeSeq_Type, Dee_HashStr__last,
 	                       &new_getset, &gs_default_seq_last);
+}
+
+PRIVATE struct type_getset tpconst gs_default_seq_cached =
+TYPE_GETTER_NODOC(NULL, &default_seq_cached);
+PRIVATE NONNULL((1)) void DCALL
+maybe_cache_optimized_seq_cached_in_membercache(DeeTypeObject *__restrict self) {
+	struct type_getset new_getset;
+	new_getset.gs_name  = STR_cached;
+	new_getset.gs_get   = DeeType_RequireSeqCached(self);
+	new_getset.gs_del   = NULL;
+	new_getset.gs_set   = NULL;
+	new_getset.gs_bound = NULL;
+	DeeTypeMRO_PatchGetSet(self, &DeeSeq_Type, Dee_HashStr__cached,
+	                       &new_getset, &gs_default_seq_cached);
 }
 
 PRIVATE struct type_getset tpconst gs_default_map_keys =
@@ -6352,6 +6369,12 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default_seq_setlast(DeeObject *self, DeeObject *value) {
 	maybe_cache_optimized_seq_last_in_membercache(Dee_TYPE(self));
 	return DeeSeq_InvokeSetLast(self, value);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL default_seq_cached)(DeeObject *__restrict self) {
+	maybe_cache_optimized_seq_cached_in_membercache(Dee_TYPE(self));
+	return DeeSeq_InvokeCached(self);
 }
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

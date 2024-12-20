@@ -3608,6 +3608,7 @@ PRIVATE struct type_getset tpconst list_getsets[] = {
 	TYPE_GETTER_F(STR_frozen, &list_get_frozen, METHOD_FNOREFESCAPE,
 	              "->?DTuple\n"
 	              "Return a copy of the contents of @this List as an immutable sequence"),
+	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER_F("__sizeof__", &list_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };

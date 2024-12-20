@@ -386,4 +386,48 @@ DeeSeq_DefaultSetLastWithError(DeeObject *self, DeeObject *value) {
 	return err_seq_unsupportedf(self, "last = %r", value);
 }
 
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultCachedWithSeqIter(DeeObject *__restrict self) {
+	DREF CachedSeq_WithIter *result;
+	DREF DeeObject *iter;
+	iter = DeeSeq_OperatorIter(self);
+	if unlikely(!iter)
+		goto err;
+	result = CachedSeq_WithIter_New(iter);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultCachedWithSeqGetItem(DeeObject *__restrict self) {
+	/* TODO */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem(DeeObject *__restrict self) {
+	/* TODO */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItemIndex(DeeObject *__restrict self) {
+	/* TODO */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_DefaultCachedWithError(DeeObject *__restrict self) {
+	err_seq_unsupportedf(self, "cached");
+	return NULL;
+}
+
 DECL_END

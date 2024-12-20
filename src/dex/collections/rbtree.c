@@ -3620,22 +3620,23 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 
 PRIVATE struct type_getset tpconst rbtree_getsets[] = {
 	TYPE_GETTER_F("first", &rbtree_get_first, METHOD_FNOREFESCAPE,
-	            "->?T3?O?O?O\n"
-	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
-	            "Return the triple #C{minkey,maxkey,value} for the lowest range in @this ?."),
+	              "->?T3?O?O?O\n"
+	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	              "Return the triple #C{minkey,maxkey,value} for the lowest range in @this ?."),
 	TYPE_GETTER_F("last", &rbtree_get_last, METHOD_FNOREFESCAPE,
-	            "->?T3?O?O?O\n"
-	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
-	            "Return the triple #C{minkey,maxkey,value} for the greatest range in @this ?."),
+	              "->?T3?O?O?O\n"
+	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	              "Return the triple #C{minkey,maxkey,value} for the greatest range in @this ?."),
 	TYPE_GETTER_F("__root__", &rbtree_get_itroot, METHOD_FNOREFESCAPE,
-	            "->?#Iterator\n"
-	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
-	            "Return an ?#Iterator for the root node of the tree"),
+	              "->?#Iterator\n"
+	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	              "Return an ?#Iterator for the root node of the tree"),
 	TYPE_GETTER_F("__depth__", &rbtree_get_depth, METHOD_FNOREFESCAPE,
-	            "->?Dint\n"
-	            "Depth of the left-most tree node (since the tree is balanced, "
-	            /**/ "this is either the tree's max-depth, or one less than that)"),
+	              "->?Dint\n"
+	              "Depth of the left-most tree node (since the tree is balanced, "
+	              /**/ "this is either the tree's max-depth, or one less than that)"),
 	TYPE_GETTER_F("__sizeof__", &rbtree_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER("cached", &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 

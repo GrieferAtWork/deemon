@@ -2906,6 +2906,7 @@ INTERN_TPCONST struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETTER_F(STR_frozen, &DeeRoDict_FromSequence, METHOD_FNOREFESCAPE,
 	              "->?Ert:RoDict\n"
 	              "Returns a read-only (frozen) copy of @this ?."),
+	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_GETSET_F("max_load_factor",
 	              &deprecated_d100_get_maxloadfactor,

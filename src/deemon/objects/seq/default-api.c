@@ -394,6 +394,8 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 		Dee_tsc_uslot_fini_function(&self->tsc_seq_dellast_data);
 	if (self->tsc_seq_setlast == &DeeSeq_DefaultSetLastWithCallSetLastDataFunction)
 		Dee_tsc_uslot_fini_function(&self->tsc_seq_setlast_data);
+	if (self->tsc_seq_cached == &DeeSeq_DefaultCachedWithCallCachedDataFunction)
+		Dee_tsc_uslot_fini_function(&self->tsc_seq_cached_data);
 	if (self->tsc_seq_any == &DeeSeq_DefaultAnyWithCallAnyDataFunction ||
 	    self->tsc_seq_any_with_key == &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSeq ||
 	    self->tsc_seq_any_with_key == &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSetOrMap ||
@@ -1116,6 +1118,8 @@ DECL_END
 #define DEFINE_DeeType_RequireSeqDelLast
 #include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_RequireSetLast
+#include "default-api-require-method-impl.c.inl"
+#define DEFINE_DeeType_RequireCached
 #include "default-api-require-method-impl.c.inl"
 #define DEFINE_DeeType_RequireSeqAny
 #include "default-api-require-method-impl.c.inl"

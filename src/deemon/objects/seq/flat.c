@@ -154,9 +154,9 @@ PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_bool_foreach_cb(void *UNUSED(arg), DeeObject *item) {
 	int result = DeeSeq_OperatorBool(item);
 	if (result > 0)
-		result = SF_BOOL_FOREACH_YES;
-	ASSERT(result == 0 || result == -1 || result == SF_BOOL_FOREACH_YES);
-	return result;
+		result = (int)SF_BOOL_FOREACH_YES;
+	ASSERT(result == 0 || result == -1 || result == (int)SF_BOOL_FOREACH_YES);
+	return (Dee_ssize_t)result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -226,9 +226,9 @@ sf_contains_foreach_cb(void *arg, DeeObject *item) {
 		goto err;
 	result = DeeObject_BoolInherited(contains_ob);
 	if (result > 0)
-		result = SF_CONTAINS_FOREACH_YES;
-	ASSERT(result == 0 || result == -1 || result == SF_CONTAINS_FOREACH_YES);
-	return result;
+		result = (int)SF_CONTAINS_FOREACH_YES;
+	ASSERT(result == 0 || result == -1 || result == (int)SF_CONTAINS_FOREACH_YES);
+	return (Dee_ssize_t)result;
 err:
 	return -1;
 }
@@ -840,7 +840,7 @@ INTERN DeeTypeObject SeqFlat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqFlat",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(seq:??S?S?O)"),
+	                         "(seq:?S?S?O)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

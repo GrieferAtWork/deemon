@@ -708,6 +708,9 @@
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\cached-seq.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\combinations.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
@@ -1296,6 +1299,9 @@
 			<Filter>src\objects</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\byattr.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\cached-seq.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\combinations.c">
