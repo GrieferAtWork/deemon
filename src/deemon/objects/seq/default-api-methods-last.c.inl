@@ -403,25 +403,19 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultCachedWithSeqGetItem(DeeObject *__restrict self) {
 	/* TODO */
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
+	return DeeSeq_DefaultCachedWithSeqIter(self);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem(DeeObject *__restrict self) {
 	/* TODO */
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
+	return DeeSeq_DefaultCachedWithSeqIter(self);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItemIndex(DeeObject *__restrict self) {
 	/* TODO */
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
+	return DeeSeq_DefaultCachedWithSeqIter(self);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

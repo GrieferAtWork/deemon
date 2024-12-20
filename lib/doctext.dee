@@ -600,11 +600,11 @@ class Table {
 				local cellPrinter = ConsolePrinter(
 					maxWidth: columnsWidths[column], base: p);
 				cellPrinter.appendall(row[column][1]);
-				local lines = Tuple(cellPrinter.fp.string.splitlines(false));
+				local lines = cellPrinter.fp.string.splitlines(false).cached;
 				cellLines[column] = lines;
-				lines = #lines;
-				if (reqLines < lines)
-					reqLines = lines;
+				local nLines = #lines;
+				if (reqLines < nLines)
+					reqLines = nLines;
 			}
 			/* Print cell lines */
 			for (local lno: [:reqLines]) {
@@ -849,7 +849,7 @@ class ThrowsDescription {
 @@with @attr Exceptions during invocation are silently ignored, and result in no
 @@object being appended to the resulting sequence
 @@The first item of each element from @items is forwarded into the resulting sequence
-function resolveGetattrForAll(items: {(Object, Object)...}, attr: string): {(Object, Object)...} {
+function resolveGetAttrForAll(items: {(Object, Object)...}, attr: string): {(Object, Object)...} {
 	for (local tag, e: items) {
 		try {
 			e = e.operator . (attr);
@@ -886,8 +886,8 @@ function resolveColonReferenceShortcut(name: string): string | none {
 		("/errors", errors),
 	};
 	for (local a: name.split("."))
-		candidates = resolveGetattrForAll(candidates, a);
-	candidates = Tuple(candidates);
+		candidates = resolveGetAttrForAll(candidates, a);
+	candidates = candidates.cached;
 	if (#candidates == 1) {
 use_first_candy:
 		return f"{candidates[0][0]}/{name.replace('.', '/')}";

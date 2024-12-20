@@ -1138,8 +1138,8 @@ instance_builtin_tdeepload(DeeTypeObject *tp_self,
 	/* Replace all members with deep copies of themself. */
 	size = desc->cd_desc->cd_imemb_size;
 	for (i = 0; i < size; ++i) {
-		if (DeeObject_XInplaceDeepCopyWithLock(&instance->id_vtab[i],
-		                                       &instance->id_lock))
+		if (DeeObject_XInplaceDeepCopyWithRWLock(&instance->id_vtab[i],
+		                                         &instance->id_lock))
 			goto err;
 	}
 	return 0;

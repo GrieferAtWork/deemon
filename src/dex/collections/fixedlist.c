@@ -277,8 +277,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 fl_deepload(FixedList *__restrict self) {
 	size_t i;
 	for (i = 0; i < self->fl_size; ++i) {
-		if (DeeObject_XInplaceDeepCopyWithLock(&self->fl_elem[i],
-		                                       &self->fl_lock))
+		if (DeeObject_XInplaceDeepCopyWithRWLock(&self->fl_elem[i],
+		                                         &self->fl_lock))
 			goto err;
 	}
 	return 0;

@@ -756,6 +756,7 @@ EXPORTS
 	_DeeObject_InplaceAndUInt32@8=DeeObject_InplaceAndUInt32@8
 	_DeeObject_InplaceDeepCopy@4=DeeObject_InplaceDeepCopy@4
 	_DeeObject_InplaceDeepCopyWithLock@8=DeeObject_InplaceDeepCopyWithLock@8
+	_DeeObject_InplaceDeepCopyWithRWLock@8=DeeObject_InplaceDeepCopyWithRWLock@8
 	_DeeObject_InplaceDeepCopyv@8=DeeObject_InplaceDeepCopyv@8
 	_DeeObject_InplaceDiv@8=DeeObject_InplaceDiv@8
 	_DeeObject_InplaceDivInt8@8=DeeObject_InplaceDivInt8@8
@@ -1036,6 +1037,7 @@ EXPORTS
 	_DeeObject_VThisCallf@16=DeeObject_VThisCallf@16
 	_DeeObject_Visit@12=DeeObject_Visit@12
 	_DeeObject_XInplaceDeepCopyWithLock@8=DeeObject_XInplaceDeepCopyWithLock@8
+	_DeeObject_XInplaceDeepCopyWithRWLock@8=DeeObject_XInplaceDeepCopyWithRWLock@8
 	_DeeObject_Xor@8=DeeObject_Xor@8
 	_DeeObject_XorUInt32@8=DeeObject_XorUInt32@8
 	_DeeRange_New@12=DeeRange_New@12

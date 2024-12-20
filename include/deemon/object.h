@@ -4648,11 +4648,15 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopyv(/*in|out*/ DRE
  * >> #endif // !IS_XDEEPCOPY
  * >> return 0;
  */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_rwlock_t *__restrict p_lock);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_rwlock_t *__restrict p_lock);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_lock_t *__restrict p_lock);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_lock_t *__restrict p_lock);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithRWLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_rwlock_t *__restrict p_lock);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithRWLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_rwlock_t *__restrict p_lock);
 #else /* !CONFIG_NO_THREADS */
-#define DeeObject_InplaceDeepCopyWithLock(p_self, p_lock)  DeeObject_InplaceDeepCopy(p_self)
-#define DeeObject_XInplaceDeepCopyWithLock(p_self, p_lock) DeeObject_XInplaceDeepCopy(p_self)
+#define DeeObject_InplaceDeepCopyWithLock(p_self, p_lock)    DeeObject_InplaceDeepCopy(p_self)
+#define DeeObject_XInplaceDeepCopyWithLock(p_self, p_lock)   DeeObject_XInplaceDeepCopy(p_self)
+#define DeeObject_InplaceDeepCopyWithRWLock(p_self, p_lock)  DeeObject_InplaceDeepCopy(p_self)
+#define DeeObject_XInplaceDeepCopyWithRWLock(p_self, p_lock) DeeObject_XInplaceDeepCopy(p_self)
 #endif /* CONFIG_NO_THREADS */
 
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_Assign(DeeObject *self, DeeObject *some_object);

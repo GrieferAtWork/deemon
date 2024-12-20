@@ -1316,7 +1316,7 @@ class TypeExpr: WeakRefAble {
 		case "T": {
 			local items;
 			try {
-				items = Tuple(ob);
+				items = Sequence.cached(ob);
 			} catch (...) {
 				return false;
 			}
@@ -1465,7 +1465,7 @@ check_elem:
 			result[i] = TypeExpr(docdecl, m_docstring.substr(pos, end));
 			pos = end;
 		}
-		m_cache = Tuple(result);
+		m_cache = result.frozen;
 	}
 	private function loadS() {
 		m_cache = TypeExpr(docdecl, m_docstring.substr(2));
@@ -1974,7 +1974,7 @@ done:
 					pos = deflexpr_end(m_docstring, pos);
 					items[i] = Expression(docdecl, m_docstring.substr(start, pos));
 				}
-				m_cache = Tuple(items);
+				m_cache = items.frozen;
 			}
 			return m_cache;
 		}
@@ -2059,8 +2059,9 @@ done:
 				return f"[{','.join(Sitems)}]";
 
 			case "T": {
-				local t = Tuple(Sitems);
-				if (!t) return "()";
+				local t = Sitems.cached;
+				if (!t)
+					return "()";
 				if (#t == 1)
 					return f"({t[0]},)";
 				return f"({','.join(t)})";
@@ -2285,7 +2286,7 @@ class Parameter: WeakRefAble {
 			m_defstring = docstring.substr(name_end + 1);
 			/* Try to determine the default value of the Parameter */
 			if (m_typstring is none) {
-				local types = Tuple(defexpr.exprtypes);
+				local types = defexpr.exprtypes.cached;
 				if (types) {
 					if (#types == 1) {
 						m_typ = types[0];
@@ -2715,14 +2716,15 @@ class Declaration: WeakRefAble {
 				if (parstr is none) {
 					local doc = docsect.value.docnode.value;
 					if (doc.isfunction) {
-						m_parameters = [Parameter(this, 0, "args!")];
+						m_parameters = { Parameter(this, 0, "args!") };
 					} else {
 						m_parameters = none; /* No parameters */
 					}
 				} else {
-					m_parameters = Tuple(
-						for (local i, part: util.enumerate(splitNonEscaped(parstr, ",")))
-							Parameter(this, i, part));
+					m_parameters = (
+						for (local i, part: splitNonEscaped(parstr, ",").enumerate())
+							Parameter(this, i, part)
+					).frozen;
 				}
 			}
 			return m_parameters;
@@ -2991,7 +2993,7 @@ class DocSection: WeakRefAble {
 	public final property segments: {Declaration | TextSegment...} = {
 		get() {
 			if (m_segments !is bound)
-				m_segments = Tuple(splitSegments(this, docstring));
+				m_segments = splitSegments(this, docstring).frozen;
 			return m_segments;
 		}
 	}
@@ -3415,10 +3417,10 @@ err_unknown_attribute:
 			local sect;
 			if (operatorDoc is bound) {
 				/* Caller-provided documentation string */
-				sect = Tuple(operatorDoc);
+				sect = Sequence.frozen(operatorDoc);
 			} else {
 				/* Manually lookup the doc section associated with this operaotr. */
-				sect = Tuple(docParentOrPath.getopdoc(attributeName));
+				sect = docParentOrPath.getopdoc(attributeName).frozen;
 				if (!sect)
 					goto err_unknown_operator;
 			}
@@ -4033,7 +4035,7 @@ set_is_type:
 								}
 								result[name] = (DocSection(this, resdoc.string),);
 							} else {
-								result[name] = Tuple(autogenerateOperatorDecl(name));
+								result[name] = autogenerateOperatorDecl(name).frozen;
 							}
 						} else {
 							result[name] = (DocSection(this, name + "->!D"),);
@@ -4042,7 +4044,7 @@ set_is_type:
 				}
 			} else {
 				if ("constructor" !in result)
-					result["constructor"] = Tuple(autogenerateNativeConstructorSections());
+					result["constructor"] = autogenerateNativeConstructorSections().frozen;
 				for (local name: Type.__operators__(object)) {
 					if (name !is string)
 						continue;
@@ -4055,7 +4057,7 @@ set_is_type:
 					if (name == "destructor")
 						continue;
 					if (name !in result)
-						result[name] = Tuple(autogenerateOperatorDecl(name));
+						result[name] = autogenerateOperatorDecl(name).frozen;
 				}
 			}
 		}

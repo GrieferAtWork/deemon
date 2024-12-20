@@ -46,11 +46,9 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_ctor(CachedSeq_WithIter *__restrict self) {
-	Dee_Incref(Dee_EmptyIterator);
-	self->cswi_iter = Dee_EmptyIterator;
+	self->cswi_iter = NULL;
 	Dee_atomic_lock_init(&self->cswi_lock);
 	objectlist_init(&self->cswi_cache);
-	CachedSeq_WithIter_SetFinished(self);
 	return 0;
 }
 
@@ -77,12 +75,8 @@ again:
 	}
 	cache_copy = Dee_Movrefv(cache_copy, other->cswi_cache.ol_elemv, cache_size);
 	_Dee_objectlist_setalloc(&self->cswi_cache, cache_size);
-#ifdef CachedSeq_WithIter_HAVE_cswi_finished
-	self->cswi_finished = other->cswi_finished;
-#else /* CachedSeq_WithIter_HAVE_cswi_finished */
-	if (CachedSeq_WithIter_GetFinished(other))
-		CachedSeq_WithIter_SetFinished(self);
-#endif /* !CachedSeq_WithIter_HAVE_cswi_finished */
+	self->cswi_iter = other->cswi_iter;
+	Dee_XIncref(self->cswi_iter);
 	CachedSeq_WithIter_LockRelease(other);
 	self->cswi_cache.ol_elemc = cache_size;
 	self->cswi_cache.ol_elemv = cache_copy;
@@ -96,16 +90,17 @@ cswi_copy(CachedSeq_WithIter *__restrict self,
           CachedSeq_WithIter *__restrict other) {
 	if unlikely(cswi_copycache(self, other))
 		goto err;
-	if (CachedSeq_WithIter_GetFinished(self)) {
-		Dee_Incref(Dee_EmptyIterator);
-		self->cswi_iter = Dee_EmptyIterator;
-	} else {
-		self->cswi_iter = DeeObject_Copy(other->cswi_iter);
-		if unlikely(!self->cswi_iter)
-			goto err_cache;
+	if (self->cswi_iter) {
+		DREF DeeObject *iter_copy;
+		iter_copy = DeeObject_Copy(self->cswi_iter);
+		if unlikely(!iter_copy)
+			goto err_cache_iter;
+		Dee_Decref_unlikely(self->cswi_iter);
+		self->cswi_iter = iter_copy;
 	}
 	return 0;
-err_cache:
+err_cache_iter:
+	Dee_Decref(self->cswi_iter);
 	objectlist_fini(&self->cswi_cache);
 err:
 	return -1;
@@ -114,21 +109,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cswi_deep(CachedSeq_WithIter *__restrict self,
           CachedSeq_WithIter *__restrict other) {
-	if unlikely(cswi_copycache(self, other))
-		goto err;
-	if (CachedSeq_WithIter_GetFinished(self)) {
-		Dee_Incref(Dee_EmptyIterator);
-		self->cswi_iter = Dee_EmptyIterator;
-	} else {
-		self->cswi_iter = DeeObject_DeepCopy(other->cswi_iter);
-		if unlikely(!self->cswi_iter)
-			goto err_cache;
-	}
-	return 0;
-err_cache:
-	objectlist_fini(&self->cswi_cache);
-err:
-	return -1;
+	return cswi_copycache(self, other);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -164,7 +145,7 @@ again_copy_at_i:
 		CachedSeq_WithIter_LockRelease(self);
 		Dee_Decref(oldval);
 	}
-	return 0;
+	return DeeObject_InplaceDeepCopyWithLock(&self->cswi_iter, &self->cswi_lock);
 err:
 	return -1;
 }
@@ -177,7 +158,6 @@ cswi_init(CachedSeq_WithIter *__restrict self,
 	Dee_Incref(self->cswi_iter);
 	Dee_atomic_lock_init(&self->cswi_lock);
 	objectlist_init(&self->cswi_cache);
-	CachedSeq_WithIter_InitFinished(self);
 	return 0;
 err:
 	return -1;
@@ -186,7 +166,7 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 cswi_fini(CachedSeq_WithIter *__restrict self) {
 	objectlist_fini(&self->cswi_cache);
-	Dee_Decref(self->cswi_iter);
+	Dee_XDecref(self->cswi_iter);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -194,8 +174,8 @@ cswi_visit(CachedSeq_WithIter *__restrict self, dvisit_t proc, void *arg) {
 	CachedSeq_WithIter_LockAcquire(self);
 	Dee_Visitv(self->cswi_cache.ol_elemv,
 	           self->cswi_cache.ol_elemc);
+	Dee_XVisit(self->cswi_iter);
 	CachedSeq_WithIter_LockRelease(self);
-	Dee_Visit(self->cswi_iter);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -226,20 +206,27 @@ cswi_ensure_loaded(CachedSeq_WithIter *__restrict self, size_t index) {
 	CachedSeq_WithIter_LockAcquire(self);
 	while (index >= self->cswi_cache.ol_elemc) {
 		size_t alloc;
-		if (CachedSeq_WithIter_GetFinished(self)) {
+		DREF DeeObject *iter;
+		iter = self->cswi_iter;
+		if (!iter) {
 			CachedSeq_WithIter_LockRelease(self);
 			return 1; /* Out-of-bounds */
 		}
+		Dee_Incref(iter);
 		CachedSeq_WithIter_LockRelease(self);
 
 		/* Load 1 additional element. */
-		nextitem = DeeObject_IterNext(self->cswi_iter);
+		nextitem = DeeObject_IterNext(iter);
+		Dee_Decref_unlikely(iter);
 		if (!ITER_ISOK(nextitem)) {
 			if unlikely(!nextitem)
 				goto err;
 			CachedSeq_WithIter_LockAcquire(self);
-			CachedSeq_WithIter_SetFinished(self);
+			iter = self->cswi_iter;
+			self->cswi_iter = NULL;
 			CachedSeq_WithIter_LockRelease(self);
+			if likely(iter)
+				Dee_Decref(iter);
 			return 1;
 		}
 
@@ -380,7 +367,7 @@ cswi_size_fast(CachedSeq_WithIter *__restrict self) {
 	size_t result;
 	CachedSeq_WithIter_LockAcquire(self);
 	result = self->cswi_cache.ol_elemc;
-	if (!CachedSeq_WithIter_GetFinished(self))
+	if (self->cswi_iter != NULL)
 		result = (size_t)-1;
 	CachedSeq_WithIter_LockRelease(self);
 	return result;
@@ -511,8 +498,18 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cswi_getseq(CachedSeq_WithIter *__restrict self) {
-	return DeeObject_GetAttr(self->cswi_iter, (DeeObject *)&str_seq);
+cswi_getiter(CachedSeq_WithIter *__restrict self) {
+	DREF DeeObject *result;
+	CachedSeq_WithIter_LockAcquire(self);
+	result = self->cswi_iter;
+	if likely(result) {
+		Dee_Incref(result);
+		CachedSeq_WithIter_LockRelease(self);
+		return result;
+	}
+	CachedSeq_WithIter_LockRelease(self);
+	err_unbound_attribute_string(&CachedSeq_WithIter_Type, "__iter__");
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -542,12 +539,11 @@ PRIVATE struct type_method tpconst cswi_methods[] = {
 PRIVATE struct type_getset tpconst cswi_getsets[] = {
 	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER(STR_frozen, &cswi_getfrozen, "->?.\nFully populate the cache, then re-return it"),
-	TYPE_GETTER("__seq__", &cswi_getseq, "->?DSequence\nAlias for ${this.__iter__.seq}"),
+	TYPE_GETTER("__iter__", &cswi_getiter, "->?.\nThe iterator acting as cache source (throws :UnboundAttribute once exhausted)"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst cswi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(CachedSeq_WithIter, cswi_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD("__cache_size__", STRUCT_SIZE_T | STRUCT_CONST | STRUCT_ATOMIC,
 	                  offsetof(CachedSeq_WithIter, cswi_cache.ol_elemc)),
 	TYPE_MEMBER_END

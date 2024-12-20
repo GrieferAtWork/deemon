@@ -147,8 +147,8 @@ cell_clear(Cell *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_deepload(Cell *__restrict self) {
-	return DeeObject_XInplaceDeepCopyWithLock(&self->c_item,
-	                                          &self->c_lock);
+	return DeeObject_XInplaceDeepCopyWithRWLock(&self->c_item,
+	                                            &self->c_lock);
 }
 
 

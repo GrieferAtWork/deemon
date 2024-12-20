@@ -35,29 +35,16 @@ DECL_BEGIN
 /* ITERATOR-BASED CACHE                                                 */
 /************************************************************************/
 typedef struct {
-	PROXY_OBJECT_HEAD(cswi_iter)     /* [1..1][const] The iterator whose results are being cached. */
+	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t cswi_lock;     /* The lock used to synchronize the cache below. */
+	Dee_atomic_lock_t cswi_lock;  /* The lock used to synchronize the cache below. */
 #endif /* !CONFIG_NO_THREADS */
-	struct objectlist cswi_cache;    /* Cache of results returned by `cswi_iter' */
-#ifndef DEE_OBJECTLIST_HAVE_ELEMA
-#define CachedSeq_WithIter_HAVE_cswi_finished
-	bool              cswi_finished; /* Set to true once `cswi_iter' has been exhausted */
-#endif /* !DEE_OBJECTLIST_HAVE_ELEMA */
+	DREF DeeObject   *cswi_iter;  /* [0..1][lock(cswi_lock)] The iterator whose results are being cached (or NULL once exhausted). */
+	struct objectlist cswi_cache; /* [lock(cswi_lock)] Cache of results returned by `cswi_iter' */
 } CachedSeq_WithIter;
 
 /* Uses an auto-growing vector for elements, that is fed by an iterator. */
 INTDEF DeeTypeObject CachedSeq_WithIter_Type;
-
-#ifdef CachedSeq_WithIter_HAVE_cswi_finished
-#define CachedSeq_WithIter_InitFinished(self) (void)((self)->cswi_finished = false)
-#define CachedSeq_WithIter_GetFinished(self)  ((self)->cswi_finished)
-#define CachedSeq_WithIter_SetFinished(self)  (void)((self)->cswi_finished = true)
-#else /* CachedSeq_WithIter_HAVE_cswi_finished */
-#define CachedSeq_WithIter_InitFinished(self) (void)0
-#define CachedSeq_WithIter_GetFinished(self)  ((self)->cswi_cache.ol_elema == (size_t)-1)
-#define CachedSeq_WithIter_SetFinished(self)  (void)((self)->cswi_cache.ol_elema = (size_t)-1)
-#endif /* !CachedSeq_WithIter_HAVE_cswi_finished */
 
 #define CachedSeq_WithIter_LockAvailable(self)  Dee_atomic_lock_available(&(self)->cswi_lock)
 #define CachedSeq_WithIter_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->cswi_lock)
@@ -84,7 +71,6 @@ CachedSeq_WithIter_New(/*inherit(always)*/ DREF DeeObject *iter) {
 	result->cswi_iter = iter; /* Inherit reference */
 	Dee_atomic_lock_init(&result->cswi_lock);
 	objectlist_init(&result->cswi_cache);
-	CachedSeq_WithIter_InitFinished(result);
 	DeeObject_Init(result, &CachedSeq_WithIter_Type);
 	return (DREF CachedSeq_WithIter *)DeeGC_Track((DREF DeeObject *)result);
 err:

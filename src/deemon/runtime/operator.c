@@ -1371,8 +1371,71 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceDeepCopyWithLock)(DREF DeeObject **__restrict p_self,
-                                          Dee_atomic_rwlock_t *__restrict p_lock) {
+(DCALL DeeObject_InplaceDeepCopyWithLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
+                                          Dee_atomic_lock_t *__restrict p_lock) {
+	DREF DeeObject *temp, *copy;
+	(void)p_lock;
+
+	/* Step #1: Extract the existing object. */
+	Dee_atomic_lock_acquire(p_lock);
+	temp = *p_self;
+	Dee_Incref(temp);
+	Dee_atomic_lock_release(p_lock);
+
+	/* Step #2: Create a deep copy for it. */
+	copy = DeeObject_DeepCopy(temp);
+	Dee_Decref(temp);
+	if unlikely(!copy)
+		goto err;
+
+	/* Step #3: Write back the newly created deep copy. */
+	Dee_atomic_lock_acquire(p_lock);
+	temp   = *p_self; /* Inherit */
+	*p_self = copy;   /* Inherit */
+	Dee_atomic_lock_release(p_lock);
+	Dee_Decref(temp);
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_XInplaceDeepCopyWithLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
+                                           Dee_atomic_lock_t *__restrict p_lock) {
+	DREF DeeObject *temp, *copy;
+	(void)p_lock;
+
+	/* Step #1: Extract the existing object. */
+	Dee_atomic_lock_acquire(p_lock);
+	temp = *p_self;
+	if (!temp) {
+		Dee_atomic_lock_release(p_lock);
+		goto done;
+	}
+	Dee_Incref(temp);
+	Dee_atomic_lock_release(p_lock);
+
+	/* Step #2: Create a deep copy for it. */
+	copy = DeeObject_DeepCopy(temp);
+	Dee_Decref(temp);
+	if unlikely(!copy)
+		goto err;
+
+	/* Step #3: Write back the newly created deep copy. */
+	Dee_atomic_lock_acquire(p_lock);
+	temp   = *p_self; /* Inherit */
+	*p_self = copy;   /* Inherit */
+	Dee_atomic_lock_release(p_lock);
+	Dee_XDecref(temp);
+done:
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_InplaceDeepCopyWithRWLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
+                                            Dee_atomic_rwlock_t *__restrict p_lock) {
 	DREF DeeObject *temp, *copy;
 	(void)p_lock;
 
@@ -1400,8 +1463,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_XInplaceDeepCopyWithLock)(DREF DeeObject **__restrict p_self,
-                                           Dee_atomic_rwlock_t *__restrict p_lock) {
+(DCALL DeeObject_XInplaceDeepCopyWithRWLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
+                                             Dee_atomic_rwlock_t *__restrict p_lock) {
 	DREF DeeObject *temp, *copy;
 	(void)p_lock;
 
