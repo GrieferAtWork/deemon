@@ -987,6 +987,7 @@ tuple_iterator_next(TupleIterator *__restrict self) {
 			return ITER_DONE;
 	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, index, index + 1));
 	result = DeeTuple_GET(self->ti_tuple, index);
+	ASSERT(result != (DREF DeeObject *)0xcccccccc);
 	ASSERT_OBJECT(result);
 	Dee_Incref(result);
 	return result;
@@ -2084,7 +2085,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *sequence) {
 	DREF Tuple *me = (DREF Tuple *)self;
 	DREF Tuple *result;
-	size_t other_sizehint, total_size;
+	size_t lhs_size, other_sizehint, total_size;
 	DeeTypeObject *tp_sequence;
 	if unlikely(DeeObject_IsShared(me)) {
 		result = tuple_concat(me, sequence);
@@ -2109,12 +2110,13 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 	}
 
 	/* Allocate an initial buffer. */
-	if (OVERFLOW_UADD(me->t_size, other_sizehint, &total_size))
+	lhs_size = me->t_size;
+	if (OVERFLOW_UADD(lhs_size, other_sizehint, &total_size))
 		total_size = (size_t)-1;
 	result = DeeTuple_TryResizeUninitialized(me, total_size);
 	if unlikely(!result) {
 		other_sizehint = 0;
-		total_size     = me->t_size;
+		total_size     = lhs_size;
 		result = DeeTuple_ResizeUninitialized(me, total_size);
 		if unlikely(!result)
 			goto err_me;
@@ -2126,20 +2128,22 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 		for (;;) {
 			DREF Tuple *new_result;
 			other_size = (*tp_sequence->tp_seq->tp_asvector)(sequence, other_sizehint,
-			                                                 result->t_elem + result->t_size);
+			                                                 result->t_elem + lhs_size);
 			if (other_size <= other_sizehint)
 				break; /* Success! got the entire sequence */
 			/* Must allocate a larger buffer. */
-			if (OVERFLOW_UADD(result->t_size, other_size, &total_size))
+			if (OVERFLOW_UADD(lhs_size, other_size, &total_size))
 				total_size = (size_t)-1; /* Force downstream OOM */
 			new_result = DeeTuple_ResizeUninitialized(result, total_size);
-			if unlikely(!new_result)
+			if unlikely(!new_result) {
+				Dee_Decrefv(result->t_elem, lhs_size);
 				goto err_r;
+			}
 			result         = new_result;
 			other_sizehint = other_size;
 		}
 		if (other_size < other_sizehint) {
-			total_size = result->t_size + other_size;
+			total_size = lhs_size + other_size;
 			result = DeeTuple_TruncateUninitialized(result, total_size);
 		}
 	} else {
@@ -2147,14 +2151,13 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 		struct tuple_concat_fe_data data;
 		ASSERT(tp_sequence->tp_seq->tp_foreach);
 		data.tcfed_result = result;
-		data.tcfed_offset = result->t_size;
+		data.tcfed_offset = lhs_size;
 		fe_status = (*tp_sequence->tp_seq->tp_foreach)(sequence, &tuple_concat_fe_cb, &data);
-		ASSERTF(data.tcfed_offset >= result->t_size, "%Iu >= %Iu", data.tcfed_offset, result->t_size);
+		ASSERTF(data.tcfed_offset >= lhs_size, "%Iu >= %Iu", data.tcfed_offset, lhs_size);
 		result = data.tcfed_result;
 		ASSERT(fe_status <= 0);
 		if unlikely(fe_status) {
-			Dee_Decrefv(result->t_elem + result->t_size,
-			            data.tcfed_offset - result->t_size);
+			Dee_Decrefv(result->t_elem, data.tcfed_offset);
 			goto err_r;
 		}
 		total_size = data.tcfed_offset;
@@ -2385,7 +2388,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         /**/ "negative @start or @end values, as well as ?N being passed for "
 	                         /**/ "either (s.a. ?A{op:getrange}?DSequence)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT,
-	/* .tp_weakrefs = */ 0,
+	/* .tp_weakrefs = */ 0, /* !!! DeeTuple_ConcatInherited assumes that tuples can't have weakrefs! */
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
