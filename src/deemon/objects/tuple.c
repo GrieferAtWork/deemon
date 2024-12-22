@@ -987,7 +987,6 @@ tuple_iterator_next(TupleIterator *__restrict self) {
 			return ITER_DONE;
 	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, index, index + 1));
 	result = DeeTuple_GET(self->ti_tuple, index);
-	ASSERT(result != (DREF DeeObject *)0xcccccccc);
 	ASSERT_OBJECT(result);
 	Dee_Incref(result);
 	return result;
