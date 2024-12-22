@@ -29,7 +29,7 @@
 //#define DEFINE_DeeType_RequireSeqBoundLast
 //#define DEFINE_DeeType_RequireSeqDelLast
 //#define DEFINE_DeeType_RequireSetLast
-#define DEFINE_DeeType_RequireCached
+//#define DEFINE_DeeType_RequireCached
 //#define DEFINE_DeeType_RequireSeqAny
 //#define DEFINE_DeeType_RequireSeqAnyWithKey
 //#define DEFINE_DeeType_RequireSeqAnyWithRange
@@ -86,7 +86,7 @@
 //#define DEFINE_DeeType_RequireSeqAppend
 //#define DEFINE_DeeType_RequireSeqExtend
 //#define DEFINE_DeeType_RequireSeqXchItemIndex
-//#define DEFINE_DeeType_RequireSeqClear
+#define DEFINE_DeeType_RequireSeqClear
 //#define DEFINE_DeeType_RequireSeqPop
 //#define DEFINE_DeeType_RequireSeqRemove
 //#define DEFINE_DeeType_RequireSeqRemoveWithKey
@@ -666,9 +666,8 @@ DECL_BEGIN
 #define LOCAL_Bar                    XchItem
 #define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
 #elif defined(DEFINE_DeeType_RequireSeqClear)
-#define LOCAL_foo                    clear
-#define LOCAL_Foo                    Clear
-#define LOCAL_ATTR_REQUIRED_SEQCLASS Dee_SEQCLASS_SEQ
+#define LOCAL_foo clear
+#define LOCAL_Foo Clear
 #elif defined(DEFINE_DeeType_RequireSeqPop)
 #define LOCAL_foo                    pop
 #define LOCAL_Foo                    Pop
