@@ -2126,11 +2126,11 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 		for (;;) {
 			DREF Tuple *new_result;
 			other_size = (*tp_sequence->tp_seq->tp_asvector)(sequence, other_sizehint,
-			                                                 result->t_elem + me->t_size);
+			                                                 result->t_elem + result->t_size);
 			if (other_size <= other_sizehint)
 				break; /* Success! got the entire sequence */
 			/* Must allocate a larger buffer. */
-			if (OVERFLOW_UADD(me->t_size, other_size, &total_size))
+			if (OVERFLOW_UADD(result->t_size, other_size, &total_size))
 				total_size = (size_t)-1; /* Force downstream OOM */
 			new_result = DeeTuple_ResizeUninitialized(result, total_size);
 			if unlikely(!new_result)
@@ -2139,7 +2139,7 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 			other_sizehint = other_size;
 		}
 		if (other_size < other_sizehint) {
-			total_size = me->t_size + other_size;
+			total_size = result->t_size + other_size;
 			result = DeeTuple_TruncateUninitialized(result, total_size);
 		}
 	} else {
@@ -2147,14 +2147,14 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 		struct tuple_concat_fe_data data;
 		ASSERT(tp_sequence->tp_seq->tp_foreach);
 		data.tcfed_result = result;
-		data.tcfed_offset = me->t_size;
+		data.tcfed_offset = result->t_size;
 		fe_status = (*tp_sequence->tp_seq->tp_foreach)(sequence, &tuple_concat_fe_cb, &data);
-		ASSERTF(data.tcfed_offset >= me->t_size, "%Iu >= %Iu", data.tcfed_offset, me->t_size);
+		ASSERTF(data.tcfed_offset >= result->t_size, "%Iu >= %Iu", data.tcfed_offset, result->t_size);
 		result = data.tcfed_result;
 		ASSERT(fe_status <= 0);
 		if unlikely(fe_status) {
-			Dee_Decrefv(result->t_elem + me->t_size,
-			            data.tcfed_offset - me->t_size);
+			Dee_Decrefv(result->t_elem + result->t_size,
+			            data.tcfed_offset - result->t_size);
 			goto err_r;
 		}
 		total_size = data.tcfed_offset;
