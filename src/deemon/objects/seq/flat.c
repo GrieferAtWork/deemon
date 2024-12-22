@@ -152,11 +152,11 @@ sf_ctor(SeqFlat *__restrict self) {
 #define SF_BOOL_FOREACH_YES SSIZE_MIN
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_bool_foreach_cb(void *UNUSED(arg), DeeObject *item) {
-	int result = DeeSeq_OperatorBool(item);
+	Dee_ssize_t result = DeeSeq_OperatorBool(item);
 	if (result > 0)
-		result = (int)SF_BOOL_FOREACH_YES;
-	ASSERT(result == 0 || result == -1 || result == (int)SF_BOOL_FOREACH_YES);
-	return (Dee_ssize_t)result;
+		result = SF_BOOL_FOREACH_YES;
+	ASSERT(result == 0 || result == -1 || result == SF_BOOL_FOREACH_YES);
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -219,16 +219,16 @@ err:
 #define SF_CONTAINS_FOREACH_YES SSIZE_MIN
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_contains_foreach_cb(void *arg, DeeObject *item) {
-	int result;
+	Dee_ssize_t result;
 	DREF DeeObject *contains_ob;
 	contains_ob = DeeSeq_OperatorContains(item, (DeeObject *)arg);
 	if unlikely(!contains_ob)
 		goto err;
 	result = DeeObject_BoolInherited(contains_ob);
 	if (result > 0)
-		result = (int)SF_CONTAINS_FOREACH_YES;
-	ASSERT(result == 0 || result == -1 || result == (int)SF_CONTAINS_FOREACH_YES);
-	return (Dee_ssize_t)result;
+		result = SF_CONTAINS_FOREACH_YES;
+	ASSERT(result == 0 || result == -1 || result == SF_CONTAINS_FOREACH_YES);
+	return result;
 err:
 	return -1;
 }
