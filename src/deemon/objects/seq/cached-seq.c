@@ -23,6 +23,7 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/class.h>
 #include <deemon/gc.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -32,18 +33,23 @@
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
 
+#include <hybrid/align.h>
 #include <hybrid/overflow.h>
 
 /**/
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "../int_logic.h"
 
 /**/
 #include "cached-seq.h"
 
 DECL_BEGIN
 
+/************************************************************************/
+/* ITERATOR-BASED CACHE                                                 */
+/************************************************************************/
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_ctor(CachedSeq_WithIter *__restrict self) {
 	self->cswi_iter = NULL;
@@ -759,6 +765,1167 @@ INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* INDEX-BASED CACHE                                                    */
+/************************************************************************/
+
+#ifdef HAVE_CachedSeq_WithGetItem
+PRIVATE struct {
+	Dee_OBJECT_HEAD
+	Dee_ssize_t ob_size;
+	Dee_digit_t ob_digit[CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS)];
+} int_SIZE_MAX_plus_1 = {
+	OBJECT_HEAD_INIT(&DeeInt_Type),
+	CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS),
+	{
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 2
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 3
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 4
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 5
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 6
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 7
+#error "Unsupported __SIZEOF_SIZE_T__/DIGIT_BITS combination"
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 7 */
+		0,
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 6 */
+		0,
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 5 */
+		0,
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 4 */
+		0,
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 3 */
+		0,
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 2 */
+		((Dee_digit_t)1 << ((__SIZEOF_SIZE_T__ * __CHAR_BIT__) % DIGIT_BITS))
+	}
+};
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+cachedseq_index_inc(struct cachedseq_index *__restrict self) {
+	if (self->csi_indexob)
+		return int_inc(&self->csi_indexob);
+	if unlikely(OVERFLOW_UADD(self->csi_index, 1, &self->csi_index)) {
+		Dee_Incref(&int_SIZE_MAX_plus_1);
+		self->csi_indexob = (DREF DeeIntObject *)&int_SIZE_MAX_plus_1;
+	}
+	return 0;
+}
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "../int.c" */
+int_compareint(DeeIntObject const *a, DeeIntObject const *b);
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+cachedseq_index_compare(struct cachedseq_index const *__restrict lhs,
+                        struct cachedseq_index const *__restrict rhs) {
+	size_t lhs_asint;
+	size_t rhs_asint;
+	if (lhs->csi_indexob) {
+		if (rhs->csi_indexob)
+			return int_compareint(lhs->csi_indexob, rhs->csi_indexob);
+		rhs_asint = rhs->csi_index;
+		if (!DeeInt_TryAsSize((DeeObject *)lhs->csi_indexob, &lhs_asint))
+			return 1; /* lhs > rhs  (reason: lhs > (size_t)-1) */
+	} else {
+		lhs_asint = lhs->csi_index;
+		if (rhs->csi_indexob) {
+			if (!DeeInt_TryAsSize((DeeObject *)rhs->csi_indexob, &rhs_asint))
+				return -1; /* lhs < rhs  (reason: rhs > (size_t)-1) */
+		} else {
+			rhs_asint = rhs->csi_index;
+		}
+	}
+	if (lhs_asint < rhs_asint)
+		return -1;
+	if (lhs_asint > rhs_asint)
+		return 1;
+	return 0;
+}
+
+
+#define cswsogi_ctor cswgi_ctor
+#define cswsgi_ctor cswgi_ctor
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cswgi_ctor(CachedSeq_WithGetItem *__restrict self) {
+	Dee_atomic_lock_init(&self->cswgi_lock);
+	self->cswgi_seq                 = NULL;
+	self->cswgi_size.csi_indexob    = NULL;
+	self->cswgi_size.csi_index      = 0;
+	self->cswgi_maxsize.csi_indexob = NULL;
+	self->cswgi_maxsize.csi_index   = 0;
+	self->cswgi_loaded.csi_indexob  = NULL;
+	self->cswgi_loaded.csi_index    = 0;
+	objectlist_init(&self->cswgi_vector);
+	indexbtab_init(&self->cswgi_btab);
+	return 0;
+}
+
+#define cswsogi_init cswgi_init
+#define cswsgi_init  cswgi_init
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cswgi_init(CachedSeq_WithGetItem *__restrict self,
+           size_t argc, DeeObject *const *argv) {
+	if unlikely(argc != 1)
+		return err_invalid_argc(Dee_TYPE(self)->tp_name, argc, 1, 1);
+	self->cswgi_seq = argv[0];
+	Dee_Incref(self->cswgi_seq);
+	self->cswgi_size.csi_indexob    = NULL;
+	self->cswgi_size.csi_index      = (size_t)-1;
+	self->cswgi_maxsize.csi_indexob = NULL;
+	self->cswgi_maxsize.csi_index   = (size_t)-1;
+	self->cswgi_loaded.csi_indexob  = NULL;
+	self->cswgi_loaded.csi_index    = 0;
+	Dee_atomic_lock_init(&self->cswgi_lock);
+	objectlist_init(&self->cswgi_vector);
+	indexbtab_init(&self->cswgi_btab);
+	return 0;
+}
+
+#define cswsogi_fini cswgi_fini
+#define cswsgi_fini  cswgi_fini
+PRIVATE NONNULL((1)) void DCALL
+cswgi_fini(CachedSeq_WithGetItem *__restrict self) {
+	size_t i;
+	Dee_XDecref(self->cswgi_seq);
+	cachedseq_index_fini(&self->cswgi_size);
+	cachedseq_index_fini(&self->cswgi_maxsize);
+	cachedseq_index_fini(&self->cswgi_loaded);
+	Dee_XDecrefv(self->cswgi_vector.ol_elemv,
+	             self->cswgi_vector.ol_elemc);
+	Dee_objectlist_elemv_free(self->cswgi_vector.ol_elemv);
+	for (i = 0; i < self->cswgi_btab.ibt_size; ++i) {
+		Dee_Decref(self->cswgi_btab.ibt_elem[i].ibti_index);
+		Dee_XDecref(self->cswgi_btab.ibt_elem[i].ibti_value);
+	}
+	Dee_Free(self->cswgi_btab.ibt_elem);
+}
+
+#define cswsogi_visit cswgi_visit
+#define cswsgi_visit  cswgi_visit
+PRIVATE NONNULL((1, 2)) void DCALL
+cswgi_visit(CachedSeq_WithGetItem *__restrict self, dvisit_t proc, void *arg) {
+	size_t i;
+	CachedSeq_WithGetItem_LockAcquire(self);
+	Dee_XVisit(self->cswgi_seq);
+	/*Dee_XVisit(self->cswgi_size.csi_indexob);*/
+	/*Dee_XVisit(self->cswgi_maxsize.csi_indexob);*/
+	/*Dee_XVisit(self->cswgi_loaded.csi_indexob);*/
+	Dee_XVisitv(self->cswgi_vector.ol_elemv,
+	            self->cswgi_vector.ol_elemc);
+	for (i = 0; i <= self->cswgi_btab.ibt_size; ++i) {
+		/*Dee_Visit(self->cswgi_btab.ibt_elem[i].ibti_index);*/
+		Dee_XVisit(self->cswgi_btab.ibt_elem[i].ibti_value);
+	}
+	CachedSeq_WithGetItem_LockRelease(self);
+}
+
+#define cswgi_deep   cswgi_copy
+#define cswsogi_copy cswgi_copy
+#define cswsogi_deep cswgi_copy
+#define cswsgi_copy  cswgi_copy
+#define cswsgi_deep  cswgi_copy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cswgi_copy(CachedSeq_WithGetItem *__restrict self,
+           CachedSeq_WithGetItem *__restrict other) {
+	size_t i;
+	DREF DeeObject **vector_copy;
+	size_t vector_size;
+	struct indexbtab_item *indexbtab_copy;
+	size_t indexbtab_size;
+again:
+	CachedSeq_WithGetItem_LockAcquire(other);
+	vector_size = other->cswgi_vector.ol_elemc;
+	if (vector_size) {
+		vector_copy = Dee_objectlist_elemv_trymalloc(vector_size);
+		if unlikely(!vector_copy) {
+			CachedSeq_WithGetItem_LockRelease(other);
+			vector_copy = Dee_objectlist_elemv_malloc(vector_size);
+			if unlikely(!vector_copy)
+				goto err;
+			CachedSeq_WithGetItem_LockAcquire(other);
+			if unlikely(other->cswgi_vector.ol_elemc != vector_size) {
+unlock_other_and_free_vector_copy_and_again:
+				CachedSeq_WithGetItem_LockRelease(other);
+				Dee_objectlist_elemv_free(vector_copy);
+				goto again;
+			}
+		}
+	}
+again_copy_indexbtab_locked:
+	indexbtab_size = other->cswgi_btab.ibt_size;
+	indexbtab_copy = NULL;
+	if (indexbtab_size) {
+		indexbtab_copy = (struct indexbtab_item *)Dee_TryMallocc(indexbtab_size,
+		                                                         sizeof(struct indexbtab_item));
+		if unlikely(!indexbtab_copy) {
+			CachedSeq_WithGetItem_LockRelease(other);
+			indexbtab_copy = (struct indexbtab_item *)Dee_Mallocc(indexbtab_size,
+			                                                      sizeof(struct indexbtab_item));
+			if unlikely(!indexbtab_copy)
+				goto err_vector_copy;
+			CachedSeq_WithGetItem_LockAcquire(other);
+			if unlikely(other->cswgi_btab.ibt_size != indexbtab_size - 1) {
+				CachedSeq_WithGetItem_LockRelease(other);
+				Dee_Free(indexbtab_copy);
+				CachedSeq_WithGetItem_LockAcquire(other);
+				goto again_copy_indexbtab_locked;
+			}
+			if unlikely(other->cswgi_vector.ol_elemc != vector_size)
+				goto unlock_other_and_free_vector_copy_and_again;
+		}
+	}
+
+	/* Copy indexbtab cache. */
+	self->cswgi_btab.ibt_elem = indexbtab_copy;
+	self->cswgi_btab.ibt_size = other->cswgi_btab.ibt_size;
+	for (i = 0; i < self->cswgi_btab.ibt_size; ++i) {
+		struct indexbtab_item *dst = &indexbtab_copy[i];
+		struct indexbtab_item *src = &other->cswgi_btab.ibt_elem[i];
+		dst->ibti_index = src->ibti_index;
+		Dee_Incref(dst->ibti_index);
+		dst->ibti_value = src->ibti_value;
+		Dee_XIncref(dst->ibti_value);
+	}
+
+	/* Copy vector cache. */
+	vector_copy = Dee_XMovrefv(vector_copy, other->cswgi_vector.ol_elemv, vector_size);
+	self->cswgi_vector.ol_elemc = vector_size;
+	self->cswgi_vector.ol_elemv = vector_copy;
+	_Dee_objectlist_setalloc(&self->cswgi_vector, vector_size);
+
+	/* Copy other caches/fields. */
+	cachedseq_index_copy(&self->cswgi_size, &other->cswgi_size);
+	cachedseq_index_copy(&self->cswgi_maxsize, &other->cswgi_maxsize);
+	cachedseq_index_copy(&self->cswgi_loaded, &other->cswgi_loaded);
+	self->cswgi_seq = other->cswgi_seq;
+	Dee_XIncref(self->cswgi_seq);
+	CachedSeq_WithGetItem_LockRelease(other);
+	objectlist_init(&self->cswgi_vector);
+	indexbtab_init(&self->cswgi_btab);
+	Dee_atomic_lock_init(&self->cswgi_lock);
+	return 0;
+err_vector_copy:
+	Dee_objectlist_elemv_free(vector_copy);
+err:
+	return -1;
+}
+
+#define cswsogi_deepload cswgi_deepload
+#define cswsgi_deepload  cswgi_deepload
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cswgi_deepload(CachedSeq_WithGetItem *__restrict self) {
+	size_t i;
+	CachedSeq_WithGetItem_LockAcquire(self);
+	for (i = 0; i < self->cswgi_vector.ol_elemc; ++i) {
+		DREF DeeObject *new_vector_elem;
+		DREF DeeObject *old_vector_elem;
+		old_vector_elem = self->cswgi_vector.ol_elemv[i];
+		if (!old_vector_elem)
+			continue;
+		CachedSeq_WithGetItem_LockRelease(self);
+		new_vector_elem = DeeObject_DeepCopy(old_vector_elem);
+		Dee_Decref_unlikely(old_vector_elem);
+		if unlikely(!new_vector_elem)
+			goto err;
+		CachedSeq_WithGetItem_LockAcquire(self);
+		old_vector_elem = self->cswgi_vector.ol_elemv[i]; /* Inherit reference */
+		self->cswgi_vector.ol_elemv[i] = new_vector_elem; /* Inherit reference */
+		CachedSeq_WithGetItem_LockRelease(self);
+		Dee_XDecref(old_vector_elem);
+		CachedSeq_WithGetItem_LockAcquire(self);
+	}
+	for (i = 0; i < self->cswgi_btab.ibt_size; ++i) {
+		DREF DeeObject *old_indexbtab_elem;
+		DREF DeeObject *new_indexbtab_elem;
+		old_indexbtab_elem = self->cswgi_btab.ibt_elem[i].ibti_value;
+		if (!old_indexbtab_elem)
+			continue;
+		Dee_Incref(old_indexbtab_elem);
+		CachedSeq_WithGetItem_LockRelease(self);
+		new_indexbtab_elem = DeeObject_DeepCopy(old_indexbtab_elem);
+		Dee_Decref_unlikely(old_indexbtab_elem);
+		if unlikely(!new_indexbtab_elem)
+			goto err;
+		CachedSeq_WithGetItem_LockAcquire(self);
+		old_indexbtab_elem = self->cswgi_btab.ibt_elem[i].ibti_value; /* Inherit reference */
+		self->cswgi_btab.ibt_elem[i].ibti_value = new_indexbtab_elem; /* Inherit reference */
+		CachedSeq_WithGetItem_LockRelease(self);
+		Dee_XDecref(old_indexbtab_elem);
+		CachedSeq_WithGetItem_LockAcquire(self);
+	}
+	CachedSeq_WithGetItem_LockRelease(self);
+	return DeeObject_XInplaceDeepCopyWithLock(&self->cswgi_seq, &self->cswgi_lock);
+err:
+	return -1;
+}
+
+
+#define cswsogi_clear cswgi_clear
+#define cswsgi_clear  cswgi_clear
+PRIVATE NONNULL((1, 2)) void DCALL
+cswgi_clear(CachedSeq_WithGetItem *__restrict self, dvisit_t proc, void *arg) {
+	size_t i;
+	DREF DeeObject *old_seq;
+	DREF DeeIntObject *old_sizeob;
+	DREF DeeIntObject *old_maxsizeob;
+	DREF DeeIntObject *old_loadedob;
+	size_t old_map_mask;
+	struct indexbtab_item *old_map_elem;
+	size_t old_vector_size;
+	DREF DeeObject **old_vector_elem;
+	CachedSeq_WithGetItem_LockAcquire(self);
+	old_seq = self->cswgi_seq;
+	self->cswgi_seq = NULL;
+	old_sizeob = self->cswgi_size.csi_indexob;
+	cachedseq_index_init_index(&self->cswgi_size, 0);
+	old_maxsizeob = self->cswgi_maxsize.csi_indexob;
+	cachedseq_index_init_index(&self->cswgi_maxsize, 0);
+	old_loadedob = self->cswgi_loaded.csi_indexob;
+	cachedseq_index_init_index(&self->cswgi_loaded, 0);
+	old_vector_elem = self->cswgi_vector.ol_elemv;
+	old_vector_size = self->cswgi_vector.ol_elemc;
+	self->cswgi_vector.ol_elemv = NULL;
+	self->cswgi_vector.ol_elemc = 0;
+	old_map_elem = self->cswgi_btab.ibt_elem;
+	old_map_mask = self->cswgi_btab.ibt_size;
+	self->cswgi_btab.ibt_elem = NULL;
+	self->cswgi_btab.ibt_size = 0;
+	CachedSeq_WithGetItem_LockRelease(self);
+	Dee_XDecref(old_seq);
+	Dee_XDecref(old_sizeob);
+	Dee_XDecref(old_maxsizeob);
+	Dee_XDecref(old_loadedob);
+	Dee_XDecrefv(old_vector_elem, old_vector_size);
+	Dee_objectlist_elemv_free(old_vector_elem);
+	for (i = 0; i <= old_map_mask; ++i) {
+		if (!old_map_elem[i].ibti_index)
+			continue;
+		Dee_Visit(old_map_elem[i].ibti_index);
+		Dee_XVisit(old_map_elem[i].ibti_value);
+	}
+	Dee_Free(old_map_elem);
+}
+
+
+#define cswsogi_gc cswgi_gc
+#define cswsgi_gc  cswgi_gc
+PRIVATE struct type_gc cswgi_gc = {
+	/* .tp_clear */ (void (DCALL *)(DeeObject *__restrict))&cswgi_clear
+};
+
+
+
+#include <deemon/error.h>
+
+/* @return: 0 : Size has been cached
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cswgi_loadsize(CachedSeq_WithGetItem *__restrict self) {
+	/* TODO */
+	(void)self;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+/* Returns the next (bound) index that is `>= min_index [&& <= end_index]'
+ * NOTE: Initializes `result' on success (return == 0)
+ * @param: end_index: when non-NULL, never return indices `>= end_index'.
+ *                    Instead, temporarily act as if "self" ended at "end_index".
+ * @return: 1 : No such index
+ * @return: 0 : Success 
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+cswgi_indexafter(CachedSeq_WithGetItem *__restrict self,
+                 /*out[1..1]*/ struct cachedseq_index *result,
+                 /*in[1..1]*/ struct cachedseq_index const *min_index,
+                 /*in[0..1]*/ struct cachedseq_index const *end_index) {
+	/* TODO */
+	(void)self;
+	(void)result;
+	(void)min_index;
+	(void)end_index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+#define CSWGI_GETITEM_ERROR   NULL
+#define CSWGI_GETITEM_UNBOUND ITER_DONE
+#define CSWGI_GETITEM_OOB     ((DeeObject *)-2l)
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cswgi_getitem_index_ex(CachedSeq_WithGetItem *__restrict self, size_t index) {
+	/* TODO */
+	(void)self;
+	(void)index;
+	DeeError_NOTIMPLEMENTED();
+	return CSWGI_GETITEM_ERROR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cswgi_getitem_object_ex(CachedSeq_WithGetItem *self, DeeObject *index) {
+	/* TODO */
+	(void)self;
+	(void)index;
+	DeeError_NOTIMPLEMENTED();
+	return CSWGI_GETITEM_ERROR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cswgi_getitem_ex(CachedSeq_WithGetItem *self,
+                 struct cachedseq_index const *index) {
+	return index->csi_indexob ? cswgi_getitem_object_ex(self, (DeeObject *)index->csi_indexob)
+	                          : cswgi_getitem_index_ex(self, index->csi_index);
+}
+
+#define cswsogi_sizeob cswgi_sizeob
+#define cswsgi_sizeob  cswgi_sizeob
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cswgi_sizeob(CachedSeq_WithGetItem *__restrict self) {
+	struct cachedseq_index result;
+	if unlikely(cswgi_loadsize(self))
+		goto err;
+	CachedSeq_WithGetItem_LockAcquire(self);
+	cachedseq_index_copy(&result, &self->cswgi_size);
+	CachedSeq_WithGetItem_LockRelease(self);
+	if (result.csi_indexob != NULL)
+		return (DREF DeeObject *)result.csi_indexob;
+	return DeeInt_NewSize(result.csi_index);
+err:
+	return NULL;
+}
+
+#define cswsogi_size cswgi_size
+#define cswsgi_size  cswgi_size
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+cswgi_size(CachedSeq_WithGetItem *__restrict self) {
+	struct cachedseq_index result;
+	if unlikely(cswgi_loadsize(self))
+		goto err;
+	CachedSeq_WithGetItem_LockAcquire(self);
+	cachedseq_index_copy(&result, &self->cswgi_size);
+	CachedSeq_WithGetItem_LockRelease(self);
+	if (result.csi_indexob != NULL) {
+		int temp;
+		temp = DeeInt_AsSize((DREF DeeObject *)result.csi_indexob, &result.csi_index);
+		Dee_Decref(result.csi_indexob);
+		if unlikely(temp)
+			goto err;
+	}
+	if unlikely(result.csi_index == (size_t)-1)
+		err_integer_overflow_i(sizeof(size_t) * __CHAR_BIT__, true);
+	return result.csi_index;
+err:
+	return (size_t)-1;
+}
+
+#define cswsogi_size_fast cswgi_size_fast
+#define cswsgi_size_fast  cswgi_size_fast
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+cswgi_size_fast(CachedSeq_WithGetItem *__restrict self) {
+	size_t result = (size_t)-1;
+	CachedSeq_WithGetItem_LockAcquire(self);
+	if (!self->cswgi_seq && !self->cswgi_size.csi_indexob)
+		result = self->cswgi_size.csi_index;
+	CachedSeq_WithGetItem_LockRelease(self);
+	return result;
+}
+
+
+#define cswsogi_getitem cswgi_getitem
+#define cswsgi_getitem  cswgi_getitem
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cswgi_getitem(CachedSeq_WithGetItem *self, DeeObject *index) {
+	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
+	if unlikely(result == CSWGI_GETITEM_UNBOUND) {
+		err_unbound_index_ob((DeeObject *)self, index);
+		goto err;
+	}
+	if unlikely(result == CSWGI_GETITEM_OOB) {
+		DREF DeeObject *sizeob = cswgi_sizeob(self);
+		if unlikely(!sizeob)
+			goto err;
+		err_index_out_of_bounds_ob((DeeObject *)self, index, sizeob);
+		Dee_Decref_unlikely(sizeob);
+		goto err;
+	}
+	return result;
+err:
+	return NULL;
+}
+
+#define cswsogi_bounditem cswgi_bounditem
+#define cswsgi_bounditem  cswgi_bounditem
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cswgi_bounditem(CachedSeq_WithGetItem *self, DeeObject *index) {
+	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
+	if (result == CSWGI_GETITEM_UNBOUND)
+		return 0;
+	if (result == CSWGI_GETITEM_OOB)
+		return -2;
+	if (result == CSWGI_GETITEM_ERROR)
+		return -1;
+	Dee_Decref_unlikely(result);
+	return 1;
+}
+
+#define cswsogi_hasitem cswgi_hasitem
+#define cswsgi_hasitem  cswgi_hasitem
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cswgi_hasitem(CachedSeq_WithGetItem *self, DeeObject *index) {
+	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
+	if (result == CSWGI_GETITEM_UNBOUND)
+		return 0;
+	if (result == CSWGI_GETITEM_OOB)
+		return 0;
+	if (result == CSWGI_GETITEM_ERROR)
+		return -1;
+	Dee_Decref_unlikely(result);
+	return 1;
+}
+
+#define cswsogi_bounditem_index cswgi_bounditem_index
+#define cswsgi_bounditem_index  cswgi_bounditem_index
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cswgi_bounditem_index(CachedSeq_WithGetItem *self, size_t index) {
+	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
+	if (result == CSWGI_GETITEM_UNBOUND)
+		return 0;
+	if (result == CSWGI_GETITEM_OOB)
+		return -2;
+	if (result == CSWGI_GETITEM_ERROR)
+		return -1;
+	Dee_Decref_unlikely(result);
+	return 1;
+}
+
+#define cswsogi_hasitem_index cswgi_hasitem_index
+#define cswsgi_hasitem_index  cswgi_hasitem_index
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cswgi_hasitem_index(CachedSeq_WithGetItem *self, size_t index) {
+	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
+	if (result == CSWGI_GETITEM_UNBOUND)
+		return 0;
+	if (result == CSWGI_GETITEM_OOB)
+		return 0;
+	if (result == CSWGI_GETITEM_ERROR)
+		return -1;
+	Dee_Decref_unlikely(result);
+	return 1;
+}
+
+#define cswsogi_trygetitem cswgi_trygetitem
+#define cswsgi_trygetitem  cswgi_trygetitem
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cswgi_trygetitem(CachedSeq_WithGetItem *self, DeeObject *index) {
+	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
+	STATIC_ASSERT((uintptr_t)CSWGI_GETITEM_UNBOUND == (uintptr_t)ITER_DONE);
+	if (result == CSWGI_GETITEM_OOB)
+		result = ITER_DONE;
+	return result;
+}
+
+#define cswsogi_getitem_index cswgi_getitem_index
+#define cswsgi_getitem_index  cswgi_getitem_index
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cswgi_getitem_index(CachedSeq_WithGetItem *self, size_t index) {
+	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
+	if unlikely(result == CSWGI_GETITEM_UNBOUND) {
+		err_unbound_index((DeeObject *)self, index);
+		goto err;
+	}
+	if unlikely(result == CSWGI_GETITEM_OOB) {
+		DREF DeeObject *indexob;
+		DREF DeeObject *sizeob = cswgi_sizeob(self);
+		if unlikely(!sizeob)
+			goto err;
+		indexob = DeeInt_NewSize(index);
+		if likely(indexob) {
+			err_index_out_of_bounds_ob((DeeObject *)self, indexob, sizeob);
+			Dee_Decref_likely(indexob);
+		}
+		Dee_Decref_unlikely(sizeob);
+		goto err;
+	}
+	return result;
+err:
+	return NULL;
+}
+
+#define cswsogi_trygetitem_index cswgi_trygetitem_index
+#define cswsgi_trygetitem_index  cswgi_trygetitem_index
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cswgi_trygetitem_index(CachedSeq_WithGetItem *self, size_t index) {
+	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
+	STATIC_ASSERT((uintptr_t)CSWGI_GETITEM_UNBOUND == (uintptr_t)ITER_DONE);
+	if (result == CSWGI_GETITEM_OOB)
+		result = ITER_DONE;
+	return result;
+}
+
+
+#define cswsogi_foreach cswgi_foreach
+#define cswsgi_foreach  cswgi_foreach
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cswgi_foreach(CachedSeq_WithGetItem *self, Dee_foreach_t cb, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	struct cachedseq_index prev_index;
+	cachedseq_index_init_index(&prev_index, 0);
+	for (;;) {
+		int status;
+		DREF DeeObject *value;
+		struct cachedseq_index next_index;
+		status = cswgi_indexafter(self, &prev_index, &next_index, NULL);
+		if unlikely(status < 0)
+			goto err_prev_index;
+		if (status > 0)
+			break;
+		cachedseq_index_fini(&prev_index);
+		cachedseq_index_move(&prev_index, &next_index);
+		value = cswgi_getitem_ex(self, &prev_index);
+		if unlikely(value == CSWGI_GETITEM_ERROR)
+			goto err_prev_index;
+		if unlikely(value == CSWGI_GETITEM_OOB)
+			break;
+		if likely(value != CSWGI_GETITEM_UNBOUND) {
+			temp = (*cb)(arg, value);
+			Dee_Decref(value);
+			if unlikely(temp < 0)
+				goto err_prev_index_temp;
+			result += temp;
+		}
+		if (cachedseq_index_inc(&prev_index))
+			goto err_prev_index;
+	}
+	cachedseq_index_fini(&prev_index);
+	return result;
+err_prev_index_temp:
+	cachedseq_index_fini(&prev_index);
+	return temp;
+err_prev_index:
+	cachedseq_index_fini(&prev_index);
+/*err:*/
+	return -1;
+}
+
+
+#define cswsogi_enumerate cswgi_enumerate
+#define cswsgi_enumerate  cswgi_enumerate
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cswgi_enumerate(CachedSeq_WithGetItem *self, Dee_enumerate_t cb, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	struct cachedseq_index prev_index;
+	cachedseq_index_init_index(&prev_index, 0);
+	for (;;) {
+		int status;
+		DREF DeeObject *value;
+		struct cachedseq_index next_index;
+		status = cswgi_indexafter(self, &prev_index, &next_index, NULL);
+		if unlikely(status < 0)
+			goto err_prev_index;
+		if (status > 0)
+			break;
+		cachedseq_index_fini(&prev_index);
+		cachedseq_index_move(&prev_index, &next_index);
+		value = cswgi_getitem_ex(self, &prev_index);
+		if unlikely(value == CSWGI_GETITEM_ERROR)
+			goto err_prev_index;
+		if unlikely(value == CSWGI_GETITEM_OOB)
+			break;
+		if likely(value != CSWGI_GETITEM_UNBOUND) {
+			if (prev_index.csi_indexob) {
+				temp = (*cb)(arg, (DeeObject *)prev_index.csi_indexob, value);
+			} else {
+				DREF DeeObject *indexob;
+				indexob = DeeInt_NewSize(prev_index.csi_index);
+				if likely(indexob) {
+					temp = (*cb)(arg, indexob, value);
+					Dee_Decref(indexob);
+				} else {
+					temp = -1;
+				}
+			}
+			Dee_Decref(value);
+			if unlikely(temp < 0)
+				goto err_prev_index_temp;
+			result += temp;
+		}
+		if (cachedseq_index_inc(&prev_index))
+			goto err_prev_index;
+	}
+	cachedseq_index_fini(&prev_index);
+	return result;
+err_prev_index_temp:
+	cachedseq_index_fini(&prev_index);
+	return temp;
+err_prev_index:
+	cachedseq_index_fini(&prev_index);
+/*err:*/
+	return -1;
+}
+
+#define cswsogi_enumerate_index cswgi_enumerate_index
+#define cswsgi_enumerate_index  cswgi_enumerate_index
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cswgi_enumerate_index(CachedSeq_WithGetItem *self, Dee_enumerate_index_t cb,
+                      void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	struct cachedseq_index prev_index;
+	struct cachedseq_index end_index;
+	cachedseq_index_init_index(&prev_index, start);
+	cachedseq_index_init_index(&end_index, end);
+	for (;;) {
+		int status;
+		DREF DeeObject *value;
+		struct cachedseq_index next_index;
+		status = cswgi_indexafter(self, &prev_index, &next_index, &end_index);
+		if unlikely(status < 0)
+			goto err_prev_index;
+		if (status > 0)
+			break;
+		cachedseq_index_fini(&prev_index);
+		cachedseq_index_move(&prev_index, &next_index);
+		value = cswgi_getitem_ex(self, &prev_index);
+		if unlikely(value == CSWGI_GETITEM_ERROR)
+			goto err_prev_index;
+		if unlikely(value == CSWGI_GETITEM_OOB)
+			break;
+		if likely(value != CSWGI_GETITEM_UNBOUND) {
+			if (!prev_index.csi_indexob) {
+				temp = (*cb)(arg, prev_index.csi_index, value);
+			} else {
+				size_t int_index;
+				if unlikely(!DeeInt_TryAsSize((DeeObject *)prev_index.csi_indexob, &int_index)) {
+					Dee_Decref(value);
+					break;
+				}
+				temp = (*cb)(arg, int_index, value);
+			}
+			Dee_Decref(value);
+			if unlikely(temp < 0)
+				goto err_prev_index_temp;
+			result += temp;
+		}
+		if (cachedseq_index_inc(&prev_index))
+			goto err_prev_index;
+	}
+	cachedseq_index_fini(&prev_index);
+	return result;
+err_prev_index_temp:
+	cachedseq_index_fini(&prev_index);
+	return temp;
+err_prev_index:
+	cachedseq_index_fini(&prev_index);
+/*err:*/
+	return -1;
+}
+
+#define cswsogi_iter cswgi_iter
+#define cswsgi_iter  cswgi_iter
+PRIVATE WUNUSED NONNULL((1)) DREF CachedSeq_WithGetItem_Iterator *DCALL
+cswgi_iter(CachedSeq_WithGetItem *__restrict self) {
+	DREF CachedSeq_WithGetItem_Iterator *result;
+	result = DeeObject_MALLOC(CachedSeq_WithGetItem_Iterator);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->cswgii_cache = self;
+	cachedseq_index_init_index(&result->cswgii_nextindex, 0);
+	Dee_atomic_lock_init(&result->cswgii_lock);
+	DeeObject_Init(result, &CachedSeq_WithGetItem_Iterator_Type);
+	return result;
+err:
+	return NULL;
+}
+
+#define cswsogi_bool cswgi_bool
+#define cswsgi_bool  cswgi_bool
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cswgi_bool(CachedSeq_WithGetItem *__restrict self) {
+	int status;
+	struct cachedseq_index prev_index;
+	struct cachedseq_index next_index;
+	cachedseq_index_init_index(&prev_index, 0);
+	status = cswgi_indexafter(self, &prev_index, &next_index, NULL);
+	cachedseq_index_fini(&next_index);
+	ASSERT(prev_index.csi_indexob == NULL); /*cachedseq_index_fini(&prev_index);*/
+	if (status >= 0)
+		status = !status;
+	return status;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cswgi_populate_impl(CachedSeq_WithGetItem *__restrict self,
+                    struct cachedseq_index *__restrict start,
+                    /*0..1*/ struct cachedseq_index *end) {
+	int status = 0;
+	struct cachedseq_index prev_index;
+	struct cachedseq_index next_index;
+	CachedSeq_WithGetItem_LockAcquire(self);
+	cachedseq_index_copy(&prev_index, &self->cswgi_loaded);
+	CachedSeq_WithGetItem_LockRelease(self);
+	if (cachedseq_index_compare(&prev_index, start) < 0) {
+		cachedseq_index_fini(&prev_index);
+		cachedseq_index_copy(&prev_index, start);
+	}
+	for (;;) {
+		CachedSeq_WithGetItem_LockAcquire(self);
+		if (self->cswgi_seq == NULL) {
+			/* Everything has been cached */
+			CachedSeq_WithGetItem_LockRelease(self);
+			break;
+		}
+		CachedSeq_WithGetItem_LockRelease(self);
+		status = cswgi_indexafter(self, &next_index, &prev_index, end);
+		if (status != 0)
+			break;
+		cachedseq_index_fini(&prev_index);
+		cachedseq_index_move(&prev_index, &next_index);
+	}
+	cachedseq_index_fini(&prev_index);
+	return status;
+}
+
+
+#define cswsogi_populate cswgi_populate
+#define cswsgi_populate  cswgi_populate
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cswgi_populate(CachedSeq_WithGetItem *__restrict self,
+               size_t argc, DeeObject *const *argv) {
+	int status;
+	struct cachedseq_index start, end;
+	if (argc == 0) {
+		cachedseq_index_init_index(&start, 0);
+		status = cswgi_populate_impl(self, &start, NULL);
+	} else if (argc == 1) {
+		end.csi_indexob = (DREF DeeIntObject *)DeeObject_Int(argv[0]);
+		if unlikely(!end.csi_indexob)
+			goto err;
+		cachedseq_index_init_index(&start, 0);
+		status = cswgi_populate_impl(self, &start, &end);
+		cachedseq_index_fini(&end);
+	} else if (argc == 2) {
+		start.csi_indexob = (DREF DeeIntObject *)DeeObject_Int(argv[0]);
+		if unlikely(!start.csi_indexob)
+			goto err;
+		end.csi_indexob = (DREF DeeIntObject *)DeeObject_Int(argv[1]);
+		if unlikely(!end.csi_indexob)
+			goto err_start;
+		status = cswgi_populate_impl(self, &start, &end);
+		cachedseq_index_fini(&end);
+		cachedseq_index_fini(&start);
+	} else {
+		err_invalid_argc("populate", argc, 0, 2);
+		goto err;
+	}
+	if unlikely(status < 0)
+		goto err;
+	return_none;
+err_start:
+	cachedseq_index_fini(&start);
+err:
+	return NULL;
+}
+
+#define cswsogi_methods cswgi_methods
+#define cswsgi_methods  cswgi_methods
+PRIVATE struct type_method cswgi_methods[] = {
+	TYPE_METHOD("populate", &cswgi_populate,
+	            "()\n"
+	            "(end:?Dint)\n"
+	            "(start:?Dint,end:?Dint)\n"
+	            "Populate the entire cache, or the specified range of indices"),
+	TYPE_METHOD_END
+};
+
+#define cswsogi_getsets cswgi_getsets
+#define cswsgi_getsets  cswgi_getsets
+PRIVATE struct type_getset cswgi_getsets[] = {
+	/* TODO */
+	TYPE_GETSET_END
+};
+
+#define cswsogi_members cswgi_members
+#define cswsgi_members  cswgi_members
+PRIVATE struct type_member cswgi_members[] = {
+	TYPE_MEMBER_FIELD("__vector_cache_size__", STRUCT_SIZE_T | STRUCT_ATOMIC | STRUCT_CONST,
+	                  offsetof(CachedSeq_WithGetItem, cswgi_vector.ol_elemc)),
+	TYPE_MEMBER_FIELD("__btab_cache_size__", STRUCT_SIZE_T | STRUCT_ATOMIC | STRUCT_CONST,
+	                  offsetof(CachedSeq_WithGetItem, cswgi_btab.ibt_size)),
+	TYPE_MEMBER_END
+};
+
+#define cswsogi_class_members cswgi_class_members
+#define cswsgi_class_members  cswgi_class_members
+PRIVATE struct type_member cswgi_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &CachedSeq_WithGetItem_Iterator_Type),
+	TYPE_MEMBER_END
+};
+
+
+#define cswsogi_seq cswgi_seq
+#define cswsgi_seq  cswgi_seq
+PRIVATE struct type_seq cswgi_seq = {
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cswgi_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cswgi_sizeob,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cswgi_getitem,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cswgi_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&cswgi_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&cswgi_enumerate_index,
+	/* .tp_iterkeys                   = */ &DeeSeq_DefaultIterKeysWithSizeOb,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&cswgi_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cswgi_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&cswgi_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&cswgi_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cswgi_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&cswgi_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&cswgi_hasitem_index,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cswgi_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cswgi_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ NULL
+};
+
+
+INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_CachedSeqWithGetItem",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(objWithGetItem)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&cswgi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&cswgi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&cswgi_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&cswgi_init,
+				TYPE_FIXED_ALLOCATOR_GC(CachedSeq_WithGetItem)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswgi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cswgi_deepload,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cswgi_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswgi_visit,
+	/* .tp_gc            = */ &cswgi_gc,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &cswgi_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ cswgi_methods,
+	/* .tp_getsets       = */ cswgi_getsets,
+	/* .tp_members       = */ cswgi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ cswgi_class_members,
+};
+
+INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_CachedSeqWithSizeObAndGetItem",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(objWithSizeAndGetItem)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&cswsogi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&cswsogi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&cswsogi_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&cswsogi_init,
+				TYPE_FIXED_ALLOCATOR_GC(CachedSeq_WithIter)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswsogi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cswsogi_deepload,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cswsogi_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswsogi_visit,
+	/* .tp_gc            = */ &cswsogi_gc,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &cswsogi_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ cswsogi_methods,
+	/* .tp_getsets       = */ cswsogi_getsets,
+	/* .tp_members       = */ cswsogi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ cswsogi_class_members,
+};
+
+INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_CachedSeqWithSizeAndGetItemIndex",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(objWithSizeAndGetItem)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&cswsgi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&cswsgi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&cswsgi_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&cswsgi_init,
+				TYPE_FIXED_ALLOCATOR_GC(CachedSeq_WithIter)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswsgi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cswsgi_deepload,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cswsgi_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswsgi_visit,
+	/* .tp_gc            = */ &cswsgi_gc,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &cswsgi_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ cswsgi_methods,
+	/* .tp_getsets       = */ cswsgi_getsets,
+	/* .tp_members       = */ cswsgi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ cswsgi_class_members,
+};
+
+
+
+
+
+INTERN DeeTypeObject CachedSeq_WithGetItem_Iterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_CachedSeqWithGetItemIterator",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(base:?X3"
+	                         /**/ "?Ert:CachedSeqWithGetItem"
+	                         /**/ "?Ert:CachedSeqWithSizeObAndGetItem"
+	                         /**/ "?Ert:CachedSeqWithSizeAndGetItem"
+	                         ",index=!0)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL, /* Not GC because "cswgii_nextindex" can only reference int-objects. */
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&cswgiiter_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&cswgiiter_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&cswgiiter_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&cswgiiter_init,
+				TYPE_FIXED_ALLOCATOR(CachedSeq_WithGetItem_Iterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswgiiter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cswgiiter_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cswgiiter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cswgiiter_next,
+	/* .tp_iterator      = */ &cswgiiter_iterator,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ cswgiiter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+#endif /* HAVE_CachedSeq_WithGetItem */
 
 DECL_END
 

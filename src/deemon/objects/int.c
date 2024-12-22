@@ -3909,7 +3909,7 @@ err:
 
 
 /* Integer compare. */
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* Needed by "seq/cached-seq.c" */
 int_compareint(DeeIntObject const *a, DeeIntObject const *b) {
 	Dee_ssize_t sign;
 	if (a->ob_size != b->ob_size) {

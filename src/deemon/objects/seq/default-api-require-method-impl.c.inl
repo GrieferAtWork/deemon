@@ -1349,19 +1349,33 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 #elif defined(DEFINE_DeeType_RequireCached)
 	if (seqclass == Dee_SEQCLASS_SEQ) {
 		if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_GETITEM)) {
+			bool has_custom_iter;
+			bool has_custom_size;
+			bool has_custom_sizeob;
+			bool has_custom_getitem;
 			ASSERT(self->tp_seq);
 			ASSERT(self->tp_seq->tp_getitem);
 			ASSERT(self->tp_seq->tp_getitem_index);
-			if (self->tp_seq->tp_size && !DeeType_IsDefaultSize(self->tp_seq->tp_size))
-				return &DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItemIndex;
-			if (self->tp_seq->tp_sizeob && !DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob))
+			ASSERT(self->tp_seq->tp_trygetitem);
+			ASSERT(self->tp_seq->tp_trygetitem_index);
+			has_custom_iter    = self->tp_seq->tp_iter && !DeeType_IsDefaultIter(self->tp_seq->tp_iter);
+			has_custom_size    = self->tp_seq->tp_size && !DeeType_IsDefaultSize(self->tp_seq->tp_size);
+			has_custom_sizeob  = self->tp_seq->tp_sizeob && !DeeType_IsDefaultSizeOb(self->tp_seq->tp_sizeob);
+			has_custom_getitem = !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem) ||
+			                     !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index) ||
+			                     !DeeType_IsDefaultTryGetItem(self->tp_seq->tp_trygetitem) ||
+			                     !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index);
+			if (has_custom_getitem && has_custom_size)
+				return &DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItem;
+			if (has_custom_getitem && has_custom_sizeob)
 				return &DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem;
-			if ((self->tp_seq->tp_getitem && !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem)) ||
-			    (self->tp_seq->tp_getitem_index && !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)))
+			if (has_custom_iter)
+				return &DeeSeq_DefaultCachedWithSeqIter; /* custom iterator. */
+			if (has_custom_getitem)
 				return &DeeSeq_DefaultCachedWithSeqGetItem; /* custom getitem. */
-			if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_ITER))
-				return &DeeSeq_DefaultCachedWithSeqIter; /* custom iter/foreach/etc. */
-			if (DeeType_HasPrivateOperator_in(orig_type, self, OPERATOR_SIZE))
+			if (has_custom_size)
+				return &DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItem;
+			if (has_custom_sizeob)
 				return &DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem;
 			return &DeeSeq_DefaultCachedWithSeqGetItem;
 		}

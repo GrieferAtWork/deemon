@@ -2142,7 +2142,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	            /**/ "print (for (local x: { 5, 7 }) seq.rfind(x)) > ...; /* 3 */"
 	            "}\n"
 	            "This works because ?#find and similar functions always perform comparisons with the "
-	            /**/ "item being searched on the left-hand-side, meaning *its* compare operators are "
+	            /**/ "item being searched on the left-hand-side, meaning #Iits compare operators are "
 	            /**/ "invoked in order to determine equality. As such, ${(seq.some == foo).operator bool()} "
 	            /**/ "has been programmed to return the same as ${(foo in seq).operator bool()}"),
 	TYPE_GETTER("ids", &SeqIds_New,

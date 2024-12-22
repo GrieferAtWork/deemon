@@ -413,7 +413,7 @@ DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItemIndex(DeeObject *__restrict self) {
+DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItem(DeeObject *__restrict self) {
 	/* TODO */
 	return DeeSeq_DefaultCachedWithSeqIter(self);
 }

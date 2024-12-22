@@ -1315,7 +1315,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithCallCa
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqIter(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqGetItem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqSizeObAndSeqGetItem(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItemIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithSeqSizeAndSeqGetItem(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultCachedWithError(DeeObject *__restrict self);
 
 
