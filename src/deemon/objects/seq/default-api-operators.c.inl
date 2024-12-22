@@ -760,13 +760,13 @@ DeeSeq_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_DefaultOperatorInplaceAddWithTSCExtend(DREF DeeObject **__restrict p_self,
+DeeSeq_DefaultOperatorInplaceAddWithSeqExtend(DREF DeeObject **__restrict p_self,
                                               DeeObject *some_object) {
 	return DeeSeq_InvokeExtend(*p_self, some_object);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend(DREF DeeObject **__restrict p_self,
+DeeSeq_DefaultOperatorInplaceMulWithSeqClearAndSeqExtend(DREF DeeObject **__restrict p_self,
                                                          DeeObject *some_object) {
 	int result;
 	size_t repeat;

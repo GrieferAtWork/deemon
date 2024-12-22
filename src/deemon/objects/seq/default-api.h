@@ -324,8 +324,8 @@ for (local seqClass, name: operatorNames) {
 #define DeeSeq_VariantsFor_OperatorLe(cb)                      cb(DeeSeq_OperatorLe) cb(DeeSeq_DefaultOperatorLeWithEmpty) cb(DeeSeq_DefaultOperatorLeWithSeqCompare) cb(DeeSeq_DefaultOperatorLeWithError)
 #define DeeSeq_VariantsFor_OperatorGr(cb)                      cb(DeeSeq_OperatorGr) cb(DeeSeq_DefaultOperatorGrWithEmpty) cb(DeeSeq_DefaultOperatorGrWithSeqCompare) cb(DeeSeq_DefaultOperatorGrWithError)
 #define DeeSeq_VariantsFor_OperatorGe(cb)                      cb(DeeSeq_OperatorGe) cb(DeeSeq_DefaultOperatorGeWithEmpty) cb(DeeSeq_DefaultOperatorGeWithSeqCompare) cb(DeeSeq_DefaultOperatorGeWithError)
-#define DeeSeq_VariantsFor_OperatorInplaceAdd(cb)              cb(DeeSeq_OperatorInplaceAdd) cb(DeeSeq_DefaultOperatorInplaceAddWithTSCExtend) cb(DeeObject_DefaultInplaceAddWithAdd)
-#define DeeSeq_VariantsFor_OperatorInplaceMul(cb)              cb(DeeSeq_OperatorInplaceMul) cb(DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend) cb(DeeObject_DefaultInplaceMulWithMul)
+#define DeeSeq_VariantsFor_OperatorInplaceAdd(cb)              cb(DeeSeq_OperatorInplaceAdd) cb(DeeSeq_DefaultOperatorInplaceAddWithSeqExtend) cb(DeeObject_DefaultInplaceAddWithAdd)
+#define DeeSeq_VariantsFor_OperatorInplaceMul(cb)              cb(DeeSeq_OperatorInplaceMul) cb(DeeSeq_DefaultOperatorInplaceMulWithSeqClearAndSeqExtend) cb(DeeObject_DefaultInplaceMulWithMul)
 #define DeeSet_VariantsFor_OperatorIter(cb)                    cb(DeeSet_OperatorIter) cb(DeeSeq_DefaultOperatorIterWithEmpty) cb(DeeSet_DefaultOperatorIterWithDistinctIter) cb(DeeSet_DefaultOperatorIterWithError)
 #define DeeSet_VariantsFor_OperatorForeach(cb)                 cb(DeeSet_OperatorForeach) cb(DeeSeq_DefaultOperatorForeachWithEmpty) cb(DeeSet_DefaultOperatorForeachWithDistinctForeach) cb(DeeSet_DefaultOperatorForeachWithError)
 #define DeeSet_VariantsFor_OperatorSize(cb)                    cb(DeeSet_OperatorSize) cb(DeeSeq_DefaultOperatorSizeWithEmpty) cb(DeeSet_DefaultOperatorSizeWithSetForeach) cb(DeeSet_DefaultOperatorSizeWithError)
@@ -972,11 +972,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGeWit
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGeWithEmpty(DeeObject *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGeWithError(DeeObject *self, DeeObject *some_object);
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorInplaceAddWithTSCExtend(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorInplaceAddWithSeqExtend(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 #define DeeSeq_DefaultOperatorInplaceAddWithEmpty DeeSeq_DefaultOperatorInplaceAddWithError
 #define DeeSeq_DefaultOperatorInplaceAddWithError DeeObject_DefaultInplaceAddWithAdd
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorInplaceMulWithSeqClearAndSeqExtend(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 #define DeeSeq_DefaultOperatorInplaceMulWithEmpty DeeSeq_DefaultOperatorInplaceMulWithError
 #define DeeSeq_DefaultOperatorInplaceMulWithError DeeObject_DefaultInplaceMulWithMul
 

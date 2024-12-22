@@ -1233,7 +1233,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		Dee_mh_seq_extend_t tsc_seq_extend;
 		tsc_seq_extend = DeeType_RequireSeqExtend(self);
 		if (tsc_seq_extend != &DeeSeq_DefaultExtendWithError)
-			return &DeeSeq_DefaultOperatorInplaceAddWithTSCExtend;
+			return &DeeSeq_DefaultOperatorInplaceAddWithSeqExtend;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorInplaceMul)
 #ifndef LOCAL_FOR_OPTIMIZE
@@ -1245,7 +1245,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		Dee_mh_seq_clear_t tsc_seq_clear;
 		if ((tsc_seq_extend = DeeType_RequireSeqExtend(self)) != &DeeSeq_DefaultExtendWithError &&
 		    (tsc_seq_clear = DeeType_RequireSeqClear(self)) != &DeeSeq_DefaultClearWithError)
-			return &DeeSeq_DefaultOperatorInplaceMulWithTSCClearAndTSCExtend;
+			return &DeeSeq_DefaultOperatorInplaceMulWithSeqClearAndSeqExtend;
 	}
 #elif defined(DEFINE_DeeType_RequireSetOperatorIter)
 #ifndef LOCAL_FOR_OPTIMIZE
