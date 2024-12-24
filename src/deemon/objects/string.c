@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -1437,38 +1438,34 @@ err_oob:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_getitem(String *self, DeeObject *index) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_trygetitem_index(String *__restrict self, size_t index) {
 	int width = DeeString_WIDTH(self);
 	union dcharptr str;
-	size_t i, len;
+	size_t len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
-	if (DeeObject_AsSize(index, &i))
-		goto err;
-	if unlikely(i >= len)
+	if unlikely(index >= len)
 		goto err_oob;
 	SWITCH_SIZEOF_WIDTH(width) {
 
 	CASE_WIDTH_1BYTE:
-		return DeeString_Chr(str.cp8[i]);
+		return DeeString_Chr(str.cp8[index]);
 
 	CASE_WIDTH_2BYTE:
-		return DeeString_Chr(str.cp16[i]);
+		return DeeString_Chr(str.cp16[index]);
 
 	CASE_WIDTH_4BYTE:
-		return DeeString_Chr(str.cp32[i]);
+		return DeeString_Chr(str.cp32[index]);
 
 	}
 err_oob:
-	err_index_out_of_bounds((DeeObject *)self, i, len);
-err:
-	return NULL;
+	return ITER_DONE;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_getrange_index(String *__restrict self,
-                  Dee_ssize_t begin, Dee_ssize_t end) {
+                      Dee_ssize_t begin, Dee_ssize_t end) {
 	struct Dee_seq_range range;
 	size_t range_size;
 	void *str  = DeeString_WSTR(self);
@@ -1500,20 +1497,6 @@ string_getrange_index_n(String *__restrict self, Dee_ssize_t begin) {
 	                              (start * STRING_SIZEOF_WIDTH(width)),
 	                              range_size, width);
 #endif /* !__OPTIMIZE_SIZE__ */
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-string_getrange(String *self, DeeObject *begin, DeeObject *end) {
-	Dee_ssize_t i_begin, i_end;
-	if (DeeObject_AsSSize(begin, &i_begin))
-		goto err;
-	if (DeeNone_Check(end))
-		return string_getrange_index_n(self, i_begin);
-	if (DeeObject_AsSSize(end, &i_end))
-		goto err;
-	return string_getrange_index(self, i_begin, i_end);
-err:
-	return NULL;
 }
 
 
@@ -1661,6 +1644,56 @@ err_dst_iter:
 	return (size_t)-1;
 }
 
+
+#ifdef __OPTIMIZE_SIZE__
+#define string_getitem  DeeObject_DefaultGetItemWithGetItemIndex
+#define string_getrange DeeObject_DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN
+#else /* __OPTIMIZE_SIZE__ */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_getitem(String *self, DeeObject *index) {
+	int width = DeeString_WIDTH(self);
+	union dcharptr str;
+	size_t i, len;
+	str.ptr = DeeString_WSTR(self);
+	len     = WSTR_LENGTH(str.ptr);
+	if (DeeObject_AsSize(index, &i))
+		goto err;
+	if unlikely(i >= len)
+		goto err_oob;
+	SWITCH_SIZEOF_WIDTH(width) {
+
+	CASE_WIDTH_1BYTE:
+		return DeeString_Chr(str.cp8[i]);
+
+	CASE_WIDTH_2BYTE:
+		return DeeString_Chr(str.cp16[i]);
+
+	CASE_WIDTH_4BYTE:
+		return DeeString_Chr(str.cp32[i]);
+
+	}
+err_oob:
+	err_index_out_of_bounds((DeeObject *)self, i, len);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+string_getrange(String *self, DeeObject *begin, DeeObject *end) {
+	Dee_ssize_t i_begin, i_end;
+	if (DeeObject_AsSSize(begin, &i_begin))
+		goto err;
+	if (DeeNone_Check(end))
+		return string_getrange_index_n(self, i_begin);
+	if (DeeObject_AsSSize(end, &i_end))
+		goto err;
+	return string_getrange_index(self, i_begin, i_end);
+err:
+	return NULL;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+
 PRIVATE struct type_seq string_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_sizeob,
@@ -1678,7 +1711,7 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
-	/* .tp_hasitem                    = */ NULL,
+	/* .tp_hasitem                    = */ &DeeObject_DefaultHasItemWithHasItemIndex,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&string_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&string_size,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&string_getitem_index,
@@ -1686,15 +1719,15 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_delitem_index              = */ NULL,
 	/* .tp_setitem_index              = */ NULL,
 	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_hasitem_index              = */ &DeeSeq_DefaultHasItemIndexWithSize,
 	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&string_getrange_index,
 	/* .tp_delrange_index             = */ NULL,
 	/* .tp_setrange_index             = */ NULL,
 	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&string_getrange_index_n,
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem                 = */ &DeeObject_DefaultTryGetItemWithTryGetItemIndex,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&string_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,

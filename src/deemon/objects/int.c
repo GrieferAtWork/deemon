@@ -69,6 +69,9 @@
 #include <limits.h> /* CHAR_BIT */
 #endif /* CONFIG_HAVE_LIMITS_H */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 #ifndef CHAR_BIT
 #define CHAR_BIT __CHAR_BIT__
 #endif /* !CHAR_BIT */
@@ -130,6 +133,20 @@
 #endif /* DIGIT_BITS > ... */
 
 DECL_BEGIN
+
+/* Make sure that comparison helper macros work. */
+STATIC_ASSERT(Dee_CompareNe(10, 20) == -1);
+STATIC_ASSERT(Dee_CompareNe(20, 10) == 1);
+STATIC_ASSERT(Dee_Compare(10, 10) == 0);
+STATIC_ASSERT(Dee_Compare(10, 20) == -1);
+STATIC_ASSERT(Dee_Compare(20, 10) == 1);
+STATIC_ASSERT(Dee_CompareFromDiff(-10) == -1);
+STATIC_ASSERT(Dee_CompareFromDiff(10) == 1);
+STATIC_ASSERT(Dee_CompareFromDiff(0) == 0);
+STATIC_ASSERT(Dee_CompareEqFromDiff(-10) == -1 || Dee_CompareEqFromDiff(-10) == 1);
+STATIC_ASSERT(Dee_CompareEqFromDiff(10) == -1 || Dee_CompareEqFromDiff(10) == 1);
+STATIC_ASSERT(Dee_CompareEqFromDiff(0) == 0);
+
 
 #ifndef CONFIG_HAVE_memend
 #define CONFIG_HAVE_memend
@@ -739,9 +756,9 @@ PUBLIC struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3] = {
 
 
 /* Create an integer from signed/unsigned LEB data. */
-PUBLIC WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
-DeeInt_NewSleb(uint8_t const **__restrict p_reader) {
-	uint8_t const *reader = *p_reader;
+PUBLIC WUNUSED ATTR_INOUT(1) DREF /*Int*/ DeeObject *DCALL
+DeeInt_NewSleb(byte_t const **__restrict p_reader) {
+	byte_t const *reader = *p_reader;
 	DREF DeeIntObject *result;
 	digit *dst;
 	twodigits temp;
@@ -753,7 +770,7 @@ DeeInt_NewSleb(uint8_t const **__restrict p_reader) {
 	num_digits = ((num_digits * 7 + (DIGIT_BITS - 1)) / DIGIT_BITS);
 #ifdef CONFIG_STRING_8BIT_STATIC
 	if (num_digits == 1) {
-		uint8_t first_byte;
+		byte_t first_byte;
 		/* See if maybe we can encode the value as one of the 8-bit constants. */
 		reader     = *p_reader;
 		num_bits   = 6;
@@ -823,9 +840,9 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
-DeeInt_NewUleb(uint8_t const **__restrict p_reader) {
-	uint8_t const *reader = *p_reader;
+PUBLIC WUNUSED ATTR_INOUT(1) DREF /*Int*/ DeeObject *DCALL
+DeeInt_NewUleb(byte_t const **__restrict p_reader) {
+	byte_t const *reader = *p_reader;
 	DREF DeeIntObject *result;
 	digit *dst;
 	twodigits temp;
@@ -905,12 +922,12 @@ done:
 
 /* Write the value of an integer as signed/unsigned LEB data.
  * NOTE: When writing ULEB data, the caller is responsible to ensure that `self' is positive. */
-PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) byte_t *DCALL
 DeeInt_GetSleb(/*Int*/ DeeObject *__restrict self,
-               uint8_t *__restrict writer) {
+               byte_t *__restrict writer) {
 	twodigits temp;
 	uint8_t num_bits;
-	uint8_t *dst = writer;
+	byte_t *dst = writer;
 	digit *src, *end;
 	size_t size;
 	DeeIntObject *me = (DeeIntObject *)self;
@@ -930,7 +947,7 @@ DeeInt_GetSleb(/*Int*/ DeeObject *__restrict self,
 			       !((temp >> (num_bits - 1))&1))
 				--num_bits;
 			if (num_bits <= 6) {
-				*dst++ = 0x40 | (uint8_t)temp;
+				*dst++ = 0x40 | (byte_t)temp;
 				goto done;
 			}
 		}
@@ -970,7 +987,7 @@ DeeInt_GetSleb(/*Int*/ DeeObject *__restrict self,
 				break;
 			}
 			ASSERT(!(temp & 0x80));
-			*dst++ = (uint8_t)temp;
+			*dst++ = (byte_t)temp;
 			break;
 		}
 	}
@@ -978,12 +995,12 @@ done:
 	return dst;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) byte_t *DCALL
 DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
-               uint8_t *__restrict writer) {
+               byte_t *__restrict writer) {
 	twodigits temp;
 	uint8_t num_bits;
-	uint8_t *dst = writer;
+	byte_t *dst = writer;
 	digit *src, *end;
 	DeeIntObject *me = (DeeIntObject *)self;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
@@ -1020,7 +1037,7 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 				break;
 			}
 			ASSERT(!(temp & 0x80));
-			*dst++ = (uint8_t)temp;
+			*dst++ = (byte_t)temp;
 			break;
 		}
 	}
@@ -3413,7 +3430,7 @@ PUBLIC WUNUSED DREF /*Int*/ DeeObject *
 		if (as_signed) {
 			Dee_int128_t val;
 #ifdef UNALIGNED_GET128
-			val = __hybrid_int128_asunsigned(UNALIGNED_GET128(buf));
+			val = __hybrid_uint128_assigned(UNALIGNED_GET128(buf));
 #elif defined(__ARCH_HAVE_UNALIGNED_MEMORY_ACCESS)
 			val = *(Dee_int128_t const *)buf;
 #else /* ... */
@@ -3450,10 +3467,11 @@ PUBLIC WUNUSED DREF /*Int*/ DeeObject *
 		uint8_t sign_byte;
 		uint8_t msb_byte;
 		unsigned int msb_topbit;
-#ifndef __OPTIMIZE_SIZE__
+#ifdef __OPTIMIZE_SIZE__
+		/* Needed here because not already handled by switch above under __OPTIMIZE_SIZE__ */
 		if (!length)
 			goto return_zero;
-#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* __OPTIMIZE_SIZE__ */
 		sign_byte = 0x00;
 		if (little_endian) {
 			if (((uint8_t const *)buf)[length - 1] & 0x80) {
@@ -3976,11 +3994,7 @@ int_compare(DeeIntObject *self, DeeObject *some_object) {
 		goto err;
 	compare_value = int_compareint(self, rhs);
 	Dee_Decref(rhs);
-	if (compare_value < 0)
-		return -1;
-	if (compare_value > 0)
-		return 1;
-	return 0;
+	return Dee_CompareFromDiff(compare_value);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4001,7 +4015,7 @@ int_compare_eq(DeeIntObject *self, DeeObject *some_object) {
 		compare_value = int_compareint(self, rhs);
 		Dee_Decref(rhs);
 	}
-	return compare_value != 0 ? 1 : 0;
+	return Dee_CompareEqFromDiff(compare_value);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4023,7 +4037,7 @@ int_trycompare_eq(DeeIntObject *self, DeeObject *some_object) {
 	} else {
 		return 1; /* Implicit `NotImplemented' caught */
 	}
-	return compare_value != 0 ? 1 : 0;
+	return Dee_CompareEqFromDiff(compare_value);
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -4432,8 +4446,8 @@ PRIVATE struct type_method tpconst int_class_methods[] = {
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES,
 	                "(data:?DBytes,byteorder:?X2?Dstring?N=!N,signed=!f)->?.\n"
 	                "#pbyteorder{The byteorder encoding used by the returned bytes. "
-	                /*            */ "One of $\"little\" (for little-endian), $\"big\" "
-	                /*            */ "(for big-endian) or ?N (for host-endian)}"
+	                /*       */ "One of $\"little\" (for little-endian), $\"big\" "
+	                /*       */ "(for big-endian) or ?N (for host-endian)}"
 	                "#tValueError{The given @byteorder string isn't recognized}"
 	                "The inverse of ?#tobytes, decoding a given bytes buffer @bytes to "
 	                /**/ "construct an integer"),
@@ -4532,7 +4546,7 @@ err:
 	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                    \
 	int_##name(DeeIntObject *self, size_t argc, DeeObject *const *argv) { \
 		DREF DeeIntObject *y;                                             \
-		Dee_ssize_t diff;                                                    \
+		Dee_ssize_t diff;                                                 \
 		if (DeeArg_Unpack(argc, argv, "o:" #name, &y))                    \
 			goto err;                                                     \
 		y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);           \

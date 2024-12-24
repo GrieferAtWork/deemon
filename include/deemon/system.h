@@ -342,7 +342,7 @@ DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
                                /* va_list * */ void *Arguments,
                                bool *__restrict p_success);
 
-/* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error message.
+/* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error messages.
  * When no error message exists, return an empty string.
  * @return: * :   The error message. (or an empty string)
  * @return: NULL: A deemon callback failed and an error was thrown. */

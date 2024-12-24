@@ -788,7 +788,7 @@ typedef struct {
 	DREF DeeObject *cfp_dstfile; /* [1..1][const] Destination file */
 	size_t          cfp_bufsize; /* [lock(WEAK(ATOMIC))] Buffer size used during file copy */
 	uint64_t        cfp_copied;  /* [lock(WEAK(ATOMIC))] Number of bytes that have been copied */
-	uint64_t        cfp_total;   /* [lock(WRITE_ONCE)] Total size of `cfp_srcfile' (or `(size_t)-1' if not yet determined) */
+	uint64_t        cfp_total;   /* [lock(WRITE_ONCE)] Total size of `cfp_srcfile' (or `(uint64_t)-1' if not yet determined) */
 } DeeCopyFileProgressObject;
 
 INTDEF DeeTypeObject DeeCopyFileProgress_Type;

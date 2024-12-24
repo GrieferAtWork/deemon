@@ -234,15 +234,15 @@ PRIVATE struct type_math bool_math = {
 	                                       *  --> ~(1 - 1) = ~0  = 1 (1 -> 1)
 	                                       *  Ergo: -bool == bool */
 	/* .tp_add    = */ &bool_or,
-	/* .tp_sub    = */ &bool_xor, /* 0, 0 -> 0-0 =  0 = 0;
-	                               * 0, 1 -> 0-1 = -1 = 1;
-	                               * 1, 0 -> 1-0 =  1 = 1;
-	                               * 1, 1 -> 0-0 =  0 = 0;
+	/* .tp_sub    = */ &bool_xor, /* 0, 0 -> 0 - 0 =  0 = 0;
+	                               * 0, 1 -> 0 - 1 = -1 = 1;
+	                               * 1, 0 -> 1 - 0 =  1 = 1;
+	                               * 1, 1 -> 0 - 0 =  0 = 0;
 	                               * >> Same as xor. */
-	/* .tp_mul    = */ &bool_and, /* 0, 0 -> 0*0 =  0 = 0;
-	                               * 0, 1 -> 0*1 =  0 = 0;
-	                               * 1, 0 -> 1*0 =  0 = 0;
-	                               * 1, 1 -> 1*1 =  1 = 1;
+	/* .tp_mul    = */ &bool_and, /* 0, 0 -> 0 * 0 =  0 = 0;
+	                               * 0, 1 -> 0 * 1 =  0 = 0;
+	                               * 1, 0 -> 1 * 0 =  0 = 0;
+	                               * 1, 1 -> 1 * 1 =  1 = 1;
 	                               * >> Same as and. */
 	/* .tp_div    = */ &bool_div, /* 0, 0 -> 0 / 0 =  ERROR;
 	                               * 0, 1 -> 0 / 1 =  0 = 0;
@@ -287,7 +287,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_compare(DeeObject *self, DeeObject *other) {
 	int error;
 	if (DeeBool_Check(other))
-		return self == other ? 0 : 1;
+		Dee_return_compare(self, other);
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;

@@ -1979,7 +1979,7 @@ do_copy_and_return_hResult:
 			    dwCreationDisposition == CREATE_ALWAYS ||
 			    dwCreationDisposition == TRUNCATE_EXISTING) {
 				/* These modes cannot be used to access STD* files. */
-				SetLastError(ERROR_INVALID_PARAMETER);
+				(void)SetLastError(ERROR_INVALID_PARAMETER);
 				DBG_ALIGNMENT_ENABLE();
 				return INVALID_HANDLE_VALUE;
 			}
@@ -2225,7 +2225,7 @@ again:
 
 	/* When the file is a pipe (which it can be if `filename' starts with r"\\.\pipe\"),
 	 * then we have to change the pipe to non-blocking if the caller wants it to be so.
-	 * 
+	 *
 	 * NOTE: We only need to do this if the caller set the NONBLOCK flag, since otherwise
 	 *       the default behavior of a named pipe is to block:
 	 * """PIPE_WAIT [...] This mode is the default if no wait-mode flag is specified""" */
@@ -2255,7 +2255,7 @@ again:
 	return hFile;
 /*
 err_fp:
-	CloseHandle(hFile);*/
+	(void)CloseHandle(hFile);*/
 err:
 	return NULL;
 }
@@ -2311,7 +2311,7 @@ PRIVATE LPGETFINALPATHNAMEBYHANDLEW pdyn_GetFinalPathNameByHandleW = NULL;
 #define DEFINED_GET_KERNEL32_HANDLE 1
 PRIVATE WCHAR const wKernel32[]    = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 PRIVATE WCHAR const wKernel32Dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
-PRIVATE HMODULE DCALL GetKernel32Handle(void) {
+PRIVATE WUNUSED HMODULE DCALL GetKernel32Handle(void) {
 	HMODULE hKernel32;
 	hKernel32 = GetModuleHandleW(wKernel32);
 	if (!hKernel32)
@@ -2376,7 +2376,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 			}
 			unicode_printer_free_wchar(printer, lpBuffer);
 			DBG_ALIGNMENT_DISABLE();
-			SetLastError(dwError);
+			(void)SetLastError(dwError);
 			DBG_ALIGNMENT_ENABLE();
 			/* Some files don't support this function. -> treat these cases as unsupported. */
 			if (dwError == ERROR_INVALID_FUNCTION ||
@@ -2413,7 +2413,7 @@ PRIVATE LPNTQUERYOBJECT pdyn_NtQueryObject = NULL;
 #define DEFINED_GET_NTDLL_HANDLE 1
 PRIVATE WCHAR const wNtdll[]    = { 'N', 'T', 'D', 'L', 'L', 0 };
 PRIVATE WCHAR const wNtdllDll[] = { 'N', 't', 'd', 'l', 'l', '.', 'd', 'l', 'l', 0 };
-PRIVATE HMODULE DCALL GetNtdllHandle(void) {
+PRIVATE WUNUSED HMODULE DCALL GetNtdllHandle(void) {
 	HMODULE hNtdll;
 	hNtdll = GetModuleHandleW(wNtdll);
 	if (!hNtdll)
@@ -2438,7 +2438,7 @@ typedef struct {
  * @return: 1:  The system call failed (s.a. `GetLastError()').
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
-PRIVATE WUNUSED int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__restrict printer,
                                                      HANDLE hFile) {
 	LPWSTR lpNewBuffer, lpBuffer;
@@ -2499,7 +2499,7 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__r
 		    ntResult == ERROR_INVALID_PARAMETER)
 			return 2;
 		DBG_ALIGNMENT_DISABLE();
-		SetLastError(ntResult);
+		(void)SetLastError(ntResult);
 		DBG_ALIGNMENT_ENABLE();
 		return 1;
 do_resize_buffer:
@@ -2559,17 +2559,17 @@ DeeNTSystem_PrintMappedFileNameWrapper(struct unicode_printer *__restrict printe
 	result = DeeNTSystem_PrintMappedFileName(printer, GetCurrentProcess(), lpFileMapAddr);
 	if (result == 1)
 		goto os_err_hFileMap_lpFileMapAddr;
-	UnmapViewOfFile(lpFileMapAddr);
-	CloseHandle(hFileMap);
+	(void)UnmapViewOfFile(lpFileMapAddr);
+	(void)CloseHandle(hFileMap);
 	return result;
 os_err_hFileMap_lpFileMapAddr:
 	dwError = GetLastError();
-	UnmapViewOfFile(lpFileMapAddr);
-	SetLastError(dwError);
+	(void)UnmapViewOfFile(lpFileMapAddr);
+	(void)SetLastError(dwError);
 os_err_hFileMap:
 	dwError = GetLastError();
-	CloseHandle(hFileMap);
-	SetLastError(dwError);
+	(void)CloseHandle(hFileMap);
+	(void)SetLastError(dwError);
 os_err:
 	DBG_ALIGNMENT_ENABLE();
 	return 1;
@@ -3059,8 +3059,11 @@ DeeNTSystem_PrintFilenameOfHandle(struct unicode_printer *__restrict printer,
 	int error;
 	size_t length;
 	length = UNICODE_PRINTER_LENGTH(printer);
+#if 1
+	error  = DeeNTSystem_PrintFinalPathNameByHandle(printer, hFile, 0);
+#else
 	error  = 2;
-	/*error  = DeeNTSystem_PrintFinalPathNameByHandle(printer, hFile, 0);*/
+#endif
 	if (error == 0) {
 		size_t new_length;
 		/* Try to get rid of the \\?\ prefix */
@@ -3158,7 +3161,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 			if (hModule) {
 				lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(hModule, name_GetMappedFileNameW);
 				if (!lpGetMappedFileNameW)
-					FreeLibrary(hModule);
+					(void)FreeLibrary(hModule);
 			}
 		}
 		if (!lpGetMappedFileNameW) {
@@ -3166,7 +3169,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 			if (hModule) {
 				lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(hModule, name_GetMappedFileNameW);
 				if (!lpGetMappedFileNameW)
-					FreeLibrary(hModule);
+					(void)FreeLibrary(hModule);
 			}
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -3201,7 +3204,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 				goto do_resize_buffer;
 			}
 			unicode_printer_free_wchar(printer, lpBuffer);
-			SetLastError(dwError);
+			(void)SetLastError(dwError);
 			return 1;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -3248,7 +3251,7 @@ DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
 	DBG_ALIGNMENT_ENABLE();
 	unicode_printer_fini(&printer);
 	DBG_ALIGNMENT_DISABLE();
-	SetLastError(dwLastError);
+	(void)SetLastError(dwLastError);
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0)
 		goto err;
@@ -3366,7 +3369,7 @@ DeeNTSystem_PrintFormatMessage(dformatprinter printer, void *arg,
 }
 
 
-/* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error message.
+/* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error messages.
  * When no error message exists, return an empty string.
  * @return: * :   The error message. (or an empty string)
  * @return: NULL: A deemon callback failed and an error was thrown. */

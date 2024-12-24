@@ -242,9 +242,10 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define Dee_COMPARE_ERR (-2)
 
 /* Helper macros for implementing compare operators. */
-#define Dee_CompareNe(a, b)       ((a) < (b) ? -1 : 1)
-#define Dee_Compare(a, b)         ((a) == (b) ? 0 : Dee_CompareNe(a, b))
-#define Dee_CompareFromDiff(diff) ((diff) == 0 ? 0 : (diff) < 0 ? -1 : 1)
+#define Dee_CompareNe(a, b)         ((a) < (b) ? -1 : 1)
+#define Dee_Compare(a, b)           ((a) == (b) ? 0 : Dee_CompareNe(a, b))
+#define Dee_CompareFromDiff(diff)   ((diff) == 0 ? 0 : (diff) < 0 ? -1 : 1)
+#define Dee_CompareEqFromDiff(diff) ((int)!!(diff)) /* diff == 0 ? 0 : 1 */
 
 #define Dee_return_compare_if_ne(a, b)  \
 	do {                                \
@@ -544,7 +545,7 @@ struct Dee_weakref {
  * >>         //                 weakref'd object was being destroyed.
  * >>         DeeWeakref_UnlockCallback(self);
  * >>     } else {
- * >>         DREF MyObject *result;
+ * >>         DREF DeeObject *result;
  * >>         DeeWeakref_UnlockCallback(self);
  * >>         // At this point, we've unlocked the weakref after safely acquiring
  * >>         // a reference to the controlling object, meaning we're now safe to

@@ -45,17 +45,36 @@
 
 /* NOTE: Integer objects have been completely reworked in deemon 2.0,
  *       no longer being split between 8 different types for different
- *       sizes, as well as being becoming immutable objects alongside
- *       the change of disallowing inplace operators on out-of-scope
- *       variables:
- *    >> local my_var = 42;
- *    >> function foo() {
- *    >>     ++my_var; // Illegal since __DEEMON__ >= 200
- *    >>               // Causes a compiler error.
- *    >> }
- *    >> print my_var; // 42
- *    >> foo();
- *    >> print my_var; // 43 (Before 200)
+ *       sizes, as well as becoming immutable objects and disallowing
+ *       inplace operators on out-of-scope variables:
+ * >> local my_var = 42;
+ * >> function foo() {
+ * >>     ++my_var; // Illegal since __DEEMON__ >= 200
+ * >>               // Causes a compiler error.
+ * >> }
+ * >> print my_var; // 42
+ * >> foo();
+ * >> print my_var; // 43 (Before 200)
+ *
+ * Code like this can be migrated as follows:
+ * Option 1:
+ * >> global my_var = 42; // Change to a global variable
+ * >> function foo() {
+ * >>     ++my_var;
+ * >> }
+ * >> print my_var; // 42
+ * >> foo();
+ * >> print my_var; // 43
+ *
+ * Option 2:
+ * >> import Cell from deemon;
+ * >> local my_var = Cell(42); // Change to a cell
+ * >> function foo() {
+ * >>     ++my_var.value;
+ * >> }
+ * >> print my_var.value; // 42
+ * >> foo();
+ * >> print my_var.value; // 43
  */
 
 DECL_BEGIN
@@ -73,17 +92,17 @@ typedef struct Dee_int_object DeeIntObject;
 #endif /* __SIZEOF_POINTER__ < 8 */
 
 
-#if Dee_DIGIT_BITS == 30
-typedef uint32_t Dee_digit_t;
-typedef int32_t Dee_sdigit_t;
-typedef uint64_t Dee_twodigits_t;
-typedef int64_t Dee_stwodigits_t;
-#else /* Dee_DIGIT_BITS == 30 */
+#if Dee_DIGIT_BITS <= 16
 typedef uint16_t Dee_digit_t;
 typedef int16_t Dee_sdigit_t;
 typedef uint32_t Dee_twodigits_t;
 typedef int32_t Dee_stwodigits_t;
-#endif /* Dee_DIGIT_BITS != 30 */
+#else /* Dee_DIGIT_BITS <= 16 */
+typedef uint32_t Dee_digit_t;
+typedef int32_t Dee_sdigit_t;
+typedef uint64_t Dee_twodigits_t;
+typedef int64_t Dee_stwodigits_t;
+#endif /* Dee_DIGIT_BITS > 16 */
 #define Dee_DIGIT_BASE ((Dee_digit_t)1 << Dee_DIGIT_BITS)
 #define Dee_DIGIT_MASK ((Dee_digit_t)(Dee_DIGIT_BASE - 1))
 
@@ -475,19 +494,19 @@ DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewUInt128(Dee_uint128_t va
 DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewDouble(double val); /* TODO: Rounding? */
 
 /* Create an integer from signed/unsigned LEB data. */
-DFUNDEF WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
-DeeInt_NewSleb(uint8_t const **__restrict p_reader);
-DFUNDEF WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
-DeeInt_NewUleb(uint8_t const **__restrict p_reader);
+DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*Int*/ DeeObject *DCALL
+DeeInt_NewSleb(__BYTE_TYPE__ const **__restrict p_reader);
+DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*Int*/ DeeObject *DCALL
+DeeInt_NewUleb(__BYTE_TYPE__ const **__restrict p_reader);
 
 /* Write the value of an integer as signed/unsigned LEB data.
  * NOTE: When writing ULEB data, the caller is responsible to ensure that `self' is positive. */
-DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) __BYTE_TYPE__ *DCALL
 DeeInt_GetSleb(/*Int*/ DeeObject *__restrict self,
-               uint8_t *__restrict writer);
-DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+               __BYTE_TYPE__ *__restrict writer);
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) __BYTE_TYPE__ *DCALL
 DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
-               uint8_t *__restrict writer);
+               __BYTE_TYPE__ *__restrict writer);
 
 /* Calculate the worst-case required memory for writing a given integer in LEB format. */
 #define DeeInt_GetSlebMaxSize(self)                                                     \
@@ -878,17 +897,17 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 #define DeeInt_NewIntptr(val)  DeeInt_NewIntN(__SIZEOF_POINTER__, val)
 #define DeeInt_NewUIntptr(val) DeeInt_NewUIntN(__SIZEOF_POINTER__, val)
 
-#if DIGIT_BITS == 30
-#define DeeInt_NewDigit(val)      DeeInt_NewUIntN(4, val)
-#define DeeInt_NewSDigit(val)     DeeInt_NewIntN(4, val)
-#define DeeInt_NewTwoDigits(val)  DeeInt_NewUIntN(8, val)
-#define DeeInt_NewSTwoDigits(val) DeeInt_NewIntN(8, val)
-#else /* DIGIT_BITS == 30 */
+#if DIGIT_BITS <= 16
 #define DeeInt_NewDigit(val)      DeeInt_NewUIntN(2, val)
 #define DeeInt_NewSDigit(val)     DeeInt_NewIntN(2, val)
 #define DeeInt_NewTwoDigits(val)  DeeInt_NewUIntN(4, val)
 #define DeeInt_NewSTwoDigits(val) DeeInt_NewIntN(4, val)
-#endif /* DIGIT_BITS != 30 */
+#else /* DIGIT_BITS <= 16 */
+#define DeeInt_NewDigit(val)      DeeInt_NewUIntN(4, val)
+#define DeeInt_NewSDigit(val)     DeeInt_NewIntN(4, val)
+#define DeeInt_NewTwoDigits(val)  DeeInt_NewUIntN(8, val)
+#define DeeInt_NewSTwoDigits(val) DeeInt_NewIntN(8, val)
+#endif /* DIGIT_BITS > 16 */
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

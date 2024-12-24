@@ -831,7 +831,7 @@ cachedseq_index_inc(struct cachedseq_index *__restrict self) {
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "../int.c" */
 int_compareint(DeeIntObject const *a, DeeIntObject const *b);
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cachedseq_index_compare(struct cachedseq_index const *__restrict lhs,
                         struct cachedseq_index const *__restrict rhs) {
 	size_t lhs_asint;

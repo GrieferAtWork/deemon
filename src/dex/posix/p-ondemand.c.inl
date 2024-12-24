@@ -664,7 +664,7 @@ nt_DecodeSid(/*Int*/ DeeObject *__restrict self) {
 	/* Figure out what's going to be the value of `SubAuthorityCount'
 	 *
 	 * Since we always use little-endian for encoding SIDs, and since
-	 * the `SubAuthorityCount' is only a single byte larger, its final
+	 * the `SubAuthorityCount' is only a single byte large, its final
 	 * value will always be located in the same spot. */
 #if Dee_DIGIT_BITS >= 16
 	SubAuthorityCount = (me->ob_digit[0] >> 8) & 0xff;

@@ -14427,15 +14427,27 @@ err:
 
 
 #ifndef DEFINE_TYPED_OPERATORS
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+default_map_contains_with_forach_cb(void *arg, DeeObject *key,
+                                    DeeObject *UNUSED(value)) {
+	int temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
+	if (temp == 0)
+		return -2;
+	if unlikely(temp == Dee_COMPARE_ERR)
+		return -1;
+	return 0;
+}
+
 /* Extra map functions that are needed for implementing generic map operator. */
 DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithForeachPair,
                              (DeeObject *self, DeeObject *elem)) {
+	Dee_ssize_t status;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)elem;
-	DeeError_NOTIMPLEMENTED();
+	status = (*DeeType_RequireSeqOperatorForeachPair(tp_self))(self, &default_map_contains_with_forach_cb, elem);
+	if (status == -2)
+		return_true;
+	if (status == 0)
+		return_false;
 	return NULL;
 }
 
