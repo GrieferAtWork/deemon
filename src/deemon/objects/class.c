@@ -5895,6 +5895,12 @@ err_custom_allocator:
 	if (result->tp_init.tp_move_assign == &instance_builtin_moveassign)
 		result->tp_flags &= ~TP_FMOVEANY;
 
+	/* If the class has a custom destructor, it *may* be able to revive itself during destruction.
+	 * XXX: Technically only needed if the dtor function doesn't support "METHOD_FNOREFESCAPE",
+	 *      but we don't keep track of attributes like that for user-functions (yet?) */
+	if (result->tp_init.tp_dtor == &instance_destructor)
+		result->tp_flags |= TP_FMAYREVIVE;
+
 	/* Assign the declaring module (if given) */
 	if likely(declaring_module != NULL)
 		Dee_weakref_init(&result->tp_module, (DeeObject *)declaring_module, NULL);

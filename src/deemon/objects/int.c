@@ -265,11 +265,12 @@ do_free:
 	DeeObject_Free(self);
 }
 
-INTERN WUNUSED DREF DeeIntObject *DCALL
 #ifdef NDEBUG
+INTERN WUNUSED DREF DeeIntObject *DCALL
 DeeInt_Alloc(size_t n_digits)
 #else /* NDEBUG */
-DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
+INTERN WUNUSED DREF DeeIntObject *DCALL
+DeeInt_Alloc_d(size_t n_digits, char const *file, int line)
 #endif /* !NDEBUG */
 {
 	DREF DeeIntObject *result;
@@ -322,11 +323,12 @@ Dee_intcache_clearall(size_t UNUSED(max_clear)) {
 }
 
 
-INTERN WUNUSED DREF DeeIntObject *DCALL
 #ifdef NDEBUG
+INTERN WUNUSED DREF DeeIntObject *DCALL
 DeeInt_Alloc(size_t n_digits)
 #else /* NDEBUG */
-DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
+INTERN WUNUSED DREF DeeIntObject *DCALL
+DeeInt_Alloc_d(size_t n_digits, char const *file, int line)
 #endif /* !NDEBUG */
 {
 	DREF DeeIntObject *result;

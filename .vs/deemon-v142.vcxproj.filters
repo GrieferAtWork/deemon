@@ -705,6 +705,9 @@
 		<ClInclude Include="..\src\deemon\objects\int_logic.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\object-destroy.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>

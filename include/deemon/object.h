@@ -760,6 +760,14 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy_d(DeeObject *__restrict self, 
 #define DeeObject_Destroy(self) DeeObject_Destroy_d(self, __FILE__, __LINE__)
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS || CONFIG_TRACE_REFCHANGES */
 
+typedef NONNULL_T((1)) void (DCALL *Dee_tp_destroy_t)(DeeObject *__restrict self);
+
+/* Return a pointer to the optimized implementation of
+ * object destruction called by `DeeObject_Destroy()' */
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_destroy_t DCALL
+DeeType_RequireDestroy(DeeTypeObject *__restrict self);
+
+
 /* Reference control macros as functions.
  * Use these (#undef'ing the macros, or like `(Dee_Incref)(foo)') in dex
  * modules that should work independently of the deemon configuration. */
@@ -1751,6 +1759,11 @@ struct Dee_type_constructor {
 	 * >>     return NULL;
 	 */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_deepload)(DeeObject *__restrict self);
+
+	/* Callback for `DeeObject_Destroy()' (usually auto-assigned by `DeeType_RequireDestroy()', but
+	 * can be overwritten with a custom implementation). When "CONFIG_HAVE_COMPUTED_OBJECT_DESTROY"
+	 * wasn't enabled while compiling deemon, this callback is unused and ignored. */
+	Dee_tp_destroy_t tp_destroy;
 };
 
 struct Dee_type_cast {
@@ -3952,11 +3965,11 @@ struct Dee_type_operator {
 /*      Dee_TP_F                0x0200  * ... */
 #define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
 #define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
-/*      Dee_TP_F                0x1000  * ... */
-#define Dee_TP_FVARIABLE        0x2000 /* Variable-length object type. (`tp_var' is used, rather than `tp_alloc') */
-#define Dee_TP_FGC              0x4000 /* Instance of this type can be harvested by the Garbage Collector. */
-#define Dee_TP_FHEAP            0x8000 /* This type was allocated on the heap. */
-#define Dee_TP_FINTERHITABLE   (Dee_TP_FINTERRUPT | Dee_TP_FVARIABLE | Dee_TP_FGC) \
+#define Dee_TP_FMAYREVIVE       0x1000 /* This type's `tp_dtor' may revive the object (return with the object's `ob_refcnt > 0') */
+#define Dee_TP_FGC              0x2000 /* Instance of this type can be harvested by the Garbage Collector. */
+#define Dee_TP_FHEAP            0x4000 /* This type was allocated on the heap. */
+#define Dee_TP_FVARIABLE        0x8000 /* Variable-length object type. (`tp_var' is used, rather than `tp_alloc') */
+#define Dee_TP_FINTERHITABLE    (Dee_TP_FINTERRUPT | Dee_TP_FMAYREVIVE | Dee_TP_FGC | Dee_TP_FVARIABLE) \
                                        /* Set of special flags that are inherited by sub-classes. */
 
 #define Dee_TF_NONE             0x00000000 /* No special features. */
@@ -3984,6 +3997,7 @@ struct Dee_type_operator {
 #define TP_FABSTRACT        Dee_TP_FABSTRACT
 #define TP_FNAMEOBJECT      Dee_TP_FNAMEOBJECT
 #define TP_FDOCOBJECT       Dee_TP_FDOCOBJECT
+#define TP_FMAYREVIVE       Dee_TP_FMAYREVIVE
 #define TP_FVARIABLE        Dee_TP_FVARIABLE
 #define TP_FGC              Dee_TP_FGC
 #define TP_FHEAP            Dee_TP_FHEAP
