@@ -324,7 +324,7 @@ local macros: {(string, string)...} = [
 	("F_MINCODE", f"0x80"),
 	("F_MAXCODE", f"{(0x80 + #usedFFormats - 1).hex(2)}"),
 ];
-for (local i, x: util.enumerate(usedFFormats)) {
+for (local i, x: usedFFormats.enumerate()) {
 	local f_code = 0x80 + i;
 	macros.append((f"{x}",   f'"\\x{f_code.tostr(16, 2)}"'));
 	macros.append((f"{x}_C", f'{f_code.hex()}'));
@@ -342,9 +342,9 @@ local macros: {(string, string)...} = [
 	("SP_ADD_COUNT", f'{#addCodes}'),
 	("SP_SUB_COUNT", f'{#subCodes}'),
 ];
-for (local i, x: util.enumerate(addCodes))
+for (local i, x: addCodes.enumerate())
 	macros.append((f"{x}", f"{i}"));
-for (local i, x: util.enumerate(subCodes))
+for (local i, x: subCodes.enumerate())
 	macros.append((f"{x}", f"{i}"));
 local longestNameLen = macros.each.first.length > ...;
 for (local name, value: macros)
@@ -912,14 +912,14 @@ DEE_ASM_OPCODE(0xf0, 0x0c, 6, 16_PUSH_BND_EXTERN, SP_SUB0, SP_ADD1, "push" F_PAD
 DEE_ASM_OPCODE(0xf0, 0x0d, 2, 16_PUSH_BND_STATIC, SP_SUB0, SP_ADD1, "push" F_PAD "bound " F_STATIC16)
 DEE_ASM_OPCODE(0xf0, 0x0e, 4, 16_PUSH_BND_GLOBAL, SP_SUB0, SP_ADD1, "push" F_PAD "bound " F_GLOBAL16)
 DEE_ASM_OPCODE(0xf0, 0x0f, 4, 16_PUSH_BND_LOCAL, SP_SUB0, SP_ADD1, "push" F_PAD "bound " F_LOCAL16)
-DEE_ASM_OPCODE_P(0xf0, 0x10, 3, _FOREACH_KEY, SP_SUB1, SP_ADD2, "foreach_key," F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD1, "foreach_key," F_PAD F_PREFIX ", " F_SDISP8)
-DEE_ASM_OPCODE_P(0xf0, 0x11, 4, _FOREACH_KEY16, SP_SUB1, SP_ADD2, "foreach_key," F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD1, "foreach_key," F_PAD F_PREFIX ", " F_SDISP16)
-DEE_ASM_OPCODE_P(0xf0, 0x12, 3, _FOREACH_VALUE, SP_SUB1, SP_ADD2, "foreach_value," F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD1, "foreach_value," F_PAD F_PREFIX ", " F_SDISP8)
-DEE_ASM_OPCODE_P(0xf0, 0x13, 4, _FOREACH_VALUE16, SP_SUB1, SP_ADD2, "foreach_value," F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD1, "foreach_value," F_PAD F_PREFIX ", " F_SDISP16)
+DEE_ASM_OPCODE_P(0xf0, 0x10, 3, _FOREACH_KEY, SP_SUB1, SP_ADD2, "foreach_key" F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD1, "foreach_key" F_PAD F_PREFIX ", " F_SDISP8)
+DEE_ASM_OPCODE_P(0xf0, 0x11, 4, _FOREACH_KEY16, SP_SUB1, SP_ADD2, "foreach_key" F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD1, "foreach_key" F_PAD F_PREFIX ", " F_SDISP16)
+DEE_ASM_OPCODE_P(0xf0, 0x12, 3, _FOREACH_VALUE, SP_SUB1, SP_ADD2, "foreach_value" F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD1, "foreach_value" F_PAD F_PREFIX ", " F_SDISP8)
+DEE_ASM_OPCODE_P(0xf0, 0x13, 4, _FOREACH_VALUE16, SP_SUB1, SP_ADD2, "foreach_value" F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD1, "foreach_value" F_PAD F_PREFIX ", " F_SDISP16)
 DEE_ASM_OPCODE(0xf0, 0x14, 6, 32_JMP, SP_SUB0, SP_ADD0, "jmp" F_PAD F_SDISP32)
 DEE_ASM_UNDEFINED(0xf0, 0x15, 2)
-DEE_ASM_OPCODE_P(0xf0, 0x16, 3, _FOREACH_PAIR, SP_SUB1, SP_ADD3, "foreach_pair," F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD2, "foreach_pair," F_PAD F_PREFIX ", " F_SDISP8)
-DEE_ASM_OPCODE_P(0xf0, 0x17, 4, _FOREACH_PAIR16, SP_SUB1, SP_ADD3, "foreach_pair," F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD2, "foreach_pair," F_PAD F_PREFIX ", " F_SDISP16)
+DEE_ASM_OPCODE_P(0xf0, 0x16, 3, _FOREACH_PAIR, SP_SUB1, SP_ADD3, "foreach_pair" F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD2, "foreach_pair" F_PAD F_PREFIX ", " F_SDISP8)
+DEE_ASM_OPCODE_P(0xf0, 0x17, 4, _FOREACH_PAIR16, SP_SUB1, SP_ADD3, "foreach_pair" F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD2, "foreach_pair" F_PAD F_PREFIX ", " F_SDISP16)
 DEE_ASM_OPCODE(0xf0, 0x18, 2, _JMP_POP_POP, SP_SUB2, SP_ADD0, "jmp" F_PAD "pop, #pop")
 DEE_ASM_OPCODE_P(0xf0, 0x19, 5, 16_OPERATOR, SP_SUBIMM4N8_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", #" F_IMM8, SP_SUBIMM4N8, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", #" F_IMM8)
 DEE_ASM_OPCODE_P(0xf0, 0x1a, 4, 16_OPERATOR_TUPLE, SP_SUB2, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", pop...", SP_SUB1, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", pop...")

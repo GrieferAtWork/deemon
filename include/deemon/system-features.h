@@ -330,7 +330,7 @@ func("posix_spawn_file_actions_addfchdir", "0", test: 'extern posix_spawn_file_a
 func("posix_spawn_file_actions_addfchdir_np", "0", test: 'extern posix_spawn_file_actions_t fa; return posix_spawn_file_actions_addfchdir_np(&fa, 99);');
 
 func("cwait", msvc, test: 'extern int st; return cwait(&st, 42, 43);');
-func("_cwait", msvc, test: 'extern int st; return cwait(&st, 42, 43);');
+func("_cwait", msvc, test: 'extern int st; return _cwait(&st, 42, 43);');
 func("wait", unix, test: 'extern int st; return wait(&st);');
 func("waitpid", unix, test: 'extern int st; return waitpid(42, &st, 0);');
 constant("WNOHANG");

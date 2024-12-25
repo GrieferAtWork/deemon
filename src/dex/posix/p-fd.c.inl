@@ -485,9 +485,7 @@ EINTR_LABEL(again)
 again_setinfo:
 		hNewFd = (HANDLE)(uintptr_t)get_osfhandle(newfd);
 		if (hNewFd == INVALID_HANDLE_VALUE) {
-#ifdef CONFIG_HAVE_close
-			close(newfd);
-#endif /* CONFIG_HAVE_close */
+			OPT_close(newfd);
 			DBG_ALIGNMENT_ENABLE();
 			DeeError_Throwf(&DeeError_FileClosed, "Invalid fd %d", newfd);
 			goto err;
@@ -506,11 +504,9 @@ again_setinfo:
 				DBG_ALIGNMENT_DISABLE();
 				goto again_setinfo;
 			}
-#ifdef CONFIG_HAVE_close
 			DBG_ALIGNMENT_DISABLE();
-			close(newfd);
+			OPT_close(newfd);
 			DBG_ALIGNMENT_ENABLE();
-#endif /* CONFIG_HAVE_close */
 			DeeNTSystem_ThrowErrorf(NULL, dwError,
 			                        "Failed to set handle information for handle %p",
 			                        hNewFd);
@@ -523,22 +519,18 @@ again_setinfo:
 
 	DBG_ALIGNMENT_ENABLE();
 	result = DeeInt_NewInt(newfd);
-#ifdef CONFIG_HAVE_close
 	if unlikely(!result) {
 		DBG_ALIGNMENT_DISABLE();
-		close(newfd);
+		OPT_close(newfd);
 		DBG_ALIGNMENT_ENABLE();
 	}
-#endif /* CONFIG_HAVE_close */
 	return result;
 
 #ifdef posix_dup3_USE_dup2_AND_fcntl
 handle_system_error_nfd:
-#ifdef CONFIG_HAVE_close
 	error = DeeSystem_GetErrno();
-	close(newfd);
+	OPT_close(newfd);
 	DeeSystem_SetErrno(error);
-#endif /* CONFIG_HAVE_close */
 #endif /* posix_dup3_USE_dup2_AND_fcntl */
 handle_system_error:
 	error = DeeSystem_GetErrno();

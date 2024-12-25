@@ -2776,6 +2776,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FS_ICASE", (DeeObject *)&posix_FS_ICASE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("Evaluations to true if the host has a case-insensitive file-system") },
 
+	/* Allow user-code to dynamically determine if the host has drives. */
+#ifdef DEE_SYSTEM_FS_DRIVES
+#define posix_FS_DRIVES (*Dee_True)
+#else /* DEE_SYSTEM_FS_DRIVES */
+#define posix_FS_DRIVES (*Dee_False)
+#endif /* !DEE_SYSTEM_FS_DRIVES */
+	{ "FS_DRIVES", (DeeObject *)&posix_FS_DRIVES, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+	  DOC("Evaluations to true if the host has DOS-like, drive-based file-system") },
+
 	{ NULL }
 };
 #undef D

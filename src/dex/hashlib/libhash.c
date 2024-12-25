@@ -34,7 +34,6 @@ DECL_BEGIN
 /*[[[deemon
 import * from deemon;
 import * from fs;
-import util;
 local algo_folder = "algorithms";
 
 function DEEMON_REFLECT(x, n_bits) {
@@ -172,7 +171,7 @@ function def_crc(names, width, poly, args...) {
 	local algo_filename = joinpath(algo_folder, "algorithm." + main_name.replace("\\", "_").replace("/", "_") + ".c.inl");
 	with (local algo_file = File.open(algo_filename, "w")) {
 		print algo_file: "{";
-		for (local i, x: util.enumerate(DEEMON_GENERATE_CRC(width, poly, refin))) {
+		for (local i, x: DEEMON_GENERATE_CRC(width, poly, refin).enumerate()) {
 			if ((i % 8) == 0)
 				print algo_file: "\t",;
 			print algo_file: CODEINT(x),;

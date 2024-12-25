@@ -24,10 +24,10 @@ import * from posix;
 assert r"../foo/bar"     == walklink(r"../foo/bar", r"link");
 assert r"dir/../foo/bar" == walklink(r"../foo/bar", r"dir/link");
 assert r"/foo/bar"       == walklink(r"/foo/bar", r"link");
-#ifdef __WINDOWS__
-assert r"C:/foo/bar"     == walklink(r"C:/foo/bar", r"dir/link");
-assert r"\\foo/bar"      == walklink(r"\\foo/bar", r"dir/link");
-#else /* __WINDOWS__ */
-assert r"/foo/bar"       == walklink(r"/foo/bar", r"dir/link");
-assert r"//foo/bar"      == walklink(r"//foo/bar", r"dir/link");
-#endif /* !__WINDOWS__ */
+if (FS_DRIVES) {
+	assert r"C:/foo/bar" == walklink(r"C:/foo/bar", r"dir/link");
+	assert r"\\foo/bar"  == walklink(r"\\foo/bar", r"dir/link");
+} else {
+	assert r"/foo/bar"  == walklink(r"/foo/bar", r"dir/link");
+	assert r"//foo/bar" == walklink(r"//foo/bar", r"dir/link");
+}

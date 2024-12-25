@@ -55,7 +55,7 @@ module_compile(DeeModuleObject *__restrict mod,
 	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
 	/* Truncate some vectors before we'll be inheriting them. */
 	ASSERT(current_rootscope->rs_importc <= current_rootscope->rs_importa);
-	if (current_rootscope->rs_importa != current_rootscope->rs_importc) {
+	if (current_rootscope->rs_importa > current_rootscope->rs_importc) {
 		DREF DeeModuleObject **new_vector;
 		new_vector = (DREF DeeModuleObject **)Dee_TryReallocc(current_rootscope->rs_importv,
 		                                                      current_rootscope->rs_importc,

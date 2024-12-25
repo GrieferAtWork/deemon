@@ -247,10 +247,10 @@ struct builtin_desc {
 };
 
 /*[[[deemon
-#include <file>
-#include <util>
-local sets = dict();
-for (local l: file.open(__FILE__)) {
+import * from deemon;
+
+local sets = Dict();
+for (local l: File.open(__FILE__)) {
 	local setid, name, id, typeval;
 	try {
 		setid, name, id, typeval = l.scanf(" # define DEC_BUILTIN_SET%[^_]_%[^ ] %[^ ] /" "* %[^ ] *" "/")...;
@@ -271,7 +271,7 @@ for (local l: file.open(__FILE__)) {
 
 // Count the total number of builtin objects.
 local num_builtin_objects = (
-	for (local x: sets.items()) #(
+	for (local x: sets.values) #(
 		for (local y: x)
 			if (y !is none)
 				y
@@ -280,14 +280,12 @@ print "#define NUM_BUILTIN_OBJECT_SETS", #sets;
 print "#define NUM_BUILTIN_OBJECTS    ", num_builtin_objects;
 print "PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {";
 for (local setname, setlist: sets) {
-	for (local i, data: util.enumerate(setlist)) {
+	for (local i, data: setlist.enumerate()) {
 		if (data is none)
 			continue;
 		local name, typeval = data...;
-		print "\t{ (DeeObject *)&" + typeval + 
-			", DEC_BUILTINID_MAKE(" + setname + 
-			", ", DEC_BUILTIN_SET" + setname + 
-			", "_" + name + ") },";
+		print("\t{ (DeeObject *)&", typeval, ", DEC_BUILTINID_MAKE(", setname,
+		      ", DEC_BUILTIN_SET", setname, "_", name, ") },");
 	}
 }
 print "};";
@@ -297,9 +295,9 @@ for (local setname, setlist: sets) {
 	print "PRIVATE DeeObject *buitlin_set"+setname+"[DTYPE_BUILTIN_NUM] = {";
 	if (#setlist < 0xf0)
 		setlist.resize(0xf0);
-	for (local i, data: util.enumerate(setlist[0x10:])) {
+	for (local i, data: setlist[0x10:].enumerate()) {
 		if (data is none) {
-			print "\t/" "* 0x%.2x *" "/ NULL, " % (i+0x10);
+			print "\t/" "* 0x%.2x *" "/ NULL," % (i + 0x10);
 		} else {
 			local name, typeval = data...;
 			print "\t/" "* 0x%.2x *" "/ (DeeObject *)&%s, /" "* %s *" "/" % (i+0x10, typeval, name);
@@ -307,7 +305,6 @@ for (local setname, setlist: sets) {
 	}
 	print "};";
 }
-
 ]]]*/
 #define NUM_BUILTIN_OBJECT_SETS 1
 #define NUM_BUILTIN_OBJECTS     56

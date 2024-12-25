@@ -1475,7 +1475,7 @@ DeeModule_ViewGlobals(DeeObject *__restrict self);
 
 PRIVATE struct type_getset tpconst module_getsets[] = {
 	TYPE_GETTER("__exports__", &DeeModule_ViewExports,
-	            "->?M?Dstring?O\n" /* TODO: Also allow gid:?Dint instead of only ?Dstring */
+	            "->?M?X2?Dstring?Dint?O\n"
 	            "Returns a modifiable mapping-like object containing @this "
 	            "Module's global variables accessible by name (and enumerable)\n"
 	            "Note that only existing exports can be modified, however no new symbols can be added:\n"
@@ -1612,7 +1612,7 @@ PRIVATE struct type_method tpconst module_class_methods[] = {
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
 	TYPE_METHOD("open", &module_class_open,
 	            "(name:?Dstring)->?DModule\n"
-	            "Deprecated alias for :import"),
+	            "Deprecated alias for ?Dimport"),
 	TYPE_METHOD_END
 };
 

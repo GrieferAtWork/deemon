@@ -105,12 +105,10 @@ EINTR_LABEL(again)
 		goto err_fds;
 	return result;
 err_fds:
-#ifdef CONFIG_HAVE_close
 	DBG_ALIGNMENT_DISABLE();
-	(void)close(fds[1]);
-	(void)close(fds[0]);
+	OPT_close(fds[1]);
+	OPT_close(fds[0]);
 	DBG_ALIGNMENT_ENABLE();
-#endif /* CONFIG_HAVE_close */
 err:
 	return NULL;
 #endif /* posix_pipe_USE_pipe */
@@ -150,21 +148,17 @@ again:
 		goto err_fds;
 	return result;
 err_fds:
-#ifdef CONFIG_HAVE_close
 	DBG_ALIGNMENT_DISABLE();
-	(void)close(fds[1]);
-	(void)close(fds[0]);
+	OPT_close(fds[1]);
+	OPT_close(fds[0]);
 	DBG_ALIGNMENT_ENABLE();
-#endif /* CONFIG_HAVE_close */
 	goto err;
 err_hWritefds0_errno:
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                          "Failed to create pipe");
-#ifdef CONFIG_HAVE_close
 	DBG_ALIGNMENT_DISABLE();
-	(void)close(fds[0]);
+	OPT_close(fds[0]);
 	DBG_ALIGNMENT_ENABLE();
-#endif /* CONFIG_HAVE_close */
 	goto err_hWrite;
 err_hWritehRead_errno:
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
@@ -276,24 +270,20 @@ EINTR_LABEL(again)
 
 	DBG_ALIGNMENT_ENABLE();
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
-#ifdef CONFIG_HAVE_close
 	if unlikely(!result) {
 		DBG_ALIGNMENT_DISABLE();
-		(void)close(fds[1]);
-		(void)close(fds[0]);
+		OPT_close(fds[1]);
+		OPT_close(fds[0]);
 		DBG_ALIGNMENT_ENABLE();
 	}
-#endif /* CONFIG_HAVE_close */
 	return result;
 
 #ifdef posix_pipe2_USE_pipe_AND_fcntl
 handle_system_error_fds:
-#ifdef CONFIG_HAVE_close
 	error = DeeSystem_GetErrno();
-	(void)close(fds[1]);
-	(void)close(fds[0]);
+	OPT_close(fds[1]);
+	OPT_close(fds[0]);
 	DeeSystem_SetErrno(error);
-#endif /* CONFIG_HAVE_close */
 #endif /* posix_pipe2_USE_pipe_AND_fcntl */
 handle_system_error:
 	error = DeeSystem_GetErrno();
@@ -354,21 +344,17 @@ again:
 	if unlikely(fds[1] < 0)
 		goto err_hWritefds0_errno;
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
-#ifdef CONFIG_HAVE_close
 	if unlikely(!result) {
 		DBG_ALIGNMENT_DISABLE();
-		(void)close(fds[1]);
-		(void)close(fds[0]);
+		OPT_close(fds[1]);
+		OPT_close(fds[0]);
 		DBG_ALIGNMENT_ENABLE();
 	}
-#endif /* CONFIG_HAVE_close */
 	return result;
 err_hWritefds0_errno:
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                          "Failed to create pipe");
-#ifdef CONFIG_HAVE_close
-	(void)close(fds[0]);
-#endif /* CONFIG_HAVE_close */
+	OPT_close(fds[0]);
 	goto err_hWrite;
 err_hWritehRead_errno:
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),

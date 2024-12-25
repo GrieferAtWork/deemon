@@ -64,7 +64,7 @@
 
 #undef OPT_close
 #ifdef CONFIG_HAVE_close
-#define OPT_close(fd) close(fd)
+#define OPT_close(fd) (void)close(fd)
 #else /* CONFIG_HAVE_close */
 #define OPT_close(fd) (void)0
 #endif /* !CONFIG_HAVE_close */

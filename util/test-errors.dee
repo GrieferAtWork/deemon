@@ -22,7 +22,6 @@
 import deemon;
 import * from deemon;
 import * from doc;
-import util;
 import posix;
 import threading;
 import printcode from disassembler;
@@ -220,7 +219,7 @@ function invokeWithValues(
 	local argIndices = [0] * #argValues;
 	while (argIndices.first < #argValues.first) {
 		local args = Tuple(
-			for (local i, j: util.enumerate(argIndices))
+			for (local i, j: argIndices.enumerate())
 				argValues[i][j]);
 		print f"\r{name}({", ".join(for (local x: args) repr x)})"
 			[:TERM_WIDTH].ljust(TERM_WIDTH),;

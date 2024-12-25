@@ -526,7 +526,6 @@ DeeObject_FreeTracker(struct Dee_object *__restrict self);
  * slab allocator function to either include, or exclude debug information. */
 /*[[[deemon
 import * from deemon;
-import util;
 
 local SLAB_CONFIGURATIONS: {(string, {int...})...} = {
 //	("defined(__i386__)", [1, 2, 3, 4, 5, 6]),
@@ -541,7 +540,7 @@ function endMacro(decl) {
 	CURRENT_MACRO_LINES = List(for (local x: CURRENT_MACRO_LINES) f"    {x}");
 	local longestMacroLineLength = { defineLine, CURRENT_MACRO_LINES... }.each.length > ...;
 	print(defineLine, " " * (longestMacroLineLength - #defineLine), " \\");
-	for (local i, l: util.enumerate(CURRENT_MACRO_LINES)) {
+	for (local i, l: CURRENT_MACRO_LINES.enumerate()) {
 		print("\t", l[4:]),;
 		if (i == #CURRENT_MACRO_LINES - 1) {
 			print;
@@ -560,7 +559,7 @@ function printSlabConfiguration(sizes: {int...}) {
 	print("#define Dee_SLAB_MAXSIZE  ", str(sizes.last).ljust(maxWidth),  " /" "* Size of the largest slab *" "/");
 	print("#define Dee_SLAB_COUNT    ", str(#sizes).ljust(maxWidth),      " /" "* # of different slabs *" "/");
 	beginMacro();
-	for (local i, s: util.enumerate(sizes)) {
+	for (local i, s: sizes.enumerate()) {
 		printMacro("func(", i, ", ", " " * (cntWidth - #str(i)), s, ")", " " * (maxWidth - #str(s)),
 		           " /" "* ", s * 4, " / ", s * 8, " *" "/");
 	}

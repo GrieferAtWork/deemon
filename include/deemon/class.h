@@ -2362,7 +2362,7 @@ for (local name: groupNames) {
 		print("default");
 	} else {
 		print("\\");
-		for (local i, mem: util.enumerate(mems)) {
+		for (local i, mem: mems.enumerate()) {
 			print("	", i == 0 ? "(" : " "),;
 			print("(", tp, ") == &", mem, " ? map(", mem.replace("_", "_T"), ") : "),;
 			if (i == #mems - 1) {
@@ -2377,7 +2377,7 @@ for (local name: groupNames) {
 	local mems = groups[name];
 	local tp = getTpName(name);
 	print("#define DeeType_IsDefault", name, "(", tp, ") \\");
-	for (local i, mem: util.enumerate(mems)) {
+	for (local i, mem: mems.enumerate()) {
 		print("	", i == 0 ? "(" : " "),;
 		print("(", tp, ") == &", mem),;
 		if (i == #mems - 1) {
@@ -2442,7 +2442,7 @@ for (local name: groupNames) {
 		//print("(*(", tp, "))(", args, ")");
 	} else {
 		print("\\");
-		for (local i, mem: util.enumerate(mems)) {
+		for (local i, mem: mems.enumerate()) {
 			print("	", i == 0 ? "(" : " "),;
 			print("(", tp, ") == &", mem, " ? ", mem.replace("_", "_T"), "(tp_self, ", args, ") : "),;
 			print("\\");

@@ -488,7 +488,7 @@ final class CxxType {
 					if (!returnsVoid)
 						print("WUNUSED "),;
 					local objectArgumentIndices = List(
-						for (local i, argType: util.enumerate(argTypes))
+						for (local i, argType: argTypes.enumerate())
 							if (argType == "DeeObject *") (i + 1)
 					);
 					if (objectArgumentIndices)
@@ -520,7 +520,7 @@ final class CxxType {
 							while (argsVarname in parameterNames)
 								argsVarname += "_";
 							print("		DeeObject *", argsVarname, "[", #parameterNames, "];");
-							for (local i, parameterName: util.enumerate(parameterNames)) {
+							for (local i, parameterName: parameterNames.enumerate()) {
 								print("		", argsVarname, "[", i, "] = ", parameterName, ";");
 							}
 							callExpr = f"DeeObject_CallAttrStringHash(this, {

@@ -17,7 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-import rt, deemon, util, functools;
+import rt, deemon, functools;
 import * from deemon;
 import * from errors;
 
@@ -122,7 +122,7 @@ function map(func, iterable, more...): bool {
 		for (;;) {
 			local elems = [none] * #its;
 			local has_elems = false;
-			for (local i, it: util.enumerate(its)) {
+			for (local i, it: its.enumerate()) {
 				local elem;
 				try {
 					elem = it.operator next();

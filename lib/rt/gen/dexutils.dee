@@ -20,7 +20,6 @@ local copyright =
  */";
 
 import fs;
-import util;
 import * from deemon;
 import rt.hash as rtHash;
 
@@ -343,7 +342,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	local user_impl_name = f"{libname}{name}_f_impl";
 	local user_args = args.split(",");
 	local arg_data = List(#user_args, none);
-	for (local i, arg: util.enumerate(user_args)) {
+	for (local i, arg: user_args.enumerate()) {
 		local x, none, y = arg.partition(":")...;
 		local y, none, z = y.partition("=")...;
 		if (!y) y = "o";
