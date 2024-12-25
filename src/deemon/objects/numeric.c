@@ -341,7 +341,7 @@ err:
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_popcount(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ffs(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_fls(DeeIntObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_partity(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_parity(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ctz(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_msb(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_nth(DeeIntObject *__restrict self);
@@ -431,13 +431,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
-numeric_get_partity(DeeObject *__restrict self) {
+numeric_get_parity(DeeObject *__restrict self) {
 	DREF DeeIntObject *result;
 	DREF DeeIntObject *asint;
 	asint = (DREF DeeIntObject *)DeeObject_Int(self);
 	if unlikely(!asint)
 		goto err;
-	result = int_get_partity(asint);
+	result = int_get_parity(asint);
 	Dee_Decref(asint);
 	return result;
 err:
@@ -1223,7 +1223,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
-	TYPE_GETTER("partity", &numeric_get_partity,
+	TYPE_GETTER("parity", &numeric_get_parity,
 	            "->?Dint\n"
 	            "#tIntegerOverflow{When ${this < 0}}"
 	            "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}. Implemented as:\n"

@@ -766,21 +766,21 @@ public:
 	WUNUSED _Wrap_fls (fls)() DEE_CXX_NOTHROW {
 		return this;
 	}
-	class _Wrap_partity
-		: public deemon::detail::ConstGetRefProxy<_Wrap_partity, deemon::int_> {
+	class _Wrap_parity
+		: public deemon::detail::ConstGetRefProxy<_Wrap_parity, deemon::int_> {
 	private:
 		DeeObject *m_self; /* [1..1] Linked object */
 	public:
-		_Wrap_partity(DeeObject *self) DEE_CXX_NOTHROW
+		_Wrap_parity(DeeObject *self) DEE_CXX_NOTHROW
 			: m_self(self) {}
 		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "partity", _Dee_HashSelectC(0x2e58034c, 0x667c0ca8cad072de));
+			return DeeObject_GetAttrStringHash(m_self, "parity", _Dee_HashSelectC(0x92f3da0a, 0x254564db48674f28));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "partity", _Dee_HashSelectC(0x2e58034c, 0x667c0ca8cad072de)));
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "parity", _Dee_HashSelectC(0x92f3da0a, 0x254564db48674f28)));
 		}
 	};
-	WUNUSED _Wrap_partity (partity)() DEE_CXX_NOTHROW {
+	WUNUSED _Wrap_parity (parity)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_ctz

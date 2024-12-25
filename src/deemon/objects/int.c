@@ -4719,7 +4719,7 @@ int_get_ffs(DeeIntObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
-int_get_partity(DeeIntObject *__restrict self) {
+int_get_parity(DeeIntObject *__restrict self) {
 	__SHIFT_TYPE__ result;
 	size_t i;
 	digit sum;
@@ -4883,7 +4883,7 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	              "->?Dint\n"
 	              "#tIntegerOverflow{When ${this < 0}}"
 	              "FindLastSet: same as ?#msb +1, but returns $0 when ${this == 0}"),
-	TYPE_GETTER_F("partity", &int_get_partity,
+	TYPE_GETTER_F("parity", &int_get_parity,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tIntegerOverflow{When ${this < 0}}"
