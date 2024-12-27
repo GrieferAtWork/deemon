@@ -4701,19 +4701,34 @@ err_neg:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_get_ffs(DeeIntObject *__restrict self) {
-	size_t result, i;
-	if (self->ob_size == 0)
-		return_reference_((DeeIntObject *)DeeInt_Zero);
-	result = 1;
-	for (i = 0;; ++i) {
-		digit dig;
-		ASSERT(i < (size_t)self->ob_size);
-		dig = self->ob_digit[i];
-		if (dig) {
-			result += CTZ(dig);
-			break;
+	size_t result = 1, i;
+	if (self->ob_size > 0) {
+		for (i = 0;; ++i) {
+			digit d;
+			ASSERT(i < (size_t)self->ob_size);
+			d = self->ob_digit[i];
+			if (d) {
+				result += CTZ(d);
+				break;
+			}
+			result += DIGIT_BITS;
 		}
-		result += DIGIT_BITS;
+	} else if (self->ob_size < 0) {
+		digit carry = 1;
+		for (i = 0;; ++i) {
+			digit d;
+			ASSERT(i < (size_t)-self->ob_size);
+			carry += self->ob_digit[i] ^ DIGIT_MASK;
+			d = carry & DIGIT_MASK;
+			carry >>= DIGIT_BITS;
+			if (d) {
+				result += CTZ(d);
+				break;
+			}
+			result += DIGIT_BITS;
+		}
+	} else {
+		result = 0;
 	}
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 }
@@ -4737,19 +4752,34 @@ err_neg:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_get_ctz(DeeIntObject *__restrict self) {
-	size_t result, i;
-	if likely(self->ob_size == 0)
-		goto err_zero;
-	result = 0;
-	for (i = 0;; ++i) {
-		digit dig;
-		ASSERT(i < (size_t)self->ob_size);
-		dig = self->ob_digit[i];
-		if (dig) {
-			result += CTZ(dig);
-			break;
+	size_t result = 0, i;
+	if (self->ob_size > 0) {
+		for (i = 0;; ++i) {
+			digit d;
+			ASSERT(i < (size_t)self->ob_size);
+			d = self->ob_digit[i];
+			if (d) {
+				result += CTZ(d);
+				break;
+			}
+			result += DIGIT_BITS;
 		}
-		result += DIGIT_BITS;
+	} else if (self->ob_size < 0) {
+		digit carry = 1;
+		for (i = 0;; ++i) {
+			digit d;
+			ASSERT(i < (size_t)-self->ob_size);
+			carry += self->ob_digit[i] ^ DIGIT_MASK;
+			d = carry & DIGIT_MASK;
+			carry >>= DIGIT_BITS;
+			if (d) {
+				result += CTZ(d);
+				break;
+			}
+			result += DIGIT_BITS;
+		}
+	} else {
+		goto err_zero;
 	}
 	return (DREF DeeIntObject *)DeeInt_NewSize(result);
 err_zero:
