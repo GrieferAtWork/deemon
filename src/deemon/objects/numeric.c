@@ -343,6 +343,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ffs(DeeIntObject *_
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_fls(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_parity(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ctz(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ct1(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_msb(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_nth(DeeIntObject *__restrict self);
 
@@ -452,6 +453,20 @@ numeric_get_ctz(DeeObject *__restrict self) {
 	if unlikely(!asint)
 		goto err;
 	result = int_get_ctz(asint);
+	Dee_Decref(asint);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+numeric_get_ct1(DeeObject *__restrict self) {
+	DREF DeeIntObject *result;
+	DREF DeeIntObject *asint;
+	asint = (DREF DeeIntObject *)DeeObject_Int(self);
+	if unlikely(!asint)
+		goto err;
+	result = int_get_ct1(asint);
 	Dee_Decref(asint);
 	return result;
 err:
@@ -1247,6 +1262,22 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            /**/ "property ctz: int {\n"
 	            /**/ "	get(): int {\n"
 	            /**/ "		return ((int)this).ctz;\n"
+	            /**/ "	}\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_GETTER("ct1", &numeric_get_ct1,
+	            "->?Dint\n"
+	            "#tIntegerOverflow{When ${this == -1}}"
+	            "CountTrailingOnes: return the number of trailing 1-bits:\n"
+	            "${"
+	            /**/ "local n = this.ct1;\n"
+	            /**/ "assert this == ((this >> n) << n) | ((1 << ct1) - 1);"
+	            "}\n"
+	            "Implemented as:\n"
+	            "${"
+	            /**/ "property ct1: int {\n"
+	            /**/ "	get(): int {\n"
+	            /**/ "		return ((int)this).ct1;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),

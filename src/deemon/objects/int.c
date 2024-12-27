@@ -4788,6 +4788,48 @@ err_zero:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_ct1(DeeIntObject *__restrict self) {
+	size_t result = 0, i;
+	if (self->ob_size > 0) {
+		for (i = 0; i < (size_t)self->ob_size; ++i) {
+			digit d;
+			d = self->ob_digit[i];
+			if (d != DIGIT_MASK) {
+				while (d & 1) {
+					++result;
+					d >>= 1;
+				}
+				break;
+			}
+			result += DIGIT_BITS;
+		}
+	} else if (self->ob_size < 0) {
+		size_t n_digits = (size_t)-self->ob_size;
+		digit carry = 1;
+		for (i = 0; i < n_digits; ++i) {
+			digit d;
+			carry += self->ob_digit[i] ^ DIGIT_MASK;
+			d = carry & DIGIT_MASK;
+			carry >>= DIGIT_BITS;
+			if (d != DIGIT_MASK) {
+				while (d & 1) {
+					++result;
+					d >>= 1;
+				}
+				break;
+			}
+			result += DIGIT_BITS;
+		}
+		if unlikely(carry)
+			goto err_minus_one;
+	}
+	return (DREF DeeIntObject *)DeeInt_NewSize(result);
+err_minus_one:
+	err_int_negative((DeeObject *)self);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_get_fls(DeeIntObject *__restrict self) {
 	size_t result;
 	digit msb_digit;
@@ -4926,6 +4968,15 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	              "${"
 	              /**/ "local n = this.ctz;\n"
 	              /**/ "assert this == (this >> n) << n;"
+	              "}"),
+	TYPE_GETTER_F("ct1", &int_get_ct1,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tIntegerOverflow{When ${this == -1}}"
+	              "CountTrailingOnes: return the number of trailing 1-bits:\n"
+	              "${"
+	              /**/ "local n = this.ct1;\n"
+	              /**/ "assert this == ((this >> n) << n) | ((1 << ct1) - 1);"
 	              "}"),
 	TYPE_GETTER_F("msb", &int_get_msb,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
