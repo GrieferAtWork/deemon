@@ -768,6 +768,7 @@ DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_destroy_t DCALL
 DeeType_RequireDestroy(DeeTypeObject *__restrict self);
 
 
+
 /* Reference control macros as functions.
  * Use these (#undef'ing the macros, or like `(Dee_Incref)(foo)') in dex
  * modules that should work independently of the deemon configuration. */

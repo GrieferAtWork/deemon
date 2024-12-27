@@ -29,6 +29,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
@@ -318,9 +319,6 @@ PRIVATE struct type_getset tpconst set_class_getsets[] = {
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_set_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 
-INTDEF int DCALL none_i1(void *UNUSED(a));
-INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
-
 PRIVATE struct type_operator const set_operators[] = {
 //	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR), /* TODO: And THISELEM CONST_HASH+CONST_COMPARE_EQ */
 	TYPE_OPERATOR_FLAGS(OPERATOR_000D_INV, METHOD_FCONSTCALL),
@@ -439,9 +437,9 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&none_i1, /* Allow default-construction of sequence objects. */
-				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
-				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor, /* Allow default-construction of sequence objects. */
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}

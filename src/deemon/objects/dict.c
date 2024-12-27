@@ -32,6 +32,7 @@
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
@@ -2883,10 +2884,8 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deprecated_d100_get_maxloadfactor(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL
-deprecated_d100_del_maxloadfactor(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-deprecated_d100_set_maxloadfactor(DeeObject *self, DeeObject *value);
+#define deprecated_d100_del_maxloadfactor (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
+#define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 INTDEF struct type_getset tpconst dict_getsets[];

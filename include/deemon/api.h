@@ -529,13 +529,35 @@ DECL_END
 #define CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS
 #endif /* __GNUC__ */
 
-/* Calling convention used for the deemon API */
+/* Calling convention used for the deemon API
+ * DCALL_CALLER_CLEANUP: When defined, a function:
+ *                       >> int DCALL foo(int a, int b);
+ *                       can safely be called like:
+ *                       >> int result = (*(int(DCALL *)(int, int, int, int, int))&foo)(10, 20, -1, -1, -1);
+ *                  iow: any additional arguments to functions are silently ignored, and will not
+ *                       cause any problems because the ABI specifies that any CLEANUP is done by
+ *                       the CALLER of a function (and argument registers/locations are allocated
+ *                       left-to-right).
+ * DCALL_RETURN_COMMON: When defined, a function:
+ *                      >> size_t DCALL foo(int a, int b);
+ *                      can safely be called like (so-long as the return value fits into an "int"):
+ *                      >> int result = (*(int(DCALL *)(int, int))&foo)(10, 20);
+ *                 iow: Integer return types <= sizeof(__REGISTER_TYPE__) are passed via the same
+ *                      register (or registers that shadow/alias each other). */
 #ifndef DCALL
 #if defined(__i386__) && !defined(__x86_64__)
 #define DCALL __ATTR_STDCALL
-#else /* __i386__ && !__x86_64__ */
+#undef DCALL_CALLER_CLEANUP
+#define DCALL_RETURN_COMMON
+#elif defined(__x86_64__) || defined(__arm__)
 #define DCALL /* nothing (use default calling convention) */
-#endif /* !__i386__ || __x86_64__ */
+#define DCALL_CALLER_CLEANUP /* Known to be the case on these architectures */
+#define DCALL_RETURN_COMMON
+#else /* ... */
+#define DCALL /* nothing (use default calling convention) */
+#undef DCALL_CALLER_CLEANUP
+#undef DCALL_RETURN_COMMON
+#endif /* !... */
 #endif /* !DCALL */
 
 /* Calling convention for short leaf functions with up to 2 arguments (e.g. `Dee_HashCombine'). */

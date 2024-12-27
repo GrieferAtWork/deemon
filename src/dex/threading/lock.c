@@ -29,6 +29,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
@@ -460,12 +461,6 @@ DOC_DEF(doc_rwlock_writelock,
 /* Abstract Lock API                                                    */
 /************************************************************************/
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-lock_ctor(DeeObject *__restrict self) {
-	(void)self;
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
 lock_do_acquire(DeeObject *__restrict self) {
 	DeeObject *result;
 	result = DeeObject_CallAttr(self, (DeeObject *)&str_acquire, 0, NULL);
@@ -685,7 +680,7 @@ INTERN DeeTypeObject DeeLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&lock_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
@@ -731,7 +726,6 @@ INTERN DeeTypeObject DeeLock_Type = {
 /************************************************************************/
 /* Abstract RWLock API                                                  */
 /************************************************************************/
-#define rwlock_ctor lock_ctor
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rwlock_do_tryread(DeeObject *self) {
 	DREF DeeObject *result_ob;
@@ -1246,7 +1240,7 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rwlock_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,

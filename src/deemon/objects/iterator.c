@@ -29,6 +29,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/mro.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -2511,10 +2512,6 @@ err:
 }
 
 
-INTDEF int DCALL none_i1(void *UNUSED(a));
-INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
-
-
 /* `Iterator from deemon' */
 PUBLIC DeeTypeObject DeeIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2644,9 +2641,9 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&none_i1,
-				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
-				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}

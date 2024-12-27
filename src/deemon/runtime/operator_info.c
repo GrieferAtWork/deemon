@@ -901,9 +901,9 @@ check_effective_opname_with_copy:
 	/* Default flags for certain operators. */
 	switch (opname) {
 
-		/* TODO: Special handling when tp_ctor==&none_i1 -> CONSTEXPR */
-		/* TODO: Special handling when tp_copy==&none_i2 -> CONSTEXPR */
-		/* TODO: Special handling when tp_dtor==NULL -> CONSTEXPR */
+		/* TODO: Special handling when tp_ctor == &DeeNone_OperatorCtor -> CONSTEXPR */
+		/* TODO: Special handling when tp_copy == &DeeNone_OperatorCopy -> CONSTEXPR */
+		/* TODO: Special handling when tp_dtor == NULL -> CONSTEXPR */
 		/* TODO: Special handling when ... */
 
 	case OPERATOR_DESTRUCTOR:

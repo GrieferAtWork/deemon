@@ -23,15 +23,13 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/callable.h>
+#include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 
 #include "../runtime/strings.h"
 
 DECL_BEGIN
-
-INTDEF int DCALL none_i1(void *UNUSED(a));
-INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
 
 /* `Callable from deemon'
  *
@@ -52,9 +50,9 @@ PUBLIC DeeTypeObject DeeCallable_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&none_i1,
-				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
-				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}

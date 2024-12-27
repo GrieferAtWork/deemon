@@ -31,6 +31,7 @@
 #include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -2387,10 +2388,6 @@ generic_seq_assign(DeeObject *self, DeeObject *other) {
 }
 
 
-INTDEF int DCALL none_i1(void *UNUSED(a));
-INTDEF int DCALL none_i2(void *UNUSED(a), void *UNUSED(b));
-
-
 PRIVATE struct type_operator const seq_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0010_ADD, METHOD_FCONSTCALL),
@@ -3000,9 +2997,9 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&none_i1, /* Allow default-construction of Sequence objects. */
-				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
-				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor, /* Allow default-construction of Sequence objects. */
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}

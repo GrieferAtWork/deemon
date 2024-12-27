@@ -32,6 +32,7 @@
 #include <deemon/int.h>
 #include <deemon/mapfile.h>
 #include <deemon/module.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -1161,12 +1162,6 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 
 
 
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-file_init(DeeFileObject *__restrict UNUSED(self)) {
-	return 0;
-}
 
 
 struct open_option {
@@ -2734,7 +2729,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		/* .tp_init = */ {
 			{
 				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ (dfunptr_t)&file_init,
+					/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
 					/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 					/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 					/* .tp_any_ctor  = */ (dfunptr_t)NULL,

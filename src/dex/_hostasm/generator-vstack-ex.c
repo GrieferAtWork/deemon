@@ -47,6 +47,7 @@
 #include <deemon/map.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
@@ -1391,8 +1392,8 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 	/* Inline select constructor implementations (e.g. that of DeeList_Type)
 	 * NOTE: We *always* compare against "tp_ctor", so we also hit
 	 *       sub-classes that inherited these special constructors. */
-	if (tp_ctor == DeeObject_Type.tp_init.tp_alloc.tp_ctor) {
-		return 1; /* This one is known as "none_i1", and a bunch of types use it to implement no-op constructors. */
+	if (tp_ctor == &DeeNone_OperatorCtor) {
+		return 1; /* A bunch of types use it to implement no-op constructors. */
 	} else if (tp_ctor == DeeCell_Type.tp_init.tp_alloc.tp_ctor) {
 		DO(fg_vpush_NULL(self));                               /* instance, NULL */
 		DO(fg_vpopind(self, offsetof(DeeCellObject, c_item))); /* instance */
@@ -1479,9 +1480,9 @@ vcall_Type_tp_copy_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject 
 	/* Inline select constructor implementations
 	 * NOTE: We *always* compare against "tp_copy_ctor", so we also hit
 	 *       sub-classes that inherited these special constructors. */
-	if (tp_copy_ctor == DeeNone_Type.tp_init.tp_assign) {
-		/* This one is known as "none_i2", and a bunch of types
-		 * use it to implement no-op copy constructors. */
+	if (tp_copy_ctor == &DeeNone_OperatorCopy) {
+		/* This one is known as "DeeNone_OperatorCopy", and a bunch
+		 * of types use it to implement no-op copy constructors. */
 		DO(fg_vpop(self));
 		return 1;
 	}

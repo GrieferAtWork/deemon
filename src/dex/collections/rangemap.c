@@ -32,6 +32,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -138,19 +139,6 @@ typedef struct {
 /************************************************************************/
 /* CORE ABSTRACT TYPE                                                   */
 /************************************************************************/
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rangemap_ctor(DeeObject *__restrict self) {
-	(void)self;
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rangemap_copy(DeeObject *__restrict self, DeeObject *__restrict other) {
-	(void)self;
-	(void)other;
-	return 0;
-}
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 rangemap_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
@@ -809,9 +797,9 @@ INTERN DeeTypeObject RangeMap_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rangemap_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&rangemap_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&rangemap_copy,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeObject)
 			}

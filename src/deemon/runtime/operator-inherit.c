@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/class.h>
 #include <deemon/mro.h>
+#include <deemon/none-operator.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
 
@@ -4453,8 +4454,6 @@ DeeType_InheritBool(DeeTypeObject *__restrict self) {
 
 
 
-INTDEF int DCALL none_i1(void *UNUSED(a));
-
 INTERN NONNULL((1)) bool DCALL
 DeeType_InheritWith(DeeTypeObject *__restrict self) {
 	struct type_with *base_with;
@@ -4466,13 +4465,13 @@ DeeType_InheritWith(DeeTypeObject *__restrict self) {
 			/* Special case: When `tp_enter' is implemented,
 			 * a missing `tp_leave' behaves as a no-op. */
 			if (base_with->tp_leave == NULL)
-				base_with->tp_leave = (int (DCALL *)(DeeObject *__restrict))&none_i1;
+				base_with->tp_leave = (int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1;
 			return true;
 		} else if (base_with->tp_leave) {
 			/* Special case: When `tp_leave' is implemented,
 			 * a missing `tp_enter' behaves as a no-op. */
 			if (base_with->tp_enter == NULL)
-				base_with->tp_enter = (int (DCALL *)(DeeObject *__restrict))&none_i1;
+				base_with->tp_enter = (int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1;
 			return true;
 		}
 	}

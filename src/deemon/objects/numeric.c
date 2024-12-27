@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
+#include <deemon/none-operator.h>
 #include <deemon/numeric.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -41,9 +42,6 @@
 #include "../runtime/strings.h"
 
 DECL_BEGIN
-
-INTDEF int DCALL none_i1(void *UNUSED(b));
-INTDEF int DCALL none_i2(void *UNUSED(b), void *UNUSED(c));
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_asflt(DeeObject *__restrict self) {
@@ -937,7 +935,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	TYPE_GETTER(STR_int, &DeeObject_Int,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
-	            "Return @this number as an integer, truncating all digits after a dot/comma"),
+	            "Return @this number as an integer, truncating any decimal digits"),
 	TYPE_GETTER(STR_float, &numeric_asflt,
 	            "->?Dfloat\n"
 	            "#tNotImplemented{@this number does not implement ${operator float}}"
@@ -1984,9 +1982,9 @@ PUBLIC DeeTypeObject DeeNumeric_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&none_i1,
-				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
-				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}

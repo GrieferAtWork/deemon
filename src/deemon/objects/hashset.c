@@ -31,6 +31,7 @@
 #include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/roset.h>
@@ -2030,17 +2031,8 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deprecated_d100_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
 	return_reference_((DeeObject *)&float_1_point_0);
 }
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-deprecated_d100_del_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
-	return 0;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-deprecated_d100_set_maxloadfactor(DeeObject *UNUSED(self),
-                                  DeeObject *UNUSED(value)) {
-	return 0;
-}
+#define deprecated_d100_del_maxloadfactor (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
+#define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 INTDEF struct type_getset tpconst hashset_getsets[];

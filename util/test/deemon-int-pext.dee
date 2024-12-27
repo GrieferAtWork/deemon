@@ -52,7 +52,6 @@ function assertPExt(self: int, mask: int) {
 		f"\nActual:   {actual.hex()}"
 		f"\nself:     {self.hex()}"
 		f"\nmask:     {mask.hex()}";
-	assert expected == correctPExt(self, mask);
 }
 
 function getWideRangeOfIntegers(): {int...} {

@@ -47,9 +47,8 @@ DDATDEF DeeNoneObject DeeNone_Singleton;
 DDATDEF DeeObject     DeeNone_Singleton;
 #define Dee_None    (&DeeNone_Singleton)
 #endif /* !GUARD_DEEMON_OBJECTS_NONE_C */
-#define DeeNone_NewRef() (Dee_Incref(Dee_None), Dee_None)
 
-#define Dee_return_none  Dee_return_reference_(Dee_None)
+#define Dee_return_none return DeeNone_NewRef()
 
 /* WARNING: If these two macros are ever changed, make sure to allow
  *          `NULL' to be passed for `x', as code exists that assumes
@@ -57,6 +56,11 @@ DDATDEF DeeObject     DeeNone_Singleton;
 #define DeeNone_Check(x)      ((DeeObject *)Dee_REQUIRES_OBJECT(x) == Dee_None) /* `none' is a singleton. */
 #define DeeNone_CheckExact(x) ((DeeObject *)Dee_REQUIRES_OBJECT(x) == Dee_None)
 
+/* No-op/none function pointers */
+DFUNDEF ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL DeeNone_NewRef)(void);
+#ifndef __OPTIMIZE_SIZE__
+#define DeeNone_NewRef() (Dee_Incref(Dee_None), Dee_None)
+#endif /* !__OPTIMIZE_SIZE__ */
 
 DECL_END
 

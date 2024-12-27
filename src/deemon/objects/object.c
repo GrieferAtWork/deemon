@@ -38,6 +38,7 @@
 #include <deemon/map.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
@@ -1570,11 +1571,9 @@ again:
 #ifdef __OPTIMIZE_SIZE__
 	(*DeeType_RequireDestroy(type))(self);
 #else /* __OPTIMIZE_SIZE__ */
-	if likely(type->tp_init.tp_destroy) {
-		(*type->tp_init.tp_destroy)(self);
-	} else {
-		(*DeeType_RequireDestroy_uncached(type))(self);
-	}
+	(*(likely(type->tp_init.tp_destroy)
+	   ? type->tp_init.tp_destroy
+	   : DeeType_RequireDestroy_uncached(type)))(self);
 #endif /* !__OPTIMIZE_SIZE__ */
 #else /* CONFIG_HAVE_COMPUTED_OBJECT_DESTROY */
 	orig_type = type;
@@ -2983,9 +2982,6 @@ PRIVATE struct type_operator const object_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 };
 
-INTDEF int DCALL none_i1(void *UNUSED(b));
-INTDEF int DCALL none_i2(void *UNUSED(b), void *UNUSED(c));
-
 PUBLIC DeeTypeObject DeeObject_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Object),
@@ -3020,9 +3016,9 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&none_i1,
-				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
-				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)&object_any_ctor,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}

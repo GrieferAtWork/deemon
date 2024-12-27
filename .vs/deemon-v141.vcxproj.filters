@@ -552,6 +552,9 @@
 		<ClInclude Include="..\include\deemon\mro.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\none-operator.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\none.h">
 			<Filter>include</Filter>
 		</ClInclude>

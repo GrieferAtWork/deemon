@@ -29,6 +29,7 @@
 #include <deemon/exec.h>
 #include <deemon/format.h>
 #include <deemon/module.h>
+#include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -1410,8 +1411,6 @@ INIT_CUSTOM_ERROR("KeyboardInterrupt", NULL,
                   TP_FNORMAL | TP_FINHERITCTOR | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
                   NULL, NULL, NULL, NULL, DeeSignalObject, NULL, NULL, NULL,
                   NULL, NULL, NULL, NULL, NULL);
-INTDEF int DCALL none_i1(void *a);
-INTDEF int DCALL none_i2(void *a, void *b);
 PRIVATE struct type_member tpconst signal_class_members[] = {
 	TYPE_MEMBER_CONST("Interrupt", &DeeError_Interrupt),
 	TYPE_MEMBER_CONST("StopIteration", &DeeError_StopIteration),
@@ -1437,9 +1436,9 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&none_i1,
-				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
-				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_ctor      = */ (dfunptr_t)&DeeNone_OperatorCtor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeNone_OperatorCopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DeeSignalObject)
 			}
