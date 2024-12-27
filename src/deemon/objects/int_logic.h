@@ -36,13 +36,13 @@
 
 DECL_BEGIN
 
-#if Dee_SIZEOF_DIGIT == 2
+#if Dee_SIZEOF_DIGIT == 2 && defined(CONFIG_HAVE_memsetw)
 #define Dee_digit_memset(p, v, n) memsetw(p, v, n)
-#elif Dee_SIZEOF_DIGIT == 4
+#elif Dee_SIZEOF_DIGIT == 4 && defined(CONFIG_HAVE_memsetl)
 #define Dee_digit_memset(p, v, n) memsetl(p, v, n)
-#elif Dee_SIZEOF_DIGIT == 1
+#elif Dee_SIZEOF_DIGIT == 1 && defined(CONFIG_HAVE_memset)
 #define Dee_digit_memset(p, v, n) memset(p, v, n)
-#elif Dee_SIZEOF_DIGIT == 8
+#elif Dee_SIZEOF_DIGIT == 8 && defined(CONFIG_HAVE_memsetq)
 #define Dee_digit_memset(p, v, n) memsetq(p, v, n)
 #else /* Dee_SIZEOF_DIGIT == ... */
 #define Dee_digit_memset(p, v, n)    \
