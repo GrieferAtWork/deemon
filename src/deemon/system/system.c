@@ -874,14 +874,14 @@ DeeSystem_DlSym(void *handle, char const *symbol_name) {
 PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 #ifdef DeeSystem_DlOpen_USE_LoadLibrary
 	DBG_ALIGNMENT_DISABLE();
-	FreeLibrary((HMODULE)handle);
+	(void)FreeLibrary((HMODULE)handle);
 	DBG_ALIGNMENT_ENABLE();
 #endif /* DeeSystem_DlOpen_USE_LoadLibrary */
 
 #ifdef DeeSystem_DlOpen_USE_dlopen
 #ifdef CONFIG_HAVE_dlclose
 	DBG_ALIGNMENT_DISABLE();
-	dlclose(handle);
+	(void)dlclose(handle);
 	DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_dlclose */
 #endif /* DeeSystem_DlOpen_USE_dlopen */

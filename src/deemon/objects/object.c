@@ -1442,7 +1442,7 @@ PRIVATE Dee_tp_destroy_t tpconst DeeObject_DefaultDestroy_table[DESTROY_COUNT] =
      (Dee_TP_FGC >> DESTROY_TP_FLAGS_SHIFT_HINT) != DESTROY_FGC || \
      (Dee_TP_FHEAP >> DESTROY_TP_FLAGS_SHIFT_HINT) != DESTROY_FHEAPTYPE)
 #undef DESTROY_TP_FLAGS_SHIFT_HINT
-#endif
+#endif /* ... */
 #endif /* DESTROY_TP_FLAGS_SHIFT_HINT */
 
 LOCAL ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_destroy_t DCALL
@@ -3684,7 +3684,7 @@ type_newinstance(DeeTypeObject *self, size_t argc,
 	DREF DeeObject *result;
 	if (self == &DeeNone_Type)
 		return_none; /* Allow `none' to be instantiated with whatever you throw at it! */
-	if (kw && (!DeeKwds_Check(kw) || DeeKwds_SIZE(kw) == argc)) {
+	if (kw && (DeeKwds_Check(kw) ? (argc == DeeKwds_SIZE(kw)) : (argc == 0))) {
 		/* Instantiate using keyword arguments. */
 		result = type_new_raw(self);
 		/* Fill in values for provided fields. */
@@ -3828,7 +3828,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_setinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr_value, meth_setattr, &name, &value))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr_value,
+	                    meth_setinstanceattr, &name, &value))
 		goto err;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
@@ -4361,10 +4362,10 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "(name:?Dstring)->\n"
 	              "Lookup an attribute @name that is implemented by instances of @this ?.\n"
 	              "Normally, such attributes can also be accessed using regular attribute lookup, "
-	              /**/ "however in ambiguous cases where both the type, as well as instances implement "
-	              /**/ "an attribute of the same name (s.a. ?AKeys?DDict vs. ?Akeys?DDict), using regular "
-	              /**/ "attribute lookup on the type (as in ${posix.stat.isdir}) will always return the "
-	              /**/ "type-attribute, rather than a wrapper around the instance attribute.\n"
+	              /**/ "however in ambiguous cases where both the type, as well as instances implement an "
+	              /**/ "attribute of the same name (s.a. ?A{i:isdir}?Eposix:stat vs. ?A{c:isdir}?Eposix:stat), "
+	              /**/ "using regular attribute lookup on the type (as in ${posix.stat.isdir}) will always "
+	              /**/ "return the type-attribute, rather than a wrapper around the instance attribute.\n"
 	              "In such cases, this function may be used to explicitly lookup the instance variant:\n"
 	              "${"
 	              /**/ "import stat from posix;\n"

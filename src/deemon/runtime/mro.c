@@ -390,7 +390,7 @@ do_operate_with_old_table:
 		int result = -1;
 		if (old_table != NULL) {
 			/* It doesn't matter if this addslot() call succeeds or not... */
-			result = Dee_membercache_table_addslot(old_table, slot, true) >= 0;
+			result = Dee_membercache_table_addslot(old_table, slot, true);
 			Dee_membercache_table_decref(old_table);
 #ifndef Dee_DPRINT_IS_NOOP
 			if (result == 0)

@@ -3965,7 +3965,12 @@ struct Dee_type_operator {
 /*      Dee_TP_F                0x0200  * ... */
 #define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
 #define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
-#define Dee_TP_FMAYREVIVE       0x1000 /* This type's `tp_dtor' may revive the object (return with the object's `ob_refcnt > 0') */
+#define Dee_TP_FMAYREVIVE       0x1000 /* This type's `tp_dtor' may revive the object (return with the object's `ob_refcnt > 0')
+                                        * Note that when reviving an object, `tp_dtor' must (in addition to an external reference)
+                                        * gift the caller one further reference to the object that got revived (meaning that upon
+                                        * return, `ob_refcnt >= 2', where at least 1 reference is caused by some global reference,
+                                        * and 1 will be inherited by `DeeObject_Destroy()'). This is needed to prevent a potential
+                                        * race condition where a GC-object isn't being tracked during destruction. */
 #define Dee_TP_FGC              0x2000 /* Instance of this type can be harvested by the Garbage Collector. */
 #define Dee_TP_FHEAP            0x4000 /* This type was allocated on the heap. */
 #define Dee_TP_FVARIABLE        0x8000 /* Variable-length object type. (`tp_var' is used, rather than `tp_alloc') */
@@ -4230,10 +4235,10 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, Dee_operator_t opname);
 
 /* Helper for checking that every cast-like operators is
- * either not implemented, or marked as Dee_METHOD_FCONSTCALL:
+ * either: not implemented, or marked as Dee_METHOD_FCONSTCALL:
  * >> (!DeeType_HasOperator(self, OPERATOR_BOOL) || (DeeType_GetOperatorFlags(self, OPERATOR_BOOL) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_INT) || (DeeType_GetOperatorFlags(self, OPERATOR_INT) & Dee_METHOD_FCONSTCALL)) &&
- * >> (!DeeType_HasOperator(self, OPERATOR_FLOAT) || (DeeType_GetOperatorFlags(self, OPERATOR_FLOAT) & Dee_METHOD_FCONSTCALL));
+ * >> (!DeeType_HasOperator(self, OPERATOR_FLOAT) || (DeeType_GetOperatorFlags(self, OPERATOR_FLOAT) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_ITER) || (DeeType_GetOperatorFlags(self, OPERATOR_ITER) & Dee_METHOD_FCONSTCALL));
  * This is the condition that must be fulfilled by all arguments other than "this" when
  * a function uses "Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST" to make its CONSTCALL flag
@@ -4571,7 +4576,7 @@ DeeObject_Class(DeeObject *__restrict self);
 
 /* Object inheritance checking:
  * - DeeObject_Implements:      Check if part of MRO
- * - DeeObject_InstanceOf:      Check if part of base-chain (implies MRO; required for non-TP_FABSTRACT types)
+ * - DeeObject_InstanceOf:      Check if part of base-chain (implies MRO; enough for non-TP_FABSTRACT types)
  * - DeeObject_InstanceOfExact: Check if type matches exactly (fastest check; enough for TP_FFINAL/TP_FVARIABLE types) */
 #define DeeObject_Implements(self, super_type)       DeeType_Implements(Dee_TYPE(self), super_type)
 #define DeeObject_InstanceOf(self, super_type)       DeeType_Extends(Dee_TYPE(self), super_type)
