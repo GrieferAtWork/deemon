@@ -47,6 +47,7 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/align.h>
 #include <hybrid/bit.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/int128.h>
@@ -131,6 +132,9 @@
 #else /* DIGIT_BITS <= ... */
 #define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec64_significand(var, 0) & DIGIT_MASK)
 #endif /* DIGIT_BITS > ... */
+
+#undef shift_t
+#define shift_t __SHIFT_TYPE__
 
 DECL_BEGIN
 
@@ -814,7 +818,7 @@ DeeInt_NewSleb(byte_t const **__restrict p_reader) {
 			if (!num_bits) {
 				if (dst == result->ob_digit) {
 					/* Special case: INT(0) */
-					DeeInt_Free(result);
+					DeeInt_Destroy(result);
 					result = (DeeIntObject *)DeeInt_Zero;
 					Dee_Incref(result);
 					goto done2;
@@ -898,7 +902,7 @@ DeeInt_NewUleb(byte_t const **__restrict p_reader) {
 			if (!num_bits) {
 				if (dst == result->ob_digit) {
 					/* Special case: INT(0) */
-					DeeInt_Free(result);
+					DeeInt_Destroy(result);
 					result = (DeeIntObject *)DeeInt_Zero;
 					Dee_Incref(result);
 					goto done2;
@@ -4864,6 +4868,27 @@ err_neg_or_zero:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_get_bitmask(DeeIntObject *__restrict self) {
+	shift_t last_digit_bits;
+	size_t n_bits, n_digits;
+	DREF DeeIntObject *result;
+	if unlikely(DeeInt_AsSize((DeeObject *)self, &n_bits))
+		goto err;
+	if unlikely(!n_bits)
+		return_reference_((DeeIntObject *)DeeInt_Zero);
+	n_digits = CEILDIV(n_bits, DIGIT_BITS);
+	result = DeeInt_Alloc(n_digits);
+	if unlikely(!result)
+		goto err;
+	Dee_digit_memset(result->ob_digit, DIGIT_MASK, n_digits - 1);
+	last_digit_bits = DIGIT_BITS - (shift_t)((n_digits * DIGIT_BITS) - n_bits);
+	result->ob_digit[n_digits - 1] = ((digit)1 << last_digit_bits) - 1;
+	return result;
+err:
+	return NULL;
+}
+
 /*[[[deemon
 (PRIVATE_DEFINE_STRING from rt.gen.string)("str_m3rd", "-3rd");
 (PRIVATE_DEFINE_STRING from rt.gen.string)("str_m2nd", "-2nd");
@@ -4986,7 +5011,11 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	              "${"
 	              /**/ "assert (this >> this.msb) == 1;"
 	              "}"),
-
+	TYPE_GETTER_F("bitmask", &int_get_bitmask,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tIntegerOverflow{When ${this < 0}}"
+	              "Same as ${(1 << this) - 1}"),
 	TYPE_GETTER_F("nth", &int_get_nth,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
