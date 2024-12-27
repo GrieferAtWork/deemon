@@ -16,16 +16,22 @@
 
 #include "int_logic.h"
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
-#include <deemon/thread.h>
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/thread.h>
 
+#include <hybrid/align.h>
+#include <hybrid/bit.h>
 #include <hybrid/minmax.h>
 
 #include "../runtime/runtime_error.h"
+
+#undef shift_t
+#define shift_t __SHIFT_TYPE__
 
 DECL_BEGIN
 
@@ -83,7 +89,7 @@ int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
-int_neg(DeeIntObject *self) {
+int_neg(DeeIntObject *__restrict self) {
 	DREF DeeIntObject *result;
 	size_t num_digits;
 	if (ABS(self->ob_size) <= 1)
@@ -681,7 +687,7 @@ int_inc(DREF DeeIntObject **__restrict p_self) {
 		if unlikely(a->ob_size == 0) {
 			*p_self = (DeeIntObject *)DeeInt_One;
 			Dee_Incref(DeeInt_One);
-			Dee_DecrefDokill(a);
+			DeeInt_Destroy(a);
 			goto done2;
 		}
 		if (a->ob_size > 0) {
@@ -710,7 +716,7 @@ int_inc(DREF DeeIntObject **__restrict p_self) {
 					ASSERT(i == 0);
 					*p_self = (DeeIntObject *)DeeInt_Zero;
 					Dee_Incref(DeeInt_Zero);
-					Dee_DecrefDokill(a);
+					DeeInt_Destroy(a);
 					goto done2;
 				}
 				a->ob_digit[i] = oldval - 1;
@@ -718,7 +724,7 @@ int_inc(DREF DeeIntObject **__restrict p_self) {
 			}
 		}
 		*p_self = z; /* Inherit reference. */
-		Dee_DecrefDokill(a);
+		DeeInt_Destroy(a);
 		goto done2;
 	}
 	if (ABS(a->ob_size) <= 1) {
@@ -750,7 +756,7 @@ int_dec(DREF DeeIntObject **__restrict p_self) {
 		if unlikely(a->ob_size == 0) {
 			*p_self = (DeeIntObject *)DeeInt_MinusOne;
 			Dee_Incref(DeeInt_MinusOne);
-			Dee_DecrefDokill(a);
+			DeeInt_Destroy(a);
 			goto done2;
 		}
 		if (a->ob_size > 0) {
@@ -766,7 +772,7 @@ int_dec(DREF DeeIntObject **__restrict p_self) {
 					ASSERT(i == 0);
 					*p_self = (DeeIntObject *)DeeInt_Zero;
 					Dee_Incref(DeeInt_Zero);
-					Dee_DecrefDokill(a);
+					DeeInt_Destroy(a);
 					goto done2;
 				}
 				a->ob_digit[i] = oldval - 1;
@@ -787,7 +793,7 @@ int_dec(DREF DeeIntObject **__restrict p_self) {
 			z->ob_digit[a_digits] = 1;
 		}
 		*p_self = z; /* Inherit reference. */
-		Dee_DecrefDokill(a);
+		DeeInt_Destroy(a);
 		goto done2;
 	}
 	if (ABS(a->ob_size) <= 1) {
@@ -1541,7 +1547,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
-int_inv(DeeIntObject *v) {
+int_inv(DeeIntObject *__restrict v) {
 	DeeIntObject *x;
 	if (ABS(v->ob_size) <= 1)
 		return (DREF DeeIntObject *)DeeInt_NewMedian(-(MEDIUM_VALUE(v) + 1));
@@ -1553,6 +1559,44 @@ int_inv(DeeIntObject *v) {
 err:
 	return NULL;
 }
+
+#if 0 /* Not needed... */
+#define HAVE_int_inv_inherited
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_inv_inherited(/*inherit(always)*/ DREF DeeIntObject *__restrict v) {
+	DREF DeeIntObject *result;
+	size_t i, size;
+	if unlikely(DeeObject_IsShared(v)) {
+		result = int_inv(v);
+		Dee_Decref_unlikely(v);
+		return result;
+	}
+	size = ABS(v->ob_size);
+	for (i = 0;; ++i) {
+		if (i >= size) {
+			result = DeeInt_Alloc(size + 1);
+			if unlikely(!result)
+				goto err_v;
+			if (v->ob_size >= 0)
+				result->ob_size = -result->ob_size;
+			DeeInt_Destroy(v);
+			bzeroc(result->ob_digit, size, sizeof(Dee_digit_t));
+			result->ob_digit[size] = 1;
+			return result;
+		}
+		if (v->ob_digit[i] < DIGIT_MASK) {
+			++v->ob_digit[i];
+			break;
+		}
+		v->ob_digit[i] = 0;
+	}
+	v->ob_size = -v->ob_size;
+	return v;
+err_v:
+	DeeInt_Destroy(v);
+	return NULL;
+}
+#endif
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 int_shr(DeeIntObject *a, DeeObject *b) {
@@ -1568,8 +1612,12 @@ int_shr(DeeIntObject *a, DeeObject *b) {
 		Dee_Decref(a1);
 		if unlikely(!a2)
 			goto err;
+#ifdef HAVE_int_inv_inherited
+		z = int_inv_inherited(a2);
+#else /* HAVE_int_inv_inherited */
 		z = int_inv(a2);
 		Dee_Decref(a2);
+#endif /* !HAVE_int_inv_inherited */
 	} else {
 		if (DeeObject_AsSSize(b, &shiftby))
 			goto err;
@@ -1646,8 +1694,8 @@ err:
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-v_complement(digit *z, digit const *a, dssize_t m) {
-	dssize_t i;
+v_complement(digit *z, digit const *a, size_t m) {
+	size_t i;
 	digit carry = 1;
 	for (i = 0; i < m; ++i) {
 		carry += a[i] ^ DIGIT_MASK;
@@ -1663,8 +1711,8 @@ int_bitwise(DeeIntObject *__restrict a, char op,
             DeeIntObject *__restrict b) {
 	int nega, negb, negz;
 	DREF DeeIntObject *z;
-	dssize_t size_a, size_b, size_z, i;
-	size_a = ABS(a->ob_size);
+	size_t size_a, size_b, size_z, i;
+	size_a = (size_t)ABS(a->ob_size);
 	nega   = a->ob_size < 0;
 	if (nega) {
 		z = DeeInt_Alloc(size_a);
@@ -1675,7 +1723,7 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 	} else {
 		Dee_Incref(a);
 	}
-	size_b = ABS(b->ob_size);
+	size_b = (size_t)ABS(b->ob_size);
 	negb   = b->ob_size < 0;
 	if (negb) {
 		z = DeeInt_Alloc(size_b);
@@ -1877,6 +1925,310 @@ err:
 	return NULL;
 #undef MULT
 }
+
+
+/* Everything below is not derived from python and as such is subject to the following license */
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
+int_pext_impl(digit const *self, digit const *mask, size_t common_size) {
+	DREF DeeIntObject *result;
+	size_t i, result_nbits, result_digits;
+	size_t result_index;
+	shift_t result_shift;
+	for (result_nbits = i = 0; i < common_size; ++i) {
+		digit d = mask[i];
+		result_nbits += POPCOUNT(d);
+	}
+	result_digits = CEILDIV(result_nbits, DIGIT_BITS);
+	result = DeeInt_Alloc(result_digits);
+	if unlikely(!result)
+		goto err;
+	bzeroc(result->ob_digit, result_digits, sizeof(Dee_digit_t));
+	result_index = 0;
+	result_shift = 0;
+	for (i = 0; i < common_size; ++i) {
+		shift_t n;
+		digit v, m = mask[i];
+		if (!m)
+			continue;
+		v = self[i];
+		v = PEXT(v, m);  /* Value to append to "result" */
+		n = POPCOUNT(m); /* # of bits from "v" to append write to "result" */
+		ASSERT(n > 0);
+		ASSERT(n <= DIGIT_BITS);
+		for (;;) {
+			shift_t n_copy;
+			digit addend;
+			n_copy = DIGIT_BITS - result_shift;
+			if (n_copy > n)
+				n_copy = n;
+			addend = v & (((digit)1 << n_copy) - 1);
+			addend <<= result_shift;
+			result->ob_digit[result_index] |= addend;
+			n -= n_copy;
+			if (!n) {
+				result_shift += n_copy;
+				ASSERT(result_shift <= DIGIT_BITS);
+				break;
+			}
+			ASSERT((result_shift + n_copy) == DIGIT_BITS);
+			++result_index;
+			result_shift = 0;
+			v >>= n_copy;
+		}
+	}
+	result = int_normalize(result);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
+int_pext_ex_impl(DeeIntObject *self, DeeIntObject *mask) {
+	size_t self_size = (size_t)ABS(self->ob_size);
+	size_t mask_size = (size_t)ABS(mask->ob_size);
+	bool self_neg = self->ob_size < 0;
+	bool mask_neg = mask->ob_size < 0;
+	DREF DeeIntObject *result;
+	size_t i, result_nbits, result_digits;
+	size_t result_index, common_size;
+	shift_t result_shift;
+	digit mask_carry;
+	digit self_carry;
+	result_nbits = 0;
+	common_size = self_size;
+	if (common_size > mask_size)
+		common_size = mask_size;
+	if (mask_neg) {
+		size_t mask_common_size = mask_size;
+		if (self_neg)
+			mask_common_size = common_size;
+		mask_carry = 1;
+		for (i = 0; i < mask_common_size; ++i) {
+			digit d;
+			mask_carry += mask->ob_digit[i] ^ DIGIT_MASK;
+			d = mask_carry & DIGIT_MASK;
+			mask_carry >>= DIGIT_BITS;
+			result_nbits += POPCOUNT(d);
+		}
+		ASSERT(mask_carry == 0 || mask_carry == 1);
+		result_nbits += mask_carry;
+
+		/* Special case when the mask is `-1' (iow: when `~mask == 0') */
+		if unlikely(!result_nbits)
+			return_reference_(self);
+
+		/* Because the mask is negative, all bits past the mask are copied as-is from "self" */
+		if (i < self_size)
+			result_nbits += (self_size - i) * DIGIT_BITS;
+		if (self_neg)
+			++result_nbits; /* need 1 extra bit for the sign when inverting "result" */
+	} else {
+		for (i = 0; i < mask_size; ++i) {
+			digit d = mask->ob_digit[i];
+			result_nbits += POPCOUNT(d);
+		}
+	}
+	result_digits = CEILDIV(result_nbits, DIGIT_BITS);
+	result = DeeInt_Alloc(result_digits);
+	if unlikely(!result)
+		goto err;
+	bzeroc(result->ob_digit, result_digits, sizeof(Dee_digit_t));
+	result_index = 0;
+	result_shift = 0;
+	mask_carry = 1;
+	self_carry = 1;
+	for (i = 0; i < common_size; ++i) {
+		shift_t n;
+		digit v, m = mask->ob_digit[i];
+		if (mask_neg) {
+			mask_carry += m ^ DIGIT_MASK;
+			m = mask_carry & DIGIT_MASK;
+			mask_carry >>= DIGIT_BITS;
+		}
+		if (!m) {
+			if (self_neg) {
+				self_carry += self->ob_digit[i] ^ DIGIT_MASK;
+				self_carry >>= DIGIT_BITS;
+			}
+			continue;
+		}
+		v = self->ob_digit[i];
+		if (self_neg) {
+			self_carry += v ^ DIGIT_MASK;
+			v = self_carry & DIGIT_MASK;
+			self_carry >>= DIGIT_BITS;
+		}
+		v = PEXT(v, m);  /* Value to append to "result" */
+		n = POPCOUNT(m); /* # of bits from "v" to append write to "result" */
+		ASSERT(n > 0);
+		for (;;) {
+			shift_t n_copy;
+			digit addend;
+			n_copy = DIGIT_BITS - result_shift;
+			if (n_copy > n)
+				n_copy = n;
+			addend = v & (((digit)1 << n_copy) - 1);
+			addend <<= result_shift;
+			result->ob_digit[result_index] |= addend;
+			n -= n_copy;
+			if (!n) {
+				result_shift += n_copy;
+				ASSERT(result_shift <= DIGIT_BITS);
+				break;
+			}
+			ASSERT((result_shift + n_copy) == DIGIT_BITS);
+			++result_index;
+			result_shift = 0;
+			v >>= n_copy;
+		}
+	}
+	if (mask_neg) {
+		if (self_size > common_size) {
+			/* Remaining bits of "self" must be copied as-is */
+			ASSERT(i == common_size);
+#ifndef __OPTIMIZE_SIZE__
+			if (!self_neg && result_shift == 0) {
+				size_t n_digits = self_size - common_size;
+				memcpyc(&result->ob_digit[result_index], &self->ob_digit[common_size],
+				        n_digits, sizeof(digit));
+				result_index += n_digits;
+			} else
+#endif /* !__OPTIMIZE_SIZE__ */
+			{
+				for (; i < self_size; ++i) {
+					shift_t n;
+					digit v = self->ob_digit[i];
+					if (self_neg) {
+						self_carry += v ^ DIGIT_MASK;
+						v = self_carry & DIGIT_MASK;
+						self_carry >>= DIGIT_BITS;
+					}
+					for (n = DIGIT_BITS;;) {
+						shift_t n_copy;
+						digit addend;
+						n_copy = DIGIT_BITS - result_shift;
+						if (n_copy > n)
+							n_copy = n;
+						addend = v & (((digit)1 << n_copy) - 1);
+						addend <<= result_shift;
+						result->ob_digit[result_index] |= addend;
+						n -= n_copy;
+						if (!n) {
+							result_shift += n_copy;
+							ASSERT(result_shift <= DIGIT_BITS);
+							break;
+						}
+						ASSERT((result_shift + n_copy) == DIGIT_BITS);
+						++result_index;
+						result_shift = 0;
+						v >>= n_copy;
+					}
+				}
+			}
+		}
+		if (self_neg) {
+			digit lastmask;
+			ASSERT(result_shift <= DIGIT_BITS);
+			if (result_shift == DIGIT_BITS) {
+				++result_index;
+				result_shift = 0;
+			}
+			ASSERT(result_index == result_digits - 1);
+			ASSERT((result_shift + result_index * DIGIT_BITS) <= result_nbits);
+			lastmask = (DIGIT_MASK << result_shift) & DIGIT_MASK;
+			result->ob_digit[result_index] |= lastmask;
+			v_complement(result->ob_digit, result->ob_digit, (size_t)result->ob_size);
+			result->ob_size = -result->ob_size;
+		}
+	} else if (self_neg && mask_size > common_size) {
+		/* Remaining bits of "self" are all 1es */
+		size_t remaining_bits;
+		ASSERT((result_shift + (result_index * DIGIT_BITS)) <= result_nbits);
+		remaining_bits = result_nbits - (result_shift + (result_index * DIGIT_BITS));
+		if (result_shift >= DIGIT_BITS) {
+			result_shift -= DIGIT_BITS;
+			++result_index;
+		}
+		if (result_shift) {
+			size_t first_trailing_digit_bits;
+			digit first_trailing_digit_mask;
+			first_trailing_digit_bits = DIGIT_BITS - result_shift;
+			if (first_trailing_digit_bits > remaining_bits)
+				first_trailing_digit_bits = remaining_bits;
+			first_trailing_digit_mask = ((digit)1 << first_trailing_digit_bits) - 1;
+			first_trailing_digit_mask <<= result_shift;
+			result->ob_digit[result_index] |= first_trailing_digit_mask;
+			remaining_bits -= first_trailing_digit_bits;
+			if (!remaining_bits)
+				goto done;
+			/*result_shift = 0;*/ /* Unused... */
+			++result_index;
+		}
+		if (remaining_bits >= DIGIT_BITS) {
+			size_t n_digits = remaining_bits / DIGIT_BITS;
+			Dee_digit_memset(&result->ob_digit[result_index], DIGIT_MASK, n_digits);
+			result_index += n_digits;
+			remaining_bits -= n_digits * DIGIT_BITS;
+		}
+		if (remaining_bits) {
+			digit lastmask = ((digit)1 << remaining_bits) - 1;
+			result->ob_digit[result_index] = lastmask;
+		}
+	}
+done:
+	result = int_normalize(result);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
+int_pext(DeeIntObject *self, DeeIntObject *mask) {
+	DREF DeeIntObject *result;
+	/* A negative self/mask makes this algorithm extremely complicated.
+	 * A (correct, but unoptimized) reference implementation can be found at:
+	 * >> /util/test/deemon-int-pdep.dee:correctPExt */
+	if likely(self->ob_size >= 0 && mask->ob_size >= 0) {
+		size_t common_size = (size_t)mask->ob_size;
+		if (common_size > (size_t)self->ob_size)
+			common_size = (size_t)self->ob_size;
+		result = int_pext_impl(self->ob_digit, mask->ob_digit, common_size);
+	} else {
+		result = int_pext_ex_impl(self, mask);
+	}
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
+int_pdep(DeeIntObject *self, DeeIntObject *mask) {
+	/* TODO */
+	(void)self;
+	(void)mask;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
 
 DECL_END
 

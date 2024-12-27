@@ -4582,6 +4582,44 @@ err:
 	return NULL;
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_pext_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeIntObject *result, *mask;
+	if (DeeArg_Unpack(argc, argv, "o:pext", &mask))
+		goto err;
+#ifndef __OPTIMIZE_SIZE__
+	if likely(DeeInt_Check(mask))
+		return int_pext(self, mask);
+#endif /* !__OPTIMIZE_SIZE__ */
+	mask = (DeeIntObject *)DeeObject_Int((DeeObject *)mask);
+	if unlikely(!mask)
+		goto err;
+	result = int_pext(self, mask);
+	Dee_Decref_unlikely(mask);
+	return result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_pdep_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeIntObject *result, *mask;
+	if (DeeArg_Unpack(argc, argv, "o:pdep", &mask))
+		goto err;
+#ifndef __OPTIMIZE_SIZE__
+	if likely(DeeInt_Check(mask))
+		return int_pdep(self, mask);
+#endif /* !__OPTIMIZE_SIZE__ */
+	mask = (DeeIntObject *)DeeObject_Int((DeeObject *)mask);
+	if unlikely(!mask)
+		goto err;
+	result = int_pdep(self, mask);
+	Dee_Decref_unlikely(mask);
+	return result;
+err:
+	return NULL;
+}
+
 DOC_REF(numeric_hex_doc);
 DOC_REF(numeric_bin_doc);
 DOC_REF(numeric_oct_doc);
@@ -4670,6 +4708,28 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	              "This function is implementation-specific and used by tests "
 	              /**/ "in order to ensure that inplace-optimization of certain "
 	              /**/ "operators functions correctly"),
+
+	TYPE_METHOD_F("pext", &int_pext_f,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "(mask:?.)->?.\n"
+	              "Parallel extract bits specified by @mask, compress them, and return the result\n"
+	              "${"
+	              /**/ "assert 0x00001357 == (0x12345678).pext(0xf0f0f0f0);\n"
+	              /**/ "assert 0x00000033 == (0x11223344).pext(0x0000ff00);"
+	              "}"),
+	TYPE_METHOD_F("pdep", &int_pdep_f,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "(mask:?.)->?.\n"
+	              "Parallel deposit bits specified by @mask, decompressing them in the process, and return the result\n"
+	              "${"
+	              /**/ "assert 0x10305070 == (0x00001357).pdep(0xf0f0f0f0);\n"
+	              /**/ "assert 0x00003300 == (0x00000033).pdep(0x0000ff00);"
+	              "}"),
+
+	/* TODO: floordiv(rhs:?.)->?. (same as regular divide) */
+	/* TODO: truncdiv(rhs:?.)->?. */
+	/* TODO: ceildiv(rhs:?.)->?. */
+
 	TYPE_METHOD_END
 };
 

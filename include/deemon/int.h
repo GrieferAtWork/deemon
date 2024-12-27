@@ -93,11 +93,15 @@ typedef struct Dee_int_object DeeIntObject;
 
 
 #if Dee_DIGIT_BITS <= 16
+#define Dee_SIZEOF_DIGIT     2
+#define Dee_SIZEOF_TWODIGITS 4
 typedef uint16_t Dee_digit_t;
 typedef int16_t Dee_sdigit_t;
 typedef uint32_t Dee_twodigits_t;
 typedef int32_t Dee_stwodigits_t;
 #else /* Dee_DIGIT_BITS <= 16 */
+#define Dee_SIZEOF_DIGIT     4
+#define Dee_SIZEOF_TWODIGITS 8
 typedef uint32_t Dee_digit_t;
 typedef int32_t Dee_sdigit_t;
 typedef uint64_t Dee_twodigits_t;

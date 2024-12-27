@@ -1,0 +1,77 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+@@Reference implementation for @int.pdep
+function correctPDep(self: int, mask: int): int {
+	// TODO
+}
+
+function assertPDep(self: int, mask: int) {
+	local expected = correctPDep(self, mask);
+//	print self.hex(), mask.hex();
+	local actual = self.pdep(mask);
+	assert expected == actual,
+		f"\nExpected: {expected.hex()}"
+		f"\nActual:   {actual.hex()}"
+		f"\nself:     {self.hex()}"
+		f"\nmask:     {mask.hex()}";
+	assert expected == correctPDep(self, mask);
+}
+
+function getWideRangeOfIntegers(): {int...} {
+	for (local i: {0, 14, 15, 16, 29, 30, 31, 63, 64, 65,
+	               127, 128, 129, 255, 256, 257}) {
+		local limit = (1 << i) - 1;
+		yield -limit;
+		yield -limit - 1;
+		yield -limit + 1;
+		yield limit;
+		yield limit - 1;
+		yield limit + 1;
+	}
+	local mask = 0xf0f0f0f0;
+	for (none: [:4]) {
+		yield -mask;
+		yield mask;
+		mask = (mask << 32) | 0xf0f0f0f0;
+	}
+}
+
+
+//TODO:assert -1 == correctPDep(-1, -1);
+//TODO:assert 0x1234 == correctPDep(0x1234, -1);
+//TODO:assert "0x13" == correctPDep(0x1234, 0xf0f0).hex();
+//TODO:assert "0x13579bdf" == correctPDep(0x123456789ABCDEF0, 0xf0f0f0f0f0f0f0f0).hex();
+//TODO:assert "0x1357" == correctPDep(0x12345678, 0xf0f0f0f0).hex();
+//TODO:assert "0x33" == correctPDep(0x11223344, 0xff00).hex();
+//TODO:
+//TODO:assertPDep(0x1234, 0xf0f0);
+//TODO:assertPDep(0x123456789ABCDEF0, 0xf0f0f0f0f0f0f0f0);
+//TODO:assertPDep(0x12345678, 0xf0f0f0f0);
+//TODO:assertPDep(0x11223344, 0xff00);
+//TODO:
+//TODO:for (local self: getWideRangeOfIntegers()) {
+//TODO:	for (local mask: getWideRangeOfIntegers()) {
+//TODO:		assertPDep(self, mask);
+//TODO:	}
+//TODO:}

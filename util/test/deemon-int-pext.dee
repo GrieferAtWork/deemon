@@ -1,0 +1,94 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+@@Reference implementation for @int.pext
+function correctPExt(self: int, mask: int): int {
+	local result = 0;
+	local resultShift = 0;
+	while (mask) {
+		local nSkip = mask.ctz;
+		mask >>= nSkip;
+		self >>= nSkip;
+		if (mask == -1) {
+			result |= self << resultShift;
+			break;
+		}
+		local nCopy = mask.ct1;
+		local addend = self & nCopy.bitmask;
+		result |= addend << resultShift;
+		mask >>= nCopy;
+		self >>= nCopy;
+		resultShift += nCopy;
+	}
+	return result;
+}
+
+function assertPExt(self: int, mask: int) {
+	local expected = correctPExt(self, mask);
+//	print self.hex(), mask.hex();
+	local actual = self.pext(mask);
+	assert expected == actual,
+		f"\nExpected: {expected.hex()}"
+		f"\nActual:   {actual.hex()}"
+		f"\nself:     {self.hex()}"
+		f"\nmask:     {mask.hex()}";
+	assert expected == correctPExt(self, mask);
+}
+
+function getWideRangeOfIntegers(): {int...} {
+	for (local i: {0, 14, 15, 16, 29, 30, 31, 63, 64, 65,
+	               127, 128, 129, 255, 256, 257}) {
+		local limit = (1 << i) - 1;
+		yield -limit;
+		yield -limit - 1;
+		yield -limit + 1;
+		yield limit;
+		yield limit - 1;
+		yield limit + 1;
+	}
+	local mask = 0xf0f0f0f0;
+	for (none: [:4]) {
+		yield -mask;
+		yield mask;
+		mask = (mask << 32) | 0xf0f0f0f0;
+	}
+}
+
+
+assert -1 == correctPExt(-1, -1);
+assert 0x1234 == correctPExt(0x1234, -1);
+assert "0x13" == correctPExt(0x1234, 0xf0f0).hex();
+assert "0x13579bdf" == correctPExt(0x123456789ABCDEF0, 0xf0f0f0f0f0f0f0f0).hex();
+assert "0x1357" == correctPExt(0x12345678, 0xf0f0f0f0).hex();
+assert "0x33" == correctPExt(0x11223344, 0xff00).hex();
+
+assertPExt(0x1234, 0xf0f0);
+assertPExt(0x123456789ABCDEF0, 0xf0f0f0f0f0f0f0f0);
+assertPExt(0x12345678, 0xf0f0f0f0);
+assertPExt(0x11223344, 0xff00);
+
+for (local self: getWideRangeOfIntegers()) {
+	for (local mask: getWideRangeOfIntegers()) {
+		assertPExt(self, mask);
+	}
+}

@@ -345,6 +345,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_parity(DeeIntObject
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ctz(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_ct1(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_msb(DeeIntObject *__restrict self);
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_bitmask(DeeIntObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_nth(DeeIntObject *__restrict self);
 
 #ifdef CONFIG_HAVE_FPU
@@ -481,6 +482,20 @@ numeric_get_msb(DeeObject *__restrict self) {
 	if unlikely(!asint)
 		goto err;
 	result = int_get_msb(asint);
+	Dee_Decref(asint);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+numeric_get_bitmask(DeeObject *__restrict self) {
+	DREF DeeIntObject *result;
+	DREF DeeIntObject *asint;
+	asint = (DREF DeeIntObject *)DeeObject_Int(self);
+	if unlikely(!asint)
+		goto err;
+	result = int_get_bitmask(asint);
 	Dee_Decref(asint);
 	return result;
 err:
@@ -1296,6 +1311,10 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
+	TYPE_GETTER("bitmask", &numeric_get_bitmask,
+	            "->?Dint\n"
+	            "#tIntegerOverflow{When ${this < 0}}"
+	            "Same as ${(1 << this) - 1}"),
 	TYPE_GETTER("abs", &numeric_get_abs,
 	            "->?.\n"
 	            "Return the absolute value of @this. Implemented as:\n"
@@ -1613,6 +1632,38 @@ err:
 	return NULL;
 }
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_pext_f(DeeIntObject *self, size_t argc, DeeObject *const *argv);
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+numeric_pext(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *as_int, *result;
+	as_int = DeeObject_Int(self);
+	if unlikely(!as_int)
+		goto err;
+	result = int_pext_f((DeeIntObject *)as_int, argc, argv);
+	Dee_Decref(as_int);
+	return result;
+err:
+	return NULL;
+}
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_pdep_f(DeeIntObject *self, size_t argc, DeeObject *const *argv);
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+numeric_pdep(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *as_int, *result;
+	as_int = DeeObject_Int(self);
+	if unlikely(!as_int)
+		goto err;
+	result = int_pdep_f((DeeIntObject *)as_int, argc, argv);
+	Dee_Decref(as_int);
+	return result;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 numeric_divmod(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
@@ -1837,6 +1888,12 @@ PRIVATE struct type_method tpconst numeric_methods[] = {
 	              "(signed=!f)->?.\n"
 	              "Convert @this number into an integer and call ?Abitcount?Dint\n"
 	              "TODO: This also needs handling for floats!"),
+	TYPE_METHOD("pext", &numeric_pext,
+	            "(mask:?.)->?Dint\n"
+	            "Convert @this number into an integer and call ?Apext?Dint\n"),
+	TYPE_METHOD("pdep", &numeric_pdep,
+	            "(mask:?.)->?Dint\n"
+	            "Convert @this number into an integer and call ?Apdep?Dint\n"),
 	TYPE_METHOD("divmod", &numeric_divmod, numeric_divmod_doc),
 	TYPE_METHOD("nextafter", &numeric_nextafter,
 	            "(y:?.)->?.\n"

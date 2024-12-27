@@ -30,10 +30,30 @@
 #define GUARD_DEEMON_OBJECTS_INT_LOGIC_H 1
 
 #include <deemon/api.h>
-#include <deemon/object.h>
 #include <deemon/int.h>
+#include <deemon/object.h>
+#include <deemon/system-features.h> /* memsetw/memsetl/... */
 
 DECL_BEGIN
+
+#if Dee_SIZEOF_DIGIT == 2
+#define Dee_digit_memset(p, v, n) memsetw(p, v, n)
+#elif Dee_SIZEOF_DIGIT == 4
+#define Dee_digit_memset(p, v, n) memsetl(p, v, n)
+#elif Dee_SIZEOF_DIGIT == 1
+#define Dee_digit_memset(p, v, n) memset(p, v, n)
+#elif Dee_SIZEOF_DIGIT == 8
+#define Dee_digit_memset(p, v, n) memsetq(p, v, n)
+#else /* Dee_SIZEOF_DIGIT == ... */
+#define Dee_digit_memset(p, v, n)    \
+	do {                             \
+		size_t _i;                   \
+		for (_i = 0; _i < (n); ++_i) \
+			(p)[_i] = (v);           \
+	}	__WHILE0
+#endif /* Dee_SIZEOF_DIGIT != ... */
+
+
 
 #if defined(CONFIG_NO_CACHES) || defined(CONFIG_NO_INT_CACHES)
 #undef CONFIG_INT_CACHE_MAXSIZE
@@ -73,6 +93,7 @@ INTDEF NONNULL((1)) void DCALL DeeInt_Free(DeeIntObject *__restrict self);
 #else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 #define DeeInt_Free(self) DeeObject_Free(self)
 #endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
+#define DeeInt_Destroy(self) (DeeInt_Free(self), Dee_DecrefNokill(&DeeInt_Type))
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL int_divmod(DeeIntObject *a, DeeIntObject *b, DeeIntObject **p_div, DeeIntObject **p_rem);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_add(DeeIntObject *a, DeeObject *b);
@@ -80,8 +101,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_sub(DeeIntObject *a,
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_mul(DeeIntObject *a, DeeObject *b);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_div(DeeIntObject *a, DeeObject *b);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_mod(DeeIntObject *a, DeeObject *b);
-INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_inv(DeeIntObject *v);
-INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_neg(DeeIntObject *v);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_inv(DeeIntObject *__restrict v);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_neg(DeeIntObject *__restrict v);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_shl(DeeIntObject *a, DeeObject *b);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_shr(DeeIntObject *a, DeeObject *b);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_and(DeeIntObject *a, DeeObject *b);
@@ -96,6 +117,9 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_AddSDigit(DeeIntObje
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_AddUInt32(DeeIntObject *__restrict a, uint32_t b);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_SubUInt32(DeeIntObject *__restrict a, uint32_t b);
+
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_pext(DeeIntObject *self, DeeIntObject *mask);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_pdep(DeeIntObject *self, DeeIntObject *mask);
 
 DECL_END
 
