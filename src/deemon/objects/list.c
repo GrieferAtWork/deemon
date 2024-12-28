@@ -1051,20 +1051,19 @@ DeeList_Clear(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-list_printrepr(DeeObject *__restrict self,
-               dformatprinter printer, void *arg) {
-	List *me = (List *)self;
+list_printrepr(List *__restrict self,
+               Dee_formatprinter_t printer, void *arg) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	temp = (*printer)(arg, "[", 1);
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
-	DeeList_LockRead(me);
-	for (i = 0; i < me->l_list.ol_elemc; ++i) {
-		DREF DeeObject *elem = me->l_list.ol_elemv[i];
+	DeeList_LockRead(self);
+	for (i = 0; i < self->l_list.ol_elemc; ++i) {
+		DREF DeeObject *elem = self->l_list.ol_elemv[i];
 		Dee_Incref(elem);
-		DeeList_LockEndRead(me);
+		DeeList_LockEndRead(self);
 		/* Print this item. */
 		if (i) {
 			temp = (*printer)(arg, ", ", 2);
@@ -1077,9 +1076,9 @@ list_printrepr(DeeObject *__restrict self,
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
-		DeeList_LockRead(me);
+		DeeList_LockRead(self);
 	}
-	DeeList_LockEndRead(me);
+	DeeList_LockEndRead(self);
 	temp = (*printer)(arg, "]", 1);
 	if unlikely(temp < 0)
 		goto err;
@@ -4210,7 +4209,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&list_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ &list_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&list_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&list_visit,
@@ -4274,7 +4273,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject *const *argv) {
 	self->li_index = 0;
-	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_ListIterator", &self->li_list, &self->li_index))
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":_ListIterator",
+	                  &self->li_list, &self->li_index))
 		goto err;
 	if (DeeObject_AssertType(self->li_list, &DeeList_Type))
 		goto err;
@@ -4308,7 +4308,7 @@ again:
 	Dee_Incref(result);
 	DeeList_LockEndRead(self->li_list);
 	if (!atomic_cmpxch_weak_or_write(&self->li_index, list_index, list_index + 1)) {
-		Dee_Decref(result);
+		Dee_Decref_unlikely(result);
 		goto again;
 	}
 	return result;
@@ -4462,7 +4462,8 @@ PRIVATE struct type_member tpconst li_members[] = {
 INTERN DeeTypeObject DeeListIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ListIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(list:?DList,index=!0)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

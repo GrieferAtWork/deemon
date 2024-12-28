@@ -46,6 +46,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 DECL_BEGIN
 
@@ -1347,28 +1348,27 @@ err:
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF HashSet        *si_set;  /* [1..1][const] The set that is being iterated. */
-	struct hashset_item *si_next; /* [?..1][MAYBE(in(si_set->hs_elem))][atomic]
-	                               *   The first candidate for the next item.
-	                               *   NOTE: Before being dereferenced, this pointer is checked
-	                               *         for being located inside the set's element vector.
-	                               *         In the event that it is located at its end, `ITER_DONE'
-	                               *         is returned, though in the event that it is located
-	                               *         outside, an error is thrown (`err_changed_sequence()'). */
+	PROXY_OBJECT_HEAD_EX(HashSet, hsi_set)  /* [1..1][const] The set that is being iterated. */
+	struct hashset_item          *hsi_next; /* [?..1][MAYBE(in(hsi_set->hs_elem))][atomic]
+	                                         * The first candidate for the next item.
+	                                         * NOTE: Before being dereferenced, this pointer is checked
+	                                         *       for being located inside the set's element vector.
+	                                         *       In the event that it is located at its end, `ITER_DONE'
+	                                         *       is returned, though in the event that it is located
+	                                         *       outside, an error is thrown (`err_changed_sequence()'). */
 } HashSetIterator;
-#define READ_ITEM(x) atomic_read(&(x)->si_next)
+#define READ_ITEM(x) atomic_read(&(x)->hsi_next)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 hashsetiterator_next(HashSetIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct hashset_item *item, *end;
-	HashSet *set = self->si_set;
+	HashSet *set = self->hsi_set;
 	DeeHashSet_LockRead(set);
 	end = set->hs_elem + (set->hs_mask + 1);
 	for (;;) {
 		struct hashset_item *old_item;
-		item = atomic_read(&self->si_next);
+		item = atomic_read(&self->hsi_next);
 		old_item = item;
 
 		/* Validate that the pointer is still located in-bounds. */
@@ -1384,11 +1384,11 @@ hashsetiterator_next(HashSetIterator *__restrict self) {
 		while (item < end && (!item->hsi_key || item->hsi_key == dummy))
 			++item;
 		if (item == end) {
-			if (!atomic_cmpxch_weak_or_write(&self->si_next, old_item, item))
+			if (!atomic_cmpxch_weak_or_write(&self->hsi_next, old_item, item))
 				continue;
 			goto iter_exhausted;
 		}
-		if (atomic_cmpxch_weak_or_write(&self->si_next, old_item, item + 1))
+		if (atomic_cmpxch_weak_or_write(&self->hsi_next, old_item, item + 1))
 			break;
 	}
 	result = item->hsi_key;
@@ -1406,10 +1406,10 @@ iter_exhausted:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashsetiterator_ctor(HashSetIterator *__restrict self) {
-	self->si_set = (HashSet *)DeeHashSet_New();
-	if unlikely(!self->si_set)
+	self->hsi_set = (HashSet *)DeeHashSet_New();
+	if unlikely(!self->hsi_set)
 		goto err;
-	self->si_next = self->si_set->hs_elem;
+	self->hsi_next = self->hsi_set->hs_elem;
 	return 0;
 err:
 	return -1;
@@ -1418,22 +1418,15 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 hashsetiterator_copy(HashSetIterator *__restrict self,
                      HashSetIterator *__restrict other) {
-	self->si_set = other->si_set;
-	Dee_Incref(self->si_set);
-	self->si_next = READ_ITEM(other);
+	self->hsi_set = other->hsi_set;
+	Dee_Incref(self->hsi_set);
+	self->hsi_next = READ_ITEM(other);
 	return 0;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-hashsetiterator_fini(HashSetIterator *__restrict self) {
-	Dee_Decref(self->si_set);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-hashsetiterator_visit(HashSetIterator *__restrict self,
-                      dvisit_t proc, void *arg) {
-	Dee_Visit(self->si_set);
-}
+STATIC_ASSERT(offsetof(HashSetIterator, hsi_set) == offsetof(ProxyObject, po_obj));
+#define hashsetiterator_fini  generic_proxy_fini
+#define hashsetiterator_visit generic_proxy_visit
 
 INTDEF DeeTypeObject HashSetIterator_Type;
 
@@ -1445,9 +1438,9 @@ hashsetiterator_init(HashSetIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertType(set, &DeeHashSet_Type))
 		goto err;
-	self->si_set = set;
+	self->hsi_set = set;
 	Dee_Incref(set);
-	self->si_next = atomic_read(&set->hs_elem);
+	self->hsi_next = atomic_read(&set->hs_elem);
 	return 0;
 err:
 	return -1;
@@ -1456,7 +1449,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashsetiterator_bool(HashSetIterator *__restrict self) {
 	struct hashset_item *item = READ_ITEM(self);
-	HashSet *set              = self->si_set;
+	HashSet *set = self->hsi_set;
 	/* Check if the iterator is in-bounds.
 	 * NOTE: Since this is nothing but a shallow boolean check anyways, there
 	 *       is no need to lock the Set since we're not dereferencing anything. */
@@ -1480,23 +1473,23 @@ err:
 }
 
 PRIVATE struct type_member tpconst hashsetiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(HashSetIterator, si_set), "->?DHashSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(HashSetIterator, hsi_set), "->?DHashSet"),
 	TYPE_MEMBER_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF HashSet *DCALL
 hseti_nii_getseq(HashSetIterator *__restrict self) {
-	return_reference_(self->si_set);
+	return_reference_(self->hsi_set);
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 hseti_nii_getindex(HashSetIterator *__restrict self) {
 	size_t mask;
 	struct hashset_item *vector, *elem;
-	DeeHashSet_LockRead(self->si_set);
-	vector = self->si_set->hs_elem;
-	mask   = self->si_set->hs_mask;
-	DeeHashSet_LockEndRead(self->si_set);
+	DeeHashSet_LockRead(self->hsi_set);
+	vector = self->hsi_set->hs_elem;
+	mask   = self->hsi_set->hs_mask;
+	DeeHashSet_LockEndRead(self->hsi_set);
 	elem = READ_ITEM(self);
 	if unlikely(elem < vector || elem > vector + mask)
 		return (size_t)-2; /* Indeterminate (detached) */
@@ -1507,19 +1500,19 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 hseti_nii_setindex(HashSetIterator *__restrict self, size_t new_index) {
 	size_t mask;
 	struct hashset_item *vector;
-	DeeHashSet_LockRead(self->si_set);
-	vector = self->si_set->hs_elem;
-	mask   = self->si_set->hs_mask;
-	DeeHashSet_LockEndRead(self->si_set);
+	DeeHashSet_LockRead(self->hsi_set);
+	vector = self->hsi_set->hs_elem;
+	mask   = self->hsi_set->hs_mask;
+	DeeHashSet_LockEndRead(self->hsi_set);
 	if (new_index > mask + 1)
 		new_index = mask + 1;
-	atomic_write(&self->si_next, vector + new_index);
+	atomic_write(&self->hsi_next, vector + new_index);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hseti_nii_rewind(HashSetIterator *__restrict self) {
-	atomic_write(&self->si_next, atomic_read(&self->si_set->hs_elem));
+	atomic_write(&self->hsi_next, atomic_read(&self->hsi_set->hs_elem));
 	return 0;
 }
 
@@ -1528,17 +1521,17 @@ hseti_nii_revert(HashSetIterator *__restrict self, size_t step) {
 	size_t index, mask;
 	struct hashset_item *vector, *elem;
 again:
-	DeeHashSet_LockRead(self->si_set);
-	vector = self->si_set->hs_elem;
-	mask   = self->si_set->hs_mask;
-	DeeHashSet_LockEndRead(self->si_set);
+	DeeHashSet_LockRead(self->hsi_set);
+	vector = self->hsi_set->hs_elem;
+	mask   = self->hsi_set->hs_mask;
+	DeeHashSet_LockEndRead(self->hsi_set);
 	elem = READ_ITEM(self);
 	if unlikely(elem < vector || elem > vector + mask)
 		return 0; /* Indeterminate (detached) */
 	index = (size_t)(elem - vector);
 	if (step < index)
 		vector = elem - step;
-	if (!atomic_cmpxch_weak_or_write(&self->si_next, elem, vector))
+	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, elem, vector))
 		goto again;
 	return elem == vector ? 1 : 2;
 }
@@ -1548,10 +1541,10 @@ hseti_nii_advance(HashSetIterator *__restrict self, size_t step) {
 	size_t index, mask;
 	struct hashset_item *vector, *elem;
 again:
-	DeeHashSet_LockRead(self->si_set);
-	vector = self->si_set->hs_elem;
-	mask   = self->si_set->hs_mask;
-	DeeHashSet_LockEndRead(self->si_set);
+	DeeHashSet_LockRead(self->hsi_set);
+	vector = self->hsi_set->hs_elem;
+	mask   = self->hsi_set->hs_mask;
+	DeeHashSet_LockEndRead(self->hsi_set);
 	elem = READ_ITEM(self);
 	if unlikely(elem < vector || elem > vector + mask)
 		return 0; /* Indeterminate (detached) */
@@ -1559,7 +1552,7 @@ again:
 	if (index > mask + 1)
 		index = mask + 1;
 	vector += index;
-	if (!atomic_cmpxch_weak_or_write(&self->si_next, elem, vector))
+	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, elem, vector))
 		goto again;
 	return index == mask + 1 ? 1 : 2;
 }
@@ -1569,14 +1562,14 @@ hseti_nii_prev(HashSetIterator *__restrict self) {
 	size_t mask;
 	struct hashset_item *vector, *elem;
 again:
-	DeeHashSet_LockRead(self->si_set);
-	vector = self->si_set->hs_elem;
-	mask   = self->si_set->hs_mask;
-	DeeHashSet_LockEndRead(self->si_set);
+	DeeHashSet_LockRead(self->hsi_set);
+	vector = self->hsi_set->hs_elem;
+	mask   = self->hsi_set->hs_mask;
+	DeeHashSet_LockEndRead(self->hsi_set);
 	elem = READ_ITEM(self);
 	if unlikely(elem <= vector || elem > vector + mask)
 		return 1; /* Indeterminate (detached), or at start */
-	if (!atomic_cmpxch_weak_or_write(&self->si_next, elem, vector))
+	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, elem, vector))
 		goto again;
 	return 0;
 }
@@ -1586,15 +1579,15 @@ hseti_nii_next(HashSetIterator *__restrict self) {
 	size_t mask;
 	struct hashset_item *vector, *elem;
 again:
-	DeeHashSet_LockRead(self->si_set);
-	vector = self->si_set->hs_elem;
-	mask   = self->si_set->hs_mask;
-	DeeHashSet_LockEndRead(self->si_set);
+	DeeHashSet_LockRead(self->hsi_set);
+	vector = self->hsi_set->hs_elem;
+	mask   = self->hsi_set->hs_mask;
+	DeeHashSet_LockEndRead(self->hsi_set);
 	elem = READ_ITEM(self);
 	if unlikely(elem < vector || elem >= vector + mask)
 		return 1; /* Indeterminate (detached), or at end */
 	vector = elem + 1;
-	if (!atomic_cmpxch_weak_or_write(&self->si_next, elem, vector))
+	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, elem, vector))
 		goto again;
 	return 0;
 }
@@ -1602,7 +1595,7 @@ again:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hseti_nii_hasprev(HashSetIterator *__restrict self) {
 	struct hashset_item *item = READ_ITEM(self);
-	HashSet *set              = self->si_set;
+	HashSet *set              = self->hsi_set;
 	/* Check if the iterator is in-bounds.
 	 * NOTE: Since this is nothing but a shallow boolean check anyways, there
 	 *       is no need to lock the Set since we're not dereferencing anything. */
@@ -1614,7 +1607,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 hseti_nii_peek(HashSetIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct hashset_item *item, *end;
-	HashSet *set = self->si_set;
+	HashSet *set = self->hsi_set;
 	DeeHashSet_LockRead(set);
 	end  = set->hs_elem + (set->hs_mask + 1);
 	item = READ_ITEM(self);
@@ -1683,7 +1676,8 @@ PRIVATE struct type_cmp hashsetiterator_cmp = {
 INTERN DeeTypeObject HashSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_HashSetIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(set:?DHashSet)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1735,16 +1729,16 @@ hashset_iter(HashSet *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &HashSetIterator_Type);
-	result->si_set = self;
+	result->hsi_set = self;
 	Dee_Incref(self);
-	result->si_next = atomic_read(&self->hs_elem);
+	result->hsi_next = atomic_read(&self->hs_elem);
 done:
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 hashset_repr(HashSet *__restrict self) {
-	dssize_t error;
+	Dee_ssize_t error;
 	struct unicode_printer p;
 	struct hashset_item *iter, *end;
 	struct hashset_item *vector;
@@ -1791,10 +1785,10 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 hashset_printrepr(HashSet *__restrict self,
-                  dformatprinter printer, void *arg) {
-	dssize_t temp, result;
+                  Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result;
 	struct hashset_item *iter, *end;
 	struct hashset_item *vector;
 	size_t mask;
@@ -2145,7 +2139,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&hashset_repr,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&hashset_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&hashset_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&hashset_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&hashset_visit,

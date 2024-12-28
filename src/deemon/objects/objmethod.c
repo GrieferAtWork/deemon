@@ -42,6 +42,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 DECL_BEGIN
 
@@ -156,16 +157,9 @@ DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
 }
 
 
-PRIVATE NONNULL((1)) void DCALL
-objmethod_fini(DeeObjMethodObject *__restrict self) {
-	Dee_Decref(self->om_this);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-objmethod_visit(DeeObjMethodObject *__restrict self,
-                dvisit_t proc, void *arg) {
-	Dee_Visit(((DeeObjMethodObject *)self)->om_this);
-}
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(ProxyObject, po_obj));
+#define objmethod_fini  generic_proxy_fini
+#define objmethod_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -316,9 +310,9 @@ PRIVATE struct type_member tpconst objmethod_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 objmethod_print(DeeObjMethodObject *__restrict self,
-                dformatprinter printer, void *arg) {
+                Dee_formatprinter_t printer, void *arg) {
 	struct objmethod_origin origin;
 	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) {
 		return DeeFormat_Printf(printer, arg,
@@ -332,9 +326,9 @@ objmethod_print(DeeObjMethodObject *__restrict self,
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 objmethod_printrepr(DeeObjMethodObject *__restrict self,
-                    dformatprinter printer, void *arg) {
+                    Dee_formatprinter_t printer, void *arg) {
 	struct objmethod_origin origin;
 	char const *name = "<unknown>";
 	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
@@ -381,8 +375,8 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&objmethod_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&objmethod_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&objmethod_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&objmethod_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&objmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&objmethod_visit,
@@ -410,15 +404,13 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *dk_owner; /* [1..1][const] The owner of `dk_start'. */
-	char const     *dk_start; /* [1..1][const] Doc string. */
+	PROXY_OBJECT_HEAD(dk_owner) /* [1..1][const] The owner of `dk_start'. */
+	char const       *dk_start; /* [1..1][const] Doc string. */
 } DocKwds;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DocKwds     *dki_kwds; /* [1..1][const] The associated sequence. */
-	DWEAK char const *dki_iter; /* [1..1] Iterator position (start of next keyword name). */
+	PROXY_OBJECT_HEAD_EX(DocKwds, dki_kwds) /* [1..1][const] The associated sequence. */
+	DWEAK char const             *dki_iter; /* [1..1] Iterator position (start of next keyword name). */
 } DocKwdsIterator;
 #define DOCKWDSITER_RDITER(self) atomic_read(&(self)->dki_iter)
 
@@ -517,15 +509,23 @@ dockwdsiter_copy(DocKwdsIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-dockwdsiter_fini(DocKwdsIterator *__restrict self) {
-	Dee_Decref(self->dki_kwds);
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dockwdsiter_init(DocKwdsIterator *__restrict self,
+                 size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o:_DocKwdsIterator", &self->dki_kwds))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->dki_kwds, &DocKwds_Type))
+		goto err;
+	Dee_Incref(self->dki_kwds);
+	self->dki_iter = self->dki_kwds->dk_start + 1;
+	return 0;
+err:
+	return -1;
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-dockwdsiter_visit(DocKwdsIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->dki_kwds);
-}
+STATIC_ASSERT(offsetof(DocKwdsIterator, dki_kwds) == offsetof(ProxyObject, po_obj));
+#define dockwdsiter_fini  generic_proxy_fini
+#define dockwdsiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 dockwdsiter_hash(DocKwdsIterator *self) {
@@ -569,7 +569,9 @@ PRIVATE struct type_member tpconst dockwdsiter_members[] = {
 INTERN DeeTypeObject DocKwdsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DocKwdsIterator",
-	/* .tp_doc      = */ DOC("next->?Dstring"),
+	/* .tp_doc      = */ DOC("(kwds:?Ert:DocKwds)\n"
+	                         "\n"
+	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -580,7 +582,7 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&dockwdsiter_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&dockwdsiter_init,
 				TYPE_FIXED_ALLOCATOR(DocKwdsIterator)
 			}
 		},
@@ -613,9 +615,9 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 };
 
 
-STATIC_ASSERT(offsetof(DocKwds, dk_owner) == offsetof(DocKwdsIterator, dki_kwds));
-#define dockwds_fini  dockwdsiter_fini
-#define dockwds_visit dockwdsiter_visit
+STATIC_ASSERT(offsetof(DocKwds, dk_owner) == offsetof(ProxyObject, po_obj));
+#define dockwds_fini  generic_proxy_fini
+#define dockwds_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DocKwdsIterator *DCALL
 dockwds_iter(DocKwds *__restrict self) {
@@ -697,9 +699,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dockwds_print(DocKwds *__restrict self,
-              dformatprinter printer, void *arg) {
+              Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<keywords for %k>", self->dk_owner);
 }
 
@@ -707,7 +709,8 @@ dockwds_print(DocKwds *__restrict self,
 INTERN DeeTypeObject DocKwds_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DocKwds",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(text:?Dstring)"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -730,7 +733,7 @@ INTERN DeeTypeObject DocKwds_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&dockwds_print,
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&dockwds_print,
 		/* .tp_printrepr = */ NULL
 	},
 	/* .tp_call          = */ NULL,
@@ -777,12 +780,11 @@ no_kwds:
 
 
 
-STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) ==
-              offsetof(DeeKwObjMethodObject, om_this));
-STATIC_ASSERT(offsetof(DeeObjMethodObject, om_func) ==
-              offsetof(DeeKwObjMethodObject, om_func));
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(DeeKwObjMethodObject, om_this));
+STATIC_ASSERT(offsetof(DeeObjMethodObject, om_func) == offsetof(DeeKwObjMethodObject, om_func));
 #define kwobjmethod_fini  objmethod_fini
 #define kwobjmethod_visit objmethod_visit
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwobjmethod_call(DeeKwObjMethodObject *self, size_t argc, DeeObject *const *argv) {
 	return DeeKwObjMethod_CallFunc(self->om_func, self->om_this, argc, argv, NULL);
@@ -880,8 +882,8 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&kwobjmethod_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&kwobjmethod_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwobjmethod_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwobjmethod_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwobjmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwobjmethod_visit,
@@ -968,10 +970,8 @@ err:
 
 
 #if 1
-STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_type) ==
-              offsetof(DeeObjMethodObject, om_this));
-STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_func) ==
-              offsetof(DeeObjMethodObject, om_func));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_type) == offsetof(DeeObjMethodObject, om_this));
+STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_func) == offsetof(DeeObjMethodObject, om_func));
 #define clsmethod_fini  objmethod_fini
 #define clsmethod_visit objmethod_visit
 #else
@@ -995,18 +995,18 @@ clsmethod_getname(DeeClsMethodObject *__restrict self) {
 	return "<unknown>";
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsmethod_print(DeeClsMethodObject *__restrict self,
-                dformatprinter printer, void *arg) {
+                Dee_formatprinter_t printer, void *arg) {
 	char const *name = clsmethod_getname(self);
 	return DeeFormat_Printf(printer, arg,
 	                        "<class method %k.%s>",
 	                        self->cm_type, name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsmethod_printrepr(DeeClsMethodObject *__restrict self,
-                    dformatprinter printer, void *arg) {
+                    Dee_formatprinter_t printer, void *arg) {
 	char const *name = clsmethod_getname(self);
 	return DeeFormat_Printf(printer, arg, "%r.%s",
 	                        self->cm_type, name);
@@ -1087,11 +1087,11 @@ clsmethod_bound_module(DeeClsMethodObject *__restrict self) {
 	return 0;
 }
 
-#define clsmethod_getsets (kwclsmethod_getsets + 1)
 PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
 	TYPE_GETTER_BOUND_F(STR___kwds__, &kwclsmethod_get_kwds, &kwclsmethod_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    DOC_GET(objmethod_get_kwds_doc)),
+#define clsmethod_getsets (kwclsmethod_getsets + 1)
 	TYPE_GETTER_BOUND_F(STR___name__, &clsmethod_get_name, &clsmethod_bound_name,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
@@ -1159,8 +1159,8 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&clsmethod_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&clsmethod_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsmethod_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsmethod_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
@@ -1186,11 +1186,6 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 	/* .tp_operators_size= */ COMPILER_LENOF(clsmethod_operators)
 };
 
-
-STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_func) ==
-              offsetof(DeeKwClsMethodObject, cm_func));
-STATIC_ASSERT(offsetof(DeeClsMethodObject, cm_type) ==
-              offsetof(DeeKwClsMethodObject, cm_type));
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwclsmethod_call(DeeKwClsMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -1227,6 +1222,8 @@ err:
 	return NULL;
 }
 
+STATIC_ASSERT(offsetof(DeeKwClsMethodObject, cm_func) == offsetof(DeeClsMethodObject, cm_func));
+STATIC_ASSERT(offsetof(DeeKwClsMethodObject, cm_type) == offsetof(DeeClsMethodObject, cm_type));
 #define kwclsmethod_fini      clsmethod_fini
 #define kwclsmethod_print     clsmethod_print
 #define kwclsmethod_printrepr clsmethod_printrepr
@@ -1261,8 +1258,8 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&kwclsmethod_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&kwclsmethod_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwclsmethod_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwclsmethod_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwclsmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwclsmethod_visit,
@@ -1463,9 +1460,9 @@ clsproperty_getname(DeeClsPropertyObject *__restrict self) {
 	return "<unknown>";
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsproperty_print(DeeClsPropertyObject *__restrict self,
-                  dformatprinter printer, void *arg) {
+                  Dee_formatprinter_t printer, void *arg) {
 	char permissions[COMPILER_LENOF(",get,del,set")], *p = permissions;
 	char const *name = clsproperty_getname(self);
 	if (self->cp_get)
@@ -1475,16 +1472,16 @@ clsproperty_print(DeeClsPropertyObject *__restrict self,
 	if (self->cp_set)
 		p = stpcpy(p, ",set");
 	if (p == permissions)
-		strcpy(p, ",-");
+		(void)strcpy(p, ",-");
 	return DeeFormat_Printf(printer, arg,
 	                        "<class property %k.%s (%s)>",
 	                        self->cp_type, name,
 	                        permissions + 1);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsproperty_printrepr(DeeClsPropertyObject *__restrict self,
-                      dformatprinter printer, void *arg) {
+                      Dee_formatprinter_t printer, void *arg) {
 	char const *name = clsproperty_getname(self);
 	return DeeFormat_Printf(printer, arg, "%r.%s", self->cp_type, name);
 }
@@ -1618,8 +1615,8 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&clsproperty_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&clsproperty_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsproperty_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsproperty_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
@@ -1664,31 +1661,25 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-clsmember_fini(DeeClsMemberObject *__restrict self) {
-	Dee_Decref(self->cm_type);
-}
+STATIC_ASSERT(offsetof(DeeClsMemberObject, cm_type) == offsetof(ProxyObject, po_obj));
+#define clsmember_fini  generic_proxy_fini
+#define clsmember_visit generic_proxy_visit
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsmember_print(DeeClsMemberObject *__restrict self,
-                dformatprinter printer, void *arg) {
+                Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg,
 	                        "<class member %k.%s>",
 	                        self->cm_type,
 	                        self->cm_memb.m_name);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsmember_printrepr(DeeClsMemberObject *__restrict self,
-                    dformatprinter printer, void *arg) {
+                    Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "%r.%s",
 	                        self->cm_type,
 	                        self->cm_memb.m_name);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-clsmember_visit(DeeClsMemberObject *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->cm_type);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1872,8 +1863,8 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&clsmember_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&clsmember_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsmember_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&clsmember_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsmember_get,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmember_visit,
@@ -2174,12 +2165,12 @@ cmethod_get_print_typename(DeeCMethodObject *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cmethod_print(DeeCMethodObject *__restrict self,
-              dformatprinter printer, void *arg) {
+              Dee_formatprinter_t printer, void *arg) {
 	DREF DeeModuleObject *mod;
 	char const *type_name = cmethod_get_print_typename(self);
-	dssize_t result;
+	Dee_ssize_t result;
 	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (mod != NULL) {
 		DREF DeeTypeObject *type;
@@ -2213,10 +2204,10 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cmethod_printrepr(DeeCMethodObject *__restrict self,
-                  dformatprinter printer, void *arg) {
-	dssize_t result;
+                  Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
 	DREF DeeModuleObject *mod;
 	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (mod) {
@@ -2276,8 +2267,8 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cmethod_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cmethod_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cmethod_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&cmethod_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cmethod_call,
 	/* .tp_visit         = */ NULL,
@@ -2304,11 +2295,6 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 };
 
 
-/* Make sure that we can re-use some functions from `CMethod' */
-STATIC_ASSERT(offsetof(DeeKwCMethodObject, kcm_func) ==
-              offsetof(DeeCMethodObject, cm_func));
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_call(DeeKwCMethodObject *self, size_t argc, DeeObject *const *argv) {
 	return DeeKwCMethod_CallFunc(self->kcm_func, argc, argv, NULL);
@@ -2320,6 +2306,8 @@ kwcmethod_call_kw(DeeKwCMethodObject *self, size_t argc,
 	return DeeKwCMethod_CallFunc(self->kcm_func, argc, argv, kw);
 }
 
+/* Make sure that we can re-use some functions from `CMethod' */
+STATIC_ASSERT(offsetof(DeeKwCMethodObject, kcm_func) == offsetof(DeeCMethodObject, cm_func));
 #define kwcmethod_print     cmethod_print
 #define kwcmethod_printrepr cmethod_printrepr
 #define kwcmethod_operators cmethod_operators
@@ -2350,8 +2338,8 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&kwcmethod_print,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&kwcmethod_printrepr
+		/* .tp_print     = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwcmethod_print,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwcmethod_printrepr
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&kwcmethod_call,
 	/* .tp_visit         = */ NULL,
@@ -2435,6 +2423,8 @@ DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags) {
  * >> if (DeeFormat_Printf(...) < 0) goto err;
  */
 #ifndef NDEBUG
+INTDEF void DCALL assert_print_usercode_trace(void);
+
 PRIVATE ATTR_NORETURN void DCALL
 fatal_invalid_except(DeeObject *__restrict return_value,
                      uint16_t excepted, void *callback_addr) {
@@ -2445,7 +2435,7 @@ fatal_invalid_except(DeeObject *__restrict return_value,
 	            /**/ "depth should have been %u, but was actually %u\n"
 	            "For details, see the C documentation of `DeeCMethod_CallFunc'",
 	            return_value, callback_addr, excepted, DeeThread_Self()->t_exceptsz);
-	/* TODO: Dump deemon call-stack trace. */
+	assert_print_usercode_trace();
 	Dee_BREAKPOINT();
 	abort();
 }
@@ -2515,7 +2505,8 @@ DeeKwObjMethod_CallFunc_d(Dee_kwobjmethod_t funptr, DeeObject *thisarg,
 
 /* Helpers for calling native deemon function with format arguments. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeCMethod_CallFuncf(Dee_cmethod_t funptr, char const *format, ...) {
+DeeCMethod_CallFuncf(Dee_cmethod_t funptr,
+                     char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, format);
@@ -2525,7 +2516,8 @@ DeeCMethod_CallFuncf(Dee_cmethod_t funptr, char const *format, ...) {
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
-DeeObjMethod_CallFuncf(Dee_objmethod_t funptr, DeeObject *thisarg, char const *format, ...) {
+DeeObjMethod_CallFuncf(Dee_objmethod_t funptr, DeeObject *thisarg,
+                       char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, format);
@@ -2535,7 +2527,8 @@ DeeObjMethod_CallFuncf(Dee_objmethod_t funptr, DeeObject *thisarg, char const *f
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
-DeeKwCMethod_CallFuncf(Dee_kwcmethod_t funptr, char const *format, ...) {
+DeeKwCMethod_CallFuncf(Dee_kwcmethod_t funptr,
+                       char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, format);
@@ -2545,7 +2538,8 @@ DeeKwCMethod_CallFuncf(Dee_kwcmethod_t funptr, char const *format, ...) {
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
-DeeKwObjMethod_CallFuncf(Dee_kwobjmethod_t funptr, DeeObject *thisarg, char const *format, ...) {
+DeeKwObjMethod_CallFuncf(Dee_kwobjmethod_t funptr, DeeObject *thisarg,
+                         char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, format);
@@ -2555,7 +2549,8 @@ DeeKwObjMethod_CallFuncf(Dee_kwobjmethod_t funptr, DeeObject *thisarg, char cons
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeCMethod_VCallFuncf(Dee_cmethod_t funptr, char const *format, va_list args) {
+DeeCMethod_VCallFuncf(Dee_cmethod_t funptr,
+                      char const *__restrict format, va_list args) {
 	/* XXX: Optimizations? */
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
@@ -2571,7 +2566,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwCMethod_VCallFuncf(Dee_kwcmethod_t funptr, char const *format, va_list args) {
+DeeKwCMethod_VCallFuncf(Dee_kwcmethod_t funptr,
+                        char const *__restrict format, va_list args) {
 	/* XXX: Optimizations? */
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
@@ -2588,7 +2584,8 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeObjMethod_VCallFuncf(Dee_objmethod_t funptr, DeeObject *thisarg, char const *format, va_list args) {
+DeeObjMethod_VCallFuncf(Dee_objmethod_t funptr, DeeObject *thisarg,
+                        char const *__restrict format, va_list args) {
 	/* XXX: Optimizations? */
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);

@@ -36,6 +36,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 
 DECL_BEGIN
 
@@ -49,10 +50,9 @@ DECL_BEGIN
 typedef DeeRoSetObject RoSet;
 
 typedef struct {
-	OBJECT_HEAD
-	RoSet             *rosi_set;  /* [1..1][const] The set being iterated. */
-	struct roset_item *rosi_next; /* [?..1][in(rosi_set->rs_elem)][atomic]
-	                               * The first candidate for the next item. */
+	PROXY_OBJECT_HEAD_EX(RoSet, rosi_set)  /* [1..1][const] The set being iterated. */
+	struct roset_item          *rosi_next; /* [?..1][in(rosi_set->rs_elem)][atomic]
+	                                        * The first candidate for the next item. */
 } RoSetIterator;
 #define READ_ITEM(x) atomic_read(&(x)->rosi_next)
 
@@ -94,15 +94,9 @@ rosetiterator_copy(RoSetIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-rosetiterator_fini(RoSetIterator *__restrict self) {
-	Dee_Decref(self->rosi_set);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-rosetiterator_visit(RoSetIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->rosi_set);
-}
+STATIC_ASSERT(offsetof(RoSetIterator, rosi_set) == offsetof(ProxyObject, po_obj));
+#define rosetiterator_fini  generic_proxy_fini
+#define rosetiterator_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_bool(RoSetIterator *__restrict self) {
@@ -175,7 +169,8 @@ PRIVATE struct type_member tpconst roset_iterator_members[] = {
 INTERN DeeTypeObject RoSetIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoSetIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(set:?Ert:RoSet)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -322,7 +317,7 @@ DeeRoSet_InsertSequence_foreach(void *arg, DeeObject *elem) {
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
 	DREF RoSet *result;
-	size_t length_hint, mask;
+	size_t size_hint, mask;
 
 	/* Optimization: Since rosets are immutable, re-return if the
 	 *               given sequence already is a read-only RoSet. */
@@ -334,10 +329,10 @@ DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
 	 * then copy as-is) */
 
 	/* Construct a read-only RoSet from a generic sequence. */
-	mask        = ROSET_INITIAL_MASK;
-	length_hint = DeeFastSeq_GetSize_deprecated(sequence);
-	if (length_hint != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		while (mask <= length_hint)
+	mask      = ROSET_INITIAL_MASK;
+	size_hint = DeeObject_SizeFast(sequence);
+	if (size_hint != (size_t)-1) {
+		while (mask <= size_hint)
 			mask = (mask << 1) | 1;
 		mask = (mask << 1) | 1;
 	}
@@ -408,8 +403,7 @@ roset_size(RoSet *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-roset_contains(RoSet *self,
-               DeeObject *key) {
+roset_contains(RoSet *self, DeeObject *key) {
 	size_t i, perturb, hash;
 	struct roset_item *item;
 	hash    = DeeObject_Hash(key);

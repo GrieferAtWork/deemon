@@ -39,6 +39,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 #include "seq/hashfilter.h"
 
 DECL_BEGIN
@@ -60,10 +61,9 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 typedef DeeRoDictObject RoDict;
 
 typedef struct {
-	OBJECT_HEAD
-	RoDict             *rodi_dict; /* [1..1][const] The RoDict being iterated. */
-	struct rodict_item *rodi_next; /* [?..1][in(rodi_dict->rd_elem)][atomic]
-	                                * The first candidate for the next item. */
+	PROXY_OBJECT_HEAD_EX(RoDict, rodi_dict) /* [1..1][const] The RoDict being iterated. */
+	struct rodict_item          *rodi_next; /* [?..1][in(rodi_dict->rd_elem)][atomic]
+	                                         * The first candidate for the next item. */
 } RoDictIterator;
 #define READ_ITEM(x) atomic_read(&(x)->rodi_next)
 
@@ -103,23 +103,17 @@ rodictiterator_copy(RoDictIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-rodictiterator_fini(RoDictIterator *__restrict self) {
-	Dee_Decref(self->rodi_dict);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-rodictiterator_visit(RoDictIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->rodi_dict);
-}
+STATIC_ASSERT(offsetof(RoDictIterator, rodi_dict) == offsetof(ProxyObject, po_obj));
+#define rodictiterator_fini  generic_proxy_fini
+#define rodictiterator_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rodictiterator_bool(RoDictIterator *__restrict self) {
 	struct rodict_item *item = READ_ITEM(self);
-	RoDict *RoDict               = self->rodi_dict;
+	RoDict *dict = self->rodi_dict;
 	for (;; ++item) {
 		/* Check if the iterator is in-bounds. */
-		if (item > RoDict->rd_elem + RoDict->rd_mask)
+		if (item > dict->rd_elem + dict->rd_mask)
 			return 0;
 		if (item->rdi_key)
 			break;
@@ -130,7 +124,8 @@ rodictiterator_bool(RoDictIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_next(RoDictIterator *__restrict self) {
 	struct rodict_item *item, *end;
-	end = self->rodi_dict->rd_elem + self->rodi_dict->rd_mask + 1;
+	RoDict *dict = self->rodi_dict;
+	end = dict->rd_elem + dict->rd_mask + 1;
 	for (;;) {
 		struct rodict_item *old_item;
 		item     = atomic_read(&self->rodi_next);
@@ -156,7 +151,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rodictiterator_nextpair(RoDictIterator *__restrict self,
                         DREF DeeObject *key_and_value[2]) {
 	struct rodict_item *item, *end;
-	end = self->rodi_dict->rd_elem + self->rodi_dict->rd_mask + 1;
+	RoDict *dict = self->rodi_dict;
+	end = dict->rd_elem + dict->rd_mask + 1;
 	for (;;) {
 		struct rodict_item *old_item;
 		item     = atomic_read(&self->rodi_next);
@@ -185,7 +181,8 @@ iter_exhausted:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_nextkey(RoDictIterator *__restrict self) {
 	struct rodict_item *item, *end;
-	end = self->rodi_dict->rd_elem + self->rodi_dict->rd_mask + 1;
+	RoDict *dict = self->rodi_dict;
+	end = dict->rd_elem + dict->rd_mask + 1;
 	for (;;) {
 		struct rodict_item *old_item;
 		item     = atomic_read(&self->rodi_next);
@@ -210,7 +207,8 @@ iter_exhausted:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_nextvalue(RoDictIterator *__restrict self) {
 	struct rodict_item *item, *end;
-	end = self->rodi_dict->rd_elem + self->rodi_dict->rd_mask + 1;
+	RoDict *dict = self->rodi_dict;
+	end = dict->rd_elem + dict->rd_mask + 1;
 	for (;;) {
 		struct rodict_item *old_item;
 		item     = atomic_read(&self->rodi_next);
@@ -272,7 +270,10 @@ PRIVATE struct type_member tpconst rodict_iterator_members[] = {
 INTERN DeeTypeObject RoDictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoDictIterator",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(dict:?Ert:RoDict)\n"
+	                         "\n"
+	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
