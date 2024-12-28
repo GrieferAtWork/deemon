@@ -543,30 +543,6 @@ librt_get_DictIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictProxyIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return_cached(DeeObject_GetAttr((DeeObject *)&DeeDictProxy_Type,
-	                                (DeeObject *)&str_Iterator));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictKeysIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return_cached(DeeObject_GetAttr((DeeObject *)&DeeDictKeys_Type,
-	                                (DeeObject *)&str_Iterator));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictItemsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return_cached(DeeObject_GetAttr((DeeObject *)&DeeDictItems_Type,
-	                                (DeeObject *)&str_Iterator));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictValuesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return_cached(DeeObject_GetAttr((DeeObject *)&DeeDictValues_Type,
-	                                (DeeObject *)&str_Iterator));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_TracebackIterator_impl_f(void) {
 	return_cached(DeeObject_GetAttr((DeeObject *)&DeeTraceback_Type,
 	                                (DeeObject *)&str_Iterator));
@@ -3460,10 +3436,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_ListIterator, &librt_get_ListIterator_f, METHOD
 PRIVATE DEFINE_CMETHOD(librt_get_TupleIterator, &librt_get_TupleIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_HashSetIterator, &librt_get_HashSetIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_DictIterator, &librt_get_DictIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_DictProxyIterator, &librt_get_DictProxyIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_DictKeysIterator, &librt_get_DictKeysIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_DictItemsIterator, &librt_get_DictItemsIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_DictValuesIterator, &librt_get_DictValuesIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_TracebackIterator, &librt_get_TracebackIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_GCSet, &librt_get_GCSet_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_GCSetIterator, &librt_get_GCSetIterator_f, METHOD_FCONSTCALL);
@@ -4053,17 +4025,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "TupleIterator", (DeeObject *)&librt_get_TupleIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* DeeTupleIterator_Type */
 	{ "HashSetIterator", (DeeObject *)&librt_get_HashSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* HashSetIterator_Type */
 	{ "TracebackIterator", (DeeObject *)&librt_get_TracebackIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeTracebackIterator_Type */
-
-	/* Helper types used to drive the builtin `Dict' type */
-	{ "DictIterator", (DeeObject *)&librt_get_DictIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DictIterator_Type */
-	{ "DictProxy", (DeeObject *)&DeeDictProxy_Type, MODSYM_FREADONLY },
-	{ "DictProxyIterator", (DeeObject *)&librt_get_DictProxyIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DictProxyIterator_Type */
-	{ "DictKeys", (DeeObject *)&DeeDictKeys_Type, MODSYM_FREADONLY },
-	{ "DictKeysIterator", (DeeObject *)&librt_get_DictKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DictKeysIterator_Type */
-	{ "DictItems", (DeeObject *)&DeeDictItems_Type, MODSYM_FREADONLY },
-	{ "DictItemsIterator", (DeeObject *)&librt_get_DictItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DictItemsIterator_Type */
-	{ "DictValues", (DeeObject *)&DeeDictValues_Type, MODSYM_FREADONLY },
-	{ "DictValuesIterator", (DeeObject *)&librt_get_DictValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DictValuesIterator_Type */
+	{ "DictIterator", (DeeObject *)&librt_get_DictIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DictIterator_Type */
 
 	/* Special instances of non-singleton objects */
 	{ "Sequence_empty", Dee_EmptySeq, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty sequence singleton") },

@@ -1226,9 +1226,6 @@
 		<ClCompile Include="..\src\deemon\objects\dict.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\dictproxy.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\error_types.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>

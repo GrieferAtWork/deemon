@@ -83,12 +83,6 @@ DDATDEF DeeTypeObject DeeDict_Type;
 #define DeeDict_Check(ob)         DeeObject_InstanceOf(ob, &DeeDict_Type)
 #define DeeDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeDict_Type)
 
-/* Dict proxy types (implemented in `/src/deemon/objects/dictproxy.c') */
-DDATDEF DeeTypeObject DeeDictProxy_Type;
-DDATDEF DeeTypeObject DeeDictKeys_Type;
-DDATDEF DeeTypeObject DeeDictItems_Type;
-DDATDEF DeeTypeObject DeeDictValues_Type;
-
 /* A dummy object used by Dict and HashSet to refer to
  * deleted keys that are still apart of the hash chain.
  * Only here to allow dex modules to correct work

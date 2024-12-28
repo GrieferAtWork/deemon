@@ -300,16 +300,7 @@ assertRtTypeName("ListIterator");
 assertRtTypeName("TupleIterator");
 assertRtTypeName("HashSetIterator");
 assertRtTypeName("TracebackIterator");
-
 assertRtTypeName("DictIterator");
-assertRtTypeName("DictProxy");
-assertRtTypeName("DictProxyIterator");
-assertRtTypeName("DictKeys");
-assertRtTypeName("DictKeysIterator");
-assertRtTypeName("DictItems");
-assertRtTypeName("DictItemsIterator");
-assertRtTypeName("DictValues");
-assertRtTypeName("DictValuesIterator");
 
 assertRtTypeName("Attribute", "Attribute");
 assertRtTypeName("EnumAttr", "enumattr");

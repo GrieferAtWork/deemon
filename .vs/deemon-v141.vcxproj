@@ -419,7 +419,6 @@
 		<ClCompile Include="..\src\deemon\objects\class.c" />
 		<ClCompile Include="..\src\deemon\objects\class_desc.c" />
 		<ClCompile Include="..\src\deemon\objects\dict.c" />
-		<ClCompile Include="..\src\deemon\objects\dictproxy.c" />
 		<ClCompile Include="..\src\deemon\objects\error_types.c" />
 		<ClCompile Include="..\src\deemon\objects\file-type-operators.c" />
 		<ClCompile Include="..\src\deemon\objects\file.c" />

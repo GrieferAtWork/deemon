@@ -73,11 +73,11 @@ local __objects = deemon.List {
 	/* 0x000e */ deemon.Tuple.Iterator,
 	/* 0x000f */ deemon.Dict,
 	/* 0x0010 */ deemon.Dict.Keys,
-	/* 0x0011 */ deemon.Dict.Items,
-	/* 0x0012 */ deemon.Dict.Values,
+	/* 0x0011 */ deemon.Dict.Values, /* Was actually called "DeeDictItems_Type", but deemon100+ had Items/Values swapped */
+	/* 0x0012 */ deemon.Sequence, /* deemon.Dict.Items ("Items" is no longer a real type, but just a super-wrapper "this as Sequence") */
 	/* 0x0013 */ deemon.Dict.Iterator,
 	/* 0x0014 */ deemon.Dict.Keys.Iterator,
-	/* 0x0015 */ deemon.Dict.Items.Iterator,
+	/* 0x0015 */ deemon.Dict.Values.Iterator, /* Was actually called "DeeDictItemsIterator_Type", but deemon100+ had Items/Values swapped */
 	/* 0x0016 */ deemon.float,
 	/* 0x0017 */ deemon.float, /* double */
 	/* 0x0018 */ deemon.float, /* long double */

@@ -103,8 +103,8 @@ import * from collections;
 		assert x.get("MISSING", false) === false;
 	}
 	function check_iterators(x) {
-		str(x);
-		repr(x);
+		(none)str(x);
+		(none)repr(x);
 		assert x is Sequence;
 		local a = x.operator iter();
 		assert a is Iterator, str type a;
@@ -119,8 +119,8 @@ import * from collections;
 			assert a;
 			assert copy a;
 			b.operator next();
-			assert !(a == b);
 			assert a != b;
+			assert !(a == b);
 			assert !(a > b),
 				"{}: {}, {} -- {}, {}".format({
 					try repr(x) catch (...) "NO REPR",
