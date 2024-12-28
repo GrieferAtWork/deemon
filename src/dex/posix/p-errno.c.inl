@@ -496,24 +496,27 @@ PRIVATE DEFINE_CMETHOD(posix_errno_set, &posix_errno_set_f, METHOD_FNORMAL);
 /************************************************************************/
 /* strerror()                                                           */
 /************************************************************************/
+/*[[[deemon import("rt.gen.dexutils").gw("strerror", "errnum:d=DeeSystem_GetErrno()->?X2?Dstring?N", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerror_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_STRERROR_DEF { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring") },
-#define POSIX_STRERROR_DEF_DOC(doc) { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_strerror, posix_strerror_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
+#define POSIX_STRERROR_DEF { "strerror", (DeeObject *)&posix_strerror, MODSYM_FREADONLY, DOC("(errnum:?Dint=DeeSystem_GetErrno())->?X2?Dstring?N") },
+#define POSIX_STRERROR_DEF_DOC(doc) { "strerror", (DeeObject *)&posix_strerror, MODSYM_FREADONLY, DOC("(errnum:?Dint=DeeSystem_GetErrno())->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_strerror, &posix_strerror_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_ERRNUM_DEFINED
-#define POSIX_KWDS_ERRNUM_DEFINED 1
-PRIVATE DEFINE_KWLIST(posix_kwds_errnum, { K(errnum), KEND });
+#define POSIX_KWDS_ERRNUM_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_errnum, { KEX("errnum", 0x60862d21, 0xe0c2e0432c8b5f4a), KEND });
 #endif /* !POSIX_KWDS_ERRNUM_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerror_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int errnum = DeeSystem_GetErrno();
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_errnum, "|d:strerror", &errnum))
-	    goto err;
+		goto err;
 	return posix_strerror_f_impl(errnum);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum)
+/*[[[end]]]*/
+{
 #ifdef posix_strerror_USE_strerrordesc_np
 	{
 		char const *text;
@@ -592,25 +595,27 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 /************************************************************************/
 /* strerrorname()                                                       */
 /************************************************************************/
-
+/*[[[deemon import("rt.gen.dexutils").gw("strerrorname", "errnum:d=DeeSystem_GetErrno()->?X2?Dstring?N", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerrorname_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_STRERRORNAME_DEF { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring") },
-#define POSIX_STRERRORNAME_DEF_DOC(doc) { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_strerrorname, posix_strerrorname_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
+#define POSIX_STRERRORNAME_DEF { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FREADONLY, DOC("(errnum:?Dint=DeeSystem_GetErrno())->?X2?Dstring?N") },
+#define POSIX_STRERRORNAME_DEF_DOC(doc) { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FREADONLY, DOC("(errnum:?Dint=DeeSystem_GetErrno())->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(posix_strerrorname, &posix_strerrorname_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_ERRNUM_DEFINED
-#define POSIX_KWDS_ERRNUM_DEFINED 1
-PRIVATE DEFINE_KWLIST(posix_kwds_errnum, { K(errnum), KEND });
+#define POSIX_KWDS_ERRNUM_DEFINED
+PRIVATE DEFINE_KWLIST(posix_kwds_errnum, { KEX("errnum", 0x60862d21, 0xe0c2e0432c8b5f4a), KEND });
 #endif /* !POSIX_KWDS_ERRNUM_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerrorname_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	int errnum = DeeSystem_GetErrno();
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_errnum, "|d:strerrorname", &errnum))
-	    goto err;
+		goto err;
 	return posix_strerrorname_f_impl(errnum);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum) {
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum)
+/*[[[end]]]*/
+{
 #ifdef posix_strerrorname_USE_strerrorname_np
 	{
 		char const *text;
