@@ -269,6 +269,7 @@ header_nostdinc("spawn.h");
 header_nostdinc("vfork.h");
 header_nostdinc("paths.h");
 header_nostdinc("sys/sendfile.h");
+header_nostdinc("sys/sysinfo.h", addparen(linux) + " || " + addparen(kos));
 
 include_known_headers();
 
@@ -1207,6 +1208,8 @@ functest("_sysconf(0)");
 functest("mpctl(0, 0, 0)", "defined(__hpux__)");
 functest("sysctl(0, 0, 0, 0, 0, 0)");
 
+functest("get_nprocs()", "defined(CONFIG_HAVE_SYS_SYSINFO_H)");
+
 constant("_SC_NPROCESSORS_ONLN");
 constant("_SC_NPROC_ONLN");
 constant("MPC_GETNUMSPUS", "defined(__hpux__)");
@@ -1955,6 +1958,14 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_SYS_SENDFILE_H) && \
       (__has_include(<sys/sendfile.h>))
 #define CONFIG_HAVE_SYS_SENDFILE_H
+#endif
+
+#ifdef CONFIG_NO_SYS_SYSINFO_H
+#undef CONFIG_HAVE_SYS_SYSINFO_H
+#elif !defined(CONFIG_HAVE_SYS_SYSINFO_H) && \
+      (__has_include(<sys/sysinfo.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_SYS_SYSINFO_H
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -8974,6 +8985,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_sysctl) && \
       (defined(sysctl) || defined(__sysctl_defined))
 #define CONFIG_HAVE_sysctl
+#endif
+
+#ifdef CONFIG_NO_get_nprocs
+#undef CONFIG_HAVE_get_nprocs
+#elif !defined(CONFIG_HAVE_get_nprocs) && \
+      (defined(get_nprocs) || defined(__get_nprocs_defined) || defined(CONFIG_HAVE_SYS_SYSINFO_H))
+#define CONFIG_HAVE_get_nprocs
 #endif
 
 #ifdef CONFIG_NO__SC_NPROCESSORS_ONLN

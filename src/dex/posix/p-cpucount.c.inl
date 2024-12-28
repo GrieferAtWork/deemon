@@ -34,6 +34,7 @@ DECL_BEGIN
 #undef posix_cpu_count_USE_sysctl__HW_NCPU
 #undef posix_cpu_count_USE_mpctl__MPC_GETNUMSPUS
 #undef posix_cpu_count_USE_sysconf__SC_NPROC_ONLN
+#undef posix_cpu_count_USE_get_nprocs
 #undef posix_cpu_count_USE_open_AND_proc_cpuinfo
 #undef posix_cpu_count_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
@@ -50,6 +51,8 @@ DECL_BEGIN
 #define posix_cpu_count_USE_mpctl__MPC_GETNUMSPUS
 #elif defined(CONFIG_HAVE_sysconf) && defined(CONFIG_HAVE__SC_NPROC_ONLN)
 #define posix_cpu_count_USE_sysconf__SC_NPROC_ONLN
+#elif defined(CONFIG_HAVE_get_nprocs)
+#define posix_cpu_count_USE_get_nprocs
 #elif defined(CONFIG_HAVE_PROCFS)
 #define posix_cpu_count_USE_open_AND_proc_cpuinfo
 #else /* ... */
@@ -57,6 +60,11 @@ DECL_BEGIN
 #endif /* !... */
 
 
+#ifdef posix_cpu_count_USE_get_nprocs
+DECL_END
+#include <sys/sysinfo.h>
+DECL_BEGIN
+#endif /* posix_cpu_count_USE_get_nprocs */
 
 /*[[[deemon import("rt.gen.dexutils").gw("cpu_count", "->?Dint", libname: "posix", ispure: true); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void);
@@ -143,6 +151,13 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void)
 		result = 1; /* Shouldn't happen... */
 	return DeeInt_NewUInt((unsigned int)result);
 #endif /* posix_cpu_count_USE_sysconf__SC_NPROC_ONLN */
+
+#ifdef posix_cpu_count_USE_get_nprocs
+	int result = get_nprocs();
+	if unlikely(result <= 0)
+		result = 1; /* Shouldn't happen... */
+	return DeeInt_NewUInt((unsigned int)result);
+#endif /* posix_cpu_count_USE_get_nprocs */
 
 #ifdef posix_cpu_count_USE_open_AND_proc_cpuinfo
 	unsigned int result = 0;
