@@ -1948,6 +1948,14 @@ err:
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+#undef HAVE_int_pext_impl
+#undef HAVE_int_pdep_impl
+#if !defined(__OPTIMIZE_SIZE__) && 1
+#define HAVE_int_pext_impl
+#define HAVE_int_pdep_impl
+#endif
+
+#ifdef HAVE_int_pext_impl
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 int_pext_impl(digit const *self, digit const *mask, size_t common_size) {
 	DREF DeeIntObject *result;
@@ -2001,6 +2009,7 @@ int_pext_impl(digit const *self, digit const *mask, size_t common_size) {
 err:
 	return NULL;
 }
+#endif /* HAVE_int_pext_impl */
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 int_pext_ex_impl(DeeIntObject *self, DeeIntObject *mask) {
@@ -2207,25 +2216,108 @@ int_pext(DeeIntObject *self, DeeIntObject *mask) {
 	DREF DeeIntObject *result;
 	/* A negative self/mask makes this algorithm extremely complicated.
 	 * A (correct, but unoptimized) reference implementation can be found at:
-	 * >> /util/test/deemon-int-pdep.dee:correctPExt */
+	 * >> /util/test/deemon-int-pext.dee:correctPExt */
+#ifdef HAVE_int_pext_impl
 	if likely(self->ob_size >= 0 && mask->ob_size >= 0) {
 		size_t common_size = (size_t)mask->ob_size;
 		if (common_size > (size_t)self->ob_size)
 			common_size = (size_t)self->ob_size;
 		result = int_pext_impl(self->ob_digit, mask->ob_digit, common_size);
-	} else {
+	} else
+#endif /* HAVE_int_pext_impl */
+	{
 		result = int_pext_ex_impl(self, mask);
 	}
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
-int_pdep(DeeIntObject *self, DeeIntObject *mask) {
+
+
+#ifdef HAVE_int_pdep_impl
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeIntObject *DCALL
+int_pdep_impl(digit const *self, size_t common_size,
+              digit const *mask, size_t mask_size) {
+	DREF DeeIntObject *result;
+	size_t i, self_index;
+	shift_t self_shift;
+	result = DeeInt_Alloc(mask_size);
+	if unlikely(!result)
+		goto err;
+	self_index = 0;
+	self_shift = 0;
+	for (i = 0; i < mask_size && self_index < common_size; ++i) {
+		shift_t m_nbits;
+		digit v, m = mask[i];
+		if likely(m) {
+			m_nbits = POPCOUNT(m);
+			v = self[self_index] >> self_shift; /* v_nbits = DIGIT_BITS - self_shift */
+			self_shift += m_nbits;              /* v_nbits = DIGIT_BITS - self_shift + m_nbits */
+			if (self_shift >= DIGIT_BITS) {
+				self_shift -= DIGIT_BITS;       /* v_nbits = DIGIT_BITS - self_shift + m_nbits - DIGIT_BITS */
+				++self_index;
+				if (self_index < common_size) {
+					shift_t v_nbits; /* # of bits already stored in "v" */
+					/* >> v_nbits = DIGIT_BITS - self_shift + m_nbits - DIGIT_BITS
+					 * >> v_nbits = -self_shift + m_nbits
+					 * >> v_nbits = m_nbits - self_shift */
+					v_nbits = m_nbits - self_shift;
+					v |= self[self_index] << v_nbits;
+				}
+			}
+			v = PDEP(v, m);
+		} else {
+			v = 0;
+		}
+		result->ob_digit[i] = v;
+	}
+#if 1
+	result->ob_size = (Dee_ssize_t)i;
+#else
+	bzeroc(result->ob_digit + i, mask_size - i, sizeof(Dee_digit_t));
+#endif
+	result = int_normalize(result);
+	return result;
+err:
+	return NULL;
+}
+#endif /* HAVE_int_pdep_impl */
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
+int_pdep_ex_impl(DeeIntObject *self, DeeIntObject *mask) {
+#if 0
+	size_t self_size = (size_t)ABS(self->ob_size);
+	size_t mask_size = (size_t)ABS(mask->ob_size);
+	bool self_neg = self->ob_size < 0;
+	bool mask_neg = mask->ob_size < 0;
+	DREF DeeIntObject *result;
+#endif
+
 	/* TODO */
 	(void)self;
 	(void)mask;
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
+int_pdep(DeeIntObject *self, DeeIntObject *mask) {
+	DREF DeeIntObject *result;
+	/* A negative self/mask makes this algorithm extremely complicated.
+	 * A (correct, but unoptimized) reference implementation can be found at:
+	 * >> /util/test/deemon-int-pdep.dee:correctPDep */
+#ifdef HAVE_int_pdep_impl
+	if likely(self->ob_size >= 0 && mask->ob_size >= 0) {
+		size_t common_size = (size_t)mask->ob_size;
+		if (common_size > (size_t)self->ob_size)
+			common_size = (size_t)self->ob_size;
+		result = int_pdep_impl(self->ob_digit, common_size,
+		                       mask->ob_digit, (size_t)mask->ob_size);
+	} else
+#endif /* HAVE_int_pdep_impl */
+	{
+		result = int_pdep_ex_impl(self, mask);
+	}
+	return result;
 }
 
 

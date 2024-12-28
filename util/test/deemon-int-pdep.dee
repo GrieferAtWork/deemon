@@ -23,7 +23,24 @@ import * from deemon;
 
 @@Reference implementation for @int.pdep
 function correctPDep(self: int, mask: int): int {
-	// TODO
+	local result = 0;
+	local resultShift = 0;
+	while (mask) {
+		local nSkip = mask.ctz;
+		resultShift += nSkip;
+		mask >>= nSkip;
+		if (mask == -1) {
+			result |= self << resultShift;
+			break;
+		}
+		local nCopy = mask.ct1;
+		local addend = self & nCopy.bitmask;
+		result |= addend << resultShift;
+		mask >>= nCopy;
+		self >>= nCopy;
+		resultShift += nCopy;
+	}
+	return result;
 }
 
 function assertPDep(self: int, mask: int) {
@@ -35,7 +52,6 @@ function assertPDep(self: int, mask: int) {
 		f"\nActual:   {actual.hex()}"
 		f"\nself:     {self.hex()}"
 		f"\nmask:     {mask.hex()}";
-	assert expected == correctPDep(self, mask);
 }
 
 function getWideRangeOfIntegers(): {int...} {
@@ -58,20 +74,28 @@ function getWideRangeOfIntegers(): {int...} {
 }
 
 
-//TODO:assert -1 == correctPDep(-1, -1);
-//TODO:assert 0x1234 == correctPDep(0x1234, -1);
-//TODO:assert "0x13" == correctPDep(0x1234, 0xf0f0).hex();
-//TODO:assert "0x13579bdf" == correctPDep(0x123456789ABCDEF0, 0xf0f0f0f0f0f0f0f0).hex();
-//TODO:assert "0x1357" == correctPDep(0x12345678, 0xf0f0f0f0).hex();
-//TODO:assert "0x33" == correctPDep(0x11223344, 0xff00).hex();
-//TODO:
-//TODO:assertPDep(0x1234, 0xf0f0);
-//TODO:assertPDep(0x123456789ABCDEF0, 0xf0f0f0f0f0f0f0f0);
-//TODO:assertPDep(0x12345678, 0xf0f0f0f0);
-//TODO:assertPDep(0x11223344, 0xff00);
-//TODO:
-//TODO:for (local self: getWideRangeOfIntegers()) {
-//TODO:	for (local mask: getWideRangeOfIntegers()) {
-//TODO:		assertPDep(self, mask);
-//TODO:	}
-//TODO:}
+assert -1 == correctPDep(-1, -1);
+assert 0x1234 == correctPDep(0x1234, -1);
+assert "0x3040" == correctPDep(0x1234, 0xf0f0).hex();
+assert "0x3040" == correctPDep(0x34, 0xf0f0).hex();
+assert "0x90a0b0c0d0e0f000" == correctPDep(0x9ABCDEF0, 0xf0f0f0f0f0f0f0f0).hex();
+assert "0x90a0b0c0d0e0f000" == correctPDep(0x9ABCDEF0, 0xfffffffffffffffff0f0f0f0f0f0f0f0).hex();
+assert "0x90a0b0c0d0e0f000" == correctPDep(0x123456789ABCDEF0, 0xf0f0f0f0f0f0f0f0).hex();
+assert "0x102030405060708090a0b0c0d0e0f000" == correctPDep(
+	0x123456789ABCDEF0, 0xf0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0).hex();
+assert "0x50607080" == correctPDep(0x5678, 0xf0f0f0f0).hex();
+assert "0x50607080" == correctPDep(0x12345678, 0xf0f0f0f0).hex();
+assert "0x4400" == correctPDep(0x44, 0xff00).hex();
+assert "0x4400" == correctPDep(0x11223344, 0xff00).hex();
+
+assert 0x10305070 == correctPDep(0x00001357, 0xf0f0f0f0);
+assert 0x00003300 == correctPDep(0x00000033, 0x0000ff00);
+assertPDep(0x00001357, 0xf0f0f0f0);
+assertPDep(0x00000033, 0x0000ff00);
+
+for (local self: getWideRangeOfIntegers()) {
+	for (local mask: getWideRangeOfIntegers()) {
+		if (self >= 0 && mask >= 0) // TODO: REMOVE ME
+		assertPDep(self, mask);
+	}
+}
