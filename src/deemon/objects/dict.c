@@ -341,7 +341,10 @@ PRIVATE struct type_member tpconst dict_iterator_members[] = {
 INTERN DeeTypeObject DictIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictIterator",
-	/* .tp_doc      = */ DOC("next->?T2?O?O"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(dict:?DDict)\n"
+	                         "\n"
+	                         "next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

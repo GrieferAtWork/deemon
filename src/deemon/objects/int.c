@@ -3739,19 +3739,19 @@ PRIVATE struct type_math int_math = {
 	/* .tp_or          = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_or,
 	/* .tp_xor         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_xor,
 	/* .tp_pow         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_pow,
-	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&int_inc,
-	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&int_dec,
-	/* .tp_inplace_add = */ NULL,
-	/* .tp_inplace_sub = */ NULL,
-	/* .tp_inplace_mul = */ NULL,
-	/* .tp_inplace_div = */ NULL,
-	/* .tp_inplace_mod = */ NULL,
-	/* .tp_inplace_shl = */ NULL,
-	/* .tp_inplace_shr = */ NULL,
-	/* .tp_inplace_and = */ NULL,
-	/* .tp_inplace_or  = */ NULL,
-	/* .tp_inplace_xor = */ NULL,
-	/* .tp_inplace_pow = */ NULL
+	/* .tp_inc         = */ (int (DCALL *)(DREF DeeObject **__restrict))&int_inc,
+	/* .tp_dec         = */ (int (DCALL *)(DREF DeeObject **__restrict))&int_dec,
+	/* .tp_inplace_add = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_sub = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_mul = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_div = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_mod = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_shl = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_shr = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_and = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_or  = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_xor = */ NULL, /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
+	/* .tp_inplace_pow = */ NULL  /* TODO: Same as regular, allow optimizations for !DeeObject_IsShared() */
 };
 
 

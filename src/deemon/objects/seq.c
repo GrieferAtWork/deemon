@@ -64,12 +64,10 @@
 #include "seq/simpleproxy.h"
 #include "seq/svec.h"
 #include "seq/unique-iterator.h"
-#include "seq_functions.h"
 
 #undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
-
 
 /* Provide aliases for certain Set operators in Sequence */
 #undef CONFIG_HAVE_SET_OPERATORS_IN_SEQ
@@ -501,39 +499,59 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_combinations(DeeObject *self, size_t argc, DeeObject *const *argv) {
+seq_combinations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t r;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":combinations", &r))
+	bool cached = true;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, UNPuSIZ "|b:combinations", &r, &cached))
 		goto err;
+	if (cached) {
+		self = DeeSeq_InvokeCached(self);
+		if unlikely(!self)
+			goto err;
+	} else {
+		Dee_Incref(self);
+	}
 	return DeeSeq_Combinations(self, r);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_repeatcombinations(DeeObject *self, size_t argc, DeeObject *const *argv) {
+seq_repeatcombinations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t r;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":repeatcombinations", &r))
+	bool cached = true;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, UNPuSIZ "|b:repeatcombinations", &r, &cached))
 		goto err;
+	if (cached) {
+		self = DeeSeq_InvokeCached(self);
+		if unlikely(!self)
+			goto err;
+	} else {
+		Dee_Incref(self);
+	}
 	return DeeSeq_RepeatCombinations(self, r);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_permutations(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	size_t r;
-	DeeObject *arg = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "|o:permutations", &arg))
+seq_permutations(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	size_t r = (size_t)-1;
+	bool cached = true;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__r_cached, "|" UNPuSIZ "b:permutations", &r, &cached))
 		goto err;
-	if (DeeNone_Check(arg))
-		return DeeSeq_Permutations(self);
-	if (DeeObject_AsSize(arg, &r))
-		goto err;
+	if (cached) {
+		self = DeeSeq_InvokeCached(self);
+		if unlikely(!self)
+			goto err;
+	} else {
+		Dee_Incref(self);
+	}
 	return DeeSeq_Permutations2(self, r);
 err:
 	return NULL;
 }
+
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1420,61 +1438,64 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            /**/ "making its length a little bit shorter than the other buckets\n"
 	            "This is similar to #segments, however rather than having the caller specify the "
 	            /**/ "size of the a bucket, the number of buckets is specified instead."),
-	TYPE_METHOD("combinations",
-	            &seq_combinations,
-	            "(r:?Dint)->?S?DSequence\n"
-	            "#tIntegerOverflow{@r is negative, or too large}"
-	            "Returns a Sequence of r-long sequences representing all possible (ordered) "
-	            /**/ "combinations of elements retrieved from @this\n"
-	            "${"
-	            /**/ "/* { (\"A\", \"B\"), (\"A\", \"C\"), (\"A\", \"D\"),\n"
-	            /**/ " *   (\"B\", \"C\"), (\"B\", \"D\"), (\"C\", \"D\") } */\n"
-	            /**/ "print repr \"ABCD\".combinations(2);"
-	            "}\n"
-	            "Notice that a combination such as $\"BA\" is not produced, as only possible "
-	            /**/ "combinations with their original element order still in tact may be returned\n"
-	            "When @this Sequence implements ?#{op:getitem} and ?#{op:size}, those will be invoked "
-	            /**/ "as items are retrieved by index. Otherwise, all elements from @this Sequence "
-	            /**/ "are loaded at once when #combinations is called first.\n"
-	            "When @r is greater than ${##this}, an empty Sequence is returned (${{}})\n"
-	            "Hint: The python equivalent of this function is "
-	            /**/ "#A{itertools.combinations|https://docs.python.org/3/library/itertools.html##itertools.combinations}"),
-	TYPE_METHOD("repeatcombinations",
-	            &seq_repeatcombinations,
-	            "(r:?Dint)->?S?DSequence\n"
-	            "#tIntegerOverflow{@r is negative, or too large}"
-	            "Same as #combinations, however elements of @this Sequence may be repeated (though element order is still enforced)\n"
-	            "${"
-	            /**/ "/* { (\"A\", \"A\"), (\"A\", \"B\"), (\"A\", \"C\"),\n"
-	            /**/ " *   (\"B\", \"B\"), (\"B\", \"C\"), (\"C\", \"C\") } */\n"
-	            /**/ "print repr \"ABC\".repeatcombinations(2);"
-	            "}\n"
-	            "When @this Sequence implements ?#{op:getitem} and ?#{op:size}, those will be invoked "
-	            /**/ "as items are retrieved by index. Otherwise, all elements from @this Sequence "
-	            /**/ "are loaded at once when #repeatcombinations is called first.\n"
-	            "When @r is $0, a Sequence containing a single, empty Sequence is returned (${{{}}})\n"
-	            "When ${##this} is zero, an empty Sequence is returned (${{}})\n"
-	            "Hint: The python equivalent of this function is "
-	            /**/ "#A{itertools.combinations_with_replacement|https://docs.python.org/3/library/itertools.html##itertools.combinations_with_replacement}"),
-	TYPE_METHOD("permutations",
-	            &seq_permutations,
-	            "(r:?Dint=!N)->?S?DSequence\n"
-	            "#tIntegerOverflow{@r is negative, or too large}"
-	            "Same as #combinations, however the order of elements must "
-	            /**/ "not be enforced, though indices may not be repeated\n"
-	            "When @r is ?N, ${##this} is used instead\n"
-	            "${"
-	            /**/ "/* { (\"A\", \"B\"), (\"A\", \"C\"), (\"B\", \"A\"),\n"
-	            /**/ " *   (\"B\", \"C\"), (\"C\", \"A\"), (\"C\", \"B\") } */\n"
-	            /**/ "print repr \"ABC\".permutations(2);"
-	            "}\n"
-	            "When @this Sequence implements ?#{op:getitem} and ?#{op:size}, those will be invoked "
-	            /**/ "as items are retrieved by index. Otherwise, all elements from @this Sequence "
-	            /**/ "are loaded at once when #repeatcombinations is called first.\n"
-	            "When @r is $0, a Sequence containing a single, empty Sequence is returned (${{{}}})\n"
-	            "When ${##this} is zero, an empty Sequence is returned (${{}})\n"
-	            "Hint: The python equivalent of this function is "
-	            /**/ "#A{itertools.permutations|https://docs.python.org/3/library/itertools.html##itertools.permutations}"),
+	TYPE_KWMETHOD("combinations",
+	              &seq_combinations,
+	              "(r:?Dint,cached=!t)->?S?DSequence\n"
+	              "#pcached{When true, automatically wrap using ?#cached like ${this.cached.combinations(r, cached: false)}}"
+	              "#tIntegerOverflow{@r is negative, or too large}"
+	              "Returns a Sequence of r-long sequences representing all possible (ordered) "
+	              /**/ "combinations of elements retrieved from @this\n"
+	              "${"
+	              /**/ "/* { (\"A\", \"B\"), (\"A\", \"C\"), (\"A\", \"D\"),\n"
+	              /**/ " *   (\"B\", \"C\"), (\"B\", \"D\"), (\"C\", \"D\") } */\n"
+	              /**/ "print repr \"ABCD\".combinations(2);"
+	              "}\n"
+	              "Notice that a combination such as $\"BA\" is not produced, as only possible "
+	              /**/ "combinations with their original element order still in tact may be returned\n"
+	              "When @this Sequence implements ?#{op:getitem} and ?#{op:size}, those will be invoked "
+	              /**/ "as items are retrieved by index. Otherwise, all elements from @this Sequence "
+	              /**/ "are loaded at once when #combinations is called first.\n"
+	              "When @r is greater than ${##this}, an empty Sequence is returned (${{}})\n"
+	              "Hint: The python equivalent of this function is "
+	              /**/ "#A{itertools.combinations|https://docs.python.org/3/library/itertools.html##itertools.combinations}"),
+	TYPE_KWMETHOD("repeatcombinations",
+	              &seq_repeatcombinations,
+	              "(r:?Dint,cached=!t)->?S?DSequence\n"
+	              "#pcached{When true, automatically wrap using ?#cached like ${this.cached.repeatcombinations(r, cached: false)}}"
+	              "#tIntegerOverflow{@r is negative, or too large}"
+	              "Same as #combinations, however elements of @this Sequence may be repeated (though element order is still enforced)\n"
+	              "${"
+	              /**/ "/* { (\"A\", \"A\"), (\"A\", \"B\"), (\"A\", \"C\"),\n"
+	              /**/ " *   (\"B\", \"B\"), (\"B\", \"C\"), (\"C\", \"C\") } */\n"
+	              /**/ "print repr \"ABC\".repeatcombinations(2);"
+	              "}\n"
+	              "When @this Sequence implements ?#{op:getitem} and ?#{op:size}, those will be invoked "
+	              /**/ "as items are retrieved by index. Otherwise, all elements from @this Sequence "
+	              /**/ "are loaded at once when #repeatcombinations is called first.\n"
+	              "When @r is $0, a Sequence containing a single, empty Sequence is returned (${{{}}})\n"
+	              "When ${##this} is zero, an empty Sequence is returned (${{}})\n"
+	              "Hint: The python equivalent of this function is "
+	              /**/ "#A{itertools.combinations_with_replacement|https://docs.python.org/3/library/itertools.html##itertools.combinations_with_replacement}"),
+	TYPE_KWMETHOD("permutations",
+	              &seq_permutations,
+	              "(r?:?Dint,cached=!t)->?S?DSequence\n"
+	              "#pcached{When true, automatically wrap using ?#cached like ${this.cached.permutations(r, cached: false)}}"
+	              "#tIntegerOverflow{@r is negative, or too large}"
+	              "Same as #combinations, however the order of elements must "
+	              /**/ "not be enforced, though indices may not be repeated\n"
+	              "When @r is ?N, ${##this} is used instead\n"
+	              "${"
+	              /**/ "/* { (\"A\", \"B\"), (\"A\", \"C\"), (\"B\", \"A\"),\n"
+	              /**/ " *   (\"B\", \"C\"), (\"C\", \"A\"), (\"C\", \"B\") } */\n"
+	              /**/ "print repr \"ABC\".permutations(2);"
+	              "}\n"
+	              "When @this Sequence implements ?#{op:getitem} and ?#{op:size}, those will be invoked "
+	              /**/ "as items are retrieved by index. Otherwise, all elements from @this Sequence "
+	              /**/ "are loaded at once when #repeatcombinations is called first.\n"
+	              "When @r is $0, a Sequence containing a single, empty Sequence is returned (${{{}}})\n"
+	              "When ${##this} is zero, an empty Sequence is returned (${{}})\n"
+	              "Hint: The python equivalent of this function is "
+	              /**/ "#A{itertools.permutations|https://docs.python.org/3/library/itertools.html##itertools.permutations}"),
 
 	TYPE_KWMETHOD("byhash", &seq_byhash, DOC_GET(seq_byhash_doc)),
 

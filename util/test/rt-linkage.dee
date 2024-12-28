@@ -39,6 +39,7 @@ assertRtTypeName("SeqRepeatCombinations");
 assertRtTypeName("SeqRepeatCombinationsIterator");
 assertRtTypeName("SeqPermutations");
 assertRtTypeName("SeqPermutationsIterator");
+assertRtTypeName("SeqCombinationsView");
 assertRtTypeName("SeqSegments");
 assertRtTypeName("SeqSegmentsIterator");
 assertRtTypeName("SeqConcat");

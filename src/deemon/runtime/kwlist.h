@@ -124,6 +124,7 @@ local kw_lists = {
 	{"obj", "callback"},
 	{"code", "positional", "kwargs", "kwds"},
 	{"code", "positional", "kwds"},
+	{"r", "cached"},
 
 	{"#ifdef CONFIG_HOST_WINDOWS", "message", "inner", "errno", "nterr_np"},
 	{"#ifndef CONFIG_HOST_WINDOWS", "message", "inner", "errno"},
@@ -228,6 +229,7 @@ DECLARE_KWLIST(kwlist__pattern_start_end_rules, { KEX("pattern", 0x6ea88732, 0x8
 DECLARE_KWLIST(kwlist__pos_maxbytes_readall, { KEX("pos", 0xb1aecbb4, 0x277b6d36f75741ae), KEX("maxbytes", 0x3b196fc0, 0x93d3b3615fcacd4a), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEND });
 DECLARE_KWLIST(kwlist__precision, { KEX("precision", 0xb3c93bdd, 0x3d6866f78be60b), KEND });
 DECLARE_KWLIST(kwlist__predicate_answer, { KEX("predicate", 0x3c672fb4, 0xb5f52435e811385), KEX("answer", 0x63c165df, 0x76fd5eeb2e58020), KEND });
+DECLARE_KWLIST(kwlist__r_cached, { KEX("r", 0x5c9373f1, 0x6ece84440d42ecf6), KEX("cached", 0x915e175e, 0xddfd408a14eae4b4), KEND });
 DECLARE_KWLIST(kwlist__radix_precision_mode, { KEX("radix", 0xb10d4185, 0xbf2dcb32c6415f32), KEX("precision", 0xb3c93bdd, 0x3d6866f78be60b), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 DECLARE_KWLIST(kwlist__should_start_end_max, { KEX("should", 0x28877b82, 0xbb3cb749df0a8b51), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEND });
 DECLARE_KWLIST(kwlist__signed, { KEX("signed", 0x17a15883, 0x58a245b6f802625f), KEND });

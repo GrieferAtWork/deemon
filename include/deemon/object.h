@@ -605,8 +605,9 @@ DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_li
 
 
 /* Initialize the given weak reference to NULL. */
-#define Dee_weakref_initempty(self) \
-	(void)((self)->wr_obj = NULL, (self)->wr_del = NULL)
+#define Dee_weakref_initempty(self)                         \
+	(void)((self)->wr_pself = NULL, (self)->wr_next = NULL, \
+	       (self)->wr_obj = NULL, (self)->wr_del = NULL)
 
 /* Weak reference functionality.
  * @assume(ob != NULL);
@@ -4549,8 +4550,14 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeExact)(DeeObject 
 /* Throw a TypeError stating that an instance of `required_type' was required, when `self' was given. */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeObject_TypeAssertFailed2)(DeeObject *self, DeeTypeObject *required_type1, DeeTypeObject *required_type2);
+DFUNDEF ATTR_COLD NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TypeAssertFailed3)(DeeObject *self, DeeTypeObject *required_type1, DeeTypeObject *required_type2, DeeTypeObject *required_type3);
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
-#define DeeObject_TypeAssertFailed(self, required_type) Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed(self, required_type), -1)
+#define DeeObject_TypeAssertFailed(self, required_type) \
+	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed(self, required_type), -1)
+#define DeeObject_TypeAssertFailed2(self, required_type1, required_type2) \
+	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed2(self, required_type1, required_type2), -1)
+#define DeeObject_TypeAssertFailed3(self, required_type1, required_type2, required_type3) \
+	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed3(self, required_type1, required_type2, required_type3), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 #define DeeObject_AssertTypeOrNone(self, required_type)      (DeeNone_Check(self) ? 0 : DeeObject_AssertType(self, required_type))
 #define DeeObject_AssertTypeExactOrNone(self, required_type) (DeeNone_CheckExact(self) ? 0 : DeeObject_AssertTypeExact(self, required_type))

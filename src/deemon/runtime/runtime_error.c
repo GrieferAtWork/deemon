@@ -102,6 +102,21 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	                       Dee_TYPE(self), self);
 }
 
+PUBLIC ATTR_COLD NONNULL((1, 2, 3, 4)) int
+(DCALL DeeObject_TypeAssertFailed3)(DeeObject *self,
+                                    DeeTypeObject *required_type1,
+                                    DeeTypeObject *required_type2,
+                                    DeeTypeObject *required_type3) {
+	ASSERT_OBJECT(self);
+	ASSERT_OBJECT(required_type1);
+	ASSERT_OBJECT(required_type2);
+	ASSERT_OBJECT(required_type3);
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Expected instance of `%r', `%r' or `%r', but got a `%r' object: %k",
+	                       required_type1, required_type2, required_type3,
+	                       Dee_TYPE(self), self);
+}
+
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_constructor_kw)(DeeTypeObject *tp, size_t argc,
                                          DeeObject *const *argv, DeeObject *kw) {

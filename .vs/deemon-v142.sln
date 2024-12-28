@@ -396,6 +396,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-property.dee = ..\util\test\deemon-property.dee
 		..\util\test\deemon-sequence-bsearch.dee = ..\util\test\deemon-sequence-bsearch.dee
 		..\util\test\deemon-sequence-cached.dee = ..\util\test\deemon-sequence-cached.dee
+		..\util\test\deemon-sequence-combinations.dee = ..\util\test\deemon-sequence-combinations.dee
 		..\util\test\deemon-sequence-compare.dee = ..\util\test\deemon-sequence-compare.dee
 		..\util\test\deemon-sequence-each-contains.dee = ..\util\test\deemon-sequence-each-contains.dee
 		..\util\test\deemon-sequence-each.dee = ..\util\test\deemon-sequence-each.dee

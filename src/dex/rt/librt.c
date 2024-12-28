@@ -298,6 +298,10 @@ PRIVATE DEFINE_STRING_EX(str_Iterator, "Iterator", 0xfce46883, 0x3c33c9d5c64ebff
 /*[[[end]]]*/
 #endif
 
+/*[[[deemon (PRIVATE_DEFINE_STRING from rt.gen.string)("str_ItemType", "ItemType");]]]*/
+PRIVATE DEFINE_STRING_EX(str_ItemType, "ItemType", 0x6e2bcfbc, 0x930e682d9edfa03b);
+/*[[[end]]]*/
+
 
 #ifdef __OPTIMIZ_SIZE__
 #define return_cached(expr) return expr
@@ -351,6 +355,17 @@ get_iterator_of(DREF DeeObject *ob) {
 	if likely(ob) {
 		result = DeeObject_GetAttr((DeeObject *)ob,
 		                           (DeeObject *)&str_Iterator);
+		Dee_Decref_unlikely(ob);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+get_itemtype_of(DREF DeeObject *ob) {
+	DREF DeeObject *result = NULL;
+	if likely(ob) {
+		result = DeeObject_GetAttr((DeeObject *)ob,
+		                           (DeeObject *)&str_ItemType);
 		Dee_Decref_unlikely(ob);
 	}
 	return result;
@@ -809,6 +824,11 @@ librt_get_SeqPermutations_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqPermutationsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return_cached(get_iterator_of(librt_get_SeqPermutations_impl_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqCombinationsView_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return_cached(get_itemtype_of(librt_get_SeqCombinations_impl_f()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -3288,6 +3308,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqRepeatCombinations, &librt_get_SeqRepeatComb
 PRIVATE DEFINE_CMETHOD(librt_get_SeqRepeatCombinationsIterator, &librt_get_SeqRepeatCombinationsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqPermutations, &librt_get_SeqPermutations_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqPermutationsIterator, &librt_get_SeqPermutationsIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqCombinationsView, &librt_get_SeqCombinationsView_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSegments, &librt_get_SeqSegments_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSegmentsIterator, &librt_get_SeqSegmentsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqConcat, &librt_get_SeqConcat_f, METHOD_FCONSTCALL);
@@ -3661,6 +3682,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqRepeatCombinationsIterator", (DeeObject *)&librt_get_SeqRepeatCombinationsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SeqRepeatCombinationsIterator_Type */
 	{ "SeqPermutations", (DeeObject *)&librt_get_SeqPermutations, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* SeqPermutations_Type */
 	{ "SeqPermutationsIterator", (DeeObject *)&librt_get_SeqPermutationsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqPermutationsIterator_Type */
+	{ "SeqCombinationsView", (DeeObject *)&librt_get_SeqCombinationsView, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqCombinationsView_Type */
+
 	{ "SeqSegments", (DeeObject *)&librt_get_SeqSegments, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SeqSegments_Type */
 	{ "SeqSegmentsIterator", (DeeObject *)&librt_get_SeqSegmentsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqSegmentsIterator_Type */
 	{ "SeqConcat", (DeeObject *)&librt_get_SeqConcat, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqConcat_Type */

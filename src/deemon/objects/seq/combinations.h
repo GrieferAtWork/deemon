@@ -21,54 +21,47 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_COMBINATIONS_H 1
 
 #include <deemon/api.h>
+#include <deemon/method-hints.h>
 #include <deemon/object.h>
+#include <deemon/util/atomic.h>
+
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
-/* TODO: Completely re-write this stuff to make use of new sequence APIs */
+typedef struct seq_combinations SeqCombinations;
+typedef struct seq_combinations_iterator SeqCombinationsIterator;
+typedef struct seq_combinations_view SeqCombinationsView;
 
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject  *c_seq;        /* [1..1][const] The underlying sequence that is being combined. */
-	DREF DeeObject **c_elem;       /* [1..1][0..c_seqlen][const][owned_if(!= DeeTuple_ELEM(c_seq))]
-	                                * The vector of elements found in `c_seq'
-	                                * NOTE: When `NULL', elements from `c_seq' are accessed through
-	                                *       the GETITEM interface, as those items are being used. */
-	size_t           c_seqlen;     /* [const][!0] The length of the sequence (in items) */
-	size_t           c_comlen;     /* [const][< c_seqlen] The amount of elements per combination. */
-	struct type_seq *c_getitem;    /* [0..1][if(!c_elem, [1..1])][const] The seq-interface of the type
-	                                * to-be used to access the items of `c_seq' */
-	DeeTypeObject   *c_getitem_tp; /* [1..1][valid_if(c_getitem != NULL)] The type used to invoke the getitem operator. */
-} Combinations;
+struct seq_combinations {
+	PROXY_OBJECT_HEAD(sc_seq)                                   /* [1..1][const] Underlying sequence */
+	Dee_mh_seq_operator_trygetitem_index_t sc_trygetitem_index; /* [1..1][const] trygetitem_index operator for "sc_seq" */
+	size_t                                 sc_seqsize;          /* [valid_if(!= (size_t)-1)][lock(WRITE_ONCE)] Cache for `DeeSeq_OperatorSize(sc_seq)' */
+	size_t                                 sc_rparam;           /* [!0][valid_if(!= (size_t)-1)][lock(WRITE_ONCE)] the "r" parameter (or `(size_t)-1' when `sc_seqsize ?: 1' should be used)
+	                                                             * NOTE: Guarantied to be valid when accessed by an iterator. */
+};
 
-typedef struct {
-	OBJECT_HEAD
-	DREF Combinations  *ci_combi;   /* [1..1][const] The underlying combinations sequence proxy. */
-	size_t             *ci_indices; /* [1..ci_combi->c_comlen][lock(ci_lock)][owned]
-	                                 * Indices to-be used for the next set of combinations to-be
-	                                 * combined to generate the next item. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t ci_lock;    /* Lock for this combinations iterator. */
-#endif /* !CONFIG_NO_THREADS */
-	bool                ci_first;   /* [lock(ci_lock)] True prior to the first iteration. */
-} CombinationsIterator;
+struct seq_combinations_iterator {
+	PROXY_OBJECT_HEAD_EX(SeqCombinations, sci_com)  /* [1..1][const] Underlying sequence combinations controller */
+	WEAKREF(SeqCombinationsView)          sci_view; /* [0..1] View that is aliasing "sci_idx" */
+	COMPILER_FLEXIBLE_ARRAY(size_t,       sci_idx); /* [lock(ATOMIC)][sci_com->sc_rparam] Index matrix */
+};
 
-#define CombinationsIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->ci_lock)
-#define CombinationsIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->ci_lock)
-#define CombinationsIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->ci_lock)
-#define CombinationsIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->ci_lock)
-#define CombinationsIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->ci_lock)
-#define CombinationsIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->ci_lock)
-#define CombinationsIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->ci_lock)
-#define CombinationsIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->ci_lock)
-#define CombinationsIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->ci_lock)
-#define CombinationsIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->ci_lock)
-#define CombinationsIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->ci_lock)
-#define CombinationsIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->ci_lock)
-#define CombinationsIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->ci_lock)
-#define CombinationsIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->ci_lock)
-#define CombinationsIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->ci_lock)
-#define CombinationsIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->ci_lock)
+struct seq_combinations_view {
+	PROXY_OBJECT_HEAD_EX(SeqCombinationsIterator, scv_iter) /* [1..1] Iterator being viewed */
+	SeqCombinations                              *scv_com;  /* [1..1][== scv_iter->sci_com][const] Shallow alias */
+	size_t                                       *scv_idx;  /* [1..scv_com->sc_rparam][owned_if(!= scv_iter->sci_idx)]
+	                                                         * [lock(ATOMIC && WRITE_ONCE && KEEP_VALID)]
+	                                                         * Used table of indices. You can (atomically) read this pointer
+	                                                         * and dereference it without needing to hold any locks, because
+	                                                         * at the moment that this pointer is exchanged, the old location
+	                                                         * will remain valid. */
+	WEAKREF_SUPPORT
+};
+
+/* Get/Set(once) the "scv_idx" field of "SeqCombinationsView" */
+#define SeqCombinationsView_GetIdx(self)    atomic_read(&(self)->scv_idx)
+#define SeqCombinationsView_SetIdx(self, p) atomic_cmpxch(&(self)->scv_idx, (self)->scv_iter->sci_idx, p)
 
 
 INTDEF DeeTypeObject SeqCombinations_Type;
@@ -77,12 +70,18 @@ INTDEF DeeTypeObject SeqRepeatCombinations_Type;
 INTDEF DeeTypeObject SeqRepeatCombinationsIterator_Type;
 INTDEF DeeTypeObject SeqPermutations_Type;
 INTDEF DeeTypeObject SeqPermutationsIterator_Type;
+INTDEF DeeTypeObject SeqCombinationsView_Type;
 
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Combinations(DeeObject *__restrict self, size_t r);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Permutations(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Permutations2(DeeObject *__restrict self, size_t r);
+/* Sequence combinatoric functions:
+ * >> DeeSeq_Combinations("ABCD", 2)      -> AB AC AD BC BD CD
+ * >> DeeSeq_RepeatCombinations("ABC", 2) -> AA AB AC BB BC CC
+ * >> DeeSeq_Permutations2("ABCD", 2)     -> AB AC BA BC CA CB
+ * >> DeeSeq_Permutations2("ABC", 2)      -> AB AC BA BC CA CB
+ * >> DeeSeq_Permutations("ABC")          -> ABC ACA ACB BAA BAC BCA CAA CAB CBA */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Combinations(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t r);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_RepeatCombinations(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t r);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Permutations2(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t r);
+#define DeeSeq_Permutations(self) DeeSeq_Permutations2(self, (size_t)-1)
 
 DECL_END
 

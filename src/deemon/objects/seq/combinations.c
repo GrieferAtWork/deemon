@@ -20,483 +20,277 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_COMBINATIONS_C
 #define GUARD_DEEMON_OBJECTS_SEQ_COMBINATIONS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
-#include <deemon/class.h>
 #include <deemon/error.h>
-#include <deemon/format.h>
 #include <deemon/int.h>
-#include <deemon/none.h>
-#include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/system-features.h>
-#include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/lock.h>
 
-#include "combinations.h"
+#include <hybrid/overflow.h>
+
 /**/
-
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "default-api.h"
+
+/**/
+#include "combinations.h"
 
 DECL_BEGIN
 
-#ifndef CONFIG_HAVE_memsetp
-#define CONFIG_HAVE_memsetp
-#define memsetp(dst, pointer, num_pointers) \
-	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
-DeeSystem_DEFINE_memsetp(dee_memsetp)
-#endif /* !CONFIG_HAVE_memsetp */
+/************************************************************************/
+/* SEQUENCE                                                             */
+/************************************************************************/
+
+STATIC_ASSERT(offsetof(SeqCombinations, sc_seq) == offsetof(ProxyObject, po_obj));
+#define sc_fini   generic_proxy_fini
+#define sc_visit  generic_proxy_visit
+#define src_fini  generic_proxy_fini
+#define src_visit generic_proxy_visit
+#define sp_fini   generic_proxy_fini
+#define sp_visit  generic_proxy_visit
+
+#define src_ctor sc_ctor
+#define sp_ctor  sc_ctor
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sc_ctor(SeqCombinations *__restrict self) {
+	Dee_Incref(Dee_EmptySeq);
+	self->sc_seq              = Dee_EmptySeq;
+	self->sc_trygetitem_index = &DeeSeq_DefaultOperatorTryGetItemIndexWithEmpty;
+	self->sc_seqsize          = 0;
+	self->sc_rparam           = 1;
+	return 0;
+}
+
+#define src_copy sc_copy
+#define sp_copy  sc_copy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sc_copy(SeqCombinations *__restrict self,
+        SeqCombinations *__restrict other) {
+	Dee_Incref(other->sc_seq);
+	self->sc_seq              = other->sc_seq;
+	self->sc_trygetitem_index = other->sc_trygetitem_index;
+	self->sc_seqsize          = other->sc_seqsize;
+	self->sc_rparam           = other->sc_rparam;
+	return 0;
+}
+
+#define src_deep sc_deep
+#define sp_deep  sc_deep
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sc_deep(SeqCombinations *__restrict self,
+        SeqCombinations *__restrict other) {
+	self->sc_seq = DeeObject_DeepCopy(other->sc_seq);
+	if unlikely(!self->sc_seq)
+		goto err;
+	self->sc_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self->sc_seq));
+	self->sc_seqsize          = other->sc_seqsize;
+	self->sc_rparam           = other->sc_rparam;
+	return 0;
+err:
+	return -1;
+}
+
+#define src_init sc_init
+#define sp_init  sc_init
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sc_init(SeqCombinations *__restrict self,
+        size_t argc, DeeObject *const *argv) {
+	if (argc < 1 || argc > 2)
+		return err_invalid_argc(Dee_TYPE(self)->tp_name, argc, 1, 2);
+	self->sc_rparam = (size_t)-1;
+	if (argc >= 2) {
+		if unlikely(DeeObject_AsSize(argv[1], &self->sc_rparam))
+			goto err;
+		if unlikely(!self->sc_rparam)
+			goto err_zero_rparam;
+	}
+	self->sc_seq = argv[0];
+	Dee_Incref(self->sc_seq);
+	self->sc_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self->sc_seq));
+	self->sc_seqsize = (size_t)-1;
+	return 0;
+err_zero_rparam:
+	DeeError_Throwf(&DeeError_ValueError, "'r' parameter of '%s' must not be 0",
+	                Dee_TYPE(self)->tp_name);
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+sc_getseqsize(SeqCombinations *__restrict self) {
+	size_t result = atomic_read(&self->sc_seqsize);
+	if (result == (size_t)-1) {
+		result = DeeSeq_OperatorSize(self->sc_seq);
+		if likely(result != (size_t)-1)
+			atomic_write(&self->sc_seqsize, result);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+sc_getrparam(SeqCombinations *__restrict self) {
+	size_t result = atomic_read(&self->sc_rparam);
+	if (result == (size_t)-1) {
+		result = sc_getseqsize(self);
+		if unlikely(result == 0)
+			result = 1;
+		if likely(result != (size_t)-1)
+			atomic_write(&self->sc_rparam, result);
+	}
+	return result;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
-	DREF DeeObject *temp, *result;
-	struct type_nsi const *nsi;
-	ASSERT(index < self->c_seqlen);
-	if (self->c_elem)
-		return_reference_(self->c_elem[index]);
-	ASSERT(self->c_getitem != NULL);
-	ASSERT(self->c_getitem->tp_getitem != NULL);
-	nsi = self->c_getitem->tp_nsi;
-	if (nsi &&
-	    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
-	    nsi->nsi_seqlike.nsi_getitem)
-		return (*nsi->nsi_seqlike.nsi_getitem)(self->c_seq, index);
-	temp = DeeInt_NewSize(index);
-	if unlikely(!temp)
+sc_iter(SeqCombinations *__restrict self) {
+	DREF SeqCombinationsIterator *result;
+	size_t i, seqsize, rparam;
+	seqsize = sc_getseqsize(self);
+	if unlikely(seqsize == (size_t)-1)
+		goto err; /* Must be loaded for there to be an iterator! */
+	rparam = sc_getrparam(self);
+	if unlikely(rparam == (size_t)-1)
 		goto err;
-	result = DeeType_invoke_seq_tp_getitem(self->c_getitem_tp,
-	                                       self->c_getitem->tp_getitem,
-	                                       self->c_seq, temp);
-	Dee_Decref(temp);
-	return result;
-err:
-	return NULL;
-}
-
-
-PRIVATE NONNULL((1)) void DCALL
-comiter_fini(CombinationsIterator *__restrict self) {
-	Dee_Free(self->ci_indices);
-	Dee_Decref_likely(self->ci_combi);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-comiter_ctor(CombinationsIterator *__restrict self) {
-	self->ci_combi = (DREF Combinations *)DeeObject_NewDefault(&SeqCombinations_Type);
-	if unlikely(!self->ci_combi)
-		goto err;
-	self->ci_indices = (size_t *)Dee_Callocc(self->ci_combi->c_comlen,
-	                                         sizeof(size_t));
-	if unlikely(!self->ci_indices)
-		goto err_combi;
-	self->ci_first = true;
-	Dee_atomic_rwlock_init(&self->ci_lock);
-	return 0;
-err_combi:
-	Dee_Decref_likely(self->ci_combi);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-comiter_init(CombinationsIterator *__restrict self,
-             size_t argc, DeeObject *const *argv) {
-	size_t i, comlen;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqCombinationsIterator", &self->ci_combi))
-		goto err;
-	if (DeeObject_AssertTypeExact(self->ci_combi, &SeqCombinations_Type))
-		goto err;
-	Dee_atomic_rwlock_init(&self->ci_lock);
-	comlen           = self->ci_combi->c_comlen;
-	self->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
-	if unlikely(!self->ci_indices)
-		goto err;
-	for (i = 0; i < comlen; ++i)
-		self->ci_indices[i] = i;
-	self->ci_first = true;
-	Dee_Incref(self->ci_combi);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-comiter_copy(CombinationsIterator *__restrict self,
-             CombinationsIterator *__restrict other) {
-	self->ci_indices = (size_t *)Dee_Mallocc(other->ci_combi->c_comlen,
-	                                         sizeof(size_t));
-	if unlikely(!self->ci_indices)
-		goto err;
-	CombinationsIterator_LockRead(other);
-	memcpyc(self->ci_indices,
-	        other->ci_indices,
-	        other->ci_combi->c_comlen,
-	        sizeof(size_t));
-	self->ci_first = other->ci_first;
-	CombinationsIterator_LockEndRead(other);
-	Dee_atomic_rwlock_init(&self->ci_lock);
-	self->ci_combi = other->ci_combi;
-	Dee_Incref(self->ci_combi);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-comiter_deep(CombinationsIterator *__restrict self,
-             CombinationsIterator *__restrict other) {
-	self->ci_indices = (size_t *)Dee_Mallocc(other->ci_combi->c_comlen,
-	                                         sizeof(size_t));
-	if unlikely(!self->ci_indices)
-		goto err;
-	CombinationsIterator_LockRead(other);
-	memcpyc(self->ci_indices,
-	        other->ci_indices,
-	        other->ci_combi->c_comlen,
-	        sizeof(size_t));
-	self->ci_first = other->ci_first;
-	CombinationsIterator_LockEndRead(other);
-	Dee_atomic_rwlock_init(&self->ci_lock);
-	self->ci_combi = (DREF Combinations *)DeeObject_DeepCopy((DeeObject *)other->ci_combi);
-	if unlikely(!self->ci_combi)
-		goto err_indices;
-	return 0;
-err_indices:
-	Dee_Free(self->ci_indices);
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-comiter_visit(CombinationsIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->ci_combi);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-comiter_next(CombinationsIterator *__restrict self) {
-	DREF DeeTupleObject *result;
-	size_t *result_indices, i, comlen, seqlen;
-	comlen         = self->ci_combi->c_comlen;
-	seqlen         = self->ci_combi->c_seqlen;
-	result_indices = (size_t *)Dee_Mallocac(comlen, sizeof(size_t));
-	if unlikely(!result_indices)
-		goto err;
-	CombinationsIterator_LockWrite(self);
-	if (self->ci_first) {
-		self->ci_first = false;
-		goto copy_indices;
-	}
-	for (i = comlen; i;) {
-		--i;
-		if (self->ci_indices[i] != i + seqlen - comlen)
-			goto update_indices;
-	}
-	/* Signal `ITER_DONE' */
-	CombinationsIterator_LockEndWrite(self);
-	Dee_Freea(result_indices);
-	return (DREF DeeTupleObject *)ITER_DONE;
-update_indices:
-	++self->ci_indices[i];
-	for (++i; i < comlen; ++i)
-		self->ci_indices[i] = self->ci_indices[i - 1] + 1;
-copy_indices:
-	memcpyc(result_indices,
-	        self->ci_indices,
-	        comlen,
-	        sizeof(size_t));
-	CombinationsIterator_LockEndWrite(self);
-	result = DeeTuple_NewUninitialized(comlen);
+	if unlikely(rparam > seqsize)
+		return_empty_iterator;
+	result = (DREF SeqCombinationsIterator *)DeeObject_Mallocc(offsetof(SeqCombinationsIterator, sci_idx),
+	                                                           rparam, sizeof(size_t));
 	if unlikely(!result)
-		goto err_indices;
-	for (i = 0; i < comlen; ++i) {
-		DREF DeeObject *temp;
-		temp = Combinations_GetSeqItem(self->ci_combi,
-		                               result_indices[i]);
-		if unlikely(!temp)
-			goto err_indices_r;
-		DeeTuple_SET(result, i, temp); /* Inherit reference. */
-	}
-	Dee_Freea(result_indices);
-	return result;
-err_indices_r:
-	Dee_Decrefv(DeeTuple_ELEM(result), i);
-	DeeTuple_FreeUninitialized(result);
-err_indices:
-	Dee_Freea(result_indices);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_member tpconst comiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqCombinations"),
-	TYPE_MEMBER_END
-};
-
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-comiter_compare(CombinationsIterator *self, CombinationsIterator *other) {
-	size_t i;
-	int result = 0;
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	Dee_return_compare_if_ne(self->ci_combi, other->ci_combi);
-	DeeLock_Acquire2(CombinationsIterator_LockRead(self),
-	                 CombinationsIterator_LockTryRead(self),
-	                 CombinationsIterator_LockEndRead(self),
-	                 CombinationsIterator_LockRead(other),
-	                 CombinationsIterator_LockTryRead(other),
-	                 CombinationsIterator_LockEndRead(other));
-	for (i = 0; i < self->ci_combi->c_comlen; ++i) {
-		size_t lhs_index = self->ci_indices[i];
-		size_t rhs_index = other->ci_indices[i];
-		if (lhs_index != rhs_index) {
-			result = Dee_CompareNe(lhs_index, rhs_index);
-			break;
-		}
-	}
-	CombinationsIterator_LockEndRead(other);
-	CombinationsIterator_LockEndRead(self);
-	return result;
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE struct type_cmp comiter_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&comiter_compare,
-};
-
-INTERN DeeTypeObject SeqCombinationsIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqCombinationsIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqCombinations)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&comiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&comiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&comiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&comiter_init,
-				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comiter_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &comiter_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&comiter_next,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ comiter_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
-};
-
-PRIVATE WUNUSED NONNULL((1)) DREF CombinationsIterator *DCALL
-com_iter(Combinations *__restrict self) {
-	DREF CombinationsIterator *result;
-	size_t i, comlen;
-	result = DeeObject_MALLOC(CombinationsIterator);
-	if unlikely(!result)
-		goto done;
-	result->ci_combi = self;
-	Dee_atomic_rwlock_init(&result->ci_lock);
-	comlen             = self->c_comlen;
-	result->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
-	if unlikely(!result->ci_indices)
-		goto err_r;
-	for (i = 0; i < comlen; ++i)
-		result->ci_indices[i] = i;
-	result->ci_first = true;
+	/* Fill in iterator as the normal matrix (truncated to "rparam"). */
+	for (i = 0; i < rparam; ++i)
+		result->sci_idx[i] = i;
+	--result->sci_idx[rparam - 1]; /* Hack to get the first element to load correctly */
 	Dee_Incref(self);
+	result->sci_com = self;
+	Dee_weakref_initempty(&result->sci_view);
 	DeeObject_Init(result, &SeqCombinationsIterator_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-PRIVATE int DCALL
-com_bool(Combinations *__restrict UNUSED(self)) {
-	/* Combinations are always non-empty.
-	 * The creator function `DeeSeq_Combinations()' returns a
-	 * different sequence type if we would have been empty. */
-	return 1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-com_copy(Combinations *__restrict self,
-         Combinations *__restrict other) {
-	/* NOTE: `DeeTuple_ELEM()' just returns an invalid
-	 *        pointer for any object that isn't a tuple. */
-	self->c_elem = other->c_elem;
-	if (other->c_elem &&
-	    other->c_elem != DeeTuple_ELEM(other->c_seq)) {
-		DREF DeeObject **elem_copy;
-		ASSERT(other->c_seqlen != 0);
-		elem_copy = (DREF DeeObject **)Dee_Mallocc(other->c_seqlen,
-		                                           sizeof(DREF DeeObject *));
-		if unlikely(!elem_copy)
-			goto err;
-		self->c_elem = Dee_Movrefv(elem_copy,
-		                           other->c_elem,
-		                           other->c_seqlen);
-	}
-	self->c_seq        = other->c_seq;
-	self->c_seqlen     = other->c_seqlen;
-	self->c_comlen     = other->c_comlen;
-	self->c_getitem    = other->c_getitem;
-	self->c_getitem_tp = other->c_getitem_tp;
-	Dee_Incref(self->c_seq);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-com_deepcopy(Combinations *__restrict self,
-             Combinations *__restrict other) {
-	/* NOTE: `DeeTuple_ELEM()' just returns an invalid
-	 *        pointer for any object that isn't a tuple. */
-	self->c_elem   = other->c_elem;
-	self->c_comlen = other->c_comlen;
-	if (other->c_elem &&
-	    other->c_elem != DeeTuple_ELEM(other->c_seq)) {
-		size_t i;
-		DREF DeeObject **elem_copy;
-		ASSERT(other->c_seqlen != 0);
-		elem_copy = (DREF DeeObject **)Dee_Mallocc(other->c_seqlen,
-		                                           sizeof(DREF DeeObject *));
-		if unlikely(!elem_copy)
-			goto err;
-		for (i = 0; i < other->c_seqlen; ++i) {
-			elem_copy[i] = DeeObject_DeepCopy(other->c_elem[i]);
-			if unlikely(!elem_copy[i]) {
-				Dee_Decrefv(elem_copy, i);
-				Dee_Free(elem_copy);
-				goto err;
-			}
-		}
-		self->c_elem = elem_copy;
-		self->c_seq  = other->c_seq;
-		Dee_Incref(self->c_seq);
-		self->c_seqlen = other->c_seqlen;
-	} else {
-		self->c_seq = DeeObject_DeepCopy(other->c_seq);
-		if unlikely(!self->c_seq)
-			goto err;
-		ASSERT(Dee_TYPE(self->c_seq) == Dee_TYPE(other->c_seq));
-		if (other->c_elem == DeeTuple_ELEM(other->c_seq)) {
-			self->c_elem   = DeeTuple_ELEM(self->c_seq);
-			self->c_seqlen = other->c_seqlen;
-		} else {
-			ASSERT(self->c_elem == NULL);
-			ASSERT(other->c_elem == NULL);
-			/* Reload the sequence length, as it may have
-			 * changed after copying the underlying sequence. */
-			self->c_seqlen = DeeObject_Size(self->c_seq);
-			if unlikely(self->c_seqlen == (size_t)-1) {
-err_seq_len:
-				Dee_Decref(self->c_seq);
-				goto err;
-			}
-			if unlikely(self->c_seqlen == 0) {
-				err_empty_sequence(self->c_seq);
-				goto err_seq_len;
-			}
-			/* Make sure that the sequence fulfills the minimum length requirements. */
-			if unlikely(self->c_comlen >= self->c_seqlen) {
-				DeeError_Throwf(&DeeError_ValueError,
-				                "Sequence too short after deepcopy (needs at "
-				                "least %" PRFuSIZ " items, but only has %" PRFuSIZ ")",
-				                self->c_comlen, self->c_seqlen);
-				goto err_seq_len;
-			}
-		}
-	}
-	self->c_getitem    = other->c_getitem;
-	self->c_getitem_tp = other->c_getitem_tp;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-com_ctor(Combinations *__restrict self) {
-	self->c_seq = DeeTuple_Pack(1, Dee_None);
-	if unlikely(!self->c_seq)
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+src_iter(SeqCombinations *__restrict self) {
+	DREF SeqCombinationsIterator *result;
+	size_t rparam;
+	if unlikely(sc_getseqsize(self) == (size_t)-1)
+		goto err; /* Must be loaded for there to be an iterator! */
+	rparam = sc_getrparam(self);
+	if unlikely(rparam == (size_t)-1)
 		goto err;
-	self->c_elem       = DeeTuple_ELEM(self->c_seq);
-	self->c_seqlen     = 1;
-	self->c_comlen     = 1;
-	self->c_getitem    = DeeTuple_Type.tp_seq;
-	self->c_getitem_tp = &DeeTuple_Type;
-	return 0;
+	result = (DREF SeqCombinationsIterator *)DeeObject_Callocc(offsetof(SeqCombinationsIterator, sci_idx),
+	                                                           rparam, sizeof(size_t));
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->sci_com = self;
+	result->sci_idx[rparam - 1] = (size_t)-1; /* Hack to get the first element to load correctly */
+	Dee_weakref_initempty(&result->sci_view);
+	DeeObject_Init(result, &SeqRepeatCombinationsIterator_Type);
+	return (DREF DeeObject *)result;
 err:
-	return -1;
+	return NULL;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-com_fini(Combinations *__restrict self) {
-	/* NOTE: `DeeTuple_ELEM()' just returns an invalid
-	 *        pointer for any object that isn't a tuple. */
-	if (self->c_elem &&
-	    self->c_elem != DeeTuple_ELEM(self->c_seq)) {
-		Dee_Decrefv(self->c_elem, self->c_seqlen);
-		Dee_Free(self->c_elem);
-	}
-	Dee_Decref(self->c_seq);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_iter(SeqCombinations *__restrict self) {
+	DREF SeqCombinationsIterator *result;
+	size_t i, seqsize, rparam;
+	seqsize = sc_getseqsize(self);
+	if unlikely(seqsize == (size_t)-1)
+		goto err; /* Must be loaded for there to be an iterator! */
+	rparam = sc_getrparam(self);
+	if unlikely(rparam == (size_t)-1)
+		goto err;
+	if unlikely(rparam > seqsize)
+		return_empty_iterator;
+	result = (DREF SeqCombinationsIterator *)DeeObject_Mallocc(offsetof(SeqCombinationsIterator, sci_idx),
+	                                                           rparam, sizeof(size_t));
+	if unlikely(!result)
+		goto err;
+	/* Fill in iterator as the normal matrix (truncated to "rparam"). */
+	for (i = 0; i < rparam; ++i)
+		result->sci_idx[i] = i;
+	--result->sci_idx[rparam - 1]; /* Hack to get the first element to load correctly */
+	Dee_Incref(self);
+	result->sci_com = self;
+	Dee_weakref_initempty(&result->sci_view);
+	DeeObject_Init(result, &SeqPermutationsIterator_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-com_visit(Combinations *__restrict self, dvisit_t proc, void *arg) {
-	/* NOTE: `DeeTuple_ELEM()' just returns an invalid
-	 *        pointer for any object that isn't a tuple. */
-	if (self->c_elem &&
-	    self->c_elem != DeeTuple_ELEM(self->c_seq))
-		Dee_Visitv(self->c_elem, self->c_seqlen);
-	Dee_Visit(self->c_seq);
-}
-
-PRIVATE struct type_seq com_seq = {
-	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&com_iter
+PRIVATE struct type_seq sc_seq = {
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sc_iter,
+	/* TODO: Formula for getitem/size */
 };
 
-PRIVATE struct type_member tpconst com_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &SeqCombinationsIterator_Type),
-	/* TODO: "Frozen" */
+PRIVATE struct type_seq src_seq = {
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&src_iter,
+	/* TODO: Formula for getitem/size */
+};
+
+PRIVATE struct type_seq sp_seq = {
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sp_iter,
+	/* TODO: Formula for getitem/size */
+};
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sc_getseqsize_ob(SeqCombinations *__restrict self) {
+	size_t result = sc_getseqsize(self);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sc_getrparam_ob(SeqCombinations *__restrict self) {
+	size_t result = sc_getrparam(self);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+
+#define src_getsets sc_getsets
+#define sp_getsets  sc_getsets
+PRIVATE struct type_getset tpconst sc_getsets[] = {
+	TYPE_GETTER_F("__seqsize__", &sc_getseqsize_ob, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__rparam__", &sc_getrparam_ob, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETSET_END
+};
+
+#define src_members sc_members
+#define sp_members  sc_members
+PRIVATE struct type_member tpconst sc_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqCombinations, sc_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member tpconst com_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Combinations, c_seq), "->?DSequence"),
-	/* TODO: GETTER: "frozen" */
+PRIVATE struct type_member tpconst sc_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqCombinationsIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &SeqCombinationsView_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst src_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqRepeatCombinationsIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &SeqCombinationsView_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst sp_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqPermutationsIterator_Type),
+	TYPE_MEMBER_CONST(STR_ItemType, &SeqCombinationsView_Type),
 	TYPE_MEMBER_END
 };
 
@@ -504,7 +298,8 @@ PRIVATE struct type_member tpconst com_members[] = {
 INTERN DeeTypeObject SeqCombinations_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqCombinations",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(seq:?DSequence,r?:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -512,189 +307,14 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&com_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&com_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&com_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
-				TYPE_FIXED_ALLOCATOR(Combinations)
+				/* .tp_ctor      = */ (dfunptr_t)&sc_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&sc_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&sc_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&sc_init,
+				TYPE_FIXED_ALLOCATOR(SeqCombinations)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&com_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&com_bool
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ &com_seq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ com_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ com_class_members
-};
-
-
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-rcomiter_next(CombinationsIterator *__restrict self) {
-	DREF DeeTupleObject *result;
-	size_t *result_indices, i, comlen, seqlen, offset;
-	comlen = self->ci_combi->c_comlen;
-	seqlen = self->ci_combi->c_seqlen;
-	if (self->ci_first) {
-		CombinationsIterator_LockWrite(self);
-		COMPILER_READ_BARRIER();
-		if (!self->ci_first) {
-			CombinationsIterator_LockEndWrite(self);
-		} else {
-			DREF DeeObject *elem;
-			self->ci_first = false;
-			CombinationsIterator_LockEndWrite(self);
-			result = DeeTuple_NewUninitialized(comlen);
-			if unlikely(!result)
-				goto err;
-			elem = Combinations_GetSeqItem(self->ci_combi, 0);
-			if unlikely(!elem) {
-				DeeTuple_FreeUninitialized(result);
-				goto err;
-			}
-			memsetp(DeeTuple_ELEM(result), elem, comlen);
-			Dee_Incref_n(elem, comlen);
-			return result;
-		}
-	}
-	result_indices = (size_t *)Dee_Mallocac(comlen, sizeof(size_t));
-	if unlikely(!result_indices)
-		goto err;
-	CombinationsIterator_LockWrite(self);
-	i = comlen;
-	while (i--) {
-		if (self->ci_indices[i] != seqlen - 1)
-			goto update_indices;
-	}
-	/* Signal `ITER_DONE' */
-	CombinationsIterator_LockEndWrite(self);
-	Dee_Freea(result_indices);
-	return (DREF DeeTupleObject *)ITER_DONE;
-update_indices:
-	offset = self->ci_indices[i] + 1;
-	for (; i < comlen; ++i)
-		self->ci_indices[i] = offset;
-	memcpyc(result_indices,
-	        self->ci_indices,
-	        comlen,
-	        sizeof(size_t));
-	CombinationsIterator_LockEndWrite(self);
-	result = DeeTuple_NewUninitialized(comlen);
-	if unlikely(!result)
-		goto err_indices;
-	for (i = 0; i < comlen; ++i) {
-		DREF DeeObject *temp;
-		size_t j, index = result_indices[i];
-		for (j = 0; j < i; ++j) {
-			if (result_indices[j] == index) {
-				temp = DeeTuple_GET(result, j);
-				Dee_Incref(temp);
-				goto set_temp;
-			}
-		}
-		temp = Combinations_GetSeqItem(self->ci_combi, index);
-		if unlikely(!temp)
-			goto err_indices_r;
-set_temp:
-		DeeTuple_SET(result, i, temp); /* Inherit reference. */
-	}
-	Dee_Freea(result_indices);
-	return result;
-err_indices_r:
-	Dee_Decrefv(DeeTuple_ELEM(result), i);
-	DeeTuple_FreeUninitialized(result);
-err_indices:
-	Dee_Freea(result_indices);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_member tpconst rcomiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqRepeatCombinations"),
-	TYPE_MEMBER_END
-};
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rcomiter_ctor(CombinationsIterator *__restrict self) {
-	self->ci_combi = (DREF Combinations *)DeeObject_NewDefault(&SeqRepeatCombinations_Type);
-	if unlikely(!self->ci_combi)
-		goto err;
-	self->ci_indices = (size_t *)Dee_Callocc(self->ci_combi->c_comlen,
-	                                         sizeof(size_t));
-	if unlikely(!self->ci_indices)
-		goto err_combi;
-	self->ci_first = true;
-	Dee_atomic_rwlock_init(&self->ci_lock);
-	return 0;
-err_combi:
-	Dee_Decref_likely(self->ci_combi);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rcomiter_init(CombinationsIterator *__restrict self,
-              size_t argc, DeeObject *const *argv) {
-	size_t i, comlen;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRepeatCombinationsIterator", &self->ci_combi))
-		goto err;
-	if (DeeObject_AssertTypeExact(self->ci_combi, &SeqRepeatCombinations_Type))
-		goto err;
-	Dee_atomic_rwlock_init(&self->ci_lock);
-	comlen           = self->ci_combi->c_comlen;
-	self->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
-	if unlikely(!self->ci_indices)
-		goto err;
-	for (i = 0; i < comlen; ++i)
-		self->ci_indices[i] = i;
-	self->ci_first = true;
-	Dee_Incref(self->ci_combi);
-	return 0;
-err:
-	return -1;
-}
-
-INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqRepeatCombinationsIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqRepeatCombinations)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&rcomiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&comiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&comiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&rcomiter_init,
-				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sc_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -704,60 +324,31 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sc_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &comiter_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rcomiter_next,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &sc_seq,
+	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ rcomiter_members,
+	/* .tp_getsets       = */ sc_getsets,
+	/* .tp_members       = */ sc_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ sc_class_members
 };
-
-PRIVATE WUNUSED NONNULL((1)) DREF CombinationsIterator *DCALL
-rcom_iter(Combinations *__restrict self) {
-	DREF CombinationsIterator *result;
-	result = DeeObject_MALLOC(CombinationsIterator);
-	if unlikely(!result)
-		goto done;
-	result->ci_combi = self;
-	Dee_atomic_rwlock_init(&result->ci_lock);
-	result->ci_indices = (size_t *)Dee_Callocc(self->c_comlen, sizeof(size_t));
-	if unlikely(!result->ci_indices)
-		goto err_r;
-	result->ci_first = true;
-	Dee_Incref(self);
-	DeeObject_Init(result, &SeqRepeatCombinationsIterator_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
-	return NULL;
-}
-
-PRIVATE struct type_seq rcom_seq = {
-	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rcom_iter
-};
-
-PRIVATE struct type_member tpconst rcom_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &SeqRepeatCombinationsIterator_Type),
-	TYPE_MEMBER_END
-};
-
-#define rcom_members com_members
 
 INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRepeatCombinations",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(seq:?DSequence,r?:?Dint)\n"
+	                         "\n"
+	                         "iter->?#Iterator"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -765,178 +356,14 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&com_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&com_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&com_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
-				TYPE_FIXED_ALLOCATOR(Combinations)
+				/* .tp_ctor      = */ (dfunptr_t)&src_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&src_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&src_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&src_init,
+				TYPE_FIXED_ALLOCATOR(SeqCombinations)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&com_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&com_bool
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ &rcom_seq,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ rcom_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ rcom_class_members
-};
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-pmutiter_next(CombinationsIterator *__restrict self) {
-	DREF DeeTupleObject *result;
-	size_t *result_indices, i, comlen, seqlen;
-	comlen         = self->ci_combi->c_comlen;
-	seqlen         = self->ci_combi->c_seqlen;
-	result_indices = (size_t *)Dee_Mallocac(comlen, sizeof(size_t));
-	if unlikely(!result_indices)
-		goto err;
-	CombinationsIterator_LockWrite(self);
-	if (self->ci_first) {
-		self->ci_first = false;
-		goto copy_indices;
-	}
-	if (self->ci_indices[0] >= seqlen) {
-		/* Signal `ITER_DONE' */
-signal_done:
-		CombinationsIterator_LockEndWrite(self);
-		Dee_Freea(result_indices);
-		return (DREF DeeTupleObject *)ITER_DONE;
-	}
-	i = comlen;
-	for (;;) {
-		size_t j, index;
-		--i;
-increment_i:
-		if (++self->ci_indices[i] >= seqlen) {
-			if (i == 0) {
-				self->ci_indices[i] = seqlen - 1;
-				goto signal_done;
-			}
-			self->ci_indices[i] = 0;
-			continue;
-		}
-		index = self->ci_indices[i];
-		for (j = 0; j < comlen; ++j) {
-			if (j == i)
-				continue;
-			if (self->ci_indices[j] == index)
-				goto increment_i;
-		}
-		break;
-	}
-copy_indices:
-	memcpyc(result_indices,
-	        self->ci_indices,
-	        comlen,
-	        sizeof(size_t));
-	CombinationsIterator_LockEndWrite(self);
-	result = DeeTuple_NewUninitialized(comlen);
-	if unlikely(!result)
-		goto err_indices;
-	for (i = 0; i < comlen; ++i) {
-		DREF DeeObject *temp;
-		temp = Combinations_GetSeqItem(self->ci_combi,
-		                               result_indices[i]);
-		if unlikely(!temp)
-			goto err_indices_r;
-		DeeTuple_SET(result, i, temp); /* Inherit reference. */
-	}
-	Dee_Freea(result_indices);
-	return result;
-err_indices_r:
-	Dee_Decrefv(DeeTuple_ELEM(result), i);
-	DeeTuple_FreeUninitialized(result);
-err_indices:
-	Dee_Freea(result_indices);
-err:
-	return NULL;
-}
-
-PRIVATE struct type_member tpconst pmutiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(CombinationsIterator, ci_combi), "->?Ert:SeqPermutations"),
-	TYPE_MEMBER_END
-};
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-pmutiter_ctor(CombinationsIterator *__restrict self) {
-	self->ci_combi = (DREF Combinations *)DeeObject_NewDefault(&SeqPermutations_Type);
-	if unlikely(!self->ci_combi)
-		goto err;
-	self->ci_indices = (size_t *)Dee_Callocc(self->ci_combi->c_comlen,
-	                                         sizeof(size_t));
-	if unlikely(!self->ci_indices)
-		goto err_combi;
-	self->ci_first = true;
-	Dee_atomic_rwlock_init(&self->ci_lock);
-	return 0;
-err_combi:
-	Dee_Decref_likely(self->ci_combi);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-pmutiter_init(CombinationsIterator *__restrict self,
-              size_t argc, DeeObject *const *argv) {
-	size_t i, comlen;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqPermutationsIterator", &self->ci_combi))
-		goto err;
-	if (DeeObject_AssertTypeExact(self->ci_combi, &SeqPermutations_Type))
-		goto err;
-	Dee_atomic_rwlock_init(&self->ci_lock);
-	comlen           = self->ci_combi->c_comlen;
-	self->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
-	if unlikely(!self->ci_indices)
-		goto err;
-	for (i = 0; i < comlen; ++i)
-		self->ci_indices[i] = i;
-	self->ci_first = true;
-	Dee_Incref(self->ci_combi);
-	return 0;
-err:
-	return -1;
-}
-
-
-INTERN DeeTypeObject SeqPermutationsIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqPermutationsIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqPermutations)"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&pmutiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&comiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&comiter_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)&pmutiter_init,
-				TYPE_FIXED_ALLOCATOR(CombinationsIterator)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&comiter_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&src_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -946,64 +373,29 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&comiter_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&src_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &comiter_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pmutiter_next,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &src_seq,
+	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ pmutiter_members,
+	/* .tp_getsets       = */ src_getsets,
+	/* .tp_members       = */ src_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ src_class_members
 };
-
-PRIVATE WUNUSED NONNULL((1)) DREF CombinationsIterator *DCALL
-pmut_iter(Combinations *__restrict self) {
-	DREF CombinationsIterator *result;
-	size_t i, comlen;
-	result = DeeObject_MALLOC(CombinationsIterator);
-	if unlikely(!result)
-		goto done;
-	result->ci_combi = self;
-	Dee_atomic_rwlock_init(&result->ci_lock);
-	comlen             = self->c_comlen;
-	result->ci_indices = (size_t *)Dee_Mallocc(comlen, sizeof(size_t));
-	if unlikely(!result->ci_indices)
-		goto err_r;
-	for (i = 0; i < comlen; ++i)
-		result->ci_indices[i] = i;
-	result->ci_first = true;
-	Dee_Incref(self);
-	DeeObject_Init(result, &SeqPermutationsIterator_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
-	return NULL;
-}
-
-PRIVATE struct type_seq pmut_seq = {
-	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pmut_iter
-};
-
-PRIVATE struct type_member tpconst pmut_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &SeqPermutationsIterator_Type),
-	TYPE_MEMBER_END
-};
-
-#define pmut_members com_members
 
 INTERN DeeTypeObject SeqPermutations_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqPermutations",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(seq:?DSequence,r?:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1011,28 +403,889 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&com_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&com_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&com_deepcopy,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
-				TYPE_FIXED_ALLOCATOR(Combinations)
+				/* .tp_ctor      = */ (dfunptr_t)&sp_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&sp_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&sp_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&sp_init,
+				TYPE_FIXED_ALLOCATOR(SeqCombinations)
 			}
 		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&com_fini,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sp_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&com_bool
+		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&com_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sp_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ &pmut_seq,
+	/* .tp_seq           = */ &sp_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ sp_getsets,
+	/* .tp_members       = */ sp_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ sp_class_members
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* ITERATOR                                                             */
+/************************************************************************/
+
+PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsIterator *DCALL
+generic_default_iter_of(DeeTypeObject *__restrict type) {
+	DREF SeqCombinationsIterator *result;
+	DREF SeqCombinations *com;
+	com = (DREF SeqCombinations *)DeeObject_NewDefault(type);
+	if unlikely(!com)
+		goto err;
+	result = (DREF SeqCombinationsIterator *)DeeObject_Iter((DeeObject *)com);
+	Dee_Decref_unlikely(com);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF SeqCombinationsIterator *DCALL sci_ctor(void) {
+	return generic_default_iter_of(&SeqCombinations_Type);
+}
+
+PRIVATE WUNUSED DREF SeqCombinationsIterator *DCALL srci_ctor(void) {
+	return generic_default_iter_of(&SeqRepeatCombinations_Type);
+}
+
+PRIVATE WUNUSED DREF SeqCombinationsIterator *DCALL spi_ctor(void) {
+	return generic_default_iter_of(&SeqPermutations_Type);
+}
+
+#define srci_copy sci_copy
+#define spi_copy  sci_copy
+PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsIterator *DCALL
+sci_copy(SeqCombinationsIterator *__restrict self) {
+	DREF SeqCombinationsIterator *result;
+	size_t i, rparam = atomic_read(&self->sci_com->sc_rparam);
+	result = (DREF SeqCombinationsIterator *)DeeObject_Mallocc(offsetof(SeqCombinationsIterator, sci_idx),
+	                                                           rparam, sizeof(size_t));
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self->sci_com);
+	result->sci_com = self->sci_com;
+	for (i = 0; i < rparam; ++i)
+		result->sci_idx[i] = atomic_read(&self->sci_idx[i]);
+	Dee_weakref_initempty(&result->sci_view);
+	DeeObject_Init(result, Dee_TYPE(self));
+	return result;
+err:
+	return NULL;
+}
+
+#define srci_deep sci_deep
+#define spi_deep  sci_deep
+PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsIterator *DCALL
+sci_deep(SeqCombinationsIterator *__restrict self) {
+	DREF SeqCombinationsIterator *result = sci_copy(self);
+	if (DeeObject_InplaceDeepCopy((DREF DeeObject **)&result->sci_com))
+		goto err_r;
+	return result;
+err_r:
+	Dee_DecrefDokill(result);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((3, 4)) DREF SeqCombinationsIterator *DCALL
+sci_init_generic(size_t argc, DeeObject *const *argv,
+                 DeeTypeObject *expected_seq_type,
+                 DeeTypeObject *returned_iter_type) {
+	SeqCombinations *com;
+	if unlikely(argc != 1)
+		goto err_bad_argc;
+	com = (DREF SeqCombinations *)argv[0];
+	if (DeeObject_AssertTypeExact(com, expected_seq_type))
+		goto err;
+	return (DREF SeqCombinationsIterator *)DeeObject_Iter((DeeObject *)com);
+err_bad_argc:
+	err_invalid_argc(returned_iter_type->tp_name, argc, 1, 1);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF SeqCombinationsIterator *DCALL
+sci_init(size_t argc, DeeObject *const *argv) {
+	return sci_init_generic(argc, argv, &SeqCombinations_Type, &SeqCombinationsIterator_Type);
+}
+
+PRIVATE WUNUSED DREF SeqCombinationsIterator *DCALL
+srci_init(size_t argc, DeeObject *const *argv) {
+	return sci_init_generic(argc, argv, &SeqRepeatCombinations_Type, &SeqRepeatCombinationsIterator_Type);
+}
+
+PRIVATE WUNUSED DREF SeqCombinationsIterator *DCALL
+spi_init(size_t argc, DeeObject *const *argv) {
+	return sci_init_generic(argc, argv, &SeqPermutations_Type, &SeqPermutationsIterator_Type);
+}
+
+#define srci_fini sci_fini
+#define spi_fini  sci_fini
+PRIVATE NONNULL((1)) void DCALL
+sci_fini(SeqCombinationsIterator *__restrict self) {
+	Dee_Decref(self->sci_com);
+	Dee_weakref_fini(&self->sci_view);
+}
+
+STATIC_ASSERT(offsetof(SeqCombinationsIterator, sci_com) == offsetof(ProxyObject, po_obj));
+#define sci_visit  generic_proxy_visit
+#define srci_visit generic_proxy_visit
+#define spi_visit  generic_proxy_visit
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sci_unshare_view(SeqCombinationsIterator *__restrict self) {
+	DREF SeqCombinationsView *view;
+	view = (DREF SeqCombinationsView *)Dee_weakref_lock(&self->sci_view);
+	if (!view)
+		return 0;
+	if (SeqCombinationsView_GetIdx(view) == self->sci_idx) {
+		/* Do the unshare */
+		size_t i, rparam = self->sci_com->sc_rparam, *idx_copy;
+		idx_copy = (size_t *)Dee_Mallocc(rparam, sizeof(size_t));
+		if unlikely(!idx_copy)
+			goto err_view;
+		for (i = 0; i < rparam; ++i)
+			idx_copy[i] = atomic_read(&self->sci_idx[i]);
+		/* Store the unshared copy within the view (this also asserts
+		 * that no other thread already did this in the mean-time, and
+		 * if some other thread did, then we simply free our copy) */
+		if unlikely(!SeqCombinationsView_SetIdx(view, idx_copy))
+			Dee_Free(idx_copy);
+	}
+	Dee_Decref_unlikely(view);
+	/* Clear the weakref since its indices won't reference us anymore. */
+	(void)Dee_weakref_clear(&self->sci_view);
+	return 0;
+err_view:
+	Dee_Decref_unlikely(view);
+	return -1;
+}
+
+#define srci_getview sci_getview
+#define spi_getview  sci_getview
+PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsView *DCALL
+sci_getview(SeqCombinationsIterator *__restrict self) {
+	DREF SeqCombinationsView *result;
+	result = (DREF SeqCombinationsView *)Dee_weakref_lock(&self->sci_view);
+	if (!result) {
+		DREF SeqCombinationsView *old_view;
+		/* Lazily allocate view */
+		result = DeeObject_MALLOC(SeqCombinationsView);
+		if unlikely(!result)
+			goto err;
+		Dee_Incref(self);
+		result->scv_iter = self;
+		result->scv_com  = self->sci_com;
+		result->scv_idx  = self->sci_idx;
+		weakref_support_init(result);
+		DeeObject_Init(result, &SeqCombinationsView_Type);
+		COMPILER_WRITE_BARRIER();
+
+		/* Cache the view within the weakref, and handle the
+		 * case where another view was created in the mean-time. */
+		old_view = (DREF SeqCombinationsView *)Dee_weakref_cmpxch(&self->sci_view, NULL,
+		                                                          (DeeObject *)result);
+		ASSERT(old_view != (DREF SeqCombinationsView *)ITER_DONE);
+		if unlikely(old_view) {
+			Dee_DecrefDokill(result);
+			result = old_view;
+		}
+	}
+	return result;
+err:
+	return NULL;
+}
+
+#define srci_assign sci_assign
+#define spi_assign  sci_assign
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sci_assign(SeqCombinationsIterator *self,
+           SeqCombinationsIterator *other) {
+	size_t i;
+	if unlikely(self == other)
+		return 0;
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	if unlikely(self->sci_com->sc_seq != other->sci_com->sc_seq ||
+	            self->sci_com->sc_rparam != other->sci_com->sc_rparam)
+		goto wrong_com;
+	if unlikely(sci_unshare_view(self))
+		goto err;
+	for (i = 0; i < self->sci_com->sc_rparam; ++i)
+		self->sci_idx[i] = atomic_read(&other->sci_idx[i]);
+	return 0;
+wrong_com:
+	DeeError_Throwf(&DeeError_ValueError,
+	                "Cannot assign incompatible combination iterators");
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sci_bool(SeqCombinationsIterator *__restrict self) {
+	size_t i, rparam = self->sci_com->sc_rparam;
+	size_t seqsize = self->sci_com->sc_seqsize;
+	size_t value;
+	ASSERT(rparam != (size_t)-1);
+	ASSERT(seqsize != (size_t)-1);
+	ASSERT(rparam > 0);
+	i = rparam;
+	do {
+		--i;
+		value = atomic_read(&self->sci_idx[i]);
+		if (value < i + seqsize - rparam)
+			return 1;
+	} while (i);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+srci_bool(SeqCombinationsIterator *__restrict self) {
+	size_t i, rparam = self->sci_com->sc_rparam;
+	size_t offset, seqsize = self->sci_com->sc_seqsize;
+	ASSERT(rparam != (size_t)-1);
+	ASSERT(seqsize != (size_t)-1);
+	ASSERT(rparam > 0);
+	i = rparam;
+	do {
+		--i;
+		offset = atomic_read(&self->sci_idx[i]) + 1;
+		if (offset < seqsize)
+			return 1;
+	} while (i);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+spi_bool(SeqCombinationsIterator *__restrict self) {
+	size_t i, rparam = self->sci_com->sc_rparam;
+	size_t seqsize = self->sci_com->sc_seqsize;
+	ASSERT(rparam != (size_t)-1);
+	ASSERT(seqsize != (size_t)-1);
+	ASSERT(rparam > 0);
+	/* For "ABCD".permutations(3), the final state is "DCB", so check for that! */
+	i = 0;
+	do {
+		if ((self->sci_idx[i] + 1) < (seqsize - i))
+			return 1;
+	} while (++i < rparam);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+sci_inc(SeqCombinationsIterator *__restrict self) {
+	size_t i, rparam = self->sci_com->sc_rparam;
+	size_t seqsize = self->sci_com->sc_seqsize;
+	size_t value;
+	ASSERT(rparam != (size_t)-1);
+	ASSERT(seqsize != (size_t)-1);
+	ASSERT(rparam > 0);
+	i = rparam;
+	do {
+		--i;
+		value = atomic_read(&self->sci_idx[i]);
+		if (value < i + seqsize - rparam)
+			goto do_inc_at_i;
+	} while (i);
+	return false;
+do_inc_at_i:
+	do {
+		++value;
+		atomic_write(&self->sci_idx[i], value);
+	} while (++i < rparam);
+	return true;
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+srci_inc(SeqCombinationsIterator *__restrict self) {
+	size_t i, rparam = self->sci_com->sc_rparam;
+	size_t offset, seqsize = self->sci_com->sc_seqsize;
+	ASSERT(rparam != (size_t)-1);
+	ASSERT(seqsize != (size_t)-1);
+	ASSERT(rparam > 0);
+	i = rparam;
+	do {
+		--i;
+		offset = atomic_read(&self->sci_idx[i]) + 1;
+		if (offset < seqsize)
+			goto do_inc_at_i;
+	} while (i);
+	return false;
+do_inc_at_i:
+	do {
+		atomic_write(&self->sci_idx[i], offset);
+	} while (++i < rparam);
+	return true;
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+spi_inc(SeqCombinationsIterator *__restrict self) {
+	size_t i, rparam = self->sci_com->sc_rparam;
+	size_t seqsize = self->sci_com->sc_seqsize;
+	ASSERT(rparam != (size_t)-1);
+	ASSERT(seqsize != (size_t)-1);
+	ASSERT(rparam > 0);
+	if (self->sci_idx[0] >= seqsize && (self->sci_idx[0] != (size_t)-1 && rparam != 0))
+		return false;
+	i = rparam;
+	for (;;) {
+		size_t j, index;
+		--i;
+increment_i:
+		if (++self->sci_idx[i] >= seqsize) {
+			if (i == 0) {
+				self->sci_idx[i] = seqsize - 1;
+				return false;
+			}
+			self->sci_idx[i] = 0;
+			continue;
+		}
+		index = self->sci_idx[i];
+		for (j = 0; j < rparam; ++j) {
+			if (j == i)
+				continue;
+			if (self->sci_idx[j] == index)
+				goto increment_i;
+		}
+		break;
+	}
+	return true;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsView *DCALL
+sci_next(SeqCombinationsIterator *__restrict self) {
+	if (!sci_inc(self))
+		return (DREF SeqCombinationsView *)ITER_DONE;
+	return sci_getview(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsView *DCALL
+srci_next(SeqCombinationsIterator *__restrict self) {
+	if (!srci_inc(self))
+		return (DREF SeqCombinationsView *)ITER_DONE;
+	return srci_getview(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsView *DCALL
+spi_next(SeqCombinationsIterator *__restrict self) {
+	if (!spi_inc(self))
+		return (DREF SeqCombinationsView *)ITER_DONE;
+	return spi_getview(self);
+}
+
+#define srci_compare sci_compare
+#define spi_compare  sci_compare
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sci_compare(SeqCombinationsIterator *lhs, SeqCombinationsIterator *rhs) {
+	size_t i, rparam;
+	if (DeeObject_AssertTypeExact(rhs, Dee_TYPE(lhs)))
+		goto err;
+	Dee_return_compare_if_ne(lhs->sci_com, lhs->sci_com);
+	rparam = lhs->sci_com->sc_rparam;
+	ASSERT(rparam != (size_t)-1);
+	/* All combinations iterators increment starting at "sci_idx[0]",
+	 * so we can compare all of them the same way by starting at the
+	 * greatest index "sci_idx[rparam - 1]" */
+	i = rparam;
+	do {
+		Dee_ssize_t lhs_index, rhs_index;
+		--i;
+		/* Force use of signed indices here, so we're correctly handling
+		 * the case where we make use of integer roll-over to represent
+		 * the -1'th matrix state (as set-up for the initial state) */
+		lhs_index = (Dee_ssize_t)atomic_read(&lhs->sci_idx[i]);
+		rhs_index = (Dee_ssize_t)atomic_read(&rhs->sci_idx[i]);
+		Dee_return_compare_if_ne(lhs_index, rhs_index);
+	} while (i);
+	return 0;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+
+#define srci_cmp sci_cmp
+#define spi_cmp  sci_cmp
+PRIVATE struct type_cmp sci_cmp = {
+	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sci_compare,
+};
+
+#define srci_getsets sci_getsets
+#define spi_getsets  sci_getsets
+PRIVATE struct type_getset tpconst sci_getsets[] = {
+	TYPE_GETTER("__view__", &sci_getview, "->?Ert:SeqCombinationsView"),
+	TYPE_GETSET_END
+};
+
+#define srci_members sci_members
+#define spi_members  sci_members
+PRIVATE struct type_member tpconst sci_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__wview__", STRUCT_WOBJECT,
+	                      offsetof(SeqCombinationsIterator, sci_view),
+	                      "->?Ert:SeqCombinationsView"),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject SeqCombinationsIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqCombinationsIterator",
+	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqCombinations)\n"
+	                         "\n"
+	                         "iter->?Ert:SeqCombinationsView"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&sci_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&sci_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&sci_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&sci_init,
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sci_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&sci_assign,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sci_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sci_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &sci_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sci_next,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ sci_getsets,
+	/* .tp_members       = */ sci_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+};
+
+INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqRepeatCombinationsIterator",
+	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqRepeatCombinations)\n"
+	                         "\n"
+	                         "iter->?Ert:SeqCombinationsView"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&srci_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&srci_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&srci_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&srci_init,
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srci_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&srci_assign,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&srci_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&srci_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &srci_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&srci_next,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ srci_getsets,
+	/* .tp_members       = */ srci_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+};
+
+INTERN DeeTypeObject SeqPermutationsIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqPermutationsIterator",
+	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqPermutations)\n"
+	                         "\n"
+	                         "iter->?Ert:SeqCombinationsView"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&spi_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&spi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&spi_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&spi_init,
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&spi_fini,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&spi_assign,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&spi_bool
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&spi_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &spi_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&spi_next,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ spi_getsets,
+	/* .tp_members       = */ spi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* VIEW                                                                 */
+/************************************************************************/
+
+STATIC_ASSERT(offsetof(SeqCombinationsView, scv_iter) == offsetof(ProxyObject, po_obj));
+#define scv_visit generic_proxy_visit
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+scv_ctor(SeqCombinationsView *__restrict self) {
+	self->scv_iter = (DREF SeqCombinationsIterator *)DeeObject_NewDefault(&SeqCombinationsIterator_Type);
+	if unlikely(!self->scv_iter)
+		goto err;
+	self->scv_com = self->scv_iter->sci_com;
+	self->scv_idx = self->scv_iter->sci_idx;
+	Dee_weakref_support_init(self);
+	(void)Dee_weakref_set(&self->scv_iter->sci_view, (DeeObject *)self);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+scv_fini(SeqCombinationsView *__restrict self) {
+	if unlikely(self->scv_idx != self->scv_iter->sci_idx)
+		Dee_Free(self->scv_idx);
+	Dee_Decref_unlikely(self->scv_iter);
+	Dee_weakref_support_fini(self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+scv_copy(SeqCombinationsView *__restrict self,
+         SeqCombinationsView *__restrict other) {
+	size_t i, rparam = other->scv_com->sc_rparam, *idx_copy, *idx_other;
+	idx_copy = (size_t *)Dee_Mallocc(rparam, sizeof(size_t));
+	if unlikely(!idx_copy)
+		goto err;
+	idx_other = SeqCombinationsView_GetIdx(other);
+	for (i = 0; i < rparam; ++i)
+		idx_copy[i] = atomic_read(&idx_other[i]);
+	self->scv_idx = idx_copy;
+	Dee_Incref(other->scv_iter);
+	self->scv_iter = other->scv_iter;
+	self->scv_com  = self->scv_iter->sci_com;
+	Dee_weakref_support_init(self);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+scv_deep(SeqCombinationsView *__restrict self,
+         SeqCombinationsView *__restrict other) {
+	if unlikely(scv_copy(self, other))
+		goto err;
+	if (DeeObject_InplaceDeepCopy((DeeObject **)&self->scv_iter))
+		goto err_self;
+	self->scv_com = self->scv_iter->sci_com;
+	return 0;
+err_self:
+	scv_fini(self);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+scv_init(SeqCombinationsView *__restrict self,
+         size_t argc, DeeObject *const *argv) {
+	size_t i, rparam, *idx_copy, *idx_other;
+	if (DeeArg_Unpack(argc, argv, "o:_SeqCombinationsView", &self->scv_iter))
+		goto err;
+	if unlikely(!DeeObject_InstanceOfExact(self->scv_iter, &SeqCombinationsIterator_Type) &&
+	            !DeeObject_InstanceOfExact(self->scv_iter, &SeqRepeatCombinationsIterator_Type) &&
+	            !DeeObject_InstanceOfExact(self->scv_iter, &SeqPermutationsIterator_Type))
+		goto err_bad_iter_type;
+	self->scv_com = self->scv_iter->sci_com;
+	rparam = self->scv_com->sc_rparam;
+	idx_copy = (size_t *)Dee_Mallocc(rparam, sizeof(size_t));
+	if unlikely(!idx_copy)
+		goto err;
+	idx_other = self->scv_iter->sci_idx;
+	for (i = 0; i < rparam; ++i)
+		idx_copy[i] = atomic_read(&idx_other[i]);
+	self->scv_idx = idx_copy;
+	Dee_Incref(self->scv_iter);
+	Dee_weakref_support_init(self);
+	return 0;
+err_bad_iter_type:
+	DeeObject_TypeAssertFailed3((DeeObject *)self->scv_iter,
+	                            &SeqCombinationsIterator_Type,
+	                            &SeqRepeatCombinationsIterator_Type,
+	                            &SeqPermutationsIterator_Type);
+err:
+	return -1;
+}
+
+PRIVATE struct type_member tpconst scv_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqCombinationsView, scv_iter),
+	                      "->?X3?Ert:SeqCombinationsIterator"
+	                      /**/ "?Ert:SeqRepeatCombinationsIterator"
+	                      /**/ "?Ert:SeqPermutationsIterator"),
+	TYPE_MEMBER_FIELD_DOC("__com__", STRUCT_OBJECT, offsetof(SeqCombinationsView, scv_com),
+	                      "->?X3?Ert:SeqCombinations"
+	                      /**/ "?Ert:SeqRepeatCombinations"
+	                      /**/ "?Ert:SeqPermutations"),
+	TYPE_MEMBER_END
+};
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+scv_size(SeqCombinationsView *__restrict self) {
+	ASSERT(self->scv_com->sc_rparam != (size_t)-1);
+	return self->scv_com->sc_rparam;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+scv_getitem_index(SeqCombinationsView *__restrict self, size_t index) {
+	size_t *idx = SeqCombinationsView_GetIdx(self);
+	ASSERT(self->scv_com->sc_rparam != (size_t)-1);
+	if unlikely(index >= self->scv_com->sc_rparam)
+		goto err_oob;
+	index = idx[index];
+	return DeeSeq_OperatorGetItemIndex(self->scv_com->sc_seq, index);
+err_oob:
+	err_index_out_of_bounds((DeeObject *)self, index, self->scv_com->sc_rparam);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+scv_trygetitem_index(SeqCombinationsView *__restrict self, size_t index) {
+	size_t *idx = SeqCombinationsView_GetIdx(self);
+	ASSERT(self->scv_com->sc_rparam != (size_t)-1);
+	if unlikely(index >= self->scv_com->sc_rparam)
+		return ITER_DONE;
+	index = idx[index];
+	return (*self->scv_com->sc_trygetitem_index)(self->scv_com->sc_seq, index);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+scv_bounditem_index(SeqCombinationsView *__restrict self, size_t index) {
+	size_t *idx = SeqCombinationsView_GetIdx(self);
+	ASSERT(self->scv_com->sc_rparam != (size_t)-1);
+	if unlikely(index >= self->scv_com->sc_rparam)
+		return -2;
+	index = idx[index];
+	return DeeSeq_OperatorBoundItemIndex(self->scv_com->sc_seq, index);
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+scv_foreach(SeqCombinationsView *__restrict self, Dee_foreach_t cb, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i, rparam = self->scv_com->sc_rparam, *idx = SeqCombinationsView_GetIdx(self);
+	ASSERT(rparam != (size_t)-1);
+	for (i = 0; i < rparam; ++i) {
+		DREF DeeObject *elem;
+		size_t index = idx[i];
+		elem = (*self->scv_com->sc_trygetitem_index)(self->scv_com->sc_seq, index);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err;
+		} else {
+			temp = (*cb)(arg, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+scv_enumerate_index(SeqCombinationsView *__restrict self, Dee_enumerate_index_t proc,
+                    void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	size_t i, *idx = SeqCombinationsView_GetIdx(self);
+	ASSERT(self->scv_com->sc_rparam != (size_t)-1);
+	if (end > self->scv_com->sc_rparam)
+		end = self->scv_com->sc_rparam;
+	for (i = start; i < end; ++i) {
+		DREF DeeObject *elem;
+		size_t index = idx[i];
+		elem = (*self->scv_com->sc_trygetitem_index)(self->scv_com->sc_seq, index);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err;
+		} else {
+			temp = (*proc)(arg, i, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE struct type_seq scv_seq = {
+	/* .tp_iter               = */ NULL,
+	/* .tp_sizeob             = */ NULL,
+	/* .tp_contains           = */ NULL,
+	/* .tp_getitem            = */ NULL,
+	/* .tp_delitem            = */ NULL,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ NULL,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_nsi                = */ NULL,
+	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&scv_foreach,
+	/* .tp_foreach_pair       = */ NULL,
+	/* .tp_enumerate          = */ NULL,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&scv_enumerate_index,
+	/* .tp_iterkeys           = */ NULL,
+	/* .tp_bounditem          = */ NULL,
+	/* .tp_hasitem            = */ NULL,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&scv_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&scv_size,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&scv_getitem_index,
+	/* .tp_getitem_index_fast = */ NULL,
+	/* .tp_delitem_index      = */ NULL,
+	/* .tp_setitem_index      = */ NULL,
+	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&scv_bounditem_index,
+	/* .tp_hasitem_index      = */ &DeeSeq_DefaultHasItemIndexWithSize,
+	/* .tp_getrange_index     = */ NULL,
+	/* .tp_delrange_index     = */ NULL,
+	/* .tp_setrange_index     = */ NULL,
+	/* .tp_getrange_index_n   = */ NULL,
+	/* .tp_delrange_index_n   = */ NULL,
+	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_trygetitem         = */ NULL,
+	/* .tp_trygetitem_index   = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&scv_trygetitem_index,
+};
+
+INTERN DeeTypeObject SeqCombinationsView_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqCombinationsView",
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(iter:?X3?Ert:SeqCombinationsIterator"
+	                         /*    */ "?Ert:SeqRepeatCombinationsIterator"
+	                         /*    */ "?Ert:SeqPermutationsIterator)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(SeqCombinationsView),
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&scv_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&scv_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&scv_deep,
+				/* .tp_any_ctor  = */ (dfunptr_t)&scv_init,
+				TYPE_FIXED_ALLOCATOR(SeqCombinationsView)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&scv_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&scv_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &scv_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
@@ -1040,519 +1293,57 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ pmut_members,
+	/* .tp_members       = */ scv_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ pmut_class_members
+	/* .tp_class_members = */ NULL
 };
 
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
-	DREF Combinations *result;
-	DeeTypeObject *tp_iter;
-	DeeTypeMRO mro;
-	result = DeeObject_MALLOC(Combinations);
+PRIVATE DEFINE_TUPLE(empty_combinations, 1, { Dee_EmptyTuple });
+
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+SeqCombinations_New(/*inherit(always)*/ DREF DeeObject *__restrict seq,
+                    size_t rparam, DeeTypeObject *__restrict type) {
+	DREF SeqCombinations *result;
+	if unlikely(!rparam) {
+		Dee_Decref(seq);
+		return_reference_((DeeObject *)&empty_combinations);
+	}
+	result = DeeObject_MALLOC(SeqCombinations);
 	if unlikely(!result)
-		goto done;
-
-	/* Quickly check if we can use the fast-sequence interface. */
-	tp_iter = Dee_TYPE(self);
-	if (tp_iter == &DeeTuple_Type) {
-		if (r >= DeeTuple_SIZE(self)) {
-			DeeObject_FREE(result);
-			if (r == DeeTuple_SIZE(self))
-				return DeeTuple_Pack(1, self);
-			return_empty_seq;
-		}
-		result->c_getitem = NULL;
-		result->c_elem    = DeeTuple_ELEM(self);
-		result->c_seqlen  = DeeTuple_SIZE(self);
-		goto fill_in_result_2;
-	}
-	result->c_seqlen = DeeFastSeq_GetSize_deprecated(self);
-	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		result->c_getitem    = tp_iter->tp_seq;
-		result->c_elem       = NULL;
-		result->c_getitem_tp = tp_iter;
-		ASSERT(result->c_getitem);
-		goto fill_in_result;
-	}
-	DeeTypeMRO_Init(&mro, tp_iter);
-	do {
-		struct type_seq *seq;
-		if ((seq = tp_iter->tp_seq) == NULL)
-			continue;
-		if (seq->tp_getitem) {
-			/* Use the getitem/size variant. */
-			result->c_getitem    = seq;
-			result->c_getitem_tp = tp_iter;
-			result->c_elem       = NULL;
-			if (!seq->tp_sizeob) {
-				for (;;) {
-					tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-					if (!tp_iter) {
-						err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SIZE);
-						goto err_r;
-					}
-					seq = tp_iter->tp_seq;
-					if (seq && seq->tp_sizeob)
-						break;
-				}
-			}
-			goto load_tp_size;
-		}
-		if (seq->tp_sizeob) {
-			/* Use the getitem/size variant. */
-			for (;;) {
-				tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-				if (!tp_iter) {
-					err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
-					goto err_r;
-				}
-				if (tp_iter->tp_seq &&
-				    tp_iter->tp_seq->tp_getitem)
-					break;
-			}
-			result->c_getitem    = tp_iter->tp_seq;
-			result->c_getitem_tp = tp_iter;
-load_tp_size:
-			result->c_elem = NULL;
-			{
-				DREF DeeObject *temp;
-				int error;
-				temp = (*seq->tp_sizeob)(self);
-				if unlikely(!temp)
-					goto err_r;
-				error = DeeObject_AsSize(temp, &result->c_seqlen);
-				Dee_Decref(temp);
-				if unlikely(error)
-					goto err_r;
-			}
-			goto fill_in_result;
-		}
-		if (seq->tp_iter) {
-			DREF DeeObject *iterator, *elem;
-			DREF DeeObject **elem_v, **new_elem_v;
-			size_t elem_c, elem_a;
-			/* Use the iterator variant */
-			iterator = (*seq->tp_iter)(self);
-			if unlikely(!iterator)
-				goto err_r;
-			elem_c = elem_a = 0;
-			elem_v          = NULL;
-			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-				ASSERT(elem_c <= elem_a);
-				if (elem_c >= elem_a) {
-					size_t new_alloc = elem_a * 2;
-					if (!new_alloc)
-						new_alloc = 8;
-					new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, new_alloc,
-					                                                sizeof(DREF DeeObject *));
-					if unlikely(!new_elem_v) {
-						new_alloc  = elem_c + 1;
-						new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, new_alloc,
-						                                                sizeof(DREF DeeObject *));
-						if unlikely(!new_elem_v) {
-							Dee_Decref(elem);
-err_elem_v:
-							Dee_Decrefv(elem_v, elem_c);
-							Dee_Free(elem_v);
-							goto err_r;
-						}
-					}
-					elem_v = new_elem_v;
-					elem_a = new_alloc;
-				}
-				elem_v[elem_c++] = elem; /* Inherit reference. */
-				if (DeeThread_CheckInterrupt())
-					goto err_elem_v;
-			}
-			if unlikely(!elem)
-				goto err_elem_v;
-			Dee_Decref(iterator);
-			if (r >= elem_c) {
-				Dee_Decrefv(elem_v, elem_c);
-				Dee_Free(elem_v);
-				DeeObject_FREE(result);
-				if (r == elem_c)
-					return DeeTuple_Pack(1, self);
-				return_empty_seq;
-			}
-			if likely(elem_a > elem_c) {
-				new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, elem_c,
-				                                                sizeof(DREF DeeObject *));
-				if likely(new_elem_v)
-					elem_v = new_elem_v;
-			}
-			result->c_getitem = NULL;
-			result->c_elem    = elem_v;
-			result->c_seqlen  = elem_c;
-			goto fill_in_result_2;
-		}
-	} while ((tp_iter = DeeTypeMRO_Next(&mro, tp_iter)) != NULL);
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
-	goto err_r;
-fill_in_result:
-	if (r >= result->c_seqlen) {
-		size_t seqlen = result->c_seqlen;
-		ASSERT(!result->c_elem);
-		DeeObject_FREE(result);
-		if (r == seqlen)
-			return DeeTuple_Pack(1, self);
-		return_empty_seq;
-	}
-fill_in_result_2:
-	result->c_seq    = self;
-	result->c_comlen = r;
-	Dee_Incref(self);
-	DeeObject_Init(result, &SeqCombinations_Type);
-done:
+		goto err_seq;
+	result->sc_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(seq));
+	if unlikely(result->sc_trygetitem_index == &DeeSeq_DefaultOperatorTryGetItemIndexWithError)
+		goto err_seq_r_combinations_not_supported;
+	result->sc_seqsize = (size_t)-1; /* Will be calculated lazily */
+	result->sc_rparam  = rparam;
+	result->sc_seq     = seq; /* Inherit reference */
+	DeeObject_Init(result, type);
 	return (DREF DeeObject *)result;
-err_r:
+err_seq_r_combinations_not_supported:
 	DeeObject_FREE(result);
-	return NULL;
-}
-
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
-	DREF Combinations *result;
-	DeeTypeObject *tp_iter;
-	DeeTypeMRO mro;
-	if (!r)
-		return DeeTuple_Pack(1, Dee_EmptySeq);
-	result = DeeObject_MALLOC(Combinations);
-	if unlikely(!result)
-		goto done;
-
-	/* Quickly check if we can use the fast-sequence interface. */
-	tp_iter = Dee_TYPE(self);
-	if (tp_iter == &DeeTuple_Type) {
-		if (!DeeTuple_SIZE(self)) {
-			DeeObject_FREE(result);
-			return_empty_seq;
-		}
-		result->c_getitem = NULL;
-		result->c_elem    = DeeTuple_ELEM(self);
-		result->c_seqlen  = DeeTuple_SIZE(self);
-		goto fill_in_result_2;
-	}
-	result->c_seqlen = DeeFastSeq_GetSize_deprecated(self);
-	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		result->c_getitem    = tp_iter->tp_seq;
-		result->c_elem       = NULL;
-		result->c_getitem_tp = tp_iter;
-		ASSERT(result->c_getitem);
-		goto fill_in_result;
-	}
-	DeeTypeMRO_Init(&mro, tp_iter);
-	do {
-		struct type_seq *seq;
-		if ((seq = tp_iter->tp_seq) == NULL)
-			continue;
-		if (seq->tp_getitem) {
-			/* Use the getitem/size variant. */
-			result->c_getitem    = seq;
-			result->c_getitem_tp = tp_iter;
-			result->c_elem       = NULL;
-			if (!seq->tp_sizeob) {
-				for (;;) {
-					tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-					if (!tp_iter) {
-						err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SIZE);
-						goto err_r;
-					}
-					seq = tp_iter->tp_seq;
-					if (seq && seq->tp_sizeob)
-						break;
-				}
-			}
-			goto load_tp_size;
-		}
-		if (seq->tp_sizeob) {
-			/* Use the getitem/size variant. */
-			tp_iter     = tp_iter;
-			for (;;) {
-				tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-				if (!tp_iter) {
-					err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
-					goto err_r;
-				}
-				if (tp_iter->tp_seq &&
-				    tp_iter->tp_seq->tp_getitem)
-					break;
-			}
-			result->c_getitem    = tp_iter->tp_seq;
-			result->c_getitem_tp = tp_iter;
-load_tp_size:
-			result->c_elem = NULL;
-			{
-				DREF DeeObject *temp;
-				int error;
-				temp = (*seq->tp_sizeob)(self);
-				if unlikely(!temp)
-					goto err_r;
-				error = DeeObject_AsSize(temp, &result->c_seqlen);
-				Dee_Decref(temp);
-				if unlikely(error)
-					goto err_r;
-			}
-			goto fill_in_result;
-		}
-		if (seq->tp_iter) {
-			DREF DeeObject *iterator, *elem;
-			DREF DeeObject **elem_v, **new_elem_v;
-			size_t elem_c, elem_a;
-			/* Use the iterator variant */
-			iterator = (*seq->tp_iter)(self);
-			if unlikely(!iterator)
-				goto err_r;
-			elem_c = elem_a = 0;
-			elem_v          = NULL;
-			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-				ASSERT(elem_c <= elem_a);
-				if (elem_c >= elem_a) {
-					size_t new_alloc = elem_a * 2;
-					if (!new_alloc)
-						new_alloc = 8;
-					new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, new_alloc,
-					                                                sizeof(DREF DeeObject *));
-					if unlikely(!new_elem_v) {
-						new_alloc  = elem_c + 1;
-						new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, new_alloc,
-						                                                sizeof(DREF DeeObject *));
-						if unlikely(!new_elem_v) {
-							Dee_Decref(elem);
-err_elem_v:
-							Dee_Decrefv(elem_v, elem_c);
-							Dee_Free(elem_v);
-							goto err_r;
-						}
-					}
-					elem_v = new_elem_v;
-					elem_a = new_alloc;
-				}
-				elem_v[elem_c++] = elem; /* Inherit reference. */
-				if (DeeThread_CheckInterrupt())
-					goto err_elem_v;
-			}
-			if unlikely(!elem)
-				goto err_elem_v;
-			Dee_Decref(iterator);
-			if (!elem_c) {
-				Dee_Free(elem_v);
-				DeeObject_FREE(result);
-				return_empty_seq;
-			}
-			if likely(elem_a > elem_c) {
-				new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, elem_c,
-				                                                sizeof(DREF DeeObject *));
-				if likely(new_elem_v)
-					elem_v = new_elem_v;
-			}
-			result->c_getitem = NULL;
-			result->c_elem    = elem_v;
-			result->c_seqlen  = elem_c;
-			goto fill_in_result_2;
-		}
-	} while ((tp_iter = DeeTypeMRO_Next(&mro, tp_iter)) != NULL);
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
-	goto err_r;
-fill_in_result:
-	if (!result->c_seqlen) {
-		ASSERT(!result->c_elem);
-		DeeObject_FREE(result);
-		return_empty_seq;
-	}
-fill_in_result_2:
-	result->c_seq    = self;
-	result->c_comlen = r;
-	Dee_Incref(self);
-	DeeObject_Init(result, &SeqRepeatCombinations_Type);
-done:
-	return (DREF DeeObject *)result;
-err_r:
-	DeeObject_FREE(result);
-	return NULL;
-}
-
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Permutations(DeeObject *__restrict self) {
-	DREF Combinations *result;
-	DeeTypeObject *tp_iter;
-	DeeTypeMRO mro;
-	result = DeeObject_MALLOC(Combinations);
-	if unlikely(!result)
-		goto done;
-
-	/* Quickly check if we can use the fast-sequence interface. */
-	tp_iter = Dee_TYPE(self);
-	if (tp_iter == &DeeTuple_Type) {
-		if (!DeeTuple_SIZE(self)) {
-			DeeObject_FREE(result);
-			return DeeTuple_Pack(1, Dee_EmptySeq);
-		}
-		result->c_getitem = NULL;
-		result->c_elem    = DeeTuple_ELEM(self);
-		result->c_seqlen  = DeeTuple_SIZE(self);
-		goto fill_in_result_2;
-	}
-	result->c_seqlen = DeeFastSeq_GetSize_deprecated(self);
-	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		result->c_getitem    = tp_iter->tp_seq;
-		result->c_elem       = NULL;
-		result->c_getitem_tp = tp_iter;
-		ASSERT(result->c_getitem);
-		goto fill_in_result;
-	}
-	DeeTypeMRO_Init(&mro, tp_iter);
-	do {
-		struct type_seq *seq;
-		if ((seq = tp_iter->tp_seq) == NULL)
-			continue;
-		if (seq->tp_getitem) {
-			/* Use the getitem/size variant. */
-			result->c_getitem    = seq;
-			result->c_getitem_tp = tp_iter;
-			result->c_elem       = NULL;
-			if (!seq->tp_sizeob) {
-				for (;;) {
-					tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-					if (!tp_iter) {
-						err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SIZE);
-						goto err_r;
-					}
-					seq = tp_iter->tp_seq;
-					if (seq && seq->tp_sizeob)
-						break;
-				}
-			}
-			goto load_tp_size;
-		}
-		if (seq->tp_sizeob) {
-			/* Use the getitem/size variant. */
-			for (;;) {
-				tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-				if (!tp_iter) {
-					err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
-					goto err_r;
-				}
-				if (tp_iter->tp_seq &&
-				    tp_iter->tp_seq->tp_getitem)
-					break;
-			}
-			result->c_getitem    = tp_iter->tp_seq;
-			result->c_getitem_tp = tp_iter;
-load_tp_size:
-			result->c_elem = NULL;
-			{
-				DREF DeeObject *temp;
-				int error;
-				temp = (*seq->tp_sizeob)(self);
-				if unlikely(!temp)
-					goto err_r;
-				error = DeeObject_AsSize(temp, &result->c_seqlen);
-				Dee_Decref(temp);
-				if unlikely(error)
-					goto err_r;
-			}
-			goto fill_in_result;
-		}
-		if (seq->tp_iter) {
-			DREF DeeObject *iterator, *elem;
-			DREF DeeObject **elem_v, **new_elem_v;
-			size_t elem_c, elem_a;
-			/* Use the iterator variant */
-			iterator = (*seq->tp_iter)(self);
-			if unlikely(!iterator)
-				goto err_r;
-			elem_a = 0;
-			elem_c = 0;
-			elem_v = NULL;
-			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-				ASSERT(elem_c <= elem_a);
-				if (elem_c >= elem_a) {
-					size_t new_alloc = elem_a * 2;
-					if (!new_alloc)
-						new_alloc = 8;
-					new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, new_alloc,
-					                                                sizeof(DREF DeeObject *));
-					if unlikely(!new_elem_v) {
-						new_alloc  = elem_c + 1;
-						new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, new_alloc,
-						                                                sizeof(DREF DeeObject *));
-						if unlikely(!new_elem_v) {
-							Dee_Decref(elem);
-err_elem_v:
-							Dee_Decrefv(elem_v, elem_c);
-							Dee_Free(elem_v);
-							goto err_r;
-						}
-					}
-					elem_v = new_elem_v;
-					elem_a = new_alloc;
-				}
-				elem_v[elem_c++] = elem; /* Inherit reference. */
-				if (DeeThread_CheckInterrupt())
-					goto err_elem_v;
-			}
-			if unlikely(!elem)
-				goto err_elem_v;
-			Dee_Decref(iterator);
-			if (!elem_c) {
-				Dee_Free(elem_v);
-				DeeObject_FREE(result);
-				return DeeTuple_Pack(1, Dee_EmptySeq);
-			}
-			if likely(elem_a > elem_c) {
-				new_elem_v = (DREF DeeObject **)Dee_TryReallocc(elem_v, elem_c,
-				                                                sizeof(DREF DeeObject *));
-				if likely(new_elem_v)
-					elem_v = new_elem_v;
-			}
-			result->c_getitem = NULL;
-			result->c_elem    = elem_v;
-			result->c_seqlen  = elem_c;
-			goto fill_in_result_2;
-		}
-	} while ((tp_iter = DeeTypeMRO_Next(&mro, tp_iter)) != NULL);
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
-	goto err_r;
-fill_in_result:
-	if (!result->c_seqlen) {
-		ASSERT(!result->c_elem);
-		DeeObject_FREE(result);
-		return DeeTuple_Pack(1, Dee_EmptySeq);
-	}
-fill_in_result_2:
-	result->c_seq    = self;
-	result->c_comlen = result->c_seqlen;
-	Dee_Incref(self);
-	DeeObject_Init(result, &SeqPermutations_Type);
-done:
-	return (DREF DeeObject *)result;
-err_r:
-	DeeObject_FREE(result);
+	DeeError_Throwf(&DeeError_SequenceError,
+	                "Type %r does not support sequence combinations",
+	                Dee_TYPE(seq));
+err_seq:
+	Dee_Decref(seq);
 	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Permutations2(DeeObject *__restrict self, size_t r) {
-	DREF Combinations *result;
-	if (!r)
-		return DeeTuple_Pack(1, Dee_EmptySeq);
-	result = (DREF Combinations *)DeeSeq_Permutations(self);
-	if likely(result && Dee_TYPE(result) == &SeqPermutations_Type) {
-		result->c_comlen = r;
-		if (r > result->c_seqlen) {
-			Dee_Decref_likely(result);
-			result = (DREF Combinations *)Dee_EmptySeq;
-			Dee_Incref(Dee_EmptySeq);
-		}
-	}
-	return (DREF DeeObject *)result;
+DeeSeq_Combinations(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t r) {
+	return SeqCombinations_New(self, r, &SeqCombinations_Type);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_RepeatCombinations(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t r) {
+	return SeqCombinations_New(self, r, &SeqRepeatCombinations_Type);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Permutations2(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t r) {
+	return SeqCombinations_New(self, r, &SeqPermutations_Type);
 }
 
 

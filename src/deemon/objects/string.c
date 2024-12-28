@@ -1334,7 +1334,8 @@ PRIVATE struct type_cmp stringiter_cmp = {
 INTERN DeeTypeObject StringIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringIterator",
-	/* .tp_doc      = */ DOC("(seq?:?Dstring)"),
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(s:?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
