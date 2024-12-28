@@ -58,7 +58,7 @@ DeeFloat_Print(LOCAL_float_t value, dformatprinter printer, void *arg,
 	char buf[32]; /* Must be able to hold a decimal-encoded UINT64_MAX +1 more character */
 	size_t len, total_len;
 	bool is_negative;
-	unsigned int max_prec, min_prec;
+	unsigned int use_nfrac, min_nfrac;
 	uintmax_t whole, frac;
 
 	/* Check for INF */
@@ -90,25 +90,25 @@ DeeFloat_Print(LOCAL_float_t value, dformatprinter printer, void *arg,
 	}
 
 	/* Determine the intended precision. */
-	max_prec = (unsigned int)precision;
-	min_prec = (unsigned int)precision;
+	use_nfrac = (unsigned int)precision;
+	min_nfrac = (unsigned int)precision;
 	if (!(flags & DEEFLOAT_PRINT_FPRECISION)) {
-		max_prec = 6;
-		min_prec = 0;
-	} else if (max_prec > 9) {
-		max_prec = min_prec = 9;
+		use_nfrac = 6; /* Print at most 1 fractional digit by default. */
+		min_nfrac = 1; /* Print at least 1 fractional digit by default. */
+	} else if (use_nfrac > 9) {
+		use_nfrac = min_nfrac = 9;
 	}
 
 	/* XXX: This cast can overflow */
 	whole  = (uintmax_t)value;
-	tmpval = (value - whole) * pow10[max_prec];
+	tmpval = (value - whole) * pow10[use_nfrac];
 	frac   = (uintmax_t)tmpval;
 	diff   = tmpval - frac;
 
 	/* Round to the closest fraction. */
 	if (diff > 0.5) {
 		++frac;
-		if (frac > pow10[max_prec]) {
+		if (frac > pow10[use_nfrac]) {
 			frac = 0;
 			++whole;
 		}
@@ -117,7 +117,7 @@ DeeFloat_Print(LOCAL_float_t value, dformatprinter printer, void *arg,
 	}
 
 	/* Special case: no fraction wanted. - Round the whole-part. */
-	if (max_prec == 0) {
+	if (use_nfrac == 0) {
 		diff = value - (LOCAL_float_t)whole;
 		if (diff > 0.5) {
 			++whole;
@@ -137,28 +137,19 @@ DeeFloat_Print(LOCAL_float_t value, dformatprinter printer, void *arg,
 
 	/* Trim unused fraction digits. (should precision or
 	 * width require them, they'll be re-added later) */
-	while (frac && (frac % 10) == 0)
+	while (use_nfrac > min_nfrac && (frac % 10) == 0) {
 		frac /= 10;
+		--use_nfrac;
+	}
 	total_len = COMPILER_LENOF(buf) - len;
 	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
 	    /*    */ (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) {
 		/* Pad with with leading zeroes. */
 		if (is_negative || (flags & (DEEFLOAT_PRINT_FSIGN | DEEFLOAT_PRINT_FSPACE)))
 			++total_len;
-		if (max_prec != 0) {
-			unsigned int temp_min;
-			temp_min = min_prec;
-			whole    = frac;
+		if (use_nfrac) {
 			++total_len; /* . */
-			for (;;) {
-				if (temp_min)
-					--temp_min;
-				++total_len;
-				whole /= 10;
-				if (!whole)
-					break;
-			}
-			total_len += temp_min;
+			total_len += use_nfrac; /* fraction */
 		}
 		if (width <= total_len)
 			goto do_float_normal_width;
@@ -199,36 +190,27 @@ do_float_normal_width:
 	result += temp;
 
 	/* Fractional part. */
-	if (max_prec != 0) {
+	if (use_nfrac != 0) {
+		unsigned int count;
 		len = COMPILER_LENOF(buf);
-		for (;;) {
-			if (min_prec)
-				--min_prec;
+		count = use_nfrac;
+		do {
 			buf[--len] = (char)(48 + (frac % 10));
 			frac /= 10;
-			if (!frac)
-				break;
-		}
+		} while (--count);
 		buf[--len] = '.';
-		temp       = (*printer)(arg, buf + len, COMPILER_LENOF(buf) - len);
+		temp = (*printer)(arg, buf + len, COMPILER_LENOF(buf) - len);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
 		total_len += COMPILER_LENOF(buf) - len;
-		if (min_prec) {
-			temp = DeeFormat_Repeat(printer, arg, '0', min_prec);
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-			total_len += min_prec;
-		}
 	}
 	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
 	    /*    */ (DEEFLOAT_PRINT_FWIDTH) &&
 	    (width > total_len)) {
 
 		/* Insert a missing decimal separator. */
-		if (flags & DEEFLOAT_PRINT_FPADZERO && max_prec == 0) {
+		if ((flags & DEEFLOAT_PRINT_FPADZERO) && use_nfrac == 0) {
 			buf[0] = '.';
 			temp   = (*printer)(arg, buf, 1);
 			if unlikely(temp < 0)
