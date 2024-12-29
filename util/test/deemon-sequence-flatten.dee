@@ -29,3 +29,5 @@ assert 0 == x.flatten[0];
 assert 1 == x.flatten[1];
 assert 2 == x.flatten[2];
 assert 5 == x.flatten[3];
+
+assert { 10, 20, 30 }.map(e -> (e, e + 1)).flatten == { 10, 11, 20, 21, 30, 31 };

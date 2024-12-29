@@ -1011,6 +1011,7 @@ sfi_next(SeqFlatIterator *__restrict self) {
 	for (;;) {
 		DREF DeeObject *result;
 		DREF DeeObject *curriter;
+		DREF DeeObject *new_currseq;
 		DREF DeeObject *new_curriter;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;
@@ -1022,9 +1023,13 @@ sfi_next(SeqFlatIterator *__restrict self) {
 			return result; /* Error or success */
 
 		/* Current iterator has been exhausted -> load the next one */
-		new_curriter = DeeObject_IterNext(self->sfi_baseiter);
-		if (!ITER_ISOK(new_curriter))
-			return new_curriter; /* Error or ITER_DONE */
+		new_currseq = DeeObject_IterNext(self->sfi_baseiter);
+		if (!ITER_ISOK(new_currseq))
+			return new_currseq; /* Error or ITER_DONE */
+		new_curriter = DeeObject_Iter(new_currseq);
+		Dee_Decref(new_currseq);
+		if unlikely(!new_curriter)
+			goto err;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;     /* Inherit reference */
 		self->sfi_curriter = new_curriter; /* Inherit reference */
