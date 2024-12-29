@@ -1021,8 +1021,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 
 #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VNewPack, 12),
-                    ASSEMBLY_NAME(DeeObject_New, 12));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VNewPack, 12),
+                    DCALL_ASSEMBLY_NAME(DeeObject_New, 12));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_VNewPack(DeeTypeObject *object_type,
@@ -2080,8 +2080,8 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallTupleKw,
 #ifndef DEFINE_TYPED_OPERATORS
 #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallPack, 12),
-                    ASSEMBLY_NAME(DeeObject_Call, 12));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VCallPack, 12),
+                    DCALL_ASSEMBLY_NAME(DeeObject_Call, 12));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {

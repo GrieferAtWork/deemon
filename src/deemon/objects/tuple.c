@@ -739,14 +739,14 @@ done:
 
 #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VPack, 8),
-                    ASSEMBLY_NAME(DeeTuple_NewVector, 8));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VPackSymbolic, 8),
-                    ASSEMBLY_NAME(DeeTuple_NewVectorSymbolic, 8));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VTryPack, 8),
-                    ASSEMBLY_NAME(DeeTuple_TryNewVector, 8));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeTuple_VTryPackSymbolic, 8),
-                    ASSEMBLY_NAME(DeeTuple_TryNewVectorSymbolic, 8));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VPack, 8),
+                    DCALL_ASSEMBLY_NAME(DeeTuple_NewVector, 8));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VPackSymbolic, 8),
+                    DCALL_ASSEMBLY_NAME(DeeTuple_NewVectorSymbolic, 8));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VTryPack, 8),
+                    DCALL_ASSEMBLY_NAME(DeeTuple_TryNewVector, 8));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VTryPackSymbolic, 8),
+                    DCALL_ASSEMBLY_NAME(DeeTuple_TryNewVectorSymbolic, 8));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VPack(size_t n, va_list args) {

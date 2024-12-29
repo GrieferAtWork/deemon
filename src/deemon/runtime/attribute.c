@@ -396,8 +396,8 @@ PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *
 
 #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallAttrPack, 16),
-                    ASSEMBLY_NAME(DeeObject_CallAttr, 16));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VCallAttrPack, 16),
+                    DCALL_ASSEMBLY_NAME(DeeObject_CallAttr, 16));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_VCallAttrPack(DeeObject *self,
@@ -450,10 +450,10 @@ DeeObject_CallAttrf(DeeObject *self,
 
 #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallAttrStringPack, 16),
-                    ASSEMBLY_NAME(DeeObject_CallAttrString, 16));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallAttrStringHashPack, 20),
-                    ASSEMBLY_NAME(DeeObject_CallAttrStringHash, 20));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VCallAttrStringPack, 16),
+                    DCALL_ASSEMBLY_NAME(DeeObject_CallAttrString, 16));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_VCallAttrStringHashPack, 20),
+                    DCALL_ASSEMBLY_NAME(DeeObject_CallAttrStringHash, 20));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_VCallAttrStringPack)(DeeObject *self,

@@ -1149,8 +1149,8 @@ DeeFatal_BadDecref(DeeObject *UNUSED(ob),
 	abort();
 }
 #else /* __NO_DEFINE_ALIAS */
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref, 12),
-                    ASSEMBLY_NAME(DeeFatal_BadIncref, 12));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeFatal_BadDecref, 12),
+                    DCALL_ASSEMBLY_NAME(DeeFatal_BadIncref, 12));
 #endif /* !__NO_DEFINE_ALIAS */
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 

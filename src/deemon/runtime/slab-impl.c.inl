@@ -647,10 +647,10 @@ PUBLIC ATTR_MALLOC WUNUSED void *(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *
 }
 
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeSlab_Free), 4),
-                    ASSEMBLY_NAME(Dee_Free, 4));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free), 12),
-                    ASSEMBLY_NAME(DeeDbg_Free, 12));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(FUNC(DeeSlab_Free), 4),
+                    DCALL_ASSEMBLY_NAME(Dee_Free, 4));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free), 12),
+                    DCALL_ASSEMBLY_NAME(DeeDbg_Free, 12));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *ptr) {
 	(Dee_Free)(ptr);
@@ -666,10 +666,10 @@ PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *ptr, char const *file, int line)
 #if SIZE == Dee_SLAB_MINSIZE
 #ifndef MY_SLAB_IS_DISABLED
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free, 4),
-                    ASSEMBLY_NAME(FUNC(DeeSlab_Free), 4));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free, 12),
-                    ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free), 12));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_Free, 4),
+                    DCALL_ASSEMBLY_NAME(FUNC(DeeSlab_Free), 4));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeDbgObject_Free, 12),
+                    DCALL_ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free), 12));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
 	(FUNC(DeeSlab_Free))(ptr);
@@ -689,10 +689,10 @@ PUBLIC void *(DCALL DeeDbgObject_UntrackAlloc)(void *ptr, char const *file, int 
 }
 #else /* !MY_SLAB_IS_DISABLED */
 #ifndef __NO_DEFINE_ALIAS
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_Free, 4),
-                    ASSEMBLY_NAME(Dee_Free, 4));
-DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeDbgObject_Free, 12),
-                    ASSEMBLY_NAME(DeeDbg_Free, 12));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeObject_Free, 4),
+                    DCALL_ASSEMBLY_NAME(Dee_Free, 4));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeDbgObject_Free, 12),
+                    DCALL_ASSEMBLY_NAME(DeeDbg_Free, 12));
 #else /* !__NO_DEFINE_ALIAS */
 PUBLIC void (DCALL DeeObject_Free)(void *ptr) {
 	(Dee_Free)(ptr);

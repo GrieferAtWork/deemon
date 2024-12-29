@@ -425,18 +425,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* CONFIG_HOST_WINDOWS */
 
 
-#ifdef CONFIG_BUILDING_DEEMON
-#if ((defined(__i386__) && !defined(__x86_64__)) && defined(__PE__))
-#if 0
-#define ASSEMBLY_NAME(x, s) PP_CAT4(__USER_LABEL_PREFIX__, x, @, s)
-#else
-#define ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x@s)
-#endif
-#else
-#define ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x)
-#endif
-#endif /* CONFIG_BUILDING_DEEMON */
-
 #if defined(__i386__) && !defined(__x86_64__)
 /* The `va_list' structure is simply a pointer into the argument list,
  * where arguments can be indexed by alignment of at least sizeof(void *).
@@ -455,8 +443,8 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
  * >>
  * >> #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
  * >> #ifndef __NO_DEFINE_ALIAS
- * >> DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(function_b, 8),
- * >>                     ASSEMBLY_NAME(function_a, 8));
+ * >> DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(function_b, 8),
+ * >>                     DCALL_ASSEMBLY_NAME(function_a, 8));
  * >> #else // !__NO_DEFINE_ALIAS
  * >> PUBLIC void DCALL function_b(size_t argc, va_list args) {
  * >>      function_a(argc, (void **)args);
@@ -557,6 +545,21 @@ DECL_END
 #undef DCALL_RETURN_COMMON
 #endif /* !... */
 #endif /* !DCALL */
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Expand to the assembly symbol name of a INTERN/PUBLIC function declared via "DCALL". */
+#if (defined(__i386__) && !defined(__x86_64__)) && defined(__PE__)
+#if 0
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT4(__USER_LABEL_PREFIX__, x, @, s)
+#else
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x@s)
+#endif
+#else /* ... */
+#define DCALL_ASSEMBLY_NAME(x, s) PP_CAT2(__USER_LABEL_PREFIX__, x)
+#endif /* !... */
+#endif /* CONFIG_BUILDING_DEEMON */
+
 
 /* Calling convention for short leaf functions with up to 2 arguments (e.g. `Dee_HashCombine'). */
 #ifndef DFCALL

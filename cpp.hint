@@ -989,17 +989,17 @@
 #define DPRINTER_CC
 #define DFUNDEF
 #define DDATDEF extern
-#define ASSEMBLY_NAME(x,s)  x
-#define Dee_DOC(x)          x
+#define DCALL_ASSEMBLY_NAME(x,s) x
+#define Dee_DOC(x) x
 #define Dee_DOC_DEF(n,x) char const n[]=x
-#define Dee_DOC_REF(n)   extern char const n[]
-#define Dee_DOC_GET(n)   n
-#define DOC(x)              x
-#define DOC_DEF(n,x)     char const n[]=x
-#define DOC_REF(n)       extern char const n[]
-#define DOC_GET(n)       n
-#define DEE_CXX_BEGIN    namespace deemon{
-#define DEE_CXX_END      }
+#define Dee_DOC_REF(n) extern char const n[]
+#define Dee_DOC_GET(n) n
+#define DOC(x) x
+#define DOC_DEF(n,x) char const n[]=x
+#define DOC_REF(n) extern char const n[]
+#define DOC_GET(n) n
+#define DEE_CXX_BEGIN namespace deemon{
+#define DEE_CXX_END }
 #define DEE_CXX_NOTHROW
 
 #define TPPCALL

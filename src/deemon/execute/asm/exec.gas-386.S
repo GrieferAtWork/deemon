@@ -100,7 +100,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define SYM3(x, y) x##y
 #define SYM2(x, y) SYM3(x, y)
 #define SYM(x)     SYM2(__USER_LABEL_PREFIX__, x)
-#define fSYM(x, s) ASSEMBLY_NAME(x, s)
+#define fSYM(x, s) DCALL_ASSEMBLY_NAME(x, s)
 
 #ifdef CONFIG_NO_THREADS
 #define LOCK_PREFIX  /* nothing */
