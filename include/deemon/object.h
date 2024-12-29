@@ -2066,6 +2066,116 @@ my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 }
 #endif
 
+/* Possible values returned by C-API isbound checking functions. */
+#define Dee_BOUND_ERR      (-1)
+#define Dee_BOUND_MISSING  (-2) /* TODO: Change this to "0" (for binary compat with "hasattr") */
+#define Dee_BOUND_YES      1    /* TODO: Change this to "1" (for binary compat with "hasattr") */
+#define Dee_BOUND_NO       0    /* TODO: Change this to "2" (for binary compat with "hasattr") */
+
+/* #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES) */
+#define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES)
+
+/* #define Dee_BOUND_ISUNBOUND(x) ((x) == Dee_BOUND_NO) */
+#define Dee_BOUND_ISUNBOUND(x) ((x) == Dee_BOUND_NO)
+
+/* #define Dee_BOUND_ISMISSING(x) ((x) == Dee_BOUND_MISSING) */
+#define Dee_BOUND_ISMISSING(x) ((x) == Dee_BOUND_MISSING)
+
+/* #define Dee_BOUND_ISERR(x) ((x) == Dee_BOUND_ERR) */
+#if Dee_BOUND_ERR < 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_MISSING >= 0
+#define Dee_BOUND_ISERR(x) ((x) < 0)
+#else /* Dee_BOUND_ERR < 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_MISSING >= 0 */
+#define Dee_BOUND_ISERR(x) ((x) == Dee_BOUND_ERR)
+#endif /* Dee_BOUND_ERR >= 0 || Dee_BOUND_NO < 0 || Dee_BOUND_YES < 0 || Dee_BOUND_MISSING < 0 */
+
+/* #define Dee_BOUND_ISPRESENT(x) ((x) == Dee_BOUND_YES || (x) == Dee_BOUND_NO) */
+#if Dee_BOUND_YES > 0 && Dee_BOUND_NO > 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_ERR <= 0
+#define Dee_BOUND_ISPRESENT(x) ((x) > 0)
+#elif Dee_BOUND_YES >= 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_MISSING < 0 && Dee_BOUND_ERR < 0
+#define Dee_BOUND_ISPRESENT(x) ((x) >= 0)
+#elif Dee_BOUND_YES <= 0 && Dee_BOUND_NO <= 0 && Dee_BOUND_MISSING > 0 && Dee_BOUND_ERR > 0
+#define Dee_BOUND_ISPRESENT(x) ((x) <= 0)
+#elif Dee_BOUND_YES < 0 && Dee_BOUND_NO < 0 && Dee_BOUND_MISSING >= 0 && Dee_BOUND_ERR >= 0
+#define Dee_BOUND_ISPRESENT(x) ((x) < 0)
+#else /* ... */
+#define Dee_BOUND_ISPRESENT(x) ((x) == Dee_BOUND_YES || (x) == Dee_BOUND_NO)
+#endif /* !... */
+
+/* #define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) == Dee_BOUND_MISSING || (x) == Dee_BOUND_NO) */
+#if Dee_BOUND_MISSING > 0 && Dee_BOUND_NO > 0 && Dee_BOUND_YES <= 0 && Dee_BOUND_ERR <= 0
+#define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) > 0)
+#elif Dee_BOUND_MISSING >= 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_YES < 0 && Dee_BOUND_ERR < 0
+#define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) >= 0)
+#elif Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0 && Dee_BOUND_YES > 0 && Dee_BOUND_ERR > 0
+#define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) <= 0)
+#elif Dee_BOUND_MISSING < 0 && Dee_BOUND_NO < 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_ERR >= 0
+#define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) < 0)
+#else /* ... */
+#define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) == Dee_BOUND_MISSING || (x) == Dee_BOUND_NO)
+#endif /* !... */
+
+/* #define Dee_BOUND_FROMBOOL(is_bound) ((is_bound) ? Dee_BOUND_YES : Dee_BOUND_NO) */
+#if Dee_BOUND_NO == 0 && Dee_BOUND_YES == 1
+#define Dee_BOUND_FROMBOOL(is_bound) ((int)!!(is_bound))
+#elif Dee_BOUND_NO == 2 && Dee_BOUND_YES == 1
+#define Dee_BOUND_FROMBOOL(is_bound) (2 - (int)!!(is_bound))
+#else /* Dee_BOUND_NO == ... && Dee_BOUND_YES == ... */
+#define Dee_BOUND_FROMBOOL(is_bound) ((is_bound) ? Dee_BOUND_YES : Dee_BOUND_NO)
+#endif /* Dee_BOUND_NO != ... || Dee_BOUND_YES != ... */
+
+/* #define Dee_BOUND_FROMPRESENT_BOUND(is_present) ((is_present) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+ * Considers is_present == true as bound */
+#if Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1
+#define Dee_BOUND_FROMPRESENT_BOUND(is_present) ((int)!!(is_present))
+#else /* Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 */
+#define Dee_BOUND_FROMPRESENT_BOUND(is_present) ((is_present) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#endif /* Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 */
+
+/* #define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((is_present) ? Dee_BOUND_NO : Dee_BOUND_MISSING)
+ * Considers is_present == true as unbound */
+#if Dee_BOUND_MISSING == 0 && Dee_BOUND_NO == 1
+#define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((int)!!(is_present))
+#elif Dee_BOUND_MISSING == 0 && Dee_BOUND_NO == 2
+#define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((int)!!(is_present) << 1)
+#else /* Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 */
+#define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((is_present) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#endif /* Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 */
+
+/* When defined, "hasattr" function pointer may be implemented as an alias of "boundattr" */
+#undef Dee_BOUND_MAYALIAS_HAS
+#if Dee_BOUND_ERR < 0 && Dee_BOUND_MISSING == 0 && Dee_BOUND_YES > 0 && Dee_BOUND_NO > 0
+#define Dee_BOUND_MAYALIAS_HAS
+#endif /* ... */
+
+/* When defined, boolean-style is-bound function pointer may be implemented as an
+ * alias of "boundattr", so-long as "boundattr" can never return "Dee_BOUND_MISSING" */
+#undef Dee_BOUND_PRESENT_MAYALIAS_BOOL
+#if Dee_BOUND_ERR < 0 && Dee_BOUND_NO == 0 && Dee_BOUND_YES > 0
+#define Dee_BOUND_PRESENT_MAYALIAS_BOOL
+#endif /* ... */
+
+/* Convert a Dee_BOUND_* value into the equivalent return value of hasattr/hasitem */
+#ifdef Dee_BOUND_MAYALIAS_HAS
+#define Dee_BOUND_ASHAS(bound_status) (bound_status)
+#else /* ... */
+#define Dee_BOUND_ASHAS(bound_status) \
+	(Dee_BOUND_ISERR(bound_status) ? -1 : !Dee_BOUND_ISMISSING(bound_status))
+#endif /* !... */
+#if Dee_BOUND_MISSING == 0 && Dee_BOUND_YES > 0 && Dee_BOUND_NO > 0
+#define Dee_BOUND_ASHAS_NOEXCEPT(bound_status) (bound_status)
+#else /* ... */
+#define Dee_BOUND_ASHAS_NOEXCEPT(bound_status) (!Dee_BOUND_ISMISSING(bound_status))
+#endif /* !... */
+
+/* Considers has_value == true as bound */
+#define Dee_BOUND_FROMHAS_BOUND(has_value) \
+	(unlikely(has_value) < 0 ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_BOUND(has_value))
+
+/* Considers has_value == true as unbound */
+#define Dee_BOUND_FROMHAS_UNBOUND(has_value) \
+	(unlikely(has_value) < 0 ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_UNBOUND(has_value))
+
+
 struct Dee_type_seq_cache;
 struct Dee_type_seq {
 	/* Sequence operators. */
@@ -2106,16 +2216,16 @@ struct Dee_type_seq {
 
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
-	 * @return: 1 : Item is bound.
-	 * @return: 0 : Item isn't bound. (in `tp_getitem': `UnboundItem')
-	 * @return: -1: An error occurred.
-	 * @return: -2: Item doesn't exist (in `tp_getitem': `KeyError' or `IndexError'). */
+	 * @return: Dee_BOUND_YES:     Item is bound.
+	 * @return: Dee_BOUND_NO:      Item isn't bound. (in `tp_getitem': `UnboundItem')
+	 * @return: Dee_BOUND_ERR:     An error occurred.
+	 * @return: Dee_BOUND_MISSING: Item doesn't exist (in `tp_getitem': `KeyError' or `IndexError'). */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem)(DeeObject *self, DeeObject *index);
 
 	/* Check if a given item exists (`deemon.hasitem(self, index)') (inherited alongside `tp_getitem')
-	 * @return: 1:  Does exists.   (in `tp_getitem': `UnboundItem' or <no error>)
-	 * @return: 0:  Doesn't exist. (in `tp_getitem': `KeyError' or `IndexError')
-	 * @return: -1: Error. */
+	 * @return: >  0: Does exists.   (in `tp_getitem': `UnboundItem' or <no error>)
+	 * @return: == 0: Doesn't exist. (in `tp_getitem': `KeyError' or `IndexError')
+	 * @return: <  0: Error. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem)(DeeObject *self, DeeObject *index);
 
 	/* Aliases for `tp_sizeob' */
@@ -2837,20 +2947,16 @@ struct Dee_type_attr {
 	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *tp_findattr)(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attribute_info *__restrict result, struct Dee_attribute_lookup_rules const *__restrict rules);
 
 	/* [0..1] Like `tp_getattr', but handles attribute errors:
-	 * @return: 1 : Attribute exists.
-	 * @return: 0 : Attribute doesn't exist.
-	 * @return: -1: An error occurred. .*/
+	 * @return: >  0: Attribute exists.
+	 * @return: == 0: Attribute doesn't exist.
+	 * @return: <  0: An error occurred. .*/
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasattr)(DeeObject *self, /*String*/ DeeObject *attr);
 
 	/* [0..1] Like `tp_getattr', but handles attribute errors:
-	 * @return: 1 : Attribute is bound.
-	 * @return: 0 : Attribute isn't bound.
-	 * @return: -1: An error occurred.
-	 * @return: -2: The attribute doesn't exist.
-	 * @return: -3: A user-defined getattr operator threw an error indicating
-	 *              that the attribute doesn't exists. - Should be handled the
-	 *              same way as `-2', however search for the attribute should
-	 *              not continue.*/
+	 * @return: Dee_BOUND_YES:     Attribute is bound.
+	 * @return: Dee_BOUND_NO:      Attribute isn't bound.
+	 * @return: Dee_BOUND_ERR:     An error occurred.
+	 * @return: Dee_BOUND_MISSING: The attribute doesn't exist. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_boundattr)(DeeObject *self, /*String*/ DeeObject *attr);
 
 	/* [0..1] Like `tp_getattr' + `DeeObject_Call()', but no need to create the intermediate object. */
@@ -2970,9 +3076,9 @@ typedef WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_kw
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_getmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_delmethod_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self, DeeObject *value);
-/* @return: 1 : Attribute is bound
- * @return: 0 : Attribute isn't bound (reading it would throw `DeeError_UnboundAttribute')
- * @return: -1: Some other error occurred. */
+/* @return: Dee_BOUND_YES: Attribute is bound
+ * @return: Dee_BOUND_NO:  Attribute isn't bound (reading it would throw `DeeError_UnboundAttribute')
+ * @return: Dee_BOUND_ERR: Some other error occurred. */
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_boundmethod_t)(DeeObject *__restrict self);
 
 #ifdef DEE_SOURCE
@@ -4401,8 +4507,8 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL DeeObject_TGenericSetAttrStringH
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 6)) int DCALL DeeObject_TGenericSetAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrStringHash(DeeTypeObject *tp_self, char const *__restrict attr, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeObject_TGenericHasAttrStringLenHash(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash); /* -2 / -3: not found; -1: error; 0: unbound; 1: bound; */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash); /* Dee_BOUND_MISSING: not found; Dee_BOUND_ERR: error; Dee_BOUND_NO: unbound; Dee_BOUND_YES: bound; */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLenHash(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash); /* Dee_BOUND_MISSING: not found; Dee_BOUND_ERR: error; Dee_BOUND_NO: unbound; Dee_BOUND_YES: bound; */
 
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_TGenericEnumAttr(DeeTypeObject *tp_self, Dee_enum_t proc, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attribute_info *__restrict result, struct Dee_attribute_lookup_rules const *__restrict rules);
@@ -5059,9 +5165,9 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *
 #define DeeObject_SetItemStringLen(self, key, keylen, value)  DeeObject_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
 
 /* Check if a given item exists (`deemon.hasitem(self, index)')
- * @return: 0:  Doesn't exist;
- * @return: 1:  Does exists;
- * @return: -1: Error. */
+ * @return: == 0:  Doesn't exist;
+ * @return: > 0: Does exists;
+ * @return: < 0: Error. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
@@ -5070,10 +5176,10 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringLenHash)(DeeOb
 #define DeeObject_HasItemStringLen(self, key, keylen) DeeObject_HasItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 
 /* Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
- * @return: 1 : Item is bound.
- * @return: 0 : Item isn't bound. (`UnboundItem' was caught internally)
- * @return: -1: An error occurred.
- * @return: -2: Item doesn't exist (`KeyError' or `IndexError' were caught). */
+ * @return: Dee_BOUND_YES:     Item is bound.
+ * @return: Dee_BOUND_NO:      Item isn't bound. (`UnboundItem' was caught internally)
+ * @return: Dee_BOUND_MISSING: Item doesn't exist (`KeyError' or `IndexError' were caught).
+ * @return: Dee_BOUND_ERR:     An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItem)(DeeObject *self, DeeObject *index);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
@@ -5220,21 +5326,6 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetAttrStringHa
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #define DeeObject_GetAttrStringLen(self, attr, attrlen) DeeObject_GetAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
-/* >> DeeObject_HasAttr() -- deemon.hasattr(<self>, <attr>);
- * Check if `self' has an attribute `attr'. Same as the builtin `deemon.hasattr()'
- * function. Note that an attribute that is currently unbound, differs from one
- * that does not exist at all. This function will return `1' (true) for the former,
- * but `0' (false) for the later. During normal attribute access, this difference
- * is reflected by the type of exception: `UnboundAttribute' and `AttributeError'.
- * @return: 0 : Attribute doesn't exist
- * @return: 1 : Attribute exists
- * @return: -1: An error was thrown. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttr)(DeeObject *self, /*String*/ DeeObject *attr);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
-#define DeeObject_HasAttrStringLen(self, attr, attrlen) DeeObject_HasAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
-
 /* >> DeeObject_DelAttr() -- del <self>.<attr>;
  * Delete an attribute, either removing it from existence, marking it as
  * unbound, or doing something else entirely (such as assigning it some
@@ -5319,16 +5410,26 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_CallAttrTupl
  *                that was attempted for the purpose of attribute enumeration) */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_EnumAttr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg);
 
+/* >> DeeObject_HasAttr() -- deemon.hasattr(<self>, <attr>);
+ * Check if `self' has an attribute `attr'. Same as the builtin `deemon.hasattr()'
+ * function. Note that an attribute that is currently unbound, differs from one
+ * that does not exist at all. This function will return `1' (true) for the former,
+ * but `0' (false) for the later. During normal attribute access, this difference
+ * is reflected by the type of exception: `UnboundAttribute' and `AttributeError'.
+ * @return: >  0: Attribute exists
+ * @return: == 0: Attribute doesn't exist
+ * @return: <  0: An error was thrown. */
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttr)(DeeObject *self, /*String*/ DeeObject *attr);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self, char const *__restrict attr);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasAttrStringLenHash)(DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+#define DeeObject_HasAttrStringLen(self, attr, attrlen) DeeObject_HasAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
 /* >> DeeObject_BoundAttr() -- <self>.<attr> is bound;
- * @return: 1 : Attribute is bound.
- * @return: 0 : Attribute isn't bound.
- * @return: -1: An error occurred.
- * @return: -2: The attribute doesn't exist.
- * @return: -3: A user-defined getattr operator threw an error indicating
- *              that the attribute doesn't exists. - Should be handled the
- *              same way as `-2', however search for the attribute should
- *              not continue. */
+ * @return: Dee_BOUND_YES:     Attribute is bound.
+ * @return: Dee_BOUND_NO:      Attribute isn't bound.
+ * @return: Dee_BOUND_MISSING: The attribute doesn't exist.
+ * @return: Dee_BOUND_ERR:     An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttr)(DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrString)(DeeObject *__restrict self, char const *__restrict attr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrStringHash)(DeeObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);

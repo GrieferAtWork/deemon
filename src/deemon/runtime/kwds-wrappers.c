@@ -1603,7 +1603,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blkw_bounditem(DeeBlackListKwObject *self, DeeObject *key) {
 	if likely(DeeString_Check(key) && !DeeBlackListKw_IsBlackListed(self, key))
 		return DeeObject_BoundItem(DeeBlackListKw_KW(self), key);
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1611,7 +1611,7 @@ blkw_bounditem_string_hash(DeeBlackListKwObject *__restrict self,
                            char const *__restrict name, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringHash(self, name, hash))
 		return DeeObject_BoundItemStringHash(DeeBlackListKw_KW(self), name, hash);
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1620,7 +1620,7 @@ blkw_bounditem_string_len_hash(DeeBlackListKwObject *__restrict self,
                                size_t namelen, Dee_hash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
 		return DeeObject_BoundItemStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash);
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

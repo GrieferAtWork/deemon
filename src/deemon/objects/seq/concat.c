@@ -600,9 +600,9 @@ cat_bounditem_index(Cat *self, size_t index) {
 		}
 		return DeeObject_BoundItemIndex(DeeTuple_GET(self, i), sub_index);
 	}
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

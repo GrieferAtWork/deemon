@@ -456,7 +456,7 @@ function_get_kwds(Function *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_kwds(Function *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
-	return (code->co_keywords || code->co_argc_max == 0) ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(code->co_keywords || code->co_argc_max == 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -481,9 +481,9 @@ function_bound_name(Function *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_name);
-	return info.fi_name ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(info.fi_name);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -522,9 +522,9 @@ function_bound_type(Function *__restrict self) {
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
-	return info.fi_type ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(info.fi_type);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -538,7 +538,7 @@ function_get_module(Function *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_module(Function *__restrict self) {
-	return self->fo_code->co_module ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(self->fo_code->co_module);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -564,9 +564,9 @@ function_bound_operator(Function *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	return info.fi_opname != (Dee_operator_t)-1 ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(info.fi_opname != (Dee_operator_t)-1);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -614,9 +614,9 @@ function_bound_property(Function *__restrict self) {
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
-	return info.fi_getset != (uint16_t)-1 ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(info.fi_getset != (uint16_t)-1);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL code_getdefaults(DeeCodeObject *__restrict self);
@@ -2235,9 +2235,9 @@ yfi_bound_yfunc(YFIterator *__restrict self) {
 		goto err;
 	result = self->yi_func;
 	DeeYieldFunctionIterator_LockEndRead(self);
-	return result ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2266,9 +2266,9 @@ yfi_bound_this(YFIterator *__restrict self) {
 	if (!(self->yi_frame.cf_flags & CODE_FTHISCALL))
 		thisarg = NULL;
 	DeeYieldFunctionIterator_LockEndRead(self);
-	return thisarg ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(thisarg);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFrameObject *DCALL
@@ -2552,7 +2552,7 @@ yfi_bound_kwds(YFIterator *__restrict self) {
 	DeeYieldFunctionIterator_LockEndRead(self);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2620,12 +2620,12 @@ yfi_bound_name(YFIterator *__restrict self) {
 	Dee_XIncref(func);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!func)
-		return 0;
+		return Dee_BOUND_NO;
 	result = yf_bound_name(func);
 	Dee_Decref(func);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2667,12 +2667,12 @@ yfi_bound_type(YFIterator *__restrict self) {
 	Dee_XIncref(func);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!func)
-		return 0;
+		return Dee_BOUND_NO;
 	result = yf_bound_type(func);
 	Dee_Decref(func);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2696,9 +2696,9 @@ yfi_bound_module(YFIterator *__restrict self) {
 		goto err;
 	bound = self->yi_func && self->yi_func->yf_func->fo_code->co_module;
 	DeeYieldFunctionIterator_LockEndRead(self);
-	return bound ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(bound);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2725,12 +2725,12 @@ yfi_bound_operator(YFIterator *__restrict self) {
 	Dee_XIncref(func);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!func)
-		return 0;
+		return Dee_BOUND_NO;
 	result = yf_bound_operator(func);
 	Dee_Decref(func);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2772,12 +2772,12 @@ yfi_bound_property(YFIterator *__restrict self) {
 	Dee_XIncref(func);
 	DeeYieldFunctionIterator_LockEndRead(self);
 	if unlikely(!func)
-		return 0;
+		return Dee_BOUND_NO;
 	result = yf_bound_property(func);
 	Dee_Decref(func);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

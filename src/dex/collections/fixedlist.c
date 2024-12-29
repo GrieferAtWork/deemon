@@ -417,16 +417,16 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 fl_bounditem_index(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_size)
-		return -2;
+		return Dee_BOUND_MISSING;
 	FixedList_LockRead(self);
 	result = self->fl_elem[index];
 	if unlikely(!result) {
 		FixedList_LockEndRead(self);
-		return 0;
+		return Dee_BOUND_NO;
 	}
 	Dee_Incref(result);
 	FixedList_LockEndRead(self);
-	return 1;
+	return Dee_BOUND_YES;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

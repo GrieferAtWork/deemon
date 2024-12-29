@@ -57,6 +57,10 @@ PUBLIC int (DCALL _DeeNone_reti1)(void) {
 	return 1;
 }
 
+PUBLIC int (DCALL _DeeNone_reti2)(void) {
+	return 2;
+}
+
 #if !defined(DCALL_RETURN_COMMON) && __SIZEOF_SIZE_T__ != __SIZEOF_INT__
 PUBLIC int (DCALL _DeeNone_reti0)(void) {
 	return 0;
@@ -124,10 +128,6 @@ PUBLIC int (DCALL _DeeNone_reti1_3)(void *UNUSED(a), void *UNUSED(b), void *UNUS
 }
 
 PUBLIC int (DCALL _DeeNone_reti1_4)(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
-	return 1;
-}
-
-PUBLIC int (DCALL _DeeNone_reti1_5)(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e)) {
 	return 1;
 }
 

@@ -1329,50 +1329,18 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_bounditem_string_hash(DeeObject *__restrict self,
                            char const *__restrict key,
                            Dee_hash_t hash) {
-	Dict *me = (Dict *)self;
-	Dee_hash_t i, perturb;
-	DeeDict_LockRead(me);
-	perturb = i = DeeDict_HashSt(me, hash);
-	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(me, i);
-		if (!item->di_key)
-			break; /* Not found */
-		if (item->di_hash != hash)
-			continue; /* Non-matching hash */
-		if (!DeeString_Check(item->di_key))
-			continue; /* NOTE: This also captures `dummy' */
-		if (strcmp(DeeString_STR(item->di_key), key) == 0) {
-			DeeDict_LockEndRead(me);
-			return 1;
-		}
-	}
-	DeeDict_LockEndRead(me);
-	return -2;
+	int has = dict_hasitem_string_hash(self, key, hash);
+	ASSERT(has >= 0);
+	return Dee_BOUND_FROMPRESENT_BOUND(has);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_bounditem_string_len_hash(DeeObject *__restrict self,
                                char const *__restrict key,
                                size_t keylen, Dee_hash_t hash) {
-	Dict *me = (Dict *)self;
-	Dee_hash_t i, perturb;
-	DeeDict_LockRead(me);
-	perturb = i = DeeDict_HashSt(me, hash);
-	for (;; DeeDict_HashNx(i, perturb)) {
-		struct dict_item *item = DeeDict_HashIt(me, i);
-		if (!item->di_key)
-			break; /* Not found */
-		if (item->di_hash != hash)
-			continue; /* Non-matching hash */
-		if (!DeeString_Check(item->di_key))
-			continue; /* NOTE: This also captures `dummy' */
-		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
-			DeeDict_LockEndRead(me);
-			return 1;
-		}
-	}
-	DeeDict_LockEndRead(me);
-	return -2;
+	int has = dict_hasitem_string_len_hash(self, key, keylen, hash);
+	ASSERT(has >= 0);
+	return Dee_BOUND_FROMPRESENT_BOUND(has);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1925,98 +1893,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_bounditem(Dict *self, DeeObject *key) {
-	size_t mask;
-	struct dict_item *vector;
-	Dee_hash_t i, perturb;
-	int error;
-	Dee_hash_t hash = DeeObject_Hash(key);
-	DeeDict_LockRead(self);
-restart:
-	vector  = self->d_elem;
-	mask    = self->d_mask;
-	perturb = i = hash & mask;
-	for (;; DeeDict_HashNx(i, perturb)) {
-		DREF DeeObject *item_key;
-		struct dict_item *item = &vector[i & mask];
-		if (!item->di_key)
-			break; /* Not found */
-		if (item->di_hash != hash)
-			continue; /* Non-matching hash */
-		if (item->di_key == dummy)
-			continue; /* Dummy key. */
-		item_key   = item->di_key;
-		Dee_Incref(item_key);
-		DeeDict_LockEndRead(self);
-
-		/* Invoke the compare operator outside of any lock. */
-		error = DeeObject_TryCompareEq(key, item_key);
-		Dee_Decref(item_key);
-		if (error == 0)
-			return 1; /* Found the item. */
-		if unlikely(error == Dee_COMPARE_ERR)
-			goto err; /* Error in compare operator. */
-		DeeDict_LockRead(self);
-
-		/* Check if the Dict was modified. */
-		if (self->d_elem != vector ||
-		    self->d_mask != mask ||
-		    item->di_key != item_key)
-			goto restart;
-	}
-	DeeDict_LockEndRead(self);
-	return -2;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_bounditem_index(Dict *self, size_t key) {
-	size_t mask;
-	struct dict_item *vector;
-	Dee_hash_t i, perturb;
-	int error;
-	Dee_hash_t hash = DeeInt_Size_Hash(key);
-	DeeDict_LockRead(self);
-restart:
-	vector  = self->d_elem;
-	mask    = self->d_mask;
-	perturb = i = hash & mask;
-	for (;; DeeDict_HashNx(i, perturb)) {
-		DREF DeeObject *item_key;
-		struct dict_item *item = &vector[i & mask];
-		if (!item->di_key)
-			break; /* Not found */
-		if (item->di_hash != hash)
-			continue; /* Non-matching hash */
-		if (item->di_key == dummy)
-			continue; /* Dummy key. */
-		item_key   = item->di_key;
-		Dee_Incref(item_key);
-		DeeDict_LockEndRead(self);
-
-		/* Invoke the compare operator outside of any lock. */
-		error = DeeInt_Size_TryCompareEq(key, item_key);
-		Dee_Decref(item_key);
-		if (error == 0)
-			return 1; /* Found the item. */
-		if unlikely(error == Dee_COMPARE_ERR)
-			goto err; /* Error in compare operator. */
-		DeeDict_LockRead(self);
-
-		/* Check if the Dict was modified. */
-		if (self->d_elem != vector ||
-		    self->d_mask != mask ||
-		    item->di_key != item_key)
-			goto restart;
-	}
-	DeeDict_LockEndRead(self);
-	return -2;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_hasitem(Dict *self, DeeObject *key) {
 	size_t mask;
 	struct dict_item *vector;
@@ -2106,6 +1982,18 @@ restart:
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_bounditem(Dict *self, DeeObject *key) {
+	int has = dict_hasitem(self, key);
+	return Dee_BOUND_FROMHAS_BOUND(has);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dict_bounditem_index(Dict *self, size_t key) {
+	int has = dict_hasitem_index(self, key);
+	return Dee_BOUND_FROMHAS_BOUND(has);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

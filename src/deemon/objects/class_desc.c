@@ -2537,8 +2537,8 @@ err_index:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ot_bounditem_index(ObjectTable *__restrict self, size_t index) {
 	if unlikely(index >= self->ot_size)
-		return -2;
-	return atomic_read(&self->ot_desc->id_vtab[index]) ? 1 : 0;
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_FROMBOOL(atomic_read(&self->ot_desc->id_vtab[index]));
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
@@ -3667,13 +3667,14 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
                                 struct class_attribute const *__restrict attr) {
-	int result;
+	bool result;
 	struct class_desc *my_class;
 
 	/* Return an instance-wrapper for instance-members. */
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
-		return 1; /* instance-members outside of class memory are
-		           * accessed through wrappers, which are always bound. */
+		/* instance-members outside of class memory are
+		 * accessed through wrappers, which are always bound. */
+		return Dee_BOUND_YES;
 	}
 	my_class = DeeClass_DESC(class_type);
 
@@ -3688,7 +3689,7 @@ DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
 		result = my_class->cd_members[attr->ca_addr] != NULL;
 	}
 	Dee_class_desc_lock_endread(my_class);
-	return result;
+	return Dee_BOUND_FROMBOOL(result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -4167,19 +4168,17 @@ DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
 		Dee_Decref(getter);
 		if likely(result) {
 			Dee_Decref(result);
-			return 1;
+			return Dee_BOUND_YES;
 		}
-		if (CATCH_ATTRIBUTE_ERROR())
-			return -3;
 		if (DeeError_Catch(&DeeError_UnboundAttribute))
-			return 0;
-		return -1;
+			return Dee_BOUND_NO;
+		return Dee_BOUND_ERR;
 	} else {
 		/* Simply return the attribute as-is. */
 		return atomic_read(&self->id_vtab[attr->ca_addr]) != NULL;
 	}
 unbound:
-	return 0;
+	return Dee_BOUND_NO;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
@@ -4991,13 +4990,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		goto err_req_class;
 	if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
 		goto err_bad_index;
-	return DeeInstance_BoundMember(tp_self, self, addr);
+	return Dee_BOUND_FROMBOOL(DeeInstance_BoundMember(tp_self, self, addr));
 err_bad_index:
 	return err_invalid_instance_addr(tp_self, self, addr);
 err_req_class:
 	return err_requires_class(tp_self);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
@@ -5147,13 +5146,13 @@ PUBLIC WUNUSED NONNULL((1)) int
 		goto err_req_class;
 	if (addr >= DeeClass_DESC(self)->cd_desc->cd_cmemb_size)
 		goto err_bad_index;
-	return DeeClass_BoundMember(self, addr);
+	return Dee_BOUND_FROMBOOL(DeeClass_BoundMember(self, addr));
 err_bad_index:
 	return err_invalid_class_addr(self, addr);
 err_req_class:
 	return err_requires_class(self);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 

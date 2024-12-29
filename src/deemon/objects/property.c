@@ -274,7 +274,7 @@ property_callback_boundattr(Property *self, DeeStringObject *name) {
 	} else if (self->p_set) {
 		result = DeeObject_BoundAttr(self->p_set, (DeeObject *)name);
 	} else {
-		return 0;
+		result = Dee_BOUND_NO;
 	}
 	return result;
 }
@@ -310,10 +310,10 @@ property_bound_name(Property *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	if (info.fi_name)
-		return 1;
+		return Dee_BOUND_YES;
 	return property_callback_boundattr(self, &str___name__);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -347,10 +347,10 @@ property_bound_doc(Property *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_doc)
-		return 1;
+		return Dee_BOUND_YES;
 	return property_callback_boundattr(self, &str___doc__);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
@@ -384,20 +384,25 @@ property_bound_type(Property *__restrict self) {
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
 	if (info.fi_type)
-		return 1;
+		return Dee_BOUND_YES;
 	return property_callback_boundattr(self, &str___type__);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_function_module(DeeFunctionObject *__restrict self) {
-	return_reference_((DeeObject *)self->fo_code->co_module);
+	DeeModuleObject *mod = self->fo_code->co_module;
+	if likely(mod)
+		return_reference_((DeeObject *)mod);
+	err_unbound_attribute_string(&DeeFunction_Type, STR___module__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bound_function_module(DeeFunctionObject *__restrict self) {
-	return (DeeObject *)self->fo_code->co_module ? 1 : 0;
+	DeeModuleObject *mod = self->fo_code->co_module;
+	return Dee_BOUND_FROMBOOL(mod);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

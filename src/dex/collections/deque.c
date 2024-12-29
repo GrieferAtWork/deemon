@@ -538,8 +538,7 @@ Deque_llrot(Deque *__restrict self, size_t num_objects) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
-		err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
-		return -1;
+		return err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
 	}
 	Deque_llrot_unlocked(self, num_objects);
 	Deque_LockEndWrite(self);
@@ -553,8 +552,7 @@ Deque_lrrot(Deque *__restrict self, size_t num_objects) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
-		err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
-		return -1;
+		return err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
 	}
 	Deque_lrrot_unlocked(self, num_objects);
 	Deque_LockEndWrite(self);
@@ -568,8 +566,7 @@ Deque_rlrot(Deque *__restrict self, size_t num_objects) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
-		err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
-		return -1;
+		return err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
 	}
 	Deque_rlrot_unlocked(self, num_objects);
 	Deque_LockEndWrite(self);
@@ -583,8 +580,7 @@ Deque_rrrot(Deque *__restrict self, size_t num_objects) {
 		size_t my_size = self->d_size;
 		COMPILER_READ_BARRIER();
 		Deque_LockEndWrite(self);
-		err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
-		return -1;
+		return err_index_out_of_bounds((DeeObject *)self, num_objects, my_size);
 	}
 	Deque_rrrot_unlocked(self, num_objects);
 	Deque_LockEndWrite(self);

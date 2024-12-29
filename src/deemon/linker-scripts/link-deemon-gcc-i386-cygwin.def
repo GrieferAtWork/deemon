@@ -1439,7 +1439,6 @@ EXPORTS
 	__DeeNone_reti1_2@8=_DeeNone_reti1_2@8
 	__DeeNone_reti1_3@12=_DeeNone_reti1_3@12
 	__DeeNone_reti1_4@16=_DeeNone_reti1_4@16
-	__DeeNone_reti1_5@20=_DeeNone_reti1_5@20
 	__DeeNone_rets0_1@4=_DeeNone_rets0_1@4
 	__DeeNone_rets0_2@8=_DeeNone_rets0_2@8
 	__DeeNone_rets0_3@12=_DeeNone_rets0_3@12

@@ -544,10 +544,10 @@ action_set_expr_result:
 		    DeeString_Check(self->a_action.a_act1->a_constexpr)) {
 			int temp = DeeObject_BoundAttr(self->a_action.a_act0->a_constexpr,
 			                               self->a_action.a_act1->a_constexpr);
-			if (temp == -1) {
+			if unlikely(Dee_BOUND_ISERR(temp)) {
 				expr_result = NULL;
 			} else {
-				expr_result = DeeBool_For(temp > 0);
+				expr_result = DeeBool_For(Dee_BOUND_ISBOUND(temp));
 				Dee_Incref(expr_result);
 			}
 			goto action_set_expr_result;
@@ -564,10 +564,10 @@ action_set_expr_result:
 		    DeeString_Check(self->a_action.a_act1->a_constexpr)) {
 			int temp = DeeObject_BoundItem(self->a_action.a_act0->a_constexpr,
 			                               self->a_action.a_act1->a_constexpr);
-			if (temp == -1) {
+			if unlikely(Dee_BOUND_ISERR(temp)) {
 				expr_result = NULL;
 			} else {
-				expr_result = DeeBool_For(temp > 0);
+				expr_result = DeeBool_For(Dee_BOUND_ISBOUND(temp));
 				Dee_Incref(expr_result);
 			}
 			goto action_set_expr_result;

@@ -52,6 +52,12 @@
 /**/
 #include "function-wrappers.h"
 
+#ifdef __OPTIMIZE_SIZE__
+#define NULL_if_Os(x) NULL
+#else /* __OPTIMIZE_SIZE__ */
+#define NULL_if_Os(x) x
+#endif /* !__OPTIMIZE_SIZE__ */
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strcmpz
@@ -328,6 +334,23 @@ funcstatics_getitem_index(FunctionStatics *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
+funcstatics_bounditem_index(FunctionStatics *__restrict self, size_t index) {
+	DeeFunctionObject *func = self->fs_func;
+	DeeCodeObject *code = func->fo_code;
+	DeeObject *result;
+	if (OVERFLOW_UADD(index, code->co_refc, &index) || index >= code->co_refstaticc)
+		return Dee_BOUND_MISSING;
+	DeeFunction_RefLockRead(func);
+	result = func->fo_refv[index];
+	if unlikely(!ITER_ISOK(result)) {
+		DeeFunction_RefLockEndRead(func);
+		return Dee_BOUND_NO;
+	}
+	DeeFunction_RefLockEndRead(func);
+	return Dee_BOUND_YES;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstatics_delitem_index(FunctionStatics *__restrict self, size_t index) {
 	DeeFunctionObject *func = self->fs_func;
 	DeeCodeObject *code = func->fo_code;
@@ -510,7 +533,7 @@ PRIVATE struct type_seq funcstatics_seq = {
 	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcstatics_getitem_index_fast,
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&funcstatics_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&funcstatics_setitem_index,
-	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&funcstatics_bounditem_index,
 	/* .tp_hasitem_index      = */ NULL,
 	/* .tp_getrange_index     = */ NULL,
 	/* .tp_delrange_index     = */ NULL,
@@ -1263,6 +1286,7 @@ err:
 	return NULL;
 }
 
+#ifndef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 funcsymbolsbyname_bounditem(FunctionSymbolsByName *self, DeeObject *key) {
 	DeeFunctionObject *func = self->fsbn_func;
@@ -1284,14 +1308,14 @@ funcsymbolsbyname_bounditem(FunctionSymbolsByName *self, DeeObject *key) {
 	DeeFunction_RefLockRead(func);
 	if unlikely(!ITER_ISOK(func->fo_refv[rid])) {
 		DeeFunction_RefLockEndRead(func);
-		return 0;
+		return Dee_BOUND_NO;
 	}
 	DeeFunction_RefLockEndRead(func);
-	return 1;
+	return Dee_BOUND_YES;
 err_no_such_key:
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1318,6 +1342,7 @@ err_no_such_key:
 err:
 	return -1;
 }
+#endif /* !__OPTIMIZE_SIZE__ */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 funcsymbolsbyname_delitem(FunctionSymbolsByName *self,
@@ -1435,8 +1460,8 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&funcsymbolsbyname_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_iterkeys,
-	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_bounditem,
-	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_hasitem,
+	/* .tp_bounditem                  = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_bounditem),
+	/* .tp_hasitem                    = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_hasitem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_size,
 	/* .tp_getitem_index              = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcsymbolsbyname_getitem_index,
@@ -2374,6 +2399,7 @@ err:
 	return NULL;
 }
 
+#ifndef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 yfuncsymbolsbyname_bounditem(YieldFunctionSymbolsByName *self, DeeObject *key) {
 	yfuncsymbol_t symid = YieldFunctionSymbolsByName_TryKey2Sym(self, key);
@@ -2384,13 +2410,13 @@ yfuncsymbolsbyname_bounditem(YieldFunctionSymbolsByName *self, DeeObject *key) {
 		result = YieldFunction_TryGetSymbol(self->yfsbn_yfunc, symid);
 		if (result != NULL) {
 			Dee_Decref(result);
-			return 1;
+			return Dee_BOUND_YES;
 		}
-		return 0;
+		return Dee_BOUND_NO;
 	}
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2405,6 +2431,7 @@ yfuncsymbolsbyname_hasitem(YieldFunctionSymbolsByName *self, DeeObject *key) {
 err:
 	return -1;
 }
+#endif /* !__OPTIMIZE_SIZE__ */
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 yfuncsymbolsbyname_setitem(YieldFunctionSymbolsByName *self,
@@ -2525,8 +2552,8 @@ PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
 	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&yfuncsymbolsbyname_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iterkeys,
-	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_bounditem,
-	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_hasitem,
+	/* .tp_bounditem                  = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_bounditem),
+	/* .tp_hasitem                    = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_hasitem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_size,
 	/* .tp_getitem_index              = */ NULL, // TODO: (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&yfuncsymbolsbyname_getitem_index,
@@ -2728,6 +2755,35 @@ err:
 	return NULL;
 }
 
+#ifndef __OPTIMIZE_SIZE__
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+frameargs_bounditem_index(FrameArgs *__restrict self, size_t index) {
+	struct code_frame const *frame;
+	DeeCodeObject *code = self->fa_code;
+	if (index >= code->co_argc_max)
+		return Dee_BOUND_MISSING;
+	frame = DeeFrame_LockRead((DeeObject *)self->fa_frame);
+	if unlikely(!frame)
+		goto err;
+	if likely(index < frame->cf_argc) {
+		/*frame->cf_argv[index];*/
+	} else if (frame->cf_kw) {
+		if (!frame->cf_kw->fk_kargv[index - frame->cf_argc])
+			goto use_default;
+	} else {
+use_default:
+		if (!code->co_defaultv[index - code->co_argc_min]) {
+			DeeFrame_LockEndRead((DeeObject *)self->fa_frame);
+			return Dee_BOUND_NO;
+		}
+	}
+	DeeFrame_LockEndRead((DeeObject *)self->fa_frame);
+	return Dee_BOUND_YES;
+err:
+	return Dee_BOUND_ERR;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
 frameargs_get_func(FrameArgs *__restrict self) {
 	struct code_frame const *frame;
@@ -2795,7 +2851,7 @@ PRIVATE struct type_seq frameargs_seq = {
 	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,
 	/* .tp_setitem_index      = */ NULL,
-	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_bounditem_index    = */ NULL_if_Os((int (DCALL *)(DeeObject *, size_t))&frameargs_bounditem_index),
 	/* .tp_hasitem_index      = */ NULL,
 	/* .tp_getrange_index     = */ NULL,
 	/* .tp_delrange_index     = */ NULL,
@@ -2925,6 +2981,26 @@ framelocals_getitem_index(FrameLocals *__restrict self, size_t index) {
 err:
 	return NULL;
 }
+
+#ifndef __OPTIMIZE_SIZE__
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+framelocals_bounditem_index(FrameLocals *__restrict self, size_t index) {
+	struct code_frame const *frame;
+	if unlikely(index >= self->fl_localc)
+		return Dee_BOUND_MISSING;
+	frame = DeeFrame_LockRead((DeeObject *)self->fl_frame);
+	if unlikely(!frame)
+		goto err;
+	if unlikely(!frame->cf_frame[index]) {
+		DeeFrame_LockEndRead((DeeObject *)self->fl_frame);
+		return Dee_BOUND_NO;
+	}
+	DeeFrame_LockEndRead((DeeObject *)self->fl_frame);
+	return Dee_BOUND_YES;
+err:
+	return Dee_BOUND_ERR;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framelocals_delitem_index(FrameLocals *__restrict self, size_t index) {
@@ -3100,7 +3176,7 @@ PRIVATE struct type_seq framelocals_seq = {
 	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&framelocals_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&framelocals_setitem_index,
-	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_bounditem_index    = */ NULL_if_Os((int (DCALL *)(DeeObject *, size_t))&framelocals_bounditem_index),
 	/* .tp_hasitem_index      = */ NULL,
 	/* .tp_getrange_index     = */ NULL,
 	/* .tp_delrange_index     = */ NULL,
@@ -3236,6 +3312,28 @@ framestack_getitem_index(FrameStack *__restrict self, size_t index) {
 err:
 	return NULL;
 }
+
+#ifndef __OPTIMIZE_SIZE__
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+framestack_bounditem_index(FrameStack *__restrict self, size_t index) {
+	uint16_t stackc;
+	struct code_frame const *frame;
+	DeeObject *value;
+	frame = DeeFrame_LockRead((DeeObject *)self->fs_frame);
+	if unlikely(!frame)
+		goto err;
+	stackc = Dee_code_frame_getspaddr(frame);
+	if unlikely(index >= stackc) {
+		DeeFrame_LockEndRead((DeeObject *)self->fs_frame);
+		return Dee_BOUND_MISSING;
+	}
+	value = frame->cf_stack[index];
+	DeeFrame_LockEndRead((DeeObject *)self->fs_frame);
+	return Dee_BOUND_FROMBOOL(value);
+err:
+	return Dee_BOUND_ERR;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 framestack_xchitem_index(FrameStack *self, size_t index, DeeObject *value) {
@@ -3492,7 +3590,7 @@ PRIVATE struct type_seq framestack_seq = {
 	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&framestack_setitem_index,
-	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_bounditem_index    = */ NULL_if_Os((int (DCALL *)(DeeObject *, size_t))&framestack_bounditem_index),
 	/* .tp_hasitem_index      = */ NULL,
 	/* .tp_getrange_index     = */ NULL,
 	/* .tp_delrange_index     = */ NULL,
@@ -4722,13 +4820,13 @@ framesymbolsbyname_bounditem(FrameSymbolsByName *self, DeeObject *key) {
 		if unlikely(!result)
 			goto err;
 		if (result == ITER_DONE)
-			return 0; /* Unbound */
+			return Dee_BOUND_NO;
 		Dee_Decref(result);
-		return 1; /* Bound */
+		return Dee_BOUND_YES;
 	}
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -4797,13 +4895,13 @@ framesymbolsbyname_bounditem_index(FrameSymbolsByName *self, size_t key) {
 		if unlikely(!result)
 			goto err;
 		if (result == ITER_DONE)
-			return 0; /* Unbound */
+			return Dee_BOUND_NO; /* Unbound */
 		Dee_Decref(result);
-		return 1; /* Bound */
+		return Dee_BOUND_YES; /* Bound */
 	}
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -4877,13 +4975,13 @@ framesymbolsbyname_bounditem_string_len_hash(FrameSymbolsByName *self,
 		if unlikely(!result)
 			goto err;
 		if (result == ITER_DONE)
-			return 0; /* Unbound */
+			return Dee_BOUND_NO; /* Unbound */
 		Dee_Decref(result);
-		return 1; /* Bound */
+		return Dee_BOUND_YES; /* Bound */
 	}
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

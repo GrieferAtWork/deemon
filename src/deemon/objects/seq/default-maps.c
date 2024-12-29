@@ -203,9 +203,9 @@ mu_hasitem(MapUnion *__restrict self, DeeObject *key) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_bounditem(MapUnion *__restrict self, DeeObject *key) {
 	int result = DeeMap_OperatorBoundItem(self->mu_a, key);
-	if (result == 0 || result == -2) {
+	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
 		int result2 = DeeMap_OperatorBoundItem(self->mu_b, key);
-		if (result == -2 || result2 != -2)
+		if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2))
 			result = result2;
 	}
 	return result;
@@ -238,9 +238,9 @@ mu_hasitem_index(MapUnion *__restrict self, size_t key) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_bounditem_index(MapUnion *__restrict self, size_t key) {
 	int result = DeeMap_OperatorBoundItemIndex(self->mu_a, key);
-	if (result == 0 || result == -2) {
+	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
 		int result2 = DeeMap_OperatorBoundItemIndex(self->mu_b, key);
-		if (result == -2 || result2 != -2)
+		if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2))
 			result = result2;
 	}
 	return result;
@@ -273,9 +273,9 @@ mu_hasitem_string_hash(MapUnion *__restrict self, char const *key, Dee_hash_t ha
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mu_bounditem_string_hash(MapUnion *__restrict self, char const *key, Dee_hash_t hash) {
 	int result = DeeMap_OperatorBoundItemStringHash(self->mu_a, key, hash);
-	if (result == 0 || result == -2) {
+	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
 		int result2 = DeeMap_OperatorBoundItemStringHash(self->mu_b, key, hash);
-		if (result == -2 || result2 != -2)
+		if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2))
 			result = result2;
 	}
 	return result;
@@ -308,9 +308,9 @@ mu_hasitem_string_len_hash(MapUnion *__restrict self, char const *key, size_t ke
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mu_bounditem_string_len_hash(MapUnion *__restrict self, char const *key, size_t keylen, Dee_hash_t hash) {
 	int result = DeeMap_OperatorBoundItemStringLenHash(self->mu_a, key, keylen, hash);
-	if (result == 0 || result == -2) {
+	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
 		int result2 = DeeMap_OperatorBoundItemStringLenHash(self->mu_b, key, keylen, hash);
-		if (result == -2 || result2 != -2)
+		if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2))
 			result = result2;
 	}
 	return result;
@@ -1034,11 +1034,11 @@ mi_bounditem(MapIntersection *__restrict self, DeeObject *key) {
 	if unlikely(temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
-		return -2;
+		return Dee_BOUND_MISSING;
 	}
 	return DeeMap_OperatorBoundItem(self->mi_map, key);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 
@@ -1444,11 +1444,11 @@ md_bounditem(MapDifference *self, DeeObject *key) {
 	if unlikely(in_keys != 0) {
 		if unlikely(in_keys < 0)
 			goto err;
-		return -2;
+		return Dee_BOUND_MISSING;
 	}
 	return DeeMap_OperatorBoundItem(self->md_map, key);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1857,26 +1857,26 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_bounditem(MapSymmetricDifference *__restrict self, DeeObject *key) {
 	int exists, result;
 	result = DeeMap_OperatorBoundItem(self->msd_a, key);
-	if (result == 0 || result == -2) {
+	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
 		int result2 = DeeMap_OperatorBoundItem(self->msd_b, key);
 		if (result == result2) {
-			result = -2;
-		} else if (result == -2 || result2 != -2) {
+			result = Dee_BOUND_MISSING;
+		} else if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2)) {
 			result = result2;
 		}
 		return result;
 	}
-	if unlikely(result < 0)
+	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
 	exists = DeeMap_OperatorBoundItem(self->msd_b, key);
-	if unlikely(exists != 0 && exists != -2) {
-		if unlikely(exists == -1)
+	if unlikely(!Dee_BOUND_ISMISSING_OR_UNBOUND(exists)) {
+		if unlikely(Dee_BOUND_ISERR(exists))
 			goto err;
 		return exists;
 	}
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1946,26 +1946,26 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 msd_bounditem_index(MapSymmetricDifference *__restrict self, size_t key) {
 	int exists, result;
 	result = DeeMap_OperatorBoundItemIndex(self->msd_a, key);
-	if (result == 0 || result == -2) {
+	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
 		int result2 = DeeMap_OperatorBoundItemIndex(self->msd_b, key);
 		if (result == result2) {
-			result = -2;
-		} else if (result == -2 || result2 != -2) {
+			result = Dee_BOUND_MISSING;
+		} else if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2)) {
 			result = result2;
 		}
 		return result;
 	}
-	if unlikely(result < 0)
+	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
 	exists = DeeMap_OperatorBoundItemIndex(self->msd_b, key);
-	if unlikely(exists != 0 && exists != -2) {
-		if unlikely(exists == -1)
+	if unlikely(!Dee_BOUND_ISMISSING_OR_UNBOUND(exists)) {
+		if unlikely(Dee_BOUND_ISERR(exists))
 			goto err;
 		return exists;
 	}
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2039,26 +2039,26 @@ msd_bounditem_string_hash(MapSymmetricDifference *__restrict self,
                           char const *key, Dee_hash_t hash) {
 	int exists, result;
 	result = DeeMap_OperatorBoundItemStringHash(self->msd_a, key, hash);
-	if (result == 0 || result == -2) {
+	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
 		int result2 = DeeMap_OperatorBoundItemStringHash(self->msd_b, key, hash);
 		if (result == result2) {
-			result = -2;
-		} else if (result == -2 || result2 != -2) {
+			result = Dee_BOUND_MISSING;
+		} else if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2)) {
 			result = result2;
 		}
 		return result;
 	}
-	if unlikely(result < 0)
+	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
 	exists = DeeMap_OperatorBoundItemStringHash(self->msd_b, key, hash);
-	if unlikely(exists != 0 && exists != -2) {
-		if unlikely(exists == -1)
+	if unlikely(!Dee_BOUND_ISMISSING_OR_UNBOUND(exists)) {
+		if unlikely(Dee_BOUND_ISERR(exists))
 			goto err;
 		return exists;
 	}
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2132,26 +2132,26 @@ msd_bounditem_string_len_hash(MapSymmetricDifference *__restrict self,
                               char const *key, size_t keylen, Dee_hash_t hash) {
 	int exists, result;
 	result = DeeMap_OperatorBoundItemStringLenHash(self->msd_a, key, keylen, hash);
-	if (result == 0 || result == -2) {
+	if (Dee_BOUND_ISMISSING_OR_UNBOUND(result)) {
 		int result2 = DeeMap_OperatorBoundItemStringLenHash(self->msd_b, key, keylen, hash);
 		if (result == result2) {
-			result = -2;
-		} else if (result == -2 || result2 != -2) {
+			result = Dee_BOUND_MISSING;
+		} else if (Dee_BOUND_ISMISSING(result) || !Dee_BOUND_ISMISSING(result2)) {
 			result = result2;
 		}
 		return result;
 	}
-	if unlikely(result < 0)
+	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
 	exists = DeeMap_OperatorBoundItemStringLenHash(self->msd_b, key, keylen, hash);
-	if unlikely(exists != 0 && exists != -2) {
-		if unlikely(exists == -1)
+	if unlikely(!Dee_BOUND_ISMISSING_OR_UNBOUND(exists)) {
+		if unlikely(Dee_BOUND_ISERR(exists))
 			goto err;
 		return exists;
 	}
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

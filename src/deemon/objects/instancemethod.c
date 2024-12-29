@@ -193,7 +193,7 @@ instancemethod_bound_name(InstanceMethod *__restrict self) {
 	struct class_attribute *attr;
 	attr = instancemethod_getattr(self, NULL, NULL);
 	if (attr)
-		return 1;
+		return Dee_BOUND_YES;
 	return DeeObject_BoundAttr(self->im_func, (DeeObject *)&str___name__);
 }
 
@@ -240,10 +240,10 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 instancemethod_bound_type(InstanceMethod *__restrict self) {
+	struct class_attribute *attr;
 	DeeTypeObject *result;
-	if (instancemethod_getattr(self, NULL, &result))
-		return 1;
-	return 0;
+	attr = instancemethod_getattr(self, NULL, &result);
+	return Dee_BOUND_FROMBOOL(attr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

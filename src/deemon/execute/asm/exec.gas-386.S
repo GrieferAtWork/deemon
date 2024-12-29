@@ -204,6 +204,11 @@ END(_impl_assert_failed)
 #define ERROR_PRINT_HANDLEINTR 2
 #endif /* !CONFIG_NO_THREADS */
 
+#define Dee_BOUND_ERR     (-1)
+#define Dee_BOUND_MISSING (-2) /* TODO: Change this to "0" (for binary compat with "hasattr") */
+#define Dee_BOUND_NO      0    /* TODO: Change this to "1" (for binary compat with "hasattr") */
+#define Dee_BOUND_YES     1    /* TODO: Change this to "2" (for binary compat with "hasattr") */
+
 #define DEE_STDIN  0
 #define DEE_STDOUT 1
 #define DEE_STDERR 2
@@ -5637,10 +5642,10 @@ target_bounditem:
 	call   fSYM(DeeObject_BoundItem,8)
 	ADJUST_CFA_OFFSET(-8)
 	xorl   %ecx, %ecx /* Clear out ECX */
-	cmpl   $-1, %eax
+	cmpl   $(Dee_BOUND_ERR), %eax
 	je     .except /* Check for errors. */
-	cmpl   $0, %eax
-	setg   %cl /* CL = EAX > 0 */
+	cmpl   $(Dee_BOUND_YES), %eax
+	sete   %cl /* CL = EAX == Dee_BOUND_YES */
 	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
 	incref %eax /* Incref the boolean value. */
 	xchgl  SECOND, %eax /* Store the result onto the stack. */
@@ -6645,10 +6650,10 @@ target_boundattr:
 	call   fSYM(DeeObject_BoundAttr,8)
 	ADJUST_CFA_OFFSET(-8)
 	xorl   %ecx, %ecx /* Clear out ECX */
-	cmpl   $-1, %eax
+	cmpl   $(Dee_BOUND_ERR), %eax
 	je     .except /* Check for errors. */
-	cmpl   $0, %eax
-	setg   %cl /* CL = EAX > 0 */
+	cmpl   $(Dee_BOUND_YES), %eax
+	sete   %cl /* CL = EAX == Dee_BOUND_YES */
 	leal   SYM(Dee_FalseTrue)(,%ecx,8), %eax /* Convert to a boolean. */
 	incref %eax /* Incref the boolean value. */
 	xchgl  SECOND, %eax /* Store the result onto the stack. */

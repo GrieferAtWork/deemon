@@ -414,36 +414,38 @@ se_setitem_string_len_hash(SeqEachBase *self, char const *key, size_t keylen,
 
 LOCAL ATTR_CONST Dee_ssize_t DCALL
 seqeach_map_to_bound(int bound_result) {
-	if (bound_result > 0)
+	switch (bound_result) {
+	case Dee_BOUND_YES:
 		return SEQEACH_FOREACH_YES; /* Item is bound */
-	if (bound_result == -2)
+	case Dee_BOUND_ERR:
+		return SEQEACH_FOREACH_ERROR;
+	case Dee_BOUND_NO:
+		return 1; /* Item exists, but isn't bound */
+	default:
 		return SEQEACH_FOREACH_NO; /* Item doesn't exist */
-	if unlikely(bound_result == -1)
-		goto err;
-	return 1; /* Item exists, but isn't bound */
-err:
-	return SEQEACH_FOREACH_ERROR;
+	}
+	__builtin_unreachable();
 }
 
 LOCAL ATTR_CONST int DCALL
 seqeach_map_from_bound(Dee_ssize_t foreach_result) {
 	switch (foreach_result) {
 	case SEQEACH_FOREACH_ERROR:
-		return -1;
+		return Dee_BOUND_ERR;
 	case SEQEACH_FOREACH_YES:
-		return 1;
+		return Dee_BOUND_YES;
 	case SEQEACH_FOREACH_NO:
-		return -2;
+		return Dee_BOUND_MISSING;
 	default:
-		return 0;
+		return Dee_BOUND_NO;
 	}
 }
 
 LOCAL ATTR_CONST Dee_ssize_t DCALL
-seqeach_map_to_has(int bound_result) {
-	if (bound_result > 0)
+seqeach_map_to_has(int has_result) {
+	if (has_result > 0)
 		return SEQEACH_FOREACH_YES; /* Item exists */
-	if (bound_result == 0)
+	if (has_result == 0)
 		return SEQEACH_FOREACH_NO; /* Item doesn't exists */
 	return SEQEACH_FOREACH_ERROR;
 }

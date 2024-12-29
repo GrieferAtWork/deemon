@@ -147,7 +147,7 @@ struct Dee_class_desc;
 struct Dee_membercache_slot {
 	/* A slot inside of a `struct Dee_membercache' table. */
 	uint16_t               mcs_type;   /* The type of this slot (One of `MEMBERCACHE_*') */
-	uint16_t              _mcs_pad[(sizeof(void *)-2)/2];
+	uint16_t              _mcs_pad[(sizeof(void *) - 2) / 2];
 	Dee_hash_t             mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED && mcs_type != MEMBERCACHE_UNINITIALIZED)][== Dee_HashStr(mcs_name)] */
 	DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED && mcs_type != MEMBERCACHE_UNINITIALIZED)][1..1][const]
 	                                    * The type that is providing this attribute, which must be
@@ -285,10 +285,10 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetCachedInstanceA
 #define DeeType_GetCachedInstanceAttrString(tp_self, attr)             DeeType_GetCachedInstanceAttrStringHash(tp_self, attr, Dee_HashStr(attr))
 #define DeeType_GetCachedInstanceAttrStringLen(tp_self, attr, attrlen) DeeType_GetCachedInstanceAttrStringLenHash(tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen))
 
-/* @return: 1 : Attribute is bound.
- * @return: 0 : Attribute isn't bound.
- * @return: -1: An error occurred.
- * @return: -2: The attribute doesn't exist. */
+/* @return: Dee_BOUND_YES:     Attribute is bound.
+ * @return: Dee_BOUND_NO:      Attribute isn't bound.
+ * @return: Dee_BOUND_MISSING: The attribute doesn't exist.
+ * @return: Dee_BOUND_ERR:     An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundCachedAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeType_BoundCachedAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeType_BoundCachedClassAttrStringHash)(DeeTypeObject *__restrict tp_self, char const *__restrict attr, Dee_hash_t hash);
@@ -933,10 +933,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanc
 
 
 /* Check if attributes from `tp_self->tp_getsets' / `tp_self->tp_class_getsets' are bound.
- * @return:  1: The attribute is bound.
- * @return:  0: The attribute is unbound.
- * @return: -1: An error occurred.
- * @return: -2: The attribute could not be found in `chain'. */
+ * @return: Dee_BOUND_YES:     The attribute is bound.
+ * @return: Dee_BOUND_NO:      The attribute is unbound.
+ * @return: Dee_BOUND_MISSING: The attribute could not be found in `chain'.
+ * @return: Dee_BOUND_ERR:     An error occurred. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundGetSetAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundGetSetAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
@@ -1129,10 +1129,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanc
 
 
 /* Check if attributes from `tp_self->tp_members' / `tp_self->tp_class_members' are bound.
- * @return:  1: The attribute is bound.
- * @return:  0: The attribute is unbound.
- * @return: -1: An error occurred.
- * @return: -2: The attribute could not be found in `chain'. */
+ * @return: Dee_BOUND_YES:     The attribute is bound.
+ * @return: Dee_BOUND_NO:      The attribute is unbound.
+ * @return: Dee_BOUND_MISSING: The attribute could not be found in `chain'.
+ * @return: Dee_BOUND_ERR:     An error occurred. */
 #ifdef __INTELLISENSE__
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundMemberAttrStringHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeType_BoundMemberAttrStringLenHash)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
@@ -1470,12 +1470,12 @@ DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTy
 
 /* Misc. functions here for completeness, but don't *really* make
  * sense since they only throw errors when an attribute is found. */
-#define DeeType_BoundMethodAttr(tp_invoker, tp_self, self, attr)                                  (DeeType_HasMethodAttr(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundMethodAttrHash(tp_invoker, tp_self, self, attr, hash)                        (DeeType_HasMethodAttrHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundMethodAttrString(tp_invoker, tp_self, self, attr)                            (DeeType_HasMethodAttrString(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundMethodAttrStringHash(tp_invoker, tp_self, self, attr, hash)                  (DeeType_HasMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundMethodAttrStringLen(tp_invoker, tp_self, self, attr, attrlen)                (DeeType_HasMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? 1 : -2)
-#define DeeType_BoundMethodAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash)      (DeeType_HasMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define DeeType_BoundMethodAttr(tp_invoker, tp_self, self, attr)                                  (DeeType_HasMethodAttr(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundMethodAttrHash(tp_invoker, tp_self, self, attr, hash)                        (DeeType_HasMethodAttrHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundMethodAttrString(tp_invoker, tp_self, self, attr)                            (DeeType_HasMethodAttrString(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundMethodAttrStringHash(tp_invoker, tp_self, self, attr, hash)                  (DeeType_HasMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundMethodAttrStringLen(tp_invoker, tp_self, self, attr, attrlen)                (DeeType_HasMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundMethodAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash)      (DeeType_HasMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #define DeeType_DelMethodAttr(tp_invoker, tp_self, self, attr)                                    (DeeType_HasMethodAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelMethodAttrHash(tp_invoker, tp_self, self, attr, hash)                          (DeeType_HasMethodAttrHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelMethodAttrString(tp_invoker, tp_self, self, attr)                              (DeeType_HasMethodAttrString(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
@@ -1489,12 +1489,12 @@ DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTy
 #define DeeType_SetMethodAttrStringLen(tp_invoker, tp_self, self, attr, attrlen, value)           (DeeType_HasMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 #define DeeType_SetMethodAttrStringLenHash(tp_invoker, tp_self, self, attr, attrlen, hash, value) (DeeType_HasMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 
-#define DeeType_BoundClassMethodAttr(tp_invoker, tp_self, attr)                                  (DeeType_HasClassMethodAttr(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundClassMethodAttrHash(tp_invoker, tp_self, attr, hash)                        (DeeType_HasClassMethodAttrHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundClassMethodAttrString(tp_invoker, tp_self, attr)                            (DeeType_HasClassMethodAttrString(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundClassMethodAttrStringHash(tp_invoker, tp_self, attr, hash)                  (DeeType_HasClassMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundClassMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen)                (DeeType_HasClassMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? 1 : -2)
-#define DeeType_BoundClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)      (DeeType_HasClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define DeeType_BoundClassMethodAttr(tp_invoker, tp_self, attr)                                  (DeeType_HasClassMethodAttr(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundClassMethodAttrHash(tp_invoker, tp_self, attr, hash)                        (DeeType_HasClassMethodAttrHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundClassMethodAttrString(tp_invoker, tp_self, attr)                            (DeeType_HasClassMethodAttrString(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundClassMethodAttrStringHash(tp_invoker, tp_self, attr, hash)                  (DeeType_HasClassMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundClassMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen)                (DeeType_HasClassMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)      (DeeType_HasClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #define DeeType_DelClassMethodAttr(tp_invoker, tp_self, attr)                                    (DeeType_HasClassMethodAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelClassMethodAttrHash(tp_invoker, tp_self, attr, hash)                          (DeeType_HasClassMethodAttrHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelClassMethodAttrString(tp_invoker, tp_self, attr)                              (DeeType_HasClassMethodAttrString(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
@@ -1508,12 +1508,12 @@ DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTy
 #define DeeType_SetClassMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen, value)           (DeeType_HasClassMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 #define DeeType_SetClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, value) (DeeType_HasClassMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 
-#define DeeType_BoundInstanceMethodAttr(tp_invoker, tp_self, attr)                                  (DeeType_HasInstanceMethodAttr(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash)                        (DeeType_HasInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceMethodAttrString(tp_invoker, tp_self, attr)                            (DeeType_HasInstanceMethodAttrString(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash)                  (DeeType_HasInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen)                (DeeType_HasInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? 1 : -2)
-#define DeeType_BoundInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)      (DeeType_HasInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define DeeType_BoundInstanceMethodAttr(tp_invoker, tp_self, attr)                                  (DeeType_HasInstanceMethodAttr(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash)                        (DeeType_HasInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMethodAttrString(tp_invoker, tp_self, attr)                            (DeeType_HasInstanceMethodAttrString(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash)                  (DeeType_HasInstanceMethodAttrStringHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen)                (DeeType_HasInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)      (DeeType_HasInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #define DeeType_DelInstanceMethodAttr(tp_invoker, tp_self, attr)                                    (DeeType_HasInstanceMethodAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash)                          (DeeType_HasInstanceMethodAttrHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelInstanceMethodAttrString(tp_invoker, tp_self, attr)                              (DeeType_HasInstanceMethodAttrString(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
@@ -1527,12 +1527,12 @@ DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTy
 #define DeeType_SetInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen, value)           (DeeType_HasInstanceMethodAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 #define DeeType_SetInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, value) (DeeType_HasInstanceMethodAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 
-#define DeeType_BoundInstanceGetSetAttr(tp_invoker, tp_self, attr)                                  (DeeType_HasInstanceGetSetAttr(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash)                        (DeeType_HasInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceGetSetAttrString(tp_invoker, tp_self, attr)                            (DeeType_HasInstanceGetSetAttrString(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)                  (DeeType_HasInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)                (DeeType_HasInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? 1 : -2)
-#define DeeType_BoundInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)      (DeeType_HasInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define DeeType_BoundInstanceGetSetAttr(tp_invoker, tp_self, attr)                                  (DeeType_HasInstanceGetSetAttr(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash)                        (DeeType_HasInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceGetSetAttrString(tp_invoker, tp_self, attr)                            (DeeType_HasInstanceGetSetAttrString(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash)                  (DeeType_HasInstanceGetSetAttrStringHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen)                (DeeType_HasInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)      (DeeType_HasInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #define DeeType_DelInstanceGetSetAttr(tp_invoker, tp_self, attr)                                    (DeeType_HasInstanceGetSetAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash)                          (DeeType_HasInstanceGetSetAttrHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelInstanceGetSetAttrString(tp_invoker, tp_self, attr)                              (DeeType_HasInstanceGetSetAttrString(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)
@@ -1546,12 +1546,12 @@ DeeType_FindInstanceMemberAttrInfoStringLenHash(DeeTypeObject *tp_invoker, DeeTy
 #define DeeType_SetInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen, value)           (DeeType_HasInstanceGetSetAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 #define DeeType_SetInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, value) (DeeType_HasInstanceGetSetAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? err_cant_access_attribute_string_len(tp_self, attr, attrlen, ATTR_ACCESS_SET) : 1)
 
-#define DeeType_BoundInstanceMemberAttr(tp_invoker, tp_self, attr)                                  (DeeType_HasInstanceMemberAttr(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash)                        (DeeType_HasInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceMemberAttrString(tp_invoker, tp_self, attr)                            (DeeType_HasInstanceMemberAttrString(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash)                  (DeeType_HasInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash) ? 1 : -2)
-#define DeeType_BoundInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)                (DeeType_HasInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? 1 : -2)
-#define DeeType_BoundInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)      (DeeType_HasInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? 1 : -2)
+#define DeeType_BoundInstanceMemberAttr(tp_invoker, tp_self, attr)                                  (DeeType_HasInstanceMemberAttr(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash)                        (DeeType_HasInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMemberAttrString(tp_invoker, tp_self, attr)                            (DeeType_HasInstanceMemberAttrString(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash)                  (DeeType_HasInstanceMemberAttrStringHash(tp_invoker, tp_self, attr, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen)                (DeeType_HasInstanceMemberAttrStringLen(tp_invoker, tp_self, attr, attrlen) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
+#define DeeType_BoundInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash)      (DeeType_HasInstanceMemberAttrStringLenHash(tp_invoker, tp_self, attr, attrlen, hash) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #define DeeType_DelInstanceMemberAttr(tp_invoker, tp_self, attr)                                    (DeeType_HasInstanceMemberAttr(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash)                          (DeeType_HasInstanceMemberAttrHash(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute(tp_self, attr, ATTR_ACCESS_DEL) : 1)
 #define DeeType_DelInstanceMemberAttrString(tp_invoker, tp_self, attr)                              (DeeType_HasInstanceMemberAttrString(tp_invoker, tp_self, attr, hash) ? err_cant_access_attribute_string(tp_self, attr, ATTR_ACCESS_DEL) : 1)

@@ -302,7 +302,7 @@ DECL_BEGIN
 #define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
 #else /* ... */
 #define LOCAL_return_t              int
-#define LOCAL_ATTR_NOT_FOUND_RESULT (-2)
+#define LOCAL_ATTR_NOT_FOUND_RESULT Dee_BOUND_MISSING
 #endif /* !... */
 
 #if defined(DEFINE_DeeObject_TGenericFindAttr)

@@ -258,8 +258,8 @@ DECL_BEGIN
 #define LOCAL_ERROR_RETURN_VALUE    (-1)
 #else /* ... */
 #define LOCAL_return_t              int
-#define LOCAL_ATTR_NOT_FOUND_RESULT (-2)
-#define LOCAL_ERROR_RETURN_VALUE    (-1)
+#define LOCAL_ATTR_NOT_FOUND_RESULT Dee_BOUND_MISSING
+#define LOCAL_ERROR_RETURN_VALUE    Dee_BOUND_ERR
 #endif /* !... */
 
 #if defined(DEFINE_DeeType_FindInstanceAttr)
@@ -310,7 +310,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #ifdef LOCAL_HAS_len
                                          size_t attrlen,
 #endif /* LOCAL_HAS_len */
-                                         dhash_t hash
+                                         Dee_hash_t hash
 #ifdef LOCAL_IS_CALL
                                          , size_t argc, DeeObject *const *argv
 #elif defined(LOCAL_IS_CALL_KW)

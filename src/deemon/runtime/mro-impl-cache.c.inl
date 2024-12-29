@@ -850,10 +850,10 @@ err_noargs:
  * @return: ITER_DONE: The attribute could not be found in the cache. */
 INTERN WUNUSED LOCAL_ATTR_NONNULL DREF DeeObject *
 #elif defined(LOCAL_IS_BOUND)
-/* @return: 1 : Attribute is bound.
- * @return: 0 : Attribute isn't bound.
- * @return: -1: An error occurred.
- * @return: -2: The attribute doesn't exist. */
+/* @return: Dee_BOUND_YES:     Attribute is bound.
+ * @return: Dee_BOUND_NO:      Attribute isn't bound.
+ * @return: Dee_BOUND_ERR:     An error occurred.
+ * @return: Dee_BOUND_MISSING: The attribute doesn't exist. */
 INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #elif defined(LOCAL_IS_HAS)
 /* @return: true : The attribute exists.
@@ -1528,18 +1528,16 @@ check_and_invoke_callback:
 			if (bound)
 				return (*bound)(LOCAL_self);
 			if unlikely(!getter)
-				return 0;
+				return Dee_BOUND_NO;
 			temp = (*getter)(LOCAL_self);
 			if unlikely(!temp) {
-				if (CATCH_ATTRIBUTE_ERROR())
-					return -3;
 				if (DeeError_Catch(&DeeError_UnboundAttribute))
-					return 0;
+					return Dee_BOUND_NO;
 				goto err;
 #define NEED_err
 			}
 			Dee_Decref(temp);
-			return 1;
+			return Dee_BOUND_YES;
 #elif defined(LOCAL_IS_DEL)
 			ddelmethod_t del;
 			DeeTypeObject *decl;
@@ -1581,7 +1579,10 @@ check_and_invoke_callback:
 			buf = *(struct buffer *)&item->mcs_member;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 #ifdef LOCAL_IS_BOUND
-			return type_member_bound((struct type_member const *)&buf, LOCAL_self);
+			{
+				bool bound = type_member_bound((struct type_member const *)&buf, LOCAL_self);
+				return Dee_BOUND_FROMBOOL(bound);
+			}
 #elif defined(LOCAL_IS_DEL)
 			return type_member_del((struct type_member const *)&buf, LOCAL_self);
 #elif defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
@@ -1884,7 +1885,7 @@ cache_miss:
      defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) || defined(LOCAL_IS_VCALLF))
 	return ITER_DONE;
 #elif defined(LOCAL_IS_BOUND)
-	return -2;
+	return Dee_BOUND_MISSING;
 #elif defined(LOCAL_IS_HAS) || defined(LOCAL_IS_FINDINFO)
 	return false;
 #elif defined(LOCAL_IS_DEL) || defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
@@ -1914,7 +1915,9 @@ err:
      defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) ||              \
      defined(LOCAL_IS_VCALLF))
 	return NULL;
-#elif defined(LOCAL_IS_BOUND) || defined(LOCAL_IS_DEL) || defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
+#elif defined(LOCAL_IS_BOUND)
+	return Dee_BOUND_ERR;
+#elif defined(LOCAL_IS_DEL) || defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
 	return -1;
 #else /* ... */
 #error "Invalid configuration"

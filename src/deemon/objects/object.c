@@ -3784,7 +3784,6 @@ type_boundinstanceattr(DeeTypeObject *self, size_t argc,
                        DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	bool allow_missing = true;
-	int result;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__attr_allow_missing,
 	                    meth_boundinstanceattr, &name, &allow_missing))
 		goto err;
@@ -3792,14 +3791,21 @@ type_boundinstanceattr(DeeTypeObject *self, size_t argc,
 		goto err;
 
 	/* Instance attributes of types are always bound (because they're all wrappers) */
-	result = DeeType_BoundInstanceAttr(self, name);
-	if (result > 0)
+	switch (DeeType_BoundInstanceAttr(self, name)) {
+	default:
+		if unlikely(!allow_missing) {
+			err_unknown_attribute(self, name, ATTR_ACCESS_GET);
+			goto err;
+		}
+		ATTR_FALLTHROUGH
+	case Dee_BOUND_NO:
+		return_false;
+	case Dee_BOUND_YES:
 		return_true;
-	if (result == -1)
+	case Dee_BOUND_ERR:
 		goto err;
-	if (allow_missing)
-		return_false; /* Unknown attributes are unbound. */
-	err_unknown_attribute(self, name, ATTR_ACCESS_GET);
+	}
+	__builtin_unreachable();
 err:
 	return NULL;
 }
@@ -4701,9 +4707,9 @@ type_bound_instancesize(DeeTypeObject *__restrict self) {
 		goto unknown;
 #endif /* CONFIG_NO_OBJECT_SLABS */
 	}
-	return 1;
+	return Dee_BOUND_YES;
 unknown:
-	return 0;
+	return Dee_BOUND_NO;
 }
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_operators(DeeTypeObject *__restrict self);

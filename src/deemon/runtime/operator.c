@@ -7884,9 +7884,9 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithBoundItem,
 	int result;
 	LOAD_TP_SELF;
 	result = DeeType_INVOKE_BOUNDITEM_NODEFAULT(tp_self, self, elem);
-	if unlikely(result == -1)
+	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	return_bool_(result > 0);
+	return_bool_(Dee_BOUND_ISBOUND(result));
 err:
 	return NULL;
 }
@@ -7989,9 +7989,9 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithBoundItemStrin
 	result = DeeType_INVOKE_BOUNDITEMSTRINGHASH_NODEFAULT(tp_self, self,
 	                                                      DeeString_STR(elem),
 	                                                      DeeString_Hash(elem));
-	if unlikely(result == -1)
+	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	if (result > 0)
+	if (Dee_BOUND_ISBOUND(result))
 		return_true;
 nope:
 	return_false;
@@ -8009,9 +8009,9 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithBoundItemStrin
 	                                                         DeeString_STR(elem),
 	                                                         DeeString_SIZE(elem),
 	                                                         DeeString_Hash(elem));
-	if unlikely(result == -1)
+	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	if (result > 0)
+	if (Dee_BOUND_ISBOUND(result))
 		return_true;
 nope:
 	return_false;
@@ -8026,10 +8026,10 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultContainsWithBoundItemIndex
 	LOAD_TP_SELF;
 	if (DeeObject_AsSize(elem, &index))
 		goto err_tryhandle;
-	result = DeeType_INVOKE_HASITEMINDEX_NODEFAULT(tp_self, self, index);
-	if unlikely(result == -1)
+	result = DeeType_INVOKE_BOUNDITEMINDEX_NODEFAULT(tp_self, self, index);
+	if unlikely(Dee_BOUND_ISERR(result))
 		goto err;
-	return_bool_(result > 0);
+	return_bool_(Dee_BOUND_ISBOUND(result));
 err_tryhandle:
 	if (DeeError_Catch(&DeeError_ValueError) ||
 	    DeeError_Catch(&DeeError_NotImplemented))
@@ -10221,7 +10221,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemIndex,
 		goto err;
 	return DeeType_INVOKE_BOUNDITEMINDEX_NODEFAULT(tp_self, self, index_value);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemStringHash,
@@ -10233,7 +10233,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemStringHash,
 	                                                    DeeString_STR(index),
 	                                                    DeeString_Hash(index));
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemStringLenHash,
@@ -10246,7 +10246,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemStringLenHash,
 	                                                       DeeString_SIZE(index),
 	                                                       DeeString_Hash(index));
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemStringHash,
@@ -10260,14 +10260,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemStringHash,
 	                                                   DeeString_Hash(index));
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	if (DeeError_Catch(&DeeError_KeyError))
-		return -2;
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError))
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemStringLenHash,
@@ -10282,14 +10282,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemStringLenHash,
 	                                                      DeeString_Hash(index));
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	if (DeeError_Catch(&DeeError_KeyError))
-		return -2;
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError))
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItem,
@@ -10299,14 +10299,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItem,
 	item_value = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, index);
 	if (item_value) {
 		Dee_Decref(item_value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
 	if (DeeError_Catch(&DeeError_KeyError) ||
 	    DeeError_Catch(&DeeError_IndexError))
-		return -2;
-	return -1;
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemIndex,
@@ -10319,15 +10319,15 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemIndex,
 	item_value = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, index_value);
 	if (item_value) {
 		Dee_Decref(item_value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
 	if (DeeError_Catch(&DeeError_KeyError) ||
 	    DeeError_Catch(&DeeError_IndexError))
-		return -2;
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemAndHasItem,
@@ -10340,10 +10340,10 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemAndHasItem,
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEM_NODEFAULT(tp_self, self, index);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
 	return -1;
 }
@@ -10363,12 +10363,12 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemIndexAndHasItemIndex
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEMINDEX_NODEFAULT(tp_self, self, index_value);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemStringLenHashAndHasItemStringLenHash,
@@ -10386,15 +10386,15 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemStringLenHashAndHasI
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEMSTRINGLENHASH_NODEFAULT(tp_self, self,
 	                                                       DeeString_STR(index),
 	                                                       DeeString_SIZE(index),
 	                                                       DeeString_HASH(index));
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemStringHashAndHasItemStringHash,
@@ -10411,14 +10411,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemStringHashAndHasItem
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEMSTRINGHASH_NODEFAULT(tp_self, self,
 	                                                    DeeString_STR(index),
 	                                                    DeeString_HASH(index));
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemWithTryGetItemAndSizeOb,
@@ -10436,14 +10436,12 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemWithTryGetItemAndSizeOb,
 			goto err;
 		temp = DeeObject_CmpLoAsBool(index, sizeob);
 		Dee_Decref(sizeob);
-		if unlikely(temp < 0)
-			goto err;
-		return temp ? 0 : -2;
+		return Dee_BOUND_FROMHAS_UNBOUND(temp);
 	}
 	Dee_Decref(value);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemWithSizeAndTryGetItemIndex,
@@ -10461,12 +10459,12 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemWithSizeAndTryGetItemIndex,
 		size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
 		if unlikely(size == (size_t)-1)
 			goto err;
-		return index_value < size ? 0 : -2;
+		return Dee_BOUND_FROMPRESENT_UNBOUND(index_value < size);
 	}
 	Dee_Decref(value);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItem,
@@ -10477,11 +10475,11 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItem,
 	if unlikely(!value)
 		goto err;
 	if (value == ITER_DONE)
-		return -2;
+		return Dee_BOUND_MISSING;
 	Dee_Decref(value);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_NO;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemIndex,
@@ -10495,11 +10493,11 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemIndex,
 	if unlikely(!value)
 		goto err;
 	if (value == ITER_DONE)
-		return -2;
+		return Dee_BOUND_MISSING;
 	Dee_Decref(value);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemStringLenHash,
@@ -10515,11 +10513,11 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemStringLenHash,
 	if unlikely(!value)
 		goto err;
 	if (value == ITER_DONE)
-		return -2;
+		return Dee_BOUND_MISSING;
 	Dee_Decref(value);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemStringHash,
@@ -10534,11 +10532,11 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithTryGetItemStringHash,
 	if unlikely(!value)
 		goto err;
 	if (value == ITER_DONE)
-		return -2;
+		return Dee_BOUND_MISSING;
 	Dee_Decref(value);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 
@@ -10549,14 +10547,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemDefault,
 	item_value = DeeType_INVOKE_GETITEM(tp_self, self, index);
 	if (item_value) {
 		Dee_Decref(item_value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
 	if (DeeError_Catch(&DeeError_KeyError) ||
 	    DeeError_Catch(&DeeError_IndexError))
-		return -2;
-	return -1;
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithContains,
@@ -10568,9 +10566,7 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithContains,
 	if unlikely(!result)
 		goto err;
 	result_status = DeeObject_BoolInherited(result);
-	if (result_status == 0)
-		result_status = -2;
-	return result_status;
+	return Dee_BOUND_FROMHAS_BOUND(result_status);
 err:
 	return -1;
 }
@@ -10582,11 +10578,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithEnumerate,
 	status = DeeType_INVOKE_ENUMERATE_NODEFAULT(tp_self, self, &default_map_bounditem_with_enumerate_cb, index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -10598,11 +10598,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithEnumerateDefault,
 	status = DeeType_INVOKE_ENUMERATE(tp_self, self, &default_map_bounditem_with_enumerate_cb, index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -10622,7 +10626,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithBoundItem,
 	Dee_Decref(indexob);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithSizeAndGetItemIndexFast,
@@ -10634,14 +10638,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithSizeAndGetItemIndexFast,
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if unlikely(index >= size)
-		return -2; /* Index does not exist. */
+		return Dee_BOUND_MISSING; /* Index does not exist. */
 	result = (*tp_self->tp_seq->tp_getitem_index_fast)(self, index);
 	if (!result)
-		return 0; /* Index isn't bound */
+		return Dee_BOUND_NO; /* Index isn't bound */
 	Dee_Decref(result);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItemIndex,
@@ -10651,14 +10655,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItemIndex,
 	item_value = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, index);
 	if (item_value) {
 		Dee_Decref(item_value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
 	if (DeeError_Catch(&DeeError_KeyError) ||
 	    DeeError_Catch(&DeeError_IndexError))
-		return -2;
-	return -1;
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItem,
@@ -10673,15 +10677,15 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItem,
 	Dee_Decref(indexob);
 	if (item_value) {
 		Dee_Decref(item_value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
 	if (DeeError_Catch(&DeeError_KeyError) ||
 	    DeeError_Catch(&DeeError_IndexError))
-		return -2;
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItemIndexDefault,
@@ -10691,14 +10695,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItemIndexDefault,
 	item_value = DeeType_INVOKE_GETITEMINDEX(tp_self, self, index);
 	if (item_value) {
 		Dee_Decref(item_value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
 	if (DeeError_Catch(&DeeError_KeyError) ||
 	    DeeError_Catch(&DeeError_IndexError))
-		return -2;
-	return -1;
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithTryGetItemIndexAndHasItemIndex,
@@ -10711,12 +10715,12 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithTryGetItemIndexAndHasItem
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEMINDEX_NODEFAULT(tp_self, self, index);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithTryGetItemAndHasItem,
@@ -10734,15 +10738,15 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithTryGetItemAndHasItem,
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
 		Dee_Decref(indexob);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEM_NODEFAULT(tp_self, self, indexob);
 	Dee_Decref(indexob);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err_indexob:
 	Dee_Decref(indexob);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemIndexWithSizeAndTryGetItemIndex,
@@ -10757,12 +10761,12 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemIndexWithSizeAndTryGetItemInde
 		size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
 		if unlikely(size == (size_t)-1)
 			goto err;
-		return index < size ? 0 : -2;
+		return Dee_BOUND_FROMPRESENT_UNBOUND(index < size);
 	}
 	Dee_Decref(value);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemIndexWithTryGetItemAndSizeOb,
@@ -10788,12 +10792,12 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemIndexWithTryGetItemAndSizeOb,
 		Dee_Decref(sizeob);
 		if unlikely(temp < 0)
 			goto err;
-		return index < size ? 0 : -2;
+		return Dee_BOUND_FROMPRESENT_UNBOUND(index < size);
 	}
 	Dee_Decref(value);
-	return 1;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 
@@ -10808,7 +10812,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithErrorRequiresString,
 	DeeObject_TypeAssertFailed(indexob, &DeeString_Type);
 	Dee_Decref(indexob);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -10824,11 +10828,9 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemIndexWithContains,
 	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, indexob);
 	Dee_Decref(indexob);
 	result_status = DeeObject_BoolInherited(result);
-	if (result_status == 0)
-		result_status = -2;
-	return result_status;
+	return Dee_BOUND_FROMHAS_BOUND(result_status);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -10857,11 +10859,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemIndexWithEnumerate,
 	status = DeeType_INVOKE_ENUMERATE_NODEFAULT(tp_self, self, &default_map_bounditem_index_with_enumerate_cb, (void *)(uintptr_t)index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -10873,11 +10879,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemIndexWithEnumerateDefault,
 	status = DeeType_INVOKE_ENUMERATE(tp_self, self, &default_map_bounditem_index_with_enumerate_cb, (void *)(uintptr_t)index);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -10902,7 +10912,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithBoundItem,
 	Dee_Decref(keyob);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithGetItemStringHash,
@@ -10912,13 +10922,13 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithGetItemStringHash,
 	value = DeeType_INVOKE_GETITEMSTRINGHASH_NODEFAULT(tp_self, self, key, hash);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	if (DeeError_Catch(&DeeError_KeyError))
-		return -2;
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
-	return -1;
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError))
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithGetItemStringLenHash,
@@ -10928,13 +10938,13 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithGetItemStringLenHash
 	value = DeeType_INVOKE_GETITEMSTRINGLENHASH_NODEFAULT(tp_self, self, key, strlen(key), hash);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	if (DeeError_Catch(&DeeError_KeyError))
-		return -2;
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
-	return -1;
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError))
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithGetItem,
@@ -10948,14 +10958,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithGetItem,
 	Dee_Decref(keyob);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	if (DeeError_Catch(&DeeError_KeyError))
-		return -2;
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError))
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemStringHashAndHasItemStringHash,
@@ -10968,12 +10978,12 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemStringHash
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEMSTRINGHASH_NODEFAULT(tp_self, self, key, hash);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemStringLenHashAndHasItemStringLenHash,
@@ -10987,12 +10997,12 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemStringLenH
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEMSTRINGLENHASH_NODEFAULT(tp_self, self, key, keylen, hash);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemAndHasItem,
@@ -11009,15 +11019,15 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemAndHasItem
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
 		Dee_Decref(keyob);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEM_NODEFAULT(tp_self, self, keyob);
 	Dee_Decref(keyob);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err_keyob:
 	Dee_Decref(keyob);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemStringHash,
@@ -11027,11 +11037,11 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemStringHash
 	value = DeeType_INVOKE_TRYGETITEMSTRINGHASH_NODEFAULT(tp_self, self, key, hash);
 	if (value) {
 		if (value == ITER_DONE)
-			return -2;
+			return Dee_BOUND_MISSING;
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemStringLenHash,
@@ -11041,11 +11051,11 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItemStringLenH
 	value = DeeType_INVOKE_TRYGETITEMSTRINGLENHASH_NODEFAULT(tp_self, self, key, strlen(key), hash);
 	if (value) {
 		if (value == ITER_DONE)
-			return -2;
+			return Dee_BOUND_MISSING;
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItem,
@@ -11059,12 +11069,12 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithTryGetItem,
 	Dee_Decref(keyob);
 	if (value) {
 		if (value == ITER_DONE)
-			return -2;
+			return Dee_BOUND_MISSING;
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithBoundItemDefault,
@@ -11079,7 +11089,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithBoundItemDefault,
 	Dee_Decref(keyob);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -11093,7 +11103,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithErrorRequiresInt,
 	DeeObject_TypeAssertFailed(keyob, &DeeInt_Type);
 	Dee_Decref(keyob);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -11109,11 +11119,9 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringHashWithContains,
 	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, keyob);
 	Dee_Decref(keyob);
 	result_status = DeeObject_BoolInherited(result);
-	if (result_status == 0)
-		result_status = -2;
-	return result_status;
+	return Dee_BOUND_FROMHAS_BOUND(result_status);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 struct default_map_bounditem_string_hash_with_enumerate_data {
@@ -11146,11 +11154,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringHashWithEnumerate,
 	status = DeeType_INVOKE_ENUMERATE_NODEFAULT(tp_self, self, &default_map_bounditem_string_hash_with_enumerate_cb, &data);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -11165,11 +11177,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringHashWithEnumerateDefault
 	status = DeeType_INVOKE_ENUMERATE(tp_self, self, &default_map_bounditem_string_hash_with_enumerate_cb, &data);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -11186,7 +11202,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithBoundItemStringHa
 	));
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithBoundItem,
@@ -11201,7 +11217,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithBoundItem,
 	Dee_Decref(keyob);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithGetItemStringHash,
@@ -11213,14 +11229,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithGetItemStringHash
 	));
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	if (DeeError_Catch(&DeeError_KeyError))
-		return -2;
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError))
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithGetItemStringLenHash,
@@ -11230,13 +11246,13 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithGetItemStringLenH
 	value = DeeType_INVOKE_GETITEMSTRINGLENHASH_NODEFAULT(tp_self, self, key, keylen, hash);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	if (DeeError_Catch(&DeeError_KeyError))
-		return -2;
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
-	return -1;
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError))
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithGetItem,
@@ -11250,14 +11266,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithGetItem,
 	Dee_Decref(keyob);
 	if (value) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	if (DeeError_Catch(&DeeError_KeyError))
-		return -2;
 	if (DeeError_Catch(&DeeError_UnboundItem))
-		return 0;
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError))
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemStringLenHashAndHasItemStringLenHash,
@@ -11270,12 +11286,12 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemStringL
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEMSTRINGLENHASH_NODEFAULT(tp_self, self, key, keylen, hash);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemStringHashAndHasItemStringHash,
@@ -11290,14 +11306,14 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemStringH
 		goto err;
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	LOCAL_WITH_ZSTRING_COPY(err, keyz, key, keylen, (
 		result = DeeType_INVOKE_HASITEMSTRINGHASH_NODEFAULT(tp_self, self, keyz, hash)
 	));
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemAndHasItem,
@@ -11314,15 +11330,15 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemAndHasI
 	if (value != ITER_DONE) {
 		Dee_Decref(value);
 		Dee_Decref(keyob);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	result = DeeType_INVOKE_HASITEM_NODEFAULT(tp_self, self, keyob);
 	Dee_Decref(keyob);
-	return result ? result : -2;
+	return Dee_BOUND_FROMHAS_UNBOUND(result);
 err_keyob:
 	Dee_Decref(keyob);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemStringLenHash,
@@ -11332,11 +11348,11 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemStringL
 	value = DeeType_INVOKE_TRYGETITEMSTRINGLENHASH_NODEFAULT(tp_self, self, key, keylen, hash);
 	if (value) {
 		if (value == ITER_DONE)
-			return -2;
+			return Dee_BOUND_MISSING;
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemStringHash,
@@ -11348,12 +11364,12 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItemStringH
 	));
 	if (value) {
 		if (value == ITER_DONE)
-			return -2;
+			return Dee_BOUND_MISSING;
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItem,
@@ -11367,12 +11383,12 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithTryGetItem,
 	Dee_Decref(keyob);
 	if (value) {
 		if (value == ITER_DONE)
-			return -2;
+			return Dee_BOUND_MISSING;
 		Dee_Decref(value);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithBoundItemDefault,
@@ -11387,7 +11403,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithBoundItemDefault,
 	Dee_Decref(keyob);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -11401,7 +11417,7 @@ DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithErrorRequiresInt,
 	DeeObject_TypeAssertFailed(keyob, &DeeInt_Type);
 	Dee_Decref(keyob);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -11417,11 +11433,9 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringLenHashWithContains,
 	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, keyob);
 	Dee_Decref(keyob);
 	result_status = DeeObject_BoolInherited(result);
-	if (result_status == 0)
-		result_status = -2;
-	return result_status;
+	return Dee_BOUND_FROMHAS_BOUND(result_status);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 struct default_map_bounditem_string_len_hash_with_enumerate_data {
@@ -11456,11 +11470,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringLenHashWithEnumerate,
 	status = DeeType_INVOKE_ENUMERATE_NODEFAULT(tp_self, self, &default_map_bounditem_string_len_hash_with_enumerate_cb, &data);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -11476,11 +11494,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringLenHashWithEnumerateDefa
 	status = DeeType_INVOKE_ENUMERATE(tp_self, self, &default_map_bounditem_string_len_hash_with_enumerate_cb, &data);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -11524,13 +11546,13 @@ err:
 	return -1;
 }
 
-LOCAL ATTR_CONST int DCALL bound2has(int return_status) {
-	if (return_status == 0)
-		return 1; /* Unbound, but exists */
-	if (return_status == -2)
+LOCAL ATTR_CONST int DCALL bound2has(int bound_status) {
+	if (Dee_BOUND_ISPRESENT(bound_status))
+		return 1; /* Bound or unbound (but present) */
+	if (Dee_BOUND_ISMISSING(bound_status))
 		return 0; /* Not bound */
-	ASSERT(return_status == 1 || return_status == -1);
-	return return_status; /* Bound or error */
+	ASSERT(Dee_BOUND_ISERR(bound_status));
+	return -1; /* error */
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithBoundItemStringHash,
@@ -14620,11 +14642,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithForeachPair,
 	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_with_enumerate_cb, key);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -14636,11 +14662,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemIndexWithForeachPair,
 	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_index_with_enumerate_cb, (void *)(uintptr_t)key);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -14655,11 +14685,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringHashWithForeachPair,
 	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_hash_with_enumerate_cb, &data);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }
@@ -14675,11 +14709,15 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringLenHashWithForeachPair,
 	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_len_hash_with_enumerate_cb, &data);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
-		status = 1;
+		status = Dee_BOUND_YES;
 	} else if (status == -3) {
-		status = 0;
+		status = Dee_BOUND_NO;
 	} else if (status == 0) {
-		status = -2;
+		status = Dee_BOUND_MISSING;
+	} else {
+#if Dee_BOUND_ERR != -1
+		status = Dee_BOUND_ERR;
+#endif /* Dee_BOUND_ERR != -1 */
 	}
 	return (int)status;
 }

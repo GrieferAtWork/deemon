@@ -62,7 +62,7 @@
 //#define DEFINE_DeeObject_VCallAttrStringLenHashf
 //#define DEFINE_DeeObject_TVCallAttrStringLenHashf
 //#define DEFINE_DeeObject_HasAttr
-//#define DEFINE_DeeObject_THasAttr
+#define DEFINE_DeeObject_THasAttr
 //#define DEFINE_DeeObject_HasAttrStringHash
 //#define DEFINE_DeeObject_THasAttrStringHash
 //#define DEFINE_DeeObject_HasAttrStringLenHash
@@ -84,7 +84,7 @@
 //#define DEFINE_DeeObject_TFindPrivateAttrInfoStringHash
 //#define DEFINE_DeeObject_TFindPrivateAttrInfoStringLenHash
 //#define DEFINE_DeeObject_FindAttr
-#define DEFINE_DeeObject_EnumAttr
+//#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_DeeObject_GetAttr) +                           \
@@ -497,8 +497,8 @@ DECL_BEGIN
 #define LOCAL_ERROR_RESULT          DONT_USE_THIS_MACRO
 #else /* ... */
 #define LOCAL_return_t              int
-#define LOCAL_ATTR_NOT_FOUND_RESULT (-2)
-#define LOCAL_ERROR_RESULT          (-1)
+#define LOCAL_ATTR_NOT_FOUND_RESULT Dee_BOUND_MISSING
+#define LOCAL_ERROR_RESULT          Dee_BOUND_ERR
 #endif /* !... */
 
 /* Helpers to query class instance attributes */
@@ -1340,17 +1340,20 @@ do_tp_iter_attr:
 #ifdef LOCAL_IS_TEST_FUNCTION
 			if (found_object) {
 				Dee_Decref(found_object);
+#ifdef LOCAL_IS_BOUND
+				return Dee_BOUND_YES;
+#else /* LOCAL_IS_BOUND */
 				return 1;
+#endif /* !LOCAL_IS_BOUND */
 			}
 #ifdef LOCAL_IS_BOUND
 			if (DeeError_Catch(&DeeError_UnboundAttribute))
-				return 0;
+				return Dee_BOUND_NO;
 #endif /* LOCAL_IS_BOUND */
-			if (CATCH_ATTRIBUTE_ERROR()) {
+			if (DeeError_Catch(&DeeError_AttributeError) ||
+			    DeeError_Catch(&DeeError_NotImplemented)) {
 #ifdef LOCAL_IS_BOUND
-				/* Special case: A user-defined getattr operator threw an error
-				 *               indicating that the attribute doesn't exists */
-				return -3;
+				return Dee_BOUND_MISSING;
 #else /* LOCAL_IS_BOUND */
 				return 0;
 #endif /* !LOCAL_IS_BOUND */

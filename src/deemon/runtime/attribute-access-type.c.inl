@@ -364,13 +364,13 @@ DECL_BEGIN
 #define LOCAL_ATTR_NOT_FOUND_RESULT 1
 #define LOCAL_ERROR_RETURN_VALUE    (-1)
 #elif defined(LOCAL_IS_ENUM)
-#define LOCAL_return_t              dssize_t
+#define LOCAL_return_t              Dee_ssize_t
 #define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
 #define LOCAL_ERROR_RETURN_VALUE    DONT_USE_THIS_MACRO
 #else /* ... */
 #define LOCAL_return_t              int
-#define LOCAL_ATTR_NOT_FOUND_RESULT (-2)
-#define LOCAL_ERROR_RETURN_VALUE    (-1)
+#define LOCAL_ATTR_NOT_FOUND_RESULT Dee_BOUND_MISSING
+#define LOCAL_ERROR_RETURN_VALUE    Dee_BOUND_ERR
 #endif /* !... */
 
 #if defined(DEFINE_DeeType_FindAttr)

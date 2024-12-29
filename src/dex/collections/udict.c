@@ -724,7 +724,6 @@ udict_contains(UDict *self, DeeObject *key) {
 	return_false;
 }
 
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_bounditem(UDict *self, DeeObject *key) {
 	Dee_hash_t i, perturb;
@@ -736,35 +735,24 @@ udict_bounditem(UDict *self, DeeObject *key) {
 		item = &self->ud_elem[i & self->ud_mask];
 		if (USAME(item->di_key, key)) {
 			UDict_LockEndRead(self);
-			return 1; /* Found the item. */
+			return Dee_BOUND_YES; /* Found the item. */
 		}
 		if (!item->di_key)
 			break;
 	}
 	UDict_LockEndRead(self);
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
+#ifdef Dee_BOUND_MAYALIAS_HAS
+#define udict_hasitem udict_bounditem
+#else /* Dee_BOUND_MAYALIAS_HAS */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 udict_hasitem(UDict *self, DeeObject *key) {
-	Dee_hash_t i, perturb;
-	Dee_hash_t hash = UHASH(key);
-	UDict_LockRead(self);
-	perturb = i = hash & self->ud_mask;
-	for (;; UDict_HashNx(i, perturb)) {
-		struct udict_item *item;
-		item = &self->ud_elem[i & self->ud_mask];
-		if (USAME(item->di_key, key)) {
-			UDict_LockEndRead(self);
-			return 1; /* Found the item. */
-		}
-		if (!item->di_key)
-			break;
-	}
-	UDict_LockEndRead(self);
-	return 0;
+	int bound = udict_bounditem(self, key);
+	return Dee_BOUND_ASHAS_NOEXCEPT(bound);
 }
-
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 udict_getitem(UDict *self, DeeObject *key) {
@@ -1968,26 +1956,20 @@ urodict_bounditem(URoDict *self, DeeObject *key) {
 		if (!item->di_key)
 			break;
 		if (USAME(item->di_key, key))
-			return 1; /* Found it! */
+			return Dee_BOUND_YES; /* Found it! */
 	}
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
+#ifdef Dee_BOUND_MAYALIAS_HAS
+#define urodict_hasitem urodict_bounditem
+#else /* Dee_BOUND_MAYALIAS_HAS */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 urodict_hasitem(URoDict *self, DeeObject *key) {
-	size_t i, perturb, hash;
-	struct udict_item *item;
-	hash    = UHASH(key);
-	perturb = i = hash & self->urd_mask;
-	for (;; URoDict_HashNx(i, perturb)) {
-		item = &self->urd_elem[i & self->urd_mask];
-		if (!item->di_key)
-			break;
-		if (USAME(item->di_key, key))
-			return 1; /* Found it! */
-	}
-	return 0;
+	int bound = urodict_bounditem(self, key);
+	return Dee_BOUND_ASHAS_NOEXCEPT(bound);
 }
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 urodict_trygetitem(URoDict *self, DeeObject *key) {

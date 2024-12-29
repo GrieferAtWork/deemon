@@ -638,6 +638,16 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
 
 #endif /* CONFIG_NO_THREADS */
 
+#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
+#define tls_bound tls_bool
+#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+tls_bound(TLS *__restrict self) {
+	int ok = tls_bool(self);
+	return Dee_BOUND_FROMBOOL(ok);
+}
+#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 tls_printrepr(TLS *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	DeeObject *factory = self->t_factory;
@@ -648,7 +658,7 @@ tls_printrepr(TLS *__restrict self, Dee_formatprinter_t printer, void *arg) {
 
 
 PRIVATE struct type_getset tpconst tls_getsets[] = {
-	TYPE_GETSET_BOUND_F("value", &tls_getvalue, &tls_delvalue, &tls_setvalue, &tls_bool, METHOD_FNOREFESCAPE,
+	TYPE_GETSET_BOUND_F("value", &tls_getvalue, &tls_delvalue, &tls_setvalue, &tls_bound, METHOD_FNOREFESCAPE,
 	                    "#tAttributeError{The TLS variable isn't bound}"
 	                    "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
 	                    "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"

@@ -433,7 +433,7 @@ DeeModule_BoundAttrSymbol_asitem(DeeModuleObject *self,
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
-		return atomic_read(&self->mo_globalv[symbol->ss_index]) ? 1 : 0;
+		return Dee_BOUND_FROMBOOL(atomic_read(&self->mo_globalv[symbol->ss_index]));
 	}
 
 	/* External symbol, or property. */
@@ -444,19 +444,19 @@ read_symbol:
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
-			return 0;
+			return Dee_BOUND_NO;
 		/* Invoke the property callback. */
 		result = DeeObject_Call(callback, 0, NULL);
 		Dee_Decref(callback);
 		if (result) {
 			Dee_Decref(callback);
-			return 1;
+			return Dee_BOUND_YES;
 		}
 		if (DeeError_Catch(&DeeError_UnboundAttribute) ||
 		    DeeError_Catch(&DeeError_UnboundLocal) ||
 		    DeeError_Catch(&DeeError_UnboundItem))
-			return 0;
-		return -1;
+			return Dee_BOUND_NO;
+		return Dee_BOUND_ERR;
 	}
 	/* External symbol. */
 	ASSERT(symbol->ss_extern.ss_impid < self->mo_importc);
@@ -518,9 +518,9 @@ modexports_bounditem(ModuleExports *self, DeeObject *key) {
 	return result;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -678,9 +678,9 @@ modexports_bounditem_index(ModuleExports *self, size_t key) {
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
 err_nokey:
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -811,9 +811,9 @@ modexports_bounditem_string_hash(ModuleExports *self, char const *key, Dee_hash_
 	return result;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -931,9 +931,9 @@ modexports_bounditem_string_len_hash(ModuleExports *self, char const *key, size_
 	return result;
 err_nokey_unlock:
 	DeeModule_UnlockSymbols(mod);
-	return -2;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1270,15 +1270,15 @@ modglobals_bounditem_index(ModuleGlobals *self, size_t index) {
 		goto err;
 	if (index >= mod->mo_globalc) {
 		DeeModule_UnlockSymbols(mod);
-		return -2;
+		return Dee_BOUND_MISSING;
 	}
 	DeeModule_LockRead(mod);
 	value = mod->mo_globalv[index];
 	DeeModule_LockEndRead(mod);
 	DeeModule_UnlockSymbols(mod);
-	return value ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(value);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

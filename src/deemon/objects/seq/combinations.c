@@ -1152,7 +1152,7 @@ scv_bounditem_index(SeqCombinationsView *__restrict self, size_t index) {
 	size_t *idx = SeqCombinationsView_GetIdx(self);
 	ASSERT(self->scv_com->sc_rparam != (size_t)-1);
 	if unlikely(index >= self->scv_com->sc_rparam)
-		return -2;
+		return Dee_BOUND_MISSING;
 	index = idx[index];
 	return DeeSeq_OperatorBoundItemIndex(self->scv_com->sc_seq, index);
 }

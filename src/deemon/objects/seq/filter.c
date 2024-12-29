@@ -448,9 +448,9 @@ filter_bounditem_index(Filter *self, size_t index) {
 	size_t size = filter_size(self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	return index < size ? 1 : -2;
+	return Dee_BOUND_FROMPRESENT_BOUND(index < size);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -577,9 +577,9 @@ filter_bounditem_handle_itemvalue(Filter *self, /*inherit(always)*/ DREF DeeObje
 	int temp;
 	if unlikely(!itemvalue) {
 		if (DeeError_Catch(&DeeError_UnboundItem))
-			return 0;
+			return Dee_BOUND_NO;
 		if (DeeError_Catch(&DeeError_IndexError))
-			return -2;
+			return Dee_BOUND_MISSING;
 		goto err;
 	}
 	temp = invoke_filter(self->f_fun, itemvalue);
@@ -587,10 +587,10 @@ filter_bounditem_handle_itemvalue(Filter *self, /*inherit(always)*/ DREF DeeObje
 	if unlikely(temp < 0)
 		goto err;
 	if unlikely(!temp)
-		return 0;
-	return 1;
+		return Dee_BOUND_NO;
+	return Dee_BOUND_YES;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

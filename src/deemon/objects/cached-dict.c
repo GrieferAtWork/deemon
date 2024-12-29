@@ -887,85 +887,79 @@ cdict_trygetitem_string_len_hash(CachedDict *self, char const *key, size_t keyle
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cdict_bounditem(CachedDict *self, DeeObject *key) {
+	DREF DeeObject *value;
 	Dee_hash_t hash = DeeObject_Hash(key);
 	int result = cdict_iscached(self, key, hash);
-	if (result == 0) {
-		DREF DeeObject *value;
-		value = DeeObject_GetItem(self->cd_map, key);
-		if (value) {
-			Dee_Incref(key);
-			if (!DeeCachedDict_Remember(self, key, value, hash))
-				goto err;
-			return 1;
-		}
-		if (DeeError_Catch(&DeeError_KeyError) ||
-		    DeeError_Catch(&DeeError_IndexError))
-			return -2;
-		if (DeeError_Catch(&DeeError_UnboundItem))
-			return 0;
+	if unlikely(result < 0)
 		goto err;
+	if (result)
+		return Dee_BOUND_YES;
+	value = DeeObject_GetItem(self->cd_map, key);
+	if (value) {
+		Dee_Incref(key);
+		if (!DeeCachedDict_Remember(self, key, value, hash))
+			goto err;
+		return Dee_BOUND_YES;
 	}
-	return result;
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cdict_bounditem_string_hash(CachedDict *self, char const *key, Dee_hash_t hash) {
-	int result = cdict_iscached_string_hash(self, key, hash);
-	if (result == 0) {
-		DREF DeeObject *value;
-		value = DeeObject_GetItemStringHash(self->cd_map, key, hash);
-		if (value) {
-			DREF DeeObject *keyob;
-			keyob = DeeString_NewWithHash(key, hash);
-			if unlikely(!keyob) {
-				Dee_Decref(value);
-				goto err;
-			}
-			if (!DeeCachedDict_Remember(self, keyob, value, hash))
-				goto err;
-			return 1;
+	DREF DeeObject *value;
+	if (cdict_iscached_string_hash(self, key, hash))
+		return Dee_BOUND_YES;
+	value = DeeObject_GetItemStringHash(self->cd_map, key, hash);
+	if (value) {
+		DREF DeeObject *keyob;
+		keyob = DeeString_NewWithHash(key, hash);
+		if unlikely(!keyob) {
+			Dee_Decref(value);
+			goto err;
 		}
-		if (DeeError_Catch(&DeeError_KeyError) ||
-		    DeeError_Catch(&DeeError_IndexError))
-			return -2;
-		if (DeeError_Catch(&DeeError_UnboundItem))
-			return 0;
-		goto err;
+		if (!DeeCachedDict_Remember(self, keyob, value, hash))
+			goto err;
+		return Dee_BOUND_YES;
 	}
-	return result;
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cdict_bounditem_string_len_hash(CachedDict *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	int result = cdict_iscached_string_len_hash(self, key, keylen, hash);
-	if (result == 0) {
-		DREF DeeObject *value;
-		value = DeeObject_GetItemStringLenHash(self->cd_map, key, keylen, hash);
-		if (value) {
-			DREF DeeObject *keyob;
-			keyob = DeeString_NewSizedWithHash(key, keylen, hash);
-			if unlikely(!keyob) {
-				Dee_Decref(value);
-				goto err;
-			}
-			if (!DeeCachedDict_Remember(self, keyob, value, hash))
-				goto err;
-			return 1;
+	DREF DeeObject *value;
+	if (cdict_iscached_string_len_hash(self, key, keylen, hash))
+		return Dee_BOUND_YES;
+	value = DeeObject_GetItemStringLenHash(self->cd_map, key, keylen, hash);
+	if (value) {
+		DREF DeeObject *keyob;
+		keyob = DeeString_NewSizedWithHash(key, keylen, hash);
+		if unlikely(!keyob) {
+			Dee_Decref(value);
+			goto err;
 		}
-		if (DeeError_Catch(&DeeError_KeyError) ||
-		    DeeError_Catch(&DeeError_IndexError))
-			return -2;
-		if (DeeError_Catch(&DeeError_UnboundItem))
-			return 0;
-		goto err;
+		if (!DeeCachedDict_Remember(self, keyob, value, hash))
+			goto err;
+		return Dee_BOUND_YES;
 	}
-	return result;
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return Dee_BOUND_NO;
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE struct type_cmp cdict_cmp = {

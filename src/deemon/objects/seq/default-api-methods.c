@@ -4475,7 +4475,8 @@ DeeSeq_DefaultSortedWithCopySizeAndGetItemIndexFast(DeeObject *self, size_t star
 		end = selfsize;
 	if unlikely(start > end)
 		start = end;
-	result = DeeTuple_NewUninitialized(end - start);
+	end -= start;
+	result = DeeTuple_NewUninitialized(end);
 	if unlikely(!result)
 		goto err;
 	if unlikely(DeeSeq_SortGetItemIndexFast(DeeTuple_SIZE(result), DeeTuple_ELEM(result),
@@ -4483,7 +4484,14 @@ DeeSeq_DefaultSortedWithCopySizeAndGetItemIndexFast(DeeObject *self, size_t star
 		goto err_r;
 	if unlikely(DeeTuple_GET(result, 0) == NULL) {
 		/* Must trim unbound items (which were sorted to the start of the tuple) */
-
+		size_t n_unbound = 1;
+		while (n_unbound < end && DeeTuple_GET(result, n_unbound) == NULL)
+			++n_unbound;
+		end -= n_unbound;
+		memmovedownc(DeeTuple_ELEM(result),
+		             DeeTuple_ELEM(result) + n_unbound,
+		             end, sizeof(DREF DeeObject *));
+		result = DeeTuple_TruncateUninitialized(result, end);
 	}
 	return (DREF DeeObject *)result;
 err_r:
@@ -5264,11 +5272,10 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeMap_DefaultSetOldWithBoundItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
 	int bound = (*Dee_TYPE(self)->tp_seq->tp_bounditem)(self, key);
-	if (bound <= 0) {
-		if unlikely(bound == -1)
-			goto err;
-		return 0; /* Key doesn't exist */
-	}
+	if unlikely(Dee_BOUND_ISERR(bound))
+		goto err;
+	if (!Dee_BOUND_ISBOUND(bound))
+		return 0; /* Key doesn't exist or isn't bound */
 	if unlikely((*Dee_TYPE(self)->tp_seq->tp_setitem)(self, key, value))
 		goto err;
 	return 1;
@@ -5390,9 +5397,9 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeMap_DefaultSetNewWithBoundItemAndMapSetDefault(DeeObject *self, DeeObject *key, DeeObject *value) {
 	DREF DeeObject *temp;
 	int bound = (*Dee_TYPE(self)->tp_seq->tp_bounditem)(self, key);
-	if unlikely(bound == -1)
+	if unlikely(Dee_BOUND_ISERR(bound))
 		goto err;
-	if (bound > 0)
+	if (Dee_BOUND_ISBOUND(bound))
 		return 0; /* Key already exists */
 	temp = DeeMap_InvokeSetDefault(self, key, value);
 	if unlikely(!temp)
@@ -5406,9 +5413,9 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeMap_DefaultSetNewWithBoundItemAndSetItem(DeeObject *self, DeeObject *key, DeeObject *value) {
 	int bound = (*Dee_TYPE(self)->tp_seq->tp_bounditem)(self, key);
-	if unlikely(bound == -1)
+	if unlikely(Dee_BOUND_ISERR(bound))
 		goto err;
-	if (bound > 0)
+	if (Dee_BOUND_ISBOUND(bound))
 		return 0; /* Key already exists */
 	if unlikely((*Dee_TYPE(self)->tp_seq->tp_setitem)(self, key, value))
 		goto err;
@@ -5757,9 +5764,9 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeMap_DefaultRemoveWithBoundItemAndDelItem(DeeObject *self, DeeObject *key) {
 	int bound = (*Dee_TYPE(self)->tp_seq->tp_bounditem)(self, key);
-	if unlikely(bound == -1)
+	if unlikely(Dee_BOUND_ISERR(bound))
 		goto err;
-	if (bound <= 0)
+	if (!Dee_BOUND_ISBOUND(bound))
 		return 0;
 	if unlikely((*Dee_TYPE(self)->tp_seq->tp_delitem)(self, key))
 		goto err;
@@ -7652,11 +7659,11 @@ call_getter_for_bound(DeeObject *getter, DeeObject *self) {
 	result = DeeObject_ThisCall(getter, self, 0, NULL);
 	if (result) {
 		Dee_Decref(result);
-		return 1;
+		return Dee_BOUND_YES;
 	}
 	if (DeeError_Catch(&DeeError_UnboundAttribute))
-		return 0;
-	return -1;
+		return Dee_BOUND_NO;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

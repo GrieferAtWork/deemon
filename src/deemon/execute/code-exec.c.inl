@@ -3933,11 +3933,11 @@ do_call_local:
 				HANDLE_EXCEPT();
 			}
 			error = DeeObject_BoundAttr(SECOND, FIRST);
-			if unlikely(error == -1)
+			if unlikely(Dee_BOUND_ISERR(error))
 				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
-			TOP = DeeBool_For(error > 0);
+			TOP = DeeBool_For(Dee_BOUND_ISBOUND(error));
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
@@ -5179,11 +5179,11 @@ do_setmember_this:
 				TARGET(ASM_BOUNDITEM, -2, +1) {
 					int error;
 					error = DeeObject_BoundItem(SECOND, FIRST);
-					if unlikely(error == -1)
+					if unlikely(Dee_BOUND_ISERR(error))
 						HANDLE_EXCEPT();
 					POPREF();
 					Dee_Decref(TOP);
-					TOP = DeeBool_For(error > 0);
+					TOP = DeeBool_For(Dee_BOUND_ISBOUND(error));
 					Dee_Incref(TOP);
 					DISPATCH();
 				}

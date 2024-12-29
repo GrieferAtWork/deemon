@@ -1160,7 +1160,12 @@ vcall_boundmethod(struct fungen *__restrict self,
 	DO(fg_vcallapi(self, func, VCALL_CC_M1INT, 1)); /* result */
 	DO(fg_vdirect1(self));
 	ASSERT(fg_vtop_isdirect(self));
+#if Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0
 	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
+#else /* Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0 */
+	DO(fg_vdelta(self, -Dee_BOUND_YES));
+	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_Z;
+#endif /* Dee_BOUND_ERR > 0 || Dee_BOUND_MISSING > 0 || Dee_BOUND_NO > 0 */
 	return 0;
 err:
 	return -1;
@@ -3871,7 +3876,12 @@ fg_vopboundattr(struct fungen *__restrict self) {
 	DO(fg_vcallapi(self, &DeeObject_BoundAttr, VCALL_CC_M1INT, 2));
 	DO(fg_vdirect1(self));
 	ASSERT(fg_vtop_isdirect(self));
+#if Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0
 	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
+#else /* Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0 */
+	DO(fg_vdelta(self, -Dee_BOUND_YES));
+	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_Z;
+#endif /* Dee_BOUND_ERR > 0 || Dee_BOUND_MISSING > 0 || Dee_BOUND_NO > 0 */
 	return 0;
 err:
 	return -1;
@@ -4105,7 +4115,12 @@ fg_vopbounditem(struct fungen *__restrict self) {
 	DO(fg_vcallapi(self, &DeeObject_BoundItem, VCALL_CC_M1INT, 3)); /* result */
 	DO(fg_vdirect1(self));                                          /* result */
 	ASSERT(fg_vtop_isdirect(self));
+#if Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0
 	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
+#else /* Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0 */
+	DO(fg_vdelta(self, -Dee_BOUND_YES));
+	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_Z;
+#endif /* Dee_BOUND_ERR > 0 || Dee_BOUND_MISSING > 0 || Dee_BOUND_NO > 0 */
 	return 0;
 err:
 	return -1;
@@ -7205,7 +7220,12 @@ fg_vbound_module_symbol(struct fungen *__restrict self, DeeModuleObject *mod,
 	DO(fg_vcallapi(self, &DeeModule_BoundAttrSymbol, VCALL_CC_M1INT, 2));
 	DO(fg_vdirect1(self));
 	ASSERT(fg_vtop_isdirect(self));
+#if Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0
 	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
+#else /* Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0 */
+	DO(fg_vdelta(self, -Dee_BOUND_YES));
+	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_Z;
+#endif /* Dee_BOUND_ERR > 0 || Dee_BOUND_MISSING > 0 || Dee_BOUND_NO > 0 */
 	return 0;
 err:
 	return -1;
@@ -7334,7 +7354,12 @@ fg_vbound_instance_attr(struct fungen *__restrict self, DeeTypeObject *type,
 	DO(fg_vcallapi(self, &DeeInstance_BoundAttribute, VCALL_CC_M1INT, 4)); /* result */
 	DO(fg_vdirect1(self));                /* result */
 	ASSERT(fg_vtop_isdirect(self));
+#if Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0
 	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
+#else /* Dee_BOUND_ERR <= 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_NO <= 0 */
+	DO(fg_vdelta(self, -Dee_BOUND_YES));
+	fg_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_Z;
+#endif /* Dee_BOUND_ERR > 0 || Dee_BOUND_MISSING > 0 || Dee_BOUND_NO > 0 */
 	return 0;
 err:
 	return -1;

@@ -848,15 +848,15 @@ frame_bound_thisarg(Frame *__restrict self) {
 	frame = DeeFrame_LockReadIfNotDead((DeeObject *)self);
 	if unlikely(!ITER_ISOK(frame)) {
 		if (frame == Dee_CODE_FRAME_DEAD)
-			return 0;
+			return Dee_BOUND_NO;
 		goto err;
 	}
 	is_bound = (frame->cf_func->fo_code->co_flags & CODE_FTHISCALL) != 0 &&
 	           (frame->cf_this != NULL);
 	DeeFrame_LockEndRead((DeeObject *)self);
-	return is_bound ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(is_bound);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -887,18 +887,18 @@ frame_bound_return(Frame *__restrict self) {
 	bool is_bound;
 	struct code_frame const *frame;
 	if unlikely(self->f_flags & DEEFRAME_FNORESULT)
-		return 0;
+		return Dee_BOUND_NO;
 	frame = DeeFrame_LockReadIfNotDead((DeeObject *)self);
 	if unlikely(!ITER_ISOK(frame)) {
 		if (frame == Dee_CODE_FRAME_DEAD)
-			return 0;
+			return Dee_BOUND_NO;
 		goto err;
 	}
 	is_bound = ITER_ISOK(frame->cf_result);
 	DeeFrame_LockEndRead((DeeObject *)self);
-	return is_bound ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(is_bound);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -944,7 +944,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_bound_frame(Frame *__restrict self) {
-	return atomic_read(&self->f_frame) != NULL ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(atomic_read(&self->f_frame) != NULL);
 }
 
 #define frame_bound_function_statics frame_bound_frame

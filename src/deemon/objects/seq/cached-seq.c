@@ -342,9 +342,11 @@ err_oob:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_bounditem_index(CachedSeq_WithIter *__restrict self, size_t index) {
 	int result = cswi_ensure_loaded(self, index);
-	if likely(result >= 0)
-		result = result ? -2 : 1;
-	return result;
+	if unlikely(result < 0)
+		return Dee_BOUND_ERR;
+	if (result > 0)
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_YES;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1271,13 +1273,13 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cswgi_bounditem(CachedSeq_WithGetItem *self, DeeObject *index) {
 	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
 	if (result == CSWGI_GETITEM_UNBOUND)
-		return 0;
+		return Dee_BOUND_NO;
 	if (result == CSWGI_GETITEM_OOB)
-		return -2;
+		return Dee_BOUND_MISSING;
 	if (result == CSWGI_GETITEM_ERROR)
-		return -1;
+		return Dee_BOUND_ERR;
 	Dee_Decref_unlikely(result);
-	return 1;
+	return Dee_BOUND_YES;
 }
 
 #define cswsogi_hasitem cswgi_hasitem
@@ -1301,13 +1303,13 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswgi_bounditem_index(CachedSeq_WithGetItem *self, size_t index) {
 	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
 	if (result == CSWGI_GETITEM_UNBOUND)
-		return 0;
+		return Dee_BOUND_NO;
 	if (result == CSWGI_GETITEM_OOB)
-		return -2;
+		return Dee_BOUND_MISSING;
 	if (result == CSWGI_GETITEM_ERROR)
-		return -1;
+		return Dee_BOUND_ERR;
 	Dee_Decref_unlikely(result);
-	return 1;
+	return Dee_BOUND_YES;
 }
 
 #define cswsogi_hasitem_index cswgi_hasitem_index

@@ -325,6 +325,16 @@ cell_bool(DeeCellObject *__restrict self) {
 	return DeeCell_IsBound(self);
 }
 
+#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
+#define cell_value_bound cell_bool
+#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cell_value_bound(DeeCellObject *__restrict self) {
+	int ok = cell_bool(self);
+	return Dee_BOUND_FROMBOOL(ok);
+}
+#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 cell_hash(DeeCellObject *__restrict self) {
 	return DeeCell_GetHash(self);
@@ -360,7 +370,7 @@ PRIVATE struct type_cmp cell_cmp = {
 
 
 PRIVATE struct type_getset tpconst cell_getsets[] = {
-	TYPE_GETSET_BOUND_F("value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set, &cell_bool,
+	TYPE_GETSET_BOUND_F("value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set, &cell_value_bound,
 	                    METHOD_FNOREFESCAPE,
 	                    "#tUnboundAttribute{Attempted to read from an empty Cell}"
 	                    "Read/write access to the underlying, contained ?O"),

@@ -284,14 +284,14 @@ DeeSeq_DefaultOperatorBoundItemWithSeqBoundItemIndex(DeeObject *self, DeeObject 
 		goto err;
 	return DeeSeq_OperatorBoundItemIndex(self, index_value);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultOperatorBoundItemWithEmpty(DeeObject *self, DeeObject *index) {
 	(void)self;
 	(void)index;
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -372,10 +372,10 @@ DeeSeq_DefaultOperatorBoundItemIndexWithSeqSize(DeeObject *self, size_t index) {
 	if unlikely(seqsize == (size_t)-1)
 		goto err;
 	if (index < seqsize)
-		return 1;
-	return -2;
+		return Dee_BOUND_YES;
+	return Dee_BOUND_MISSING;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1918,7 +1918,7 @@ DeeMap_DefaultOperatorBoundItemStringHashWithEmpty(DeeObject *self, char const *
 	(void)self;
 	(void)key;
 	(void)hash;
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -1982,7 +1982,7 @@ DeeMap_DefaultOperatorBoundItemStringLenHashWithEmpty(DeeObject *self, char cons
 	(void)key;
 	(void)keylen;
 	(void)hash;
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL

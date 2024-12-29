@@ -223,7 +223,7 @@ DeeSeq_DefaultBoundLastWithSizeAndBoundItemIndex(DeeObject *__restrict self) {
 err_isempty:
 	err_empty_sequence(self);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -249,7 +249,7 @@ err_sizeob_isempty:
 err_sizeob:
 	Dee_Decref(sizeob);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL

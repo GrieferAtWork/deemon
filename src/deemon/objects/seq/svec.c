@@ -333,7 +333,7 @@ rvec_delitem_index(RefVector *__restrict self, size_t index) {
 	return 0;
 }
 
-PRIVATE NONNULL((1, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 rvec_setitem_index(RefVector *self, size_t index,
                  DeeObject *value) {
 	DREF DeeObject *oldobj;
@@ -350,11 +350,11 @@ rvec_setitem_index(RefVector *self, size_t index,
 	return 0;
 }
 
-PRIVATE NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_bounditem_index(RefVector *self, size_t index) {
 	if unlikely(index >= self->rv_length)
-		return -2;
-	return atomic_read(&self->rv_vector[index]) ? 1 : 0;
+		return Dee_BOUND_MISSING;
+	return Dee_BOUND_FROMBOOL(atomic_read(&self->rv_vector[index]));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

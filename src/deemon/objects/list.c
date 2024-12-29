@@ -1331,7 +1331,7 @@ unlock_and_err_index:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_bounditem_index(List *me, size_t index) {
-	return index < DeeList_SIZE_ATOMIC(me) ? 1 : -2;
+	return Dee_BOUND_FROMPRESENT_BOUND(index < DeeList_SIZE_ATOMIC(me));
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

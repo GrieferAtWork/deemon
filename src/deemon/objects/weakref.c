@@ -213,6 +213,16 @@ ob_weakref_bool(WeakRef *__restrict self) {
 	return Dee_weakref_bound(&self->wr_ref);
 }
 
+#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
+#define ob_weakref_bound ob_weakref_bool
+#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ob_weakref_bound(WeakRef *__restrict self) {
+	int ok = ob_weakref_bool(self);
+	return Dee_BOUND_FROMBOOL(ok);
+}
+#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 ob_weakref_hash(WeakRef *__restrict self) {
@@ -335,7 +345,7 @@ PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
-	TYPE_GETSET_BOUND_F("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set, &ob_weakref_bool, METHOD_FNOREFESCAPE,
+	TYPE_GETSET_BOUND_F("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set, &ob_weakref_bound, METHOD_FNOREFESCAPE,
 	                    "#tReferenceError{Attempted to get the value after the reference has been unbound}"
 	                    "#tValueError{Attempted to set an object that does not support weak referencing}"
 	                    "Access to the referenced object"),

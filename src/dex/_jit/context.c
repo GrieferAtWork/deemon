@@ -171,11 +171,6 @@ class_desc_as_instance_from_instance(struct instance_desc *__restrict self,
 	return class_desc_as_instance(cls);
 }
 
-#define CATCH_ATTRIBUTE_ERROR()                  \
-	(DeeError_Catch(&DeeError_AttributeError) || \
-	 DeeError_Catch(&DeeError_NotImplemented))
-
-
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 fast_DeeInstance_GetAttribute(struct instance_desc *__restrict self,
                               DeeObject *__restrict this_arg,
@@ -254,8 +249,6 @@ fast_DeeInstance_BoundAttribute(struct instance_desc *__restrict self,
 			Dee_Decref(result);
 			return 1;
 		}
-		if (CATCH_ATTRIBUTE_ERROR())
-			return 0; /* return -3; */
 		if (DeeError_Catch(&DeeError_UnboundAttribute))
 			return 0;
 		return -1;
@@ -386,8 +379,9 @@ JITLValue_IsBound(JITLValue *__restrict self,
 	case JIT_LVALUE_EXTERN:
 		result = DeeModule_BoundAttrSymbol(self->lv_extern.lx_mod,
 		                                   self->lv_extern.lx_sym);
-		if (result < -1)
-			result = 0; /* Attribute doesn't exist */
+		if unlikely(Dee_BOUND_ISERR(result))
+			goto err;
+		result = Dee_BOUND_ISBOUND(result);
 		break;
 
 	case JIT_LVALUE_GLOBAL:
@@ -395,8 +389,9 @@ JITLValue_IsBound(JITLValue *__restrict self,
 			return 0;
 		result = DeeObject_BoundItem(context->jc_globals,
 		                             (DeeObject *)self->lv_global);
-		if (result < -1)
-			result = 0; /* Attribute doesn't exist */
+		if unlikely(Dee_BOUND_ISERR(result))
+			goto err;
+		result = Dee_BOUND_ISBOUND(result);
 		break;
 
 	case JIT_LVALUE_GLOBALSTR:
@@ -406,8 +401,9 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		                                          self->lv_globalstr.lg_namestr,
 		                                          self->lv_globalstr.lg_namelen,
 		                                          self->lv_globalstr.lg_namehsh);
-		if (result < -1)
-			result = 0; /* Attribute doesn't exist */
+		if unlikely(Dee_BOUND_ISERR(result))
+			goto err;
+		result = Dee_BOUND_ISBOUND(result);
 		break;
 
 	case JIT_LVALUE_CLSATTRIB:
@@ -419,8 +415,9 @@ JITLValue_IsBound(JITLValue *__restrict self,
 	case JIT_LVALUE_ATTR:
 		result = DeeObject_BoundAttr(self->lv_attr.la_base,
 		                             (DeeObject *)self->lv_attr.la_name);
-		if (result < -1)
-			result = 0; /* Attribute doesn't exist */
+		if unlikely(Dee_BOUND_ISERR(result))
+			goto err;
+		result = Dee_BOUND_ISBOUND(result);
 		break;
 
 	case JIT_LVALUE_ATTRSTR:
@@ -428,15 +425,17 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		                                          self->lv_attrstr.la_name,
 		                                          self->lv_attrstr.la_size,
 		                                          self->lv_attrstr.la_hash);
-		if (result < -1)
-			result = 0; /* Attribute doesn't exist */
+		if unlikely(Dee_BOUND_ISERR(result))
+			goto err;
+		result = Dee_BOUND_ISBOUND(result);
 		break;
 
 	case JIT_LVALUE_ITEM:
 		result = DeeObject_BoundItem(self->lv_item.li_base,
 		                             self->lv_item.li_index);
-		if (result < -1)
-			result = 0; /* Item doesn't exist. */
+		if unlikely(Dee_BOUND_ISERR(result))
+			goto err;
+		result = Dee_BOUND_ISBOUND(result);
 		break;
 
 	case JIT_LVALUE_RANGE:

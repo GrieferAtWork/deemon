@@ -340,24 +340,26 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	return DeeObject_GetAttrStringHash(self, attr, Dee_HashStr(attr));
 }
 
-/* @return: 1 : does exists
- * @return: 0 : doesn't exist
- * @return: -1: Error. */
+/* >> DeeObject_HasAttr() -- deemon.hasattr(<self>, <attr>);
+ * Check if `self' has an attribute `attr'. Same as the builtin `deemon.hasattr()'
+ * function. Note that an attribute that is currently unbound, differs from one
+ * that does not exist at all. This function will return `1' (true) for the former,
+ * but `0' (false) for the later. During normal attribute access, this difference
+ * is reflected by the type of exception: `UnboundAttribute' and `AttributeError'.
+ * @return: >  0: Attribute exists
+ * @return: == 0: Attribute doesn't exist
+ * @return: <  0: An error was thrown. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr) {
 	return DeeObject_HasAttrStringHash(self, attr, Dee_HashStr(attr));
 }
 
-/* Check if a given attribute exists and/or is bound.
- * @return: 1:       Attribute is bound.
- * @return: 0:     Attribute isn't bound.
- * @return: -1:         An error occurred.
- * @return: -2:      The attribute doesn't exist.
- * @return: -3: A user-defined getattr operator threw an error indicating
- *                                     that the attribute doesn't exists. - Should be handled the
- *                                     same way as `-2', however search for the
- *                                     attribute should not continue. */
+/* >> DeeObject_BoundAttr() -- <self>.<attr> is bound;
+ * @return: Dee_BOUND_YES:     Attribute is bound.
+ * @return: Dee_BOUND_NO:      Attribute isn't bound.
+ * @return: Dee_BOUND_MISSING: The attribute doesn't exist.
+ * @return: Dee_BOUND_ERR:     An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_BoundAttrString)(DeeObject *__restrict self,
                                   char const *__restrict attr) {

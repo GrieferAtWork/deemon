@@ -337,17 +337,17 @@ default_seq___bounditem__(DeeObject *self, size_t argc, DeeObject *const *argv) 
 	if (DeeArg_Unpack(argc, argv, "o|b:__bounditem__", &index, &allow_missing))
 		goto err;
 	switch (DeeSeq_OperatorBoundItem(self, index)) {
-	case -2:
+	default:
 		if unlikely(!allow_missing) {
 			err_unknown_key(self, index);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
-	default:
+	case Dee_BOUND_NO:
 		return_false;
-	case 1:
+	case Dee_BOUND_YES:
 		return_true;
-	case -1:
+	case Dee_BOUND_ERR:
 		break; /* Error */
 	}
 err:
@@ -423,17 +423,17 @@ default_seq___bounditem_index__(DeeObject *self, size_t argc, DeeObject *const *
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|b:__bounditem_index__", &index, &allow_missing))
 		goto err;
 	switch (DeeSeq_OperatorBoundItemIndex(self, index)) {
-	case -2:
+	default:
 		if unlikely(!allow_missing) {
 			err_unknown_key_int(self, index);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
-	default:
+	case Dee_BOUND_NO:
 		return_false;
-	case 1:
+	case Dee_BOUND_YES:
 		return_true;
-	case -1:
+	case Dee_BOUND_ERR:
 		break; /* Error */
 	}
 err:
@@ -1049,17 +1049,17 @@ default_map___bounditem__(DeeObject *self, size_t argc, DeeObject *const *argv) 
 	if (DeeArg_Unpack(argc, argv, "o|b:__bounditem__", &index, &allow_missing))
 		goto err;
 	switch (DeeMap_OperatorBoundItem(self, index)) {
-	case -2:
+	default:
 		if unlikely(!allow_missing) {
 			err_unknown_key(self, index);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
-	default:
+	case Dee_BOUND_NO:
 		return_false;
-	case 1:
+	case Dee_BOUND_YES:
 		return_true;
-	case -1:
+	case Dee_BOUND_ERR:
 		break; /* Error */
 	}
 err:
@@ -1122,17 +1122,17 @@ default_map___bounditem_index__(DeeObject *self, size_t argc, DeeObject *const *
 	if (DeeArg_Unpack(argc, argv, UNPuSIZ "|b:__bounditem_index__", &index, &allow_missing))
 		goto err;
 	switch (DeeMap_OperatorBoundItemIndex(self, index)) {
-	case -2:
+	default:
 		if unlikely(!allow_missing) {
 			err_unknown_key_int(self, index);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
-	default:
+	case Dee_BOUND_NO:
 		return_false;
-	case 1:
+	case Dee_BOUND_YES:
 		return_true;
-	case -1:
+	case Dee_BOUND_ERR:
 		break; /* Error */
 	}
 err:
@@ -1301,17 +1301,17 @@ default_map___bounditem_string__(DeeObject *self, size_t argc, DeeObject *const 
 		goto err;
 	}
 	switch (result) {
-	case -2:
+	default:
 		if unlikely(!allow_missing) {
 			err_unknown_key(self, key);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
-	default:
+	case Dee_BOUND_NO:
 		return_false;
-	case 1:
+	case Dee_BOUND_YES:
 		return_true;
-	case -1:
+	case Dee_BOUND_ERR:
 		break; /* Error */
 	}
 err:
@@ -1323,7 +1323,7 @@ default_map___hasitem_string__(DeeObject *self, size_t argc, DeeObject *const *a
 	int result;
 	DeeObject *key;
 	bool allow_missing = true;
-	if (DeeArg_Unpack(argc, argv, "o|b:__bounditem_string__", &key, &allow_missing))
+	if (DeeArg_Unpack(argc, argv, "o|b:__hasitem_string__", &key, &allow_missing))
 		goto err;
 	if (DeeBytes_Check(key)) {
 		char const *data = (char const *)DeeBytes_DATA(key);

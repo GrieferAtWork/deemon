@@ -1324,9 +1324,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	TYPE_METHOD("filter", &seq_filter,
 	            "(keep:?DCallable)->?DSequence\n"
-	            "#pkeep{A key function which is called for each element of @this Sequence"
-	            /**/ "Returns a sub-Sequence of all elements for which ${keep(item)} evaluates to ?t}"
-	            "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
+	            "#pkeep{A key function which is called for each element of @this Sequence}"
+	            "Returns a sub-Sequence of all elements for which ${keep(item)} evaluates to ?t. "
+	            /**/ "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
 	            "${"
 	            /**/ "function filter(keep: Callable): Sequence {\n"
 	            /**/ "	for (local x: this)\n"
@@ -1336,10 +1336,10 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "}"),
 	TYPE_METHOD("ubfilter", &seq_ubfilter,
 	            "(keep:?DCallable)->?DSequence\n"
-	            "#pkeep{A key function which is called for each element of @this Sequence"
-	            /**/ "Returns a sub-Sequence of all elements for which ${keep(item)} evaluates to ?t}"
-	            "Same as ?#filter, but the returned sequence has the same size as @this, and filtered "
-	            /**/ "elements are simply treated as though they were unbound:\n"
+	            "#pkeep{A key function which is called for each element of @this Sequence}"
+	            "Returns a sub-Sequence of all elements for which ${keep(item)} evaluates to ?t. "
+	            /**/ "Same as ?#filter, but the returned sequence has the same size as @this, and "
+	            /**/ "filtered elements are simply treated as though they were unbound:\n"
 	            "${"
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[0] !is bound;\n"
 	            /**/ "assert { 10, 20 }.ubfilter(x -\\> x > 10)[1] is bound;"
@@ -1561,6 +1561,12 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	 * >>         }
 	 * >>     }
 	 * >> } */
+
+	/* TODO: unboundas(item)->?S?O
+	 * Return a view of @this sequence that replaces every instance of "item" with
+	 * unbound elements. Same as:
+	 * >> this.ubfilter(e -> !deemon.equals(item, e));
+	 */
 
 
 	/* TODO: findall: "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"

@@ -1225,7 +1225,7 @@ code_get_kwds(DeeCodeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_kwds(DeeCodeObject *__restrict self) {
-	return (self->co_keywords || self->co_argc_max == 0) ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(self->co_keywords || self->co_argc_max == 0);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1273,9 +1273,9 @@ code_bound_name(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	return info.fi_name ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(info.fi_name);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1314,9 +1314,9 @@ code_bound_type(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	return info.fi_type ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(info.fi_type);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1342,9 +1342,9 @@ code_bound_operator(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	return info.fi_opname != (Dee_operator_t)-1 ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(info.fi_opname != (Dee_operator_t)-1);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1393,9 +1393,9 @@ code_bound_property(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
-	return info.fi_getset != (uint16_t)-1 ? 1 : 0;
+	return Dee_BOUND_FROMBOOL(info.fi_getset != (uint16_t)-1);
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE struct type_member tpconst code_members[] = {
@@ -2067,7 +2067,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	result->co_defaultv = NULL;
 	/* Load default arguments */
 	if (!DeeNone_Check(defaults)) {
-		size_t i, default_c;
+		size_t default_c;
 		DREF DeeObject **default_vec;
 		default_c = DeeObject_Size(defaults);
 		if unlikely(default_c == (size_t)-1)
@@ -2082,18 +2082,9 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		default_vec = (DREF DeeObject **)Dee_Mallocc(default_c, sizeof(DREF DeeObject *));
 		if unlikely(!default_vec)
 			goto err_r_keywords;
-		for (i = 0; i < default_c; ++i) {
-			DREF DeeObject *elem;
-			elem = DeeObject_GetItemIndex(defaults, i);
-			if (elem) {
-				default_vec[i] = elem; /* Inherit reference */
-			} else if (DeeError_Catch(&DeeError_UnboundItem)) {
-				default_vec[i] = NULL; /* Optional argument */
-			} else {
-				Dee_XDecrefv(default_vec, i);
-				Dee_Free(default_vec);
-				goto err_r_keywords;
-			}
+		if unlikely(DeeObject_UnpackWithUnbound(defaults, default_c, default_vec)) {
+			Dee_Free(default_vec);
+			goto err_r_keywords;
 		}
 		result->co_defaultv = default_vec;
 		result->co_argc_min = (uint16_t)(coargc - (uint16_t)default_c);

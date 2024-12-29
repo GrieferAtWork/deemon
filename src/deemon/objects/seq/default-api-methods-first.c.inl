@@ -173,10 +173,10 @@ DeeSeq_DefaultBoundFirstWithForeach(DeeObject *__restrict self) {
 	foreach_status = (*Dee_TYPE(self)->tp_seq->tp_foreach)(self, &seq_default_boundfirst_with_foreach_cb, NULL);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
 	if likely(foreach_status == -2)
-		return 1;
+		return Dee_BOUND_YES;
 	if unlikely(foreach_status == -1)
-		return -1;
-	return -2;
+		return Dee_BOUND_ERR;
+	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL

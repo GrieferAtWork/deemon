@@ -473,19 +473,17 @@ N_len_hash(type_getset_boundattr_string)(struct Dee_membercache *cache, DeeTypeO
 		if (chain->gs_bound)
 			return (*chain->gs_bound)(self);
 		if unlikely(!chain->gs_get)
-			return 0;
+			return Dee_BOUND_NO;
 		temp = (*chain->gs_get)(self);
 		if likely(temp) {
 			Dee_Decref(temp);
-			return 1;
+			return Dee_BOUND_YES;
 		}
-		if (CATCH_ATTRIBUTE_ERROR())
-			return -3;
 		if (DeeError_Catch(&DeeError_UnboundAttribute))
-			return 0;
-		return -1;
+			return Dee_BOUND_NO;
+		return Dee_BOUND_ERR;
 	}
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_GETSET */
@@ -648,12 +646,14 @@ N_len_hash(type_member_boundattr_string)(struct Dee_membercache *cache, DeeTypeO
                                          struct type_member const *chain, DeeObject *self,
                                          ATTR_ARG, dhash_t hash) {
 	for (; chain->m_name; ++chain) {
+		bool result;
 		if (!NAMEEQ(chain->m_name))
 			continue;
 		Dee_membercache_addmember(cache, decl, hash, chain);
-		return type_member_bound(chain, self);
+		result = type_member_bound(chain, self);
+		return Dee_BOUND_FROMBOOL(result);
 	}
-	return -2;
+	return Dee_BOUND_MISSING;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL /* DEL_MEMBER */

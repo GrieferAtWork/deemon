@@ -191,7 +191,8 @@ PRIVATE struct type_cmp objmethod_cmp = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 objmethod_bound_origin(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
-	return DeeObjMethod_GetOrigin((DeeObject *)self, &origin) ? 1 : 0;
+	bool bound = DeeObjMethod_GetOrigin((DeeObject *)self, &origin);
+	return Dee_BOUND_FROMBOOL(bound);
 }
 
 #define objmethod_bound_func objmethod_bound_origin
@@ -1082,9 +1083,9 @@ clsmethod_bound_module(DeeClsMethodObject *__restrict self) {
 	result = DeeType_GetModule(self->cm_type);
 	if likely(result) {
 		Dee_Decref_unlikely(result);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	return 0;
+	return Dee_BOUND_NO;
 }
 
 PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
@@ -1814,9 +1815,9 @@ clsmember_bound_module(DeeClsMemberObject *__restrict self) {
 	result = DeeType_GetModule(self->cm_type);
 	if likely(result) {
 		Dee_Decref_unlikely(result);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	return 0;
+	return Dee_BOUND_NO;
 }
 
 PRIVATE struct type_getset tpconst clsmember_getsets[] = {
@@ -2040,15 +2041,16 @@ cmethod_bound_module(DeeCMethodObject *__restrict self) {
 	result = DeeModule_FromStaticPointer(*(void **)&self->cm_func);
 	if (result) {
 		Dee_Decref_unlikely(result);
-		return 1;
+		return Dee_BOUND_YES;
 	}
-	return 0;
+	return Dee_BOUND_NO;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cmethod_bound_origin(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
-	return DeeKwCMethod_GetOrigin(self, &origin) ? 1 : 0;
+	bool bound = DeeKwCMethod_GetOrigin(self, &origin);
+	return Dee_BOUND_FROMBOOL(bound);
 }
 
 #define kwcmethod_bound_kwds cmethod_bound_origin
@@ -2107,9 +2109,9 @@ cmethod_bound_type(DeeCMethodObject *__restrict self) {
 		Dee_XDecref(origin.cmo_module);
 		Dee_XDecref(origin.cmo_type);
 		if (origin.cmo_type)
-			return 1;
+			return Dee_BOUND_YES;
 	}
-	return 0;
+	return Dee_BOUND_NO;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

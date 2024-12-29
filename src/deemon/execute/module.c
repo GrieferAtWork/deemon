@@ -331,13 +331,13 @@ DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
 	ASSERT(symbol >= self->mo_bucketv &&
 	       symbol <= self->mo_bucketv + self->mo_bucketm);
 	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
-		bool result;
+		DeeObject *value;
 read_symbol:
 		ASSERT(symbol->ss_index < self->mo_globalc);
 		DeeModule_LockRead(self);
-		result = self->mo_globalv[symbol->ss_index] != NULL;
+		value = self->mo_globalv[symbol->ss_index];
 		DeeModule_LockEndRead(self);
-		return result;
+		return Dee_BOUND_FROMBOOL(value);
 	}
 
 	/* External symbol, or property. */
@@ -348,20 +348,18 @@ read_symbol:
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
-			return 0;
+			return Dee_BOUND_NO;
 
 		/* Invoke the property callback. */
 		callback_result = DeeObject_Call(callback, 0, NULL);
 		Dee_Decref(callback);
 		if likely(callback_result) {
 			Dee_Decref(callback_result);
-			return 1;
+			return Dee_BOUND_YES;
 		}
-		if (CATCH_ATTRIBUTE_ERROR())
-			return -3;
 		if (DeeError_Catch(&DeeError_UnboundAttribute))
-			return 0;
-		return -1;
+			return Dee_BOUND_NO;
+		return Dee_BOUND_ERR;
 	}
 
 	/* External symbol. */
@@ -758,12 +756,12 @@ DeeModule_BoundAttrStringHash(DeeModuleObject *__restrict self,
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
 			if unlikely(interactivemodule_lockread(self))
-				return -1;
+				return Dee_BOUND_ERR;
 			result = module_boundattr_impl(self, attr_name, hash);
 			interactivemodule_lockendread(self);
 			return result;
 		}
-		return -2;
+		return Dee_BOUND_MISSING;
 	}
 	return module_boundattr_impl(self, attr_name, hash);
 }
@@ -777,12 +775,12 @@ DeeModule_BoundAttrStringLenHash(DeeModuleObject *__restrict self,
 		if (DeeInteractiveModule_Check(self)) {
 			int result;
 			if unlikely(interactivemodule_lockread(self))
-				return -1;
+				return Dee_BOUND_ERR;
 			result = module_boundattr_len_impl(self, attr_name, attrlen, hash);
 			interactivemodule_lockendread(self);
 			return result;
 		}
-		return -2;
+		return Dee_BOUND_MISSING;
 	}
 	return module_boundattr_len_impl(self, attr_name, attrlen, hash);
 }
@@ -800,7 +798,7 @@ DeeModule_HasAttrStringHash(DeeModuleObject *__restrict self,
 			interactivemodule_lockendread(self);
 			return result;
 		}
-		return false;
+		return 0;
 	}
 	return module_hasattr_impl(self, attr_name, hash);
 }

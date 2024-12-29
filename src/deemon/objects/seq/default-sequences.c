@@ -666,7 +666,7 @@ ds_sgi_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 		goto err_obb;
 	return DeeType_InvokeSeqBoundItemIndex(tp, self->dssgi_seq, used_index);
 err_obb:
-	return -2; /* Item doesn't exist */
+	return Dee_BOUND_MISSING; /* Item doesn't exist */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -679,7 +679,7 @@ ds_sgif_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self
 		goto err_obb;
 	return DeeType_InvokeSeqBoundItemIndex(tp, self->dssgi_seq, used_index);
 err_obb:
-	return -2; /* Item doesn't exist */
+	return Dee_BOUND_MISSING; /* Item doesn't exist */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -692,7 +692,7 @@ ds_stgi_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self
 		goto err_obb;
 	return DeeType_InvokeSeqBoundItemIndex(tp, self->dssgi_seq, used_index);
 err_obb:
-	return -2; /* Item doesn't exist */
+	return Dee_BOUND_MISSING; /* Item doesn't exist */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1956,7 +1956,7 @@ ds_sg_bounditem(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
 	Dee_Decref(used_index);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1977,7 +1977,7 @@ ds_tsg_bounditem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 	Dee_Decref(used_index);
 	return result;
 err:
-	return -1;
+	return Dee_BOUND_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

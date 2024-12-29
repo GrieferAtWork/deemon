@@ -37,6 +37,7 @@ DECL_BEGIN
 #define _DeeNone_NewRef7 (*(DREF DeeObject *(DCALL *)(void *, void *, void *, void *, void *, void *, void *))(Dee_funptr_t)&DeeNone_NewRef)
 DFUNDEF size_t (DCALL _DeeNone_rets0)(void); /* Always returns "0" */
 DFUNDEF int (DCALL _DeeNone_reti1)(void); /* Always returns "1" */
+DFUNDEF int (DCALL _DeeNone_reti2)(void); /* Always returns "2" */
 #if defined(DCALL_RETURN_COMMON) || __SIZEOF_SIZE_T__ == __SIZEOF_INT__
 #define _DeeNone_reti0 (*(int (DCALL *)(void))&_DeeNone_rets0)
 #else /* DCALL_RETURN_COMMON || __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
@@ -52,7 +53,6 @@ DFUNDEF int (DCALL _DeeNone_reti0)(void);
 #define _DeeNone_reti1_2 (*(int (DCALL *)(void *, void *))&_DeeNone_reti1)
 #define _DeeNone_reti1_3 (*(int (DCALL *)(void *, void *, void *))&_DeeNone_reti1)
 #define _DeeNone_reti1_4 (*(int (DCALL *)(void *, void *, void *, void *))&_DeeNone_reti1)
-#define _DeeNone_reti1_5 (*(int (DCALL *)(void *, void *, void *, void *, void *))&_DeeNone_reti1)
 #define _DeeNone_rets0_1 (*(size_t (DCALL *)(void *))&_DeeNone_rets0)
 #define _DeeNone_rets0_2 (*(size_t (DCALL *)(void *, void *))&_DeeNone_rets0)
 #define _DeeNone_rets0_3 (*(size_t (DCALL *)(void *, void *, void *))&_DeeNone_rets0)
@@ -75,7 +75,6 @@ DFUNDEF int (DCALL _DeeNone_reti0_6)(void *, void *, void *, void *, void *, voi
 DFUNDEF int (DCALL _DeeNone_reti1_2)(void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti1_3)(void *, void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti1_4)(void *, void *, void *, void *);
-DFUNDEF int (DCALL _DeeNone_reti1_5)(void *, void *, void *, void *, void *);
 #if defined(DCALL_RETURN_COMMON) || __SIZEOF_SIZE_T__ == __SIZEOF_INT__
 #define _DeeNone_reti0_1 (*(int (DCALL *)(void *))&_DeeNone_rets0_1)
 #define _DeeNone_reti0_2 (*(int (DCALL *)(void *, void *))&_DeeNone_rets0_2)

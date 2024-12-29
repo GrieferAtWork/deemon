@@ -85,13 +85,17 @@ f_builtin_boundattr(size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
 	switch (DeeObject_BoundAttr(self, attr)) {
-	case 0: return_false;
-	case 1: return_true;
-	case -1: break; /* Error */
 	default:
-		if (allow_missing)
-			return_false; /* Unknown attributes are unbound. */
-		err_unknown_attribute(DeeObject_Class(self), attr, ATTR_ACCESS_GET);
+		if unlikely(!allow_missing) {
+			err_unknown_attribute(DeeObject_Class(self), attr, ATTR_ACCESS_GET);
+			goto err;
+		}
+		ATTR_FALLTHROUGH
+	case Dee_BOUND_NO:
+		return_false;
+	case Dee_BOUND_YES:
+		return_true;
+	case Dee_BOUND_ERR:
 		break;
 	}
 err:
@@ -106,18 +110,18 @@ f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oo|b:bounditem", &self, &key, &allow_missing))
 		goto err;
 	switch (DeeObject_BoundItem(self, key)) {
-	case -2:
+	default:
 		if unlikely(!allow_missing) {
 			err_unknown_key(self, key);
 			goto err;
 		}
 		ATTR_FALLTHROUGH
-	default:
+	case Dee_BOUND_NO:
 		return_false;
-	case 1:
+	case Dee_BOUND_YES:
 		return_true;
-	case -1:
-		break; /* Error */
+	case Dee_BOUND_ERR:
+		break;
 	}
 err:
 	return NULL;

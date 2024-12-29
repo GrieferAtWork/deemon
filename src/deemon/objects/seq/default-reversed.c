@@ -318,7 +318,7 @@ rs_tgii_trygetitem_index(DefaultReversed_WithGetItemIndex *__restrict self, size
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rs_gii_bounditem_index(DefaultReversed_WithGetItemIndex *__restrict self, size_t index) {
 	if unlikely(index >= self->drwgii_size)
-		return -2;
+		return Dee_BOUND_MISSING;
 	return DeeObject_BoundItemIndex(self->drwgii_seq, self->drwgii_max - index);
 }
 

@@ -30,10 +30,6 @@ struct code_object;
 struct class_attribute;
 struct class_desc;
 
-#define CATCH_ATTRIBUTE_ERROR()                  \
-	(DeeError_Catch(&DeeError_AttributeError) || \
-	 DeeError_Catch(&DeeError_NotImplemented))
-
 INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
 INTDEF ATTR_COLD int DCALL err_subclass_final_type(DeeTypeObject *__restrict tp);
 #define err_unimplemented_constructor(tp, argc, argv) \
