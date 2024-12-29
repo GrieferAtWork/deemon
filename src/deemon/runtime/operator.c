@@ -3904,7 +3904,7 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultLoWithForeachDefault,
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "other" is missing some element of "self" */
-	rhs_size = DeeObject_Size(other);
+	rhs_size = DeeSet_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -3930,7 +3930,7 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultLoWithForeachPairDefault,
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "other" is missing some element of "self", or has a different value for it */
-	rhs_size = DeeObject_Size(other);
+	rhs_size = DeeMap_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -4136,11 +4136,11 @@ DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultGeWithForeachDefault,
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "other" is missing some element of "self" */
-	rhs_size = DeeSeq_OperatorSize(other);
+	rhs_size = DeeSet_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
-		goto missing_item; /* "other" contains element not found in "self" */
+		goto missing_item; /* "other" contains elements not found in "self" */
 	return_false;
 missing_item:
 	return_true;
@@ -4162,7 +4162,7 @@ DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGeWithForeachPairDefault,
 		goto err;
 	if (contains_status == -2)
 		goto missing_item; /* "other" is missing some element of "self", or has a different value for it */
-	rhs_size = DeeSeq_OperatorSize(other);
+	rhs_size = DeeMap_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status >= rhs_size)
@@ -4846,7 +4846,7 @@ DEFINE_INTERNAL_SET_OPERATOR(int, DefaultCompareEqWithForeachDefault,
 		goto err;
 	if (contains_status == -2)
 		return 1; /* "other" is missing some element of "self" */
-	rhs_size = DeeSeq_OperatorSize(other);
+	rhs_size = DeeSet_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status != rhs_size)
@@ -4870,7 +4870,7 @@ DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultCompareEqWithForeachPairDefault,
 		goto err;
 	if (contains_status == -2)
 		return 1; /* "other" is missing some element of "self", or has a different value for it */
-	rhs_size = DeeObject_Size(other);
+	rhs_size = DeeMap_OperatorSize(other);
 	if unlikely(rhs_size == (size_t)-1)
 		goto err;
 	if ((size_t)contains_status != rhs_size)

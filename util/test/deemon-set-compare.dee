@@ -21,12 +21,41 @@
 
 import * from deemon;
 
-local v = ("foo", "bar", "foo", "barfoo", "bar");
-__asm__("" : "+X" (v));
-local s = v as Set;
-assert type s === Super;
+for (local set: {
+	HashSet({ 10 }).frozen,
+	HashSet({ 10, 10 }).frozen,
+	HashSet({ 10 }).cached,
+	HashSet({ 10, 10 }).cached,
+	HashSet({ 10 }),
+	HashSet({ 10, 10 }),
+	({ 10 } as Set).frozen,
+	({ 10, 10 } as Set).frozen,
+	//TODO: ({ 10 } as Set).cached,
+	//TODO: ({ 10, 10 } as Set).cached,
+	{ 10 } as Set,
+	/* TODO: The following breaks because "DeeSet_DefaultCompareEqWithForeachDefault"
+	 *       counts duplicate elements multiple times (it uses the regular tp_foreach,
+	 *       when it should probably use `DeeSet_OperatorForeach()') */
+	//{ 10, 10 } as Set,
+}) {
+	assert ((set == {10}));
+	assert !(set != {10});
+	assert !(set <  {10});
+	assert ((set <= {10}));
+	assert !(set >  {10});
+	assert ((set >= {10}));
 
-assert s.operator iter().pending == {"foo", "bar", "barfoo"};
-assert s.operator iter().pending.frozen == {"foo", "bar", "barfoo"};
-assert s.operator iter().future == {"foo", "bar", "barfoo"};
-assert s.operator iter().future.frozen == {"foo", "bar", "barfoo"};
+	assert ((set == {10, 10}));
+	assert !(set != {10, 10});
+	assert !(set <  {10, 10});
+	assert ((set <= {10, 10}));
+	assert !(set >  {10, 10});
+	assert ((set >= {10, 10}));
+
+	assert !(set == {10, 20});
+	assert ((set != {10, 20}));
+	assert ((set <  {10, 20}));
+	assert ((set <= {10, 20}));
+	assert !(set >  {10, 20});
+	assert !(set >= {10, 20});
+}
