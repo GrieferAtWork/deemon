@@ -764,7 +764,7 @@ filter_verify_insert_all(Filter *self, DeeObject *items) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 filterau_setitem(Filter *self, DeeObject *key_or_index, DeeObject *value) {
-	int result = filter_verify_insert(self, value);
+	int result = (int)filter_verify_insert(self, value);
 	if unlikely(result)
 		return result;
 	return generic_proxy_setitem((ProxyObject *)self, key_or_index, value);
@@ -772,7 +772,7 @@ filterau_setitem(Filter *self, DeeObject *key_or_index, DeeObject *value) {
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 filterau_setitem_index(Filter *self, size_t index, DeeObject *value) {
-	int result = filter_verify_insert(self, value);
+	int result = (int)filter_verify_insert(self, value);
 	if unlikely(result)
 		return result;
 	return generic_proxy_setitem_index((ProxyObject *)self, index, value);
@@ -780,7 +780,7 @@ filterau_setitem_index(Filter *self, size_t index, DeeObject *value) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 filterau_setitem_string_hash(Filter *self, char const *key, Dee_hash_t hash, DeeObject *value) {
-	int result = filter_verify_insert(self, value);
+	int result = (int)filter_verify_insert(self, value);
 	if unlikely(result)
 		return result;
 	return generic_proxy_setitem_string_hash((ProxyObject *)self, key, hash, value);
@@ -788,7 +788,7 @@ filterau_setitem_string_hash(Filter *self, char const *key, Dee_hash_t hash, Dee
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 filterau_setitem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
-	int result = filter_verify_insert(self, value);
+	int result = (int)filter_verify_insert(self, value);
 	if unlikely(result)
 		return result;
 	return generic_proxy_setitem_string_len_hash((ProxyObject *)self, key, keylen, hash, value);
@@ -796,7 +796,7 @@ filterau_setitem_string_len_hash(Filter *self, char const *key, size_t keylen, D
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 filterau_setrange(Filter *self, DeeObject *start, DeeObject *end, DeeObject *values) {
-	int result = filter_verify_insert_all(self, values);
+	int result = (int)filter_verify_insert_all(self, values);
 	if unlikely(result)
 		return result;
 	return generic_proxy_setrange((ProxyObject *)self, start, end, values);
@@ -804,7 +804,7 @@ filterau_setrange(Filter *self, DeeObject *start, DeeObject *end, DeeObject *val
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 filterau_setrange_index(Filter *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values) {
-	int result = filter_verify_insert_all(self, values);
+	int result = (int)filter_verify_insert_all(self, values);
 	if unlikely(result)
 		return result;
 	return generic_proxy_setrange_index((ProxyObject *)self, start, end, values);
@@ -812,7 +812,7 @@ filterau_setrange_index(Filter *self, Dee_ssize_t start, Dee_ssize_t end, DeeObj
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 filterau_setrange_index_n(Filter *self, Dee_ssize_t start, DeeObject *values) {
-	int result = filter_verify_insert_all(self, values);
+	int result = (int)filter_verify_insert_all(self, values);
 	if unlikely(result)
 		return result;
 	return generic_proxy_setrange_index_n((ProxyObject *)self, start, values);
@@ -855,7 +855,7 @@ PRIVATE struct type_seq filterau_seq = {
 	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&filterau_setitem,
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&filterau_getrange,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&filterau_delrange,
-	/* .tp_setrange                   = */ NULL,
+	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&filterau_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&filterau_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&filterau_enumerate,

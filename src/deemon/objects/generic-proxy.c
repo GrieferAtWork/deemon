@@ -229,7 +229,7 @@ generic_proxy_delitem_index(ProxyObject *__restrict self, size_t index) {
 	return DeeObject_DelItemIndex(self->po_obj, index);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
 generic_proxy_setitem_index(ProxyObject *__restrict self, size_t index, DeeObject *value) {
 	return DeeObject_SetItemIndex(self->po_obj, index, value);
 }
