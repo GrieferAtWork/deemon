@@ -1219,10 +1219,10 @@ class TypeExpr: WeakRefAble {
 		: docdecl(d is WeakRef ? d : WeakRef(d))
 		, m_docstring(ds)
 	{
-		if (m_docstring !is string) {
+		if (ds !is string) {
 			m_kind = "E";
-			m_cache = TypeRef(docnode, m_docstring);
-			m_types = (m_docstring,);
+			m_cache = TypeRef(docnode, ds);
+			m_types = (ds,);
 		}
 	}
 
@@ -1410,7 +1410,8 @@ check_elem:
 			break;
 
 		case "Q":
-			yield Qexpr.exprtypes...;
+			for (local t: Qexpr.exprtypes)
+				yield t.types...;
 			break;
 
 		default:

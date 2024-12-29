@@ -736,6 +736,23 @@ public:
 	WUNUSED _Wrap_frozen (frozen)() DEE_CXX_NOTHROW {
 		return this;
 	}
+	class _Wrap_cached
+		: public deemon::detail::ConstGetRefProxy<_Wrap_cached, Sequence<> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap_cached(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "cached", _Dee_HashSelectC(0x915e175e, 0xddfd408a14eae4b4));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "cached", _Dee_HashSelectC(0x915e175e, 0xddfd408a14eae4b4)));
+		}
+	};
+	WUNUSED _Wrap_cached (cached)() DEE_CXX_NOTHROW {
+		return this;
+	}
 	class _Wrap___sizeof__
 		: public deemon::detail::ConstGetRefProxy<_Wrap___sizeof__, deemon::int_> {
 	private:
