@@ -204,6 +204,7 @@ again:
 			Dee_XIncref(copy[i].shsi_key);
 	}
 	Dee_simple_hashset_with_lock_release(other);
+	Dee_atomic_lock_init(&self->shswl_lock);
 	return 0;
 err:
 	return -1;
