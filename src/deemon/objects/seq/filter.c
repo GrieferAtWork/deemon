@@ -27,6 +27,7 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -37,6 +38,7 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "default-api.h"
 
 DECL_BEGIN
 
@@ -217,6 +219,7 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
 };
 
 
+#define filterau_iter filter_iter
 PRIVATE WUNUSED NONNULL((1)) DREF FilterIterator *DCALL
 filter_iter(Filter *__restrict self) {
 	DREF FilterIterator *result;
@@ -257,6 +260,7 @@ err:
 	return -1;
 }
 
+#define filterau_foreach filter_foreach
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 filter_foreach(Filter *self, Dee_foreach_t proc, void *arg) {
 	struct filter_foreach_data data;
@@ -266,16 +270,16 @@ filter_foreach(Filter *self, Dee_foreach_t proc, void *arg) {
 	return DeeObject_Foreach(self->f_seq, &filter_foreach_cb, &data);
 }
 
-struct filter_as_unbound_enumerate_data {
+struct filterau_enumerate_data {
 	DeeObject      *faued_fun;  /* [1..1] Function used for filtering. */
 	Dee_enumerate_t faued_proc; /* [1..1] Underlying callback. */
 	void           *faued_arg;  /* [?..?] Cookie for `pfd_proc' */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_as_unbound_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
-	struct filter_as_unbound_enumerate_data *data;
-	data = (struct filter_as_unbound_enumerate_data *)arg;
+filterau_enumerate_cb(void *arg, DeeObject *index, DeeObject *value) {
+	struct filterau_enumerate_data *data;
+	data = (struct filterau_enumerate_data *)arg;
 	if (value) {
 		int pred_bool = invoke_filter(data->faued_fun, value);
 		if unlikely(pred_bool < 0)
@@ -289,24 +293,24 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_as_unbound_enumerate(Filter *self, Dee_enumerate_t proc, void *arg) {
-	struct filter_as_unbound_enumerate_data data;
+filterau_enumerate(Filter *self, Dee_enumerate_t proc, void *arg) {
+	struct filterau_enumerate_data data;
 	data.faued_fun  = self->f_fun;
 	data.faued_proc = proc;
 	data.faued_arg  = arg;
-	return DeeObject_Enumerate(self->f_seq, &filter_as_unbound_enumerate_cb, &data);
+	return DeeObject_Enumerate(self->f_seq, &filterau_enumerate_cb, &data);
 }
 
-struct filter_as_unbound_enumerate_index_data {
+struct filterau_enumerate_index_data {
 	DeeObject            *faueid_fun;  /* [1..1] Function used for filtering. */
 	Dee_enumerate_index_t faueid_proc; /* [1..1] Underlying callback. */
 	void                 *faueid_arg;  /* [?..?] Cookie for `pfd_proc' */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-filter_as_unbound_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
-	struct filter_as_unbound_enumerate_index_data *data;
-	data = (struct filter_as_unbound_enumerate_index_data *)arg;
+filterau_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	struct filterau_enumerate_index_data *data;
+	data = (struct filterau_enumerate_index_data *)arg;
 	if (value) {
 		int pred_bool = invoke_filter(data->faueid_fun, value);
 		if unlikely(pred_bool < 0)
@@ -320,13 +324,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_as_unbound_enumerate_index(Filter *self, Dee_enumerate_index_t proc,
+filterau_enumerate_index(Filter *self, Dee_enumerate_index_t proc,
                                   void *arg, size_t start, size_t end) {
-	struct filter_as_unbound_enumerate_index_data data;
+	struct filterau_enumerate_index_data data;
 	data.faueid_fun  = self->f_fun;
 	data.faueid_proc = proc;
 	data.faueid_arg  = arg;
-	return DeeObject_EnumerateIndex(self->f_seq, &filter_as_unbound_enumerate_index_cb, &data, start, end);
+	return DeeObject_EnumerateIndex(self->f_seq, &filterau_enumerate_index_cb, &data, start, end);
 }
 
 #define filter_enumerate_index_cb_MAGIC_EARLY_STOP \
@@ -378,29 +382,10 @@ filter_size_cb(void *arg, DeeObject *value) {
 	return invoke_filter((DeeObject *)arg, value);
 }
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL filter_size(Filter *self) {
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+filter_size(Filter *self) {
 	return (size_t)DeeObject_Foreach(self->f_seq, &filter_size_cb, self->f_fun);
 }
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_bool_cb(void *arg, DeeObject *value) {
-	int result = invoke_filter((DeeObject *)arg, value);
-	if (result > 1)
-		result = -2;
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_bool(Filter *self) {
-	Dee_ssize_t foreach_status;
-	foreach_status = DeeObject_Foreach(self->f_seq, &filter_bool_cb, self->f_fun);
-	if (foreach_status == -2)
-		return 1;
-	return (int)foreach_status;
-}
-
-STATIC_ASSERT(offsetof(Filter, f_seq) == offsetof(ProxyObject, po_obj));
-#define filter_as_unbound_bool generic_proxy_bool
 
 struct filter_getitem_index_data {
 	DeeObject      *fgid_fun;    /* [1..1] Function used for filtering. */
@@ -464,11 +449,7 @@ err:
 }
 
 
-STATIC_ASSERT(offsetof(Filter, f_seq) == offsetof(ProxyObject, po_obj));
-#define filter_as_unbound_sizeob    generic_proxy_sizeob
-#define filter_as_unbound_size      generic_proxy_size
-#define filter_as_unbound_size_fast generic_proxy_size_fast
-
+#define filterau_contains filter_contains
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 filter_contains(Filter *self, DeeObject *elem) {
 	int result = DeeObject_ContainsAsBool(self->f_seq, elem);
@@ -489,7 +470,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-filter_as_unbound_getitem(Filter *self, DeeObject *index) {
+filterau_getitem(Filter *self, DeeObject *index) {
 	int temp;
 	DREF DeeObject *result;
 	result = DeeObject_GetItem(self->f_seq, index);
@@ -510,7 +491,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-filter_as_unbound_getitem_index(Filter *self, size_t index) {
+filterau_getitem_index(Filter *self, size_t index) {
 	int temp;
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->f_seq, index);
@@ -531,7 +512,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-filter_as_unbound_getitem_string_hash(Filter *self, char const *key, Dee_hash_t hash) {
+filterau_getitem_string_hash(Filter *self, char const *key, Dee_hash_t hash) {
 	int temp;
 	DREF DeeObject *result;
 	result = DeeObject_GetItemStringHash(self->f_seq, key, hash);
@@ -552,7 +533,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-filter_as_unbound_getitem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash) {
+filterau_getitem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	int temp;
 	DREF DeeObject *result;
 	result = DeeObject_GetItemStringLenHash(self->f_seq, key, keylen, hash);
@@ -594,35 +575,35 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_as_unbound_bounditem(Filter *self, DeeObject *index) {
+filterau_bounditem(Filter *self, DeeObject *index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItem(self->f_seq, index);
 	return filter_bounditem_handle_itemvalue(self, result);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-filter_as_unbound_bounditem_index(Filter *self, size_t index) {
+filterau_bounditem_index(Filter *self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->f_seq, index);
 	return filter_bounditem_handle_itemvalue(self, result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_as_unbound_bounditem_string_hash(Filter *self, char const *key, Dee_hash_t hash) {
+filterau_bounditem_string_hash(Filter *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemStringHash(self->f_seq, key, hash);
 	return filter_bounditem_handle_itemvalue(self, result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_as_unbound_bounditem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash) {
+filterau_bounditem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemStringLenHash(self->f_seq, key, keylen, hash);
 	return filter_bounditem_handle_itemvalue(self, result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-filter_as_unbound_trygetitem(Filter *self, DeeObject *index) {
+filterau_trygetitem(Filter *self, DeeObject *index) {
 	int temp;
 	DREF DeeObject *result;
 	result = DeeObject_TryGetItem(self->f_seq, index);
@@ -642,7 +623,7 @@ err_r:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-filter_as_unbound_trygetitem_index(Filter *self, size_t index) {
+filterau_trygetitem_index(Filter *self, size_t index) {
 	int temp;
 	DREF DeeObject *result;
 	result = DeeObject_TryGetItemIndex(self->f_seq, index);
@@ -662,7 +643,7 @@ err_r:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-filter_as_unbound_trygetitem_string_hash(Filter *self, char const *key, Dee_hash_t hash) {
+filterau_trygetitem_string_hash(Filter *self, char const *key, Dee_hash_t hash) {
 	int temp;
 	DREF DeeObject *result;
 	result = DeeObject_TryGetItemStringHash(self->f_seq, key, hash);
@@ -682,7 +663,7 @@ err_r:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-filter_as_unbound_trygetitem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash) {
+filterau_trygetitem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	int temp;
 	DREF DeeObject *result;
 	result = DeeObject_TryGetItemStringLenHash(self->f_seq, key, keylen, hash);
@@ -702,7 +683,7 @@ err_r:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF Filter *DCALL
-filter_as_unbound_getrange(Filter *self, DeeObject *start, DeeObject *end) {
+filterau_getrange(Filter *self, DeeObject *start, DeeObject *end) {
 	DREF Filter *result;
 	DREF DeeObject *base;
 	base = DeeObject_GetRange(self->f_seq, start, end);
@@ -716,7 +697,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Filter *DCALL
-filter_as_unbound_getrange_index(Filter *self, Dee_ssize_t start, Dee_ssize_t end) {
+filterau_getrange_index(Filter *self, Dee_ssize_t start, Dee_ssize_t end) {
 	DREF Filter *result;
 	DREF DeeObject *base;
 	base = DeeObject_GetRangeIndex(self->f_seq, start, end);
@@ -730,7 +711,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Filter *DCALL
-filter_as_unbound_getrange_index_n(Filter *self, Dee_ssize_t start) {
+filterau_getrange_index_n(Filter *self, Dee_ssize_t start) {
 	DREF Filter *result;
 	DREF DeeObject *base;
 	base = DeeObject_GetRangeIndexN(self->f_seq, start);
@@ -744,10 +725,99 @@ err:
 }
 
 STATIC_ASSERT(offsetof(Filter, f_seq) == offsetof(ProxyObject, po_obj));
-#define filter_as_unbound_hasitem                 generic_proxy_hasitem
-#define filter_as_unbound_hasitem_index           generic_proxy_hasitem_index
-#define filter_as_unbound_hasitem_string_hash     generic_proxy_hasitem_string_hash
-#define filter_as_unbound_hasitem_string_len_hash generic_proxy_hasitem_string_len_hash
+#define filterau_bool                    generic_proxy_bool
+#define filterau_sizeob                  generic_proxy_sizeob
+#define filterau_size                    generic_proxy_size
+#define filterau_size_fast               generic_proxy_size_fast
+#define filterau_iterkeys                generic_proxy_iterkeys
+#define filterau_hasitem                 generic_proxy_hasitem
+#define filterau_hasitem_index           generic_proxy_hasitem_index
+#define filterau_hasitem_string_hash     generic_proxy_hasitem_string_hash
+#define filterau_hasitem_string_len_hash generic_proxy_hasitem_string_len_hash
+#define filterau_delitem                 generic_proxy_delitem
+#define filterau_delrange                generic_proxy_delrange
+#define filterau_delitem_index           generic_proxy_delitem_index
+#define filterau_delrange_index          generic_proxy_delrange_index
+#define filterau_delrange_index_n        generic_proxy_delrange_index_n
+#define filterau_delitem_string_hash     generic_proxy_delitem_string_hash
+#define filterau_delitem_string_len_hash generic_proxy_delitem_string_len_hash
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+filter_verify_insert(void *arg, DeeObject *item) {
+	Filter *self = (Filter *)arg;
+	int result = invoke_filter(self->f_fun, item);
+	if likely(result > 0)
+		return 0;
+	if (result == 0) {
+		result = DeeError_Throwf(&DeeError_ValueError,
+		                         "Cannot insert %k into filtered sequence: "
+		                         /**/ "item is black-listed by filter");
+	}
+	ASSERT(result == -1);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+filter_verify_insert_all(Filter *self, DeeObject *items) {
+	return DeeObject_Foreach(items, &filter_verify_insert, self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+filterau_setitem(Filter *self, DeeObject *key_or_index, DeeObject *value) {
+	int result = filter_verify_insert(self, value);
+	if unlikely(result)
+		return result;
+	return generic_proxy_setitem((ProxyObject *)self, key_or_index, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+filterau_setitem_index(Filter *self, size_t index, DeeObject *value) {
+	int result = filter_verify_insert(self, value);
+	if unlikely(result)
+		return result;
+	return generic_proxy_setitem_index((ProxyObject *)self, index, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+filterau_setitem_string_hash(Filter *self, char const *key, Dee_hash_t hash, DeeObject *value) {
+	int result = filter_verify_insert(self, value);
+	if unlikely(result)
+		return result;
+	return generic_proxy_setitem_string_hash((ProxyObject *)self, key, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+filterau_setitem_string_len_hash(Filter *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
+	int result = filter_verify_insert(self, value);
+	if unlikely(result)
+		return result;
+	return generic_proxy_setitem_string_len_hash((ProxyObject *)self, key, keylen, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+filterau_setrange(Filter *self, DeeObject *start, DeeObject *end, DeeObject *values) {
+	int result = filter_verify_insert_all(self, values);
+	if unlikely(result)
+		return result;
+	return generic_proxy_setrange((ProxyObject *)self, start, end, values);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+filterau_setrange_index(Filter *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values) {
+	int result = filter_verify_insert_all(self, values);
+	if unlikely(result)
+		return result;
+	return generic_proxy_setrange_index((ProxyObject *)self, start, end, values);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+filterau_setrange_index_n(Filter *self, Dee_ssize_t start, DeeObject *values) {
+	int result = filter_verify_insert_all(self, values);
+	if unlikely(result)
+		return result;
+	return generic_proxy_setrange_index_n((ProxyObject *)self, start, values);
+}
+
 
 PRIVATE struct type_seq filter_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filter_iter,
@@ -776,51 +846,51 @@ PRIVATE struct type_seq filter_seq = {
 	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&filter_hasitem_index,
 };
 
-PRIVATE struct type_seq filter_as_unbound_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filter_iter,
-	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filter_as_unbound_sizeob,
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filter_contains,
-	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filter_as_unbound_getitem,
-	/* .tp_delitem                    = */ NULL,
-	/* .tp_setitem                    = */ NULL,
-	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&filter_as_unbound_getrange,
-	/* .tp_delrange                   = */ NULL,
+PRIVATE struct type_seq filterau_seq = {
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filterau_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filterau_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filterau_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filterau_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&filterau_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&filterau_setitem,
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&filterau_getrange,
+	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&filterau_delrange,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&filter_foreach,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&filterau_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&filter_as_unbound_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&filter_as_unbound_enumerate_index,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&filter_as_unbound_bounditem,
-	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&filter_as_unbound_hasitem,
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&filter_as_unbound_size,
-	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&filter_as_unbound_size_fast,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&filter_as_unbound_getitem_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&filterau_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&filterau_enumerate_index,
+	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *))&filterau_iterkeys,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&filterau_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&filterau_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&filterau_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&filterau_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&filterau_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ NULL,
-	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&filter_as_unbound_bounditem_index,
-	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&filter_as_unbound_hasitem_index,
-	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&filter_as_unbound_getrange_index,
-	/* .tp_delrange_index             = */ NULL,
-	/* .tp_setrange_index             = */ NULL,
-	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&filter_as_unbound_getrange_index_n,
-	/* .tp_delrange_index_n           = */ NULL,
-	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filter_as_unbound_trygetitem,
-	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&filter_as_unbound_trygetitem_index,
-	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&filter_as_unbound_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&filter_as_unbound_getitem_string_hash,
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&filter_as_unbound_bounditem_string_hash,
-	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&filter_as_unbound_hasitem_string_hash,
-	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filter_as_unbound_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filter_as_unbound_getitem_string_len_hash,
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filter_as_unbound_bounditem_string_len_hash,
-	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filter_as_unbound_hasitem_string_len_hash,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&filterau_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&filterau_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&filterau_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&filterau_hasitem_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&filterau_getrange_index,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&filterau_delrange_index,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&filterau_setrange_index,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&filterau_getrange_index_n,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&filterau_delrange_index_n,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&filterau_setrange_index_n,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filterau_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&filterau_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&filterau_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&filterau_getitem_string_hash,
+	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&filterau_delitem_string_hash,
+	/* .tp_setitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&filterau_setitem_string_hash,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&filterau_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&filterau_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filterau_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filterau_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filterau_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&filterau_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filterau_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&filterau_hasitem_string_len_hash,
 };
 
 PRIVATE struct type_member tpconst filter_members[] = {
@@ -832,6 +902,89 @@ PRIVATE struct type_member tpconst filter_members[] = {
 PRIVATE struct type_member tpconst filter_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SeqFilterIterator_Type),
 	TYPE_MEMBER_END
+};
+
+PRIVATE DeeObject filter_locate_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+filter_trygetfirst(Filter *__restrict self) {
+	DREF DeeObject *result;
+	result = DeeSeq_InvokeLocate(self->f_seq, self->f_fun, &filter_locate_dummy);
+	if (result == &filter_locate_dummy) {
+		Dee_DecrefNokill(&filter_locate_dummy);
+		result = ITER_DONE;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+filter_trygetlast(Filter *__restrict self) {
+	DREF DeeObject *result;
+	result = DeeSeq_InvokeRLocateWithRange(self->f_seq, self->f_fun, 0, (size_t)-1, &filter_locate_dummy);
+	if (result == &filter_locate_dummy) {
+		Dee_DecrefNokill(&filter_locate_dummy);
+		result = ITER_DONE;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+filter_getfirst(Filter *__restrict self) {
+	DREF DeeObject *result = filter_trygetfirst(self);
+	if unlikely(result == ITER_DONE) {
+		result = NULL;
+		err_unbound_attribute_string(&SeqFilter_Type, STR_first);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+filter_getlast(Filter *__restrict self) {
+	DREF DeeObject *result = filter_trygetlast(self);
+	if unlikely(result == ITER_DONE) {
+		result = NULL;
+		err_unbound_attribute_string(&SeqFilter_Type, STR_last);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+filter_bool(Filter *self) {
+	DREF DeeObject *result = filter_trygetfirst(self);
+	if (result == ITER_DONE)
+		return 0;
+	if unlikely(result == NULL)
+		return -1;
+	Dee_Decref(result);
+	return 1;
+}
+
+#define filter_boundlast filter_boundfirst
+#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
+#define filter_boundfirst filter_bool
+#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+filter_boundfirst(Filter *__restrict self) {
+	int ok = filter_bool(self);
+	if unlikely(ok < 0)
+		goto err;
+	return Dee_BOUND_FROMBOOL(ok);
+err:
+	return Dee_BOUND_ERR;
+}
+#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+
+
+PRIVATE struct type_getset tpconst filter_getsets[] = {
+	TYPE_GETTER_BOUND_NODOC(STR_first, &filter_getfirst, &filter_boundfirst),
+	TYPE_GETTER_BOUND_NODOC(STR_last, &filter_getlast, &filter_boundlast),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method_hint tpconst filter_method_hints[] = {
+	TYPE_METHOD_HINT(seq_trygetfirst, &filter_trygetfirst),
+	TYPE_METHOD_HINT(seq_trygetlast, &filter_trygetlast),
+	TYPE_METHOD_HINT_END
 };
 
 INTERN DeeTypeObject SeqFilter_Type = {
@@ -874,11 +1027,12 @@ INTERN DeeTypeObject SeqFilter_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ filter_getsets,
 	/* .tp_members       = */ filter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ filter_class_members
+	/* .tp_class_members = */ filter_class_members,
+	/* .tp_method_hints  = */ filter_method_hints,
 };
 
 INTERN DeeTypeObject SeqFilterAsUnbound_Type = {
@@ -907,14 +1061,14 @@ INTERN DeeTypeObject SeqFilterAsUnbound_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&filter_as_unbound_bool
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&filterau_bool
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&filter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ &filter_as_unbound_seq,
+	/* .tp_seq           = */ &filterau_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,

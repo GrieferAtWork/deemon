@@ -204,6 +204,16 @@ generic_proxy_setitem(ProxyObject *self, DeeObject *key_or_index, DeeObject *val
 	return DeeObject_SetItem(self->po_obj, key_or_index, value);
 }
 
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+generic_proxy_delrange(ProxyObject *self, DeeObject *start, DeeObject *end) {
+	return DeeObject_DelRange(self->po_obj, start, end);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+generic_proxy_setrange(ProxyObject *self, DeeObject *start, DeeObject *end, DeeObject *values) {
+	return DeeObject_SetRange(self->po_obj, start, end, values);
+}
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy_hasitem(ProxyObject *self, DeeObject *key_or_index) {
 	return DeeObject_HasItem(self->po_obj, key_or_index);
@@ -212,6 +222,36 @@ generic_proxy_hasitem(ProxyObject *self, DeeObject *key_or_index) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy_bounditem(ProxyObject *self, DeeObject *key_or_index) {
 	return DeeObject_BoundItem(self->po_obj, key_or_index);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy_delitem_index(ProxyObject *__restrict self, size_t index) {
+	return DeeObject_DelItemIndex(self->po_obj, index);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy_setitem_index(ProxyObject *__restrict self, size_t index, DeeObject *value) {
+	return DeeObject_SetItemIndex(self->po_obj, index, value);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy_delrange_index(ProxyObject *self, Dee_ssize_t start, Dee_ssize_t end) {
+	return DeeObject_DelRangeIndex(self->po_obj, start, end);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy_delrange_index_n(ProxyObject *self, Dee_ssize_t start) {
+	return DeeObject_DelRangeIndexN(self->po_obj, start);
+}
+
+INTERN WUNUSED NONNULL((1, 4)) int DCALL
+generic_proxy_setrange_index(ProxyObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values) {
+	return DeeObject_SetRangeIndex(self->po_obj, start, end, values);
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+generic_proxy_setrange_index_n(ProxyObject *self, Dee_ssize_t start, DeeObject *values) {
+	return DeeObject_SetRangeIndexN(self->po_obj, start, values);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -247,7 +287,7 @@ generic_proxy_delitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t
 
 INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
 generic_proxy_setitem_string_hash(ProxyObject *self, char const *key,
-                           Dee_hash_t hash, DeeObject *value) {
+                                  Dee_hash_t hash, DeeObject *value) {
 	return DeeObject_SetItemStringHash(self->po_obj, key, hash, value);
 }
 
@@ -303,7 +343,7 @@ generic_proxy_hash_id(ProxyObject *self) {
 }*/
 
 
-INTERN struct type_cmp generic_proxy_cmp_recursive= {
+INTERN struct type_cmp generic_proxy_cmp_recursive = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&generic_proxy_hash_recursive,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *self, DeeObject *))&generic_proxy_compare_eq_recursive,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *self, DeeObject *))&generic_proxy_compare_recursive,
