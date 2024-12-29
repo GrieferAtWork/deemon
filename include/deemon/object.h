@@ -2068,9 +2068,15 @@ my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 
 /* Possible values returned by C-API isbound checking functions. */
 #define Dee_BOUND_ERR      (-1)
-#define Dee_BOUND_MISSING  (-2) /* TODO: Change this to "0" (for binary compat with "hasattr") */
-#define Dee_BOUND_YES      1    /* TODO: Change this to "1" (for binary compat with "hasattr") */
-#define Dee_BOUND_NO       0    /* TODO: Change this to "2" (for binary compat with "hasattr") */
+#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+#define Dee_BOUND_MISSING  0
+#define Dee_BOUND_YES      1
+#define Dee_BOUND_NO       2
+#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+#define Dee_BOUND_MISSING  (-2)
+#define Dee_BOUND_YES      1
+#define Dee_BOUND_NO       0
+#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 /* #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES) */
 #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES)
@@ -2110,6 +2116,8 @@ my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 #define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) <= 0)
 #elif Dee_BOUND_MISSING < 0 && Dee_BOUND_NO < 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_ERR >= 0
 #define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) < 0)
+#elif !(Dee_BOUND_MISSING & 1) && !(Dee_BOUND_NO & 1) && (Dee_BOUND_YES & 1) && (Dee_BOUND_ERR & 1)
+#define Dee_BOUND_ISMISSING_OR_UNBOUND(x) (!((x) & 1))
 #else /* ... */
 #define Dee_BOUND_ISMISSING_OR_UNBOUND(x) ((x) == Dee_BOUND_MISSING || (x) == Dee_BOUND_NO)
 #endif /* !... */

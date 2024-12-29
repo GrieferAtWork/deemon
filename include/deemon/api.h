@@ -398,15 +398,21 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* ... */
 
 
-/* Use the new sequence operator inheritance system (currently in testing). */
-#if (!defined(CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS))
-#if 1
-#define CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+
+
+/************************************************************************/
+/* EXPERIMENTAL FEATURES                                                */
+/************************************************************************/
+
+/* Experimental feature switch: use altered status codes for "boundattr" / "bounditem" */
+#if (!defined(CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS))
+#if 0
+#define CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #else
-#define CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#define CONFIG_NO_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 #if (!defined(CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT) && \
      !defined(CONFIG_NO_EXPERIMENTAL_NEW_STRING_FORMAT))
@@ -417,6 +423,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NEW_STRING_FORMAT */
 
+/************************************************************************/
 
 
 #ifdef CONFIG_HOST_WINDOWS
