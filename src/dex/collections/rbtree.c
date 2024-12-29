@@ -31,6 +31,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -466,6 +467,10 @@ again_old_node:
 		goto again_old_node;
 	}
 	RBTree_LockEndRead(tree);
+	/* TODO: Instead of a tuple, must return a custom sequence type that:
+	 * - Behaves like a 3-element tuple
+	 * - But can also be unpacked to 2 elements, in which case those are:
+	 *   >> (DeeRange_New(this[0], this[1], NULL), this[2]) */
 	result = DeeTuple_NewVectorSymbolic(3, item);
 	if unlikely(!result)
 		Dee_Decrefv_unlikely(item, 3);
@@ -477,9 +482,56 @@ err_changed_unlock:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rbtreeiter_nextpair(RBTreeIterator *__restrict self,
+                    DREF DeeObject *key_and_value[2]) {
+	DREF DeeObject *range, *minkey, *maxkey, *value;
+	RBTree *tree = self->rbti_tree;
+	struct rbtree_node *node, *old_node;
+again_old_node:
+	RBTree_LockRead(tree);
+	if unlikely(!RBTreeIterator_VersionOK(self, tree))
+		goto err_changed_unlock;
+	old_node = RBTreeIterator_GetNext(self);
+	if unlikely(!old_node) {
+		RBTree_LockEndRead(tree);
+		return 1;
+	}
+	node   = rbtree_abi_nextnode(old_node);
+	minkey = rbtree_node_get_minkey(old_node);
+	maxkey = rbtree_node_get_maxkey(old_node);
+	value  = rbtree_node_get_value(old_node);
+	Dee_Incref(minkey);
+	Dee_Incref(maxkey);
+	Dee_Incref(value);
+	if unlikely(!atomic_cmpxch_or_write(&self->rbti_next, old_node, node)) {
+		RBTree_LockEndRead(tree);
+		Dee_Decref_unlikely(minkey);
+		Dee_Decref_unlikely(maxkey);
+		Dee_Decref_unlikely(value);
+		goto again_old_node;
+	}
+	RBTree_LockEndRead(tree);
+	range = DeeRange_New(minkey, maxkey, NULL);
+	Dee_Decref_unlikely(maxkey);
+	Dee_Decref_unlikely(minkey);
+	if unlikely(!range)
+		goto err_value;
+	key_and_value[0] = range; /* Inherit reference */
+	key_and_value[1] = value; /* Inherit reference */
+	return 0;
+err_value:
+	Dee_Decref_unlikely(value);
+	return -1;
+err_changed_unlock:
+	RBTree_LockEndRead(tree);
+/*err_changed:*/
+	return err_changed_sequence((DeeObject *)tree);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtreeiter_nextkey(RBTreeIterator *__restrict self) {
-	DREF DeeObject *result, *item[2];
+	DREF DeeObject *result, *minkey, *maxkey;
 	RBTree *tree = self->rbti_tree;
 	struct rbtree_node *node, *old_node;
 again_old_node:
@@ -491,20 +543,21 @@ again_old_node:
 		RBTree_LockEndRead(tree);
 		return ITER_DONE;
 	}
-	node    = rbtree_abi_nextnode(old_node);
-	item[0] = rbtree_node_get_minkey(old_node);
-	item[1] = rbtree_node_get_maxkey(old_node);
-	Dee_Incref(item[0]);
-	Dee_Incref(item[1]);
+	node   = rbtree_abi_nextnode(old_node);
+	minkey = rbtree_node_get_minkey(old_node);
+	maxkey = rbtree_node_get_maxkey(old_node);
+	Dee_Incref(minkey);
+	Dee_Incref(maxkey);
 	if unlikely(!atomic_cmpxch_or_write(&self->rbti_next, old_node, node)) {
 		RBTree_LockEndRead(tree);
-		Dee_Decrefv_unlikely(item, 2);
+		Dee_Decref_unlikely(minkey);
+		Dee_Decref_unlikely(maxkey);
 		goto again_old_node;
 	}
 	RBTree_LockEndRead(tree);
-	result = DeeTuple_NewVectorSymbolic(2, item);
-	if unlikely(!result)
-		Dee_Decrefv_unlikely(item, 2);
+	result = DeeRange_New(minkey, maxkey, NULL);
+	Dee_Decref_unlikely(minkey);
+	Dee_Decref_unlikely(maxkey);
 	return result;
 err_changed_unlock:
 	RBTree_LockEndRead(tree);
@@ -543,6 +596,14 @@ err_changed_unlock:
 	err_changed_sequence((DeeObject *)tree);
 	return NULL;
 }
+
+PRIVATE struct type_iterator rbtreeiter_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&rbtreeiter_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rbtreeiter_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rbtreeiter_nextvalue,
+	/* .tp_advance   = */ NULL,
+};
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 rbtreeiter_eq_impl(RBTreeIterator *self, RBTreeIterator *other) {
@@ -1095,7 +1156,7 @@ INTERN DeeTypeObject RBTreeIterator_Type = {
 	/* .tp_cmp           = */ &rbtreeiter_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rbtreeiter_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iterator      = */ &rbtreeiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -1160,19 +1221,13 @@ again:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-rbtree_nsi_getsize(RBTree *__restrict self) {
+rbtree_size(RBTree *__restrict self) {
 	size_t result = 0;
 	RBTree_LockRead(self);
 	if (self->rbt_root)
 		result = rbtree_node_count(self->rbt_root);
 	RBTree_LockEndRead(self);
 	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rbtree_size(RBTree *__restrict self) {
-	size_t result = rbtree_nsi_getsize(self);
-	return DeeInt_NewSize(result);
 }
 
 
@@ -1379,7 +1434,7 @@ err:
  * @return: NULL:      Error
  * @return: ITER_DONE: No node containing `key' */
 PRIVATE WUNUSED NONNULL((1, 2)) struct rbtree_node *DCALL
-rbtree_do_locate_node(RBTree *self, DeeObject *key) {
+rbtree_trygetitem_node(RBTree *self, DeeObject *key) {
 	struct rbtree_node *node;
 	uintptr_t version;
 	DREF DeeObject *node_minkey;
@@ -1436,10 +1491,10 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rbtree_do_locate(RBTree *self, DeeObject *key) {
+rbtree_trygetitem(RBTree *self, DeeObject *key) {
 	DREF DeeObject *result;
 	struct rbtree_node *node;
-	node = rbtree_do_locate_node(self, key);
+	node = rbtree_trygetitem_node(self, key);
 	if (!ITER_ISOK(node))
 		return (DREF DeeObject *)node;
 	result = rbtree_node_get_value(node);
@@ -1671,81 +1726,21 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-rbtree_nsi_getdefault(RBTree *self, DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result;
-	result = rbtree_do_locate(self, key);
-	if (result == ITER_DONE) {
-		result = defl;
-		if (result != ITER_DONE)
-			Dee_Incref(result);
-	}
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-rbtree_nsi_setdefault(RBTree *self, DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result;
-again:
-	result = rbtree_do_locate(self, key);
-	if (result == ITER_DONE) {
-		/* Must create a new node. */
-		struct rbtree_do_insert_overlap_info overlap;
-		struct rbtree_node *newnode;
-		int temp;
-		newnode = rbtree_node_alloc();
-		if unlikely(!newnode)
-			goto err;
-		newnode->rbtn_minkey = key;
-		newnode->rbtn_maxkey = key;
-		newnode->rbtn_value  = defl;
-		Dee_Incref_n(key, 2);
-		Dee_Incref(defl);
-		temp = rbtree_do_insert(self, newnode, &overlap);
-		if (temp == 0) {
-			/* Success! */
-			result = defl;
-			Dee_Incref(defl);
-		} else {
-			rbtree_node_destroy(newnode);
-			if (temp < 0)
-				goto err;
-
-			/* Overlap happened */
-			RBTree_LockRead(self);
-			if (overlap.rbtdioi_vers != self->rbt_version) {
-				RBTree_LockEndRead(self);
-				goto again;
-			}
-
-			/* Return the value of the overlapping node. */
-			result = rbtree_node_get_value(overlap.rbtdioi_node);
-			Dee_Incref(result);
-			RBTree_LockEndRead(self);
-		}
-	}
-	return result;
-err:
-	return NULL;
-}
-
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-rbtree_nsi_updateold(RBTree *self, DeeObject *key,
-                     DeeObject *value, DREF DeeObject **p_oldvalue) {
+rbtree_mh_setold_ex(RBTree *self, DeeObject *key, DeeObject *value) {
 	(void)self;
 	(void)key;
 	(void)value;
-	(void)p_oldvalue;
 	/* TODO */
-	return DeeError_NOTIMPLEMENTED();
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-rbtree_nsi_insertnew(RBTree *self, DeeObject *key,
-                     DeeObject *value, DREF DeeObject **p_oldvalue) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+rbtree_mh_setnew_ex(RBTree *self, DeeObject *key, DeeObject *value) {
 	/* Must create a new node. */
 	struct rbtree_do_insert_overlap_info overlap;
 	struct rbtree_node *newnode;
+	DREF DeeObject *old_value;
 	int temp;
 	newnode = rbtree_node_alloc();
 	if unlikely(!newnode)
@@ -1759,32 +1754,30 @@ rbtree_nsi_insertnew(RBTree *self, DeeObject *key,
 again_insert:
 	temp = rbtree_do_insert(self, newnode, &overlap);
 	if (temp == 0)
-		return 0; /* New key added */
+		return ITER_DONE; /* New key added */
 	if (temp < 0) {
 		rbtree_node_destroy(newnode);
 		goto err;
 	}
 
 	/* Overlap happened */
-	if (p_oldvalue) {
-		RBTree_LockRead(self);
-		if (overlap.rbtdioi_vers != self->rbt_version) {
-			RBTree_LockEndRead(self);
-			goto again_insert;
-		}
-		*p_oldvalue = rbtree_node_get_value(overlap.rbtdioi_node);
-		Dee_Incref(*p_oldvalue);
+	RBTree_LockRead(self);
+	if (overlap.rbtdioi_vers != self->rbt_version) {
 		RBTree_LockEndRead(self);
+		goto again_insert;
 	}
-	return 1;
+	old_value = rbtree_node_get_value(overlap.rbtdioi_node);
+	Dee_Incref(old_value);
+	RBTree_LockEndRead(self);
+	return old_value;
 err:
-	return -1;
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rbtree_contains(RBTree *self, DeeObject *key) {
 	DREF DeeObject *result;
-	result = rbtree_do_locate(self, key);
+	result = rbtree_trygetitem(self, key);
 	if likely(result != NULL) {
 		if (result == ITER_DONE) {
 			result = Dee_False;
@@ -1800,7 +1793,7 @@ rbtree_contains(RBTree *self, DeeObject *key) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rbtree_getitem(RBTree *self, DeeObject *key) {
 	DREF DeeObject *result;
-	result = rbtree_do_locate(self, key);
+	result = rbtree_trygetitem(self, key);
 	if unlikely(result == ITER_DONE) {
 		err_unknown_key((DeeObject *)self, key);
 		result = NULL;
@@ -2369,7 +2362,7 @@ rbtree_locate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_do_locate_node(self, key);
+	node = rbtree_trygetitem_node(self, key);
 	if (!ITER_ISOK(node)) {
 		DeeTuple_FreeUninitialized(result);
 		if unlikely(!node)
@@ -2408,7 +2401,7 @@ rbtree_itlocate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_do_locate_node(self, key);
+	node = rbtree_trygetitem_node(self, key);
 	if (!ITER_ISOK(node)) {
 		DeeObject_FREE(result);
 		if unlikely(!node)
@@ -2437,7 +2430,7 @@ rbtree_remove(RBTree *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 again_locate_node:
-	node = rbtree_do_locate_node(self, key);
+	node = rbtree_trygetitem_node(self, key);
 	if (!ITER_ISOK(node)) {
 		DeeTuple_FreeUninitialized(result);
 		if unlikely(!node)
@@ -2489,7 +2482,7 @@ rbtree_prevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_do_locate_node(self, key);
+	node = rbtree_trygetitem_node(self, key);
 	if (!ITER_ISOK(node)) {
 		DeeTuple_FreeUninitialized(result);
 		if unlikely(!node)
@@ -2522,7 +2515,7 @@ rbtree_nextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_do_locate_node(self, key);
+	node = rbtree_trygetitem_node(self, key);
 	if (!ITER_ISOK(node)) {
 		DeeTuple_FreeUninitialized(result);
 		if unlikely(!node)
@@ -2555,7 +2548,7 @@ rbtree_itprevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_do_locate_node(self, key);
+	node = rbtree_trygetitem_node(self, key);
 	if (!ITER_ISOK(node)) {
 		DeeObject_FREE(result);
 		if unlikely(!node)
@@ -2589,7 +2582,7 @@ rbtree_itnextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto err;
-	node = rbtree_do_locate_node(self, key);
+	node = rbtree_trygetitem_node(self, key);
 	if (!ITER_ISOK(node)) {
 		DeeObject_FREE(result);
 		if unlikely(!node)
@@ -2846,17 +2839,6 @@ err:
 
 #define rbtree_popitem rbtree_popfront
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rbtree_setdefault(RBTree *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *value = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:setdefault", &key, &value))
-		goto err;
-	return rbtree_nsi_setdefault(self, key, value);
-err:
-	return NULL;
-}
-
-
 /*[[[deemon
 (PRIVATE_DEFINE_STRING from rt.gen.string)("str___start__", "__start__");
 (PRIVATE_DEFINE_STRING from rt.gen.string)("str___end__", "__end__");
@@ -3047,7 +3029,7 @@ rbtree_get_depth(RBTree *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_sizeof(RBTree *__restrict self) {
 	size_t result;
-	result = rbtree_nsi_getsize(self);
+	result = rbtree_size(self);
 	result *= sizeof(struct rbtree_node);
 	result += sizeof(RBTree);
 	return DeeInt_NewSize(result);
@@ -3485,37 +3467,55 @@ err_value:
 }
 
 
-
-PRIVATE struct type_nsi tpconst rbtree_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&rbtree_nsi_getsize,
-			/* .nsi_nextkey    = */ (dfunptr_t)&rbtreeiter_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&rbtreeiter_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&rbtree_nsi_getdefault,
-			/* .nsi_setdefault = */ (dfunptr_t)&rbtree_nsi_setdefault,
-			/* .nsi_updateold  = */ (dfunptr_t)&rbtree_nsi_updateold,
-			/* .nsi_insertnew  = */ (dfunptr_t)&rbtree_nsi_insertnew
-		}
-	}
-};
-
 PRIVATE struct type_seq rbtree_seq = {
-	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_iter,
-	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_size,
-	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_contains,
-	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_getitem,
-	/* .tp_delitem      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_delitem,
-	/* .tp_setitem      = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_setitem,
-	/* .tp_getrange     = */ NULL,
-	/* .tp_delrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_delrange,
-	/* .tp_setrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rbtree_setrange,
-	/* .tp_nsi          = */ &rbtree_nsi,
-	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rbtree_foreach,
-	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rbtree_foreach_pair,
-	/* TODO: New operators */
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_delrange,
+	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rbtree_setrange,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rbtree_foreach,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rbtree_foreach_pair,
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *))&rbtree_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_trygetitem,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ NULL,
+	/* .tp_unpack                     = */ NULL,
+	/* .tp_unpack_ex                  = */ NULL,
+	/* .tp_unpack_ub                  = */ NULL,
 };
 
 PRIVATE struct type_gc tpconst rbtree_gc = {
@@ -3605,18 +3605,22 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	              "->?T3?O?O?O\n"
 	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	              "#r{A random pair minkey-maxkey-value pair that has been removed}"),
-	TYPE_METHOD_F("setdefault", &rbtree_setdefault, METHOD_FNOREFESCAPE,
-	              "(key,def=!N)->\n"
-	              "#r{The object currently assigned to @key}"
-	              "Lookup @key in @this ?. and return its value if found. "
-	              /**/ "Otherwise, assign @def to @key and return it instead"),
 	TYPE_METHOD_F("update", &rbtree_update, METHOD_FNOREFESCAPE,
 	              "(items:?S?T3?O?O?O)\n"
 	              DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	              "Iterate @items and unpack each element into 3 others, "
 	              /**/ "using them as #C{minkey,maxkey,value} to insert into @this ?."),
+	TYPE_METHOD_HINTREF(map_setold_ex),
+	TYPE_METHOD_HINTREF(map_setnew_ex),
 	TYPE_METHOD_END
 };
+
+PRIVATE struct type_method_hint tpconst rbtree_method_hints[] = {
+	TYPE_METHOD_HINT(map_setold_ex, &rbtree_mh_setold_ex),
+	TYPE_METHOD_HINT(map_setnew_ex, &rbtree_mh_setnew_ex),
+	TYPE_METHOD_HINT_END
+};
+
 
 PRIVATE struct type_getset tpconst rbtree_getsets[] = {
 	TYPE_GETTER_F("first", &rbtree_get_first, METHOD_FNOREFESCAPE,
@@ -3744,7 +3748,8 @@ INTERN DeeTypeObject RBTree_Type = {
 	/* .tp_members       = */ rbtree_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ rbtree_class_members
+	/* .tp_class_members = */ rbtree_class_members,
+	/* .tp_method_hints  = */ rbtree_method_hints,
 };
 
 DECL_END

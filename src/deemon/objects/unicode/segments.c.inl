@@ -405,7 +405,6 @@ PRIVATE struct type_seq sseg_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

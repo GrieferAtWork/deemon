@@ -4055,7 +4055,7 @@ fg_vopgetitemdef(struct fungen *__restrict self) {
 		if (DeeType_InheritOperator(seq_type, OPERATOR_GETITEM) &&
 		    seq_type->tp_seq && seq_type->tp_seq->tp_getitem) {
 #if 0 /* TODO: Re-write using `tp_trygetitem' (or even better: replace this function with `fg_voptrygetitem') */
-			struct type_nsi const *nsi = seq_type->tp_seq->tp_nsi;
+			struct Dee_type_nsi const *nsi = seq_type->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_getdefault != NULL) {
 				DO(fg_vnotoneref(self, 2));                                  /* seq, key_or_index, def */
 				DO(fg_vnotoneref_if_operator_at(self, OPERATOR_GETITEM, 3)); /* seq, key_or_index, def */

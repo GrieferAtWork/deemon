@@ -35,6 +35,7 @@
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
@@ -312,68 +313,16 @@ err:
 /* map, key, [value] -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_Mapping_setdefault(struct fungen *__restrict self, vstackaddr_t argc) {
-	struct memloc l_ITER_DONE;
-	DREF struct memstate *common_state;
-	struct host_symbol *Lnot_ITER_DONE;
-	struct type_nsi const *nsi;
+	Dee_mh_map_setdefault_t mh_map_setdefault;
 	DeeTypeObject *map_type = memval_typeof(fg_vtop(self) - argc);
 	if unlikely(!map_type)
 		return 1; /* Shouldn't happen since we only get called when types are known... */
 	if (argc < 2)
 		DO(fg_vpush_none(self)); /* map, key, value */
-	nsi = DeeType_NSI(map_type);
-	if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_setdefault) {
-		DO(fg_vnotoneref(self, 2));                                  /* this, key, value */
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SETITEM, 2)); /* this, key, value */
-		return fg_vcallapi(self, nsi->nsi_maplike.nsi_setdefault, VCALL_CC_OBJECT, 3);
-	}
-	if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)
-		return 1; /* Optimized version would be too long. */
-
-	/* Fallback: lookup key and override if not already present (thread-unsafe) */
-	DO(fg_vnotoneref(self, 2));         /* this, key, value */
+	mh_map_setdefault = DeeType_RequireMapSetDefault(map_type);
+	DO(fg_vnotoneref(self, 2));                                  /* this, key, value */
 	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SETITEM, 2)); /* this, key, value */
-	DO(fg_vdup_at(self, 3));            /* this, key, value, this */
-	DO(fg_vdup_at(self, 3));            /* this, key, value, this, key */
-	DO(fg_vpush_addr(self, ITER_DONE)); /* this, key, value, this, key, ITER_DONE */
-	DO(fg_vopgetitemdef(self));         /* this, key, value, current_value */
-	DO(fg_vdirect1(self));              /* this, key, value, current_value */
-
-	/* >> if (current_value == ITER_DONE) {
-	 * >>     if (DeeObject_SetItem(this, key, value))
-	 * >>         HANDLE_EXCEPT();
-	 * >>     result = value;
-	 * >>     Dee_Incref(value);
-	 * >> } */
-	Lnot_ITER_DONE = fg_newsym_named(self, ".Lnot_ITER_DONE");
-	if unlikely(!Lnot_ITER_DONE)
-		goto err;
-	memloc_init_const(&l_ITER_DONE, ITER_DONE);
-	DO(fg_gjcc(self, fg_vtopdloc(self), &l_ITER_DONE,
-	                                false, Lnot_ITER_DONE, NULL, Lnot_ITER_DONE));
-	DO(fg_state_unshare(self));
-	common_state = self->fg_state;
-	ASSERT(memval_isdirect(memstate_vtop(common_state)));
-	memval_direct_setref(memstate_vtop(common_state));
-	memstate_incref(common_state);                        /* this, key, value, ref:current_value */
-	EDO(err_common_state, fg_state_unshare(self));        /* this, key, value, ref:current_value */
-	fg_vtop_direct_clearref(self);                        /* this, key, value, current_value */
-	EDO(err_common_state, fg_vpop(self));                 /* this, key, value */
-	EDO(err_common_state, fg_vdup_at(self, 3));           /* this, key, value, this */
-	EDO(err_common_state, fg_vdup_at(self, 3));           /* this, key, value, this, key */
-	EDO(err_common_state, fg_vdup_at(self, 3));           /* this, key, value, this, key, value */
-	EDO(err_common_state, fg_vop(self, OPERATOR_SETITEM, 3, VOP_F_NORMAL)); /* this, key, value */
-	EDO(err_common_state, fg_vdup(self));                 /* this, key, value, value */
-	EDO(err_common_state, fg_vdirect1(self));             /* this, key, value, value */
-	EDO(err_common_state, fg_gincref_loc(self, fg_vtopdloc(self), 1)); /* this, key, value, value */
-	fg_vtop_direct_setref(self);                          /* this, key, value, ref:value */
-	EDO(err_common_state, fg_vmorph(self, common_state)); /* this, key, value, ref:current_value */
-	memstate_decref(common_state);                        /* this, key, value, ref:current_value */
-	host_symbol_setsect(Lnot_ITER_DONE, self->fg_sect);   /* this, key, value, ref:current_value */
-	DO(fg_vrrot(self, 4));                                /* ref:current_value, this, key, value */
-	return fg_vpopmany(self, 3);                          /* ref:current_value */
-err_common_state:
-	memstate_decref(common_state);
+	return fg_vcallapi(self, mh_map_setdefault, VCALL_CC_OBJECT, 3);
 err:
 	return -1;
 }

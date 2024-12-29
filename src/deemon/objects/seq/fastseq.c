@@ -42,10 +42,6 @@
 
 DECL_BEGIN
 
-STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST_DEPRECATED == (size_t)-1,
-                  "`nsi_getsize_fast' assumes this correlation");
-
-
 /* Check if `self' is a fast-sequence object, and return its (current)
  * length if it is, or return `DEE_FASTSEQ_NOTFAST_DEPRECATED' if it isn't.
  * A fast-sequence object is a vector-based object implemented by the

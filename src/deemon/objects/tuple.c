@@ -585,7 +585,7 @@ list_size_changed:
 		goto done;
 	}
 
-	/* TODO: Use DeeObject_Foreach(), with DeeObject_SizeFast() as hint. */
+	/* TODO: Use tp_asvector/DeeObject_Foreach(), with DeeObject_SizeFast() as hint. */
 
 	/* Optimization for fast-sequence compatible objects. */
 	seq_length = DeeFastSeq_GetSize_deprecated(self);
@@ -1425,7 +1425,6 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&tuple_getrange,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -2624,7 +2623,6 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

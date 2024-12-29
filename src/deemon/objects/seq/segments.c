@@ -334,7 +334,6 @@ PRIVATE struct type_seq seg_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

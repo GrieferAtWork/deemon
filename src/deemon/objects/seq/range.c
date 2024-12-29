@@ -940,7 +940,6 @@ PRIVATE struct type_seq range_seq = {
 	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&range_getrange,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ NULL,
 	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))NULL, /* TODO */
 };
 
@@ -1436,7 +1435,6 @@ PRIVATE struct type_seq intrange_seq = {
 	/* .tp_getrange           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&intrange_getrange,
 	/* .tp_delrange           = */ NULL,
 	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ NULL,
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&intrange_foreach,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,

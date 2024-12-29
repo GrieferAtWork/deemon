@@ -110,7 +110,6 @@ typedef __UINTPTR_TYPE__ uintptr_t;
 #define Dee_type_cmp               type_cmp
 #define Dee_type_nii               type_nii
 #define Dee_type_seq               type_seq
-#define Dee_type_nsi               type_nsi
 #define Dee_type_iterator          type_iterator
 #define Dee_type_attr              type_attr
 #define Dee_type_with              type_with
@@ -2067,7 +2066,6 @@ my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 }
 #endif
 
-struct Dee_type_nsi;
 struct Dee_type_seq_cache;
 struct Dee_type_seq {
 	/* Sequence operators. */
@@ -2082,18 +2080,14 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int             (DCALL *tp_setrange)(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
 
 	/* Optional sequence-extensions for providing optimized (but
-	 * less generic) variants for various sequence operations. */
-
-	/* TODO: Get rid of this -- doesn't work with the unified operator inheritance system.
-	 *       Instead, everything related to NSI operators must go into `Dee_type_seq', and
-	 *       the operator inheritance system must provide defaults for linking NSI variants
-	 *       of operators with the primary operators above. */
-	struct Dee_type_nsi Dee_tpconst *tp_nsi; /* TODO: Deprecated */
+	 * less generic) variants of the sequence operators above. */
 
 	/* Alternate forms for `tp_iter' (these are inherited by `DeeType_InheritIter()').
 	 * Instead of defining `tp_iter', you can just define one of these and have the runtime
-	 * use these for enumerating the object. Note however that this is less efficient, and
-	 * that the type should still provide a proper `tp_iter' callback. */
+	 * use these for enumerating the object. Note however that this is less efficient when
+	 * enumeration still requires an iterator, and that for this purpose, the type should
+	 * still provide a proper `tp_iter' callback (or if it is derived from DeeSeq_Type, it
+	 * can also just provide `tp_size' and `tp_getitem_index'). */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
@@ -2677,7 +2671,6 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&myob_getrange,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&myob_delrange,
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&myob_setrange,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&myob_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&myob_foreach_pair,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&myob_enumerate,

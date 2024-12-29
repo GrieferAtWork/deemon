@@ -2507,7 +2507,6 @@ PRIVATE struct type_seq de_wsagiif_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wsagiif_foreach_pair,
 };
@@ -2522,7 +2521,6 @@ PRIVATE struct type_seq de_wsatgii_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wsatgii_foreach_pair,
 };
@@ -2537,7 +2535,6 @@ PRIVATE struct type_seq de_wsagii_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wsagii_foreach_pair,
 };
@@ -2552,7 +2549,6 @@ PRIVATE struct type_seq de_wsoagi_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wsoagi_foreach_pair,
 };
@@ -2567,7 +2563,6 @@ PRIVATE struct type_seq de_wsagiifaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wsagiifaf_foreach_pair,
 };
@@ -2582,7 +2577,6 @@ PRIVATE struct type_seq de_wsatgiiaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wsatgiiaf_foreach_pair,
 };
@@ -2597,7 +2591,6 @@ PRIVATE struct type_seq de_wsagiiaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wsagiiaf_foreach_pair,
 };
@@ -2612,7 +2605,6 @@ PRIVATE struct type_seq de_wsoagiaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wsoagiaf_foreach_pair,
 };
@@ -2627,7 +2619,6 @@ PRIVATE struct type_seq de_wgii_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wgii_foreach_pair,
 };
@@ -2642,7 +2633,6 @@ PRIVATE struct type_seq de_wgiiaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wgiiaf_foreach_pair,
 };
@@ -2657,7 +2647,6 @@ PRIVATE struct type_seq de_wgiaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wgiaf_foreach_pair,
 };
@@ -2672,7 +2661,6 @@ PRIVATE struct type_seq de_wikagi_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wikagi_foreach_pair,
 };
@@ -2687,7 +2675,6 @@ PRIVATE struct type_seq de_wikagiaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wikagiaf_foreach_pair,
 };
@@ -2702,7 +2689,6 @@ PRIVATE struct type_seq de_wikatgi_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wikatgi_foreach_pair,
 };
@@ -2717,7 +2703,6 @@ PRIVATE struct type_seq de_wikatgiaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wikatgiaf_foreach_pair,
 };
@@ -2732,7 +2717,6 @@ PRIVATE struct type_seq de_wiac_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wiac_foreach_pair,
 };
@@ -2747,7 +2731,6 @@ PRIVATE struct type_seq de_wiacaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wiacaf_foreach_pair,
 };
@@ -2762,7 +2745,6 @@ PRIVATE struct type_seq de_wiauaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wiauaf_foreach_pair,
 };
@@ -2777,7 +2759,6 @@ PRIVATE struct type_seq de_we_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_we_foreach_pair,
 };
@@ -2792,7 +2773,6 @@ PRIVATE struct type_seq de_wei_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_wei_foreach_pair,
 };
@@ -2807,7 +2787,6 @@ PRIVATE struct type_seq de_weaf_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&de_weaf_foreach_pair,
 };

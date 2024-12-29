@@ -991,7 +991,6 @@ PRIVATE struct type_seq cdict_seq = {
 	/* .tp_getrange                     = */ NULL,
 	/* .tp_delrange                     = */ NULL,
 	/* .tp_setrange                     = */ NULL,
-	/* .tp_nsi                          = */ NULL,
 	/* .tp_foreach                      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cdict_foreach,
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cdict_foreach_pair,
 	/* .tp_enumerate                    = */ NULL,

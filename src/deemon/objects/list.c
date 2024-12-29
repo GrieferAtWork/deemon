@@ -2416,7 +2416,6 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_getrange,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_delrange,
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&list_setrange,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&list_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

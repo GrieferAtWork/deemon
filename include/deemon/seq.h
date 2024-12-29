@@ -33,19 +33,8 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define return_empty_seq                Dee_return_empty_seq
-#define return_empty_iterator           Dee_return_empty_iterator
-#define Dee_type_nii                    type_nii
-#define Dee_type_nsi                    type_nsi
-#define TYPE_ITERX_CLASS_UNIDIRECTIONAL Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL
-#define TYPE_ITERX_CLASS_BIDIRECTIONAL  Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL
-#define TYPE_ITERX_FNORMAL              Dee_TYPE_ITERX_FNORMAL
-#define TYPE_SEQX_CLASS_SEQ             Dee_TYPE_SEQX_CLASS_SEQ
-#define TYPE_SEQX_CLASS_MAP             Dee_TYPE_SEQX_CLASS_MAP
-#define TYPE_SEQX_CLASS_SET             Dee_TYPE_SEQX_CLASS_SET
-#define TYPE_SEQX_FNORMAL               Dee_TYPE_SEQX_FNORMAL
-#define TYPE_SEQX_FMUTABLE              Dee_TYPE_SEQX_FMUTABLE
-#define TYPE_SEQX_FRESIZABLE            Dee_TYPE_SEQX_FRESIZABLE
+#define return_empty_seq      Dee_return_empty_seq
+#define return_empty_iterator Dee_return_empty_iterator
 #endif /* DEE_SOURCE */
 
 
@@ -112,6 +101,13 @@ DDATDEF DeeObject           DeeIterator_EmptyInstance;
 /* !!! BEGIN: DEPRECATED; PENDING REMOVAL AFTER CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 /*                                                                                         */
 /*******************************************************************************************/
+
+#ifdef DEE_SOURCE
+#define Dee_type_nii                    type_nii
+#define TYPE_ITERX_CLASS_UNIDIRECTIONAL Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL
+#define TYPE_ITERX_CLASS_BIDIRECTIONAL  Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL
+#define TYPE_ITERX_FNORMAL              Dee_TYPE_ITERX_FNORMAL
+#endif /* DEE_SOURCE */
 
 /* ==== NATIVE ITERATOR INTERFACE EXTENSIONS FOR TYPES ==== */
 struct Dee_type_nii {
@@ -212,110 +208,6 @@ struct Dee_type_nii {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
-
-
-/* ==== NATIVE SEQUENCE INTERFACE EXTENSIONS FOR TYPES ==== */
-
-struct Dee_type_nsi {
-	/* Native Sequence Interface for types. */
-#define Dee_TYPE_SEQX_CLASS_SEQ  0x0000 /* Sequence-like */
-#define Dee_TYPE_SEQX_CLASS_MAP  0x0001 /* Mapping-like */
-#define Dee_TYPE_SEQX_CLASS_SET  0x0002 /* Set-like */
-#define Dee_TYPE_SEQX_FNORMAL    0x0000 /* Normal sequence flags. */
-#define Dee_TYPE_SEQX_FMUTABLE   0x0001 /* The sequence is mutable. */
-#define Dee_TYPE_SEQX_FRESIZABLE 0x0002 /* The sequence is resizable. */
-	__UINTPTR_HALF_TYPE__   nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
-	__UINTPTR_HALF_TYPE__   nsi_flags; /* Sequence flags (Set of `TYPE_SEQX_F*') */
-	union {
-		Dee_funptr_t       _nsi_class_functions[24];
-
-		struct {
-			/* [1..1] ERROR: (size_t)-1 */
-			WUNUSED_T NONNULL_T((1)) size_t (DCALL *nsi_getsize)(DeeObject *__restrict self);
-		}                   nsi_common;
-
-		struct { /* TYPE_SEQX_CLASS_SEQ */
-#if 0 // def CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS // TODO
-			Dee_funptr_t _unused_nsi_getsize;
-			Dee_funptr_t _unused_nsi_getsize_fast;
-			Dee_funptr_t _unused_nsi_getitem;
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-			/* NOTE: If provided, these functions are only ever called as extensions to the
-			 *       regular sequence operators, meaning that if you implement `nsi_getsize',
-			 *       you are also _required_ to implement `tp_sizeob'
-			 * NOTE: Any object implementing sequence extensions _must_ at
-			 *       the very least provide the operators for `nsi_getsize'!
-			 * NOTE: The `*_fast' variants are allowed to assume:
-			 *       `index < ANY_PREVIOUS(nsi_getsize(ob)))' */
-
-			/* [1..1] ERROR: (size_t)-1 */
-			WUNUSED_T NONNULL_T((1))    size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self);
-
-			/* Same as `nsi_getsize', but never throw any errors, and simply return (size_t)-1 to indicate failure.
-			 * HINT: This callback is used to implement `DeeFastSeq_GetSize_deprecated()', with
-			 *       either `nsi_getitem_fast()' or `nsi_getitem()' then being used
-			 *       to implement the item lookup itself.
-			 * WARNING: When implementing this operator, you must also implement at
-			 *          least one of `nsi_getitem' or `nsi_getitem_fast' */
-			WUNUSED_T NONNULL_T((1))    size_t          (DCALL *nsi_getsize_fast)(DeeObject *__restrict self);
-			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getitem)(DeeObject *__restrict self, size_t index);
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-		}                   nsi_seqlike;
-
-		struct { /* TYPE_SEQX_CLASS_MAP */
-			/* [1..1] ERROR: (size_t)-1 */
-			WUNUSED_T NONNULL_T((1))       size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self);
-
-			/* Same as `mapping.Iterator.operator next()' of the mapping's core iterator,
-			 * however only return the key / value, rather than a key-value tuple.
-			 * @param: iterator: An iterator object, as returned by `mapping.operator iter()' */
-			WUNUSED_T NONNULL_T((1))       DREF DeeObject *(DCALL *nsi_nextkey)(DeeObject *__restrict iterator);
-			WUNUSED_T NONNULL_T((1))       DREF DeeObject *(DCALL *nsi_nextvalue)(DeeObject *__restrict iterator);
-
-			/* Lookup the given `key' and return its association, or `defl' if it doesn't yet exist.
-			 * WARNING: `defl' may be ITER_DONE, in which case you really shouldn't incref() it! */
-			WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *nsi_getdefault)(DeeObject *self, DeeObject *key, DeeObject *defl);
-
-			/* Check if the mapping contains a element for `key' and return that element's value, or
-			 * insert a new element for `key', setting its value to `defl', then returning `defl'. */
-			WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *nsi_setdefault)(DeeObject *self, DeeObject *key, DeeObject *defl);
-
-			/* Update an existing mapping element
-			 * @param: p_oldvalue: When non-NULL, store a reference to the old item here.
-			 * @return: 1:  The existing key was updated (*p_oldvalue is set to the previous value)
-			 * @return: 0:  `key' doesn't exist. (*p_oldvalue is left unchanged)
-			 * @return: -1: Error. */
-			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_updateold)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **p_oldvalue);
-
-			/* Insert a new mapping element, but don't change a pre-existing one
-			 * @param: p_oldvalue: When non-NULL, store a reference to the old item here.
-			 * @return: 1:  `key' already exists (*p_oldvalue is set to its associated value)
-			 * @return: 0:  `key' didn't exist and was thus added (*p_oldvalue is left unchanged)
-			 * @return: -1: Error. */
-			WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *nsi_insertnew)(DeeObject *self, DeeObject *key, DeeObject *value, DREF DeeObject **p_oldvalue);
-		}                   nsi_maplike;
-
-		struct { /* TYPE_SEQX_CLASS_SET */
-			/* [1..1] ERROR: (size_t)-1 */
-			WUNUSED_T NONNULL_T((1))    size_t (DCALL *nsi_getsize)(DeeObject *__restrict self);
-		}                   nsi_setlike;
-	}
-#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
-	_dee_aunion
-#define nsi_common  _dee_aunion.nsi_common
-#define nsi_seqlike _dee_aunion.nsi_seqlike
-#define nsi_maplike _dee_aunion.nsi_maplike
-#define nsi_setlike _dee_aunion.nsi_setlike
-#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
-	;
-};
-
-/* Lookup the closest NSI descriptor for `tp', or return `NULL'
- * if the top-most type implementing any sequence operator doesn't
- * expose NSI functionality. */
-DFUNDEF WUNUSED NONNULL((1)) struct Dee_type_nsi const *DCALL
-DeeType_NSI(DeeTypeObject *__restrict tp); /* !!! DEPRECATED !!! */
-
 
 /*****************************************************************************************/
 /*                                                                                       */
@@ -467,7 +359,7 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self);
 
 /* Same as `DeeSharedVector_Decref()', but should be used if the caller
  * does *not* want to gift the vector references to all of its items.
- * s.a.: the "maybe DREF" annotated on the `vector' arcument of
+ * s.a.: the "maybe DREF" annotated on the `vector' argument of
  *       `DeeSharedVector_NewShared()' */
 DFUNDEF NONNULL((1)) void DCALL
 DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);

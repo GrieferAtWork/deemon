@@ -580,7 +580,6 @@ PRIVATE struct type_seq rvec_seq = {
 	/* .tp_getrange                   = */ NULL, /* default */
 	/* .tp_delrange                   = */ NULL, /* default */
 	/* .tp_setrange                   = */ NULL, /* default */
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rvec_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1182,7 +1181,6 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&svec_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1425,7 +1423,7 @@ err_cannot_inherit:
 
 /* Same as `DeeSharedVector_Decref()', but should be used if the caller
  * does *not* want to gift the vector references to all of its items.
- * s.a.: the "maybe DREF" annotated on the `vector' arcument of
+ * s.a.: the "maybe DREF" annotated on the `vector' argument of
  *       `DeeSharedVector_NewShared()' */
 PUBLIC NONNULL((1)) void DCALL
 DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self) {

@@ -1141,7 +1141,6 @@ PRIVATE struct type_seq deq_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&deq_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,

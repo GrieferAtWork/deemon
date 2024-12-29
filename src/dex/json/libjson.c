@@ -264,17 +264,17 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-jmapiter_next(DeeJsonIteratorObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+jmapiter_nextpair(DeeJsonIteratorObject *__restrict self,
+                  DREF DeeObject *key_and_value[2]) {
 	int tok;
 	char const *orig_pos, *temp;
-	DREF DeeObject *key_and_value[2], *result;
 	DeeJsonParser parser;
 again:
 	DeeJsonIterator_GetParserEx(self, &parser);
 	orig_pos = parser.djp_parser.jp_pos;
 	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDOBJECT)
-		return ITER_DONE;
+		return 1;
 	key_and_value[0] = DeeJson_ParseString(&parser.djp_parser);
 	if unlikely(!key_and_value[0])
 		goto err;
@@ -283,9 +283,6 @@ again:
 	key_and_value[1] = DeeJson_ParseObject(&parser, true);
 	if unlikely(!key_and_value[1])
 		goto err_key;
-	result = DeeTuple_NewVectorSymbolic(2, key_and_value);
-	if unlikely(!result)
-		goto err_key_value;
 
 	/* Parse the trailing ',' that following the mapping value. */
 	temp = parser.djp_parser.jp_pos;
@@ -299,13 +296,14 @@ again:
 	/* Try to write-back the new parser position. */
 	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos,
 	                            parser.djp_parser.jp_pos)) {
-		Dee_Decref(result);
+		Dee_Decref(key_and_value[0]);
+		Dee_Decref(key_and_value[1]);
 		goto again;
 	}
-	return result;
+	return 0;
 err_key_value_syntax:
 	err_json_syntax();
-err_key_value:
+/*err_key_value:*/
 	Dee_Decref(key_and_value[1]);
 	goto err_key;
 err_key_syntax:
@@ -313,7 +311,7 @@ err_key_syntax:
 err_key:
 	Dee_Decref_likely(key_and_value[0]);
 err:
-	return NULL;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -393,6 +391,13 @@ err_syntax:
 err:
 	return NULL;
 }
+
+PRIVATE struct type_iterator jmapiter_iterator = {
+	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&jmapiter_nextpair,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmapiter_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmapiter_nextvalue,
+	/* .tp_advance   = */ NULL, // TODO: (size_t (DCALL *)(DeeObject *__restrict, size_t))&jmapiter_advance,
+};
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 jseqiter_bool(DeeJsonIteratorObject *__restrict self) {
@@ -1069,53 +1074,6 @@ err:
 	return  NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-jmap_nsi_getdefault(DeeJsonMappingObject *self,
-                    DeeObject *key, DeeObject *defl) {
-	DREF DeeObject *result;
-	char const *keystr;
-	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
-		goto err;
-	keystr = DeeString_AsUtf8(key);
-	if unlikely(!keystr)
-		goto err;
-	result = jmap_trygetitem_string_len_hash(self, keystr, WSTR_LENGTH(keystr), 0);
-	if (result == ITER_DONE) {
-		result = defl;
-		if (result != ITER_DONE)
-			Dee_Incref(result);
-	}
-	return result;
-err:
-	return NULL;
-}
-
-
-PRIVATE struct type_nsi tpconst jseq_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&jseq_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getitem      = */ (dfunptr_t)&jseq_getitem_index,
-		}
-	}
-};
-
-PRIVATE struct type_nsi tpconst jmap_nsi = {
-	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
-	{
-		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&jmap_size,
-			/* .nsi_nextkey    = */ (dfunptr_t)&jmapiter_nextkey,
-			/* .nsi_nextvalue  = */ (dfunptr_t)&jmapiter_nextvalue,
-			/* .nsi_getdefault = */ (dfunptr_t)&jmap_nsi_getdefault
-		}
-	}
-};
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 jseq_foreach(DeeJsonSequenceObject *__restrict self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -1219,7 +1177,6 @@ PRIVATE struct type_seq jseq_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &jseq_nsi,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&jseq_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
@@ -1267,7 +1224,6 @@ PRIVATE struct type_seq jmap_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ &jmap_nsi,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&jmap_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,
@@ -1426,8 +1382,8 @@ INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &jmapiter_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmapiter_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &jmapiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,

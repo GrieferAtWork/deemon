@@ -451,7 +451,6 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_getrange                     = */ &DeeNone_OperatorGetRange,
 	/* .tp_delrange                     = */ &DeeNone_OperatorDelRange,
 	/* .tp_setrange                     = */ &DeeNone_OperatorSetRange,
-	/* .tp_nsi                          = */ NULL,
 	/* .tp_foreach                      = */ &DeeNone_OperatorForeach,
 	/* .tp_foreach_pair                 = */ &DeeNone_OperatorForeachPair,
 	/* .tp_enumerate                    = */ &DeeNone_OperatorEnumerate,

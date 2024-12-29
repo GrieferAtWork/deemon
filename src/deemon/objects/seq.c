@@ -153,17 +153,6 @@ empty_range:
 	return size;
 }
 
-/* Lookup the closest NSI descriptor for `tp', or return `NULL'
- * if the top-most type implementing any sequence operator doesn't
- * expose NSI functionality. */
-PUBLIC WUNUSED NONNULL((1)) struct type_nsi const *DCALL
-DeeType_NSI(DeeTypeObject *__restrict tp) {
-	ASSERT_OBJECT_TYPE(tp, &DeeType_Type);
-	if (tp->tp_seq)
-		return tp->tp_seq->tp_nsi;
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 	DeeTypeObject *result = &DeeIterator_Type;
@@ -1526,6 +1515,53 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "	}\n"
 	              /**/ "}"
 	              "}"),
+	/* TODO: unique(key?:?DCallable)->?.
+	 * Similar to ?#distinct (and actually identical when @this is stored),
+	 * but only skip identical, consecutive items (iow: only keep track of
+	 * the most-recently encountered item, rather than all that have been
+	 * encountered across the entire sequence). */
+
+	/* TODO: takewhile(cond:?DCallble)->?.
+	 * Same as "filter(cond)", but only yield leading matches:
+	 * >> function takewhile(cond: Callble): Sequence {
+	 * >>     for (local item: this as Sequence) {
+	 * >>         if (!cond(item))
+	 * >>             break;
+	 * >>         yield item;
+	 * >>     }
+	 * >> } */
+
+	/* TODO: dropwhile(cond:?DCallble)->?.
+	 * Matches everything not matched by ?#takewhile:
+	 * >> function takeafter(cond: Callble): Sequence {
+	 * >>     local iter = (this as Sequence).operator iter();
+	 * >>     foreach (local item: iter) {
+	 * >>         if (!cond(item)) {
+	 * >>             yield item;
+	 * >>             break;
+	 * >>         }
+	 * >>     }
+	 * >>     foreach (local item: iter)
+	 * >>         yield item;
+	 * >> } */
+
+	/* TODO: pairwise->?S?T2?O?O
+	 * Yield every elements of @this (except for the first) sequence as a pair (predecessor, elem):
+	 * >> property pairwise: {(Object, Object)...} = {
+	 * >>     get() {
+	 * >>         local iter = (this as Sequence).operator iter();
+	 * >>         local prev;
+	 * >>         foreach (prev: iter)
+	 * >>             goto start;
+	 * >>         return;
+	 * >> start:
+	 * >>         foreach (local next: iter) {
+	 * >>             yield (prev, next);
+	 * >>             prev = next;
+	 * >>         }
+	 * >>     }
+	 * >> } */
+
 
 	/* TODO: findall: "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?S?Dint"
 	 * > Find not just the first, but all indices of @item */
@@ -2382,12 +2418,16 @@ PRIVATE struct type_method tpconst seq_class_methods[] = {
 	            /**/ "local x = [start:end, step];"
 	            "}"),
 	TYPE_METHOD("repeat", &seq_class_repeat,
+	            /* TODO: Rename to "repeatitem" */
+	            /* TODO: The "count" argument should be optional, and if not given, means "infinite" */
 	            "(obj,count:?Dint)->?DSequence\n"
 	            "#tIntegerOverflow{@count is negative}"
 	            "Create a proxy-Sequence that yields @obj a total of @count times\n"
 	            "The main purpose of this function is to construct large sequences "
 	            /**/ "to be used as initializers for mutable sequences such as ?DList"),
 	TYPE_METHOD("repeatseq", &seq_class_repeatseq,
+	            /* TODO: Rename to "repeat" (and change from "tp_class_methods" to "tp_methods") */
+	            /* TODO: The "count" argument should be optional, and if not given, means "infinite" */
 	            "(seq:?DSequence,count:?Dint)->?DSequence\n"
 	            "#tIntegerOverflow{@count is negative}"
 	            "Repeat all the elements from @seq a total of @count times\n"

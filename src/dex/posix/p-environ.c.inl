@@ -2193,7 +2193,6 @@ PRIVATE struct type_seq environ_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_nsi                        = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&environ_foreach_pair,
 	/* .tp_enumerate                  = */ NULL,

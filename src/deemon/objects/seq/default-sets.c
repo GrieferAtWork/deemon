@@ -878,7 +878,6 @@ PRIVATE struct type_seq su_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ NULL,
 	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&su_foreach
 };
 
@@ -1185,7 +1184,6 @@ PRIVATE struct type_seq ssd_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ NULL,
 	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ssd_foreach
 };
 
@@ -1490,7 +1488,6 @@ PRIVATE struct type_seq si_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ NULL,
 	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&si_foreach
 };
 
@@ -1720,7 +1717,6 @@ PRIVATE struct type_seq sd_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ NULL,
 	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sd_foreach
 };
 
