@@ -782,7 +782,6 @@ err:
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args;
@@ -800,35 +799,6 @@ err_printer:
 err:
 	return NULL;
 }
-#else /* CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT */
-INTDEF dssize_t DCALL
-DeeBytes_Format_old(dformatprinter printer,
-                    dformatprinter format_printer, void *arg,
-                    char const *__restrict format,
-                    size_t format_len, DeeObject *__restrict args);
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *args;
-	if (DeeArg_Unpack(argc, argv, "o:format", &args))
-		goto err;
-	{
-		struct bytes_printer printer = BYTES_PRINTER_INIT;
-		if unlikely(DeeBytes_Format_old(&bytes_printer_print,
-		                            (dformatprinter)&bytes_printer_append,
-		                            &printer,
-		                            (char *)DeeBytes_DATA(self),
-		                            DeeBytes_SIZE(self),
-		                            args) < 0)
-			goto err_printer;
-		return bytes_printer_pack(&printer);
-err_printer:
-		bytes_printer_fini(&printer);
-	}
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT */
 
 
 

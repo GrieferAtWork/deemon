@@ -414,15 +414,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
-#if (!defined(CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_NEW_STRING_FORMAT))
-#if 1 /* Will become mandatory soon; but requires more testing in external projects */
-#define CONFIG_EXPERIMENTAL_NEW_STRING_FORMAT
-#else
-#define CONFIG_NO_EXPERIMENTAL_NEW_STRING_FORMAT
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_NEW_STRING_FORMAT */
-
 /************************************************************************/
 
 
