@@ -1715,8 +1715,13 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq,
 	}
 	if (seq->tp_enumerate_index && !DeeType_IsDefaultEnumerateIndex(seq->tp_enumerate_index))
 		seq_featureset_set(self, FEAT_tp_enumerate_index);
-	if (seq->tp_bounditem && !DeeType_IsDefaultBoundItem(seq->tp_bounditem))
+	if (seq->tp_bounditem && !DeeType_IsDefaultBoundItem(seq->tp_bounditem)) {
 		seq_featureset_set(self, FEAT_tp_bounditem);
+#ifdef Dee_BOUND_MAYALIAS_HAS
+		if (!seq->tp_hasitem)
+			seq->tp_hasitem = seq->tp_bounditem;
+#endif /* Dee_BOUND_MAYALIAS_HAS */
+	}
 	if (seq->tp_hasitem && !DeeType_IsDefaultHasItem(seq->tp_hasitem))
 		seq_featureset_set(self, FEAT_tp_hasitem);
 	if (Dee_type_seq_has_custom_tp_size(seq))
@@ -1727,8 +1732,13 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq,
 		seq_featureset_set(self, FEAT_tp_delitem_index);
 	if (seq->tp_setitem_index && !DeeType_IsDefaultSetItemIndex(seq->tp_setitem_index))
 		seq_featureset_set(self, FEAT_tp_setitem_index);
-	if (Dee_type_seq_has_custom_tp_bounditem_index(seq))
+	if (Dee_type_seq_has_custom_tp_bounditem_index(seq)) {
 		seq_featureset_set(self, FEAT_tp_bounditem_index);
+#ifdef Dee_BOUND_MAYALIAS_HAS
+		if (!seq->tp_hasitem_index)
+			seq->tp_hasitem_index = seq->tp_bounditem_index;
+#endif /* Dee_BOUND_MAYALIAS_HAS */
+	}
 	if (Dee_type_seq_has_custom_tp_hasitem_index(seq))
 		seq_featureset_set(self, FEAT_tp_hasitem_index);
 	if (seq->tp_getrange_index && !DeeType_IsDefaultGetRangeIndex(seq->tp_getrange_index))
@@ -1755,8 +1765,13 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq,
 		seq_featureset_set(self, FEAT_tp_delitem_string_hash);
 	if (seq->tp_setitem_string_hash && !DeeType_IsDefaultSetItemStringHash(seq->tp_setitem_string_hash))
 		seq_featureset_set(self, FEAT_tp_setitem_string_hash);
-	if (Dee_type_seq_has_custom_tp_bounditem_string_hash(seq))
+	if (Dee_type_seq_has_custom_tp_bounditem_string_hash(seq)) {
 		seq_featureset_set(self, FEAT_tp_bounditem_string_hash);
+#ifdef Dee_BOUND_MAYALIAS_HAS
+		if (!seq->tp_hasitem_string_hash)
+			seq->tp_hasitem_string_hash = seq->tp_bounditem_string_hash;
+#endif /* Dee_BOUND_MAYALIAS_HAS */
+	}
 	if (Dee_type_seq_has_custom_tp_hasitem_string_hash(seq))
 		seq_featureset_set(self, FEAT_tp_hasitem_string_hash);
 	if (Dee_type_seq_has_custom_tp_trygetitem_string_len_hash(seq))
@@ -1767,8 +1782,13 @@ seq_featureset_init(seq_featureset_t self, struct type_seq *__restrict seq,
 		seq_featureset_set(self, FEAT_tp_delitem_string_len_hash);
 	if (Dee_type_seq_has_custom_tp_setitem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_setitem_string_len_hash);
-	if (Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq))
+	if (Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq)) {
 		seq_featureset_set(self, FEAT_tp_bounditem_string_len_hash);
+#ifdef Dee_BOUND_MAYALIAS_HAS
+		if (!seq->tp_hasitem_string_len_hash)
+			seq->tp_hasitem_string_len_hash = seq->tp_bounditem_string_len_hash;
+#endif /* Dee_BOUND_MAYALIAS_HAS */
+	}
 	if (Dee_type_seq_has_custom_tp_hasitem_string_len_hash(seq))
 		seq_featureset_set(self, FEAT_tp_hasitem_string_len_hash);
 	/*if (seq->tp_unpack && !DeeType_IsDefaultUnpack(seq->tp_unpack))
@@ -2468,10 +2488,16 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem_index = &DeeMap_DefaultHasItemIndexWithContains;
 		} else if (seq_featureset_test(features, FEAT_tp_size) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_hasitem_index = &DeeSeq_DefaultHasItemIndexWithSize;
+#ifdef Dee_BOUND_MAYALIAS_HAS
+		} else if (seq_featureset_test(features, FEAT_tp_bounditem_index) ||
+		           seq_featureset_test(features, FEAT_tp_bounditem)) {
+			seq->tp_hasitem_index = seq->tp_bounditem_index;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_index)) {
 			seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem)) {
 			seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItem;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_index)) {
 			seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithTryGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
@@ -2514,6 +2540,13 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem = &DeeSeq_DefaultHasItemWithSizeOb;
 		} else if (seq_featureset_test(features, FEAT_tp_size) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_hasitem = &DeeSeq_DefaultHasItemWithSize;
+#ifdef Dee_BOUND_MAYALIAS_HAS
+		} else if (seq_featureset_test(features, FEAT_tp_bounditem) ||
+		           seq_featureset_test(features, FEAT_tp_bounditem_string_hash) ||
+		           seq_featureset_test(features, FEAT_tp_bounditem_string_len_hash) ||
+		           seq_featureset_test(features, FEAT_tp_bounditem_index)) {
+			seq->tp_hasitem = seq->tp_bounditem;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem)) {
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItem;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_hash)) {
@@ -2522,6 +2555,7 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItemStringLenHash;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_index)) {
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItemIndex;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash)) {
@@ -2816,10 +2850,16 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 	if (!seq->tp_hasitem_string_hash) {
 		if (seq_featureset_test(features, FEAT_tp_hasitem_string_len_hash)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithHasItemStringLenHash;
+#ifdef Dee_BOUND_MAYALIAS_HAS
+		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_hash) ||
+		           seq_featureset_test(features, FEAT_tp_bounditem_string_len_hash)) {
+			seq->tp_hasitem_string_hash = seq->tp_bounditem_string_hash;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_hash)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithBoundItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_len_hash)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithBoundItemStringLenHash;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithTryGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash)) {
@@ -2833,7 +2873,11 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		} else if (seq_featureset_test(features, FEAT_tp_hasitem)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithHasItem;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem)) {
+#ifdef Dee_BOUND_MAYALIAS_HAS
+			seq->tp_hasitem_string_hash = seq->tp_bounditem_string_hash;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithBoundItem;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
@@ -2857,10 +2901,16 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 	if (!seq->tp_hasitem_string_len_hash) {
 		if (seq_featureset_test(features, FEAT_tp_hasitem_string_len_hash)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithHasItemStringHash;
+#ifdef Dee_BOUND_MAYALIAS_HAS
+		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_len_hash) ||
+		           seq_featureset_test(features, FEAT_tp_bounditem_string_hash)) {
+			seq->tp_hasitem_string_len_hash = seq->tp_bounditem_string_len_hash;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_len_hash)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithBoundItemStringLenHash;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_hash)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithBoundItemStringHash;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithTryGetItemStringLenHash;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash)) {
@@ -2874,7 +2924,11 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		} else if (seq_featureset_test(features, FEAT_tp_hasitem)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithHasItem;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem)) {
+#ifdef Dee_BOUND_MAYALIAS_HAS
+			seq->tp_hasitem_string_len_hash = seq->tp_bounditem_string_len_hash;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithBoundItem;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
@@ -3736,7 +3790,11 @@ set_string_operators_as_error:
 			} else if (Dee_type_seq_has_custom_tp_hasitem_string_len_hash(seq)) {
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemStringLenHash;
 			} else if (Dee_type_seq_has_custom_tp_bounditem(seq)) {
+#ifdef Dee_BOUND_MAYALIAS_HAS
+				seq->tp_hasitem = seq->tp_bounditem;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItem;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_trygetitem(seq)) {
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithTryGetItem;
 			} else if (Dee_type_seq_has_custom_tp_trygetitem_index(seq)) {
@@ -3745,12 +3803,19 @@ set_string_operators_as_error:
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithTryGetItemStringHash;
 			} else if (Dee_type_seq_has_custom_tp_trygetitem_string_len_hash(seq)) {
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithTryGetItemStringLenHash;
+#ifdef Dee_BOUND_MAYALIAS_HAS
+			} else if (Dee_type_seq_has_custom_tp_bounditem_index(seq) ||
+			           Dee_type_seq_has_custom_tp_bounditem_string_hash(seq) ||
+			           Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq)) {
+				seq->tp_hasitem = seq->tp_bounditem;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_bounditem_index(seq)) {
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItemIndex;
 			} else if (Dee_type_seq_has_custom_tp_bounditem_string_hash(seq)) {
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItemStringHash;
 			} else if (Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq)) {
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItemStringLenHash;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_getitem(seq)) {
 				seq->tp_hasitem = &DeeObject_DefaultHasItemWithGetItem;
 			} else if (Dee_type_seq_has_custom_tp_getitem_index(seq)) {
@@ -3767,11 +3832,19 @@ set_string_operators_as_error:
 			if (Dee_type_seq_has_custom_tp_hasitem(seq)) {
 				seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithHasItem;
 			} else if (Dee_type_seq_has_custom_tp_bounditem_index(seq)) {
+#ifdef Dee_BOUND_MAYALIAS_HAS
+				seq->tp_hasitem_index = seq->tp_bounditem_index;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 				seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItemIndex;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_trygetitem_index(seq)) {
 				seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithTryGetItemIndex;
 			} else if (Dee_type_seq_has_custom_tp_bounditem(seq)) {
+#ifdef Dee_BOUND_MAYALIAS_HAS
+				seq->tp_hasitem_index = seq->tp_bounditem_index;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 				seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItem;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_trygetitem(seq)) {
 				seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithTryGetItem;
 			} else if (Dee_type_seq_has_custom_tp_getitem_index(seq)) {
@@ -3791,10 +3864,16 @@ set_string_operators_as_error:
 		if (!seq->tp_hasitem_string_hash) {
 			if (Dee_type_seq_has_custom_tp_hasitem_string_len_hash(seq)) {
 				seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithHasItemStringLenHash;
+#ifdef Dee_BOUND_MAYALIAS_HAS
+			} else if (Dee_type_seq_has_custom_tp_bounditem_string_hash(seq) ||
+			           Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq)) {
+				seq->tp_hasitem_string_hash = seq->tp_bounditem_string_hash;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_bounditem_string_hash(seq)) {
 				seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithBoundItemStringHash;
 			} else if (Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq)) {
 				seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithBoundItemStringLenHash;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_trygetitem_string_hash(seq)) {
 				seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithTryGetItemStringHash;
 			} else if (Dee_type_seq_has_custom_tp_trygetitem_string_len_hash(seq)) {
@@ -3806,7 +3885,11 @@ set_string_operators_as_error:
 			} else if (Dee_type_seq_has_custom_tp_hasitem(seq)) {
 				seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithHasItem;
 			} else if (Dee_type_seq_has_custom_tp_bounditem(seq)) {
+#ifdef Dee_BOUND_MAYALIAS_HAS
+				seq->tp_hasitem_string_hash = seq->tp_bounditem_string_hash;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 				seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithBoundItem;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_trygetitem(seq)) {
 				seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithTryGetItem;
 			} else if (Dee_type_seq_has_custom_tp_getitem(seq)) {
@@ -3824,10 +3907,16 @@ set_string_operators_as_error:
 		if (!seq->tp_hasitem_string_len_hash) {
 			if (Dee_type_seq_has_custom_tp_hasitem_string_hash(seq)) {
 				seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithHasItemStringHash;
+#ifdef Dee_BOUND_MAYALIAS_HAS
+			} else if (Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq) ||
+			           Dee_type_seq_has_custom_tp_bounditem_string_hash(seq)) {
+				seq->tp_hasitem_string_len_hash = seq->tp_bounditem_string_len_hash;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_bounditem_string_len_hash(seq)) {
 				seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithBoundItemStringLenHash;
 			} else if (Dee_type_seq_has_custom_tp_bounditem_string_hash(seq)) {
 				seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithBoundItemStringHash;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_trygetitem_string_len_hash(seq)) {
 				seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithTryGetItemStringLenHash;
 			} else if (Dee_type_seq_has_custom_tp_trygetitem_string_hash(seq)) {
@@ -3839,7 +3928,11 @@ set_string_operators_as_error:
 			} else if (Dee_type_seq_has_custom_tp_hasitem(seq)) {
 				seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithHasItem;
 			} else if (Dee_type_seq_has_custom_tp_bounditem(seq)) {
+#ifdef Dee_BOUND_MAYALIAS_HAS
+				seq->tp_hasitem_string_len_hash = seq->tp_bounditem_string_len_hash;
+#else /* Dee_BOUND_MAYALIAS_HAS */
 				seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithBoundItem;
+#endif /* !Dee_BOUND_MAYALIAS_HAS */
 			} else if (Dee_type_seq_has_custom_tp_trygetitem(seq)) {
 				seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithTryGetItem;
 			} else if (Dee_type_seq_has_custom_tp_getitem(seq)) {

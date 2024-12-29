@@ -1165,7 +1165,7 @@ default_set_foreach_unique_cb(void *arg, DeeObject *item) {
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeSet_DefaultOperatorForeachWithDistinctForeach(DeeObject *__restrict self,
-                                               Dee_foreach_t cb, void *arg) {
+                                                 Dee_foreach_t cb, void *arg) {
 	Dee_ssize_t result;
 	struct default_set_foreach_unique_data data;
 	data.dsfud_cb.dsfucd_cb  = cb;
