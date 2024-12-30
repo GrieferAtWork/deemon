@@ -53,6 +53,45 @@ struct Dee_dict_object {
 	                               * HINT: The difference to `d_size' is the number of dummy keys currently in use. */
 	struct Dee_dict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
 	                               * [owned_if(!= INTERNAL(DeeDict_EmptyItems))] Dict key-item pairs (items). */
+	/* TODO: Make Dict remember insertion order:
+	 * - "d_elem" keep track of insertion order
+	 * - Following "d_elem" (iow: allocated within the same heap-block),
+	 *   there is a uint[8|16|32|64]_t vector of indices into "d_elem",
+	 *   that is the actual hash-table (iow: DeeDict_HashNx() enumerates
+	 *   indices of the uintX_t-vector, which in turn holds indices to
+	 *   the actual "d_elem" table)
+	 *
+	 * Advantages:
+	 * - To increase the size of a dict, it is now possible to use realloc()
+	 *   on the combined heap-block, and simply re-build the uintX_t-vector,
+	 *   whereas currently, one has to allocate an entirely new heap-block
+	 *   and copy "d_elem" into it.
+	 * - The length of "d_elem" and uintX_t-vector can be linked to ensure
+	 *   that there are always enough free hash-table entries to prevent
+	 *   hash collisions. But there can be less free entries in "d_elem",
+	 *   meaning less wasted memory (since "d_elem" takes much more space)
+	 * - Dict housekeeping (as needed after repeatedly inserting/deleting
+	 *   items) can also be done in-place, since once can just trim dummy
+	 *   entries from "d_elem" (by shifting successor with memovedownc),
+	 *   and then re-build the uintX_t-vector.
+	 * - Insertion order of elements is retained by the dict, allowing for
+	 *   more user-code use cases, including a better syntax for declaring
+	 *   structs via ctypes:
+	 *       >> import * from ctypes;
+	 *       >> struct point {
+	 *       >>     .x = int,
+	 *       >>     .y = int,
+	 *       >> };
+	 *   Currently, this way of writing code can't guaranty that the order
+	 *   of struct fields is retained, forcing the user to instead write:
+	 *       >> import * from ctypes;
+	 *       >> struct point {
+	 *       >>     ("x", int),
+	 *       >>     ("y", int),
+	 *       >> };
+	 *
+	 * Also implement this for HashSet
+	 */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t   d_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
@@ -67,18 +106,7 @@ struct Dee_dict_object {
 	{ Dee_OBJECT_HEAD_INIT(&DeeDict_Type), 0, 0, 0, (struct Dee_dict_item *)DeeDict_EmptyItems, DEE_ATOMIC_RWLOCK_INIT, Dee_WEAKREF_SUPPORT_INIT }
 #endif /* !CONFIG_NO_THREADS */
 
-/* The main `Dict' container class (and all related types):
- * >> class Dict: Mapping { ... };
- * >> class Dict.Proxy: Sequence { ... };
- * >> class Dict.Keys: Dict.Proxy { ... };
- * >> class Dict.Values: Dict.Proxy { ... };
- * >> class Dict.Items: Dict.Proxy { ... };
- * >> class Dict.Iterator: Iterator { ... };
- * >> class Dict.Proxy.Iterator: Dict.Iterator { ... };
- * >> class Dict.Keys.Iterator: Dict.Proxy.Iterator { ... };
- * >> class Dict.Values.Iterator: Dict.Proxy.Iterator { ... };
- * >> class Dict.Items.Iterator: Dict.Proxy.Iterator { ... };
- */
+/* The main `Dict' container class */
 DDATDEF DeeTypeObject DeeDict_Type;
 #define DeeDict_Check(ob)         DeeObject_InstanceOf(ob, &DeeDict_Type)
 #define DeeDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeDict_Type)
