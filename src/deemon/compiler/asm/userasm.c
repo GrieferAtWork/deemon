@@ -1767,25 +1767,38 @@ write_regular_local:
 			size_t i, length = 0;
 			DeeDictObject *d = (DeeDictObject *)self->a_constexpr;
 			DeeDict_LockRead(d);
-			if (d->d_used > UINT8_MAX) {
+			if (DeeDict_SIZE(d) > UINT8_MAX) {
 				DeeDict_LockEndRead(d);
 				goto next_option;
 			}
-			for (i = 0; i <= d->d_mask; ++i) {
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
+			for (i = Dee_dict_vidx_tovirt(0);
+			     Dee_dict_vidx_virt_lt_real(i, d->d_vsize); ++i)
+#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+			for (i = 0; i <= d->d_mask; ++i)
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+			{
 				int error;
-				DREF DeeObject *key, *item;
+				DREF DeeObject *key, *value;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
+				key = _DeeDict_GetVirtVTab(d)[i].di_key;
+				if (!key || key == &DeeDict_Dummy)
+					continue;
+				value = _DeeDict_GetVirtVTab(d)[i].di_value;
+#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 				key = d->d_elem[i].di_key;
 				if (!key || key == &DeeDict_Dummy)
 					continue;
-				item = d->d_elem[i].di_value;
+				value = d->d_elem[i].di_value;
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 				Dee_Incref(key);
-				Dee_Incref(item);
+				Dee_Incref(value);
 				DeeDict_LockEndRead(d);
 				error = asm_gpush_constexpr(key);
 				if likely(!error)
-					error = asm_gpush_constexpr(item);
+					error = asm_gpush_constexpr(value);
 				Dee_Decref(key);
-				Dee_Decref(item);
+				Dee_Decref(value);
 				if unlikely(error)
 					goto err;
 				++length;

@@ -52,6 +52,10 @@ DECL_BEGIN
 
 typedef DeeHashSetObject HashSet;
 
+PUBLIC_CONST struct Dee_hashset_item const DeeHashSet_EmptyItems[1] = {
+	{ NULL, 0 }
+};
+
 #define empty_hashset_items ((struct Dee_hashset_item *)DeeHashSet_EmptyItems)
 #define dummy               (&DeeDict_Dummy)
 

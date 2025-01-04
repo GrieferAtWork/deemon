@@ -4729,6 +4729,8 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	/* TODO: floordiv(rhs:?.)->?. (same as regular divide) */
 	/* TODO: truncdiv(rhs:?.)->?. */
 	/* TODO: ceildiv(rhs:?.)->?. */
+	/* TODO: rol(shift:?.,maxbits:?.)->?.   Rotate-left least significant "maxbits" bits "shift" times (return is always unsigned) */
+	/* TODO: ror(shift:?.,maxbits:?.)->?.   Rotate-right least significant "maxbits" bits "shift" times (return is always unsigned) */
 
 	TYPE_METHOD_END
 };

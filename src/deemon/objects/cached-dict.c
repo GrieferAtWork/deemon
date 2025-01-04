@@ -1116,6 +1116,10 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 };
 
 
+PUBLIC_CONST struct Dee_cached_dict_item const DeeCachedDict_EmptyItems[1] = {
+	{ NULL, NULL, 0 }
+};
+
 /* Construct a cached dict wrapper around "mapping" */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCachedDict_New(DeeObject *__restrict mapping) {

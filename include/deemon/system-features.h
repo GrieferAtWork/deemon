@@ -12767,16 +12767,20 @@ DECL_END
 #define DeeSystem_DEFINE_strcmpz(name) \
 	_DeeSystem_DEFINE_strcmpzT(char, unsigned char, int, name)
 
-#define DeeSystem_DEFINE_rawmemchr(name)        \
-	LOCAL ATTR_PURE WUNUSED NONNULL((1)) void * \
-	name(void const *__restrict p, int c) {     \
-		uint8_t *haystack = (uint8_t *)p;       \
-		for (;; ++haystack) {                   \
-			if (*haystack == (uint8_t)c)        \
-				break;                          \
-		}                                       \
-		return haystack;                        \
+#define _DeeSystem_DEFINE_rawmemchrT(rT, T, Tneedle, name) \
+	LOCAL ATTR_PURE WUNUSED NONNULL((1)) rT *              \
+	name(void const *__restrict p, Tneedle c) {            \
+		T const *haystack = (T const *)p;                  \
+		for (;; ++haystack) {                              \
+			if (*haystack == (T)c)                         \
+				break;                                     \
+		}                                                  \
+		return (rT *)haystack;                             \
 	}
+#define DeeSystem_DEFINE_rawmemchr(name)  _DeeSystem_DEFINE_rawmemchrT(void, uint8_t, int, rawmemchr)
+#define DeeSystem_DEFINE_rawmemchrw(name) _DeeSystem_DEFINE_rawmemchrT(uint16_t, uint16_t, uint16_t, rawmemchrw)
+#define DeeSystem_DEFINE_rawmemchrl(name) _DeeSystem_DEFINE_rawmemchrT(uint32_t, uint32_t, uint32_t, rawmemchrl)
+#define DeeSystem_DEFINE_rawmemchrq(name) _DeeSystem_DEFINE_rawmemchrT(uint64_t, uint64_t, uint64_t, rawmemchrq)
 
 #define DeeSystem_DEFINE_rawmemrchr(name)       \
 	LOCAL ATTR_PURE WUNUSED NONNULL((1)) void * \
@@ -12789,72 +12793,75 @@ DECL_END
 		return haystack;                        \
 	}
 
-#define DeeSystem_DEFINE_memend(name)                 \
-	LOCAL ATTR_PURE WUNUSED void *                    \
-	name(void const *p, int byte, size_t num_bytes) { \
-		uint8_t *haystack = (uint8_t *)p;             \
-		for (; num_bytes--; ++haystack) {             \
-			if (*haystack == (uint8_t)byte)           \
-				break;                                \
-		}                                             \
-		return haystack;                              \
+#define DeeSystem_DEFINE_memend(name)              \
+	LOCAL ATTR_PURE WUNUSED void *                 \
+	name(void const *p, int c, size_t num_bytes) { \
+		uint8_t *haystack = (uint8_t *)p;          \
+		for (; num_bytes--; ++haystack) {          \
+			if (*haystack == (uint8_t)c)           \
+				break;                             \
+		}                                          \
+		return haystack;                           \
 	}
 
-#define DeeSystem_DEFINE_memxend(name)                \
-	LOCAL ATTR_PURE WUNUSED void *                    \
-	name(void const *p, int byte, size_t num_bytes) { \
-		uint8_t *haystack = (uint8_t *)p;             \
-		for (; num_bytes--; ++haystack) {             \
-			if (*haystack != (uint8_t)byte)           \
-				break;                                \
-		}                                             \
-		return haystack;                              \
+#define DeeSystem_DEFINE_memxend(name)             \
+	LOCAL ATTR_PURE WUNUSED void *                 \
+	name(void const *p, int c, size_t num_bytes) { \
+		uint8_t *haystack = (uint8_t *)p;          \
+		for (; num_bytes--; ++haystack) {          \
+			if (*haystack != (uint8_t)c)           \
+				break;                             \
+		}                                          \
+		return haystack;                           \
 	}
 
-#define DeeSystem_DEFINE_memrend(name)                \
-	LOCAL ATTR_PURE WUNUSED void *                    \
-	name(void const *p, int byte, size_t num_bytes) { \
-		uint8_t *haystack = (uint8_t *)p;             \
-		haystack += num_bytes;                        \
-		for (;;) {                                    \
-			--haystack;                               \
-			if unlikely(!num_bytes)                   \
-				break;                                \
-			if unlikely(*haystack == (uint8_t)byte)   \
-				break;                                \
-			--num_bytes;                              \
-		}                                             \
-		return haystack;                              \
+#define DeeSystem_DEFINE_memrend(name)             \
+	LOCAL ATTR_PURE WUNUSED void *                 \
+	name(void const *p, int c, size_t num_bytes) { \
+		uint8_t *haystack = (uint8_t *)p;          \
+		haystack += num_bytes;                     \
+		for (;;) {                                 \
+			--haystack;                            \
+			if unlikely(!num_bytes)                \
+				break;                             \
+			if unlikely(*haystack == (uint8_t)c)   \
+				break;                             \
+			--num_bytes;                           \
+		}                                          \
+		return haystack;                           \
 	}
 
-#define DeeSystem_DEFINE_memlen(name)                                          \
-	LOCAL ATTR_PURE WUNUSED size_t                                             \
-	name(void const *p, int byte, size_t num_bytes) {                          \
-		return (size_t)((uintptr_t)memend(p, byte, num_bytes) - (uintptr_t)p); \
+#define DeeSystem_DEFINE_memlen(name)                                       \
+	LOCAL ATTR_PURE WUNUSED size_t                                          \
+	name(void const *p, int c, size_t num_bytes) {                          \
+		return (size_t)((uintptr_t)memend(p, c, num_bytes) - (uintptr_t)p); \
 	}
 
-#define DeeSystem_DEFINE_memxlen(name)                                          \
-	LOCAL ATTR_PURE WUNUSED size_t                                              \
-	name(void const *p, int byte, size_t num_bytes) {                           \
-		return (size_t)((uintptr_t)memxend(p, byte, num_bytes) - (uintptr_t)p); \
+#define DeeSystem_DEFINE_memxlen(name)                                       \
+	LOCAL ATTR_PURE WUNUSED size_t                                           \
+	name(void const *p, int c, size_t num_bytes) {                           \
+		return (size_t)((uintptr_t)memxend(p, c, num_bytes) - (uintptr_t)p); \
 	}
 
-#define DeeSystem_DEFINE_memrlen(name)                                          \
-	LOCAL ATTR_PURE WUNUSED size_t                                              \
-	name(void const *p, int byte, size_t num_bytes) {                           \
-		return (size_t)((uintptr_t)memrend(p, byte, num_bytes) - (uintptr_t)p); \
+#define DeeSystem_DEFINE_memrlen(name)                                       \
+	LOCAL ATTR_PURE WUNUSED size_t                                           \
+	name(void const *p, int c, size_t num_bytes) {                           \
+		return (size_t)((uintptr_t)memrend(p, c, num_bytes) - (uintptr_t)p); \
 	}
 
-#define DeeSystem_DEFINE_rawmemlen(name)                               \
-	LOCAL ATTR_PURE WUNUSED size_t                                     \
-	name(void const *p, int byte) {                                    \
-		return (size_t)((uintptr_t)rawmemchr(p, byte) - (uintptr_t)p); \
+#define _DeeSystem_DEFINE_rawmemlenT(T, Tneedle, name, rawmemchr)   \
+	LOCAL ATTR_PURE WUNUSED size_t name(void const *p, Tneedle c) { \
+		return (size_t)((T const *)rawmemchr(p, c) - (T const *)p); \
 	}
+#define DeeSystem_DEFINE_rawmemlen(name)  _DeeSystem_DEFINE_rawmemlenT(uint8_t, int, rawmemlen, rawmemchr)
+#define DeeSystem_DEFINE_rawmemlenw(name) _DeeSystem_DEFINE_rawmemlenT(uint16_t, uint16_t, rawmemlenw, rawmemchrw)
+#define DeeSystem_DEFINE_rawmemlenl(name) _DeeSystem_DEFINE_rawmemlenT(uint32_t, uint32_t, rawmemlenl, rawmemchrl)
+#define DeeSystem_DEFINE_rawmemlenq(name) _DeeSystem_DEFINE_rawmemlenT(uint64_t, uint64_t, rawmemlenq, rawmemchrq)
 
-#define DeeSystem_DEFINE_rawmemrlen(name)                               \
-	LOCAL ATTR_PURE WUNUSED size_t                                      \
-	name(void const *p, int byte) {                                     \
-		return (size_t)((uintptr_t)rawmemrchr(p, byte) - (uintptr_t)p); \
+#define DeeSystem_DEFINE_rawmemrlen(name)                            \
+	LOCAL ATTR_PURE WUNUSED size_t                                   \
+	name(void const *p, int c) {                                     \
+		return (size_t)((uintptr_t)rawmemrchr(p, c) - (uintptr_t)p); \
 	}
 
 #define DeeSystem_DEFINE_memxchr(name)                \

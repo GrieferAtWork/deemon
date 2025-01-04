@@ -237,6 +237,10 @@
 		<ClInclude Include="..\src\deemon\execute\code-invoke-kw.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h" />
+		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\dict-hidxio.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\dict-setitem-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\file-operator.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\file-type-operators.h" />
 		<ClInclude Include="..\src\deemon\objects\float-parse.c.inl" />

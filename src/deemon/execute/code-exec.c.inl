@@ -5244,7 +5244,7 @@ do_pack_set:
 					imm_val = READ_imm8();
 do_pack_dict:
 					ASSERT_USAGE(-(int)(imm_val * 2), +1);
-					dict_object = DeeDict_NewKeyItemsInherited(imm_val, sp - (imm_val * 2));
+					dict_object = DeeDict_NewKeyValuesInherited(imm_val, sp - (imm_val * 2));
 					if unlikely(!dict_object)
 						HANDLE_EXCEPT();
 					sp -= (imm_val * 2); /* Adjust SP to pop items. */

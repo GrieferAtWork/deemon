@@ -1133,6 +1133,7 @@ again:
 	BEGIN_ALLOC();
 	HEAP_CHECK();
 	result = (malloc)(n_bytes);
+	END_ALLOC();
 	if unlikely(!result) {
 #ifndef __MALLOC_ZERO_IS_NONNULL
 		if (!n_bytes) {
@@ -1868,6 +1869,7 @@ PUBLIC bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
 	if (collect_bytes >= req_bytes)
 		return true;
 	req_bytes -= collect_bytes;
+
 	/* Collect GC objects.
 	 * NOTE: When optimizing, only try to collect a single object
 	 *       in order to prevent lag-time during memory shortages.
@@ -1880,14 +1882,42 @@ PUBLIC bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
 	if (DeeGC_Collect((size_t)-1))
 		return true;
 #endif /* !NDEBUG && !__OPTIMIZE__ */
+
+	/* TODO: Call "tp_cc" of GC objects that are reachable */
+
 	return collect_bytes != 0;
 }
 
 PUBLIC bool DCALL Dee_CollectMemory(size_t req_bytes) {
-	bool result = Dee_TryCollectMemory(req_bytes);
-	if unlikely(!result)
-		Dee_BadAlloc(req_bytes);
-	return result;
+	void *_test;
+	if unlikely(!Dee_TryCollectMemory(req_bytes))
+		goto err_badalloc;
+
+	/* Check if allocating "req_bytes" actually became
+	 * possible, or if "Dee_TryCollectMemory" lied or
+	 * the memory it freed has already been allocated
+	 * for other purposes again. */
+	_test = Dee_TryMalloc(req_bytes);
+	if likely(_test) {
+		Dee_Free(_test);
+		return true;
+	}
+
+	/* Maybe "Dee_TryCollectMemory" just didn't try hard enough... */
+	if (req_bytes < (FORCED_OOM_THRESHOLD - 1)) {
+		if unlikely(!Dee_TryCollectMemory(FORCED_OOM_THRESHOLD - 1))
+			goto err_badalloc;
+		_test = Dee_TryMalloc(req_bytes);
+		if likely(_test) {
+			Dee_Free(_test);
+			return true;
+		}
+	}
+
+	/* Nope: there's no way to free up that much memory... */
+err_badalloc:
+	Dee_BadAlloc(req_bytes);
+	return false;
 }
 
 

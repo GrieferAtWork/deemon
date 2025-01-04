@@ -76,7 +76,7 @@ DDATDEF DeeTypeObject DeeCachedDict_Type;
 
 #define DeeCachedDict_MAP(ob) ((DeeCachedDictObject const *)Dee_REQUIRES_OBJECT(ob))->cd_map
 
-#define DeeCachedDict_EmptyItems ((struct Dee_cached_dict_item const *)DeeDict_EmptyItems)
+DDATDEF struct Dee_cached_dict_item const DeeCachedDict_EmptyItems[1];
 
 /* Construct a cached dict wrapper around "mapping" */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCachedDict_New(DeeObject *__restrict mapping);

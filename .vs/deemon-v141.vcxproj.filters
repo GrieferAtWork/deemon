@@ -684,6 +684,18 @@
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h">
 			<Filter>src\execute</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict-hidxio.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict-setitem-impl.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\file-operator.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>

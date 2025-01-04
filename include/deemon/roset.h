@@ -47,9 +47,8 @@ DECL_BEGIN
  * >>     print "Well... It's one of 'em!";
  * >> }
  * ASM:
- * >>     push  @_RoSet { 10, 20, 17, 19, 11, 3 }
  * >>     push  call global @get_item, #0
- * >>     contains top, pop
+ * >>     push  contains const @_RoSet { 10, 20, 17, 19, 11, 3 }, pop
  * >>     jf    pop, 1f
  * >>     print @"Well... It's one of 'em!", nl
  * >> 1:

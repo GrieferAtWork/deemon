@@ -70,8 +70,10 @@
 #define tpconst Dee_tpconst
 #ifdef Dee_tpconst_IS_const
 #define INTERN_TPCONST INTERN_CONST
+#define PUBLIC_TPCONST PUBLIC_CONST
 #else /* Dee_tpconst_IS_const */
 #define INTERN_TPCONST INTERN
+#define PUBLIC_TPCONST PUBLIC
 #endif /* !Dee_tpconst_IS_const */
 #endif /* DEE_SOURCE */
 
@@ -1894,7 +1896,11 @@ struct Dee_type_gc {
 	 *     anything the user-destructor might do to revive itself will no
 	 *     longer be done at some point.
 	 */
-	unsigned int tp_gcprio;
+	uintptr_t tp_gcprio;
+
+	/* Clear unused heap caches of the object. Called when deemon is
+	 * running low on memory (iow: from "Dee_CollectMemory") */
+	NONNULL_T((1)) bool (DCALL *tp_cc)(DeeObject *__restrict self);
 };
 
 

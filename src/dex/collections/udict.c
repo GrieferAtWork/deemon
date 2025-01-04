@@ -510,7 +510,7 @@ udict_deepload(UDict *__restrict self) {
 		Dee_hash_t j, perturb, hash;
 		hash    = UHASH(items[i].e_key);
 		perturb = j = hash & new_mask;
-		for (;; DeeDict_HashNx(j, perturb)) {
+		for (;; UDict_HashNx(j, perturb)) {
 			struct udict_item *item = &new_map[j & new_mask];
 			if (item->di_key) {
 				/* Check if deepcopy caused one of the elements to get duplicated. */

@@ -1407,6 +1407,7 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpopind(self, offsetof(DeeCellObject, c_lock))); /* instance */
 #endif /* !CONFIG_NO_THREADS */
 		return 1;
+#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 	} else if (tp_ctor == DeeDict_Type.tp_init.tp_alloc.tp_ctor) {
 		DO(fg_vpush_immSIZ(self, 0));                          /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_mask))); /* instance */
@@ -1423,6 +1424,7 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                    /* instance, WEAKREF_SUPPORT_INIT */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, ob_weakrefs))); /* instance */
 		return 1;
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 	} else if (tp_ctor == DeeHashSet_Type.tp_init.tp_alloc.tp_ctor) {
 		DO(fg_vpush_immSIZ(self, 0));                              /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_mask))); /* instance */
@@ -4811,6 +4813,7 @@ _fg_vmakemorph(struct fungen *__restrict self,
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS /* TODO */
 /* [elems...] -> seq
  * NOTE: [elems...] are all DIRECT values. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -5221,6 +5224,7 @@ err:
 err_no_result_d_elem_template:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 
 /* [elems...] -> seq */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -5331,10 +5335,12 @@ err_cseq:
 		}
 		DO(fg_vsettyp_noalias(self, seq_type));
 		return fg_voneref_noalias(self);
+#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS /* TODO */
 	} else if ((seq_type == &DeeDict_Type || seq_type == &DeeRoDict_Type ||
 	            seq_type == &DeeHashSet_Type || seq_type == &DeeRoSet_Type) &&
 	           !(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
 		return vpack_map_or_set_at_runtime(self, seq_type, elemc);
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 	} else if (seq_type == &DeeDict_Type || seq_type == &DeeHashSet_Type) {
 		vstackaddr_t i;
 		/* Force all elements to become references. */
@@ -5348,7 +5354,7 @@ err_cseq:
 		                                                                 : (size_t)(elemc)));
 		DO(fg_vswap(self)); /* [elems...], elemc, elemv */
 		DO(fg_vcallapi(self,
-		               seq_type == &DeeDict_Type ? (void const *)&DeeDict_NewKeyItemsInherited
+		               seq_type == &DeeDict_Type ? (void const *)&DeeDict_NewKeyValuesInherited
 		                                         : (void const *)&DeeHashSet_NewItemsInherited,
 		               VCALL_CC_OBJECT, 2)); /* [elems...], result */
 		DO(fg_vdirect1(self));               /* [elems...], result */

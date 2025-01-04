@@ -447,7 +447,7 @@ push_tuple_parts:
 		val = (DeeDictObject *)value;
 check_dict_again:
 		DeeDict_LockRead(val);
-		if (!val->d_used) {
+		if (!DeeDict_SIZE(val)) {
 			/* Simple case: The Dict is empty, so we can just pack an empty Dict at runtime. */
 			DeeDict_LockEndRead(val);
 			return asm_gpack_dict(0);
@@ -465,7 +465,7 @@ check_dict_again:
 				goto push_dict_parts;
 			}
 		}
-		num_items = val->d_used;
+		num_items = DeeDict_SIZE(val);
 		ro_mask   = RODICT_INITIAL_MASK;
 		while (ro_mask <= num_items)
 			ro_mask = (ro_mask << 1) | 1;

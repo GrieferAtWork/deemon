@@ -58,7 +58,7 @@ struct Dee_hashset_object {
 	Dee_WEAKREF_SUPPORT
 };
 
-#define DeeHashSet_EmptyItems ((struct Dee_hashset_item const *)DeeDict_EmptyItems)
+DDATDEF struct Dee_hashset_item const DeeHashSet_EmptyItems[1];
 
 /* The main `HashSet' container class. */
 DDATDEF DeeTypeObject DeeHashSet_Type;

@@ -938,6 +938,7 @@
 #define tpconst const
 #define Dee_tpconst const
 #define INTERN_TPCONST
+#define PUBLIC_TPCONST
 
 #define dssize_t Dee_ssize_t
 #define dhash_t Dee_hash_t
@@ -1606,3 +1607,5 @@
 
 #define LOCAL_seq_compare__(x) seq_compare__##x
 #define LOCAL_seq_docompare__(x) seq_docompare__##x
+#define LOCAL_NONNULL
+#define LOCAL_MAYBE_PUBLIC

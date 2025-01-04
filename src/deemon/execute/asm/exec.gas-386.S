@@ -6968,11 +6968,11 @@ target_pack_dict:
 	subl   %ecx, %edx
 	pushl  %edx /* BACKUP(NEW_SP) */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx /* DeeDict_NewKeyItemsInherited:key_items */
+	pushl  %edx /* DeeDict_NewKeyValuesInherited:key_values */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax /* DeeDict_NewKeyItemsInherited:num_keyitems */
+	pushl  %eax /* DeeDict_NewKeyValuesInherited:num_items */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeDict_NewKeyItemsInherited,8)
+	call   fSYM(DeeDict_NewKeyValuesInherited,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
 	jz     .except_x4

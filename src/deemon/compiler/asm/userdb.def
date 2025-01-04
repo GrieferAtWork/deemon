@@ -953,7 +953,7 @@ INSTR("range", (
 
 /* CONSTRAINTS: `enter <s>' */
 INSTR("enter", (
-	O1(ASM_ENTER, FNORMAL, (TOP)) /* `enter pop' */
+	O1(ASM_ENTER, FNORMAL, (TOP)) /* `enter top' (instruction doesn't pop "TOP" and assumes that a later "leave" will do so) */
 ))
 
 /* CONSTRAINTS: `leave <s>' */
