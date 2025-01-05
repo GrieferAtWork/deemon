@@ -23,13 +23,14 @@ import * from deemon;
 
 /* Check if "CONFIG_EXPERIMENTAL_ORDERED_DICTS" was enabled when building deemon.
  * TODO: Remove this check once "CONFIG_EXPERIMENTAL_ORDERED_DICTS" becomes mandatory */ 
-if (!hasattr(Dict, "__valloc__"))
+if (!hasattr(Dict, "__hdxio__"))
 	return;
 
 /* A simple test */
 local d = Dict({ "foo": 1, "bar": 2, "foo": 3, true: "yes", false: "no" });
 assert { ("bar", 2), ("foo", 3), (true, "yes"), (false, "no") } == d;
 
+/* A test where items are added to the dict individually */
 local d = Dict();
 d["first"] = 10;
 d["second"] = 17;
@@ -43,28 +44,89 @@ assert { "first", "third", "second" } != d.keys;
 assert { 10, 17, 9 } == d.values;
 assert { 10, 9, 17 } != d.values;
 assert #d == 3;
+assert d.first == ("first", 10);
+assert d.firstkey == "first";
+assert d.firstvalue == 10;
+assert d.last == ("third", 9);
+assert d.lastkey == "third";
+assert d.lastvalue == 9;
 
-/* When overwriting some existing key's value, the new key gets re-added at the end! */
+/* Test to ensure that the [first|last][value|key] properties are writable. */
+d.firstvalue = 11;
+d.lastvalue = 3;
+d.firstkey = "first!";
+d.lastkey = "third!";
+assert { ("first!", 11), ("second", 17), ("third!", 3) } == d;
+assert { "first!", "second", "third!" } == d.keys;
+assert { 11, 17, 3 } == d.values;
+
+/* When overwriting some existing key's value, the new key gets
+ * re-added at the end by default (see below for how to control
+ * where an item is added). */
 d["second"] = 18;
-assert { ("first", 10), ("third", 9), ("second", 18) } == d;
-assert { ("first", 10), ("second", 18), ("third", 9) } != d;
-assert { "first", "third", "second" } == d.keys;
-assert { "first", "second", "third" } != d.keys;
-assert { 10, 9, 18 } == d.values;
-assert { 10, 18, 9 } != d.values;
+assert { ("first!", 11), ("third!", 3), ("second", 18) } == d;
+assert { ("first!", 11), ("second", 18), ("third!", 3) } != d;
+assert { "first!", "third!", "second" } == d.keys;
+assert { "first!", "second", "third!" } != d.keys;
+assert { 11, 3, 18 } == d.values;
+assert { 11, 18, 3 } != d.values;
+assert #d == 3;
+d.first = ("_first", 9);
+d.last = ("_third", 4);
+assert { ("_first", 9), ("third!", 3), ("_third", 4) } == d;
+assert { "_first", "third!", "_third" } == d.keys;
+assert { 9, 3, 4 } == d.values;
 assert #d == 3;
 
-del d["second"];
-assert { ("first", 10), ("third", 9) } == d;
-assert { "first", "third" } == d.keys;
-assert { 10, 9 } == d.values;
+/* Test that deleting keys words */
+del d["third!"];
+assert { ("_first", 9), ("_third", 4) } == d;
+assert { "_first", "_third" } == d.keys;
+assert { 9, 4 } == d.values;
+assert #d == 2;
+del d["third!"]; /* Delete non-present key must be a no-op */
+assert !d.remove("third!");
+assert { ("_first", 9), ("_third", 4) } == d;
+assert { "_first", "_third" } == d.keys;
+assert { 9, 4 } == d.values;
+assert #d == 2;
+d.first = ("_first", 8);
+d.last = ("_third", 5);
+
+/* You can even use Sequence-style functions to put items at specific positions */
+d.insert(0, ("huh?", "yes"));
+assert { ("huh?", "yes"), ("_first", 8), ("_third", 5) } == d;
+assert { "huh?", "_first", "_third" } == d.keys;
+assert { "yes", 8, 5 } == d.values;
+assert #d == 3;
+
+/* Trying to insert a key that already exists requires the previous instance to be
+ * deleted automatically. Note how that the given index "2" is evaluated *before*
+ * this delete happens. */
+d.insert(2, ("huh?", "no"));
+assert { ("_first", 8), ("huh?", "no"), ("_third", 5) } == d;
+assert { "_first", "huh?", "_third" } == d.keys;
+assert { 8, "no", 5 } == d.values;
+assert #d == 3;
+
+assert d.remove("huh?");
+assert { ("_first", 8), ("_third", 5) } == d;
+assert { "_first", "_third" } == d.keys;
+assert { 8, 5 } == d.values;
+assert #d == 2;
+assert !d.remove("huh?");
+assert { ("_first", 8), ("_third", 5) } == d;
+assert { "_first", "_third" } == d.keys;
+assert { 8, 5 } == d.values;
 assert #d == 2;
 
-d.insert(0, ("huh?", "yes"));
-assert { ("huh?", "yes"), ("first", 10), ("third", 9) } == d;
-assert { "huh?", "first", "third" } == d.keys;
-assert { "yes", 10, 9 } == d.values;
-assert #d == 3;
+/* Dict even implements Sequence's reverse() function */
+d.reverse();
+assert { ("_third", 5), ("_first", 8) } == d;
+assert { "_third", "_first" } == d.keys;
+assert { 5, 8 } == d.values;
+assert #d == 2;
+
 
 d.clear();
 
@@ -101,3 +163,4 @@ assert !d.__valloc__;
 assert !d.__vsize__;
 assert !d.__vused__;
 assert !d.__hmask__;
+assert !d.__hdxio__;

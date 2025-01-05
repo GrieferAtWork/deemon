@@ -119,6 +119,10 @@ PUBLIC int (DCALL _DeeNone_reti0_6)(void *UNUSED(a), void *UNUSED(b), void *UNUS
 	return 0;
 }
 
+PUBLIC int (DCALL _DeeNone_reti1_1)(void *UNUSED(a)) {
+	return 1;
+}
+
 PUBLIC int (DCALL _DeeNone_reti1_2)(void *UNUSED(a), void *UNUSED(b)) {
 	return 1;
 }

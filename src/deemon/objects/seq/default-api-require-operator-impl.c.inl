@@ -746,6 +746,8 @@ PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) LOCAL_Dee_mh_seq_operator
 LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	(void)self;
 #ifdef LOCAL_TMH
+	/* TODO: should also allow declaration of special (explicit) attributes:
+	 * >> function __seq_getitem__(index: int): Object; */
 	{
 		/* Check if the type defines a custom hint for this operator. */
 		LOCAL_Dee_mh_seq_operator_foo_t hint;

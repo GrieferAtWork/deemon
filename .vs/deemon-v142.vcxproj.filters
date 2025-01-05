@@ -687,6 +687,9 @@
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict-firstlast-impl.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>

@@ -20,10 +20,10 @@
 #ifdef __INTELLISENSE__
 #include "dict.c"
 //#define DEFINE_dict_setitem
-//#define DEFINE_dict_setitem_at
+#define DEFINE_dict_setitem_at
 //#define DEFINE_dict_setitem_string_hash
 //#define DEFINE_dict_setitem_index
-#define DEFINE_dict_setitem_string_len_hash
+//#define DEFINE_dict_setitem_string_len_hash
 //#define DEFINE_dict_setitem_unlocked
 //#define DEFINE_dict_setitem_unlocked_fast_inherited
 //#define DEFINE_dict_mh_setold_ex
@@ -157,7 +157,9 @@ LOCAL_dict_setitem(Dict *self, LOCAL_KEY_PARAMS
                    , DeeObject *value
 #endif /* !LOCAL_IS_INHERITED */
 #ifdef LOCAL_HAS_getindex
-                   , /*virt*/Dee_dict_vidx_t (DCALL *getindex)(void *cookie, Dict *self, /*virt*/Dee_dict_vidx_t overwrite_index)
+                   , /*virt*/Dee_dict_vidx_t (DCALL *getindex)(void *cookie, Dict *self,
+                                                               /*virt*/Dee_dict_vidx_t overwrite_index,
+                                                               DREF DeeObject **p_value)
                    , void *getindex_cookie
 #endif /* LOCAL_HAS_getindex */
                    ) {
@@ -411,15 +413,18 @@ override_item_after_consistency_check:
 			/* OVERRIDE EXISTING "item"                                             */
 			/************************************************************************/
 
+#ifdef LOCAL_HAS_getindex
+			result_vidx = (*getindex)(getindex_cookie, self, vtab_idx, &value);
+			if unlikely(result_vidx == Dee_DICT_HTAB_EOF)
+				goto err;
+#endif /* LOCAL_HAS_getindex */
+
 			/* Steal the reference held by the item's old value. */
 			ASSERT(item_key == item->di_key); /* Inherit reference */
 			old_value = item->di_value;       /* Inherit reference */
 			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
 
 #ifdef LOCAL_HAS_getindex
-			result_vidx = (*getindex)(getindex_cookie, self, vtab_idx);
-			if unlikely(result_vidx == Dee_DICT_HTAB_EOF)
-				goto err;
 			if (vtab_idx == result_vidx)
 #else /* LOCAL_HAS_getindex */
 			if (Dee_dict_vidx_toreal(vtab_idx) == self->d_vsize - 1)
@@ -669,7 +674,7 @@ force_grow_without_locks:
 
 		/* Figure out where the result item should be insert */
 #ifdef LOCAL_HAS_getindex
-		result_vidx = (*getindex)(getindex_cookie, self, Dee_DICT_HTAB_EOF);
+		result_vidx = (*getindex)(getindex_cookie, self, Dee_DICT_HTAB_EOF, &value);
 		if unlikely(result_vidx == Dee_DICT_HTAB_EOF)
 			goto err;
 		dict_makespace_at(self, Dee_dict_vidx_toreal(result_vidx));

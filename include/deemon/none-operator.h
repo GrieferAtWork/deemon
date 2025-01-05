@@ -50,6 +50,7 @@ DFUNDEF int (DCALL _DeeNone_reti0)(void);
 #define _DeeNone_reti0_4 (*(int (DCALL *)(void *, void *, void *, void *))&_DeeNone_reti0)
 #define _DeeNone_reti0_5 (*(int (DCALL *)(void *, void *, void *, void *, void *))&_DeeNone_reti0)
 #define _DeeNone_reti0_6 (*(int (DCALL *)(void *, void *, void *, void *, void *, void *))&_DeeNone_reti0)
+#define _DeeNone_reti1_1 (*(int (DCALL *)(void *))&_DeeNone_reti1)
 #define _DeeNone_reti1_2 (*(int (DCALL *)(void *, void *))&_DeeNone_reti1)
 #define _DeeNone_reti1_3 (*(int (DCALL *)(void *, void *, void *))&_DeeNone_reti1)
 #define _DeeNone_reti1_4 (*(int (DCALL *)(void *, void *, void *, void *))&_DeeNone_reti1)
@@ -72,6 +73,7 @@ DFUNDEF size_t (DCALL _DeeNone_rets0_3)(void *, void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_rets0_4)(void *, void *, void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_rets0_5)(void *, void *, void *, void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti0_6)(void *, void *, void *, void *, void *, void *);
+DFUNDEF int (DCALL _DeeNone_reti1_1)(void *);
 DFUNDEF int (DCALL _DeeNone_reti1_2)(void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti1_3)(void *, void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti1_4)(void *, void *, void *, void *);
