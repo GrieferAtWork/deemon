@@ -147,9 +147,9 @@ DFUNDEF NONNULL((1)) void DCALL Dee_dict_sethidx8(void *__restrict htab, size_t 
 
 struct Dee_dict_object {
 	Dee_OBJECT_HEAD /* GC Object */
-	size_t                  d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated value-table size (should be ~2/3rd of `d_hmask + 1') */
+	size_t                  d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1') */
 	/*real*/Dee_dict_vidx_t d_vsize;   /* [lock(d_lock)][<= d_valloc] 1+ the greatest index in "d_vtab" that was ever initialized (and also the index of the next item in "d_vtab" to-be populated). */
-	size_t                  d_vused;   /* [lock(d_lock)][<= d_vsize] # of non-NULL keys in value-table. */
+	size_t                  d_vused;   /* [lock(d_lock)][<= d_vsize] # of non-NULL keys in "d_vtab". */
 	struct Dee_dict_item   *d_vtab;    /* [lock(d_lock)][0..d_vsize][owned_if(!= INTERNAL(DeeDict_EmptyTab))]
 	                                    * [OWNED_AT(. + 1)] Value-table (offset by 1 to account for special meaning of index==Dee_DICT_HTAB_EOF) */
 	size_t                  d_hmask;   /* [lock(d_lock)] Hash mask (allocated hash-map size, minus 1). */
@@ -164,7 +164,7 @@ struct Dee_dict_object {
 
 /* Return the # of bound key within "self". */
 #define DeeDict_SIZE(self)        ((self)->d_vused)
-#define DeeDict_SIZE_ATOMIC(self) atomic_read(&(self)->d_vused)
+#define DeeDict_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->d_vused)
 
 #define _DeeDict_GetVirtVTab(self)    ((self)->d_vtab)
 #define _DeeDict_SetVirtVTab(self, v) (void)((self)->d_vtab = (v))
@@ -202,8 +202,8 @@ DDATDEF __BYTE_TYPE__ const _DeeDict_EmptyTab[];
 	(void)(*(p_hs) = (*(p_hs) << 2) + *(p_hs) + *(p_perturb) + 1, *(p_perturb) >>= 5)
 
 /* Get/set vtab-index "i" of htab at a given "hs" */
-#define _DeeDict_HTabGet(self, hs)    (*(self)->d_hidxget)((self)->d_htab, (hs) & (self)->d_hmask)
-#define _DeeDict_HTabSet(self, hs, i) (*(self)->d_hidxset)((self)->d_htab, (hs) & (self)->d_hmask, i)
+#define /*virt*/_DeeDict_HTabGet(self, hs)    (*(self)->d_hidxget)((self)->d_htab, (hs) & (self)->d_hmask)
+#define _DeeDict_HTabSet(self, hs, /*virt*/i) (*(self)->d_hidxset)((self)->d_htab, (hs) & (self)->d_hmask, i)
 
 
 DDATDEF DeeObject DeeDict_Dummy; /* DEPRECATED */

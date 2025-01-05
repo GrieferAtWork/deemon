@@ -398,19 +398,23 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 libhostasm_rt_DeeDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self,
                                  /*inherit(always)*/ DREF DeeObject *key,
                                  /*inherit(always)*/ DREF DeeObject *value) {
-	struct Dee_dict_item *it;
 	DeeDictObject *me = (DeeDictObject *)self;
-	Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
-	ASSERTF(me->d_size == me->d_used, "Should always be equal at this point");
-	ASSERTF(me->d_size < me->d_mask, "Dict too small? (the assembler should have noticed this...)");
-	perturb = i = hash & me->d_mask;
-	for (;; DeeDict_HashNx(i, perturb)) {
-		it = DeeDict_HashIt(me, i);
-		if (it->di_key == NULL)
-			break;
-		if (it->di_hash == hash) {
+	Dee_hash_t hs, perturb, hash = DeeObject_Hash(key);
+	struct Dee_dict_item *item;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
+	ASSERTF(me->d_vsize == me->d_vused, "Should always be equal at this point");
+	ASSERTF(me->d_vsize < me->d_hmask, "Dict too small? (the assembler should have noticed this...)");
+	_DeeDict_HashIdxInit(me, &hs, &perturb, hash);
+	for (;; _DeeDict_HashIdxAdv(me, &hs, &perturb)) {
+		Dee_dict_vidx_t vtab_idx = _DeeDict_HTabGet(me, hs);
+		if (vtab_idx == Dee_DICT_HTAB_EOF)
+			break; /* End-of-chain */
+		ASSERT(vtab_idx < me->d_vsize);
+		item = &_DeeDict_GetVirtVTab(me)[vtab_idx];
+		ASSERTF(item->di_key, "There should be no deleted items");
+		if (item->di_hash == hash) {
 			/* Check for duplicate key. */
-			int temp = DeeObject_TryCompareEq(it->di_key, key);
+			int temp = DeeObject_TryCompareEq(item->di_key, key);
 			if unlikely(temp == Dee_COMPARE_ERR)
 				goto err;
 			if (temp == 0) {
@@ -421,19 +425,62 @@ libhostasm_rt_DeeDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict sel
 			}
 		}
 	}
-	it->di_key   = key;   /* Inherit reference */
-	it->di_value = value; /* Inherit reference */
-	it->di_hash  = hash;
+	_DeeDict_HTabSet(me, hs, Dee_dict_vidx_tovirt(me->d_vsize));
+	item = &_DeeDict_GetRealVTab(me)[me->d_vsize];
+	item->di_hash  = hash;
+	item->di_key   = key;   /* Inherit reference */
+	item->di_value = value; /* Inherit reference */
+	++me->d_vsize;
+	++me->d_vused;
+	return (DeeObject *)me;
+err:
+	/* Decref already-inserted key/value-s */
+	for (hs = Dee_dict_vidx_tovirt(0);
+	     Dee_dict_vidx_virt_lt_real(hs, me->d_vsize); ++hs) {
+		item = &_DeeDict_GetVirtVTab(me)[hs];
+		ASSERT(item->di_key);
+		Dee_Decref_unlikely(item->di_value);
+		Dee_Decref_unlikely(item->di_key);
+	}
+	Dee_Decref_unlikely(key);
+	Dee_Decref_unlikely(value);
+	Dee_Free(_DeeDict_GetRealVTab(me));
+	DeeGCObject_FREE(me); /* DeeType_FreeInstance(&DeeDict_Type, me); */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+	ASSERTF(me->d_size == me->d_used, "Should always be equal at this point");
+	ASSERTF(me->d_size < me->d_mask, "Dict too small? (the assembler should have noticed this...)");
+	perturb = hs = hash & me->d_mask;
+	for (;; DeeDict_HashNx(hs, perturb)) {
+		item = DeeDict_HashIt(me, hs);
+		if (item->di_key == NULL)
+			break;
+		if (item->di_hash == hash) {
+			/* Check for duplicate key. */
+			int temp = DeeObject_TryCompareEq(item->di_key, key);
+			if unlikely(temp == Dee_COMPARE_ERR)
+				goto err;
+			if (temp == 0) {
+				/* Duplicate key */
+				Dee_Decref_unlikely(key);
+				Dee_Decref_unlikely(value);
+				return (DeeObject *)me;
+			}
+		}
+	}
+	item->di_key   = key;   /* Inherit reference */
+	item->di_value = value; /* Inherit reference */
+	item->di_hash  = hash;
 	++me->d_size;
 	++me->d_used;
 	return (DeeObject *)me;
 err:
 	/* Decref already-inserted key/value-s */
-	for (i = 0; i <= me->d_mask; ++i) {
-		it = &me->d_elem[i];
-		if (it->di_key) {
-			Dee_Decref_unlikely(it->di_value);
-			Dee_Decref_unlikely(it->di_key);
+	for (hs = 0; hs <= me->d_mask; ++hs) {
+		item = &me->d_elem[hs];
+		if (item->di_key) {
+			Dee_Decref_unlikely(item->di_value);
+			Dee_Decref_unlikely(item->di_key);
 		}
 	}
 	Dee_Decref_unlikely(key);
@@ -441,6 +488,7 @@ err:
 	Dee_Free(me->d_elem);
 	DeeGCObject_FREE(me); /* DeeType_FreeInstance(&DeeDict_Type, me); */
 	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL

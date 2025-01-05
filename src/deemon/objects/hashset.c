@@ -69,7 +69,7 @@ hashset_insert_remainder_with_duplicates(HashSet *self, size_t num_items,
 	DREF DeeObject **extra_duplicates_v = NULL;
 next_keyitem:
 	while (key_i < num_items) {
-		DREF DeeObject *key = *items++;
+		DREF DeeObject *key = items[key_i++];
 		dhash_t i, perturb, hash = DeeObject_Hash(key);
 		perturb = i = hash & self->hs_mask;
 		for (;; DeeHashSet_HashNx(i, perturb)) {

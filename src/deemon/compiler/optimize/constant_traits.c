@@ -313,14 +313,30 @@ again0:
 			size_t i;
 			DeeDictObject *me = (DeeDictObject *)self;
 			DeeDict_LockRead(me);
-			for (i = 0; i <= me->d_mask; ++i) {
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
+			for (i = Dee_dict_vidx_tovirt(0);
+			     Dee_dict_vidx_virt_lt_real(i, me->d_vsize); ++i)
+#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+			for (i = 0; i <= me->d_mask; ++i)
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+			{
 				int temp;
-				DeeObject *key = me->d_elem[i].di_key;
+				DeeObject *key;
+				struct Dee_dict_item *item;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
+				item = &_DeeDict_GetVirtVTab(me)[i];
+				key = item->di_key;
 				if (!key)
 					continue;
+#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+				item = &me->d_elem[i];
+				key = item->di_key;
+				if (!key || key == &DeeDict_Dummy)
+					continue;
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 				temp = allow_constexpr(key);
 				if (temp == CONSTEXPR_ILLEGAL ||
-				    (temp = allow_constexpr(me->d_elem[i].di_value)) == CONSTEXPR_ILLEGAL) {
+				    (temp = allow_constexpr(item->di_value)) == CONSTEXPR_ILLEGAL) {
 					DeeDict_LockEndRead(me);
 					CONSTEXPR_FRAME_BREAK;
 					goto illegal;

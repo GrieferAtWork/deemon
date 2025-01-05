@@ -46,13 +46,13 @@ DECL_BEGIN
 #define LOCAL_dict_delitem dict_delitem
 #elif defined(DEFINE_dict_delitem_string_hash)
 #define LOCAL_dict_delitem dict_delitem_string_hash
-#define LOCAL_HAVE_KEY_IS_STRING_HASH
+#define LOCAL_HAS_KEY_IS_STRING_HASH
 #elif defined(DEFINE_dict_delitem_string_len_hash)
 #define LOCAL_dict_delitem dict_delitem_string_len_hash
-#define LOCAL_HAVE_KEY_IS_STRING_LEN_HASH
+#define LOCAL_HAS_KEY_IS_STRING_LEN_HASH
 #elif defined(DEFINE_dict_delitem_index)
 #define LOCAL_dict_delitem dict_delitem_index
-#define LOCAL_HAVE_KEY_IS_INDEX
+#define LOCAL_HAS_KEY_IS_INDEX
 #elif defined(DEFINE_dict_popvalue)
 #define LOCAL_dict_delitem dict_popvalue
 #elif defined(DEFINE_dict_mh_remove)
@@ -65,17 +65,17 @@ DECL_BEGIN
 #error "Invalid configuration"
 #endif /* ... */
 
-#ifdef LOCAL_HAVE_KEY_IS_STRING_HASH
+#ifdef LOCAL_HAS_KEY_IS_STRING_HASH
 #define LOCAL_NONNULL    NONNULL((1, 2))
 #define LOCAL_KEY_PARAMS char const *key, Dee_hash_t hash
 #define LOCAL_HAS_PARAM_HASH
-#define LOCAL_HAVE_KEY_IS_STRING
-#elif defined(LOCAL_HAVE_KEY_IS_STRING_LEN_HASH)
+#define LOCAL_HAS_KEY_IS_STRING
+#elif defined(LOCAL_HAS_KEY_IS_STRING_LEN_HASH)
 #define LOCAL_NONNULL    NONNULL((1, 2))
 #define LOCAL_KEY_PARAMS char const *key, size_t keylen, Dee_hash_t hash
 #define LOCAL_HAS_PARAM_HASH
-#define LOCAL_HAVE_KEY_IS_STRING
-#elif defined(LOCAL_HAVE_KEY_IS_INDEX)
+#define LOCAL_HAS_KEY_IS_STRING
+#elif defined(LOCAL_HAS_KEY_IS_INDEX)
 #define LOCAL_NONNULL    NONNULL((1))
 #define LOCAL_KEY_PARAMS size_t index
 #elif defined(DEFINE_dict_mh_pop_with_default)
@@ -109,22 +109,22 @@ DECL_BEGIN
 #define LOCAL_ERR         (-1)
 #endif /* !... */
 
-#undef LOCAL_HAVE_UNLOCKED_OR_NOTHREADS
-#if defined(LOCAL_HAVE_UNLOCKED) || defined(CONFIG_NO_THREADS)
-#define LOCAL_HAVE_UNLOCKED_OR_NOTHREADS
-#endif /* LOCAL_HAVE_UNLOCKED || CONFIG_NO_THREADS */
+#undef LOCAL_IS_UNLOCKED_OR_NOTHREADS
+#if defined(LOCAL_IS_UNLOCKED) || defined(CONFIG_NO_THREADS)
+#define LOCAL_IS_UNLOCKED_OR_NOTHREADS
+#endif /* LOCAL_IS_UNLOCKED || CONFIG_NO_THREADS */
 
-#ifndef LOCAL_HAVE_UNLOCKED_OR_NOTHREADS
+#ifndef LOCAL_IS_UNLOCKED_OR_NOTHREADS
 #define LOCAL_IF_NOT_UNLOCKED_AND_THREADS(...) __VA_ARGS__
-#else /* !LOCAL_HAVE_UNLOCKED_OR_NOTHREADS */
+#else /* !LOCAL_IS_UNLOCKED_OR_NOTHREADS */
 #define LOCAL_IF_NOT_UNLOCKED_AND_THREADS(...) /* nothing */
-#endif /* LOCAL_HAVE_UNLOCKED_OR_NOTHREADS */
+#endif /* LOCAL_IS_UNLOCKED_OR_NOTHREADS */
 
-#ifndef LOCAL_HAVE_UNLOCKED
+#ifndef LOCAL_IS_UNLOCKED
 #define LOCAL_IF_NOT_UNLOCKED(...) __VA_ARGS__
-#else /* !LOCAL_HAVE_UNLOCKED */
+#else /* !LOCAL_IS_UNLOCKED */
 #define LOCAL_IF_NOT_UNLOCKED(...) /* nothing */
-#endif /* LOCAL_HAVE_UNLOCKED */
+#endif /* LOCAL_IS_UNLOCKED */
 
 #define LOCAL_DeeDict_LockTryRead(self)    LOCAL_IF_NOT_UNLOCKED_AND_THREADS(DeeDict_LockTryRead(self))
 #define LOCAL_DeeDict_LockTryWrite(self)   LOCAL_IF_NOT_UNLOCKED_AND_THREADS(DeeDict_LockTryWrite(self))
@@ -141,12 +141,12 @@ DECL_BEGIN
 PRIVATE WUNUSED LOCAL_NONNULL LOCAL_return_type DCALL
 LOCAL_dict_delitem(Dict *self, LOCAL_KEY_PARAMS) {
 #ifndef LOCAL_HAS_PARAM_HASH
-#ifdef LOCAL_HAVE_KEY_IS_INDEX
+#ifdef LOCAL_HAS_KEY_IS_INDEX
 #define LOCAL_hash index
-#else /* LOCAL_HAVE_KEY_IS_INDEX */
+#else /* LOCAL_HAS_KEY_IS_INDEX */
 	Dee_hash_t hash = DeeObject_Hash(key);
 #define LOCAL_hash hash
-#endif /* !LOCAL_HAVE_KEY_IS_INDEX */
+#endif /* !LOCAL_HAS_KEY_IS_INDEX */
 #else /* !LOCAL_HAS_PARAM_HASH */
 #define LOCAL_hash hash
 #endif /* LOCAL_HAS_PARAM_HASH */
@@ -157,66 +157,66 @@ LOCAL_dict_delitem(Dict *self, LOCAL_KEY_PARAMS) {
 again_locked:
 	_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);
 	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
-#ifndef LOCAL_HAVE_KEY_IS_STRING
+#ifndef LOCAL_HAS_KEY_IS_STRING
 		int cmp;
 		DREF DeeObject *item_key;
-#endif /* !LOCAL_HAVE_KEY_IS_STRING */
+#endif /* !LOCAL_HAS_KEY_IS_STRING */
 		struct Dee_dict_item *item;
 		size_t vtab_idx = _DeeDict_HTabGet(self, hs);
 		if (vtab_idx == Dee_DICT_HTAB_EOF)
 			break; /* End-of-chain */
-		ASSERT(vtab_idx < self->d_vsize);
+		ASSERT(Dee_dict_vidx_virt_lt_real(vtab_idx, self->d_vsize));
 		item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
 		if (item->di_hash != LOCAL_hash)
 			continue; /* Different hash */
-#ifdef LOCAL_HAVE_KEY_IS_STRING
+#ifdef LOCAL_HAS_KEY_IS_STRING
 		if (!DeeString_Check(item->di_key))
 			continue; /* Not a string */
-#endif /* LOCAL_HAVE_KEY_IS_STRING */
+#endif /* LOCAL_HAS_KEY_IS_STRING */
 		if (item->di_key == NULL)
 			continue; /* Deleted item */
 
-#ifdef LOCAL_HAVE_KEY_IS_STRING
-#ifdef LOCAL_HAVE_KEY_IS_STRING_LEN_HASH
+#ifdef LOCAL_HAS_KEY_IS_STRING
+#ifdef LOCAL_HAS_KEY_IS_STRING_LEN_HASH
 		if likely(DeeString_EqualsBuf(item->di_key, key, keylen))
-#else /* LOCAL_HAVE_KEY_IS_STRING_LEN_HASH */
+#else /* LOCAL_HAS_KEY_IS_STRING_LEN_HASH */
 		if likely(strcmp(DeeString_STR(item->di_key), key) == 0)
-#endif /* !LOCAL_HAVE_KEY_IS_STRING_LEN_HASH */
-#else /* LOCAL_HAVE_KEY_IS_STRING */
+#endif /* !LOCAL_HAS_KEY_IS_STRING_LEN_HASH */
+#else /* LOCAL_HAS_KEY_IS_STRING */
 		/* This might be it! */
 		item_key = item->di_key;
 		LOCAL_IF_NOT_UNLOCKED(Dee_Incref(item_key));
 		LOCAL_DeeDict_LockEndRead(self);
-#ifdef LOCAL_HAVE_KEY_IS_INDEX
+#ifdef LOCAL_HAS_KEY_IS_INDEX
 		cmp = DeeInt_Size_TryCompareEq(index, item_key);
-#else /* LOCAL_HAVE_KEY_IS_INDEX */
+#else /* LOCAL_HAS_KEY_IS_INDEX */
 		cmp = DeeObject_TryCompareEq(key, item_key);
-#endif /* !LOCAL_HAVE_KEY_IS_INDEX */
+#endif /* !LOCAL_HAS_KEY_IS_INDEX */
 		LOCAL_IF_NOT_UNLOCKED(Dee_Decref_unlikely(item_key));
 		if likely(cmp == 0)
-#endif /* !LOCAL_HAVE_KEY_IS_STRING */
+#endif /* !LOCAL_HAS_KEY_IS_STRING */
 		{
 			/* Override existing item. */
-#ifdef LOCAL_HAVE_KEY_IS_STRING
+#ifdef LOCAL_HAS_KEY_IS_STRING
 			DREF DeeObject *item_key = item->di_key;
-#endif /* LOCAL_HAVE_KEY_IS_STRING */
+#endif /* LOCAL_HAS_KEY_IS_STRING */
 			DREF DeeObject *old_value;
-#ifndef LOCAL_HAVE_KEY_IS_STRING
+#ifndef LOCAL_HAS_KEY_IS_STRING
 			LOCAL_DeeDict_LockWrite(self);
-#else /* !LOCAL_HAVE_KEY_IS_STRING */
-#ifndef LOCAL_HAVE_UNLOCKED_OR_NOTHREADS
+#else /* !LOCAL_HAS_KEY_IS_STRING */
+#ifndef LOCAL_IS_UNLOCKED_OR_NOTHREADS
 			if (!LOCAL_DeeDict_LockUpgrade(self))
-#endif /* !LOCAL_HAVE_UNLOCKED_OR_NOTHREADS */
-#endif /* LOCAL_HAVE_KEY_IS_STRING */
+#endif /* !LOCAL_IS_UNLOCKED_OR_NOTHREADS */
+#endif /* LOCAL_HAS_KEY_IS_STRING */
 			{
-#if defined(LOCAL_HAVE_KEY_IS_STRING) ? !defined(LOCAL_HAVE_UNLOCKED_OR_NOTHREADS) : !defined(LOCAL_HAVE_UNLOCKED)
+#if defined(LOCAL_HAS_KEY_IS_STRING) ? !defined(LOCAL_IS_UNLOCKED_OR_NOTHREADS) : !defined(LOCAL_IS_UNLOCKED)
 				if unlikely(item < _DeeDict_GetRealVTab(self))
 					goto downgrade_and_again_locked;
 				if unlikely(item >= (_DeeDict_GetRealVTab(self) + self->d_vsize))
 					goto downgrade_and_again_locked;
 				if unlikely(item->di_key != item_key)
 					goto downgrade_and_again_locked;
-#endif /* LOCAL_HAVE_KEY_IS_STRING ? !LOCAL_HAVE_UNLOCKED_OR_NOTHREADS : !LOCAL_HAVE_UNLOCKED */
+#endif /* LOCAL_HAS_KEY_IS_STRING ? !LOCAL_IS_UNLOCKED_OR_NOTHREADS : !LOCAL_IS_UNLOCKED */
 			}
 
 			old_value = item->di_value; /* Inherit reference */
@@ -235,24 +235,24 @@ again_locked:
 			return old_value;
 #endif /* !LOCAL_PRESENT */
 		}
-#ifndef LOCAL_HAVE_KEY_IS_STRING
+#ifndef LOCAL_HAS_KEY_IS_STRING
 		if unlikely(cmp == Dee_COMPARE_ERR)
 			goto err;
 #define NEED_err
 		LOCAL_DeeDict_LockRead(self);
-#endif /* !LOCAL_HAVE_KEY_IS_STRING */
+#endif /* !LOCAL_HAS_KEY_IS_STRING */
 	}
 
 	LOCAL_DeeDict_LockEndRead(self);
 #ifdef LOCAL_MISSING
 	return LOCAL_MISSING;
-#elif defined(LOCAL_HAVE_KEY_IS_STRING_LEN_HASH)
+#elif defined(LOCAL_HAS_KEY_IS_STRING_LEN_HASH)
 	err_unknown_key_str_len((DeeObject *)self, key, keylen);
 #define NEED_err_fallthru
-#elif defined(LOCAL_HAVE_KEY_IS_STRING_HASH)
+#elif defined(LOCAL_HAS_KEY_IS_STRING_HASH)
 	err_unknown_key_str((DeeObject *)self, key);
 #define NEED_err_fallthru
-#elif defined(LOCAL_HAVE_KEY_IS_INDEX)
+#elif defined(LOCAL_HAS_KEY_IS_INDEX)
 	err_unknown_key_int((DeeObject *)self, index);
 #define NEED_err_fallthru
 #else /* ... */
@@ -270,11 +270,11 @@ err:
 	return LOCAL_ERR;
 #endif /* NEED_err_fallthru */
 
-#if defined(LOCAL_HAVE_KEY_IS_STRING) ? !defined(LOCAL_HAVE_UNLOCKED_OR_NOTHREADS) : !defined(LOCAL_HAVE_UNLOCKED)
+#if defined(LOCAL_HAS_KEY_IS_STRING) ? !defined(LOCAL_IS_UNLOCKED_OR_NOTHREADS) : !defined(LOCAL_IS_UNLOCKED)
 downgrade_and_again_locked:
 	DeeDict_LockDowngrade(self);
 	goto again_locked;
-#endif /* LOCAL_HAVE_KEY_IS_STRING ? !LOCAL_HAVE_UNLOCKED_OR_NOTHREADS : !LOCAL_HAVE_UNLOCKED */
+#endif /* LOCAL_HAS_KEY_IS_STRING ? !LOCAL_IS_UNLOCKED_OR_NOTHREADS : !LOCAL_IS_UNLOCKED */
 #undef LOCAL_hash
 }
 
@@ -283,7 +283,7 @@ downgrade_and_again_locked:
 #undef LOCAL_PRESENT
 #undef LOCAL_MISSING
 #undef LOCAL_ERR
-#undef LOCAL_HAVE_UNLOCKED_OR_NOTHREADS
+#undef LOCAL_IS_UNLOCKED_OR_NOTHREADS
 #undef LOCAL_IF_NOT_UNLOCKED
 #undef LOCAL_IF_NOT_UNLOCKED_AND_THREADS
 #undef LOCAL_DeeDict_LockTryRead
@@ -299,11 +299,11 @@ downgrade_and_again_locked:
 #undef LOCAL_KEY_PARAMS
 #undef LOCAL_NONNULL
 #undef LOCAL_HAS_PARAM_HASH
-#undef LOCAL_HAVE_KEY_IS_STRING
-#undef LOCAL_HAVE_KEY_IS_STRING_HASH
-#undef LOCAL_HAVE_KEY_IS_STRING_LEN_HASH
-#undef LOCAL_HAVE_KEY_IS_INDEX
-#undef LOCAL_HAVE_UNLOCKED
+#undef LOCAL_HAS_KEY_IS_STRING
+#undef LOCAL_HAS_KEY_IS_STRING_HASH
+#undef LOCAL_HAS_KEY_IS_STRING_LEN_HASH
+#undef LOCAL_HAS_KEY_IS_INDEX
+#undef LOCAL_IS_UNLOCKED
 #undef LOCAL_dict_delitem
 
 DECL_END

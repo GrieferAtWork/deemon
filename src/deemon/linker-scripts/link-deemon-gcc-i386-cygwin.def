@@ -159,6 +159,7 @@ EXPORTS
 	_DeeDict_FromSequenceInherited@4=DeeDict_FromSequenceInherited@4
 	_DeeDict_NewKeyValuesInherited@8=DeeDict_NewKeyValuesInherited@8
 	_DeeDict_NewWithHint@4=DeeDict_NewWithHint@4
+	_DeeDict_TryNewWithHint@4=DeeDict_TryNewWithHint@4
 	_DeeError_Catch@4=DeeError_Catch@4
 	_DeeError_Current@0=DeeError_Current@0
 	_DeeError_CurrentIs@4=DeeError_CurrentIs@4

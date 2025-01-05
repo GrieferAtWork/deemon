@@ -416,7 +416,7 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 
 #if (!defined(CONFIG_EXPERIMENTAL_ORDERED_DICTS) && \
      !defined(CONFIG_NO_EXPERIMENTAL_ORDERED_DICTS))
-#if 0 /* TODO: Implementation is incomplete */
+#if 0 /* Seems to be working (tests run to completion), but still needs more testing... */
 #define CONFIG_EXPERIMENTAL_ORDERED_DICTS
 #else
 #define CONFIG_NO_EXPERIMENTAL_ORDERED_DICTS

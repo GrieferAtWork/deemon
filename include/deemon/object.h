@@ -1896,7 +1896,7 @@ struct Dee_type_gc {
 	 *     anything the user-destructor might do to revive itself will no
 	 *     longer be done at some point.
 	 */
-	uintptr_t tp_gcprio;
+	unsigned int tp_gcprio;
 
 	/* Clear unused heap caches of the object. Called when deemon is
 	 * running low on memory (iow: from "Dee_CollectMemory") */

@@ -1501,6 +1501,15 @@ string_getrange_index_n(String *__restrict self, Dee_ssize_t begin) {
 }
 
 
+/* Quick alias for "DeeObject_Compare(DeeString_New(lhs), rhs)" */
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeString_New_Compare(/*unsigned*/ char const *lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeString_New_CompareEq(/*unsigned*/ char const *lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeString_New_TryCompareEq(/*unsigned*/ char const *lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeString_NewSized_Compare(/*unsigned*/ char const *lhs, size_t lhs_len, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeString_NewSized_CompareEq(/*unsigned*/ char const *lhs, size_t lhs_len, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeString_NewSized_TryCompareEq(/*unsigned*/ char const *lhs, size_t lhs_len, DeeObject *rhs);
+
+
 PRIVATE struct type_cmp string_cmp = {
 	/* .tp_hash          = */ &DeeString_Hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare_eq,
