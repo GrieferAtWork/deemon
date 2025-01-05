@@ -39,27 +39,27 @@ DECL_BEGIN
 typedef struct Dee_dict_object DeeDictObject;
 
 
-/* TODO: Make Dict remember insertion order:
- * - "d_elem" keep track of insertion order
- * - Following "d_elem" (iow: allocated within the same heap-block),
- *   there is a uint[8|16|32|64]_t vector of indices into "d_elem",
- *   that is the actual hash-table (iow: DeeDict_HashNx() enumerates
- *   indices of the uintX_t-vector, which in turn holds indices to
- *   the actual "d_elem" table)
+/* Dict can remember insertion order:
+ *
+ * How:
+ * - "d_vtab" keep track of insertion order
+ * - Following "d_vtab" (iow: allocated within the same heap-block),
+ *   there is a uint[8|16|32|64]_t vector "d_htab" of indices into
+ *   "d_vtab", that is the actual hash-table (iow: _DeeDict_HashIdxAdv()
+ *   enumerates indices of "d_htab", which in turn holds indices to
+ *   the actual "d_vtab" table)
  *
  * Advantages:
  * - To increase the size of a dict, it is now possible to use realloc()
- *   on the combined heap-block, and simply re-build the uintX_t-vector,
- *   whereas currently, one has to allocate an entirely new heap-block
- *   and copy "d_elem" into it.
- * - The length of "d_elem" and uintX_t-vector can be linked to ensure
+ *   on the combined heap-block, and simply re-build "d_htab".
+ * - The length of "d_vtab" and "d_htab" can be linked to ensure
  *   that there are always enough free hash-table entries to prevent
- *   hash collisions. But there can be less free entries in "d_elem",
- *   meaning less wasted memory (since "d_elem" takes much more space)
+ *   hash collisions. But there can be less free entries in "d_vtab",
+ *   meaning less wasted memory (since "d_vtab" takes much more space)
  * - Dict housekeeping (as needed after repeatedly inserting/deleting
- *   items) can also be done in-place, since once can just trim dummy
- *   entries from "d_elem" (by shifting successor with memovedownc),
- *   and then re-build the uintX_t-vector.
+ *   items) can also be done in-place, since one can just trim deleted
+ *   entries from "d_vtab" (by shifting successor with memovedownc),
+ *   and then re-build "d_htab".
  * - Insertion order of elements is retained by the dict, allowing for
  *   more user-code use cases, including a better syntax for declaring
  *   structs via ctypes:
@@ -68,8 +68,9 @@ typedef struct Dee_dict_object DeeDictObject;
  *       >>     .x = int,
  *       >>     .y = int,
  *       >> };
- *   Currently, this way of writing code can't guaranty that the order
- *   of struct fields is retained, forcing the user to instead write:
+ *   Previously, this way of writing code couldn't guaranty that the
+ *   order of struct fields is retained, forcing the user to instead
+ *   write:
  *       >> import * from ctypes;
  *       >> struct point {
  *       >>     ("x", int),
@@ -87,6 +88,63 @@ struct Dee_dict_item {
 
 /* Index for "d_vtab" (real and virt version) */
 typedef size_t Dee_dict_vidx_t;
+
+typedef WUNUSED_T NONNULL_T((1)) /*virt*/Dee_dict_vidx_t (DCALL *Dee_dict_gethidx_t)(void *__restrict htab, size_t index);
+typedef NONNULL_T((1)) void (DCALL *Dee_dict_sethidx_t)(void *__restrict htab, size_t index, /*virt*/Dee_dict_vidx_t value);
+
+DFUNDEF WUNUSED NONNULL((1)) Dee_dict_vidx_t DCALL Dee_dict_gethidx8(void *__restrict htab, size_t index);
+DFUNDEF NONNULL((1)) void DCALL Dee_dict_sethidx8(void *__restrict htab, size_t index, Dee_dict_vidx_t value);
+
+struct Dee_dict_object {
+	Dee_OBJECT_HEAD /* GC Object */
+	size_t                  d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1') */
+	/*real*/Dee_dict_vidx_t d_vsize;   /* [lock(d_lock)][<= d_valloc] 1+ the greatest index in "d_vtab" that was ever initialized (and also the index of the next item in "d_vtab" to-be populated). */
+	size_t                  d_vused;   /* [lock(d_lock)][<= d_vsize] # of non-NULL keys in "d_vtab". */
+	struct Dee_dict_item   *d_vtab;    /* [lock(d_lock)][0..d_vsize][owned_if(!= INTERNAL(DeeDict_EmptyTab))]
+	                                    * [OWNED_AT(. + 1)] Value-table (offset by 1 to account for special meaning of index==Dee_DICT_HTAB_EOF) */
+	size_t                  d_hmask;   /* [lock(d_lock)] Hash mask (allocated hash-map size, minus 1). */
+	Dee_dict_gethidx_t      d_hidxget; /* [lock(d_lock)] Getter for "d_htab" (always depends on "d_valloc") */
+	Dee_dict_sethidx_t      d_hidxset; /* [lock(d_lock)] Setter for "d_htab" (always depends on "d_valloc") */
+	void                   *d_htab;    /* [lock(d_lock)][== (byte_t *)(d_vtab + 1) + d_valloc] Hash-table (contains indices into "d_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_rwlock_t     d_lock;    /* Lock used for accessing this Dict. */
+#endif /* !CONFIG_NO_THREADS */
+	Dee_WEAKREF_SUPPORT
+};
+
+/* Return the # of bound key within "self". */
+#define DeeDict_SIZE(self)        ((self)->d_vused)
+#define DeeDict_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->d_vused)
+
+DDATDEF __BYTE_TYPE__ const _DeeDict_EmptyTab[];
+#define DeeDict_EmptyVTab /*virt*/ ((struct Dee_dict_item *)_DeeDict_EmptyTab - 1)
+#define DeeDict_EmptyHTab ((void *)_DeeDict_EmptyTab)
+
+#ifdef CONFIG_NO_THREADS
+#define _Dee_DICT_INIT_LOCK /* nothing */
+#else /* CONFIG_NO_THREADS */
+#define _Dee_DICT_INIT_LOCK , DEE_ATOMIC_RWLOCK_INIT
+#endif /* !CONFIG_NO_THREADS */
+#define Dee_DICT_INIT                          \
+	{                                          \
+		Dee_OBJECT_HEAD_INIT(&DeeDict_Type),   \
+		/* .d_valloc  = */ 0,                  \
+		/* .d_vsize   = */ 0,                  \
+		/* .d_vused   = */ 0,                  \
+		/* .d_vtab    = */ DeeDict_EmptyVTab,  \
+		/* .d_hmask   = */ 0,                  \
+		/* .d_hidxget = */ &Dee_dict_gethidx8, \
+		/* .d_hidxset = */ &Dee_dict_sethidx8, \
+		/* .d_htab    = */ DeeDict_EmptyHTab   \
+		_Dee_DICT_INIT_LOCK,                   \
+		Dee_WEAKREF_SUPPORT_INIT               \
+	}
+
+
+
+#ifdef DEE_SOURCE
+
+/* Helper macros for converting between "virt" and "real" dict VIDX indices. */
 #define Dee_dict_vidx_virt2real(p_self) (void)(--*(p_self))
 #define Dee_dict_vidx_real2virt(p_self) (void)(++*(p_self))
 #define Dee_dict_vidx_toreal(self)      ((self) - 1)
@@ -94,8 +152,6 @@ typedef size_t Dee_dict_vidx_t;
 #define Dee_dict_vidx_virt_lt_real(virt_self, real_count) ((virt_self) <= (real_count))
 /*#define Dee_dict_vidx_virt_lt_real(virt_self, real_count) (Dee_dict_vidx_toreal(virt_self) < (real_count))*/
 
-typedef WUNUSED_T NONNULL_T((1)) /*virt*/Dee_dict_vidx_t (DCALL *Dee_dict_gethidx_t)(void *__restrict htab, size_t index);
-typedef NONNULL_T((1)) void (DCALL *Dee_dict_sethidx_t)(void *__restrict htab, size_t index, /*virt*/Dee_dict_vidx_t value);
 typedef NONNULL_T((1)) void (DCALL *Dee_dict_movhidx_t)(void *__restrict dst, void const *__restrict src, size_t n_words);
 typedef NONNULL_T((1)) void (DCALL *Dee_dict_uprhidx_t)(void *__restrict dst, void const *__restrict src, size_t n_words);
 typedef NONNULL_T((1)) void (DCALL *Dee_dict_dwnhidx_t)(void *__restrict dst, void const *__restrict src, size_t n_words);
@@ -138,62 +194,32 @@ struct Dee_dict_hidxio_struct {
 #define DEE_DICT_HIDXIO_FROMALLOC(valloc) 0
 #endif /* __SIZEOF_SIZE_T__ < 1 */
 
+/* Dynamic dict I/O functions:
+ * >> vtab = &Dee_dict_hidxio[DEE_DICT_HIDXIO_FROMALLOC(dict->d_valloc)];  */
 DDATDEF struct Dee_dict_hidxio_struct Dee_tpconst Dee_dict_hidxio[DEE_DICT_HIDXIO_COUNT];
-DFUNDEF WUNUSED NONNULL((1)) Dee_dict_vidx_t DCALL Dee_dict_gethidx8(void *__restrict htab, size_t index);
-DFUNDEF NONNULL((1)) void DCALL Dee_dict_sethidx8(void *__restrict htab, size_t index, Dee_dict_vidx_t value);
 
 /* Index value found in "d_htab" when end-of-chain is encountered. */
 #define Dee_DICT_HTAB_EOF 0
 
-struct Dee_dict_object {
-	Dee_OBJECT_HEAD /* GC Object */
-	size_t                  d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1') */
-	/*real*/Dee_dict_vidx_t d_vsize;   /* [lock(d_lock)][<= d_valloc] 1+ the greatest index in "d_vtab" that was ever initialized (and also the index of the next item in "d_vtab" to-be populated). */
-	size_t                  d_vused;   /* [lock(d_lock)][<= d_vsize] # of non-NULL keys in "d_vtab". */
-	struct Dee_dict_item   *d_vtab;    /* [lock(d_lock)][0..d_vsize][owned_if(!= INTERNAL(DeeDict_EmptyTab))]
-	                                    * [OWNED_AT(. + 1)] Value-table (offset by 1 to account for special meaning of index==Dee_DICT_HTAB_EOF) */
-	size_t                  d_hmask;   /* [lock(d_lock)] Hash mask (allocated hash-map size, minus 1). */
-	Dee_dict_gethidx_t      d_hidxget; /* [lock(d_lock)] Getter for "d_htab" (always depends on "d_valloc") */
-	Dee_dict_sethidx_t      d_hidxset; /* [lock(d_lock)] Setter for "d_htab" (always depends on "d_valloc") */
-	void                   *d_htab;    /* [lock(d_lock)][== (byte_t *)(d_vtab + 1) + d_valloc] Hash-table (contains indices into "d_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t     d_lock;    /* Lock used for accessing this Dict. */
-#endif /* !CONFIG_NO_THREADS */
-	Dee_WEAKREF_SUPPORT
-};
-
-/* Return the # of bound key within "self". */
-#define DeeDict_SIZE(self)        ((self)->d_vused)
-#define DeeDict_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->d_vused)
-
+/* Get/set "d_vtab" in both its:
+ * - virt[ual] (index starts at 1), and
+ * - real (index starts at 0) form
+ *
+ * VIRT:
+ * - Accepts indices in range "[Dee_dict_vidx_tovirt(0),Dee_dict_vidx_tovirt(d_vsize)-1)"  (aka: "[1,d_vsize]")
+ * - These sort of indices are what is stored in `d_htab'. Indices
+ *   start at 1, because an index=0 appearing in `d_htab' has the
+ *   special meaning of `Dee_DICT_HTAB_EOF'
+ *
+ * REAL:
+ * - Accepts indices in range "[0,d_vsize)"
+ * - Actual, regular, 0-based indices
+ * - _DeeDict_GetRealVTab() also represents the actual base of the
+ *   heap-block holding the dict's tables. */
 #define _DeeDict_GetVirtVTab(self)    ((self)->d_vtab)
 #define _DeeDict_SetVirtVTab(self, v) (void)((self)->d_vtab = (v))
 #define _DeeDict_GetRealVTab(self)    ((self)->d_vtab + 1)
 #define _DeeDict_SetRealVTab(self, v) (void)((self)->d_vtab = (v) - 1)
-
-DDATDEF __BYTE_TYPE__ const _DeeDict_EmptyTab[];
-#define DeeDict_EmptyVTab /*virt*/ ((struct Dee_dict_item *)_DeeDict_EmptyTab - 1)
-#define DeeDict_EmptyHTab ((void *)_DeeDict_EmptyTab)
-
-#ifdef CONFIG_NO_THREADS
-#define _Dee_DICT_INIT_LOCK /* nothing */
-#else /* CONFIG_NO_THREADS */
-#define _Dee_DICT_INIT_LOCK , DEE_ATOMIC_RWLOCK_INIT
-#endif /* !CONFIG_NO_THREADS */
-#define Dee_DICT_INIT                          \
-	{                                          \
-		Dee_OBJECT_HEAD_INIT(&DeeDict_Type),   \
-		/* .d_valloc  = */ 0,                  \
-		/* .d_vsize   = */ 0,                  \
-		/* .d_vused   = */ 0,                  \
-		/* .d_vtab    = */ DeeDict_EmptyVTab,  \
-		/* .d_hmask   = */ 0,                  \
-		/* .d_hidxget = */ &Dee_dict_gethidx8, \
-		/* .d_hidxset = */ &Dee_dict_sethidx8, \
-		/* .d_htab    = */ DeeDict_EmptyHTab   \
-		_Dee_DICT_INIT_LOCK,                   \
-		Dee_WEAKREF_SUPPORT_INIT               \
-	}
 
 /* Advance hash-index */
 #define _DeeDict_HashIdxInit(self, p_hs, p_perturb, hash) \
@@ -204,9 +230,10 @@ DDATDEF __BYTE_TYPE__ const _DeeDict_EmptyTab[];
 /* Get/set vtab-index "i" of htab at a given "hs" */
 #define /*virt*/_DeeDict_HTabGet(self, hs)    (*(self)->d_hidxget)((self)->d_htab, (hs) & (self)->d_hmask)
 #define _DeeDict_HTabSet(self, hs, /*virt*/i) (*(self)->d_hidxset)((self)->d_htab, (hs) & (self)->d_hmask, i)
+#endif /* DEE_SOURCE */
 
 
-DDATDEF DeeObject DeeDict_Dummy; /* DEPRECATED */
+DDATDEF DeeObject DeeDict_Dummy; /* DEPRECATED (no longer used by the dict impl) */
 
 #else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 struct Dee_dict_item {
@@ -224,45 +251,6 @@ struct Dee_dict_object {
 	                               * HINT: The difference to `d_size' is the number of dummy keys currently in use. */
 	struct Dee_dict_item *d_elem; /* [1..d_size|ALLOC(d_mask+1)][lock(d_lock)]
 	                               * [owned_if(!= INTERNAL(DeeDict_EmptyItems))] Dict key-item pairs (items). */
-	/* TODO: Make Dict remember insertion order:
-	 * - "d_elem" keep track of insertion order
-	 * - Following "d_elem" (iow: allocated within the same heap-block),
-	 *   there is a uint[8|16|32|64]_t vector of indices into "d_elem",
-	 *   that is the actual hash-table (iow: DeeDict_HashNx() enumerates
-	 *   indices of the uintX_t-vector, which in turn holds indices to
-	 *   the actual "d_elem" table)
-	 *
-	 * Advantages:
-	 * - To increase the size of a dict, it is now possible to use realloc()
-	 *   on the combined heap-block, and simply re-build the uintX_t-vector,
-	 *   whereas currently, one has to allocate an entirely new heap-block
-	 *   and copy "d_elem" into it.
-	 * - The length of "d_elem" and uintX_t-vector can be linked to ensure
-	 *   that there are always enough free hash-table entries to prevent
-	 *   hash collisions. But there can be less free entries in "d_elem",
-	 *   meaning less wasted memory (since "d_elem" takes much more space)
-	 * - Dict housekeeping (as needed after repeatedly inserting/deleting
-	 *   items) can also be done in-place, since once can just trim dummy
-	 *   entries from "d_elem" (by shifting successor with memovedownc),
-	 *   and then re-build the uintX_t-vector.
-	 * - Insertion order of elements is retained by the dict, allowing for
-	 *   more user-code use cases, including a better syntax for declaring
-	 *   structs via ctypes:
-	 *       >> import * from ctypes;
-	 *       >> struct point {
-	 *       >>     .x = int,
-	 *       >>     .y = int,
-	 *       >> };
-	 *   Currently, this way of writing code can't guaranty that the order
-	 *   of struct fields is retained, forcing the user to instead write:
-	 *       >> import * from ctypes;
-	 *       >> struct point {
-	 *       >>     ("x", int),
-	 *       >>     ("y", int),
-	 *       >> };
-	 *
-	 * Also implement this for HashSet
-	 */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t   d_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */

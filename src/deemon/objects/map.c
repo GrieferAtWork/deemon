@@ -56,7 +56,7 @@
 DECL_BEGIN
 
 DOC_DEF(map_byhash_doc,
-        "(template:?O)->?S?T2?O?O\n"
+        "(template:?O)->?S?T2?O?O\n" /* TODO: This should return ?M?O?O */
         "#ptemplate{The object who's hash should be used to search for collisions}"
         "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
         /**/ "key-value pairs, search for pairs where the key matches the hash of @template");

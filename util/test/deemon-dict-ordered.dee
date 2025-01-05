@@ -32,9 +32,13 @@ assert { ("bar", 2), ("foo", 3), (true, "yes"), (false, "no") } == d;
 
 /* A test where items are added to the dict individually */
 local d = Dict();
+assert !d;
 d["first"] = 10;
+assert d;
 d["second"] = 17;
+assert d;
 d["third"] = 9;
+assert d;
 
 /* The order of insertion is remembered here! */
 assert { ("first", 10), ("second", 17), ("third", 9) } == d;
@@ -131,7 +135,7 @@ assert #d == 2;
 d.clear();
 
 
-/* Some simple and easy to debug (because hash(int) == int) */
+/* Something simple and easy to debug (because hash(int) == int) */
 for (local i: [:1024])
 	d[i] = f"Jo! {i * 2}";
 assert #d == 1024;
@@ -157,6 +161,24 @@ for (local key, value: d) {
 }
 d.clear();
 
+/* And the same test *yet* again, but be evil and constantly shrink the
+ * dict, thereby constantly forcing the runtime to reallocate tables. */
+for (local i: [:1024]) {
+	d[str i] = f"Jo! {i * 2}";
+	d.shrink();
+	assert d.__valloc__ == d.__vused__, "This is what shrink() should ensure";
+}
+assert #d == 1024;
+local expected = 0;
+for (local key, value: d) {
+	assert str(expected) == key;
+	assert expected == int(key);
+	assert f"Jo! {expected * 2}" == value;
+	++expected;
+}
+d.clear();
+
+/* Why not: assert attributes of an empty dict. */
 assert !d;
 assert !#d;
 assert !d.__valloc__;

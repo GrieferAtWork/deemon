@@ -394,6 +394,16 @@ PUBLIC DeeObject DeeDict_Dummy = { /* DEPRECATED */
 
 PUBLIC_CONST byte_t const _DeeDict_EmptyTab[] = { 0 };
 
+/* Heap functions for allocating/freeing dict tables (d_vtab + d_htab) */
+#define _DeeDict_TabsMalloc(n_bytes)          Dee_Malloc(n_bytes)
+#define _DeeDict_TabsCalloc(n_bytes)          Dee_Calloc(n_bytes)
+#define _DeeDict_TabsRealloc(ptr, n_bytes)    Dee_Realloc(ptr, n_bytes)
+#define _DeeDict_TabsTryMalloc(n_bytes)       Dee_TryMalloc(n_bytes)
+#define _DeeDict_TabsTryCalloc(n_bytes)       Dee_TryCalloc(n_bytes)
+#define _DeeDict_TabsTryRealloc(ptr, n_bytes) Dee_TryRealloc(ptr, n_bytes)
+#define _DeeDict_TabsFree(ptr)                Dee_Free(ptr)
+
+
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL Dee_dict_gethidx8(void *__restrict htab, size_t index);
 DFUNDEF NONNULL((1)) void DCALL Dee_dict_sethidx8(void *__restrict htab, size_t index, size_t value);
 PRIVATE NONNULL((1)) void DCALL Dee_dict_movhidx8(void *__restrict dst, void const *__restrict src, size_t n_words);
@@ -739,8 +749,8 @@ dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 		valloc = dict_valloc_from_hmask_and_count(hmask, num_items, allow_overalloc);
 		hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
 		tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, hidxio);
-		tabs   = tryalloc ? Dee_TryCalloc(tabssz)
-		                  : Dee_Calloc(tabssz);
+		tabs   = tryalloc ? _DeeDict_TabsTryCalloc(tabssz)
+		                  : _DeeDict_TabsCalloc(tabssz);
 		if unlikely(!tabs)
 			goto err;
 	}
@@ -763,7 +773,7 @@ dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 	return (DREF DeeObject *)result;
 err_tabs:
 	if likely(num_items)
-		Dee_Free(tabs);
+		_DeeDict_TabsFree(tabs);
 err:
 	return NULL;
 }
@@ -1012,6 +1022,517 @@ dict_htab_decafter(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_threshold
 }
 
 
+/* Try to make it so "d_vsize < d_valloc" by enlarging the vector.
+ * Do this while the caller is holding a write-lock to "self", and
+ * do so without ever releasing that lock.
+ * NOTES:
+ * - This function will NEVER rehash the dict or change the contents of d_htab!
+ * - The caller must ensure that `_DeeDict_CanGrowVTab(self)' is true
+ * @return: true:  Success
+ * @return: false: Failure */
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
+dict_trygrow_vtab(Dict *__restrict self) {
+	size_t new_valloc;
+	size_t new_tabsize;
+	shift_t old_hidxio;
+	shift_t new_hidxio;
+	struct Dee_dict_item *old_vtab;
+	struct Dee_dict_item *new_vtab;
+	void *old_htab;
+	void *new_htab;
+
+	/* Must truly allocate a new, larger v-table */
+	ASSERT(_DeeDict_CanGrowVTab(self));
+	new_valloc = dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, true);
+	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
+	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, new_hidxio);
+	old_vtab = _DeeDict_GetRealVTab(self);
+	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
+	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
+	if unlikely(!new_vtab) {
+		new_valloc = dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, false);
+		old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+		new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
+		new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, new_hidxio);
+		new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
+		if unlikely(!new_vtab)
+			return false;
+	}
+	old_htab = new_vtab + self->d_valloc;
+	new_htab = new_vtab + new_valloc;
+	if likely(old_hidxio == new_hidxio) {
+		(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, old_htab, self->d_hmask + 1);
+	} else {
+		(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, old_htab, self->d_hmask + 1);
+		self->d_hidxget = Dee_dict_hidxio[old_hidxio].dhxio_get;
+		self->d_hidxset = Dee_dict_hidxio[old_hidxio].dhxio_set;
+	}
+	bzeroc(new_vtab + self->d_valloc, new_valloc - self->d_valloc, sizeof(struct Dee_dict_item));
+	_DeeDict_SetRealVTab(self, new_vtab);
+	self->d_valloc = new_valloc;
+	self->d_htab   = new_htab;
+	return true;
+}
+
+/* Same as `dict_trygrow_vtab()', but allowed to grow the htab
+ * also, and can be used even when "!_DeeDict_CanGrowVTab(self)"
+ * @return: true:  Success
+ * @return: false: Failure */
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
+dict_trygrow_vtab_and_htab(Dict *__restrict self) {
+	size_t old_hmask;
+	size_t new_hmask;
+#ifndef NDEBUG
+	size_t old_valloc;
+#endif /* !NDEBUG */
+	size_t new_valloc;
+	size_t new_tabsize;
+	shift_t old_hidxio;
+	shift_t new_hidxio;
+	struct Dee_dict_item *old_vtab;
+	struct Dee_dict_item *new_vtab;
+	void *old_htab;
+	void *new_htab;
+
+	/* Must truly allocate a new, larger v-table */
+	old_hmask = self->d_hmask;
+	new_hmask = dict_hmask_from_count(self->d_vsize + 1);
+	if unlikely(new_hmask < old_hmask)
+		new_hmask = old_hmask;
+	if (_DeeDict_ShouldGrowHTab(self) && new_hmask <= old_hmask)
+		new_hmask = (new_hmask << 1) | 1;
+	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, true);
+	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
+	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
+	old_vtab = _DeeDict_GetRealVTab(self);
+	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
+	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
+	if unlikely(!new_vtab) {
+		new_hmask  = dict_tiny_hmask_from_count(self->d_vsize + 1);
+		new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, false);
+		old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+		new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
+		new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
+		new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
+		if unlikely(!new_vtab)
+			return false;
+	}
+	old_htab = new_vtab + self->d_valloc;
+	new_htab = new_vtab + new_valloc;
+	_DeeDict_SetRealVTab(self, new_vtab);
+#ifndef NDEBUG
+	old_valloc = self->d_valloc;
+#endif /* !NDEBUG */
+	self->d_valloc = new_valloc;
+	self->d_htab   = new_htab;
+	if (old_hmask == new_hmask) {
+		if likely(old_hidxio == new_hidxio) {
+			(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, old_htab, old_hmask + 1);
+		} else {
+			(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, old_htab, old_hmask + 1);
+			self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+			self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+		}
+	} else {
+		/* Must rebuild d_htab */
+		self->d_hmask = new_hmask;
+		self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+		self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+		dict_htab_rebuild(self);
+	}
+#ifndef NDEBUG
+	DBG_memset(new_vtab + old_valloc, 0xcc,
+	           (new_valloc - old_valloc) *
+	           sizeof(struct Dee_dict_item));
+#endif /* !NDEBUG */
+	return true;
+}
+
+#if 0
+/* Try to change "d_hmask = (d_hmask << 1) | 1"
+ * @return: true:  Success
+ * @return: false: Failure (allocation failed) */
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
+dict_trygrow_htab(Dict *__restrict self) {
+	struct Dee_dict_item *old_vtab;
+	struct Dee_dict_item *new_vtab;
+	size_t new_hmask, new_tabsize;
+	size_t valloc  = self->d_valloc;
+	shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
+	ASSERTF(self->d_hmask != (size_t)-1, "How? This should have been an OOM");
+	new_hmask = (self->d_hmask << 1) | 1;
+	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, valloc, hidxio);
+	old_vtab = _DeeDict_GetRealVTab(self);
+	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
+	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
+	if unlikely(!new_vtab)
+		goto err;
+	self->d_hmask = new_hmask;
+	_DeeDict_SetRealVTab(self, new_vtab);
+	self->d_htab  = new_vtab + valloc;
+	dict_htab_rebuild(self);
+	return true;
+err:
+	return false;
+}
+#endif
+
+/* Make it so "!_DeeDict_MustGrowVTab(self)"
+ * (aka: " d_vsize < d_valloc && d_valloc <= d_hmask")
+ * Allowed to release+re-acquire a write-lock to "self".
+ * @return: 0 : Success (lock was lost and later re-acquired)
+ * @return: -1: Failure (lock was lost and an error was thrown) */
+#ifdef HAVE_dict_setitem_unlocked
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
+dict_grow_vtab_and_htab_and_relock(Dict *__restrict self, bool without_locks)
+#else /* HAVE_dict_setitem_unlocked */
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
+dict_grow_vtab_and_htab_and_relock_impl(Dict *__restrict self)
+#define dict_grow_vtab_and_htab_and_relock(self, without_locks) \
+	dict_grow_vtab_and_htab_and_relock_impl(self)
+#endif /* !HAVE_dict_setitem_unlocked */
+{
+#ifdef HAVE_dict_setitem_unlocked
+#define IF_with_locks(x) if (!without_locks) x
+#else /* HAVE_dict_setitem_unlocked */
+#define IF_with_locks(x) x
+#endif /* !HAVE_dict_setitem_unlocked */
+	size_t new_valloc;
+	size_t old_hmask;
+	size_t new_hmask;
+	size_t new_tabsize;
+	shift_t new_hidxio;
+	struct Dee_dict_item *old_vtab;
+	struct Dee_dict_item *new_vtab;
+again:
+#ifdef HAVE_dict_setitem_unlocked
+	ASSERT(without_locks || DeeDict_LockWriting(self));
+#else /* HAVE_dict_setitem_unlocked */
+	ASSERT(DeeDict_LockWriting(self));
+#endif /* !HAVE_dict_setitem_unlocked */
+	ASSERT(_DeeDict_MustGrowVTab(self));
+
+	/* Figure out allocation sizes (never overallocate here; we only get here when memory is low!) */
+	old_hmask = self->d_hmask;
+	new_hmask = old_hmask;
+	if (_DeeDict_MustGrowHTab(self)) {
+		new_hmask = dict_tiny_hmask_from_count(self->d_vsize + 1);
+		ASSERT(new_hmask > old_hmask);
+	}
+	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, false);
+	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
+
+	/* Release dict lock */
+	IF_with_locks(DeeDict_LockEndWrite(self));
+
+	/* Allocate new dict tables. */
+	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsMalloc(new_tabsize);
+	if unlikely(!new_vtab)
+		goto err;
+
+	/* Re-acquire lock to the dict. */
+	IF_with_locks(DeeDict_LockWrite(self));
+
+	/* Check if the dict still needs the new buffer */
+	if unlikely(!_DeeDict_MustGrowVTab(self)) {
+free_buffer_and_try_again:
+		IF_with_locks(DeeDict_LockEndWrite(self));
+		_DeeDict_TabsFree(new_vtab);
+		IF_with_locks(DeeDict_LockWrite(self));
+		if likely(!_DeeDict_MustGrowVTab(self))
+			return 0;
+		goto again;
+	}
+
+	/* Check that the buffer we just allocated is actually large enough */
+	if unlikely(new_valloc <= self->d_valloc)
+		goto free_buffer_and_try_again;
+	if unlikely(old_hmask != self->d_hmask)
+		goto free_buffer_and_try_again;
+	ASSERT(new_hidxio >= DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc));
+
+	/* Everything checks out: the buffer can be installed like this! */
+
+	/* Copy over the contents of the old vtab */
+	old_vtab = _DeeDict_GetRealVTab(self);
+	if likely(old_hmask == new_hmask) {
+		shift_t old_hidxio;
+		void *new_htab = new_vtab + new_valloc;
+		new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
+		                                           sizeof(struct Dee_dict_item));
+		old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
+		if likely(old_hidxio == new_hidxio) {
+			(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, self->d_htab, new_hmask + 1);
+		} else {
+			(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, self->d_htab, new_hmask + 1);
+			self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+			self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+		}
+
+		/* Update dict control elements to use the new tables. */
+		self->d_valloc = new_valloc;
+		_DeeDict_SetRealVTab(self, new_vtab);
+		self->d_htab   = new_htab;
+	} else {
+		/* Must rebuild htab */
+		if (_DeeDict_CanOptimizeVTab(self))
+			dict_do_optimize_vtab_without_rebuild(self);
+		new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
+		                                           sizeof(struct Dee_dict_item));
+		self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+		self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+		self->d_valloc = new_valloc;
+		_DeeDict_SetRealVTab(self, new_vtab);
+		self->d_htab = new_vtab + new_valloc;
+		dict_htab_rebuild_after_optimize(self);
+	}
+
+	/* Free the old tables. */
+	IF_with_locks(DeeDict_LockEndWrite(self));
+	_DeeDict_TabsFree(old_vtab);
+	IF_with_locks(DeeDict_LockWrite(self));
+	if unlikely(_DeeDict_MustGrowVTab(self))
+		goto again;
+	return 0;
+err:
+	return -1;
+#undef IF_with_locks
+}
+
+#if 0
+/* Make it so "!_DeeDict_MustGrowHTab(self)".
+ * Allowed to release+re-acquire a write-lock to "self".
+ * @return: 0 : Success (lock was lost and later re-acquired)
+ * @return: -1: Failure (lock was lost and an error was thrown) */
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
+dict_grow_htab_and_relock(Dict *__restrict self) {
+	struct Dee_dict_item *old_vtab;
+	struct Dee_dict_item *new_vtab;
+	size_t new_hmask, new_tabsize;
+	size_t valloc;
+	shift_t hidxio;
+again:
+	ASSERT(DeeDict_LockWriting(self));
+	ASSERT(_DeeDict_MustGrowHTab(self));
+	ASSERTF(self->d_hmask != (size_t)-1, "How? This should have been an OOM");
+	valloc = self->d_valloc;
+	hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
+
+	/* Figure out the size for the new table. */
+	new_hmask   = (self->d_hmask << 1) | 1;
+	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, valloc, hidxio);
+	DeeDict_LockEndWrite(self);
+
+	/* Allocate the new table. */
+	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsMalloc(new_tabsize);
+	if unlikely(!new_vtab)
+		goto err;
+
+	/* Re-acquire lock to the dict. */
+	DeeDict_LockWrite(self);
+
+	/* Verify that the dict still needs to have it's htab grow. */
+	if unlikely(!_DeeDict_MustGrowHTab(self)) {
+free_buffer_and_try_again:
+		DeeDict_LockEndWrite(self);
+		_DeeDict_TabsFree(new_vtab);
+		DeeDict_LockWrite(self);
+		if likely(!_DeeDict_MustGrowHTab(self))
+			return 0;
+		goto again;
+	}
+	if unlikely(new_hmask <= self->d_hmask)
+		goto free_buffer_and_try_again;
+	if unlikely(valloc <= self->d_valloc)
+		goto free_buffer_and_try_again;
+
+	/* Everything checks out: the buffer can be installed like this! */
+	if (_DeeDict_CanOptimizeVTab(self))
+		dict_do_optimize_vtab_without_rebuild(self); /* Optimize first so the memcpy needs to copy less stuff! */
+	old_vtab = _DeeDict_GetRealVTab(self);
+	new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
+	                                           sizeof(struct Dee_dict_item));
+	self->d_hmask = new_hmask;
+	_DeeDict_SetRealVTab(self, new_vtab);
+	self->d_htab  = new_vtab + valloc;
+	dict_htab_rebuild_after_optimize(self);
+
+	/* Free the old tables. */
+	DeeDict_LockEndWrite(self);
+	_DeeDict_TabsFree(old_vtab);
+	DeeDict_LockWrite(self);
+	if unlikely(_DeeDict_MustGrowHTab(self))
+		goto again;
+	return 0;
+err:
+	return -1;
+}
+#endif
+
+/* Shrink the vtab and release a lock to "self". Must be called when:
+ * - holding a write-lock
+ * - _DeeDict_CanShrinkHTab(self) is true
+ * - _DeeDict_ShouldShrinkHTab(self) is true (or `fully_shrink=true')
+ * NOTE: After a call to this function, the caller must always rebuild the htab! */
+PRIVATE NONNULL((1)) void DCALL
+dict_shrink_htab(Dict *__restrict self, bool fully_shrink) {
+	size_t new_hmask;
+	size_t new_tabsize;
+	struct Dee_dict_item *old_vtab;
+	struct Dee_dict_item *new_vtab;
+	ASSERT(DeeDict_LockWriting(self));
+	ASSERT(_DeeDict_CanShrinkHTab(self));
+	ASSERT(_DeeDict_ShouldShrinkHTab(self) || fully_shrink);
+	/* Figure out the new hmask */
+	new_hmask = self->d_hmask;
+	if (fully_shrink) {
+		do {
+			new_hmask >>= 1;
+		} while (_DeeDict_CanShrinkHTab2(self->d_valloc, new_hmask));
+	} else {
+		do {
+			new_hmask >>= 1;
+		} while (_DeeDict_ShouldShrinkHTab2(self->d_valloc, new_hmask));
+	}
+	ASSERT(new_hmask >= self->d_valloc);
+	ASSERT(new_hmask < self->d_hmask);
+	ASSERT(self->d_valloc > 0);
+	ASSERT(new_hmask > 0);
+	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc(new_hmask, self->d_valloc);
+	old_vtab = _DeeDict_GetRealVTab(self);
+	ASSERT(old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab);
+	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
+	if unlikely(!new_vtab)
+		new_vtab = old_vtab;
+	_DeeDict_SetRealVTab(self, new_vtab);
+	self->d_hmask = new_hmask;
+
+	dict_htab_rebuild(self);
+}
+
+
+/* Shrink the vtab+htab. Must be called while:
+ * - holding a write-lock
+ * - _DeeDict_CanShrinkVTab(self) is true
+ * - _DeeDict_ShouldShrinkVTab(self) is true (or `fully_shrink=true') */
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
+	bool must_rebuild_htab = false;
+	struct Dee_dict_item *old_vtab;
+	struct Dee_dict_item *new_vtab;
+	size_t old_valloc;
+	size_t new_valloc;
+	size_t new_tabsize;
+	size_t old_hmask;
+	size_t new_hmask;
+	shift_t old_hidxio;
+	shift_t new_hidxio;
+	ASSERT(DeeDict_LockWriting(self));
+	ASSERT(_DeeDict_CanShrinkVTab(self));
+	ASSERT(_DeeDict_ShouldShrinkVTab(self) || fully_shrink);
+	old_vtab = _DeeDict_GetRealVTab(self);
+	if unlikely(!self->d_vused) {
+		/* Special case: dict is now empty -> clear all data. */
+		self->d_valloc  = 0;
+		self->d_vsize   = 0;
+		_DeeDict_SetVirtVTab(self, DeeDict_EmptyVTab);
+		self->d_hmask   = 0;
+		self->d_hidxget = &Dee_dict_gethidx8;
+		self->d_hidxset = &Dee_dict_sethidx8;
+		self->d_htab    = DeeDict_EmptyHTab;
+		if (old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab)
+			_DeeDict_TabsFree(old_vtab);
+		return;
+	}
+
+	/* Optimize the dict so we don't have to transfer deleted
+	 * items, and can shrink even more when `fully_shrink=true' */
+	if (_DeeDict_CanOptimizeVTab(self)) {
+		dict_do_optimize_vtab_without_rebuild(self);
+		must_rebuild_htab = true;
+	}
+
+	/* Calculate changes in buffer size */
+	ASSERT(self->d_vsize < self->d_valloc);
+	old_valloc = self->d_valloc;
+	new_valloc = fully_shrink ? self->d_vsize : _DeeDict_ShouldShrinkVTab_NEWALLOC(self);
+	ASSERT(new_valloc >= self->d_vsize);
+	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(old_valloc);
+	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+	ASSERT(new_hidxio <= old_hidxio);
+	old_hmask = self->d_hmask;
+	new_hmask = old_hmask;
+	if (fully_shrink) {
+		while (_DeeDict_CanShrinkHTab2(self->d_valloc, new_hmask))
+			new_hmask >>= 1;
+	} else {
+		while (_DeeDict_ShouldShrinkHTab2(self->d_valloc, new_hmask))
+			new_hmask >>= 1;
+	}
+	ASSERT(new_hmask <= old_hmask);
+
+	/* Shrink dict hash-table in-place (so we can then inplace-realloc-trunc the table heap area) */
+	if (old_hmask == new_hmask) {
+		if (!must_rebuild_htab) {
+			void *old_htab = old_vtab + old_valloc;
+			void *new_htab = old_vtab + new_valloc;
+			if (new_hidxio == old_hidxio) {
+				(*Dee_dict_hidxio[new_hidxio].dhxio_movdown)(new_htab, old_htab, self->d_hmask + 1);
+			} else {
+				shift_t current_hidxio;
+				(*Dee_dict_hidxio[old_hidxio].dhxio_dwn)(new_htab, old_htab, self->d_hmask + 1);
+				current_hidxio = old_hidxio - 1;
+				while (current_hidxio > new_hidxio) {
+					(*Dee_dict_hidxio[current_hidxio].dhxio_dwn)(new_htab, new_htab, self->d_hmask + 1);
+					--current_hidxio;
+				}
+			}
+		}
+	} else {
+		must_rebuild_htab = true;
+	}
+
+	/* Actually realloc the dict tables. */
+	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
+	ASSERT(new_valloc < old_valloc);
+	ASSERT(new_valloc >= self->d_vsize);
+	ASSERTF(old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab,
+	        "The empty table should have been handled by '!self->d_vused'");
+	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
+	if unlikely(!new_vtab)
+		new_vtab = old_vtab; /* Shouldn't get here because the new table is always smaller! */
+
+	/* Assign new tables / control values. */
+	self->d_valloc = new_valloc;
+	_DeeDict_SetRealVTab(self, new_vtab);
+	self->d_htab   = new_vtab + new_valloc;
+	self->d_hmask  = new_hmask;
+
+	/* Re-build the hash-table if necessary. */
+	if (must_rebuild_htab)
+		dict_htab_rebuild_after_optimize(self);
+}
+
+
+/* Automatically shrink allocated tables of "self" if appropriate.
+ * Call this function are removing elements from "self"
+ * Same as the API function "dict.shrink(fully: false)" */
+LOCAL NONNULL((1)) void DCALL
+dict_autoshrink(Dict *__restrict self) {
+	if (_DeeDict_ShouldShrinkVTab(self))
+		dict_shrink_vtab_and_htab(self, false);
+}
+
+
+
 LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_htab_incafter8(Dict *__restrict self, uint8_t vtab_threshold) {
 	size_t i;
@@ -1084,522 +1605,20 @@ dict_htab_incafter(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_threshold
 	}
 }
 
-
-/* Try to make it so "d_vsize < d_valloc" by enlarging the vector.
- * Do this while the caller is holding a write-lock to "self", and
- * do so without ever releasing that lock.
- * NOTES:
- * - This function will NEVER rehash the dict or change the contents of d_htab!
- * - The caller must ensure that `_DeeDict_CanGrowVTab(self)' is true
- * @return: true:  Success
- * @return: false: Failure */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
-dict_trygrow_vtab(Dict *__restrict self) {
-	size_t new_valloc;
-	size_t new_tabsize;
-	shift_t old_hidxio;
-	shift_t new_hidxio;
-	struct Dee_dict_item *old_vtab;
-	struct Dee_dict_item *new_vtab;
-	void *old_htab;
-	void *new_htab;
-
-	/* Must truly allocate a new, larger v-table */
-	ASSERT(_DeeDict_CanGrowVTab(self));
-	new_valloc = dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, true);
-	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
-	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
-	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, new_hidxio);
-	old_vtab = _DeeDict_GetRealVTab(self);
-	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
-	new_vtab = (struct Dee_dict_item *)Dee_TryRealloc(old_vtab, new_tabsize);
-	if unlikely(!new_vtab) {
-		new_valloc = dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, false);
-		old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-		new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
-		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
-		new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, new_hidxio);
-		new_vtab = (struct Dee_dict_item *)Dee_TryRealloc(old_vtab, new_tabsize);
-		if unlikely(!new_vtab)
-			return false;
-	}
-	old_htab = new_vtab + self->d_valloc;
-	new_htab = new_vtab + new_valloc;
-	if likely(old_hidxio == new_hidxio) {
-		(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, old_htab, self->d_hmask + 1);
-	} else {
-		(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, old_htab, self->d_hmask + 1);
-		self->d_hidxget = Dee_dict_hidxio[old_hidxio].dhxio_get;
-		self->d_hidxset = Dee_dict_hidxio[old_hidxio].dhxio_set;
-	}
-	bzeroc(new_vtab + self->d_valloc, new_valloc - self->d_valloc, sizeof(struct Dee_dict_item));
-	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_valloc = new_valloc;
-	self->d_htab   = new_htab;
-	return true;
-}
-
-/* Same as `dict_trygrow_vtab()', but allowed to grow the htab
- * also, and can be used even when "!_DeeDict_CanGrowVTab(self)"
- * @return: true:  Success
- * @return: false: Failure */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
-dict_trygrow_vtab_and_htab(Dict *__restrict self) {
-	size_t old_hmask;
-	size_t new_hmask;
-#ifndef NDEBUG
-	size_t old_valloc;
-#endif /* !NDEBUG */
-	size_t new_valloc;
-	size_t new_tabsize;
-	shift_t old_hidxio;
-	shift_t new_hidxio;
-	struct Dee_dict_item *old_vtab;
-	struct Dee_dict_item *new_vtab;
-	void *old_htab;
-	void *new_htab;
-
-	/* Must truly allocate a new, larger v-table */
-	old_hmask = self->d_hmask;
-	new_hmask = dict_hmask_from_count(self->d_vsize + 1);
-	if unlikely(new_hmask < old_hmask)
-		new_hmask = old_hmask;
-	if (_DeeDict_ShouldGrowHTab(self) && new_hmask <= old_hmask)
-		new_hmask = (new_hmask << 1) | 1;
-	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, true);
-	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
-	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
-	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
-	old_vtab = _DeeDict_GetRealVTab(self);
-	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
-	new_vtab = (struct Dee_dict_item *)Dee_TryRealloc(old_vtab, new_tabsize);
-	if unlikely(!new_vtab) {
-		new_hmask  = dict_tiny_hmask_from_count(self->d_vsize + 1);
-		new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, false);
-		old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-		new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
-		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
-		new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
-		new_vtab = (struct Dee_dict_item *)Dee_TryRealloc(old_vtab, new_tabsize);
-		if unlikely(!new_vtab)
-			return false;
-	}
-	old_htab = new_vtab + self->d_valloc;
-	new_htab = new_vtab + new_valloc;
-	_DeeDict_SetRealVTab(self, new_vtab);
-#ifndef NDEBUG
-	old_valloc = self->d_valloc;
-#endif /* !NDEBUG */
-	self->d_valloc = new_valloc;
-	self->d_htab   = new_htab;
-	if (old_hmask == new_hmask) {
-		if likely(old_hidxio == new_hidxio) {
-			(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, old_htab, old_hmask + 1);
-		} else {
-			(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, old_htab, old_hmask + 1);
-			self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-			self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
-		}
-	} else {
-		/* Must rebuild d_htab */
-		self->d_hmask = new_hmask;
-		self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-		self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
-		dict_htab_rebuild(self);
-	}
-#ifndef NDEBUG
-	DBG_memset(new_vtab + old_valloc, 0xcc,
-	           (new_valloc - old_valloc) *
-	           sizeof(struct Dee_dict_item));
-#endif /* !NDEBUG */
-	return true;
-}
-
-#if 0
-/* Try to change "d_hmask = (d_hmask << 1) | 1"
- * @return: true:  Success
- * @return: false: Failure (allocation failed) */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
-dict_trygrow_htab(Dict *__restrict self) {
-	struct Dee_dict_item *old_vtab;
-	struct Dee_dict_item *new_vtab;
-	size_t new_hmask, new_tabsize;
-	size_t valloc  = self->d_valloc;
-	shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
-	ASSERTF(self->d_hmask != (size_t)-1, "How? This should have been an OOM");
-	new_hmask = (self->d_hmask << 1) | 1;
-	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, valloc, hidxio);
-	old_vtab = _DeeDict_GetRealVTab(self);
-	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
-	new_vtab = (struct Dee_dict_item *)Dee_TryRealloc(old_vtab, new_tabsize);
-	if unlikely(!new_vtab)
-		goto err;
-	self->d_hmask = new_hmask;
-	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_htab  = new_vtab + valloc;
-	dict_htab_rebuild(self);
-	return true;
-err:
-	return false;
-}
-#endif
-
-/* Make it so "!_DeeDict_MustGrowVTab(self)"
- * (aka: " d_vsize < d_valloc && d_valloc <= d_hmask")
- * Allowed to release+re-acquire a write-lock to "self".
- * @return: 0 : Success (lock was lost and later re-acquired)
- * @return: -1: Failure (lock was lost and an error was thrown) */
-#ifdef HAVE_dict_setitem_unlocked
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
-dict_grow_vtab_and_htab_and_relock(Dict *__restrict self, bool without_locks)
-#else /* HAVE_dict_setitem_unlocked */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
-dict_grow_vtab_and_htab_and_relock_impl(Dict *__restrict self)
-#define dict_grow_vtab_and_htab_and_relock(self, without_locks) \
-	dict_grow_vtab_and_htab_and_relock_impl(self)
-#endif /* !HAVE_dict_setitem_unlocked */
-{
-#ifdef HAVE_dict_setitem_unlocked
-#define IF_with_locks(x) if (!without_locks) x
-#else /* HAVE_dict_setitem_unlocked */
-#define IF_with_locks(x) x
-#endif /* !HAVE_dict_setitem_unlocked */
-	size_t new_valloc;
-	size_t old_hmask;
-	size_t new_hmask;
-	size_t new_tabsize;
-	shift_t new_hidxio;
-	struct Dee_dict_item *old_vtab;
-	struct Dee_dict_item *new_vtab;
-again:
-#ifdef HAVE_dict_setitem_unlocked
-	ASSERT(without_locks || DeeDict_LockWriting(self));
-#else /* HAVE_dict_setitem_unlocked */
-	ASSERT(DeeDict_LockWriting(self));
-#endif /* !HAVE_dict_setitem_unlocked */
-	ASSERT(_DeeDict_MustGrowVTab(self));
-
-	/* Figure out allocation sizes (never overallocate here; we only get here when memory is low!) */
-	old_hmask = self->d_hmask;
-	new_hmask = old_hmask;
-	if (_DeeDict_MustGrowHTab(self)) {
-		new_hmask = dict_tiny_hmask_from_count(self->d_vsize + 1);
-		ASSERT(new_hmask > old_hmask);
-	}
-	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, false);
-	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
-	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
-
-	/* Release dict lock */
-	IF_with_locks(DeeDict_LockEndWrite(self));
-
-	/* Allocate new dict tables. */
-	new_vtab = (struct Dee_dict_item *)Dee_Malloc(new_tabsize);
-	if unlikely(!new_vtab)
-		goto err;
-
-	/* Re-acquire lock to the dict. */
-	IF_with_locks(DeeDict_LockWrite(self));
-
-	/* Check if the dict still needs the new buffer */
-	if unlikely(!_DeeDict_MustGrowVTab(self)) {
-free_buffer_and_try_again:
-		IF_with_locks(DeeDict_LockEndWrite(self));
-		Dee_Free(new_vtab);
-		IF_with_locks(DeeDict_LockWrite(self));
-		if likely(!_DeeDict_MustGrowVTab(self))
-			return 0;
-		goto again;
-	}
-
-	/* Check that the buffer we just allocated is actually large enough */
-	if unlikely(new_valloc <= self->d_valloc)
-		goto free_buffer_and_try_again;
-	if unlikely(old_hmask != self->d_hmask)
-		goto free_buffer_and_try_again;
-	ASSERT(new_hidxio >= DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc));
-
-	/* Everything checks out: the buffer can be installed like this! */
-
-	/* Copy over the contents of the old vtab */
-	old_vtab = _DeeDict_GetRealVTab(self);
-	if likely(old_hmask == new_hmask) {
-		shift_t old_hidxio;
-		void *new_htab = new_vtab + new_valloc;
-		new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
-		                                           sizeof(struct Dee_dict_item));
-		old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
-		if likely(old_hidxio == new_hidxio) {
-			(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, self->d_htab, new_hmask + 1);
-		} else {
-			(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, self->d_htab, new_hmask + 1);
-			self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-			self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
-		}
-
-		/* Update dict control elements to use the new tables. */
-		self->d_valloc = new_valloc;
-		_DeeDict_SetRealVTab(self, new_vtab);
-		self->d_htab   = new_htab;
-	} else {
-		/* Must rebuild htab */
-		if (_DeeDict_CanOptimizeVTab(self))
-			dict_do_optimize_vtab_without_rebuild(self);
-		new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
-		                                           sizeof(struct Dee_dict_item));
-		self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-		self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
-		self->d_valloc = new_valloc;
-		_DeeDict_SetRealVTab(self, new_vtab);
-		self->d_htab = new_vtab + new_valloc;
-		dict_htab_rebuild_after_optimize(self);
-	}
-
-	/* Free the old tables. */
-	IF_with_locks(DeeDict_LockEndWrite(self));
-	Dee_Free(old_vtab);
-	IF_with_locks(DeeDict_LockWrite(self));
-	if unlikely(_DeeDict_MustGrowVTab(self))
-		goto again;
-	return 0;
-err:
-	return -1;
-#undef IF_with_locks
-}
-
-#if 0
-/* Make it so "!_DeeDict_MustGrowHTab(self)".
- * Allowed to release+re-acquire a write-lock to "self".
- * @return: 0 : Success (lock was lost and later re-acquired)
- * @return: -1: Failure (lock was lost and an error was thrown) */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
-dict_grow_htab_and_relock(Dict *__restrict self) {
-	struct Dee_dict_item *old_vtab;
-	struct Dee_dict_item *new_vtab;
-	size_t new_hmask, new_tabsize;
-	size_t valloc;
-	shift_t hidxio;
-again:
-	ASSERT(DeeDict_LockWriting(self));
-	ASSERT(_DeeDict_MustGrowHTab(self));
-	ASSERTF(self->d_hmask != (size_t)-1, "How? This should have been an OOM");
-	valloc = self->d_valloc;
-	hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
-
-	/* Figure out the size for the new table. */
-	new_hmask   = (self->d_hmask << 1) | 1;
-	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, valloc, hidxio);
-	DeeDict_LockEndWrite(self);
-
-	/* Allocate the new table. */
-	new_vtab = (struct Dee_dict_item *)Dee_Malloc(new_tabsize);
-	if unlikely(!new_vtab)
-		goto err;
-
-	/* Re-acquire lock to the dict. */
-	DeeDict_LockWrite(self);
-
-	/* Verify that the dict still needs to have it's htab grow. */
-	if unlikely(!_DeeDict_MustGrowHTab(self)) {
-free_buffer_and_try_again:
-		DeeDict_LockEndWrite(self);
-		Dee_Free(new_vtab);
-		DeeDict_LockWrite(self);
-		if likely(!_DeeDict_MustGrowHTab(self))
-			return 0;
-		goto again;
-	}
-	if unlikely(new_hmask <= self->d_hmask)
-		goto free_buffer_and_try_again;
-	if unlikely(valloc <= self->d_valloc)
-		goto free_buffer_and_try_again;
-
-	/* Everything checks out: the buffer can be installed like this! */
-	if (_DeeDict_CanOptimizeVTab(self))
-		dict_do_optimize_vtab_without_rebuild(self); /* Optimize first so the memcpy needs to copy less stuff! */
-	old_vtab = _DeeDict_GetRealVTab(self);
-	new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
-	                                           sizeof(struct Dee_dict_item));
-	self->d_hmask = new_hmask;
-	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_htab  = new_vtab + valloc;
-	dict_htab_rebuild_after_optimize(self);
-
-	/* Free the old tables. */
-	DeeDict_LockEndWrite(self);
-	Dee_Free(old_vtab);
-	DeeDict_LockWrite(self);
-	if unlikely(_DeeDict_MustGrowHTab(self))
-		goto again;
-	return 0;
-err:
-	return -1;
-}
-#endif
-
-/* Shrink the vtab and release a lock to "self". Must be called when:
- * - holding a write-lock
- * - _DeeDict_CanShrinkHTab(self) is true
- * - _DeeDict_ShouldShrinkHTab(self) is true (or `fully_shrink=true')
- * NOTE: After a call to this function, the caller must always rebuild the htab! */
-PRIVATE NONNULL((1)) void DCALL
-dict_shrink_htab(Dict *__restrict self, bool fully_shrink) {
-	size_t new_hmask;
-	size_t new_tabsize;
-	struct Dee_dict_item *old_vtab;
-	struct Dee_dict_item *new_vtab;
-	ASSERT(DeeDict_LockWriting(self));
-	ASSERT(_DeeDict_CanShrinkHTab(self));
-	ASSERT(_DeeDict_ShouldShrinkHTab(self) || fully_shrink);
-	/* Figure out the new hmask */
-	new_hmask = self->d_hmask;
-	if (fully_shrink) {
-		do {
-			new_hmask >>= 1;
-		} while (_DeeDict_CanShrinkHTab2(self->d_valloc, new_hmask));
-	} else {
-		do {
-			new_hmask >>= 1;
-		} while (_DeeDict_ShouldShrinkHTab2(self->d_valloc, new_hmask));
-	}
-	ASSERT(new_hmask >= self->d_valloc);
-	ASSERT(new_hmask < self->d_hmask);
-	ASSERT(self->d_valloc > 0);
-	ASSERT(new_hmask > 0);
-	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc(new_hmask, self->d_valloc);
-	old_vtab = _DeeDict_GetRealVTab(self);
-	ASSERT(old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab);
-	new_vtab = (struct Dee_dict_item *)Dee_TryRealloc(old_vtab, new_tabsize);
-	if unlikely(!new_vtab)
-		new_vtab = old_vtab;
-	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_hmask = new_hmask;
-
-	dict_htab_rebuild(self);
-}
-
-
-/* Shrink the vtab+htab. Must be called while:
- * - holding a write-lock
- * - _DeeDict_CanShrinkVTab(self) is true
- * - _DeeDict_ShouldShrinkVTab(self) is true (or `fully_shrink=true') */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
-	bool must_rebuild_htab = false;
-	struct Dee_dict_item *old_vtab;
-	struct Dee_dict_item *new_vtab;
-	size_t old_valloc;
-	size_t new_valloc;
-	size_t new_tabsize;
-	size_t old_hmask;
-	size_t new_hmask;
-	shift_t old_hidxio;
-	shift_t new_hidxio;
-	ASSERT(DeeDict_LockWriting(self));
-	ASSERT(_DeeDict_CanShrinkVTab(self));
-	ASSERT(_DeeDict_ShouldShrinkVTab(self) || fully_shrink);
-	old_vtab = _DeeDict_GetRealVTab(self);
-	if unlikely(!self->d_vused) {
-		/* Special case: dict is now empty -> clear all data. */
-		self->d_valloc  = 0;
-		self->d_vsize   = 0;
-		_DeeDict_SetVirtVTab(self, DeeDict_EmptyVTab);
-		self->d_hmask   = 0;
-		self->d_hidxget = &Dee_dict_gethidx8;
-		self->d_hidxset = &Dee_dict_sethidx8;
-		self->d_htab    = DeeDict_EmptyHTab;
-		if (old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab)
-			Dee_Free(old_vtab);
-		return;
-	}
-
-	/* Optimize the dict so we don't have to transfer deleted
-	 * items, and can shrink even more when `fully_shrink=true' */
-	if (_DeeDict_CanOptimizeVTab(self)) {
-		dict_do_optimize_vtab_without_rebuild(self);
-		must_rebuild_htab = true;
-	}
-
-	/* Calculate changes in buffer size */
-	ASSERT(self->d_vsize < self->d_valloc);
-	old_valloc = self->d_valloc;
-	new_valloc = fully_shrink ? self->d_vsize : _DeeDict_ShouldShrinkVTab_NEWALLOC(self);
-	ASSERT(new_valloc >= self->d_vsize);
-	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(old_valloc);
-	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
-	ASSERT(new_hidxio <= old_hidxio);
-	old_hmask = self->d_hmask;
-	new_hmask = old_hmask;
-	if (fully_shrink) {
-		while (_DeeDict_CanShrinkHTab2(self->d_valloc, new_hmask))
-			new_hmask >>= 1;
-	} else {
-		while (_DeeDict_ShouldShrinkHTab2(self->d_valloc, new_hmask))
-			new_hmask >>= 1;
-	}
-	ASSERT(new_hmask <= old_hmask);
-
-	/* Shrink dict hash-table in-place (so we can then inplace-realloc-trunc the table heap area) */
-	if (old_hmask == new_hmask) {
-		if (!must_rebuild_htab) {
-			void *old_htab = old_vtab + old_valloc;
-			void *new_htab = old_vtab + new_valloc;
-			if (new_hidxio == old_hidxio) {
-				(*Dee_dict_hidxio[new_hidxio].dhxio_movdown)(new_htab, old_htab, self->d_hmask + 1);
-			} else {
-				shift_t current_hidxio;
-				(*Dee_dict_hidxio[old_hidxio].dhxio_dwn)(new_htab, old_htab, self->d_hmask + 1);
-				current_hidxio = old_hidxio - 1;
-				while (current_hidxio > new_hidxio) {
-					(*Dee_dict_hidxio[current_hidxio].dhxio_dwn)(new_htab, new_htab, self->d_hmask + 1);
-					--current_hidxio;
-				}
-			}
-		}
-	} else {
-		must_rebuild_htab = true;
-	}
-
-	/* Actually realloc the dict tables. */
-	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
-	ASSERT(new_valloc < old_valloc);
-	ASSERT(new_valloc >= self->d_vsize);
-	ASSERTF(old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab,
-	        "The empty table should have been handled by '!self->d_vused'");
-	new_vtab = (struct Dee_dict_item *)Dee_TryRealloc(old_vtab, new_tabsize);
-	if unlikely(!new_vtab)
-		new_vtab = old_vtab; /* Shouldn't get here because the new table is always smaller! */
-
-	/* Assign new tables / control values. */
-	self->d_valloc = new_valloc;
-	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_htab   = new_vtab + new_valloc;
-	self->d_hmask  = new_hmask;
-
-	/* Re-build the hash-table if necessary. */
-	if (must_rebuild_htab)
-		dict_htab_rebuild_after_optimize(self);
+dict_makespace_at_impl(Dict *__restrict self, /*real*/ Dee_dict_vidx_t vtab_idx) {
+	struct Dee_dict_item *vtab = _DeeDict_GetRealVTab(self);
+	ASSERT(vtab_idx < self->d_vsize);
+	memmoveupc(&vtab[vtab_idx + 1], &vtab[vtab_idx],
+	           self->d_vsize - vtab_idx, sizeof(struct Dee_dict_item));
+	dict_htab_incafter(self, Dee_dict_vidx_tovirt(vtab_idx));
 }
-
 
 LOCAL NONNULL((1)) void DCALL
-dict_autoshrink(Dict *__restrict self) {
-	if (_DeeDict_ShouldShrinkVTab(self))
-		dict_shrink_vtab_and_htab(self, false);
-}
-
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_makespace_at(Dict *__restrict self, /*real*/ Dee_dict_vidx_t vtab_idx) {
 	ASSERT(vtab_idx <= self->d_vsize);
-	if (vtab_idx < self->d_vsize) {
-		struct Dee_dict_item *vtab = _DeeDict_GetRealVTab(self);
-		memmoveupc(&vtab[vtab_idx + 1], &vtab[vtab_idx],
-		           self->d_vsize - vtab_idx, sizeof(struct Dee_dict_item));
-		dict_htab_incafter(self, Dee_dict_vidx_tovirt(vtab_idx));
-	}
+	if (vtab_idx < self->d_vsize)
+		dict_makespace_at_impl(self, vtab_idx);
 }
 
 
@@ -2087,7 +2106,7 @@ again:
 	}
 	copy_hidxio = DEE_DICT_HIDXIO_FROMALLOC(copy_valloc);
 	copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
-	copy_tabs   = Dee_TryMalloc(copy_tabssz);
+	copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
 
 	/* Try to allocate smaller tables if the first allocation failed. */
 	if unlikely(!copy_tabs) {
@@ -2096,16 +2115,16 @@ again:
 			copy_valloc = other->d_valloc;
 		copy_hidxio = DEE_DICT_HIDXIO_FROMALLOC(copy_valloc);
 		copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
-		copy_tabs   = Dee_TryMalloc(copy_tabssz);
+		copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
 		if unlikely(!copy_tabs) {
 			DeeDict_LockEndRead(other);
-			copy_tabs = Dee_Malloc(copy_tabssz);
+			copy_tabs = _DeeDict_TabsMalloc(copy_tabssz);
 			if unlikely(!copy_tabs)
 				goto err;
 			DeeDict_LockReadAndOptimize(other);
 			if unlikely(copy_vsize < other->d_vsize) {
 				DeeDict_LockEndRead(other);
-				Dee_Free(copy_tabs);
+				_DeeDict_TabsFree(copy_tabs);
 				goto again;
 			}
 		}
@@ -2282,7 +2301,7 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 err_r:
 	/* Free "result" without inheriting references to already inserted key/value pairs */
 	if likely(_DeeDict_GetVirtVTab(result) != DeeDict_EmptyVTab)
-		Dee_Free(_DeeDict_GetRealVTab(result));
+		_DeeDict_TabsFree(_DeeDict_GetRealVTab(result));
 	Dee_DecrefNokill(&DeeDict_Type);
 	DeeGCObject_FREE(result);
 err:
@@ -2300,7 +2319,7 @@ dict_fini(Dict *__restrict self) {
 				Dee_Decref(vtab[i].di_value);
 			}
 		}
-		Dee_Free(vtab);
+		_DeeDict_TabsFree(vtab);
 	}
 }
 
@@ -2353,7 +2372,7 @@ init_empty:
 		valloc = dict_valloc_from_hmask_and_count(hmask, num_items, allow_overalloc);
 		hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
 		tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, hidxio);
-		tabs   = Dee_TryCalloc(tabssz);
+		tabs   = _DeeDict_TabsTryCalloc(tabssz);
 		if unlikely(!tabs)
 			goto init_empty;
 	}
@@ -2678,7 +2697,7 @@ dict_mh_clear(Dict *__restrict self) {
 			Dee_Decref(vtab[i].di_value);
 		}
 	}
-	Dee_Free(vtab);
+	_DeeDict_TabsFree(vtab);
 	return 0;
 }
 
@@ -3079,22 +3098,22 @@ again:
 		DeeDict_LockEndWrite(self);
 		return 0;
 	}
-	old_objv = (DREF DeeObject **)Dee_TryMallocc(used.dse_count, sizeof(DREF DeeObject *));
+	old_objv = (DREF DeeObject **)Dee_TryMallocac(used.dse_count, sizeof(DREF DeeObject *));
 	if unlikely(!old_objv) {
 		struct dict_seq_erase_data new_used;
 		DeeDict_LockEndWrite(self);
-		old_objv = (DREF DeeObject **)Dee_Mallocc(used.dse_count, sizeof(DREF DeeObject *));
+		old_objv = (DREF DeeObject **)Dee_Mallocac(used.dse_count, sizeof(DREF DeeObject *));
 		if unlikely(!old_objv)
 			goto err;
 		DeeDict_LockWrite(self);
 		if unlikely(dict_seq_erase_data_init(&new_used, self, start, count)) {
 			DeeDict_LockEndWrite(self);
-			Dee_Free(old_objv);
+			Dee_Freea(old_objv);
 			return 0;
 		}
 		if unlikely(new_used.dse_count != used.dse_count) {
 			DeeDict_LockEndWrite(self);
-			Dee_Free(old_objv);
+			Dee_Freea(old_objv);
 			goto again;
 		}
 		used.dse_start = new_used.dse_start;
@@ -3120,7 +3139,7 @@ again:
 	dict_autoshrink(self);
 	DeeDict_LockEndWrite(self);
 	Dee_Decrefv(old_objv, used.dse_count * 2);
-	Dee_Free(old_objv);
+	Dee_Freea(old_objv);
 	return 0;
 err:
 	return -1;
@@ -3347,9 +3366,10 @@ dict_shrink_impl(Dict *__restrict self, bool fully_shrink) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_shrink(Dict *__restrict self, size_t argc, DeeObject *const *argv) {
+dict_shrink(Dict *__restrict self, size_t argc,
+            DeeObject *const *argv, DeeObject *kw) {
 	bool result, fully = true;
-	if (DeeArg_Unpack(argc, argv, "|b:shrink", &fully))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__fully, "|b:shrink", &fully))
 		goto err;
 	result = dict_shrink_impl(self, fully);
 	return_bool_(result);
@@ -3641,13 +3661,13 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD_HINTREF(map_popitem),
 	TYPE_METHOD_HINTREF(map_remove),
 
-	TYPE_METHOD("shrink", &dict_shrink,
-	            "(fully=!t)->?Dbool\n"
-	            "#pfully{when !f, the same sort of shrinking as done automatically as items are removed. "
-	            /*   */ "When !t, force deallocation of #Iall unused items, even if that ruins hash "
-	            /*   */ "characteristics / memory efficiency}\n"
-	            "#r{Returns !t if memory was released}"
-	            "Release unused memory"),
+	TYPE_KWMETHOD("shrink", &dict_shrink,
+	              "(fully=!t)->?Dbool\n"
+	              "#pfully{when !f, the same sort of shrinking as done automatically as items are removed. "
+	              /*   */ "When !t, force deallocation of #Iall unused items, even if that ruins hash "
+	              /*   */ "characteristics / memory efficiency}\n"
+	              "#r{Returns !t if memory was released}"
+	              "Release unused memory"),
 
 	TYPE_METHOD_HINTREF(explicit_seq_xchitem),
 	TYPE_METHOD_HINTREF(explicit_seq_erase),
