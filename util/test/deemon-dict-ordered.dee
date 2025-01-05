@@ -1,0 +1,103 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+/* Check if "CONFIG_EXPERIMENTAL_ORDERED_DICTS" was enabled when building deemon.
+ * TODO: Remove this check once "CONFIG_EXPERIMENTAL_ORDERED_DICTS" becomes mandatory */ 
+if (!hasattr(Dict, "__valloc__"))
+	return;
+
+/* A simple test */
+local d = Dict({ "foo": 1, "bar": 2, "foo": 3, true: "yes", false: "no" });
+assert { ("bar", 2), ("foo", 3), (true, "yes"), (false, "no") } == d;
+
+local d = Dict();
+d["first"] = 10;
+d["second"] = 17;
+d["third"] = 9;
+
+/* The order of insertion is remembered here! */
+assert { ("first", 10), ("second", 17), ("third", 9) } == d;
+assert { ("first", 10), ("third", 9), ("second", 17) } != d;
+assert { "first", "second", "third" } == d.keys;
+assert { "first", "third", "second" } != d.keys;
+assert { 10, 17, 9 } == d.values;
+assert { 10, 9, 17 } != d.values;
+assert #d == 3;
+
+/* When overwriting some existing key's value, the new key gets re-added at the end! */
+d["second"] = 18;
+assert { ("first", 10), ("third", 9), ("second", 18) } == d;
+assert { ("first", 10), ("second", 18), ("third", 9) } != d;
+assert { "first", "third", "second" } == d.keys;
+assert { "first", "second", "third" } != d.keys;
+assert { 10, 9, 18 } == d.values;
+assert { 10, 18, 9 } != d.values;
+assert #d == 3;
+
+del d["second"];
+assert { ("first", 10), ("third", 9) } == d;
+assert { "first", "third" } == d.keys;
+assert { 10, 9 } == d.values;
+assert #d == 2;
+
+//TODO:d.insert(0, ("huh?", "yes"));
+//TODO:assert { ("huh?", "yes"), ("first", 10), ("third", 9) } == d;
+//TODO:assert { "huh?", "first", "third" } == d.keys;
+//TODO:assert { "yes", 10, 9 } == d.values;
+//TODO:assert #d == 3;
+
+d.clear();
+
+
+/* Some simple and easy to debug (because hash(int) == int) */
+for (local i: [:1024])
+	d[i] = f"Jo! {i * 2}";
+assert #d == 1024;
+local expected = 0;
+for (local key, value: d) {
+	assert (expected) == key;
+	assert f"Jo! {expected * 2}" == value;
+	++expected;
+}
+d.clear();
+
+
+/* The same test again, but more complicated (because hash(str(int)) != int) */
+for (local i: [:1024])
+	d[str i] = f"Jo! {i * 2}";
+assert #d == 1024;
+local expected = 0;
+for (local key, value: d) {
+	assert str(expected) == key;
+	assert expected == int(key);
+	assert f"Jo! {expected * 2}" == value;
+	++expected;
+}
+d.clear();
+
+assert !d;
+assert !#d;
+assert !d.__valloc__;
+assert !d.__vsize__;
+assert !d.__vused__;
+assert !d.__hmask__;

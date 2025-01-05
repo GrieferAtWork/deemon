@@ -1199,12 +1199,14 @@ dict_trygrow_vtab_and_htab(Dict *__restrict self) {
 			(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, old_htab, old_hmask + 1);
 		} else {
 			(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, old_htab, old_hmask + 1);
-			self->d_hidxget = Dee_dict_hidxio[old_hidxio].dhxio_get;
-			self->d_hidxset = Dee_dict_hidxio[old_hidxio].dhxio_set;
+			self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+			self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
 		}
 	} else {
 		/* Must rebuild d_htab */
 		self->d_hmask = new_hmask;
+		self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+		self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
 		dict_htab_rebuild(self);
 	}
 #ifndef NDEBUG
@@ -3492,6 +3494,18 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	            /*   */ "characteristics / memory efficiency}\n"
 	            "#r{Returns !t if memory was released}"
 	            "Release unused memory"),
+
+	/* TODO: Need a way of declare the presence of sequence method hints that would normally be
+	 *       incompatible with a type's native sequence type. This needs to be done by having
+	 *       some alternative symbol name. e.g. "__seq_xchitem__" that is checked for by the
+	 *       sequence API resolver. */
+//TODO:	TYPE_METHOD_HINTREF(seq_xchitem),
+//TODO:	TYPE_METHOD_HINTREF(seq_erase),
+//TODO:	TYPE_METHOD_HINTREF(seq_insert),
+//TODO:	TYPE_METHOD_HINTREF(seq_append),
+//TODO:	TYPE_METHOD_HINTREF(seq_pop),
+//TODO:	TYPE_METHOD_HINTREF(seq_removeif),
+//TODO:	TYPE_METHOD_HINTREF(seq_reverse),
 	TYPE_METHOD_END
 };
 
