@@ -60,11 +60,11 @@ assert { "first", "third" } == d.keys;
 assert { 10, 9 } == d.values;
 assert #d == 2;
 
-//TODO:d.insert(0, ("huh?", "yes"));
-//TODO:assert { ("huh?", "yes"), ("first", 10), ("third", 9) } == d;
-//TODO:assert { "huh?", "first", "third" } == d.keys;
-//TODO:assert { "yes", 10, 9 } == d.values;
-//TODO:assert #d == 3;
+d.insert(0, ("huh?", "yes"));
+assert { ("huh?", "yes"), ("first", 10), ("third", 9) } == d;
+assert { "huh?", "first", "third" } == d.keys;
+assert { "yes", 10, 9 } == d.values;
+assert #d == 3;
 
 d.clear();
 

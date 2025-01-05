@@ -7697,6 +7697,8 @@ DECL_END
 #ifndef __INTELLISENSE__
 #define DEFINE_DeeSeq_DefaultFooWithCallAttrFoo
 #include "default-api-methods-attrproxy-impl.c.inl"
+#define DEFINE_DeeSeq_DefaultFooWithCallAttrExplicitFoo
+#include "default-api-methods-attrproxy-impl.c.inl"
 #define DEFINE_DeeSeq_DefaultFooWithCallFooDataFunction
 #include "default-api-methods-attrproxy-impl.c.inl"
 #define DEFINE_DeeSeq_DefaultFooWithCallFooDataMethod

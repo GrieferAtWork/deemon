@@ -93,7 +93,188 @@ enum {
 	DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeMH_##attr_name) wrapper_params;           \
 	DDATDEF char const DeeMH_##attr_name##_doc[];                                                    \
 	DDATDEF char const DeeMH_##attr_name##_name[];
+#define Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(new_attr_name, alias_method_name, old_attr_name) \
+	DDATDEF char const DeeMH_##new_attr_name##_name[];
 #include "method-hints.def"
+
+
+/*[[[deemon
+@@Method hint aliases: (nameAsUsedIn_TYPE_METHOD_HINTREF, attributeName, nameOfAliasedHint)
+local MH_ALIASES = [];
+#define Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(new_attr_name, alias_method_name, old_attr_name) \
+	MH_ALIASES.append((#new_attr_name, alias_method_name, #old_attr_name));
+#include "method-hints.def"
+
+local longestNewName = MH_ALIASES.each.first.length > ...;
+for (local newName, none, oldName: MH_ALIASES) {
+	print("#define DeeMH_", newName.ljust(longestNewName), "                  DeeMH_", oldName);
+	print("#define DeeMH_", (newName + "_doc").ljust(longestNewName + 4), "              DeeMH_", oldName, "_doc");
+	print("#define _Dee_TMH_WRAPPER_FLAGS_", newName.ljust(longestNewName), " _Dee_TMH_WRAPPER_FLAGS_", oldName);
+}
+]]]*/
+#define DeeMH_explicit_seq_enumerate                   DeeMH_seq_enumerate
+#define DeeMH_explicit_seq_enumerate_doc               DeeMH_seq_enumerate_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_enumerate  _Dee_TMH_WRAPPER_FLAGS_seq_enumerate
+#define DeeMH_explicit_seq_any                         DeeMH_seq_any
+#define DeeMH_explicit_seq_any_doc                     DeeMH_seq_any_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_any        _Dee_TMH_WRAPPER_FLAGS_seq_any
+#define DeeMH_explicit_seq_all                         DeeMH_seq_all
+#define DeeMH_explicit_seq_all_doc                     DeeMH_seq_all_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_all        _Dee_TMH_WRAPPER_FLAGS_seq_all
+#define DeeMH_explicit_seq_parity                      DeeMH_seq_parity
+#define DeeMH_explicit_seq_parity_doc                  DeeMH_seq_parity_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_parity     _Dee_TMH_WRAPPER_FLAGS_seq_parity
+#define DeeMH_explicit_seq_reduce                      DeeMH_seq_reduce
+#define DeeMH_explicit_seq_reduce_doc                  DeeMH_seq_reduce_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_reduce     _Dee_TMH_WRAPPER_FLAGS_seq_reduce
+#define DeeMH_explicit_seq_min                         DeeMH_seq_min
+#define DeeMH_explicit_seq_min_doc                     DeeMH_seq_min_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_min        _Dee_TMH_WRAPPER_FLAGS_seq_min
+#define DeeMH_explicit_seq_max                         DeeMH_seq_max
+#define DeeMH_explicit_seq_max_doc                     DeeMH_seq_max_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_max        _Dee_TMH_WRAPPER_FLAGS_seq_max
+#define DeeMH_explicit_seq_sum                         DeeMH_seq_sum
+#define DeeMH_explicit_seq_sum_doc                     DeeMH_seq_sum_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_sum        _Dee_TMH_WRAPPER_FLAGS_seq_sum
+#define DeeMH_explicit_seq_count                       DeeMH_seq_count
+#define DeeMH_explicit_seq_count_doc                   DeeMH_seq_count_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_count      _Dee_TMH_WRAPPER_FLAGS_seq_count
+#define DeeMH_explicit_seq_contains                    DeeMH_seq_contains
+#define DeeMH_explicit_seq_contains_doc                DeeMH_seq_contains_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_contains   _Dee_TMH_WRAPPER_FLAGS_seq_contains
+#define DeeMH_explicit_seq_locate                      DeeMH_seq_locate
+#define DeeMH_explicit_seq_locate_doc                  DeeMH_seq_locate_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_locate     _Dee_TMH_WRAPPER_FLAGS_seq_locate
+#define DeeMH_explicit_seq_rlocate                     DeeMH_seq_rlocate
+#define DeeMH_explicit_seq_rlocate_doc                 DeeMH_seq_rlocate_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_rlocate    _Dee_TMH_WRAPPER_FLAGS_seq_rlocate
+#define DeeMH_explicit_seq_startswith                  DeeMH_seq_startswith
+#define DeeMH_explicit_seq_startswith_doc              DeeMH_seq_startswith_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_startswith _Dee_TMH_WRAPPER_FLAGS_seq_startswith
+#define DeeMH_explicit_seq_endswith                    DeeMH_seq_endswith
+#define DeeMH_explicit_seq_endswith_doc                DeeMH_seq_endswith_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_endswith   _Dee_TMH_WRAPPER_FLAGS_seq_endswith
+#define DeeMH_explicit_seq_find                        DeeMH_seq_find
+#define DeeMH_explicit_seq_find_doc                    DeeMH_seq_find_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_find       _Dee_TMH_WRAPPER_FLAGS_seq_find
+#define DeeMH_explicit_seq_rfind                       DeeMH_seq_rfind
+#define DeeMH_explicit_seq_rfind_doc                   DeeMH_seq_rfind_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_rfind      _Dee_TMH_WRAPPER_FLAGS_seq_rfind
+#define DeeMH_explicit_seq_erase                       DeeMH_seq_erase
+#define DeeMH_explicit_seq_erase_doc                   DeeMH_seq_erase_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_erase      _Dee_TMH_WRAPPER_FLAGS_seq_erase
+#define DeeMH_explicit_seq_insert                      DeeMH_seq_insert
+#define DeeMH_explicit_seq_insert_doc                  DeeMH_seq_insert_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_insert     _Dee_TMH_WRAPPER_FLAGS_seq_insert
+#define DeeMH_explicit_seq_insertall                   DeeMH_seq_insertall
+#define DeeMH_explicit_seq_insertall_doc               DeeMH_seq_insertall_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_insertall  _Dee_TMH_WRAPPER_FLAGS_seq_insertall
+#define DeeMH_explicit_seq_pushfront                   DeeMH_seq_pushfront
+#define DeeMH_explicit_seq_pushfront_doc               DeeMH_seq_pushfront_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_pushfront  _Dee_TMH_WRAPPER_FLAGS_seq_pushfront
+#define DeeMH_explicit_seq_append                      DeeMH_seq_append
+#define DeeMH_explicit_seq_append_doc                  DeeMH_seq_append_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_append     _Dee_TMH_WRAPPER_FLAGS_seq_append
+#define DeeMH_explicit_seq_extend                      DeeMH_seq_extend
+#define DeeMH_explicit_seq_extend_doc                  DeeMH_seq_extend_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_extend     _Dee_TMH_WRAPPER_FLAGS_seq_extend
+#define DeeMH_explicit_seq_xchitem                     DeeMH_seq_xchitem
+#define DeeMH_explicit_seq_xchitem_doc                 DeeMH_seq_xchitem_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_xchitem    _Dee_TMH_WRAPPER_FLAGS_seq_xchitem
+#define DeeMH_explicit_seq_clear                       DeeMH_seq_clear
+#define DeeMH_explicit_seq_clear_doc                   DeeMH_seq_clear_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_clear      _Dee_TMH_WRAPPER_FLAGS_seq_clear
+#define DeeMH_explicit_seq_pop                         DeeMH_seq_pop
+#define DeeMH_explicit_seq_pop_doc                     DeeMH_seq_pop_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_pop        _Dee_TMH_WRAPPER_FLAGS_seq_pop
+#define DeeMH_explicit_seq_remove                      DeeMH_seq_remove
+#define DeeMH_explicit_seq_remove_doc                  DeeMH_seq_remove_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_remove     _Dee_TMH_WRAPPER_FLAGS_seq_remove
+#define DeeMH_explicit_seq_rremove                     DeeMH_seq_rremove
+#define DeeMH_explicit_seq_rremove_doc                 DeeMH_seq_rremove_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_rremove    _Dee_TMH_WRAPPER_FLAGS_seq_rremove
+#define DeeMH_explicit_seq_removeall                   DeeMH_seq_removeall
+#define DeeMH_explicit_seq_removeall_doc               DeeMH_seq_removeall_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_removeall  _Dee_TMH_WRAPPER_FLAGS_seq_removeall
+#define DeeMH_explicit_seq_removeif                    DeeMH_seq_removeif
+#define DeeMH_explicit_seq_removeif_doc                DeeMH_seq_removeif_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_removeif   _Dee_TMH_WRAPPER_FLAGS_seq_removeif
+#define DeeMH_explicit_seq_resize                      DeeMH_seq_resize
+#define DeeMH_explicit_seq_resize_doc                  DeeMH_seq_resize_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_resize     _Dee_TMH_WRAPPER_FLAGS_seq_resize
+#define DeeMH_explicit_seq_fill                        DeeMH_seq_fill
+#define DeeMH_explicit_seq_fill_doc                    DeeMH_seq_fill_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_fill       _Dee_TMH_WRAPPER_FLAGS_seq_fill
+#define DeeMH_explicit_seq_reverse                     DeeMH_seq_reverse
+#define DeeMH_explicit_seq_reverse_doc                 DeeMH_seq_reverse_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_reverse    _Dee_TMH_WRAPPER_FLAGS_seq_reverse
+#define DeeMH_explicit_seq_reversed                    DeeMH_seq_reversed
+#define DeeMH_explicit_seq_reversed_doc                DeeMH_seq_reversed_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_reversed   _Dee_TMH_WRAPPER_FLAGS_seq_reversed
+#define DeeMH_explicit_seq_sort                        DeeMH_seq_sort
+#define DeeMH_explicit_seq_sort_doc                    DeeMH_seq_sort_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_sort       _Dee_TMH_WRAPPER_FLAGS_seq_sort
+#define DeeMH_explicit_seq_sorted                      DeeMH_seq_sorted
+#define DeeMH_explicit_seq_sorted_doc                  DeeMH_seq_sorted_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_sorted     _Dee_TMH_WRAPPER_FLAGS_seq_sorted
+#define DeeMH_explicit_seq_bfind                       DeeMH_seq_bfind
+#define DeeMH_explicit_seq_bfind_doc                   DeeMH_seq_bfind_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_bfind      _Dee_TMH_WRAPPER_FLAGS_seq_bfind
+#define DeeMH_explicit_seq_bposition                   DeeMH_seq_bposition
+#define DeeMH_explicit_seq_bposition_doc               DeeMH_seq_bposition_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_bposition  _Dee_TMH_WRAPPER_FLAGS_seq_bposition
+#define DeeMH_explicit_seq_brange                      DeeMH_seq_brange
+#define DeeMH_explicit_seq_brange_doc                  DeeMH_seq_brange_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_seq_brange     _Dee_TMH_WRAPPER_FLAGS_seq_brange
+#define DeeMH_explicit_set_insert                      DeeMH_set_insert
+#define DeeMH_explicit_set_insert_doc                  DeeMH_set_insert_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_set_insert     _Dee_TMH_WRAPPER_FLAGS_set_insert
+#define DeeMH_explicit_set_remove                      DeeMH_set_remove
+#define DeeMH_explicit_set_remove_doc                  DeeMH_set_remove_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_set_remove     _Dee_TMH_WRAPPER_FLAGS_set_remove
+#define DeeMH_explicit_set_unify                       DeeMH_set_unify
+#define DeeMH_explicit_set_unify_doc                   DeeMH_set_unify_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_set_unify      _Dee_TMH_WRAPPER_FLAGS_set_unify
+#define DeeMH_explicit_set_insertall                   DeeMH_set_insertall
+#define DeeMH_explicit_set_insertall_doc               DeeMH_set_insertall_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_set_insertall  _Dee_TMH_WRAPPER_FLAGS_set_insertall
+#define DeeMH_explicit_set_removeall                   DeeMH_set_removeall
+#define DeeMH_explicit_set_removeall_doc               DeeMH_set_removeall_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_set_removeall  _Dee_TMH_WRAPPER_FLAGS_set_removeall
+#define DeeMH_explicit_set_pop                         DeeMH_set_pop
+#define DeeMH_explicit_set_pop_doc                     DeeMH_set_pop_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_set_pop        _Dee_TMH_WRAPPER_FLAGS_set_pop
+#define DeeMH_explicit_map_setold                      DeeMH_map_setold
+#define DeeMH_explicit_map_setold_doc                  DeeMH_map_setold_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_setold     _Dee_TMH_WRAPPER_FLAGS_map_setold
+#define DeeMH_explicit_map_setold_ex                   DeeMH_map_setold_ex
+#define DeeMH_explicit_map_setold_ex_doc               DeeMH_map_setold_ex_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_setold_ex  _Dee_TMH_WRAPPER_FLAGS_map_setold_ex
+#define DeeMH_explicit_map_setnew                      DeeMH_map_setnew
+#define DeeMH_explicit_map_setnew_doc                  DeeMH_map_setnew_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_setnew     _Dee_TMH_WRAPPER_FLAGS_map_setnew
+#define DeeMH_explicit_map_setnew_ex                   DeeMH_map_setnew_ex
+#define DeeMH_explicit_map_setnew_ex_doc               DeeMH_map_setnew_ex_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_setnew_ex  _Dee_TMH_WRAPPER_FLAGS_map_setnew_ex
+#define DeeMH_explicit_map_setdefault                  DeeMH_map_setdefault
+#define DeeMH_explicit_map_setdefault_doc              DeeMH_map_setdefault_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_setdefault _Dee_TMH_WRAPPER_FLAGS_map_setdefault
+#define DeeMH_explicit_map_update                      DeeMH_map_update
+#define DeeMH_explicit_map_update_doc                  DeeMH_map_update_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_update     _Dee_TMH_WRAPPER_FLAGS_map_update
+#define DeeMH_explicit_map_remove                      DeeMH_map_remove
+#define DeeMH_explicit_map_remove_doc                  DeeMH_map_remove_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_remove     _Dee_TMH_WRAPPER_FLAGS_map_remove
+#define DeeMH_explicit_map_removekeys                  DeeMH_map_removekeys
+#define DeeMH_explicit_map_removekeys_doc              DeeMH_map_removekeys_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_removekeys _Dee_TMH_WRAPPER_FLAGS_map_removekeys
+#define DeeMH_explicit_map_pop                         DeeMH_map_pop
+#define DeeMH_explicit_map_pop_doc                     DeeMH_map_pop_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_pop        _Dee_TMH_WRAPPER_FLAGS_map_pop
+#define DeeMH_explicit_map_popitem                     DeeMH_map_popitem
+#define DeeMH_explicit_map_popitem_doc                 DeeMH_map_popitem_doc
+#define _Dee_TMH_WRAPPER_FLAGS_explicit_map_popitem    _Dee_TMH_WRAPPER_FLAGS_map_popitem
+/*[[[end]]]*/
 
 
 

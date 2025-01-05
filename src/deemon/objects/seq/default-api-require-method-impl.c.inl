@@ -20,7 +20,7 @@
 #ifdef __INTELLISENSE__
 #include "default-api.c"
 //#define DEFINE_DeeType_RequireSeqTryGetFirst
-//#define DEFINE_DeeType_RequireSeqGetFirst
+#define DEFINE_DeeType_RequireSeqGetFirst
 //#define DEFINE_DeeType_RequireSeqBoundFirst
 //#define DEFINE_DeeType_RequireSeqDelFirst
 //#define DEFINE_DeeType_RequireSetFirst
@@ -86,7 +86,7 @@
 //#define DEFINE_DeeType_RequireSeqAppend
 //#define DEFINE_DeeType_RequireSeqExtend
 //#define DEFINE_DeeType_RequireSeqXchItemIndex
-#define DEFINE_DeeType_RequireSeqClear
+//#define DEFINE_DeeType_RequireSeqClear
 //#define DEFINE_DeeType_RequireSeqPop
 //#define DEFINE_DeeType_RequireSeqRemove
 //#define DEFINE_DeeType_RequireSeqRemoveWithKey
@@ -909,7 +909,7 @@ DECL_BEGIN
 #else /* LOCAL_WITHOUT_ATTRIBUTE || LOCAL_IS_GETSET */
 #define LOCAL_method_foo LOCAL_Attr_foo
 #endif /* !LOCAL_WITHOUT_ATTRIBUTE && !LOCAL_IS_GETSET */
-#endif /* !LOCAL_ */
+#endif /* !LOCAL_method_foo */
 
 #ifndef LOCAL_Dee_SEQCLASS
 #define LOCAL_Dee_SEQCLASS Dee_SEQCLASS_SEQ
@@ -940,10 +940,6 @@ DECL_BEGIN
 #define LOCAL_default_seq_foo PP_CAT2(default_INVALID_LOCAL_Dee_SEQCLASS_, LOCAL_method_foo)
 #endif /* LOCAL_Dee_SEQCLASS != ... */
 #endif /* !LOCAL_default_seq_foo */
-
-#ifndef LOCAL_Attr_foo
-#define LOCAL_Attr_foo LOCAL_foo
-#endif /* !LOCAL_Attr_foo */
 
 #ifndef LOCAL_tsc_seq_foo
 #if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
@@ -1009,6 +1005,7 @@ DECL_BEGIN
 #endif /* LOCAL_Dee_SEQCLASS != ... */
 #endif /* !LOCAL_DeeSeq_RequireFoo */
 
+#define LOCAL_DeeType_RequireSeqFoo_decodeattr       PP_CAT3(DeeType_Require, LOCAL_DeeSeq_RequireFoo, _decodeattr)
 #define LOCAL_DeeType_RequireSeqFoo_private_uncached PP_CAT3(DeeType_Require, LOCAL_DeeSeq_RequireFoo, _private_uncached)
 #define LOCAL_DeeType_RequireSeqFoo_uncached         PP_CAT3(DeeType_Require, LOCAL_DeeSeq_RequireFoo, _uncached)
 #define LOCAL_DeeType_RequireSeqFoo                  PP_CAT2(DeeType_Require, LOCAL_DeeSeq_RequireFoo)
@@ -1019,15 +1016,18 @@ DECL_BEGIN
 
 #ifdef LOCAL_HAS_FOR_SEQ_SUFFIX
 #define LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq              PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttr, LOCAL_Bar, ForSeq)
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBarForSeq      PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttrExplicit, LOCAL_Bar, ForSeq)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq      PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataFunctionForSeq)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq        PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataMethodForSeq)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq      PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataKwMethodForSeq)
 #define LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap         PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttr, LOCAL_Bar, ForSetOrMap)
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBarForSetOrMap PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttrExplicit, LOCAL_Bar, ForSetOrMap)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataFunctionForSetOrMap)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap   PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataMethodForSetOrMap)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataKwMethodForSetOrMap)
 #else /* LOCAL_HAS_FOR_SEQ_SUFFIX */
 #define LOCAL_DeeSeq_DefaultFooWithCallAttrBar         PP_CAT4(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttr, LOCAL_Bar)
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBar PP_CAT4(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCallAttrExplicit, LOCAL_Bar)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataFunction)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod   PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataMethod)
 #define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod PP_CAT5(LOCAL_DeeSeq_Default, LOCAL_Foo, WithCall, LOCAL_Bar, DataKwMethod)
@@ -1041,10 +1041,162 @@ DECL_BEGIN
 #endif /* !LOCAL_DeeSeq_DefaultFooForEmpty */
 
 
+#ifndef LOCAL_WITHOUT_ATTRIBUTE
+#ifndef LOCAL_Attr_foo
+#define LOCAL_Attr_foo LOCAL_foo
+#endif /* !LOCAL_Attr_foo */
+
+#if !defined(LOCAL_EXPLICIT_Attr_foo) && !defined(LOCAL_WITHOUT_EXPLICIT_ATTRIBUTE)
+#if LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SEQ
+#define LOCAL_EXPLICIT_Attr_foo PP_CAT3(__seq_, LOCAL_Attr_foo, __)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_SET
+#define LOCAL_EXPLICIT_Attr_foo PP_CAT3(__set_, LOCAL_Attr_foo, __)
+#elif LOCAL_Dee_SEQCLASS == Dee_SEQCLASS_MAP
+#define LOCAL_EXPLICIT_Attr_foo PP_CAT3(__map_, LOCAL_Attr_foo, __)
+#endif /* LOCAL_Dee_SEQCLASS != ... */
+#endif /* !LOCAL_EXPLICIT_Attr_foo && !LOCAL_WITHOUT_EXPLICIT_ATTRIBUTE */
+
 #define LOCAL_CANONICAL_NAME_LENGTHOF    COMPILER_STRLEN(PP_STR(LOCAL_Attr_foo))
 #define LOCAL_CANONICAL_NAME_str         PP_CAT2(str_, LOCAL_Attr_foo)
 #define LOCAL_CANONICAL_NAME_STR         PP_CAT2(STR_, LOCAL_Attr_foo)
 #define LOCAL_CANONICAL_NAME_Dee_HashStr PP_CAT2(Dee_HashStr__, LOCAL_Attr_foo)
+
+#ifdef LOCAL_EXPLICIT_Attr_foo
+#define LOCAL_EXPLICIT_NAME_LENGTHOF    COMPILER_STRLEN(PP_STR(LOCAL_EXPLICIT_Attr_foo))
+#define LOCAL_EXPLICIT_NAME_str         PP_CAT2(str_, LOCAL_EXPLICIT_Attr_foo)
+#define LOCAL_EXPLICIT_NAME_STR         PP_CAT2(STR_, LOCAL_EXPLICIT_Attr_foo)
+#define LOCAL_EXPLICIT_NAME_Dee_HashStr PP_CAT2(Dee_HashStr__, LOCAL_EXPLICIT_Attr_foo)
+#endif /* LOCAL_EXPLICIT_Attr_foo */
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) LOCAL_Dee_mh_seq_foo_t DCALL
+LOCAL_DeeType_RequireSeqFoo_decodeattr(struct Dee_attrinfo const *info, DeeTypeObject *self
+#ifdef LOCAL_HAS_FOR_SEQ_SUFFIX
+                                       , unsigned int seqclass
+#endif /* LOCAL_HAS_FOR_SEQ_SUFFIX */
+#ifdef LOCAL_EXPLICIT_Attr_foo
+                                       , bool is_explicit
+#endif /* LOCAL_EXPLICIT_Attr_foo */
+                                       ) {
+#ifdef LOCAL_HAS_FOR_SEQ_SUFFIX
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar                                      \
+	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq \
+	                                : &LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap))
+#define LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBar                                      \
+	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBarForSeq \
+	                                : &LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBarForSetOrMap))
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction                                      \
+	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq \
+	                                : &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap))
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod                                      \
+	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq \
+	                                : &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap))
+#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod                                      \
+	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq \
+	                                : &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap))
+#endif /* LOCAL_HAS_FOR_SEQ_SUFFIX */
+
+	struct Dee_type_seq_cache *sc = DeeType_TryRequireSeqCache(self);
+	switch (info->ai_type) {
+
+#ifdef LOCAL_IS_GETSET
+	case Dee_ATTRINFO_GETSET: {
+#ifdef LOCAL_IS_GETSET_GET
+		if (info->ai_value.v_getset->gs_get != &LOCAL_default_seq_foo)
+			return info->ai_value.v_getset->gs_get;
+#elif defined(LOCAL_IS_GETSET_BOUND)
+		if (info->ai_value.v_getset->gs_bound != &LOCAL_default_seq_foo) 
+			return info->ai_value.v_getset->gs_bound;
+#elif defined(LOCAL_IS_GETSET_DEL)
+		if (info->ai_value.v_getset->gs_del != &LOCAL_default_seq_foo)
+			return info->ai_value.v_getset->gs_del;
+#elif defined(LOCAL_IS_GETSET_SET)
+		if (info->ai_value.v_getset->gs_set != &LOCAL_default_seq_foo)
+			return info->ai_value.v_getset->gs_set;
+#endif /* ... */
+		return &LOCAL_DeeSeq_DefaultFooForEmpty;
+	}	break;
+
+	case Dee_ATTRINFO_ATTR:
+		if unlikely(!sc)
+			break;
+#if defined(LOCAL_IS_GETSET_GET) || defined(LOCAL_IS_GETSET_BOUND)
+		if ((info->ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
+		    /*                             */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM))
+#else /* LOCAL_IS_GETSET_GET || LOCAL_IS_GETSET_BOUND */
+		if ((info->ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FREADONLY)) ==
+		    /*                             */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM))
+#endif /* 1LOCAL_IS_GETSET_GET && !LOCAL_IS_GETSET_BOUND */
+		{
+			struct class_desc *desc = DeeClass_DESC(self);
+			uint16_t id = info->ai_value.v_attr->ca_addr;
+			DREF DeeObject *callback;
+			Dee_class_desc_lock_read(desc);
+#if defined(LOCAL_IS_GETSET_GET) || defined(LOCAL_IS_GETSET_BOUND)
+			callback = desc->cd_members[id + Dee_CLASS_GETSET_GET];
+#elif defined(LOCAL_IS_GETSET_DEL)
+			callback = desc->cd_members[id + Dee_CLASS_GETSET_DEL];
+#elif defined(LOCAL_IS_GETSET_SET)
+			callback = desc->cd_members[id + Dee_CLASS_GETSET_SET];
+#endif /* ... */
+			Dee_XIncref(callback);
+			Dee_class_desc_lock_endread(desc);
+			if likely(callback) {
+				if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_seq_foo_data.d_function, NULL, callback))
+					Dee_Decref(callback);
+				return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
+			}
+		}
+		break;
+#else /* LOCAL_IS_GETSET */
+
+	case Dee_ATTRINFO_METHOD:
+		if ((Dee_funptr_t)info->ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo) {
+#ifdef LOCAL_TMH
+			LOCAL_Dee_mh_seq_foo_t hint;
+			hint = (LOCAL_Dee_mh_seq_foo_t)DeeType_GetPrivateMethodHint((DeeTypeObject *)info->ai_decl, LOCAL_TMH);
+			if (hint)
+				return hint;
+#endif /* LOCAL_TMH */
+			return &LOCAL_DeeSeq_DefaultFooForEmpty;
+		}
+		if unlikely(!sc)
+			break;
+		atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, info->ai_value.v_method->m_func);
+		if (info->ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
+			return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
+		return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
+
+	case Dee_ATTRINFO_ATTR:
+		if unlikely(!sc)
+			break;
+		if ((info->ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
+		    /*                             */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
+			struct class_desc *desc = DeeClass_DESC(self);
+			uint16_t id = info->ai_value.v_attr->ca_addr;
+			DREF DeeObject *callback;
+			Dee_class_desc_lock_read(desc);
+			callback = desc->cd_members[id];
+			Dee_XIncref(callback);
+			Dee_class_desc_lock_endread(desc);
+			if likely(callback) {
+				if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_seq_foo_data.d_function, NULL, callback))
+					Dee_Decref(callback);
+				return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
+			}
+		}
+		break;
+#endif /* !LOCAL_IS_GETSET */
+
+	default: break;
+	}
+#ifdef LOCAL_EXPLICIT_Attr_foo
+	if (is_explicit)
+		return &LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBar;
+#endif /* LOCAL_EXPLICIT_Attr_foo */
+	return &LOCAL_DeeSeq_DefaultFooWithCallAttrBar;
+}
+
+#endif /* !LOCAL_WITHOUT_ATTRIBUTE */
 
 
 
@@ -1057,23 +1209,33 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 #endif /* !LOCAL_WITHOUT_ATTRIBUTE */
 	(void)orig_type;
 	(void)seqclass;
-#ifdef LOCAL_HAS_FOR_SEQ_SUFFIX
-#define LOCAL_DeeSeq_DefaultFooWithCallAttrBar                                      \
-	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq \
-	                                : &LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap))
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction                                      \
-	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq \
-	                                : &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap))
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod                                      \
-	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq \
-	                                : &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap))
-#define LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod                                      \
-	(*(seqclass == Dee_SEQCLASS_SEQ ? &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq \
-	                                : &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap))
-#endif /* LOCAL_HAS_FOR_SEQ_SUFFIX */
+
+#ifndef LOCAL_WITHOUT_ATTRIBUTE
+#if defined(LOCAL_HAS_FOR_SEQ_SUFFIX) && defined(LOCAL_EXPLICIT_NAME_STR)
+#define LOCAL_INVOKE_DeeType_RequireSeqFoo_decodeattr(info, is_explicit) LOCAL_DeeType_RequireSeqFoo_decodeattr(info, self, seqclass, is_explicit)
+#elif defined(LOCAL_HAS_FOR_SEQ_SUFFIX)
+#define LOCAL_INVOKE_DeeType_RequireSeqFoo_decodeattr(info, is_explicit) LOCAL_DeeType_RequireSeqFoo_decodeattr(info, self, seqclass)
+#elif defined(LOCAL_EXPLICIT_NAME_STR)
+#define LOCAL_INVOKE_DeeType_RequireSeqFoo_decodeattr(info, is_explicit) LOCAL_DeeType_RequireSeqFoo_decodeattr(info, self, is_explicit)
+#else /* ... */
+#define LOCAL_INVOKE_DeeType_RequireSeqFoo_decodeattr(info, is_explicit) LOCAL_DeeType_RequireSeqFoo_decodeattr(info, self)
+#endif /* !... */
+
+	/* Check if the type *explicitly* defines an alias for this function. */
+#ifdef LOCAL_EXPLICIT_NAME_STR
+	if (DeeObject_TFindPrivateAttrInfoStringLenHash(self, NULL,
+	                                                LOCAL_EXPLICIT_NAME_STR,
+	                                                LOCAL_EXPLICIT_NAME_LENGTHOF,
+	                                                LOCAL_EXPLICIT_NAME_Dee_HashStr,
+	                                                &info)) {
+		/* To prevent implicit matching, a custom "tp_getattr" isn't
+		 * considered a valid target for explicit function links. */
+		if (info.ai_type != Dee_ATTRINFO_CUSTOM)
+			return LOCAL_INVOKE_DeeType_RequireSeqFoo_decodeattr(&info, true);
+	}
+#endif /* LOCAL_EXPLICIT_NAME_STR */
 
 	/* Check if the type defines an attribute matching the canonical name of this function. */
-#ifndef LOCAL_WITHOUT_ATTRIBUTE
 #ifdef LOCAL_ATTR_REQUIRED_SEQCLASS
 	if (seqclass == LOCAL_ATTR_REQUIRED_SEQCLASS)
 #else /* LOCAL_ATTR_REQUIRED_SEQCLASS */
@@ -1084,100 +1246,10 @@ LOCAL_DeeType_RequireSeqFoo_private_uncached(DeeTypeObject *orig_type, DeeTypeOb
 		                                                LOCAL_CANONICAL_NAME_STR,
 		                                                LOCAL_CANONICAL_NAME_LENGTHOF,
 		                                                LOCAL_CANONICAL_NAME_Dee_HashStr,
-		                                                &info)) {
-			struct Dee_type_seq_cache *sc = DeeType_TryRequireSeqCache(self);
-			if likely(sc) {
-				switch (info.ai_type) {
-
-#ifdef LOCAL_IS_GETSET
-				case Dee_ATTRINFO_GETSET: {
-#ifdef LOCAL_IS_GETSET_GET
-					if (info.ai_value.v_getset->gs_get != &LOCAL_default_seq_foo)
-						return info.ai_value.v_getset->gs_get;
-#elif defined(LOCAL_IS_GETSET_BOUND)
-					if (info.ai_value.v_getset->gs_bound != &LOCAL_default_seq_foo) 
-						return info.ai_value.v_getset->gs_bound;
-#elif defined(LOCAL_IS_GETSET_DEL)
-					if (info.ai_value.v_getset->gs_del != &LOCAL_default_seq_foo)
-						return info.ai_value.v_getset->gs_del;
-#elif defined(LOCAL_IS_GETSET_SET)
-					if (info.ai_value.v_getset->gs_set != &LOCAL_default_seq_foo)
-						return info.ai_value.v_getset->gs_set;
-#endif /* ... */
-					return &LOCAL_DeeSeq_DefaultFooForEmpty;
-				}	break;
-
-				case Dee_ATTRINFO_ATTR:
-#if defined(LOCAL_IS_GETSET_GET) || defined(LOCAL_IS_GETSET_BOUND)
-					if ((info.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
-					    /*                            */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM))
-#else /* LOCAL_IS_GETSET_GET || LOCAL_IS_GETSET_BOUND */
-					if ((info.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FREADONLY)) ==
-					    /*                            */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM))
-#endif /* 1LOCAL_IS_GETSET_GET && !LOCAL_IS_GETSET_BOUND */
-					{
-						struct class_desc *desc = DeeClass_DESC(self);
-						uint16_t id = info.ai_value.v_attr->ca_addr;
-						DREF DeeObject *callback;
-						Dee_class_desc_lock_read(desc);
-#if defined(LOCAL_IS_GETSET_GET) || defined(LOCAL_IS_GETSET_BOUND)
-						callback = desc->cd_members[id + Dee_CLASS_GETSET_GET];
-#elif defined(LOCAL_IS_GETSET_DEL)
-						callback = desc->cd_members[id + Dee_CLASS_GETSET_DEL];
-#elif defined(LOCAL_IS_GETSET_SET)
-						callback = desc->cd_members[id + Dee_CLASS_GETSET_SET];
-#endif /* ... */
-						Dee_XIncref(callback);
-						Dee_class_desc_lock_endread(desc);
-						if likely(callback) {
-							if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_seq_foo_data.d_function, NULL, callback))
-								Dee_Decref(callback);
-							return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
-						}
-					}
-					break;
-#else /* LOCAL_IS_GETSET */
-
-				case Dee_ATTRINFO_METHOD:
-					if ((Dee_funptr_t)info.ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo) {
-#ifdef LOCAL_TMH
-						LOCAL_Dee_mh_seq_foo_t hint;
-						hint = (LOCAL_Dee_mh_seq_foo_t)DeeType_GetPrivateMethodHint((DeeTypeObject *)info.ai_decl, LOCAL_TMH);
-						if (hint)
-							return hint;
-#endif /* LOCAL_TMH */
-						return &LOCAL_DeeSeq_DefaultFooForEmpty;
-					}
-					atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, info.ai_value.v_method->m_func);
-					if (info.ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS)
-						return &LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod;
-					return &LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod;
-
-				case Dee_ATTRINFO_ATTR:
-					if ((info.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) ==
-					    /*                                */ (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
-						struct class_desc *desc = DeeClass_DESC(self);
-						uint16_t id = info.ai_value.v_attr->ca_addr;
-						DREF DeeObject *callback;
-						Dee_class_desc_lock_read(desc);
-						callback = desc->cd_members[id];
-						Dee_XIncref(callback);
-						Dee_class_desc_lock_endread(desc);
-						if likely(callback) {
-							if unlikely(atomic_cmpxch(&sc->LOCAL_tsc_seq_foo_data.d_function, NULL, callback))
-								Dee_Decref(callback);
-							return &LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction;
-						}
-					}
-					break;
-#endif /* !LOCAL_IS_GETSET */
-
-				default: break;
-				}
-			}
-			return &LOCAL_DeeSeq_DefaultFooWithCallAttrBar;
-		}
+		                                                &info))
+			return LOCAL_INVOKE_DeeType_RequireSeqFoo_decodeattr(&info, false);
 	}
+#undef LOCAL_INVOKE_DeeType_RequireSeqFoo_decodeattr
 #endif /* !LOCAL_WITHOUT_ATTRIBUTE */
 
 #ifdef DEFINE_DeeType_RequireSeqTryGetFirst
@@ -2496,6 +2568,7 @@ LOCAL_DeeType_RequireSeqFoo(DeeTypeObject *__restrict self) {
 
 
 #undef LOCAL_Dee_SEQCLASS
+#undef LOCAL_EXPLICIT_Attr_foo
 #undef LOCAL_Attr_foo
 #undef LOCAL_NO_TMH
 #undef LOCAL_TMH
@@ -2509,19 +2582,23 @@ LOCAL_DeeType_RequireSeqFoo(DeeTypeObject *__restrict self) {
 #undef LOCAL_tsc_seq_foo_data
 #undef LOCAL_DeeSeq_Default
 #undef LOCAL_DeeSeq_RequireFoo
+#undef LOCAL_DeeType_RequireSeqFoo_decodeattr
 #undef LOCAL_DeeType_RequireSeqFoo_private_uncached
 #undef LOCAL_DeeType_RequireSeqFoo_uncached
 #undef LOCAL_DeeType_RequireSeqFoo
 #undef LOCAL_Bar
 #undef LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSeq
+#undef LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBarForSeq
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSeq
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSeq
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSeq
 #undef LOCAL_DeeSeq_DefaultFooWithCallAttrBarForSetOrMap
+#undef LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBarForSetOrMap
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunctionForSetOrMap
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethodForSetOrMap
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethodForSetOrMap
 #undef LOCAL_DeeSeq_DefaultFooWithCallAttrBar
+#undef LOCAL_DeeSeq_DefaultFooWithCallAttrExplicitBar
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataFunction
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataMethod
 #undef LOCAL_DeeSeq_DefaultFooWithCallBarDataKwMethod
@@ -2531,6 +2608,10 @@ LOCAL_DeeType_RequireSeqFoo(DeeTypeObject *__restrict self) {
 #undef LOCAL_CANONICAL_NAME_str
 #undef LOCAL_CANONICAL_NAME_STR
 #undef LOCAL_CANONICAL_NAME_Dee_HashStr
+#undef LOCAL_EXPLICIT_NAME_LENGTHOF
+#undef LOCAL_EXPLICIT_NAME_str
+#undef LOCAL_EXPLICIT_NAME_STR
+#undef LOCAL_EXPLICIT_NAME_Dee_HashStr
 #undef LOCAL_IS_GETSET_GET
 #undef LOCAL_IS_GETSET_BOUND
 #undef LOCAL_IS_GETSET_DEL
@@ -2538,6 +2619,7 @@ LOCAL_DeeType_RequireSeqFoo(DeeTypeObject *__restrict self) {
 #undef LOCAL_IS_GETSET
 #undef LOCAL_HAS_FOR_SEQ_SUFFIX
 #undef LOCAL_WITHOUT_ATTRIBUTE
+#undef LOCAL_WITHOUT_EXPLICIT_ATTRIBUTE
 #undef LOCAL_ATTR_REQUIRED_SEQCLASS
 
 DECL_END

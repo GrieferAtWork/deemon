@@ -28,6 +28,10 @@
 #define Dee_DEFINE_TYPE_METHOD_HINT_ATTR(attr_name, method_name, wrapper_flags, doc, wrapper_params)
 #endif /* !Dee_DEFINE_TYPE_METHOD_HINT_ATTR */
 
+#ifndef Dee_DEFINE_TYPE_METHOD_HINT_ALIAS
+#define Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(new_attr_name, alias_method_name, old_attr_name)
+#endif /* !Dee_DEFINE_TYPE_METHOD_HINT_ALIAS */
+
 #define Dee_DEFINE_TYPE_METHOD_HINT_METHOD_EX(attr_name, method_name, flags, doc) \
 	Dee_DEFINE_TYPE_METHOD_HINT_ATTR(attr_name, method_name, flags, doc, (DeeObject *self, size_t argc, DeeObject *const *argv))
 #define Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD_EX(attr_name, method_name, flags, doc) \
@@ -100,6 +104,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject 
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_enumerate, "enumerate",
                                      "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?O\n"
                                      "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_enumerate, "__seq_enumerate__", seq_enumerate)
 
 
 /* @return: ITER_DONE: Sequence is empty */
@@ -113,40 +118,47 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_an
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_any_with_range, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), int, DCALL, seq_any_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_any, "any", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_any, "__seq_any__", seq_any)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_all, (DeeObject *self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_all_with_key, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_all_with_range, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), int, DCALL, seq_all_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_all, "all", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_all, "__seq_all__", seq_all)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_parity, (DeeObject *self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_parity_with_key, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_parity_with_range, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), int, DCALL, seq_parity_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_parity, "parity", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_parity, "__seq_parity__", seq_parity)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_reduce, (DeeObject *self, DeeObject *combine))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_reduce_with_init, (DeeObject *self, DeeObject *combine, DeeObject *init))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_reduce_with_range, (DeeObject *self, DeeObject *combine, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_reduce_with_range_and_init, (DeeObject *self, DeeObject *combine, size_t start, size_t end, DeeObject *init))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_reduce, "reduce", "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_reduce, "__seq_reduce__", seq_reduce)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_min, (DeeObject *self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_min_with_key, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_min_with_range, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), DREF DeeObject *, DCALL, seq_min_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_min, "min", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_min, "__seq_min__", seq_min)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_max, (DeeObject *self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_max_with_key, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_max_with_range, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), DREF DeeObject *, DCALL, seq_max_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_max, "max", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_max, "__seq_max__", seq_max)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_sum, (DeeObject *self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_sum_with_range, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_sum, "sum", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_sum, "__seq_sum__", seq_sum)
 
 /* @return: * : Count
  * @return: (size_t)-1: Error */
@@ -155,6 +167,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), size_t, DCALL, 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_count_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_count_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_count, "count", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_count, "__seq_count__", seq_count)
 
 /* @return: 0 : Not contained
  * @return: 1 : Is contained
@@ -164,16 +177,19 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_contains_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_contains_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_contains, "contains", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_contains, "__seq_contains__", seq_contains)
 
 /* Returns the first element (within the given range) where `match(elem)' is true. */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_locate, (DeeObject *self, DeeObject *match, DeeObject *def))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_locate_with_range, (DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_locate, "locate", "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_locate, "__seq_locate__", seq_locate)
 
 /* Returns the last element (within the given range) where `match(elem)' is true. */
 /*Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_rlocate, (DeeObject *self, DeeObject *match, DeeObject *def))*/ /* Wouldn't make sense: for reverse, you need indices */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_rlocate_with_range, (DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rlocate, "rlocate", "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_rlocate, "__seq_rlocate__", seq_rlocate)
 
 /* @return: 0 : Does not start with
  * @return: 1 : Does start with
@@ -183,6 +199,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_startswith_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_startswith_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_startswith, "startswith", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_startswith, "__seq_startswith__", seq_startswith)
 
 /* @return: 0 : Does not end with
  * @return: 1 : Does end with
@@ -192,6 +209,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_endswith_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_endswith_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_endswith, "endswith", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_endswith, "__seq_endswith__", seq_endswith)
 
 
 /* @return: * :         Index of `item' in `self'
@@ -200,84 +218,108 @@ Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_endswith, "endswith", "(item,start=!0,e
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_find, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_find_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_find, "find", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_find, "__seq_find__", seq_find)
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_rfind, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_rfind_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rfind, "rfind", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_rfind, "__seq_rfind__", seq_rfind)
 
 /* Functions for mutable sequences. */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_erase, (DeeObject *self, size_t index, size_t count))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_erase, "erase", "(index:?Dint,count=!1)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_erase, "__seq_erase__", seq_erase)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 3)), int, DCALL, seq_insert, (DeeObject *self, size_t index, DeeObject *item))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_insert, "insert", "(index:?Dint,item)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_insert, "__seq_insert__", seq_insert)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 3)), int, DCALL, seq_insertall, (DeeObject *self, size_t index, DeeObject *items))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_insertall, "insertall", "(index:?Dint,items:?DSequence)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_insertall, "__seq_insertall__", seq_insertall)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_pushfront, (DeeObject *self, DeeObject *item))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(seq_pushfront, "pushfront", "(item)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_pushfront, "__seq_pushfront__", seq_pushfront)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_append, (DeeObject *self, DeeObject *item))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(seq_append, "append", "(item)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_append, "__seq_append__", seq_append)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_extend, (DeeObject *self, DeeObject *items))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(seq_extend, "extend", "(items:?DSequence)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_extend, "__seq_extend__", seq_extend)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 3)), DREF DeeObject *, DCALL, seq_xchitem_index, (DeeObject *self, size_t index, DeeObject *value))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_xchitem, "xchitem", "(index:?Dint,value)->")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_xchitem, "__seq_xchitem__", seq_xchitem)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_clear, (DeeObject *self))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(seq_clear, "clear", "()")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_clear, "__seq_clear__", seq_clear)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_pop, (DeeObject *self, Dee_ssize_t index)) /* When index is negative, count from end of sequence */
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_pop, "pop", "(index=!-1)->")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_pop, "__seq_pop__", seq_pop)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_remove, (DeeObject *self, DeeObject *item, size_t start, size_t end)) /* @return: 1: Removed; 0: Not removed; -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_remove_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key)) /* @return: 1: Removed; 0: Not removed; -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_remove, "remove", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_remove, "__seq_remove__", seq_remove)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_rremove, (DeeObject *self, DeeObject *item, size_t start, size_t end)) /* @return: 1: Removed; 0: Not removed; -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_rremove_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key)) /* @return: 1: Removed; 0: Not removed; -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rremove, "rremove", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_rremove, "__seq_rremove__", seq_rremove)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_removeall, (DeeObject *self, DeeObject *item, size_t start, size_t end, size_t max))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 6)), size_t, DCALL, seq_removeall_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, size_t max, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_removeall, "removeall", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_removeall, "__seq_removeall__", seq_removeall)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_removeif, (DeeObject *self, DeeObject *should, size_t start, size_t end, size_t max))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_removeif, "removeif", "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_removeif, "__seq_removeif__", seq_removeif)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 3)), int, DCALL, seq_resize, (DeeObject *self, size_t newsize, DeeObject *filler))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_resize, "resize", "(size:?Dint,filler=!N)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_resize, "__seq_resize__", seq_resize)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), int, DCALL, seq_fill, (DeeObject *self, size_t start, size_t end, DeeObject *filler))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_fill, "fill", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_fill, "__seq_fill__", seq_fill)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_reverse, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_reverse, "reverse", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_reverse, "__seq_reverse__", seq_reverse)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_reversed, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_reversed, "reversed", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_reversed, "__seq_reversed__", seq_reversed)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_sort, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), int, DCALL, seq_sort_with_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_sort, "sort", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_sort, "__seq_sort__", seq_sort)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_sorted, (DeeObject *self, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), DREF DeeObject *, DCALL, seq_sorted_with_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_sorted, "sorted", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?DSequence")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_sorted, "__seq_sorted__", seq_sorted)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_bfind, (DeeObject *self, DeeObject *item, size_t start, size_t end)) /* @return: (size_t)-1: Not found; @return (size_t)Dee_COMPARE_ERR: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_bfind_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key)) /* @return: (size_t)-1: Not found; @return (size_t)Dee_COMPARE_ERR: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_bfind, "bfind", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_bfind, "__seq_bfind__", seq_bfind)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_bposition, (DeeObject *self, DeeObject *item, size_t start, size_t end)) /* @return: (size_t)Dee_COMPARE_ERR: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_bposition_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key)) /* @return: (size_t)Dee_COMPARE_ERR: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_bposition, "bposition", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_bposition, "__seq_bposition__", seq_bposition)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_brange, (DeeObject *self, DeeObject *item, size_t start, size_t end, size_t result_range[2]))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5, 6)), int, DCALL, seq_brange_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]))
 Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_brange, "brange", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?Dint")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_brange, "__seq_brange__", seq_brange)
 
 
 
@@ -313,6 +355,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_op
  * @return: -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_insert, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(set_insert, "insert", "(key)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_set_insert, "__set_insert__", set_insert)
 
 /* Remove a key from a set
  * @return: 1 : Given `key' was removed
@@ -320,23 +363,28 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(set_insert, "insert", "(key)->?Dbool")
  * @return: -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_remove, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(set_remove, "remove", "(key)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_set_remove, "__set_remove__", set_remove)
 
 /* Insert `key' if not already present and re-return `key'.
  * If already present, return the pre-existing (and equal) instance instead.
  * @return: NULL: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, set_unify, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(set_unify, "unify", "(key)->")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_set_unify, "__set_unify__", set_unify)
 
 /* @return: 0 : Success
  * @return: -1: Error  */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_insertall, (DeeObject *self, DeeObject *keys))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(set_insertall, "insertall", "(keys:?S?O)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_set_insertall, "__set_insertall__", set_insertall)
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_removeall, (DeeObject *self, DeeObject *keys))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(set_removeall, "removeall", "(keys:?S?O)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_set_removeall, "__set_removeall__", set_removeall)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, set_pop, (DeeObject *self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, set_pop_with_default, (DeeObject *self, DeeObject *default_))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(set_pop, "pop", "(def?)->")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_set_pop, "__set_pop__", set_pop)
 
 
 
@@ -397,12 +445,14 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_op
  * @return: -1:   Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int , DCALL, map_setold, (DeeObject *self, DeeObject *key, DeeObject *value))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setold, "setold", "(key,value)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_setold, "__map_setold__", map_setold)
 
 /* @return: * :        The value of `key' was set to `value' (returned object is the old value)
  * @return: ITER_DONE: The given `key' doesn't exist (nothing was updated)
  * @return: NULL:      Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, map_setold_ex, (DeeObject *self, DeeObject *key, DeeObject *value))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setold_ex, "setold_ex", "(key,value)->?T2?Dbool?X2?O?N")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_setold_ex, "__map_setold_ex__", map_setold_ex)
 
 /* Insert a new key whilst making sure that the key doesn't already exist
  * @param: value: The value to overwrite that of `key' with (so-long as `key' already exists)
@@ -411,12 +461,14 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setold_ex, "setold_ex", "(key,value)->?T2
  * @return: -1:   Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int , DCALL, map_setnew, (DeeObject *self, DeeObject *key, DeeObject *value))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setnew, "setnew", "(key,value)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_setnew, "__map_setnew__", map_setnew)
 
 /* @return: ITER_DONE: The value of `key' was set to `value' (the key didn't exist or used to be unbound)
  * @return: * :        The given `key' already exists (nothing was inserted; returned object is the already-present value)
  * @return: -1:        Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, map_setnew_ex, (DeeObject *self, DeeObject *key, DeeObject *value))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setnew_ex, "setnew_ex", "(key,value)->?T2?Dbool?X2?O?N")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_setnew_ex, "__map_setnew_ex__", map_setnew_ex)
 
 /* Same semantic functionality as `Dee_mh_map_setnew_ex_t': insert if not already present
  * @return: * : The value associated with key after the call:
@@ -425,6 +477,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setnew_ex, "setnew_ex", "(key,value)->?T2
  * @return: NULL: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, map_setdefault, (DeeObject *self, DeeObject *key, DeeObject *value))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setdefault, "setdefault", "(key,value)->")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_setdefault, "__map_setdefault__", map_setdefault)
 
 /* Copy all key-value pairs from `items' and assign them to `self'.
  * Same as `for (local key, value: items) self[key] = value;'
@@ -432,6 +485,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_setdefault, "setdefault", "(key,value)->"
  * @return: -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int , DCALL, map_update, (DeeObject *self, DeeObject *items))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_update, "update", "(items:?M?O?O)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_update, "__map_update__", map_update)
 
 /* Remove a single key, returning true/false indicative of that key having been removed.
  * @return: 1 : Key was removed
@@ -439,6 +493,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_update, "update", "(items:?M?O?O)")
  * @return: -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int , DCALL, map_remove, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_remove, "remove", "(key)->?Dbool")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_remove, "__map_remove__", map_remove)
 
 /* Delete all keys that appear in `keys'.
  * Same as `for (local key: keys) del self[key];'
@@ -446,6 +501,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_remove, "remove", "(key)->?Dbool")
  * @return: -1: Error */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int , DCALL, map_removekeys, (DeeObject *self, DeeObject *keys))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_removekeys, "removekeys", "(keys:?S?O)")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_removekeys, "__map_removekeys__", map_removekeys)
 
 /* Remove/unbind `key' and return whatever used to be assigned to it.
  * When the key was already absent/unbound, return `default_' or throw a `KeyError'
@@ -454,10 +510,12 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_removekeys, "removekeys", "(keys:?S?O)")
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, map_pop, (DeeObject *self, DeeObject *key))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, map_pop_with_default, (DeeObject *self, DeeObject *key, DeeObject *default_))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_pop, "pop", "(key,def?)->")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_pop, "__map_pop__", map_pop)
 
 /* Remove a random key/value pair from `self' and store it in `key_and_value' (returns "none" if nothing found) */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, map_popitem, (DeeObject *self))
 Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_popitem, "popitem", "->?X2?T2?O?O?N")
+Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_map_popitem, "__map_popitem__", map_popitem)
 
 
 #ifndef Dee_DEFINE_TYPE_METHOD_HINT_TSC_ONLY
@@ -467,6 +525,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_popitem, "popitem", "->?X2?T2?O?O?N")
 #endif /* !Dee_DEFINE_TYPE_METHOD_HINT_TSC_ONLY */
 
 
+#undef Dee_DEFINE_TYPE_METHOD_HINT_ALIAS
 #undef Dee_DEFINE_TYPE_METHOD_HINT_FUNC
 #undef Dee_DEFINE_TYPE_METHOD_HINT_ATTR
 #undef Dee_DEFINE_TYPE_METHOD_HINT_METHOD_EX

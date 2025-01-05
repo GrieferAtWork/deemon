@@ -3495,17 +3495,13 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	            "#r{Returns !t if memory was released}"
 	            "Release unused memory"),
 
-	/* TODO: Need a way of declare the presence of sequence method hints that would normally be
-	 *       incompatible with a type's native sequence type. This needs to be done by having
-	 *       some alternative symbol name. e.g. "__seq_xchitem__" that is checked for by the
-	 *       sequence API resolver. */
-//TODO:	TYPE_METHOD_HINTREF(seq_xchitem),
-//TODO:	TYPE_METHOD_HINTREF(seq_erase),
-//TODO:	TYPE_METHOD_HINTREF(seq_insert),
-//TODO:	TYPE_METHOD_HINTREF(seq_append),
-//TODO:	TYPE_METHOD_HINTREF(seq_pop),
-//TODO:	TYPE_METHOD_HINTREF(seq_removeif),
-//TODO:	TYPE_METHOD_HINTREF(seq_reverse),
+	TYPE_METHOD_HINTREF(explicit_seq_xchitem),
+	TYPE_METHOD_HINTREF(explicit_seq_erase),
+	TYPE_METHOD_HINTREF(explicit_seq_insert),
+	TYPE_METHOD_HINTREF(explicit_seq_append),
+	TYPE_METHOD_HINTREF(explicit_seq_pop),
+	TYPE_METHOD_HINTREF(explicit_seq_removeif),
+	TYPE_METHOD_HINTREF(explicit_seq_reverse),
 	TYPE_METHOD_END
 };
 

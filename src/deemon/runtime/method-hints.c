@@ -32,6 +32,8 @@ DECL_BEGIN
 #define Dee_DEFINE_TYPE_METHOD_HINT_ATTR(attr_name, method_name, wrapper_flags, doc, wrapper_params) \
 	PUBLIC_CONST char const DeeMH_##attr_name##_name[] = method_name;                                \
 	PUBLIC_CONST char const DeeMH_##attr_name##_doc[] = doc;
+#define Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(new_attr_name, alias_method_name, old_attr_name) \
+	PUBLIC_CONST char const DeeMH_##new_attr_name##_name[] = alias_method_name;
 #include "../../../include/deemon/method-hints.def"
 
 

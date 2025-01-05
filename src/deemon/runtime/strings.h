@@ -179,6 +179,68 @@ local STRINGS = {
 	"rewind",
 	"peek",
 
+	"__seq_enumerate__",
+	"__seq_any__",
+	"__seq_all__",
+	"__seq_parity__",
+	"__seq_reduce__",
+	"__seq_min__",
+	"__seq_max__",
+	"__seq_sum__",
+	"__seq_count__",
+	"__seq_contains__",
+	"__seq_locate__",
+	"__seq_rlocate__",
+	"__seq_startswith__",
+	"__seq_endswith__",
+	"__seq_find__",
+	"__seq_rfind__",
+	"__seq_erase__",
+	"__seq_insert__",
+	"__seq_insertall__",
+	"__seq_pushfront__",
+	"__seq_append__",
+	"__seq_extend__",
+	"__seq_xchitem__",
+	"__seq_clear__",
+	"__seq_pop__",
+	"__seq_remove__",
+	"__seq_rremove__",
+	"__seq_removeall__",
+	"__seq_removeif__",
+	"__seq_resize__",
+	"__seq_fill__",
+	"__seq_reverse__",
+	"__seq_reversed__",
+	"__seq_sort__",
+	"__seq_sorted__",
+	"__seq_bfind__",
+	"__seq_bposition__",
+	"__seq_brange__",
+	"__seq_first__",
+	"__seq_last__",
+	"__seq_cached__",
+	"__set_insert__",
+	"__set_remove__",
+	"__set_unify__",
+	"__set_insertall__",
+	"__set_removeall__",
+	"__set_pop__",
+	"__map_setold__",
+	"__map_setold_ex__",
+	"__map_setnew__",
+	"__map_setnew_ex__",
+	"__map_setdefault__",
+	"__map_update__",
+	"__map_remove__",
+	"__map_removekeys__",
+	"__map_pop__",
+	"__map_popitem__",
+	"__map_keys__",
+	"__map_values__",
+	"__map_iterkeys__",
+	"__map_itervalues__",
+
 	"format",
 	"__format__",
 	"__name__",
@@ -659,6 +721,189 @@ DEF_STRING(str_rewind, "rewind", 0x2ab1b235, 0xa35b8bb3941ca25f)
 #define Dee_HashStr__peek _Dee_HashSelectC(0xb2ae48a2, 0xcc667a4d924a91f8)
 DEF_STRING(str_peek, "peek", 0xb2ae48a2, 0xcc667a4d924a91f8)
 #define STR_peek DeeString_STR(&str_peek)
+#define Dee_HashStr____seq_enumerate__ _Dee_HashSelectC(0x2daa9e99, 0xca96f5a312eda247)
+DEF_STRING(str___seq_enumerate__, "__seq_enumerate__", 0x2daa9e99, 0xca96f5a312eda247)
+#define STR___seq_enumerate__ DeeString_STR(&str___seq_enumerate__)
+#define Dee_HashStr____seq_any__ _Dee_HashSelectC(0xdbc18402, 0x809971dbd2fbe45)
+DEF_STRING(str___seq_any__, "__seq_any__", 0xdbc18402, 0x809971dbd2fbe45)
+#define STR___seq_any__ DeeString_STR(&str___seq_any__)
+#define Dee_HashStr____seq_all__ _Dee_HashSelectC(0xd1aed67c, 0xba447c34c699709f)
+DEF_STRING(str___seq_all__, "__seq_all__", 0xd1aed67c, 0xba447c34c699709f)
+#define STR___seq_all__ DeeString_STR(&str___seq_all__)
+#define Dee_HashStr____seq_parity__ _Dee_HashSelectC(0xcda8343, 0x4134274571b0743b)
+DEF_STRING(str___seq_parity__, "__seq_parity__", 0xcda8343, 0x4134274571b0743b)
+#define STR___seq_parity__ DeeString_STR(&str___seq_parity__)
+#define Dee_HashStr____seq_reduce__ _Dee_HashSelectC(0x212ddcd3, 0x2f18d73fc1a6b44a)
+DEF_STRING(str___seq_reduce__, "__seq_reduce__", 0x212ddcd3, 0x2f18d73fc1a6b44a)
+#define STR___seq_reduce__ DeeString_STR(&str___seq_reduce__)
+#define Dee_HashStr____seq_min__ _Dee_HashSelectC(0xaf4e340b, 0x94879a203902a8ca)
+DEF_STRING(str___seq_min__, "__seq_min__", 0xaf4e340b, 0x94879a203902a8ca)
+#define STR___seq_min__ DeeString_STR(&str___seq_min__)
+#define Dee_HashStr____seq_max__ _Dee_HashSelectC(0x670b4224, 0xd6ab9494e5312cec)
+DEF_STRING(str___seq_max__, "__seq_max__", 0x670b4224, 0xd6ab9494e5312cec)
+#define STR___seq_max__ DeeString_STR(&str___seq_max__)
+#define Dee_HashStr____seq_sum__ _Dee_HashSelectC(0x18e84724, 0xacd793c141691611)
+DEF_STRING(str___seq_sum__, "__seq_sum__", 0x18e84724, 0xacd793c141691611)
+#define STR___seq_sum__ DeeString_STR(&str___seq_sum__)
+#define Dee_HashStr____seq_count__ _Dee_HashSelectC(0x71175b03, 0xb54ae2ee1fe7d0c9)
+DEF_STRING(str___seq_count__, "__seq_count__", 0x71175b03, 0xb54ae2ee1fe7d0c9)
+#define STR___seq_count__ DeeString_STR(&str___seq_count__)
+#define Dee_HashStr____seq_contains__ _Dee_HashSelectC(0x9acccdfe, 0x991d55e25b1a82b4)
+DEF_STRING(str___seq_contains__, "__seq_contains__", 0x9acccdfe, 0x991d55e25b1a82b4)
+#define STR___seq_contains__ DeeString_STR(&str___seq_contains__)
+#define Dee_HashStr____seq_locate__ _Dee_HashSelectC(0xb6ab1ac3, 0xe01f18461033d66c)
+DEF_STRING(str___seq_locate__, "__seq_locate__", 0xb6ab1ac3, 0xe01f18461033d66c)
+#define STR___seq_locate__ DeeString_STR(&str___seq_locate__)
+#define Dee_HashStr____seq_rlocate__ _Dee_HashSelectC(0xf40f4306, 0x5e1336153e18b450)
+DEF_STRING(str___seq_rlocate__, "__seq_rlocate__", 0xf40f4306, 0x5e1336153e18b450)
+#define STR___seq_rlocate__ DeeString_STR(&str___seq_rlocate__)
+#define Dee_HashStr____seq_startswith__ _Dee_HashSelectC(0xe2020e14, 0xda8ef94f534073e9)
+DEF_STRING(str___seq_startswith__, "__seq_startswith__", 0xe2020e14, 0xda8ef94f534073e9)
+#define STR___seq_startswith__ DeeString_STR(&str___seq_startswith__)
+#define Dee_HashStr____seq_endswith__ _Dee_HashSelectC(0x7a3367e0, 0x67cfbe5dc4038c84)
+DEF_STRING(str___seq_endswith__, "__seq_endswith__", 0x7a3367e0, 0x67cfbe5dc4038c84)
+#define STR___seq_endswith__ DeeString_STR(&str___seq_endswith__)
+#define Dee_HashStr____seq_find__ _Dee_HashSelectC(0x6efdc0ae, 0x527acacc0183caca)
+DEF_STRING(str___seq_find__, "__seq_find__", 0x6efdc0ae, 0x527acacc0183caca)
+#define STR___seq_find__ DeeString_STR(&str___seq_find__)
+#define Dee_HashStr____seq_rfind__ _Dee_HashSelectC(0x6a572f0c, 0x93860c7078813ca)
+DEF_STRING(str___seq_rfind__, "__seq_rfind__", 0x6a572f0c, 0x93860c7078813ca)
+#define STR___seq_rfind__ DeeString_STR(&str___seq_rfind__)
+#define Dee_HashStr____seq_erase__ _Dee_HashSelectC(0xf418fec, 0xaa4716e6a7c90a6e)
+DEF_STRING(str___seq_erase__, "__seq_erase__", 0xf418fec, 0xaa4716e6a7c90a6e)
+#define STR___seq_erase__ DeeString_STR(&str___seq_erase__)
+#define Dee_HashStr____seq_insert__ _Dee_HashSelectC(0x108c61ac, 0xe94b2ec29ead79d1)
+DEF_STRING(str___seq_insert__, "__seq_insert__", 0x108c61ac, 0xe94b2ec29ead79d1)
+#define STR___seq_insert__ DeeString_STR(&str___seq_insert__)
+#define Dee_HashStr____seq_insertall__ _Dee_HashSelectC(0xae7ace11, 0x8510df225525bacc)
+DEF_STRING(str___seq_insertall__, "__seq_insertall__", 0xae7ace11, 0x8510df225525bacc)
+#define STR___seq_insertall__ DeeString_STR(&str___seq_insertall__)
+#define Dee_HashStr____seq_pushfront__ _Dee_HashSelectC(0xe30e92a5, 0x69ae18cfaba44b5a)
+DEF_STRING(str___seq_pushfront__, "__seq_pushfront__", 0xe30e92a5, 0x69ae18cfaba44b5a)
+#define STR___seq_pushfront__ DeeString_STR(&str___seq_pushfront__)
+#define Dee_HashStr____seq_append__ _Dee_HashSelectC(0x43ea1331, 0x383f299606f81ebe)
+DEF_STRING(str___seq_append__, "__seq_append__", 0x43ea1331, 0x383f299606f81ebe)
+#define STR___seq_append__ DeeString_STR(&str___seq_append__)
+#define Dee_HashStr____seq_extend__ _Dee_HashSelectC(0x9bea054c, 0xe1bd8880fb31a9ee)
+DEF_STRING(str___seq_extend__, "__seq_extend__", 0x9bea054c, 0xe1bd8880fb31a9ee)
+#define STR___seq_extend__ DeeString_STR(&str___seq_extend__)
+#define Dee_HashStr____seq_xchitem__ _Dee_HashSelectC(0x4eea0d1, 0x6238b16fe217a6ed)
+DEF_STRING(str___seq_xchitem__, "__seq_xchitem__", 0x4eea0d1, 0x6238b16fe217a6ed)
+#define STR___seq_xchitem__ DeeString_STR(&str___seq_xchitem__)
+#define Dee_HashStr____seq_clear__ _Dee_HashSelectC(0x9d9e937d, 0xfdca7540ed524b50)
+DEF_STRING(str___seq_clear__, "__seq_clear__", 0x9d9e937d, 0xfdca7540ed524b50)
+#define STR___seq_clear__ DeeString_STR(&str___seq_clear__)
+#define Dee_HashStr____seq_pop__ _Dee_HashSelectC(0xbc856b3, 0x292be45738029ef3)
+DEF_STRING(str___seq_pop__, "__seq_pop__", 0xbc856b3, 0x292be45738029ef3)
+#define STR___seq_pop__ DeeString_STR(&str___seq_pop__)
+#define Dee_HashStr____seq_remove__ _Dee_HashSelectC(0xf3973265, 0xf66c3dc2f794b6f6)
+DEF_STRING(str___seq_remove__, "__seq_remove__", 0xf3973265, 0xf66c3dc2f794b6f6)
+#define STR___seq_remove__ DeeString_STR(&str___seq_remove__)
+#define Dee_HashStr____seq_rremove__ _Dee_HashSelectC(0x45433c7f, 0xb9a93a98d3d74233)
+DEF_STRING(str___seq_rremove__, "__seq_rremove__", 0x45433c7f, 0xb9a93a98d3d74233)
+#define STR___seq_rremove__ DeeString_STR(&str___seq_rremove__)
+#define Dee_HashStr____seq_removeall__ _Dee_HashSelectC(0x8b6a674f, 0xe2b4538c5c43da51)
+DEF_STRING(str___seq_removeall__, "__seq_removeall__", 0x8b6a674f, 0xe2b4538c5c43da51)
+#define STR___seq_removeall__ DeeString_STR(&str___seq_removeall__)
+#define Dee_HashStr____seq_removeif__ _Dee_HashSelectC(0x304fcae9, 0x5c2fb6757251a6dd)
+DEF_STRING(str___seq_removeif__, "__seq_removeif__", 0x304fcae9, 0x5c2fb6757251a6dd)
+#define STR___seq_removeif__ DeeString_STR(&str___seq_removeif__)
+#define Dee_HashStr____seq_resize__ _Dee_HashSelectC(0x3f5efd3b, 0xbb48ab62bf1c52f9)
+DEF_STRING(str___seq_resize__, "__seq_resize__", 0x3f5efd3b, 0xbb48ab62bf1c52f9)
+#define STR___seq_resize__ DeeString_STR(&str___seq_resize__)
+#define Dee_HashStr____seq_fill__ _Dee_HashSelectC(0x804baa4b, 0x8c022361158e60b5)
+DEF_STRING(str___seq_fill__, "__seq_fill__", 0x804baa4b, 0x8c022361158e60b5)
+#define STR___seq_fill__ DeeString_STR(&str___seq_fill__)
+#define Dee_HashStr____seq_reverse__ _Dee_HashSelectC(0x6b430a0f, 0x1b0d1d614c68adb6)
+DEF_STRING(str___seq_reverse__, "__seq_reverse__", 0x6b430a0f, 0x1b0d1d614c68adb6)
+#define STR___seq_reverse__ DeeString_STR(&str___seq_reverse__)
+#define Dee_HashStr____seq_reversed__ _Dee_HashSelectC(0xfc04d16d, 0x86f352c014e6952e)
+DEF_STRING(str___seq_reversed__, "__seq_reversed__", 0xfc04d16d, 0x86f352c014e6952e)
+#define STR___seq_reversed__ DeeString_STR(&str___seq_reversed__)
+#define Dee_HashStr____seq_sort__ _Dee_HashSelectC(0xada4b872, 0xd6269336d74985fa)
+DEF_STRING(str___seq_sort__, "__seq_sort__", 0xada4b872, 0xd6269336d74985fa)
+#define STR___seq_sort__ DeeString_STR(&str___seq_sort__)
+#define Dee_HashStr____seq_sorted__ _Dee_HashSelectC(0x5c289684, 0x5916b598f6f698c3)
+DEF_STRING(str___seq_sorted__, "__seq_sorted__", 0x5c289684, 0x5916b598f6f698c3)
+#define STR___seq_sorted__ DeeString_STR(&str___seq_sorted__)
+#define Dee_HashStr____seq_bfind__ _Dee_HashSelectC(0x14f1087e, 0xf99331ec53fd5237)
+DEF_STRING(str___seq_bfind__, "__seq_bfind__", 0x14f1087e, 0xf99331ec53fd5237)
+#define STR___seq_bfind__ DeeString_STR(&str___seq_bfind__)
+#define Dee_HashStr____seq_bposition__ _Dee_HashSelectC(0x9405a8c, 0x3af79077b899240c)
+DEF_STRING(str___seq_bposition__, "__seq_bposition__", 0x9405a8c, 0x3af79077b899240c)
+#define STR___seq_bposition__ DeeString_STR(&str___seq_bposition__)
+#define Dee_HashStr____seq_brange__ _Dee_HashSelectC(0xdce22547, 0x72bf9e7241379d7)
+DEF_STRING(str___seq_brange__, "__seq_brange__", 0xdce22547, 0x72bf9e7241379d7)
+#define STR___seq_brange__ DeeString_STR(&str___seq_brange__)
+#define Dee_HashStr____seq_first__ _Dee_HashSelectC(0xba07bcf8, 0xf64baada0fea7f04)
+DEF_STRING(str___seq_first__, "__seq_first__", 0xba07bcf8, 0xf64baada0fea7f04)
+#define STR___seq_first__ DeeString_STR(&str___seq_first__)
+#define Dee_HashStr____seq_last__ _Dee_HashSelectC(0x2bf501b7, 0x87a676ceeac240a5)
+DEF_STRING(str___seq_last__, "__seq_last__", 0x2bf501b7, 0x87a676ceeac240a5)
+#define STR___seq_last__ DeeString_STR(&str___seq_last__)
+#define Dee_HashStr____seq_cached__ _Dee_HashSelectC(0x13338d67, 0x497ba149d490b121)
+DEF_STRING(str___seq_cached__, "__seq_cached__", 0x13338d67, 0x497ba149d490b121)
+#define STR___seq_cached__ DeeString_STR(&str___seq_cached__)
+#define Dee_HashStr____set_insert__ _Dee_HashSelectC(0x50fd52f7, 0x3fc463c8885bc57c)
+DEF_STRING(str___set_insert__, "__set_insert__", 0x50fd52f7, 0x3fc463c8885bc57c)
+#define STR___set_insert__ DeeString_STR(&str___set_insert__)
+#define Dee_HashStr____set_remove__ _Dee_HashSelectC(0x7cff2ae1, 0xddd5656e54907429)
+DEF_STRING(str___set_remove__, "__set_remove__", 0x7cff2ae1, 0xddd5656e54907429)
+#define STR___set_remove__ DeeString_STR(&str___set_remove__)
+#define Dee_HashStr____set_unify__ _Dee_HashSelectC(0x72612949, 0xabb8cb45cdbd4ab4)
+DEF_STRING(str___set_unify__, "__set_unify__", 0x72612949, 0xabb8cb45cdbd4ab4)
+#define STR___set_unify__ DeeString_STR(&str___set_unify__)
+#define Dee_HashStr____set_insertall__ _Dee_HashSelectC(0x551cdddf, 0x8b13942a0ba095b4)
+DEF_STRING(str___set_insertall__, "__set_insertall__", 0x551cdddf, 0x8b13942a0ba095b4)
+#define STR___set_insertall__ DeeString_STR(&str___set_insertall__)
+#define Dee_HashStr____set_removeall__ _Dee_HashSelectC(0x427677be, 0x694ed4e8774b5ac6)
+DEF_STRING(str___set_removeall__, "__set_removeall__", 0x427677be, 0x694ed4e8774b5ac6)
+#define STR___set_removeall__ DeeString_STR(&str___set_removeall__)
+#define Dee_HashStr____set_pop__ _Dee_HashSelectC(0xf29d444d, 0x747e5186fe18cdfb)
+DEF_STRING(str___set_pop__, "__set_pop__", 0xf29d444d, 0x747e5186fe18cdfb)
+#define STR___set_pop__ DeeString_STR(&str___set_pop__)
+#define Dee_HashStr____map_setold__ _Dee_HashSelectC(0x98133a06, 0x9f85f07238f15ea8)
+DEF_STRING(str___map_setold__, "__map_setold__", 0x98133a06, 0x9f85f07238f15ea8)
+#define STR___map_setold__ DeeString_STR(&str___map_setold__)
+#define Dee_HashStr____map_setold_ex__ _Dee_HashSelectC(0x2ff74f04, 0x4bf3a474c83f3c6e)
+DEF_STRING(str___map_setold_ex__, "__map_setold_ex__", 0x2ff74f04, 0x4bf3a474c83f3c6e)
+#define STR___map_setold_ex__ DeeString_STR(&str___map_setold_ex__)
+#define Dee_HashStr____map_setnew__ _Dee_HashSelectC(0x3d51899e, 0x7cc7fad3b094d5ff)
+DEF_STRING(str___map_setnew__, "__map_setnew__", 0x3d51899e, 0x7cc7fad3b094d5ff)
+#define STR___map_setnew__ DeeString_STR(&str___map_setnew__)
+#define Dee_HashStr____map_setnew_ex__ _Dee_HashSelectC(0xdf4ed868, 0x57b1501ab5df4980)
+DEF_STRING(str___map_setnew_ex__, "__map_setnew_ex__", 0xdf4ed868, 0x57b1501ab5df4980)
+#define STR___map_setnew_ex__ DeeString_STR(&str___map_setnew_ex__)
+#define Dee_HashStr____map_setdefault__ _Dee_HashSelectC(0xc24f2597, 0xe662ab907613d2e1)
+DEF_STRING(str___map_setdefault__, "__map_setdefault__", 0xc24f2597, 0xe662ab907613d2e1)
+#define STR___map_setdefault__ DeeString_STR(&str___map_setdefault__)
+#define Dee_HashStr____map_update__ _Dee_HashSelectC(0x7999cbe, 0xfeac53cf88774cdb)
+DEF_STRING(str___map_update__, "__map_update__", 0x7999cbe, 0xfeac53cf88774cdb)
+#define STR___map_update__ DeeString_STR(&str___map_update__)
+#define Dee_HashStr____map_remove__ _Dee_HashSelectC(0xaaf1d3a3, 0xa18455f39b93dac2)
+DEF_STRING(str___map_remove__, "__map_remove__", 0xaaf1d3a3, 0xa18455f39b93dac2)
+#define STR___map_remove__ DeeString_STR(&str___map_remove__)
+#define Dee_HashStr____map_removekeys__ _Dee_HashSelectC(0x41b7c204, 0xdbdd6785608b9e21)
+DEF_STRING(str___map_removekeys__, "__map_removekeys__", 0x41b7c204, 0xdbdd6785608b9e21)
+#define STR___map_removekeys__ DeeString_STR(&str___map_removekeys__)
+#define Dee_HashStr____map_pop__ _Dee_HashSelectC(0x280f151f, 0xd722ef001b673063)
+DEF_STRING(str___map_pop__, "__map_pop__", 0x280f151f, 0xd722ef001b673063)
+#define STR___map_pop__ DeeString_STR(&str___map_pop__)
+#define Dee_HashStr____map_popitem__ _Dee_HashSelectC(0x66a1fe6, 0x6456db8617f2ac73)
+DEF_STRING(str___map_popitem__, "__map_popitem__", 0x66a1fe6, 0x6456db8617f2ac73)
+#define STR___map_popitem__ DeeString_STR(&str___map_popitem__)
+#define Dee_HashStr____map_keys__ _Dee_HashSelectC(0x14a40c86, 0xd1bc83542c560ec3)
+DEF_STRING(str___map_keys__, "__map_keys__", 0x14a40c86, 0xd1bc83542c560ec3)
+#define STR___map_keys__ DeeString_STR(&str___map_keys__)
+#define Dee_HashStr____map_values__ _Dee_HashSelectC(0x8afb96e3, 0x6b716639763fd995)
+DEF_STRING(str___map_values__, "__map_values__", 0x8afb96e3, 0x6b716639763fd995)
+#define STR___map_values__ DeeString_STR(&str___map_values__)
+#define Dee_HashStr____map_iterkeys__ _Dee_HashSelectC(0x1447f394, 0xe79c875bc390a418)
+DEF_STRING(str___map_iterkeys__, "__map_iterkeys__", 0x1447f394, 0xe79c875bc390a418)
+#define STR___map_iterkeys__ DeeString_STR(&str___map_iterkeys__)
+#define Dee_HashStr____map_itervalues__ _Dee_HashSelectC(0x225dfc75, 0xe6cfc129bcb6d0af)
+DEF_STRING(str___map_itervalues__, "__map_itervalues__", 0x225dfc75, 0xe6cfc129bcb6d0af)
+#define STR___map_itervalues__ DeeString_STR(&str___map_itervalues__)
 #define Dee_HashStr__format _Dee_HashSelectC(0x9ddde74c, 0xc575d5e219281e76)
 DEF_STRING(str_format, "format", 0x9ddde74c, 0xc575d5e219281e76)
 #define STR_format DeeString_STR(&str_format)
