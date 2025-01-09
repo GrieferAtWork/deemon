@@ -45,6 +45,7 @@
 #include <stddef.h>
 
 /**/
+#include "seq/default-compare.h"
 #include "seq/sort.h"
 
 /**/
@@ -1634,12 +1635,6 @@ tuple_bool(Tuple *__restrict self) {
 	return !DeeTuple_IsEmpty(self);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-tuple_hash(Tuple *__restrict self) {
-	return DeeObject_Hashv(DeeTuple_ELEM(self),
-	                       DeeTuple_SIZE(self));
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_sizeof(Tuple *self) {
 	return DeeInt_NewSize(DeeTuple_SIZEOF(self->t_size));
@@ -1858,107 +1853,6 @@ PRIVATE struct type_getset tpconst tuple_getsets[] = {
 	TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
-
-struct tuple_compare_foreach_data {
-	Tuple *tcfd_tuple; /* [1..1] The tuple being compared on the left side */
-	size_t tcfd_index; /* Next object index to compare against on the left size.  */
-};
-
-#define TUPLE_COMPARE_FOREACH_ISLESS        (SSIZE_MIN)
-#define TUPLE_COMPARE_FOREACH_ISEQUAL       0
-#define TUPLE_COMPARE_FOREACH_ISGREATER     (SSIZE_MIN + 2)
-#define TUPLE_COMPARE_FOREACH_NOTEQUAL(how) ((SSIZE_MIN + 1) + (how))
-STATIC_ASSERT(TUPLE_COMPARE_FOREACH_NOTEQUAL(-1) == TUPLE_COMPARE_FOREACH_ISLESS);
-STATIC_ASSERT(TUPLE_COMPARE_FOREACH_NOTEQUAL(1) == TUPLE_COMPARE_FOREACH_ISGREATER);
-
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-tuple_compare_foreach_cb(void *arg, DeeObject *elem) {
-	int temp;
-	struct tuple_compare_foreach_data *data;
-	data = (struct tuple_compare_foreach_data *)arg;
-	if (data->tcfd_index >= data->tcfd_tuple->t_size)
-		return TUPLE_COMPARE_FOREACH_ISLESS;
-	temp = DeeObject_Compare(data->tcfd_tuple->t_elem[data->tcfd_index], elem);
-	if unlikely(temp == Dee_COMPARE_ERR)
-		goto err;
-	if (temp == 0) {
-		++data->tcfd_index;
-		return TUPLE_COMPARE_FOREACH_ISEQUAL;
-	}
-	ASSERT(temp == -1 || temp == 1);
-	return TUPLE_COMPARE_FOREACH_NOTEQUAL(temp);
-err:
-	return -1;
-}
-
-#define TUPLE_COMPARE_FOREACH_EQ_ISEQUAL  0
-#define TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL (SSIZE_MIN)
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-tuple_compare_foreach_eq_cb(void *arg, DeeObject *elem) {
-	int temp;
-	struct tuple_compare_foreach_data *data;
-	data = (struct tuple_compare_foreach_data *)arg;
-	if (data->tcfd_index >= data->tcfd_tuple->t_size)
-		return TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL;
-	temp = DeeObject_CompareEq(data->tcfd_tuple->t_elem[data->tcfd_index], elem);
-	if unlikely(temp == Dee_COMPARE_ERR)
-		goto err;
-	if (temp == 0) {
-		++data->tcfd_index;
-		return TUPLE_COMPARE_FOREACH_ISEQUAL;
-	}
-	return TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-tuple_compare(Tuple *self, DeeObject *other) {
-	Dee_ssize_t status;
-	struct tuple_compare_foreach_data data;
-	data.tcfd_index = 0;
-	data.tcfd_tuple = self;
-	status = DeeObject_Foreach(other, &tuple_compare_foreach_cb, &data);
-	ASSERT(status == -1 ||
-	       status == TUPLE_COMPARE_FOREACH_ISLESS ||
-	       status == TUPLE_COMPARE_FOREACH_ISEQUAL ||
-	       status == TUPLE_COMPARE_FOREACH_ISGREATER);
-	ASSERT(data.tcfd_index <= data.tcfd_tuple->t_size);
-	if (status == TUPLE_COMPARE_FOREACH_ISEQUAL) {
-		if (data.tcfd_index >= data.tcfd_tuple->t_size)
-			return 0;
-		return 1;
-	}
-	if (status == TUPLE_COMPARE_FOREACH_ISLESS)
-		return -1;
-	if (status == TUPLE_COMPARE_FOREACH_ISGREATER)
-		return 1;
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-tuple_compare_eq(Tuple *self, DeeObject *other) {
-	Dee_ssize_t status;
-	struct tuple_compare_foreach_data data;
-	size_t sizehint = DeeObject_SizeFast(other);
-	if (sizehint != self->t_size && sizehint != (size_t)-1)
-		return 1; /* Known not-equal */
-	data.tcfd_index = 0;
-	data.tcfd_tuple = self;
-	status = DeeObject_Foreach(other, &tuple_compare_foreach_eq_cb, &data);
-	ASSERT(status == -1 ||
-	       status == TUPLE_COMPARE_FOREACH_EQ_ISEQUAL ||
-	       status == TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL);
-	ASSERT(data.tcfd_index <= data.tcfd_tuple->t_size);
-	if (status == TUPLE_COMPARE_FOREACH_EQ_ISEQUAL) {
-		if (data.tcfd_index >= data.tcfd_tuple->t_size)
-			return 0;
-		return 1;
-	}
-	if (status == TUPLE_COMPARE_FOREACH_EQ_NOTEQUAL)
-		return 1;
-	return Dee_COMPARE_ERR;
-}
 
 struct tuple_concat_fe_data {
 	DREF Tuple *tcfed_result; /* [1..1] The resulting tuple. */
@@ -2270,10 +2164,35 @@ PRIVATE struct type_math tuple_math = {
 	/* .tp_pow    = */ NULL,
 };
 
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+tuple_hash(Tuple *__restrict self) {
+	return DeeObject_Hashv(DeeTuple_ELEM(self),
+	                       DeeTuple_SIZE(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+tuple_compare(Tuple *self, DeeObject *other) {
+	return seq_docompare__lhs_vector(self->t_elem, self->t_size, other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+tuple_compare_eq(Tuple *self, DeeObject *other) {
+	return seq_docompareeq__lhs_vector(self->t_elem, self->t_size, other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+tuple_trycompare_eq(Tuple *self, DeeObject *other) {
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		return 1;
+	return tuple_compare_eq(self, other);
+}
+
 PRIVATE struct type_cmp tuple_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&tuple_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_compare_eq,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_compare,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&tuple_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_compare_eq,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&tuple_trycompare_eq,
 };
 
 PRIVATE struct type_operator const tuple_operators[] = {
@@ -2704,6 +2623,37 @@ PRIVATE struct type_member tpconst nullable_tuple_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+nullable_tuple_hash(Tuple *__restrict self) {
+	return DeeObject_XHashv(DeeTuple_ELEM(self),
+	                        DeeTuple_SIZE(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+nullable_tuple_compare(Tuple *self, DeeObject *other) {
+	return seq_docompare__lhs_xvector(self->t_elem, self->t_size, other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+nullable_tuple_compare_eq(Tuple *self, DeeObject *other) {
+	return seq_docompareeq__lhs_xvector(self->t_elem, self->t_size, other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+nullable_tuple_trycompare_eq(Tuple *self, DeeObject *other) {
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		return 1;
+	return nullable_tuple_compare_eq(self, other);
+}
+
+PRIVATE struct type_cmp nullable_tuple_cmp = {
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&nullable_tuple_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&nullable_tuple_compare_eq,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&nullable_tuple_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&nullable_tuple_trycompare_eq,
+};
+
 PRIVATE struct type_operator const nullable_tuple_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
@@ -2758,7 +2708,7 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&nullable_tuple_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ &nullable_tuple_cmp,
 	/* .tp_seq           = */ &nullable_tuple_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,

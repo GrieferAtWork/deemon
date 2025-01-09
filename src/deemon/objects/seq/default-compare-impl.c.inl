@@ -24,7 +24,10 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/int.h>
+#include <deemon/class.h>
 #include <deemon/thread.h>
+
+#include "../../runtime/runtime_error.h"
 
 #if (defined(DEFINE_compare) + defined(DEFINE_compareeq) != 1)
 #error "Must #define exactly one of these macros"
@@ -63,6 +66,50 @@ DECL_BEGIN
 #endif /* !DEFINE_compareeq */
 
 
+
+/************************************************************************/
+/* seq_compareforeach__vector__data                                     */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+LOCAL_seq_compare__(lhs_xvector__rhs_foreach__cb)(void *arg, DeeObject *rhs_elem) {
+	int temp;
+	DeeObject *lhs_elem;
+	struct seq_compareforeach__vector__data *data;
+	data = (struct seq_compareforeach__vector__data *)arg;
+	if unlikely(data->scf_v_oelem >= data->scf_v_oend)
+		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
+	lhs_elem = *data->scf_v_oelem++;
+	if unlikely(!lhs_elem) {
+		/* LHS Unbound item, or premature lhs sequence end */
+		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
+	}
+	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	return LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE(temp);
+err:
+	return LOCAL_SEQ_COMPARE_FOREACH_RESULT_ERROR;
+}
+
+#ifndef __OPTIMIZE_SIZE__
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+LOCAL_seq_compare__(lhs_vector__rhs_foreach__cb)(void *arg, DeeObject *rhs_elem) {
+	int temp;
+	DeeObject *lhs_elem;
+	struct seq_compareforeach__vector__data *data;
+	data = (struct seq_compareforeach__vector__data *)arg;
+	if unlikely(data->scf_v_oelem >= data->scf_v_oend)
+		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
+	lhs_elem = *data->scf_v_oelem++;
+	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	return LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE(temp);
+err:
+	return LOCAL_SEQ_COMPARE_FOREACH_RESULT_ERROR;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+
 /************************************************************************/
 /* seq_compareforeach__size_and_getitem_index__data                     */
 /************************************************************************/
@@ -76,7 +123,7 @@ LOCAL_seq_compare__(lhs_foreach__rhs_size_and_getitem_index_fast__cb)(void *arg,
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER; /* lhs > rhs */
 	rhs_elem = (*data->scf_sgi_ogetitem_index)(data->scf_sgi_other, data->scf_sgi_oindex++);
 	if unlikely(!rhs_elem) {
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* RHS Unbound item, or premature rhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER; /* lhs > rhs */
 	}
 	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
@@ -100,7 +147,7 @@ LOCAL_seq_compare__(lhs_foreach__rhs_size_and_trygetitem_index__cb)(void *arg, D
 	if unlikely(!ITER_ISOK(rhs_elem)) {
 		if unlikely(!rhs_elem)
 			goto err;
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* RHS Unbound item, or premature rhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER; /* lhs > rhs */
 	}
 	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
@@ -125,7 +172,7 @@ LOCAL_seq_compare__(lhs_foreach__rhs_size_and_getitem_index__cb)(void *arg, DeeO
 		if (!DeeError_Catch(&DeeError_UnboundItem) &&
 		    !DeeError_Catch(&DeeError_IndexError))
 			goto err;
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* RHS Unbound item, or premature rhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER; /* lhs > rhs */
 	}
 	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
@@ -147,7 +194,7 @@ LOCAL_seq_compare__(lhs_size_and_getitem_index_fast__rhs_foreach__cb)(void *arg,
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
 	lhs_elem = (*data->scf_sgi_ogetitem_index)(data->scf_sgi_other, data->scf_sgi_oindex++);
 	if unlikely(!lhs_elem) {
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* LHS Unbound item, or premature lhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
 	}
 	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
@@ -171,7 +218,7 @@ LOCAL_seq_compare__(lhs_size_and_trygetitem_index__rhs_foreach__cb)(void *arg, D
 	if unlikely(!ITER_ISOK(lhs_elem)) {
 		if unlikely(!lhs_elem)
 			goto err;
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* LHS Unbound item, or premature lhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
 	}
 	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
@@ -196,7 +243,7 @@ LOCAL_seq_compare__(lhs_size_and_getitem_index__rhs_foreach__cb)(void *arg, DeeO
 		if (!DeeError_Catch(&DeeError_UnboundItem) &&
 		    !DeeError_Catch(&DeeError_IndexError))
 			goto err;
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* LHS Unbound item, or premature lhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
 	}
 	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
@@ -233,7 +280,7 @@ LOCAL_seq_compare__(lhs_foreach__rhs_sizeob_and_getitem__cb)(void *arg, DeeObjec
 		if (!DeeError_Catch(&DeeError_UnboundItem) &&
 		    !DeeError_Catch(&DeeError_IndexError))
 			goto err;
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* RHS Unbound item, or premature rhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER; /* lhs > rhs */
 	}
 	if unlikely(DeeObject_Inc(&data->scf_sg_oindex))
@@ -266,7 +313,7 @@ LOCAL_seq_compare__(lhs_sizeob_and_getitem__rhs_foreach__cb)(void *arg, DeeObjec
 		if (!DeeError_Catch(&DeeError_UnboundItem) &&
 		    !DeeError_Catch(&DeeError_IndexError))
 			goto err;
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* LHS Unbound item, or premature lhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
 	}
 	if unlikely(DeeObject_Inc(&data->scf_sg_oindex))
@@ -309,7 +356,7 @@ LOCAL_seq_compare__(tlhs_sizeob_and_getitem__rhs_foreach__cb)(void *arg, DeeObje
 		if (!DeeError_Catch(&DeeError_UnboundItem) &&
 		    !DeeError_Catch(&DeeError_IndexError))
 			goto err;
-		/* RHS Unbound item, or premature lhs sequence end */
+		/* LHS Unbound item, or premature lhs sequence end */
 		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
 	}
 	if unlikely(DeeObject_Inc(&data->scf_tsg_oindex))
@@ -378,6 +425,560 @@ err:
 #undef LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER
 #undef LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE
 #undef LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE_NE
+
+
+
+
+
+
+/************************************************************************/
+/* Implementations when "lhs" is a constant vector (which is allowed to contain NULL items). */
+/************************************************************************/
+INTERN WUNUSED NONNULL((1, 3, 5)) int DCALL
+LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_getitem_index_fast)(DeeObject *const *lhs_vector, size_t lhs_size,
+                                                                    DeeObject *rhs, size_t rhs_size,
+                                                                    DREF DeeObject *(DCALL *rhs_getitem_index_fast)(DeeObject *self, size_t index)) {
+	size_t i, common_size = lhs_size;
+#ifdef DEFINE_compareeq
+	if (common_size != rhs_size)
+		return 1; /* not-equal */
+#else /* DEFINE_compareeq */
+	if (common_size > rhs_size)
+		common_size = rhs_size;
+#endif /* DEFINE_compareeq */
+	for (i = 0; i < common_size; ++i) {
+		int temp;
+		DeeObject *lhs_elem;
+		DREF DeeObject *rhs_elem;
+		lhs_elem = lhs_vector[i];
+		rhs_elem = (*rhs_getitem_index_fast)(rhs, i);
+		if (!lhs_elem || !rhs_elem) {
+			if (!lhs_elem && !rhs_elem)
+				continue; /* Both unbound */
+			if (rhs_elem)
+				Dee_Decref(rhs_elem);
+#ifdef DEFINE_compareeq
+			return 1; /* Not-equal */
+#else /* DEFINE_compareeq */
+			return lhs_elem ? 1 : -1;
+#endif /* !DEFINE_compareeq */
+		}
+		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
+		Dee_Decref(rhs_elem);
+		if (temp != 0)
+			return temp;
+	}
+#ifdef DEFINE_compareeq
+	return 0; /* Equal */
+#else /* DEFINE_compareeq */
+	return Dee_Compare(lhs_size, lhs_size);
+#endif /* !DEFINE_compareeq */
+}
+
+INTERN WUNUSED NONNULL((1, 3, 5)) int DCALL
+LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_trygetitem_index)(DeeObject *const *lhs_vector, size_t lhs_size,
+                                                                  DeeObject *rhs, size_t rhs_size, DREF DeeObject *(DCALL *rhs_trygetitem_index)(DeeObject *self, size_t index)) {
+	size_t i, common_size = lhs_size;
+#ifdef DEFINE_compareeq
+	if (common_size != rhs_size)
+		return 1; /* not-equal */
+#else /* DEFINE_compareeq */
+	if (common_size > rhs_size)
+		common_size = rhs_size;
+#endif /* DEFINE_compareeq */
+	for (i = 0; i < common_size; ++i) {
+		int temp;
+		DeeObject *lhs_elem;
+		DREF DeeObject *rhs_elem;
+		rhs_elem = (*rhs_trygetitem_index)(rhs, i);
+		if unlikely(!rhs_elem)
+			goto err;
+		lhs_elem = lhs_vector[i];
+		if (!lhs_elem || (rhs_elem == ITER_DONE)) {
+			if (!lhs_elem && (rhs_elem == ITER_DONE))
+				continue; /* Both unbound */
+			if (rhs_elem != ITER_DONE)
+				Dee_Decref(rhs_elem);
+#ifdef DEFINE_compareeq
+			return 1; /* Not-equal */
+#else /* DEFINE_compareeq */
+			return lhs_elem ? 1 : -1;
+#endif /* !DEFINE_compareeq */
+		}
+		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
+		Dee_Decref(rhs_elem);
+		if (temp != 0)
+			return temp;
+	}
+#ifdef DEFINE_compareeq
+	return 0; /* Equal */
+#else /* DEFINE_compareeq */
+	return Dee_Compare(lhs_size, lhs_size);
+#endif /* !DEFINE_compareeq */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 3, 5)) int DCALL
+LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_getitem_index)(DeeObject *const *lhs_vector, size_t lhs_size,
+                                                               DeeObject *rhs, size_t rhs_size,
+                                                               DREF DeeObject *(DCALL *rhs_getitem_index)(DeeObject *self, size_t index)) {
+	size_t i, common_size = lhs_size;
+#ifdef DEFINE_compareeq
+	if (common_size != rhs_size)
+		return 1; /* not-equal */
+#else /* DEFINE_compareeq */
+	if (common_size > rhs_size)
+		common_size = rhs_size;
+#endif /* DEFINE_compareeq */
+	for (i = 0; i < common_size; ++i) {
+		int temp;
+		DeeObject *lhs_elem;
+		DREF DeeObject *rhs_elem;
+		rhs_elem = (*rhs_getitem_index)(rhs, i);
+		if unlikely(!rhs_elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				return 1; /* RHS got smaller... -> lhs > rhs */
+			} else {
+				goto err;
+			}
+		}
+		lhs_elem = lhs_vector[i];
+		if (!lhs_elem || !rhs_elem) {
+			if (!lhs_elem && !rhs_elem)
+				continue; /* Both unbound */
+			if (rhs_elem)
+				Dee_Decref(rhs_elem);
+#ifdef DEFINE_compareeq
+			return 1; /* Not-equal */
+#else /* DEFINE_compareeq */
+			return lhs_elem ? 1 : -1;
+#endif /* !DEFINE_compareeq */
+		}
+		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
+		Dee_Decref(rhs_elem);
+		if (temp != 0)
+			return temp;
+	}
+#ifdef DEFINE_compareeq
+	return 0; /* Equal */
+#else /* DEFINE_compareeq */
+	return Dee_Compare(lhs_size, lhs_size);
+#endif /* !DEFINE_compareeq */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+
+/* @return: (size_t)-1: Error
+ * @return: (size_t)-2: Size would overflow */
+#ifndef OBJECT_TO_SIZE_WITH_OVERFLOW_HANDLER_DEFINED
+#define OBJECT_TO_SIZE_WITH_OVERFLOW_HANDLER_DEFINED
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+object_to_size_with_overflow_handler(DeeObject *sizeob) {
+	size_t result;
+	if (DeeInt_Check(sizeob)) {
+		if (!DeeInt_TryAsSize(sizeob, &result))
+			goto overflow;
+	} else {
+		if (DeeObject_AsSize(sizeob, &result))
+			goto err;
+	}
+	if unlikely(result >= (size_t)-2)
+		goto overflow;
+	return result;
+overflow:
+	return (size_t)-2;
+err:
+	if (DeeError_Catch(&DeeError_IntegerOverflow))
+		goto overflow;
+	return (size_t)-1;
+}
+#endif /* !OBJECT_TO_SIZE_WITH_OVERFLOW_HANDLER_DEFINED */
+
+INTERN WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
+LOCAL_seq_docompare__(lhs_xvector__rhs_sizeob_and_getitem)(DeeObject *const *lhs_vector, size_t lhs_size,
+                                                           DeeObject *rhs, DeeObject *rhs_sizeob,
+                                                           DREF DeeObject *(DCALL *rhs_getitem)(DeeObject *self, DeeObject *index)) {
+	size_t i, common_size = lhs_size;
+	size_t rhs_size = object_to_size_with_overflow_handler(rhs_sizeob);
+	if unlikely(rhs_size == (size_t)-1)
+		goto err;
+#ifdef DEFINE_compareeq
+	if (common_size != rhs_size)
+		return 1; /* not-equal */
+#else /* DEFINE_compareeq */
+	if (common_size > rhs_size)
+		common_size = rhs_size;
+#endif /* DEFINE_compareeq */
+	for (i = 0; i < common_size; ++i) {
+		int temp;
+		DeeObject *lhs_elem;
+		DREF DeeObject *rhs_elem;
+		DREF DeeObject *index_ob;
+		index_ob = DeeInt_NewSize(i);
+		if unlikely(!index_ob)
+			goto err;
+		rhs_elem = (*rhs_getitem)(rhs, index_ob);
+		Dee_Decref(index_ob);
+		if unlikely(!rhs_elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				return 1; /* RHS got smaller... -> lhs > rhs */
+			} else {
+				goto err;
+			}
+		}
+		lhs_elem = lhs_vector[i];
+		if (!lhs_elem || !rhs_elem) {
+			if (!lhs_elem && !rhs_elem)
+				continue; /* Both unbound */
+			if (rhs_elem)
+				Dee_Decref(rhs_elem);
+#ifdef DEFINE_compareeq
+			return 1; /* Not-equal */
+#else /* DEFINE_compareeq */
+			return lhs_elem ? 1 : -1;
+#endif /* !DEFINE_compareeq */
+		}
+		temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
+		Dee_Decref(rhs_elem);
+		if (temp != 0)
+			return temp;
+	}
+#ifdef DEFINE_compareeq
+	return 0; /* Equal */
+#else /* DEFINE_compareeq */
+	return Dee_Compare(lhs_size, lhs_size);
+#endif /* !DEFINE_compareeq */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+LOCAL_seq_docompare__(lhs_xvector)(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs) {
+	int result;
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	Dee_ssize_t (DCALL *rhs_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
+		goto err_rhs_no_iter;
+	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
+	ASSERT(rhs_tp_foreach);
+	if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_rhs->tp_seq->tp_size)(rhs);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_getitem_index_fast)(lhs_vector, lhs_size, rhs, rhs_size,
+		                                                                             tp_rhs->tp_seq->tp_getitem_index_fast);
+	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_rhs->tp_seq->tp_size)(rhs);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_trygetitem_index)(lhs_vector, lhs_size, rhs, rhs_size,
+		                                                                           tp_rhs->tp_seq->tp_trygetitem_index);
+	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_rhs->tp_seq->tp_size)(rhs);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = LOCAL_seq_docompare__(lhs_xvector__rhs_size_and_getitem_index)(lhs_vector, lhs_size, rhs, rhs_size,
+		                                                                        tp_rhs->tp_seq->tp_getitem_index);
+	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_rhs->tp_seq->tp_sizeob)(rhs);
+		if unlikely(!rhs_sizeob)
+			goto err;
+		result = LOCAL_seq_docompare__(lhs_xvector__rhs_sizeob_and_getitem)(lhs_vector, lhs_size, rhs, rhs_sizeob,
+		                                                                    tp_rhs->tp_seq->tp_getitem);
+		Dee_Decref(rhs_sizeob);
+	} else {
+		struct seq_compareforeach__vector__data data;
+		Dee_ssize_t foreach_result;
+		data.scf_v_oelem = lhs_vector;
+		data.scf_v_oend  = lhs_vector + lhs_size;
+		foreach_result = (*rhs_tp_foreach)(rhs, &LOCAL_seq_compare__(lhs_xvector__rhs_foreach__cb), &data);
+#ifdef DEFINE_compareeq
+		ASSERT(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
+		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
+		    data.scf_v_oelem >= data.scf_v_oend) {
+			result = 0;
+		} else {
+			result = 1;
+		}
+#else /* DEFINE_compareeq */
+		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_GREATER);
+		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+			result = 0;
+		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
+			result = -1;
+		} else {
+			result = 1;
+		}
+#endif /* !DEFINE_compareeq */
+	}
+	return result;
+err_rhs_no_iter:
+	err_unimplemented_operator(tp_rhs, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+
+
+
+
+
+/************************************************************************/
+/* Implementations when "lhs" is a constant vector (which is *NOT* allowed to contain NULL items). */
+/************************************************************************/
+#ifndef __OPTIMIZE_SIZE__
+INTERN WUNUSED NONNULL((1, 3, 5)) int DCALL
+LOCAL_seq_docompare__(lhs_vector__rhs_size_and_getitem_index_fast)(DeeObject *const *lhs_vector, size_t lhs_size,
+                                                                   DeeObject *rhs, size_t rhs_size,
+                                                                   DREF DeeObject *(DCALL *rhs_getitem_index_fast)(DeeObject *self, size_t index)) {
+	size_t i, common_size = lhs_size;
+#ifdef DEFINE_compareeq
+	if (common_size != rhs_size)
+		return 1; /* not-equal */
+#else /* DEFINE_compareeq */
+	if (common_size > rhs_size)
+		common_size = rhs_size;
+#endif /* DEFINE_compareeq */
+	for (i = 0; i < common_size; ++i) {
+		int temp;
+		DREF DeeObject *rhs_elem;
+		rhs_elem = (*rhs_getitem_index_fast)(rhs, i);
+		if (!rhs_elem)
+			return 1;
+		temp = LOCAL_DeeObject_Compare(lhs_vector[i], rhs_elem);
+		Dee_Decref(rhs_elem);
+		if (temp != 0)
+			return temp;
+	}
+#ifdef DEFINE_compareeq
+	return 0; /* Equal */
+#else /* DEFINE_compareeq */
+	return Dee_Compare(lhs_size, lhs_size);
+#endif /* !DEFINE_compareeq */
+}
+
+INTERN WUNUSED NONNULL((1, 3, 5)) int DCALL
+LOCAL_seq_docompare__(lhs_vector__rhs_size_and_trygetitem_index)(DeeObject *const *lhs_vector, size_t lhs_size,
+                                                                 DeeObject *rhs, size_t rhs_size, DREF DeeObject *(DCALL *rhs_trygetitem_index)(DeeObject *self, size_t index)) {
+	size_t i, common_size = lhs_size;
+#ifdef DEFINE_compareeq
+	if (common_size != rhs_size)
+		return 1; /* not-equal */
+#else /* DEFINE_compareeq */
+	if (common_size > rhs_size)
+		common_size = rhs_size;
+#endif /* DEFINE_compareeq */
+	for (i = 0; i < common_size; ++i) {
+		int temp;
+		DREF DeeObject *rhs_elem;
+		rhs_elem = (*rhs_trygetitem_index)(rhs, i);
+		if unlikely(!rhs_elem)
+			goto err;
+		if (rhs_elem == ITER_DONE)
+			return 1;
+		temp = LOCAL_DeeObject_Compare(lhs_vector[i], rhs_elem);
+		Dee_Decref(rhs_elem);
+		if (temp != 0)
+			return temp;
+	}
+#ifdef DEFINE_compareeq
+	return 0; /* Equal */
+#else /* DEFINE_compareeq */
+	return Dee_Compare(lhs_size, lhs_size);
+#endif /* !DEFINE_compareeq */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 3, 5)) int DCALL
+LOCAL_seq_docompare__(lhs_vector__rhs_size_and_getitem_index)(DeeObject *const *lhs_vector, size_t lhs_size,
+                                                              DeeObject *rhs, size_t rhs_size,
+                                                              DREF DeeObject *(DCALL *rhs_getitem_index)(DeeObject *self, size_t index)) {
+	size_t i, common_size = lhs_size;
+#ifdef DEFINE_compareeq
+	if (common_size != rhs_size)
+		return 1; /* not-equal */
+#else /* DEFINE_compareeq */
+	if (common_size > rhs_size)
+		common_size = rhs_size;
+#endif /* DEFINE_compareeq */
+	for (i = 0; i < common_size; ++i) {
+		int temp;
+		DREF DeeObject *rhs_elem;
+		rhs_elem = (*rhs_getitem_index)(rhs, i);
+		if unlikely(!rhs_elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				return 1; /* RHS got smaller... -> lhs > rhs */
+			} else {
+				goto err;
+			}
+		}
+		if (!rhs_elem)
+			return 1;
+		temp = LOCAL_DeeObject_Compare(lhs_vector[i], rhs_elem);
+		Dee_Decref(rhs_elem);
+		if (temp != 0)
+			return temp;
+	}
+#ifdef DEFINE_compareeq
+	return 0; /* Equal */
+#else /* DEFINE_compareeq */
+	return Dee_Compare(lhs_size, lhs_size);
+#endif /* !DEFINE_compareeq */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
+LOCAL_seq_docompare__(lhs_vector__rhs_sizeob_and_getitem)(DeeObject *const *lhs_vector, size_t lhs_size,
+                                                          DeeObject *rhs, DeeObject *rhs_sizeob,
+                                                          DREF DeeObject *(DCALL *rhs_getitem)(DeeObject *self, DeeObject *index)) {
+	size_t i, common_size = lhs_size;
+	size_t rhs_size = object_to_size_with_overflow_handler(rhs_sizeob);
+	if unlikely(rhs_size == (size_t)-1)
+		goto err;
+#ifdef DEFINE_compareeq
+	if (common_size != rhs_size)
+		return 1; /* not-equal */
+#else /* DEFINE_compareeq */
+	if (common_size > rhs_size)
+		common_size = rhs_size;
+#endif /* DEFINE_compareeq */
+	for (i = 0; i < common_size; ++i) {
+		int temp;
+		DREF DeeObject *rhs_elem;
+		DREF DeeObject *index_ob;
+		index_ob = DeeInt_NewSize(i);
+		if unlikely(!index_ob)
+			goto err;
+		rhs_elem = (*rhs_getitem)(rhs, index_ob);
+		Dee_Decref(index_ob);
+		if unlikely(!rhs_elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				return 1; /* RHS got smaller... -> lhs > rhs */
+			} else {
+				goto err;
+			}
+		}
+		if (!rhs_elem)
+			return 1;
+		temp = LOCAL_DeeObject_Compare(lhs_vector[i], rhs_elem);
+		Dee_Decref(rhs_elem);
+		if (temp != 0)
+			return temp;
+	}
+#ifdef DEFINE_compareeq
+	return 0; /* Equal */
+#else /* DEFINE_compareeq */
+	return Dee_Compare(lhs_size, lhs_size);
+#endif /* !DEFINE_compareeq */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+LOCAL_seq_docompare__(lhs_vector)(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs) {
+	int result;
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	Dee_ssize_t (DCALL *rhs_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
+		goto err_rhs_no_iter;
+	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
+	ASSERT(rhs_tp_foreach);
+#ifdef DEFINE_compareeq
+	if (tp_rhs->tp_seq->tp_size_fast != NULL) {
+		size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
+		if (lhs_size != rhs_sizefast && rhs_sizefast != (size_t)-1)
+			return 1;
+	}
+#endif /* DEFINE_compareeq */
+	if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_rhs->tp_seq->tp_size)(rhs);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = LOCAL_seq_docompare__(lhs_vector__rhs_size_and_getitem_index_fast)(lhs_vector, lhs_size, rhs, rhs_size,
+		                                                                            tp_rhs->tp_seq->tp_getitem_index_fast);
+	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_rhs->tp_seq->tp_size)(rhs);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = LOCAL_seq_docompare__(lhs_vector__rhs_size_and_trygetitem_index)(lhs_vector, lhs_size, rhs, rhs_size,
+		                                                                          tp_rhs->tp_seq->tp_trygetitem_index);
+	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_rhs->tp_seq->tp_size)(rhs);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = LOCAL_seq_docompare__(lhs_vector__rhs_size_and_getitem_index)(lhs_vector, lhs_size, rhs, rhs_size,
+		                                                                       tp_rhs->tp_seq->tp_getitem_index);
+	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_rhs->tp_seq->tp_sizeob)(rhs);
+		if unlikely(!rhs_sizeob)
+			goto err;
+		result = LOCAL_seq_docompare__(lhs_vector__rhs_sizeob_and_getitem)(lhs_vector, lhs_size, rhs, rhs_sizeob,
+		                                                                   tp_rhs->tp_seq->tp_getitem);
+		Dee_Decref(rhs_sizeob);
+	} else {
+		struct seq_compareforeach__vector__data data;
+		Dee_ssize_t foreach_result;
+		data.scf_v_oelem = lhs_vector;
+		data.scf_v_oend  = lhs_vector + lhs_size;
+		foreach_result = (*rhs_tp_foreach)(rhs, &LOCAL_seq_compare__(lhs_vector__rhs_foreach__cb), &data);
+#ifdef DEFINE_compareeq
+		ASSERT(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
+		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
+		    data.scf_v_oelem >= data.scf_v_oend) {
+			result = 0;
+		} else {
+			result = 1;
+		}
+#else /* DEFINE_compareeq */
+		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_GREATER);
+		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+			result = 0;
+		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
+			result = -1;
+		} else {
+			result = 1;
+		}
+#endif /* !DEFINE_compareeq */
+	}
+	return result;
+err_rhs_no_iter:
+	err_unimplemented_operator(tp_rhs, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
 
 
 
@@ -531,32 +1132,6 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-
-/* @return: (size_t)-1: Error
- * @return: (size_t)-2: Size would overflow */
-#ifndef OBJECT_TO_SIZE_WITH_OVERFLOW_HANDLER_DEFINED
-#define OBJECT_TO_SIZE_WITH_OVERFLOW_HANDLER_DEFINED
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-object_to_size_with_overflow_handler(DeeObject *sizeob) {
-	size_t result;
-	if (DeeInt_Check(sizeob)) {
-		if (!DeeInt_TryAsSize(sizeob, &result))
-			goto overflow;
-	} else {
-		if (DeeObject_AsSize(sizeob, &result))
-			goto err;
-	}
-	if unlikely(result >= (size_t)-2)
-		goto overflow;
-	return result;
-overflow:
-	return (size_t)-2;
-err:
-	if (DeeError_Catch(&DeeError_IntegerOverflow))
-		goto overflow;
-	return (size_t)-1;
-}
-#endif /* !OBJECT_TO_SIZE_WITH_OVERFLOW_HANDLER_DEFINED */
 
 INTERN WUNUSED NONNULL((1, 3, 4, 5, 6)) int DCALL
 LOCAL_seq_docompare__(lhs_size_and_getitem_index_fast__rhs_sizeob_and_getitem)(DeeObject *lhs, size_t lhs_size, DREF DeeObject *(DCALL *lhs_getitem_index_fast)(DeeObject *self, size_t index),
