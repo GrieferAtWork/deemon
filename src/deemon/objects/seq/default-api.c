@@ -635,6 +635,10 @@ DeeSeq_DefaultMakeEnumerationWithRangeWithError(DeeObject *self, DeeObject *star
 
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_makeenumeration_t DCALL
 DeeType_RequireSeqMakeEnumeration_uncached(DeeTypeObject *__restrict self) {
+	Dee_mh_seq_makeenumeration_t result;
+	result = (Dee_mh_seq_makeenumeration_t)DeeType_GetPrivateMethodHint(self, Dee_TMH_seq_makeenumeration);
+	if (result)
+		return result;
 	if (DeeType_HasOperator(self, OPERATOR_ITER)) {
 		unsigned int seqclass;
 		if (self->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndGetItem) {
@@ -743,16 +747,13 @@ DeeType_RequireSeqMakeEnumeration(DeeTypeObject *__restrict self) {
 	return result;
 }
 
-INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_makeenumeration_with_int_range_t DCALL
-DeeType_RequireSeqMakeEnumerationWithIntRange(DeeTypeObject *__restrict self) {
-	Dee_mh_seq_makeenumeration_with_int_range_t result;
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_makeenumeration_with_int_range_t DCALL
+DeeType_RequireSeqMakeEnumerationWithIntRange_uncached(DeeTypeObject *__restrict self) {
 	Dee_mh_seq_makeenumeration_t base;
-	struct Dee_type_seq_cache *sc;
-	if likely(self->tp_seq) {
-		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->tsc_seq_makeenumeration_with_int_range)
-			return sc->tsc_seq_makeenumeration_with_int_range;
-	}
+	Dee_mh_seq_makeenumeration_with_int_range_t result;
+	result = (Dee_mh_seq_makeenumeration_with_int_range_t)DeeType_GetPrivateMethodHint(self, Dee_TMH_seq_makeenumeration_with_int_range);
+	if (result)
+		return result;
 	base = DeeType_RequireSeqMakeEnumeration(self);
 	if (base == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast) {
 		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndGetItemIndexFastAndFilter;
@@ -777,22 +778,32 @@ DeeType_RequireSeqMakeEnumerationWithIntRange(DeeTypeObject *__restrict self) {
 	} else {
 		result = &DeeSeq_DefaultMakeEnumerationWithIntRangeWithError;
 	}
-	sc = DeeType_TryRequireSeqCache(self);
+	return result;
+}
+
+INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_makeenumeration_with_int_range_t DCALL
+DeeType_RequireSeqMakeEnumerationWithIntRange(DeeTypeObject *__restrict self) {
+	Dee_mh_seq_makeenumeration_with_int_range_t result;
+	struct Dee_type_seq_cache *sc;
+	if likely(self->tp_seq) {
+		sc = self->tp_seq->_tp_seqcache;
+		if likely(sc && sc->tsc_seq_makeenumeration_with_int_range)
+			return sc->tsc_seq_makeenumeration_with_int_range;
+	}
+	result = DeeType_RequireSeqMakeEnumerationWithIntRange_uncached(self);
+	sc     = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
 		atomic_write(&sc->tsc_seq_makeenumeration_with_int_range, result);
 	return result;
 }
 
-INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_makeenumeration_with_range_t DCALL
-DeeType_RequireSeqMakeEnumerationWithRange(DeeTypeObject *__restrict self) {
-	Dee_mh_seq_makeenumeration_with_range_t result;
+PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_makeenumeration_with_range_t DCALL
+DeeType_RequireSeqMakeEnumerationWithRange_uncached(DeeTypeObject *__restrict self) {
 	Dee_mh_seq_makeenumeration_t base;
-	struct Dee_type_seq_cache *sc;
-	if likely(self->tp_seq) {
-		sc = self->tp_seq->_tp_seqcache;
-		if likely(sc && sc->tsc_seq_makeenumeration_with_range)
-			return sc->tsc_seq_makeenumeration_with_range;
-	}
+	Dee_mh_seq_makeenumeration_with_range_t result;
+	result = (Dee_mh_seq_makeenumeration_with_range_t)DeeType_GetPrivateMethodHint(self, Dee_TMH_seq_makeenumeration_with_range);
+	if (result)
+		return result;
 	base = DeeType_RequireSeqMakeEnumeration(self);
 	if (base == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast ||
 	    base == &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex ||
@@ -814,7 +825,20 @@ DeeType_RequireSeqMakeEnumerationWithRange(DeeTypeObject *__restrict self) {
 	} else {
 		result = &DeeSeq_DefaultMakeEnumerationWithRangeWithError;
 	}
-	sc = DeeType_TryRequireSeqCache(self);
+	return result;
+}
+
+INTERN ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_makeenumeration_with_range_t DCALL
+DeeType_RequireSeqMakeEnumerationWithRange(DeeTypeObject *__restrict self) {
+	Dee_mh_seq_makeenumeration_with_range_t result;
+	struct Dee_type_seq_cache *sc;
+	if likely(self->tp_seq) {
+		sc = self->tp_seq->_tp_seqcache;
+		if likely(sc && sc->tsc_seq_makeenumeration_with_range)
+			return sc->tsc_seq_makeenumeration_with_range;
+	}
+	result = DeeType_RequireSeqMakeEnumerationWithRange_uncached(self);
+	sc     = DeeType_TryRequireSeqCache(self);
 	if likely(sc)
 		atomic_write(&sc->tsc_seq_makeenumeration_with_range, result);
 	return result;
