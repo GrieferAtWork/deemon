@@ -176,6 +176,7 @@ again_locked:
 		if (item->di_key == NULL)
 			continue; /* Deleted item */
 
+		/* TODO: Use "LOCAL_fastcmp" here! */
 #ifdef LOCAL_HAS_KEY_IS_STRING
 #ifdef LOCAL_HAS_KEY_IS_STRING_LEN_HASH
 		if likely(DeeString_EqualsBuf(item->di_key, key, keylen))

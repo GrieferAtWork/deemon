@@ -25,10 +25,12 @@
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/class.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/gc.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
@@ -37,6 +39,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
+#include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* bcmpc(), ... */
@@ -949,77 +952,6 @@ dict_htab_rebuild(Dict *__restrict self) {
 	dict_htab_rebuild_after_optimize(self);
 }
 
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_decafter8(Dict *__restrict self, uint8_t vtab_threshold) {
-	size_t i;
-	uint8_t *htab = (uint8_t *)self->d_htab;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		if (htab[i] >= vtab_threshold)
-			--htab[i];
-	}
-}
-
-#if DEE_DICT_HIDXIO_COUNT >= 2
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_decafter16(Dict *__restrict self, uint16_t vtab_threshold) {
-	size_t i;
-	uint16_t *htab = (uint16_t *)self->d_htab;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		if (htab[i] >= vtab_threshold)
-			--htab[i];
-	}
-}
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
-
-#if DEE_DICT_HIDXIO_COUNT >= 3
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_decafter32(Dict *__restrict self, uint32_t vtab_threshold) {
-	size_t i;
-	uint32_t *htab = (uint32_t *)self->d_htab;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		if (htab[i] >= vtab_threshold)
-			--htab[i];
-	}
-}
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
-
-#if DEE_DICT_HIDXIO_COUNT >= 4
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_decafter64(Dict *__restrict self, uint64_t vtab_threshold) {
-	size_t i;
-	uint64_t *htab = (uint64_t *)self->d_htab;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		if (htab[i] >= vtab_threshold)
-			--htab[i];
-	}
-}
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
-
-/* Decrement all vtab indices appearing the htab that are ">= vtab_threshold" */
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_decafter(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_threshold) {
-	if (DEE_DICT_HIDXIO_IS8(self->d_valloc)) {
-		dict_htab_decafter8(self, (uint8_t)vtab_threshold);
-	} else
-#if DEE_DICT_HIDXIO_COUNT >= 2
-	if (DEE_DICT_HIDXIO_IS16(self->d_valloc)) {
-		dict_htab_decafter16(self, (uint16_t)vtab_threshold);
-	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
-#if DEE_DICT_HIDXIO_COUNT >= 3
-	if (DEE_DICT_HIDXIO_IS32(self->d_valloc)) {
-		dict_htab_decafter32(self, (uint32_t)vtab_threshold);
-	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
-#if DEE_DICT_HIDXIO_COUNT >= 4
-	if (DEE_DICT_HIDXIO_IS64(self->d_valloc)) {
-		dict_htab_decafter64(self, (uint64_t)vtab_threshold);
-	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
-	{
-		__builtin_unreachable();
-	}
-}
 
 
 /* Try to make it so "d_vsize < d_valloc" by enlarging the vector.
@@ -1533,77 +1465,29 @@ dict_autoshrink(Dict *__restrict self) {
 
 
 
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_incafter8(Dict *__restrict self, uint8_t vtab_threshold) {
-	size_t i;
-	uint8_t *htab = (uint8_t *)self->d_htab;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		if (htab[i] >= vtab_threshold)
-			++htab[i];
-	}
-}
-
-#if DEE_DICT_HIDXIO_COUNT >= 2
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_incafter16(Dict *__restrict self, uint16_t vtab_threshold) {
-	size_t i;
-	uint16_t *htab = (uint16_t *)self->d_htab;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		if (htab[i] >= vtab_threshold)
-			++htab[i];
-	}
-}
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
-
-#if DEE_DICT_HIDXIO_COUNT >= 3
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_incafter32(Dict *__restrict self, uint32_t vtab_threshold) {
-	size_t i;
-	uint32_t *htab = (uint32_t *)self->d_htab;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		if (htab[i] >= vtab_threshold)
-			++htab[i];
-	}
-}
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
-
-#if DEE_DICT_HIDXIO_COUNT >= 4
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_incafter64(Dict *__restrict self, uint64_t vtab_threshold) {
-	size_t i;
-	uint64_t *htab = (uint64_t *)self->d_htab;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		if (htab[i] >= vtab_threshold)
-			++htab[i];
-	}
-}
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
+/* Decrement all vtab indices appearing the htab that are ">= vtab_threshold" */
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_decafter(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_threshold);
 
 /* Increment all vtab indices appearing the htab that are ">= vtab_threshold" */
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_htab_incafter(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_threshold) {
-	if (DEE_DICT_HIDXIO_IS8(self->d_valloc)) {
-		dict_htab_incafter8(self, (uint8_t)vtab_threshold);
-	} else
-#if DEE_DICT_HIDXIO_COUNT >= 2
-	if (DEE_DICT_HIDXIO_IS16(self->d_valloc)) {
-		dict_htab_incafter16(self, (uint16_t)vtab_threshold);
-	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
-#if DEE_DICT_HIDXIO_COUNT >= 3
-	if (DEE_DICT_HIDXIO_IS32(self->d_valloc)) {
-		dict_htab_incafter32(self, (uint32_t)vtab_threshold);
-	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
-#if DEE_DICT_HIDXIO_COUNT >= 4
-	if (DEE_DICT_HIDXIO_IS64(self->d_valloc)) {
-		dict_htab_incafter64(self, (uint64_t)vtab_threshold);
-	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
-	{
-		__builtin_unreachable();
-	}
-}
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_incafter(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_threshold);
+
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_decrange(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_min, /*virt*/Dee_dict_vidx_t vtab_max);
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_incrange(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_min, /*virt*/Dee_dict_vidx_t vtab_max);
+
+#ifndef __INTELLISENSE__
+DECL_END
+#define DEFINE_dict_htab_decafter
+#include "dict-htabmod.c.inl"
+#define DEFINE_dict_htab_incafter
+#include "dict-htabmod.c.inl"
+#define DEFINE_dict_htab_decrange
+#include "dict-htabmod.c.inl"
+#define DEFINE_dict_htab_incrange
+#include "dict-htabmod.c.inl"
+DECL_BEGIN
+#endif /* !__INTELLISENSE__ */
+
+
 
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_makespace_at_impl(Dict *__restrict self, /*real*/ Dee_dict_vidx_t vtab_idx) {
@@ -1724,6 +1608,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL dict_setitem_at(Dict *self, DeeO
 #else /* !HAVE_dict_setitem_unlocked */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL dict_setitem_unlocked(Dict *self, DeeObject *key, DeeObject *value);
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL dict_setitem_unlocked_fast_inherited(Dict *self, /*inherit(on_success)*/ DREF DeeObject *key, /*inherit(on_success)*/ DREF DeeObject *value);
+#define HAVE_dict_setitem_unlocked_fast_inherited
 #endif /* HAVE_dict_setitem_unlocked */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_delitem(Dict *self, DeeObject *key);
@@ -2224,12 +2109,13 @@ DeeDict_FromSequence(DeeObject *__restrict self) {
 		/* TODO */
 	}
 	hint = DeeObject_SizeFast(self);
-	if unlikely(hint == (size_t)-1)
-		hint = DICT_FROMSEQ_DEFAULT_HINT;
-	result = (DREF Dict *)DeeDict_TryNewWithHint(hint);
+	if likely(hint == (size_t)-1) {
+		result = (DREF Dict *)DeeDict_TryNewWithHint(hint);
+	} else {
+		result = (DREF Dict *)DeeDict_TryNewWithWeakHint(DICT_FROMSEQ_DEFAULT_HINT);
+	}
 	if unlikely(!result) {
-		hint   = 0;
-		result = (DREF Dict *)DeeDict_NewWithHint(hint);
+		result = (DREF Dict *)DeeDict_New();
 		if unlikely(!result)
 			goto err;
 	}
@@ -2269,18 +2155,19 @@ PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeDict_NewKeyValuesInherited(size_t num_items,
                               /*inhert(on_success)*/ DREF DeeObject **key_values) {
 	DREF Dict *result;
-#ifdef HAVE_dict_setitem_unlocked
+#ifdef HAVE_dict_setitem_unlocked_fast_inherited
 	result = (DREF Dict *)DeeDict_TryNewWithHint(num_items);
 	if likely(result) {
 		size_t i;
 		for (i = 0; i < num_items; ++i) {
 			DREF DeeObject *key   = key_values[(i * 2) + 0];
 			DREF DeeObject *value = key_values[(i * 2) + 1];
+			/* FIXME: This decrefs duplicate keys immediately, which won't be restored on error. */
 			if unlikely(dict_setitem_unlocked_fast_inherited(result, key, value))
 				goto err_r;
 		}
 	} else
-#endif /* HAVE_dict_setitem_unlocked */
+#endif /* HAVE_dict_setitem_unlocked_fast_inherited */
 	{
 		size_t i;
 		result = (DREF Dict *)DeeDict_New();
@@ -2403,9 +2290,11 @@ dict_initfrom_seq(Dict *__restrict self, DeeObject *seq) {
 		/* TODO */
 	}
 	hint = DeeObject_SizeFast(seq);
-	if unlikely(hint == (size_t)-1)
-		hint = DICT_FROMSEQ_DEFAULT_HINT;
-	dict_initfrom_hint(self, hint, false);
+	if likely(hint != (size_t)-1) {
+		dict_initfrom_hint(self, hint, false);
+	} else {
+		dict_initfrom_hint(self, DICT_FROMSEQ_DEFAULT_HINT, true);
+	}
 	foreach_status = DeeObject_ForeachPair(seq, &dict_fromsequence_foreach_cb, self);
 	if unlikely(foreach_status < 0)
 		goto err_self;
@@ -2774,6 +2663,67 @@ dict_foreach_pair(Dict *__restrict self, Dee_foreach_pair_t cb, void *arg) {
 	return result;
 err_temp:
 	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_enumerate_index(Dict *__restrict self, Dee_enumerate_index_t cb,
+                     void *arg, size_t start, size_t end) {
+	Dee_dict_vidx_t i;
+	Dee_ssize_t temp, result = 0;
+	DeeDict_LockRead(self);
+	for (i = Dee_dict_vidx_tovirt(0);
+	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+		DREF DeeObject *key, *value;
+		struct Dee_dict_item *item;
+		size_t index, key_index;
+		item  = &_DeeDict_GetVirtVTab(self)[i];
+		index = item->di_hash;
+
+		/* Integer hashes are equal to the integer itself, so
+		 * if the hash doesn't fall into the start...end range,
+		 * then we know it shouldn't be enumerated! */
+		if (index < start)
+			continue;
+		if (index >= end)
+			continue;
+		key = item->di_key;
+		if unlikely(!key)
+			continue; /* Deleted, and not-yet-optimized key */
+		if likely(DeeInt_Check(key)) {
+			if (!DeeInt_TryAsSize(key, &key_index))
+				continue; /* Hash only matched due to overflow... */
+			ASSERTF(key_index == index, "Huh? Is the hash incorrect?");
+			value = item->di_value;
+			Dee_Incref(value);
+			DeeDict_LockEndRead(self);
+		} else {
+			bool ok;
+			Dee_Incref(key);
+			value = item->di_value;
+			Dee_Incref(value);
+			DeeDict_LockEndRead(self);
+			key = DeeObject_IntInherited(key);
+			if unlikely(!key)
+				goto err;
+			ok = DeeInt_TryAsSize(key, &key_index) &&
+			     key_index == index;
+			Dee_Decref(key);
+			if (!ok)
+				continue; /* Hash only matched due to overflow... */
+		}
+		temp = (*cb)(arg, key_index, value);
+		Dee_Decref_unlikely(value);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		DeeDict_LockRead(self);
+	}
+	DeeDict_LockEndRead(self);
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
 }
 
 
@@ -3412,9 +3362,9 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&dict_enumerate_index, /* TODO: Optimization: only need to enumerate integer keys, so we can take advantage of the fact that "hash(int) == int". */
+	/* .tp_iterkeys                   = */ &DeeMap_DefaultIterKeysWithIter,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&dict_size,
@@ -3604,6 +3554,113 @@ err:
 	return -1;
 }
 
+struct dict_fromkeys_data {
+	Dict      *dfkd_dict;  /* [1..1] Dict to insert stuff into. */
+	DeeObject *dfkd_value; /* [1..1] Value to insert, or callback to generate value. */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+dict_fromkeys_with_value(void *arg, DeeObject *key) {
+	int result;
+	struct dict_fromkeys_data *data;
+	data = (struct dict_fromkeys_data *)arg;
+#ifdef HAVE_dict_setitem_unlocked_fast_inherited
+	Dee_Incref(key);
+	Dee_Incref(data->dfkd_value);
+	result = dict_setitem_unlocked_fast_inherited(data->dfkd_dict, key, data->dfkd_value);
+	if unlikely(result) {
+		Dee_DecrefNokill(key);
+		Dee_DecrefNokill(data->dfkd_value);
+	}
+#else /* HAVE_dict_setitem_unlocked_fast_inherited */
+	result = dict_setitem_unlocked(data->dfkd_dict, key, data->dfkd_value);
+#endif /* !HAVE_dict_setitem_unlocked_fast_inherited */
+	ASSERT(result <= 0);
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+dict_fromkeys_with_valuefor(void *arg, DeeObject *key) {
+	int result;
+	DREF DeeObject *used_value;
+	struct dict_fromkeys_data *data;
+	data = (struct dict_fromkeys_data *)arg;
+	used_value = DeeObject_Call(data->dfkd_value, 1, &key);
+	if unlikely(!used_value)
+		goto err;
+#ifdef HAVE_dict_setitem_unlocked_fast_inherited
+	Dee_Incref(key);
+	result = dict_setitem_unlocked_fast_inherited(data->dfkd_dict, key, used_value);
+	if unlikely(result) {
+		Dee_DecrefNokill(key);
+		Dee_Decref(used_value);
+	}
+#else /* HAVE_dict_setitem_unlocked_fast_inherited */
+	result = dict_setitem_unlocked(data->dfkd_dict, key, used_value);
+	Dee_Decref_unlikely(used_value);
+#endif /* !HAVE_dict_setitem_unlocked_fast_inherited */
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Dict *DCALL
+dict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
+	struct dict_fromkeys_data data;
+	Dee_ssize_t foreach_status;
+	size_t hint;
+
+	/* Special optimization when "seq" is a HashSet: Duplicate its control structures */
+	if (DeeHashSet_CheckExact(keys)) {
+		/* TODO: do this once "HashSet" uses the same data structure as Dict. */
+	}
+
+	/* Special optimization when "seq" is a RoSet: Duplicate its control structures */
+	if (DeeRoSet_Check(keys)) {
+		/* TODO: do this once "RoSet" uses the same data structure as Dict. */
+	}
+
+	hint = DeeObject_SizeFast(keys);
+	if likely(hint == (size_t)-1) {
+		data.dfkd_dict = (DREF Dict *)DeeDict_TryNewWithHint(hint);
+	} else {
+		data.dfkd_dict = (DREF Dict *)DeeDict_TryNewWithWeakHint(DICT_FROMSEQ_DEFAULT_HINT);
+	}
+	if unlikely(!data.dfkd_dict) {
+		data.dfkd_dict = (DREF Dict *)DeeDict_New();
+		if unlikely(!data.dfkd_dict)
+			goto err;
+	}
+	if unlikely(valuefor) {
+		data.dfkd_value = valuefor;
+		foreach_status  = DeeObject_Foreach(keys, &dict_fromkeys_with_valuefor, &data);
+	} else {
+		data.dfkd_value = value;
+		foreach_status  = DeeObject_Foreach(keys, &dict_fromkeys_with_value, &data);
+	}
+	if unlikely(foreach_status < 0)
+		goto err_r;
+	return data.dfkd_dict;
+err_r:
+	Dee_DecrefDokill(data.dfkd_dict);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL
+dict_fromkeys_f(DeeTypeObject *__restrict UNUSED(dict),
+                size_t argc, DeeObject *const *argv,
+                DeeObject *kw) {
+	DeeObject *keys, *value = Dee_None;
+	DeeObject *valuefor = NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__keys_value_valuefor,
+	                    "o|oo:fromkeys", &keys, &value, &valuefor))
+		goto err;
+	return dict_fromkeys(keys, value, valuefor);
+err:
+	return NULL;
+}
+
 
 PRIVATE struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETSET_BOUND(STR_first, &dict_getfirst, &dict_delfirst, &dict_setfirst, &dict_nonempty_as_bound, "->?T2?O?O"),
@@ -3707,6 +3764,9 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_operator_trygetitem_index, &dict_mh_seq_trygetitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_delitem_index, &dict_mh_seq_delitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_setitem_index, &dict_mh_seq_setitem_index, METHOD_FNOREFESCAPE),
+//TODO: Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_compare_eq, (DeeObject *self, DeeObject *some_object))
+//TODO: Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_compare, (DeeObject *self, DeeObject *some_object))
+//TODO: Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_trycompare_eq, (DeeObject *self, DeeObject *some_object))
 	TYPE_METHOD_HINT_F(seq_xchitem_index, &dict_mh_seq_xchitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_erase, &dict_mh_seq_erase, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_insert, &dict_mh_seq_insert, METHOD_FNOREFESCAPE),
@@ -3728,6 +3788,13 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_any_with_range, &dict_bool_3, METHOD_FNOREFESCAPE),
 
 	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_method tpconst dict_class_methods[] = {
+	TYPE_KWMETHOD_F("fromkeys", &dict_fromkeys_f, METHOD_FNOREFESCAPE,
+	                "(keys:?S?O,value=!n,valuefor?:DCallable)->?.\n"
+	                "Construct a new ?. from @keys, and @value (or ${valuefor(key)}) as value."),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_operator const dict_operators[] = {
@@ -3807,7 +3874,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dict_visit,
 	/* .tp_gc            = */ &dict_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO */
 	/* .tp_seq           = */ &dict_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,
@@ -3817,7 +3884,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_methods       = */ dict_methods,
 	/* .tp_getsets       = */ dict_getsets,
 	/* .tp_members       = */ dict_members,
-	/* .tp_class_methods = */ NULL,
+	/* .tp_class_methods = */ dict_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ dict_class_members,
 	/* .tp_method_hints  = */ dict_method_hints,

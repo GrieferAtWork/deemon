@@ -473,6 +473,8 @@ override_item_after_consistency_check:
 						memmoveupc(new_item + 1, new_item, /* HINT: This also deletes "item" */
 						           (/*Dee_dict_vidx_toreal*/(vtab_idx) - 1) - /*Dee_dict_vidx_toreal*/(result_vidx),
 						           sizeof(struct Dee_dict_item));
+						/* What would also work: "dict_htab_incrange(self, result_vidx, vtab_idx + 1);" */
+						dict_htab_incrange(self, result_vidx, vtab_idx);
 					} else
 #endif /* LOCAL_HAS_getindex */
 					{
@@ -480,7 +482,12 @@ override_item_after_consistency_check:
 						memmovedownc(item, item + 1, /* HINT: This also deletes "item" */
 						             (/*Dee_dict_vidx_toreal*/(result_vidx) - 1) - /*Dee_dict_vidx_toreal*/(vtab_idx),
 						             sizeof(struct Dee_dict_item));
+#ifdef LOCAL_HAS_getindex
+						/* What would also work: "dict_htab_decrange(self, vtab_idx + 1, result_vidx);" */
+						dict_htab_decrange(self, vtab_idx, result_vidx);
+#else /* LOCAL_HAS_getindex */
 						dict_htab_decafter(self, vtab_idx); /* What would also work: "dict_htab_decafter(self, vtab_idx + 1);" */
+#endif /* !LOCAL_HAS_getindex */
 						--result_vidx;
 						new_item = &_DeeDict_GetVirtVTab(self)[result_vidx];
 					}

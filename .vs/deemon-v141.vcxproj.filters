@@ -696,6 +696,9 @@
 		<ClInclude Include="..\src\deemon\objects\dict-hidxio.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict-htabmod.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-setitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>

@@ -43,8 +43,14 @@ assert d;
 /* The order of insertion is remembered here! */
 assert { ("first", 10), ("second", 17), ("third", 9) } == d;
 assert { ("first", 10), ("third", 9), ("second", 17) } != d;
+assert (d as Sequence) == { ("first", 10), ("second", 17), ("third", 9) };
+assert (d as Sequence) != { ("first", 10), ("third", 9), ("second", 17) };
+assert (d            ) == { ("first", 10), ("third", 9), ("second", 17) };
 assert { "first", "second", "third" } == d.keys;
 assert { "first", "third", "second" } != d.keys;
+assert (d.keys            ) == { "first", "second", "third" };
+assert (d.keys            ) == { "first", "third", "second" };
+assert (d.keys as Sequence) != { "first", "third", "second" };
 assert { 10, 17, 9 } == d.values;
 assert { 10, 9, 17 } != d.values;
 assert #d == 3;

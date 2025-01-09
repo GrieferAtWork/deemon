@@ -251,7 +251,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 
 	/* Do final object initialization. */
 	DeeObject_Init(result, &DeeString_Type);
-	result->s_hash = (dhash_t)-1;
+	result->s_hash = (Dee_hash_t)-1;
 	result->s_data = NULL;
 	DBG_memset(self, 0xcc, sizeof(*self));
 	return (DREF DeeObject *)result;
@@ -322,7 +322,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 			/* Do the initial init when `self' was `NULL'. */
 			DeeObject_Init(result, &DeeString_Type);
 			result->s_data = NULL;
-			result->s_hash = (dhash_t)-1;
+			result->s_hash = (Dee_hash_t)-1;
 		}
 		result->s_len = num_bytes;
 		result->s_str[num_bytes] = '\0';
@@ -354,7 +354,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 			/* Do the initial init when `self' was `NULL'. */
 			DeeObject_Init(result, &DeeString_Type);
 			result->s_data = NULL;
-			result->s_hash = (dhash_t)-1;
+			result->s_hash = (Dee_hash_t)-1;
 		}
 		result->s_len            = num_bytes;
 		result->s_str[num_bytes] = '\0';
@@ -388,7 +388,7 @@ PUBLIC WUNUSED DREF DeeObject *
 	if likely(result) {
 		DeeObject_Init(result, &DeeString_Type);
 		result->s_data           = NULL;
-		result->s_hash           = (dhash_t)-1;
+		result->s_hash           = (Dee_hash_t)-1;
 		result->s_len            = num_bytes;
 		result->s_str[num_bytes] = '\0';
 	}
@@ -544,12 +544,12 @@ string_bool(String *__restrict self) {
 	return !DeeString_IsEmpty(self);
 }
 
-INTERN ATTR_PURE WUNUSED NONNULL((1)) dhash_t DCALL
+INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 DeeString_Hash(DeeObject *__restrict self) {
-	dhash_t result;
+	Dee_hash_t result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	result = DeeString_HASH(self);
-	if (result == (dhash_t)-1) {
+	if (result == (Dee_hash_t)-1) {
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 		CASE_WIDTH_1BYTE:
@@ -575,9 +575,9 @@ DeeString_Hash(DeeObject *__restrict self) {
 	return result;
 }
 
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) dhash_t DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 DeeString_HashCase(DeeObject *__restrict self) {
-	dhash_t result;
+	Dee_hash_t result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -985,7 +985,7 @@ string_compare(String *lhs, DeeObject *rhs) {
 		return compare_strings(lhs, (String *)rhs);
 	if (DeeBytes_Check(rhs))
 		return compare_string_bytes(lhs, (DeeBytesObject *)rhs);
-	return string_compare_seq(lhs, rhs);
+	return string_compare_seq(lhs, rhs); /* TODO: Think about removing this feature here -- prevents lookup optimizations in Dict */
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
@@ -1505,7 +1505,7 @@ PRIVATE struct type_cmp string_cmp = {
 	/* .tp_hash          = */ &DeeString_Hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare_eq,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare,
-	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_trycompare_eq = */ NULL, /* TODO: could greatly speed up string lookup in Dicts */
 	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_eq,
 	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ne,
 	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_lo,

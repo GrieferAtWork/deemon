@@ -4853,6 +4853,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTupl
 /* Generate and return the hash of a given object. */
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hash)(DeeObject *__restrict self);
 DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector, size_t object_count);
+DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_XHashv)(DeeObject *const *__restrict object_vector, size_t object_count);
 
 /* GC operator invocation. */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
@@ -4894,6 +4895,7 @@ DFUNDEF WUNUSED NONNULL((1)) uint64_t (DCALL DeeObject_AsDirectUInt64Inherited)(
 
 /* Cast-to-integer conversion operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IntInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self);
 
 #define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)   DeeObject_AsInt8(self, (int8_t *)(result))
 #define DEE_PRIVATE_OBJECT_AS_INT_2(self, result)   DeeObject_AsInt16(self, (int16_t *)(result))

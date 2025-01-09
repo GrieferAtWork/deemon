@@ -126,6 +126,7 @@ local kw_lists = {
 	{"code", "positional", "kwds"},
 	{"r", "cached"},
 	{"fully"},
+	{"keys", "value", "valuefor"},
 
 	{"#ifdef CONFIG_HOST_WINDOWS", "message", "inner", "errno", "nterr_np"},
 	{"#ifndef CONFIG_HOST_WINDOWS", "message", "inner", "errno"},
@@ -199,6 +200,7 @@ DECLARE_KWLIST(kwlist__item_start_end, { KEX("item", 0x91b22efe, 0xe78210b41247a
 DECLARE_KWLIST(kwlist__item_start_end_key, { KEX("item", 0x91b22efe, 0xe78210b41247a693), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });
 DECLARE_KWLIST(kwlist__item_start_end_max_key, { KEX("item", 0x91b22efe, 0xe78210b41247a693), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });
 DECLARE_KWLIST(kwlist__key, { KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });
+DECLARE_KWLIST(kwlist__keys_value_valuefor, { KEX("keys", 0x97e36be1, 0x654d31bc4825131c), KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEX("valuefor", 0xc2d5a98f, 0x8c111daeb6d08b14), KEND });
 DECLARE_KWLIST(kwlist__length_byteorder_signed, { KEX("length", 0xecef0c1, 0x2993e8eb119cab21), KEX("byteorder", 0x7b88a38d, 0x7fef2c9253a29a88), KEX("signed", 0x17a15883, 0x58a245b6f802625f), KEND });
 DECLARE_KWLIST(kwlist__lhs_rhs, { KEX("lhs", 0x4778c168, 0x4c6b9df6ea0934de), KEX("rhs", 0xc6d67ad, 0x7f4a7fedc9040cd3), KEND });
 DECLARE_KWLIST(kwlist__lookupmode, { KEX("lookupmode", 0x5919ca40, 0x2f6c38dd63e00f55), KEND });

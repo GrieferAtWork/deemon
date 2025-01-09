@@ -223,7 +223,7 @@ DDATDEF struct Dee_dict_hidxio_struct Dee_tpconst Dee_dict_hidxio[DEE_DICT_HIDXI
 
 /* Advance hash-index */
 #define _DeeDict_HashIdxInit(self, p_hs, p_perturb, hash) \
-	(void)(*(p_hs) = *(p_perturb) = (hash) & (self)->d_hmask)
+	(void)(*(p_hs) = (*(p_perturb) = (hash)) & (self)->d_hmask)
 #define _DeeDict_HashIdxAdv(self, p_hs, p_perturb) \
 	(void)(*(p_hs) = (*(p_hs) << 2) + *(p_hs) + *(p_perturb) + 1, *(p_perturb) >>= 5)
 
