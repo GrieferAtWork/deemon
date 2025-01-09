@@ -36,6 +36,8 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/typecore.h>
+
 /**/
 #include "../../runtime/operator-require.h"
 #include "../../runtime/runtime_error.h"
@@ -43,6 +45,9 @@
 
 /**/
 #include "default-enumerate.h"
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -376,187 +381,162 @@ DeeType_TryRequireSeqCache(DeeTypeObject *__restrict self) {
 
 #define Dee_tsc_uslot_fini_function(self) Dee_Decref((self)->d_function)
 
+
+/* Specs on how to destroy  */
+struct sc_destroy_spec {
+	__UINTPTR_HALF_TYPE__ sds_offsetof_tsc_data;   /* Offset to "union Dee_tsc_uslot" */
+	__UINTPTR_HALF_TYPE__ sds_offsetof_tsc_funptr; /* Offset to function pointer */
+	Dee_funptr_t          sds_data_function_ptr;   /* Function pointer that means "must `Dee_tsc_uslot_fini_function(sds_offsetof_tsc_data)'" */
+};
+
+#define sc_destroy_spec_matched(self, tsc_base) \
+	(*(Dee_funptr_t *)((byte_t *)(tsc_base) + (self)->sds_offsetof_tsc_funptr) == (self)->sds_data_function_ptr)
+
+PRIVATE struct sc_destroy_spec tpconst sc_destroy_specs[] = {
+#define SPEC(tsc_data, tsc_funptr, data_function)      \
+	{ offsetof(struct Dee_type_seq_cache, tsc_data),   \
+	  offsetof(struct Dee_type_seq_cache, tsc_funptr), \
+	  (Dee_funptr_t)(data_function) }
+	/* Specs must be grouped by "tsc_data"! The destructor will skip any neighboring specs
+	 * for the same "tsc_data"-location if one of that location's conditions are matched. */
+	SPEC(tsc_seq_getfirst_data, tsc_seq_getfirst, &DeeSeq_DefaultGetFirstWithCallGetFirstDataFunction),
+	SPEC(tsc_seq_getfirst_data, tsc_seq_boundfirst, &DeeSeq_DefaultBoundFirstWithCallGetFirstDataFunction),
+	SPEC(tsc_seq_delfirst_data, tsc_seq_delfirst, &DeeSeq_DefaultDelFirstWithCallDelFirstDataFunction),
+	SPEC(tsc_seq_setfirst_data, tsc_seq_setfirst, &DeeSeq_DefaultSetFirstWithCallSetFirstDataFunction),
+	SPEC(tsc_seq_getlast_data, tsc_seq_getlast, &DeeSeq_DefaultGetLastWithCallGetLastDataFunction),
+	SPEC(tsc_seq_getlast_data, tsc_seq_boundlast, &DeeSeq_DefaultBoundLastWithCallGetLastDataFunction),
+	SPEC(tsc_seq_dellast_data, tsc_seq_dellast, &DeeSeq_DefaultDelLastWithCallDelLastDataFunction),
+	SPEC(tsc_seq_setlast_data, tsc_seq_setlast, &DeeSeq_DefaultSetLastWithCallSetLastDataFunction),
+	SPEC(tsc_seq_cached_data, tsc_seq_cached, &DeeSeq_DefaultCachedWithCallCachedDataFunction),
+	SPEC(tsc_seq_any_data, tsc_seq_any, &DeeSeq_DefaultAnyWithCallAnyDataFunction),
+	SPEC(tsc_seq_any_data, tsc_seq_any_with_key, &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSeq),
+	SPEC(tsc_seq_any_data, tsc_seq_any_with_key, &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSetOrMap),
+	SPEC(tsc_seq_any_data, tsc_seq_any_with_range, &DeeSeq_DefaultAnyWithRangeWithCallAnyDataFunction),
+	SPEC(tsc_seq_any_data, tsc_seq_any_with_range_and_key, &DeeSeq_DefaultAnyWithRangeAndKeyWithCallAnyDataFunction),
+	SPEC(tsc_seq_all_data, tsc_seq_all, &DeeSeq_DefaultAllWithCallAllDataFunction),
+	SPEC(tsc_seq_all_data, tsc_seq_all_with_key, &DeeSeq_DefaultAllWithKeyWithCallAllDataFunctionForSeq),
+	SPEC(tsc_seq_all_data, tsc_seq_all_with_key, &DeeSeq_DefaultAllWithKeyWithCallAllDataFunctionForSetOrMap),
+	SPEC(tsc_seq_all_data, tsc_seq_all_with_range, &DeeSeq_DefaultAllWithRangeWithCallAllDataFunction),
+	SPEC(tsc_seq_all_data, tsc_seq_all_with_range_and_key, &DeeSeq_DefaultAllWithRangeAndKeyWithCallAllDataFunction),
+	SPEC(tsc_seq_parity_data, tsc_seq_parity, &DeeSeq_DefaultParityWithCallParityDataFunction),
+	SPEC(tsc_seq_parity_data, tsc_seq_parity_with_key, &DeeSeq_DefaultParityWithKeyWithCallParityDataFunctionForSeq),
+	SPEC(tsc_seq_parity_data, tsc_seq_parity_with_key, &DeeSeq_DefaultParityWithKeyWithCallParityDataFunctionForSetOrMap),
+	SPEC(tsc_seq_parity_data, tsc_seq_parity_with_range, &DeeSeq_DefaultParityWithRangeWithCallParityDataFunction),
+	SPEC(tsc_seq_parity_data, tsc_seq_parity_with_range_and_key, &DeeSeq_DefaultParityWithRangeAndKeyWithCallParityDataFunction),
+	SPEC(tsc_seq_reduce_data, tsc_seq_reduce, &DeeSeq_DefaultReduceWithCallReduceDataFunction),
+	SPEC(tsc_seq_reduce_data, tsc_seq_reduce_with_init, &DeeSeq_DefaultReduceWithInitWithCallReduceDataFunctionForSeq),
+	SPEC(tsc_seq_reduce_data, tsc_seq_reduce_with_init, &DeeSeq_DefaultReduceWithInitWithCallReduceDataFunctionForSetOrMap),
+	SPEC(tsc_seq_reduce_data, tsc_seq_reduce_with_range, &DeeSeq_DefaultReduceWithRangeWithCallReduceDataFunction),
+	SPEC(tsc_seq_reduce_data, tsc_seq_reduce_with_range_and_init, &DeeSeq_DefaultReduceWithRangeAndInitWithCallReduceDataFunction),
+	SPEC(tsc_seq_min_data, tsc_seq_min, &DeeSeq_DefaultMinWithCallMinDataFunction),
+	SPEC(tsc_seq_min_data, tsc_seq_min_with_key, &DeeSeq_DefaultMinWithKeyWithCallMinDataFunctionForSeq),
+	SPEC(tsc_seq_min_data, tsc_seq_min_with_key, &DeeSeq_DefaultMinWithKeyWithCallMinDataFunctionForSetOrMap),
+	SPEC(tsc_seq_min_data, tsc_seq_min_with_range, &DeeSeq_DefaultMinWithRangeWithCallMinDataFunction),
+	SPEC(tsc_seq_min_data, tsc_seq_min_with_range_and_key, &DeeSeq_DefaultMinWithRangeAndKeyWithCallMinDataFunction),
+	SPEC(tsc_seq_max_data, tsc_seq_max, &DeeSeq_DefaultMaxWithCallMaxDataFunction),
+	SPEC(tsc_seq_max_data, tsc_seq_max_with_key, &DeeSeq_DefaultMaxWithKeyWithCallMaxDataFunctionForSeq),
+	SPEC(tsc_seq_max_data, tsc_seq_max_with_key, &DeeSeq_DefaultMaxWithKeyWithCallMaxDataFunctionForSetOrMap),
+	SPEC(tsc_seq_max_data, tsc_seq_max_with_range, &DeeSeq_DefaultMaxWithRangeWithCallMaxDataFunction),
+	SPEC(tsc_seq_max_data, tsc_seq_max_with_range_and_key, &DeeSeq_DefaultMaxWithRangeAndKeyWithCallMaxDataFunction),
+	SPEC(tsc_seq_sum_data, tsc_seq_sum, &DeeSeq_DefaultSumWithCallSumDataFunction),
+	SPEC(tsc_seq_sum_data, tsc_seq_sum_with_range, &DeeSeq_DefaultSumWithRangeWithCallSumDataFunction),
+	SPEC(tsc_seq_count_data, tsc_seq_count, &DeeSeq_DefaultCountWithCallCountDataFunction),
+	SPEC(tsc_seq_count_data, tsc_seq_count_with_key, &DeeSeq_DefaultCountWithKeyWithCallCountDataFunctionForSeq),
+	SPEC(tsc_seq_count_data, tsc_seq_count_with_key, &DeeSeq_DefaultCountWithKeyWithCallCountDataFunctionForSetOrMap),
+	SPEC(tsc_seq_count_data, tsc_seq_count_with_range, &DeeSeq_DefaultCountWithRangeWithCallCountDataFunction),
+	SPEC(tsc_seq_count_data, tsc_seq_count_with_range_and_key, &DeeSeq_DefaultCountWithRangeAndKeyWithCallCountDataFunction),
+	SPEC(tsc_seq_contains_data, tsc_seq_contains, &DeeSeq_DefaultContainsWithCallContainsDataFunction),
+	SPEC(tsc_seq_contains_data, tsc_seq_contains_with_key, &DeeSeq_DefaultContainsWithKeyWithCallContainsDataFunctionForSeq),
+	SPEC(tsc_seq_contains_data, tsc_seq_contains_with_key, &DeeSeq_DefaultContainsWithKeyWithCallContainsDataFunctionForSetOrMap),
+	SPEC(tsc_seq_contains_data, tsc_seq_contains_with_range, &DeeSeq_DefaultContainsWithRangeWithCallContainsDataFunction),
+	SPEC(tsc_seq_contains_data, tsc_seq_contains_with_range_and_key, &DeeSeq_DefaultContainsWithRangeAndKeyWithCallContainsDataFunction),
+	SPEC(tsc_seq_locate_data, tsc_seq_locate, &DeeSeq_DefaultLocateWithCallLocateDataFunctionForSeq),
+	SPEC(tsc_seq_locate_data, tsc_seq_locate, &DeeSeq_DefaultLocateWithCallLocateDataFunctionForSetOrMap),
+	SPEC(tsc_seq_locate_data, tsc_seq_locate_with_range, &DeeSeq_DefaultLocateWithRangeWithCallLocateDataFunction),
+	SPEC(tsc_seq_rlocate_data, tsc_seq_rlocate_with_range, &DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataFunction),
+	SPEC(tsc_seq_startswith_data, tsc_seq_startswith, &DeeSeq_DefaultStartsWithWithCallStartsWithDataFunction),
+	SPEC(tsc_seq_startswith_data, tsc_seq_startswith_with_key, &DeeSeq_DefaultStartsWithWithKeyWithCallStartsWithDataFunctionForSeq),
+	SPEC(tsc_seq_startswith_data, tsc_seq_startswith_with_key, &DeeSeq_DefaultStartsWithWithKeyWithCallStartsWithDataFunctionForSetOrMap),
+	SPEC(tsc_seq_startswith_data, tsc_seq_startswith_with_range, &DeeSeq_DefaultStartsWithWithRangeWithCallStartsWithDataFunction),
+	SPEC(tsc_seq_startswith_data, tsc_seq_startswith_with_range_and_key, &DeeSeq_DefaultStartsWithWithRangeAndKeyWithCallStartsWithDataFunction),
+	SPEC(tsc_seq_endswith_data, tsc_seq_endswith, &DeeSeq_DefaultEndsWithWithCallEndsWithDataFunction),
+	SPEC(tsc_seq_endswith_data, tsc_seq_endswith_with_key, &DeeSeq_DefaultEndsWithWithKeyWithCallEndsWithDataFunctionForSeq),
+	SPEC(tsc_seq_endswith_data, tsc_seq_endswith_with_key, &DeeSeq_DefaultEndsWithWithKeyWithCallEndsWithDataFunctionForSetOrMap),
+	SPEC(tsc_seq_endswith_data, tsc_seq_endswith_with_range, &DeeSeq_DefaultEndsWithWithRangeWithCallEndsWithDataFunction),
+	SPEC(tsc_seq_endswith_data, tsc_seq_endswith_with_range_and_key, &DeeSeq_DefaultEndsWithWithRangeAndKeyWithCallEndsWithDataFunction),
+	SPEC(tsc_seq_find_data, tsc_seq_find, &DeeSeq_DefaultFindWithCallFindDataFunction),
+	SPEC(tsc_seq_find_data, tsc_seq_find_with_key, &DeeSeq_DefaultFindWithKeyWithCallFindDataFunction),
+	SPEC(tsc_seq_rfind_data, tsc_seq_rfind, &DeeSeq_DefaultRFindWithCallRFindDataFunction),
+	SPEC(tsc_seq_rfind_data, tsc_seq_rfind_with_key, &DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction),
+	SPEC(tsc_seq_erase_data, tsc_seq_erase, &DeeSeq_DefaultEraseWithCallEraseDataFunction),
+	SPEC(tsc_seq_insert_data, tsc_seq_insert, &DeeSeq_DefaultInsertWithCallInsertDataFunction),
+	SPEC(tsc_seq_insertall_data, tsc_seq_insertall, &DeeSeq_DefaultInsertAllWithCallInsertAllDataFunction),
+	SPEC(tsc_seq_pushfront_data, tsc_seq_pushfront, &DeeSeq_DefaultPushFrontWithCallPushFrontDataFunction),
+	SPEC(tsc_seq_append_data, tsc_seq_append, &DeeSeq_DefaultAppendWithCallAppendDataFunction),
+	SPEC(tsc_seq_extend_data, tsc_seq_extend, &DeeSeq_DefaultExtendWithCallExtendDataFunction),
+	SPEC(tsc_seq_xchitem_data, tsc_seq_xchitem_index, &DeeSeq_DefaultXchItemIndexWithCallXchItemDataFunction),
+	SPEC(tsc_seq_clear_data, tsc_seq_clear, &DeeSeq_DefaultClearWithCallClearDataFunction),
+	SPEC(tsc_seq_pop_data, tsc_seq_pop, &DeeSeq_DefaultPopWithCallPopDataFunction),
+	SPEC(tsc_seq_remove_data, tsc_seq_remove, &DeeSeq_DefaultRemoveWithCallRemoveDataFunction),
+	SPEC(tsc_seq_remove_data, tsc_seq_remove_with_key, &DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataFunction),
+	SPEC(tsc_seq_rremove_data, tsc_seq_rremove, &DeeSeq_DefaultRRemoveWithCallRRemoveDataFunction),
+	SPEC(tsc_seq_rremove_data, tsc_seq_rremove_with_key, &DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataFunction),
+	SPEC(tsc_seq_removeall_data, tsc_seq_removeall, &DeeSeq_DefaultRemoveAllWithCallRemoveAllDataFunction),
+	SPEC(tsc_seq_removeall_data, tsc_seq_removeall_with_key, &DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataFunction),
+	SPEC(tsc_seq_removeif_data, tsc_seq_removeif, &DeeSeq_DefaultRemoveIfWithCallRemoveIfDataFunction),
+	SPEC(tsc_seq_resize_data, tsc_seq_resize, &DeeSeq_DefaultResizeWithCallResizeDataFunction),
+	SPEC(tsc_seq_fill_data, tsc_seq_fill, &DeeSeq_DefaultFillWithCallFillDataFunction),
+	SPEC(tsc_seq_reverse_data, tsc_seq_reverse, &DeeSeq_DefaultReverseWithCallReverseDataFunction),
+	SPEC(tsc_seq_reversed_data, tsc_seq_reversed, &DeeSeq_DefaultReversedWithCallReversedDataFunction),
+	SPEC(tsc_seq_sort_data, tsc_seq_sort, &DeeSeq_DefaultSortWithCallSortDataFunction),
+	SPEC(tsc_seq_sort_data, tsc_seq_sort_with_key, &DeeSeq_DefaultSortWithKeyWithCallSortDataFunction),
+	SPEC(tsc_seq_sorted_data, tsc_seq_sorted, &DeeSeq_DefaultSortedWithCallSortedDataFunction),
+	SPEC(tsc_seq_sorted_data, tsc_seq_sorted_with_key, &DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction),
+	SPEC(tsc_set_insert_data, tsc_set_insert, &DeeSet_DefaultInsertWithCallInsertDataFunction),
+	SPEC(tsc_set_remove_data, tsc_set_remove, &DeeSet_DefaultRemoveWithCallRemoveDataFunction),
+	SPEC(tsc_set_unify_data, tsc_set_unify, &DeeSet_DefaultUnifyWithCallUnifyDataFunction),
+	SPEC(tsc_set_insertall_data, tsc_set_insertall, &DeeSet_DefaultInsertAllWithCallInsertAllDataFunction),
+	SPEC(tsc_set_removeall_data, tsc_set_removeall, &DeeSet_DefaultRemoveAllWithCallRemoveAllDataFunction),
+	SPEC(tsc_set_pop_data, tsc_set_pop, &DeeSet_DefaultPopWithCallPopDataFunction),
+	SPEC(tsc_set_pop_data, tsc_set_pop_with_default, &DeeSet_DefaultPopWithDefaultWithCallPopDataFunction),
+	SPEC(tsc_map_setold_data, tsc_map_setold, &DeeMap_DefaultSetOldWithCallSetOldDataFunction),
+	SPEC(tsc_map_setold_ex_data, tsc_map_setold_ex, &DeeMap_DefaultSetOldExWithCallSetOldExDataFunction),
+	SPEC(tsc_map_setnew_data, tsc_map_setnew, &DeeMap_DefaultSetNewWithCallSetNewDataFunction),
+	SPEC(tsc_map_setnew_ex_data, tsc_map_setnew_ex, &DeeMap_DefaultSetNewExWithCallSetNewExDataFunction),
+	SPEC(tsc_map_setdefault_data, tsc_map_setdefault, &DeeMap_DefaultSetDefaultWithCallSetDefaultDataFunction),
+	SPEC(tsc_map_update_data, tsc_map_update, &DeeMap_DefaultUpdateWithCallUpdateDataFunction),
+	SPEC(tsc_map_remove_data, tsc_map_remove, &DeeMap_DefaultRemoveWithCallRemoveDataFunction),
+	SPEC(tsc_map_removekeys_data, tsc_map_removekeys, &DeeMap_DefaultRemoveKeysWithCallRemoveKeysDataFunction),
+	SPEC(tsc_map_pop_data, tsc_map_pop, &DeeMap_DefaultPopWithCallPopDataFunction),
+	SPEC(tsc_map_pop_data, tsc_map_pop_with_default, &DeeMap_DefaultPopWithDefaultWithCallPopDataFunction),
+	SPEC(tsc_map_popitem_data, tsc_map_popitem, &DeeMap_DefaultPopItemWithCallPopItemDataFunction),
+	SPEC(tsc_map_keys_data, tsc_map_keys, &DeeMap_DefaultKeysWithCallKeysDataFunction),
+	SPEC(tsc_map_values_data, tsc_map_values, &DeeMap_DefaultValuesWithCallValuesDataFunction),
+	SPEC(tsc_map_iterkeys_data, tsc_map_iterkeys, &DeeMap_DefaultIterKeysWithCallIterKeysDataFunction),
+	SPEC(tsc_map_itervalues_data, tsc_map_itervalues, &DeeMap_DefaultIterValuesWithCallIterValuesDataFunction),
+#undef SPEC
+};
+
 /* Destroy a lazily allocated sequence operator cache table. */
 INTERN NONNULL((1)) void DCALL
 Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
-	/* Drop function references where they are present. */
-	if (self->tsc_seq_getfirst == &DeeSeq_DefaultGetFirstWithCallGetFirstDataFunction ||
-	    self->tsc_seq_boundfirst == &DeeSeq_DefaultBoundFirstWithCallGetFirstDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_getfirst_data);
-	if (self->tsc_seq_delfirst == &DeeSeq_DefaultDelFirstWithCallDelFirstDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_delfirst_data);
-	if (self->tsc_seq_setfirst == &DeeSeq_DefaultSetFirstWithCallSetFirstDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_setfirst_data);
-	if (self->tsc_seq_getlast == &DeeSeq_DefaultGetLastWithCallGetLastDataFunction ||
-	    self->tsc_seq_boundlast == &DeeSeq_DefaultBoundLastWithCallGetLastDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_getlast_data);
-	if (self->tsc_seq_dellast == &DeeSeq_DefaultDelLastWithCallDelLastDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_dellast_data);
-	if (self->tsc_seq_setlast == &DeeSeq_DefaultSetLastWithCallSetLastDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_setlast_data);
-	if (self->tsc_seq_cached == &DeeSeq_DefaultCachedWithCallCachedDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_cached_data);
-	if (self->tsc_seq_any == &DeeSeq_DefaultAnyWithCallAnyDataFunction ||
-	    self->tsc_seq_any_with_key == &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSeq ||
-	    self->tsc_seq_any_with_key == &DeeSeq_DefaultAnyWithKeyWithCallAnyDataFunctionForSetOrMap ||
-	    self->tsc_seq_any_with_range == &DeeSeq_DefaultAnyWithRangeWithCallAnyDataFunction ||
-	    self->tsc_seq_any_with_range_and_key == &DeeSeq_DefaultAnyWithRangeAndKeyWithCallAnyDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_any_data);
-	if (self->tsc_seq_all == &DeeSeq_DefaultAllWithCallAllDataFunction ||
-	    self->tsc_seq_all_with_key == &DeeSeq_DefaultAllWithKeyWithCallAllDataFunctionForSeq ||
-	    self->tsc_seq_all_with_key == &DeeSeq_DefaultAllWithKeyWithCallAllDataFunctionForSetOrMap ||
-	    self->tsc_seq_all_with_range == &DeeSeq_DefaultAllWithRangeWithCallAllDataFunction ||
-	    self->tsc_seq_all_with_range_and_key == &DeeSeq_DefaultAllWithRangeAndKeyWithCallAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_all_data);
-	if (self->tsc_seq_parity == &DeeSeq_DefaultParityWithCallParityDataFunction ||
-	    self->tsc_seq_parity_with_key == &DeeSeq_DefaultParityWithKeyWithCallParityDataFunctionForSeq ||
-	    self->tsc_seq_parity_with_key == &DeeSeq_DefaultParityWithKeyWithCallParityDataFunctionForSetOrMap ||
-	    self->tsc_seq_parity_with_range == &DeeSeq_DefaultParityWithRangeWithCallParityDataFunction ||
-	    self->tsc_seq_parity_with_range_and_key == &DeeSeq_DefaultParityWithRangeAndKeyWithCallParityDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_parity_data);
-	if (self->tsc_seq_reduce == &DeeSeq_DefaultReduceWithCallReduceDataFunction ||
-	    self->tsc_seq_reduce_with_init == &DeeSeq_DefaultReduceWithInitWithCallReduceDataFunctionForSeq ||
-	    self->tsc_seq_reduce_with_init == &DeeSeq_DefaultReduceWithInitWithCallReduceDataFunctionForSetOrMap ||
-	    self->tsc_seq_reduce_with_range == &DeeSeq_DefaultReduceWithRangeWithCallReduceDataFunction ||
-	    self->tsc_seq_reduce_with_range_and_init == &DeeSeq_DefaultReduceWithRangeAndInitWithCallReduceDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_reduce_data);
-	if (self->tsc_seq_min == &DeeSeq_DefaultMinWithCallMinDataFunction ||
-	    self->tsc_seq_min_with_key == &DeeSeq_DefaultMinWithKeyWithCallMinDataFunctionForSeq ||
-	    self->tsc_seq_min_with_key == &DeeSeq_DefaultMinWithKeyWithCallMinDataFunctionForSetOrMap ||
-	    self->tsc_seq_min_with_range == &DeeSeq_DefaultMinWithRangeWithCallMinDataFunction ||
-	    self->tsc_seq_min_with_range_and_key == &DeeSeq_DefaultMinWithRangeAndKeyWithCallMinDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_min_data);
-	if (self->tsc_seq_max == &DeeSeq_DefaultMaxWithCallMaxDataFunction ||
-	    self->tsc_seq_max_with_key == &DeeSeq_DefaultMaxWithKeyWithCallMaxDataFunctionForSeq ||
-	    self->tsc_seq_max_with_key == &DeeSeq_DefaultMaxWithKeyWithCallMaxDataFunctionForSetOrMap ||
-	    self->tsc_seq_max_with_range == &DeeSeq_DefaultMaxWithRangeWithCallMaxDataFunction ||
-	    self->tsc_seq_max_with_range_and_key == &DeeSeq_DefaultMaxWithRangeAndKeyWithCallMaxDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_max_data);
-	if (self->tsc_seq_sum == &DeeSeq_DefaultSumWithCallSumDataFunction ||
-	    self->tsc_seq_sum_with_range == &DeeSeq_DefaultSumWithRangeWithCallSumDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_sum_data);
-	if (self->tsc_seq_count == &DeeSeq_DefaultCountWithCallCountDataFunction ||
-	    self->tsc_seq_count_with_key == &DeeSeq_DefaultCountWithKeyWithCallCountDataFunctionForSeq ||
-	    self->tsc_seq_count_with_key == &DeeSeq_DefaultCountWithKeyWithCallCountDataFunctionForSetOrMap ||
-	    self->tsc_seq_count_with_range == &DeeSeq_DefaultCountWithRangeWithCallCountDataFunction ||
-	    self->tsc_seq_count_with_range_and_key == &DeeSeq_DefaultCountWithRangeAndKeyWithCallCountDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_count_data);
-	if (self->tsc_seq_contains == &DeeSeq_DefaultContainsWithCallContainsDataFunction ||
-	    self->tsc_seq_contains_with_key == &DeeSeq_DefaultContainsWithKeyWithCallContainsDataFunctionForSeq ||
-	    self->tsc_seq_contains_with_key == &DeeSeq_DefaultContainsWithKeyWithCallContainsDataFunctionForSetOrMap ||
-	    self->tsc_seq_contains_with_range == &DeeSeq_DefaultContainsWithRangeWithCallContainsDataFunction ||
-	    self->tsc_seq_contains_with_range_and_key == &DeeSeq_DefaultContainsWithRangeAndKeyWithCallContainsDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_contains_data);
-	if (self->tsc_seq_locate == &DeeSeq_DefaultLocateWithCallLocateDataFunctionForSeq ||
-	    self->tsc_seq_locate == &DeeSeq_DefaultLocateWithCallLocateDataFunctionForSetOrMap ||
-	    self->tsc_seq_locate_with_range == &DeeSeq_DefaultLocateWithRangeWithCallLocateDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_locate_data);
-	if (self->tsc_seq_rlocate_with_range == &DeeSeq_DefaultRLocateWithRangeWithCallRLocateDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_rlocate_data);
-	if (self->tsc_seq_startswith == &DeeSeq_DefaultStartsWithWithCallStartsWithDataFunction ||
-	    self->tsc_seq_startswith_with_key == &DeeSeq_DefaultStartsWithWithKeyWithCallStartsWithDataFunctionForSeq ||
-	    self->tsc_seq_startswith_with_key == &DeeSeq_DefaultStartsWithWithKeyWithCallStartsWithDataFunctionForSetOrMap ||
-	    self->tsc_seq_startswith_with_range == &DeeSeq_DefaultStartsWithWithRangeWithCallStartsWithDataFunction ||
-	    self->tsc_seq_startswith_with_range_and_key == &DeeSeq_DefaultStartsWithWithRangeAndKeyWithCallStartsWithDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_startswith_data);
-	if (self->tsc_seq_endswith == &DeeSeq_DefaultEndsWithWithCallEndsWithDataFunction ||
-	    self->tsc_seq_endswith_with_key == &DeeSeq_DefaultEndsWithWithKeyWithCallEndsWithDataFunctionForSeq ||
-	    self->tsc_seq_endswith_with_key == &DeeSeq_DefaultEndsWithWithKeyWithCallEndsWithDataFunctionForSetOrMap ||
-	    self->tsc_seq_endswith_with_range == &DeeSeq_DefaultEndsWithWithRangeWithCallEndsWithDataFunction ||
-	    self->tsc_seq_endswith_with_range_and_key == &DeeSeq_DefaultEndsWithWithRangeAndKeyWithCallEndsWithDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_endswith_data);
-	if (self->tsc_seq_find == &DeeSeq_DefaultFindWithCallFindDataFunction ||
-	    self->tsc_seq_find_with_key == &DeeSeq_DefaultFindWithKeyWithCallFindDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_find_data);
-	if (self->tsc_seq_rfind == &DeeSeq_DefaultRFindWithCallRFindDataFunction ||
-	    self->tsc_seq_rfind_with_key == &DeeSeq_DefaultRFindWithKeyWithCallRFindDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_rfind_data);
-	if (self->tsc_seq_erase == &DeeSeq_DefaultEraseWithCallEraseDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_erase_data);
-	if (self->tsc_seq_insert == &DeeSeq_DefaultInsertWithCallInsertDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_insert_data);
-	if (self->tsc_seq_insertall == &DeeSeq_DefaultInsertAllWithCallInsertAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_insertall_data);
-	if (self->tsc_seq_pushfront == &DeeSeq_DefaultPushFrontWithCallPushFrontDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_pushfront_data);
-	if (self->tsc_seq_append == &DeeSeq_DefaultAppendWithCallAppendDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_append_data);
-	if (self->tsc_seq_extend == &DeeSeq_DefaultExtendWithCallExtendDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_extend_data);
-	if (self->tsc_seq_xchitem_index == &DeeSeq_DefaultXchItemIndexWithCallXchItemDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_xchitem_data);
-	if (self->tsc_seq_clear == &DeeSeq_DefaultClearWithCallClearDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_clear_data);
-	if (self->tsc_seq_pop == &DeeSeq_DefaultPopWithCallPopDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_pop_data);
-	if (self->tsc_seq_remove == &DeeSeq_DefaultRemoveWithCallRemoveDataFunction ||
-	    self->tsc_seq_remove_with_key == &DeeSeq_DefaultRemoveWithKeyWithCallRemoveDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_remove_data);
-	if (self->tsc_seq_rremove == &DeeSeq_DefaultRRemoveWithCallRRemoveDataFunction ||
-	    self->tsc_seq_rremove_with_key == &DeeSeq_DefaultRRemoveWithKeyWithCallRRemoveDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_rremove_data);
-	if (self->tsc_seq_removeall == &DeeSeq_DefaultRemoveAllWithCallRemoveAllDataFunction ||
-	    self->tsc_seq_removeall_with_key == &DeeSeq_DefaultRemoveAllWithKeyWithCallRemoveAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_removeall_data);
-	if (self->tsc_seq_removeif == &DeeSeq_DefaultRemoveIfWithCallRemoveIfDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_removeif_data);
-	if (self->tsc_seq_resize == &DeeSeq_DefaultResizeWithCallResizeDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_resize_data);
-	if (self->tsc_seq_fill == &DeeSeq_DefaultFillWithCallFillDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_fill_data);
-	if (self->tsc_seq_reverse == &DeeSeq_DefaultReverseWithCallReverseDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_reverse_data);
-	if (self->tsc_seq_reversed == &DeeSeq_DefaultReversedWithCallReversedDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_reversed_data);
-	if (self->tsc_seq_sort == &DeeSeq_DefaultSortWithCallSortDataFunction ||
-	    self->tsc_seq_sort_with_key == &DeeSeq_DefaultSortWithKeyWithCallSortDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_sort_data);
-	if (self->tsc_seq_sorted == &DeeSeq_DefaultSortedWithCallSortedDataFunction ||
-	    self->tsc_seq_sorted_with_key == &DeeSeq_DefaultSortedWithKeyWithCallSortedDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_seq_sorted_data);
-	if (self->tsc_set_insert == &DeeSet_DefaultInsertWithCallInsertDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_set_insert_data);
-	if (self->tsc_set_remove == &DeeSet_DefaultRemoveWithCallRemoveDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_set_remove_data);
-	if (self->tsc_set_unify == &DeeSet_DefaultUnifyWithCallUnifyDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_set_unify_data);
-	if (self->tsc_set_insertall == &DeeSet_DefaultInsertAllWithCallInsertAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_set_insertall_data);
-	if (self->tsc_set_removeall == &DeeSet_DefaultRemoveAllWithCallRemoveAllDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_set_removeall_data);
-	if (self->tsc_set_pop == &DeeSet_DefaultPopWithCallPopDataFunction ||
-	    self->tsc_set_pop_with_default == &DeeSet_DefaultPopWithDefaultWithCallPopDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_set_pop_data);
-	if (self->tsc_map_setold == &DeeMap_DefaultSetOldWithCallSetOldDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_setold_data);
-	if (self->tsc_map_setold_ex == &DeeMap_DefaultSetOldExWithCallSetOldExDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_setold_ex_data);
-	if (self->tsc_map_setnew == &DeeMap_DefaultSetNewWithCallSetNewDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_setnew_data);
-	if (self->tsc_map_setnew_ex == &DeeMap_DefaultSetNewExWithCallSetNewExDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_setnew_ex_data);
-	if (self->tsc_map_setdefault == &DeeMap_DefaultSetDefaultWithCallSetDefaultDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_setdefault_data);
-	if (self->tsc_map_update == &DeeMap_DefaultUpdateWithCallUpdateDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_update_data);
-	if (self->tsc_map_remove == &DeeMap_DefaultRemoveWithCallRemoveDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_remove_data);
-	if (self->tsc_map_removekeys == &DeeMap_DefaultRemoveKeysWithCallRemoveKeysDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_removekeys_data);
-	if (self->tsc_map_pop == &DeeMap_DefaultPopWithCallPopDataFunction ||
-	    self->tsc_map_pop_with_default == &DeeMap_DefaultPopWithDefaultWithCallPopDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_pop_data);
-	if (self->tsc_map_popitem == &DeeMap_DefaultPopItemWithCallPopItemDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_popitem_data);
-	if (self->tsc_map_keys == &DeeMap_DefaultKeysWithCallKeysDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_keys_data);
-	if (self->tsc_map_values == &DeeMap_DefaultValuesWithCallValuesDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_values_data);
-	if (self->tsc_map_iterkeys == &DeeMap_DefaultIterKeysWithCallIterKeysDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_iterkeys_data);
-	if (self->tsc_map_itervalues == &DeeMap_DefaultIterValuesWithCallIterValuesDataFunction)
-		Dee_tsc_uslot_fini_function(&self->tsc_map_itervalues_data);
-
+	size_t i;
+	for (i = 0; i < COMPILER_LENOF(sc_destroy_specs);) {
+		if (sc_destroy_spec_matched(&sc_destroy_specs[i], self)) {
+			union Dee_tsc_uslot *tsc_data;
+			uint16_t tsc_data_offset;
+			tsc_data_offset = sc_destroy_specs[i].sds_offsetof_tsc_data;
+			/* Skip any extra conditions for this data-slot. */
+			do {
+				++i;
+			} while (i < COMPILER_LENOF(sc_destroy_specs) &&
+			         sc_destroy_specs[i].sds_offsetof_tsc_data == tsc_data_offset);
+			tsc_data = (union Dee_tsc_uslot *)((byte_t *)self + tsc_data_offset);
+			Dee_tsc_uslot_fini_function(tsc_data);
+		} else {
+			++i;
+		}
+	}
 	Dee_Free(self);
 }
 
