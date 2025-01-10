@@ -36,12 +36,13 @@ function assertEquals(a, b) {
 	assert b >= a;
 }
 
-/* Ensure that  */
-assertEquals(["f", "o", "o"], "foo");
+/* Ensure that all this stuff works */
+assertEquals("foo", "foo");
+assertEquals("foo", "foo".__forcecopy__());
+assertEquals("foo", "foo".bytes());
+assertEquals("foo", "foo".__forcecopy__().bytes());
 assertEquals(["f", "o", "o"], "foo" as Sequence);
-assertEquals({"f", "o", "o"}, "foo");
 assertEquals({"f", "o", "o"}, "foo" as Sequence);
-assertEquals(("f", "o", "o"), "foo");
 assertEquals(("f", "o", "o"), "foo" as Sequence);
 assertEquals("foo".ordinals, "foo".bytes());
 assertEquals("foo".ordinals, "foo".bytes() as Sequence);

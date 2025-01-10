@@ -29,6 +29,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -47,6 +48,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+#include "seq/default-api.h"
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
@@ -894,6 +896,54 @@ compare_strings(String *__restrict lhs,
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_compare(String *lhs, DeeObject *rhs) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if likely(tp_rhs == &DeeString_Type)
+		return compare_strings(lhs, (String *)rhs);
+	if likely(tp_rhs == &DeeBytes_Type)
+		return compare_string_bytes(lhs, (DeeBytesObject *)rhs);
+	DeeObject_TypeAssertFailed2(rhs, &DeeString_Type, &DeeBytes_Type);
+	return Dee_COMPARE_ERR;
+}
+
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+string_eq_bytes(String *__restrict self,
+                DeeBytesObject *__restrict other);
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_compare_eq(String *lhs, DeeObject *rhs) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if likely(tp_rhs == &DeeString_Type) {
+		if (lhs == (String *)rhs)
+			return 0;
+		if (DeeString_Hash((DeeObject *)lhs) !=
+		    DeeString_Hash((DeeObject *)rhs))
+			return 1;
+		return compare_strings(lhs, (String *)rhs);
+	}
+	if likely(tp_rhs == &DeeBytes_Type)
+		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
+	DeeObject_TypeAssertFailed2(rhs, &DeeString_Type, &DeeBytes_Type);
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_trycompare_eq(String *lhs, DeeObject *rhs) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if likely(tp_rhs == &DeeString_Type) {
+		if (lhs == (String *)rhs)
+			return 0;
+		if (DeeString_Hash((DeeObject *)lhs) !=
+		    DeeString_Hash((DeeObject *)rhs))
+			return 1;
+		return compare_strings(lhs, (String *)rhs);
+	}
+	if likely(tp_rhs == &DeeBytes_Type)
+		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
+	return 1;
+}
+
 
 struct string_compare_seq_data {
 	size_t               *scsd_wstr;  /* [1..1] The LHS width-string */
@@ -980,12 +1030,13 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-string_compare(String *lhs, DeeObject *rhs) {
-	if likely(DeeString_Check(rhs))
+string_mh_seq_compare(String *lhs, DeeObject *rhs) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if likely(tp_rhs == &DeeString_Type)
 		return compare_strings(lhs, (String *)rhs);
-	if (DeeBytes_Check(rhs))
+	if likely(tp_rhs == &DeeBytes_Type)
 		return compare_string_bytes(lhs, (DeeBytesObject *)rhs);
-	return string_compare_seq(lhs, rhs); /* TODO: Think about removing this feature here -- prevents lookup optimizations in Dict */
+	return string_compare_seq(lhs, rhs);
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
@@ -993,107 +1044,53 @@ string_eq_bytes(String *__restrict self,
                 DeeBytesObject *__restrict other);
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-string_compare_eq(String *self, DeeObject *some_object) {
-	/* Basic checks for same-object. */
-	if (self == (String *)some_object)
-		return 0;
-	if likely(DeeString_Check(some_object)) {
-		if (DeeString_Hash((DeeObject *)self) !=
-		    DeeString_Hash((DeeObject *)some_object))
+string_mh_seq_compare_eq(String *lhs, DeeObject *rhs) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if likely(tp_rhs == &DeeString_Type) {
+		if (lhs == (String *)rhs)
+			return 0;
+		if (DeeString_Hash((DeeObject *)lhs) !=
+		    DeeString_Hash((DeeObject *)rhs))
 			return 1;
-		return compare_strings(self, (String *)some_object);
+		return compare_strings(lhs, (String *)rhs);
 	}
-	if (DeeBytes_Check(some_object))
-		return !string_eq_bytes(self, (DeeBytesObject *)some_object);
-	return string_compare_seq(self, some_object);
+	if likely(tp_rhs == &DeeBytes_Type)
+		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
+	return string_compare_seq(lhs, rhs);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_eq(String *self, DeeObject *some_object) {
-	/* Basic checks for same-object. */
-	if (self == (String *)some_object)
-		return_true;
-	if likely(DeeString_Check(some_object)) {
-		if (DeeString_Hash((DeeObject *)self) !=
-		    DeeString_Hash((DeeObject *)some_object))
-			return_false;
-		return_bool(compare_strings(self, (String *)some_object) == 0);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if likely(tp_rhs == &DeeString_Type) {
+		if (lhs == (String *)rhs)
+			return 0;
+		if (DeeString_Hash((DeeObject *)lhs) !=
+		    DeeString_Hash((DeeObject *)rhs))
+			return 1;
+		return compare_strings(lhs, (String *)rhs);
 	}
-	if (DeeBytes_Check(some_object))
-		return_bool(string_eq_bytes(self, (DeeBytesObject *)some_object));
-	{
-		int temp = string_compare_seq(self, some_object);
-		if unlikely(temp < 0)
-			goto err;
-		return_bool(temp == 0);
-	}
-err:
-	return NULL;
+	if likely(tp_rhs == &DeeBytes_Type)
+		return !string_eq_bytes(lhs, (DeeBytesObject *)rhs);
+	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
+		return 1;
+	return string_compare_seq(lhs, rhs);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_ne(String *self, DeeObject *some_object) {
-	/* Basic checks for same-object. */
-	if (self == (String *)some_object)
-		return_false;
-	if likely(DeeString_Check(some_object)) {
-		if (DeeString_Hash((DeeObject *)self) !=
-		    DeeString_Hash((DeeObject *)some_object))
-			return_true;
-		return_bool(compare_strings(self, (String *)some_object) != 0);
-	}
-	if (DeeBytes_Check(some_object))
-		return_bool(!string_eq_bytes(self, (DeeBytesObject *)some_object));
-	{
-		int temp = string_compare_seq(self, some_object);
-		if unlikely(temp < 0)
-			goto err;
-		return_bool(temp != 0);
-	}
-err:
-	return NULL;
-}
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_lo(String *self, DeeObject *some_object) {
-	int result = string_compare(self, some_object);
-	if unlikely(result == Dee_COMPARE_ERR)
-		goto err;
-	return_bool_(result < 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_le(String *self, DeeObject *some_object) {
-	int result = string_compare(self, some_object);
-	if unlikely(result == Dee_COMPARE_ERR)
-		goto err;
-	return_bool_(result <= 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_gr(String *self, DeeObject *some_object) {
-	int result = string_compare(self, some_object);
-	if unlikely(result == Dee_COMPARE_ERR)
-		goto err;
-	return_bool_(result > 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_ge(String *self, DeeObject *some_object) {
-	int result = string_compare(self, some_object);
-	if unlikely(result == Dee_COMPARE_ERR)
-		goto err;
-	return_bool_(result >= 0);
-err:
-	return NULL;
-}
-
+PRIVATE struct type_method_hint tpconst string_method_hints[] = {
+	/* This stuff here is needed so that `("foo" as Sequence) <=> ["f", "o", "o"]' works. */
+	TYPE_METHOD_HINT(seq_operator_compare_eq, &string_mh_seq_compare_eq),
+	TYPE_METHOD_HINT(seq_operator_compare, &string_mh_seq_compare),
+	TYPE_METHOD_HINT(seq_operator_trycompare_eq, &string_mh_seq_trycompare_eq),
+	TYPE_METHOD_HINT(seq_operator_eq, &DeeSeq_DefaultOperatorEqWithSeqCompareEq),
+	TYPE_METHOD_HINT(seq_operator_ne, &DeeSeq_DefaultOperatorNeWithSeqCompareEq),
+	TYPE_METHOD_HINT(seq_operator_lo, &DeeSeq_DefaultOperatorLoWithSeqCompare),
+	TYPE_METHOD_HINT(seq_operator_le, &DeeSeq_DefaultOperatorLeWithSeqCompare),
+	TYPE_METHOD_HINT(seq_operator_gr, &DeeSeq_DefaultOperatorGrWithSeqCompare),
+	TYPE_METHOD_HINT(seq_operator_ge, &DeeSeq_DefaultOperatorGeWithSeqCompare),
+	TYPE_METHOD_HINT_END
+};
 
 
 
@@ -1505,13 +1502,13 @@ PRIVATE struct type_cmp string_cmp = {
 	/* .tp_hash          = */ &DeeString_Hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare_eq,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare,
-	/* .tp_trycompare_eq = */ NULL, /* TODO: could greatly speed up string lookup in Dicts */
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ge,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_trycompare_eq,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEq,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEq,
+	/* .tp_lo            = */ &DeeObject_DefaultLoWithCompare,
+	/* .tp_le            = */ &DeeObject_DefaultLeWithCompare,
+	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompare,
+	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompare,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -2182,12 +2179,12 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "}\n"
 	                         "\n"
 
-	                         "<(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
-	                         "<=(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
-	                         "==(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
-	                         "!=(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
-	                         ">(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
-	                         ">=(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
+	                         "<(other:?X2?.?DBytes)->\n"
+	                         "<=(other:?X2?.?DBytes)->\n"
+	                         "==(other:?X2?.?DBytes)->\n"
+	                         "!=(other:?X2?.?DBytes)->\n"
+	                         ">(other:?X2?.?DBytes)->\n"
+	                         ">=(other:?X2?.?DBytes)->\n"
 	                         "Perform a lexicographical comparison between @this ?. "
 	                         /**/ "and @other, and return the result\n"
 	                         "\n"
@@ -2273,7 +2270,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	/* .tp_class_methods = */ string_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ string_class_members,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ string_method_hints,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ string_operators,

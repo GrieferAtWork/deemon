@@ -9895,6 +9895,27 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
+string_forcecopy(String *self, size_t argc, DeeObject *const *argv) {
+	union dcharptr wstr;
+	size_t wlen;
+	if (DeeArg_Unpack(argc, argv, ":__forcecopy__"))
+		goto err;
+	wstr.ptr = DeeString_WSTR(self);
+	wlen     = WSTR_LENGTH(wstr.ptr);
+	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+	CASE_WIDTH_1BYTE:
+		return (DREF String *)DeeString_New1Byte(wstr.cp8, wlen);
+	CASE_WIDTH_2BYTE:
+		return (DREF String *)DeeString_New2Byte(wstr.cp16, wlen);
+	CASE_WIDTH_4BYTE:
+		return (DREF String *)DeeString_New4Byte(wstr.cp32, wlen);
+	}
+err:
+	return NULL;
+}
+
+
 INTDEF struct type_method tpconst string_methods[];
 INTERN_TPCONST struct type_method tpconst string_methods[] = {
 
@@ -11391,6 +11412,11 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "#tValueError{The given @pattern is malformed}"
 	                "#tIndexError{No substring matching the given @pattern could be found}"
 	                "Same as ?#regrfind, but throw an :IndexError when no match can be found"),
+	TYPE_METHOD_F("__forcecopy__", &string_forcecopy,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?.\n"
+	              "Create and return a hard copy of @this ?.\n"
+	              "You should never need to use this function, but it is here for the purpose of testing"),
 
 	/* Deprecated functions. */
 	TYPE_KWMETHOD_F("reverse", &string_reversed,
