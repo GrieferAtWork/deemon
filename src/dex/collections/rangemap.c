@@ -723,7 +723,7 @@ PRIVATE struct type_getset tpconst rangemap_getsets[] = {
 	            /**/ "@this ?.. This ?DSet can only be enumerated if all used "
 	            /**/ "keys implement ${operator copy} and ${operator ++}. "
 	            /**/ "Otherwise, it is still possible to check for membership "
-	            /**/ "using ${operator contains} (which behaves the same as ?#op:contains)"),
+	            /**/ "using ${operator contains} (which behaves the same as ?#{op:contains})"),
 	TYPE_GETTER("values", &rangemap_values,
 	            "->?#Values\n"
 	            "Return a ?DSequence-proxy for ${{Values...}}, enumerating the value of each distinct node"),

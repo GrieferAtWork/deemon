@@ -1841,7 +1841,7 @@ INTERN DeeTypeObject Bitset_Type = {
 	                         "\n"
 
 	                         "deepcopy->\n"
-	                         "Same as ?#op:copy\n"
+	                         "Same as ?#{op:copy}\n"
 	                         "\n"
 
 	                         ":=(other:?S?Dint)->\n"
@@ -1856,7 +1856,7 @@ INTERN DeeTypeObject Bitset_Type = {
 	                         "\n"
 
 	                         "move:=->\n"
-	                         "Same as ?#op:assign\n"
+	                         "Same as ?#{op:assign}\n"
 	                         "\n"
 
 	                         "bool->\n"

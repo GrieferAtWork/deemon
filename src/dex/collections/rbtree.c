@@ -3579,7 +3579,7 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	              /**/ "For example, $\"bar\" has no successor. $\"bas\" would come after it, but in-"
 	              /**/ "between the two lies an infinite number of other strings, like $\"bara\" or $\"barfoo\". "
 	              /**/ "Additionally, doing this sort of thing may trigger user-defined operators, which in "
-	              /**/ "turn may call back to @this ?., which would prevent ?#op:setrange to function as an "
+	              /**/ "turn may call back to @this ?., which would prevent ?#{op:setrange} to function as an "
 	              /**/ "atomic operation in regards to all other APIs (since it would be possible to access "
 	              /**/ "the tree in an inconsistent state where nodes haven't been merged, yet).\n"
 	              "As such, only ?Dint is merged automatically while all other types need to make use of "
@@ -3699,12 +3699,12 @@ INTERN DeeTypeObject RBTree_Type = {
 
 	                         "delitem(key)->\n"
 	                         DOC_ERROR_NotImplemented_CANNOT_SPLIT
-	                         "Alias for ?#op:delrange called as ${del this[key:key]}\n"
+	                         "Alias for ?#{op:delrange} called as ${del this[key:key]}\n"
 	                         "\n"
 
 	                         "setitem(key,value)->\n"
 	                         DOC_ERROR_NotImplemented_CANNOT_SPLIT
-	                         "Alias for ?#op:setrange called as ${this[key:key] = value}"
+	                         "Alias for ?#{op:setrange} called as ${this[key:key] = value}"
 	),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,

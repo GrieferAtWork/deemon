@@ -5081,7 +5081,7 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	TYPE_GETTER_F("nth", &int_get_nth,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
-	              "Returns the value of @this ?. as a string (as per ?#op:str), with the "
+	              "Returns the value of @this ?. as a string (as per ?#{op:str}), with the "
 	              /**/ "standard english enumeration suffix applicable to the value of @{this}:\n"
 	              "#T{Value|Return~"
 	              "$-3|$\"-3rd\"&"

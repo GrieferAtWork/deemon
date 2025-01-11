@@ -3958,7 +3958,7 @@ PRIVATE struct type_member tpconst dict_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__vsize__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
 	                      offsetof(Dict, d_vsize), "## of used vtab (including deleted slots)"),
 	TYPE_MEMBER_FIELD_DOC("__vused__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
-	                      offsetof(Dict, d_vused), "## of used vtab (excluding deleted slots; same as ?#op:size)"),
+	                      offsetof(Dict, d_vused), "## of used vtab (excluding deleted slots; same as ?#{op:size})"),
 	TYPE_MEMBER_FIELD_DOC("__hmask__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
 	                      offsetof(Dict, d_hmask), "Currently active hash-mask"),
 	TYPE_MEMBER_END
@@ -3986,11 +3986,13 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	                /*   */ "When !t, force deallocation of #Iall unused items, even if that ruins hash "
 	                /*   */ "characteristics / memory efficiency}"
 	                "#r{Returns !t if memory was freed}"
-	                "Release unused memory"),
+	                "Release unused memory. In terms of implementation, after a call ${shrink(true)}, the ?. "
+	                /**/ "will have been modified such that ?#__valloc__ #C{==} ?#__vused__ #C{==} ?#__vsize__, "
+	                /**/ "and ?#__vmask__ will be the smallest hash-mask able to describe ?#__valloc__ items."),
 
 	TYPE_KWMETHOD_F("reserve", &dict_reserve, METHOD_FNOREFESCAPE,
 	                "(total=!0,more=!0,weak=!f)->?Dbool\n"
-	                "#pweak{Should the size-hint be considered weak? (s.a. ?#op:constructor)}"
+	                "#pweak{Should the size-hint be considered weak? (s.a. ?#{op:constructor}'s #Cweak argument)}"
 	                "#r{Indicative of the ?. having sufficient preallocated space on return}"
 	                "Try to preallocate buffer space for ${({#this, total} > ...) + more} items"),
 

@@ -1911,7 +1911,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	            "Alias for ${deemon.hasitem(this as Sequence, index)}"),
 	TYPE_METHOD("__size_fast__", &default_seq___size_fast__,
 	            "->?X2?N?Dint\n"
-	            "Returns the same as ?#op:size, but do so in #C{O(1)} time. "
+	            "Returns the same as ?#{op:size}, but do so in #C{O(1)} time. "
 	            /**/ "If the size cannot be computed in that time, return !N instead."),
 	TYPE_METHOD("__getitem_index__", &default_seq___getitem_index__,
 	            "(index:?Dint)->\n"
