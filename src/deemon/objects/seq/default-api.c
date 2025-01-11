@@ -524,7 +524,7 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self) {
 	for (i = 0; i < COMPILER_LENOF(sc_destroy_specs);) {
 		if (sc_destroy_spec_matched(&sc_destroy_specs[i], self)) {
 			union Dee_tsc_uslot *tsc_data;
-			uint16_t tsc_data_offset;
+			__UINTPTR_HALF_TYPE__ tsc_data_offset;
 			tsc_data_offset = sc_destroy_specs[i].sds_offsetof_tsc_data;
 			/* Skip any extra conditions for this data-slot. */
 			do {
