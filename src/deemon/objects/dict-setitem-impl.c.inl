@@ -628,7 +628,10 @@ done_overwrite_unlock_dict:
 
 	ASSERTF(result_htab_idx != (size_t)-1, "Should have been set by for-block above");
 
-	/* Check if the size of the vtab needs to increase. */
+	/* Check if the size of the vtab needs to increase.
+	 * NOTE: We don't need to check if the htab needs to grow, because
+	 *       the vtab can never be so large that the htab would be unable
+	 *       to handle a fully populated vtab. */
 	if unlikely(_DeeDict_MustGrowVTab(self)) {
 		size_t old_hmask;
 		if (_DeeDict_ShouldGrowHTab(self)) {

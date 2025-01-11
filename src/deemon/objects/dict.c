@@ -554,7 +554,7 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 
 
 #undef DICT_NDEBUG
-#if defined(NDEBUG) || 0
+#if defined(NDEBUG) || 0 /* TODO: Change this "0" to a "1" once dicts have become stable enough. */
 #define DICT_NDEBUG
 #endif /* NDEBUG */
 
@@ -1030,10 +1030,13 @@ dict_trygrow_vtab(Dict *__restrict self) {
 
 /* Same as `dict_trygrow_vtab()', but allowed to grow the htab
  * also, and can be used even when "!_DeeDict_CanGrowVTab(self)"
- * @return: true:  Success
+ * Tries to make it so "d_valloc >= min_valloc"
+ * @return: true:  Success: "d_valloc >= min_valloc"
  * @return: false: Failure */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
-dict_trygrow_vtab_and_htab(Dict *__restrict self) {
+PRIVATE ATTR_NOINLINE NONNULL((1)) bool DCALL
+dict_trygrow_vtab_and_htab_with(Dict *__restrict self,
+                                size_t min_valloc,
+                                bool allow_overalloc) {
 	size_t old_hmask;
 	size_t new_hmask;
 #ifndef NDEBUG
@@ -1047,15 +1050,16 @@ dict_trygrow_vtab_and_htab(Dict *__restrict self) {
 	struct Dee_dict_item *new_vtab;
 	void *old_htab;
 	void *new_htab;
+	ASSERT(min_valloc > self->d_valloc);
 
 	/* Must truly allocate a new, larger v-table */
 	old_hmask = self->d_hmask;
-	new_hmask = dict_hmask_from_count(self->d_vsize + 1);
+	new_hmask = dict_hmask_from_count(min_valloc);
 	if unlikely(new_hmask < old_hmask)
 		new_hmask = old_hmask;
 	if (new_hmask <= old_hmask && _DeeDict_ShouldGrowHTab(self))
 		new_hmask = (new_hmask << 1) | 1;
-	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, true);
+	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, allow_overalloc);
 	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
 	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
 	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
@@ -1064,8 +1068,8 @@ dict_trygrow_vtab_and_htab(Dict *__restrict self) {
 	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
 	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
 	if unlikely(!new_vtab) {
-		new_hmask  = dict_tiny_hmask_from_count(self->d_vsize + 1);
-		new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, false);
+		new_hmask  = dict_tiny_hmask_from_count(min_valloc);
+		new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, false);
 		old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
 		new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
 		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
@@ -1074,6 +1078,7 @@ dict_trygrow_vtab_and_htab(Dict *__restrict self) {
 		if unlikely(!new_vtab)
 			return false;
 	}
+	ASSERT(new_valloc >= min_valloc);
 	old_htab = new_vtab + self->d_valloc;
 	new_htab = new_vtab + new_valloc;
 	_DeeDict_SetRealVTab(self, new_vtab);
@@ -1103,6 +1108,16 @@ dict_trygrow_vtab_and_htab(Dict *__restrict self) {
 	           sizeof(struct Dee_dict_item));
 #endif /* !NDEBUG */
 	return true;
+}
+
+
+/* Same as `dict_trygrow_vtab()', but allowed to grow the htab
+ * also, and can be used even when "!_DeeDict_CanGrowVTab(self)"
+ * @return: true:  Success
+ * @return: false: Failure */
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+dict_trygrow_vtab_and_htab(Dict *__restrict self) {
+	return dict_trygrow_vtab_and_htab_with(self, self->d_vsize + 1, true);
 }
 
 #if 0
@@ -3369,6 +3384,33 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_reserve(Dict *__restrict self, size_t argc,
+             DeeObject *const *argv, DeeObject *kw) {
+	bool result;
+	size_t total = 0, more = 0;
+	bool weak = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__total_more_weak,
+	                    "|" UNPuSIZ UNPuSIZ "b:reserve",
+	                    &total, &more, &weak))
+		goto err;
+	DeeDict_LockWrite(self);
+	if (total < self->d_vused)
+		total = self->d_vused;
+	if (OVERFLOW_UADD(total, more, &total))
+		total = (size_t)-1;
+	/* Try to allocate more space if there isn't enough space already. */
+	if (total <= self->d_valloc) {
+		result = true;
+	} else {
+		result = dict_trygrow_vtab_and_htab_with(self, total, weak);
+	}
+	DeeDict_LockEndWrite(self);
+	return_bool_(result);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 dict_cc(Dict *__restrict self) {
 	return dict_shrink_impl(self, true);
@@ -3938,13 +3980,19 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	TYPE_METHOD_HINTREF(map_popitem),
 	TYPE_METHOD_HINTREF(map_remove),
 
-	TYPE_KWMETHOD("shrink", &dict_shrink,
-	              "(fully=!t)->?Dbool\n"
-	              "#pfully{when !f, the same sort of shrinking as done automatically as items are removed. "
-	              /*   */ "When !t, force deallocation of #Iall unused items, even if that ruins hash "
-	              /*   */ "characteristics / memory efficiency}\n"
-	              "#r{Returns !t if memory was released}"
-	              "Release unused memory"),
+	TYPE_KWMETHOD_F("shrink", &dict_shrink, METHOD_FNOREFESCAPE,
+	                "(fully=!t)->?Dbool\n"
+	                "#pfully{When !f, the same sort of shrinking as done automatically when an item is removed. "
+	                /*   */ "When !t, force deallocation of #Iall unused items, even if that ruins hash "
+	                /*   */ "characteristics / memory efficiency}"
+	                "#r{Returns !t if memory was freed}"
+	                "Release unused memory"),
+
+	TYPE_KWMETHOD_F("reserve", &dict_reserve, METHOD_FNOREFESCAPE,
+	                "(total=!0,more=!0,weak=!f)->?Dbool\n"
+	                "#pweak{Should the size-hint be considered weak? (s.a. ?#op:constructor)}"
+	                "#r{Indicative of the ?. having sufficient preallocated space on return}"
+	                "Try to preallocate buffer space for ${({#this, total} > ...) + more} items"),
 
 	TYPE_METHOD_HINTREF_DOC(explicit_seq_xchitem, "(index:?Dint,item:?T2?O?O)->?T2?O?O"),
 	TYPE_METHOD_HINTREF(explicit_seq_erase),

@@ -3215,8 +3215,9 @@ list_getallocated(List *__restrict me) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) bool DCALL
 list_do_shrink(List *__restrict me) {
+	bool result = false;
 	size_t old_elema;
 	DeeList_LockWrite(me);
 	old_elema = DeeList_GetAlloc(me);
@@ -3227,9 +3228,11 @@ list_do_shrink(List *__restrict me) {
 		if likely(new_elemv) {
 			me->l_list.ol_elemv = new_elemv;
 			_DeeList_SetAlloc(me, new_elema);
+			result = true;
 		}
 	}
 	DeeList_LockEndWrite(me);
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3276,34 +3279,43 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_reserve(List *me, size_t argc, DeeObject *const *argv) {
-	size_t old_elema;
-	size_t new_elema;
-	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":reserve", &new_elema))
+list_reserve(List *me, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	bool result = false;
+	size_t total = 0, more = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__total_more,
+	                    "|" UNPuSIZ UNPuSIZ ":reserve",
+	                    &total, &more))
 		goto err;
 	DeeList_LockWrite(me);
-	old_elema = DeeList_GetAlloc(me);
-	if (new_elema > old_elema) {
+	if (total < me->l_list.ol_elemc)
+		total = me->l_list.ol_elemc;
+	if (OVERFLOW_UADD(total, more, &total))
+		total = (size_t)-1;
+	if (total <= DeeList_GetAlloc(me)) {
+		result = true;
+	} else {
 		/* Try to allocate more memory for this List. */
 		DREF DeeObject **new_elemv;
-		new_elemv = Dee_objectlist_elemv_tryrealloc(me->l_list.ol_elemv, new_elema);
+		new_elemv = Dee_objectlist_elemv_tryrealloc_safe(me->l_list.ol_elemv, total);
 		if likely(new_elemv) {
 			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elema);
+			_DeeList_SetAlloc(me, total);
+			result = true;
 		}
 	}
 	DeeList_LockEndWrite(me);
-	return_none;
+	return_bool_(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_shrink(List *me, size_t argc, DeeObject *const *argv) {
+	bool result;
 	if (DeeArg_Unpack(argc, argv, ":shrink"))
 		goto err;
-	list_do_shrink(me);
-	return_none;
+	result = list_do_shrink(me);
+	return_bool_(result);
 err:
 	return NULL;
 }
@@ -3660,15 +3672,16 @@ PRIVATE struct type_method tpconst list_methods[] = {
 	              "Append all the given @items at the end of @this List"),
 
 	/* List buffer functions. */
-	TYPE_METHOD_F("reserve", &list_reserve, METHOD_FNOREFESCAPE,
-	              "(size:?Dint)\n"
-	              "Reserve (preallocate) memory for @size items\n"
-	              "Failures to pre-allocate memory are silently ignored, "
-	              /**/ "in which case ?#allocated will remain unchanged\n"
-	              "If @size is lower than the currently ?#allocated size, "
-	              /**/ "the function becomes a no-op"),
+	TYPE_KWMETHOD_F("reserve", &list_reserve, METHOD_FNOREFESCAPE,
+	                "(total=!0,more=!0)->?Dbool\n"
+	                "#r{Indicative of the ?. having sufficient preallocated space on return}"
+	                "Reserve (preallocate) memory for at least ${({#this, total} > ...) + more} items\n"
+	                "Failures to pre-allocate memory are silently ignored, "
+	                /**/ "in which case ?#allocated will remain unchanged\n"
+	                "If the effective new size is less than the current ?#allocated, the function becomes a no-op"),
 	TYPE_METHOD_F("shrink", &list_shrink, METHOD_FNOREFESCAPE,
-	              "()\n"
+	              "->?Dbool\n"
+	              "#r{Returns !t if memory was freed}"
 	              "Release any pre-allocated, but unused memory, setting "
 	              /**/ "?#allocated to the length of @this List"),
 
