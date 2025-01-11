@@ -847,7 +847,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 fl_mh_rfind_with_key(FixedList *self, DeeObject *item,
-                         size_t start, size_t end, DeeObject *key) {
+                     size_t start, size_t end, DeeObject *key) {
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;

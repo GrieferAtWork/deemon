@@ -1150,15 +1150,22 @@ LOCAL_DeeType_RequireSeqFoo_decodeattr(struct Dee_attrinfo const *info, DeeTypeO
 #else /* LOCAL_IS_GETSET */
 
 	case Dee_ATTRINFO_METHOD:
-		if ((Dee_funptr_t)info->ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo) {
+		/* Always check for a method hint in this case.
+		 *
+		 * Reason is that due to a PLT, a module storing the address to
+		 * (e.g.) `DeeMH_seq_find' in `info->ai_value.v_method->m_func'
+		 * might instead store the address to its PLT version of that
+		 * function, which we would then be unable to detect here! */
 #ifdef LOCAL_TMH
+		{
 			LOCAL_Dee_mh_seq_foo_t hint;
 			hint = (LOCAL_Dee_mh_seq_foo_t)DeeType_GetPrivateMethodHint((DeeTypeObject *)info->ai_decl, LOCAL_TMH);
 			if (hint)
 				return hint;
-#endif /* LOCAL_TMH */
-			return &LOCAL_DeeSeq_DefaultFooForEmpty;
 		}
+#endif /* LOCAL_TMH */
+		if ((Dee_funptr_t)info->ai_value.v_method->m_func == (Dee_funptr_t)&LOCAL_default_seq_foo)
+			return &LOCAL_DeeSeq_DefaultFooForEmpty;
 		if unlikely(!sc)
 			break;
 		atomic_write(&sc->LOCAL_tsc_seq_foo_data.d_method, info->ai_value.v_method->m_func);
