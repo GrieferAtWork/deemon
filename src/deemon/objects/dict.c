@@ -698,18 +698,23 @@ dict_verify(Dict *__restrict self) {
 		        "htab[%" PRFuSIZ "] points out-of-bounds: %" PRFuSIZ " >= %" PRFuSIZ,
 		        i, vidx, self->d_vsize);
 	}
+	for (i = 0;; ++i) {
+		Dee_dict_vidx_t vidx;
+		ASSERTF(i <= self->d_hmask, "htab contains no EOF pointers (infinite loop would occurr on non-present item lookup)");
+		vidx = (*self->d_hidxget)(self->d_htab, i);
+		if (vidx == Dee_DICT_HTAB_EOF)
+			break;
+	}
 	for (i = Dee_dict_vidx_tovirt(0), real_vused = 0;
 	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
-		size_t iteration;
 		Dee_hash_t hs, perturb;
 		struct Dee_dict_item *item = &_DeeDict_GetVirtVTab(self)[i];
 		if (!item->di_key)
 			continue;
 		_DeeDict_HashIdxInit(self, &hs, &perturb, item->di_hash);
-		for (iteration = 0;; _DeeDict_HashIdxAdv(self, &hs, &perturb), ++iteration) {
+		for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
 			Dee_dict_vidx_t vidx;
 			struct Dee_dict_item *hitem;
-			ASSERTF(iteration <= self->d_hmask, "Infinite loop in hash-table");
 			vidx = _DeeDict_HTabGet(self, hs);
 			ASSERTF(vidx != Dee_DICT_HTAB_EOF,
 			        "End-of-hash-chain[hash:%#" PRFxSIZ "] before item idx=%" PRFuSIZ ",count=%" PRFuSIZ " %r:%r was found",
