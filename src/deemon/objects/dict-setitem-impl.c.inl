@@ -634,7 +634,7 @@ done_overwrite_unlock_dict:
 		if (_DeeDict_ShouldGrowHTab(self)) {
 do_dict_trygrow_vtab_and_htab:
 			old_hmask = self->d_hmask;
-			if (!dict_trygrow_vtab_and_htab(self)) {
+			if unlikely(!dict_trygrow_vtab_and_htab(self)) {
 force_grow_without_locks:
 #ifdef LOCAL_IS_UNLOCKED
 				if unlikely(dict_grow_vtab_and_htab_and_relock(self, true))
@@ -669,8 +669,6 @@ force_grow_without_locks:
 		} else {
 			goto do_dict_trygrow_vtab_and_htab;
 		}
-	} else if (_DeeDict_ShouldGrowHTab(self)) {
-		/* TODO: Try to grow the hash-table */
 	}
 
 	/************************************************************************/

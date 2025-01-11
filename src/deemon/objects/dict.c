@@ -497,8 +497,8 @@ PUBLIC_TPCONST struct Dee_dict_hidxio_struct tpconst Dee_dict_hidxio[DEE_DICT_HI
 STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 
 /* Returns true if "d_htab" *should* be grown to its next larger multiple */
-#define _DeeDict_ShouldGrowHTab(self)               \
-	(((self)->d_valloc * DICT_VTAB_HTAB_RATIO_V) >= \
+#define _DeeDict_ShouldGrowHTab(self)                                                       \
+	((dict_suggesed_max_valloc_from_count((self)->d_vused + 1) * DICT_VTAB_HTAB_RATIO_V) >= \
 	 ((self)->d_hmask * DICT_VTAB_HTAB_RATIO_H))
 
 /* Returns true if "d_htab" *MUST* be grown to its next larger
@@ -535,13 +535,13 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 	_DeeDict_ShouldShrinkHTab2((self)->d_valloc, (self)->d_hmask)
 #define _DeeDict_ShouldShrinkHTab2(valloc, hmask) \
 	(((valloc)*DICT_VTAB_HTAB_RATIO_H) <=         \
-	 (((hmask) >> 1) * DICT_VTAB_HTAB_RATIO_V))
+	 (((hmask) >> 1) * DICT_VTAB_HTAB_RATIO_V) && (hmask))
 
 /* Returns true if the htab can be shrunk. */
 #define _DeeDict_CanShrinkHTab(self) \
 	_DeeDict_CanShrinkHTab2((self)->d_valloc, (self)->d_hmask)
 #define _DeeDict_CanShrinkHTab2(valloc, hmask) \
-	((valloc) <= ((hmask) >> 1))
+	((valloc) <= ((hmask) >> 1) && (hmask))
 
 
 #define NULL_IF__DeeDict_EmptyTab(/*real*/ p) \
@@ -565,11 +565,25 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 #endif /* __OPTIMIZE_SIZE__ */
 
 
+LOCAL ATTR_CONST size_t DCALL
+dict_suggesed_max_valloc_from_count(size_t num_item) {
+	shift_t items_nbits;
+	size_t result;
+	ASSERT(num_item > 0);
+	items_nbits = CLZ(num_item);
+	if unlikely(!items_nbits)
+		return (size_t)-1;
+	items_nbits = (sizeof(size_t) * __CHAR_BIT__) - items_nbits;
+	result = ((size_t)1 << (items_nbits)) |
+	         ((size_t)1 << (items_nbits + 1));
+	ASSERT(result >= num_item);
+	return result;
+}
+
 /* Calculate what would be a good "d_valloc" for a given "d_hmask" and "d_vsize" */
 LOCAL ATTR_CONST size_t DCALL
 dict_valloc_from_hmask_and_count(size_t hmask, size_t num_item, bool allow_overalloc) {
-	shift_t items_nbits;
-	size_t result, max_result;
+	size_t result, max_valloc;
 	ASSERT(num_item <= hmask);
 	if (!allow_overalloc)
 		return num_item;
@@ -579,15 +593,9 @@ dict_valloc_from_hmask_and_count(size_t hmask, size_t num_item, bool allow_overa
 		return num_item;
 	if unlikely(!num_item)
 		return 0;
-	items_nbits = CLZ(num_item);
-	if unlikely(!items_nbits)
-		return (size_t)-1;
-	items_nbits = (sizeof(size_t) * __CHAR_BIT__) - items_nbits;
-	max_result = ((size_t)1 << (items_nbits)) |
-	             ((size_t)1 << (items_nbits + 1));
-	ASSERT(max_result >= num_item);
-	if (result > max_result)
-		result = max_result;
+	max_valloc = dict_suggesed_max_valloc_from_count(num_item);
+	if (result > max_valloc)
+		result = max_valloc;
 	ASSERT(result >= num_item);
 	ASSERT(result <= hmask);
 	return result;
@@ -1045,7 +1053,7 @@ dict_trygrow_vtab_and_htab(Dict *__restrict self) {
 	new_hmask = dict_hmask_from_count(self->d_vsize + 1);
 	if unlikely(new_hmask < old_hmask)
 		new_hmask = old_hmask;
-	if (_DeeDict_ShouldGrowHTab(self) && new_hmask <= old_hmask)
+	if (new_hmask <= old_hmask && _DeeDict_ShouldGrowHTab(self))
 		new_hmask = (new_hmask << 1) | 1;
 	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, true);
 	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
@@ -1098,27 +1106,40 @@ dict_trygrow_vtab_and_htab(Dict *__restrict self) {
 }
 
 #if 0
-/* Try to change "d_hmask = (d_hmask << 1) | 1"
+/* Try to change "d_hmask = (d_hmask << 1) | 1",
+ * and (if we want to), also increase "d_valloc"
  * @return: true:  Success
  * @return: false: Failure (allocation failed) */
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
-dict_trygrow_htab(Dict *__restrict self) {
+dict_trygrow_htab_and_maybe_vtab(Dict *__restrict self) {
 	struct Dee_dict_item *old_vtab;
 	struct Dee_dict_item *new_vtab;
 	size_t new_hmask, new_tabsize;
-	size_t valloc  = self->d_valloc;
-	shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
+	size_t old_valloc = self->d_valloc;
+	size_t new_valloc;
+	shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(old_valloc);
 	ASSERTF(self->d_hmask != (size_t)-1, "How? This should have been an OOM");
-	new_hmask = (self->d_hmask << 1) | 1;
-	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, valloc, hidxio);
+	new_hmask  = (self->d_hmask << 1) | 1;
+	new_valloc = (new_hmask / DICT_VTAB_HTAB_RATIO_H) * DICT_VTAB_HTAB_RATIO_V;
+	if (new_valloc < old_valloc)
+		new_valloc = old_valloc;
+	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, hidxio);
+
 	old_vtab = _DeeDict_GetRealVTab(self);
 	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
 	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
-	if unlikely(!new_vtab)
-		goto err;
-	self->d_hmask = new_hmask;
+	if unlikely(!new_vtab) {
+		/* Fine... We won't grow the vtab if you wanna be that way... */
+		new_valloc  = old_valloc;
+		new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, hidxio);
+		new_vtab    = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
+		if unlikely(!new_vtab)
+			goto err;
+	}
+	self->d_valloc = new_valloc;
+	self->d_hmask  = new_hmask;
 	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_htab  = new_vtab + valloc;
+	self->d_htab = new_vtab + new_valloc;
 	dict_htab_rebuild(self);
 	return true;
 err:
@@ -1455,10 +1476,12 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 		new_vtab = old_vtab; /* Shouldn't get here because the new table is always smaller! */
 
 	/* Assign new tables / control values. */
-	self->d_valloc = new_valloc;
+	self->d_valloc  = new_valloc;
 	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_htab   = new_vtab + new_valloc;
-	self->d_hmask  = new_hmask;
+	self->d_htab    = new_vtab + new_valloc;
+	self->d_hmask   = new_hmask;
+	self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+	self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
 
 	/* Re-build the hash-table if necessary. */
 	if (must_rebuild_htab)
