@@ -1,0 +1,51 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from time;
+
+function getYMD(t: Time): (int, int, int) {
+	return (t.year, t.month, t.mday);
+}
+
+
+/* Make sure that months in leap-years are handled correctly.
+ *
+ * Before, there was an off-by-one error, where setting the
+ * month of a leap-year would subtract 1 year. */
+assert getYMD(Time(year: 103, month: 2, day: 29)) == (103, 3, 1);
+assert getYMD(Time(year: 104, month: 2, day: 29)) == (104, 2, 29);
+assert getYMD(Time(year: 105, month: 2, day: 29)) == (105, 3, 1);
+assert getYMD(Time(year: 1975, month: 2, day: 29)) == (1975, 3, 1);
+assert getYMD(Time(year: 1976, month: 2, day: 29)) == (1976, 2, 29);
+assert getYMD(Time(year: 1977, month: 2, day: 29)) == (1977, 3, 1);
+
+/* Assert that sub-month times are properly clamped when setting a
+ * month while the sub-month time would not fit into the new month. */
+local t = Time(year: 1977, month: 1, day: 31);
+t.month = 2;
+assert t == Time(year: 1977, month: 2, day: 28, hour: 23, minute: 59, second: 59, nanosecond: 999999999);
+
+/* Also make sure that month-day clamping correctly makes use of leap days. */
+local t = Time(year: 1976, month: 1, day: 31);
+t.month = 2;
+assert t == Time(year: 1976, month: 2, day: 29, hour: 23, minute: 59, second: 59, nanosecond: 999999999);
+

@@ -125,6 +125,7 @@ assert "x = 11" == "x = {_$1 + $1}".format({ "_$1": 10 });
 
 /* Do some more tests on function calls done from within template strings. */
 function func(a = 30, b = 40) -> a + b;
+assert "x = 70" == "x = {func()}".format({ "func": func });
 assert "x = 50" == "x = {func($10)}".format({ "func": func });
 assert "x = 30" == "x = {func($10, $20)}".format({ "func": func });
 assert "x = 30" == "x = {func($10, b: $20)}".format({ "func": func });

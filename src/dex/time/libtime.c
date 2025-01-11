@@ -1132,35 +1132,55 @@ DeeTime_SetRepr(DeeTimeObject *__restrict self,
 	}	break;
 
 	case TIME_REPR_MONTH: { /* Month in Year */
-		Dee_int128_t old_months, mday, extra_nano;
+		Dee_int128_t old_months, nano_since_start_of_month, start_of_month;
 		Dee_int128_t new_months, month_delta, new_year;
+		Dee_int128_t new_month_length;
+		uint16_t new_month_length_in_days;
 		uint8_t old_month, new_month;
 		struct month const *new_year_months;
-		uint16_t new_month_length;
-		_DeeTime_GetRepr(&old_months, self, TIME_REPR_MONTHS);
-		_DeeTime_GetRepr(&mday, self, TIME_REPR_MDAY);
+
+		/* Figure out the accurate month number since "0" */
+		old_months = self->t_nanos;
+		time_inplace_nanosecond2month(&old_months);
+
+		/* Figure out the # of days since the start of the relevant month. */
+		start_of_month = old_months;
+		time_inplace_month2nanosecond(&start_of_month);
+		nano_since_start_of_month = self->t_nanos;
+		__hybrid_int128_sub128(nano_since_start_of_month, start_of_month);
+
+		/* Figure out the month within the relevant year, and determine delta. */
 		__hybrid_int128_floormod8_r(old_months, MONTHS_PER_YEAR, old_month);
 		++old_month; /* 1-based */
 		month_delta = *p_value;
 		__hybrid_int128_sub8(month_delta, old_month);
+
+		/* Apply delta to months */
 		new_months = old_months;
 		__hybrid_int128_add128(new_months, month_delta);
+
+		/* Figure out the new, relevant year+month */
 		__hybrid_int128_floordivmod8(new_months, MONTHS_PER_YEAR, new_year, new_month);
-		new_year_months  = month_info_for_year(&new_year);
-		new_month_length = month_getlen(&new_year_months[new_month]);
+		new_year_months = month_info_for_year(&new_year);
+		new_month_length_in_days = month_getlen(&new_year_months[new_month]);
+		__hybrid_uint128_set16(*(Dee_uint128_t *)&new_month_length, new_month_length_in_days);
+		time_inplace_days2nanoseconds(&new_month_length);
 
-		/* Clamp day-of-month to the max valid value in the context of the new month */
-		__hybrid_int128_dec(mday); /* We need a 0-based day-of-month */
-		if (__hybrid_int128_ge16(mday, new_month_length))
-			__hybrid_int128_set16(mday, new_month_length - 1);
+		/* Clamp day-of-month to the max valid value in the context of the new month.
+		 * This is needed for:
+		 * >> local t = Time(year: 1976, month: 1, day: 31);
+		 * >> t.month = 2;
+		 * >> print repr t;
+		 * >> assert t == Time(year: 1976, month: 2, day: 29, hour: 23, minute: 59, second: 59, nanosecond: 999999999);
+		 * Without this, the date's month would unexpectedly be in March instead. */
+		if (__hybrid_int128_ge128(nano_since_start_of_month, new_month_length)) {
+			nano_since_start_of_month = new_month_length;
+			__hybrid_int128_dec(nano_since_start_of_month);
+		}
 
-		/* Combine `new_months' and `mday' to set the total number of days */
+		/* Combine `new_months' and `nano_since_start_of_month' to form a new timestamp. */
 		time_inplace_month2nanosecond(&new_months);
-		time_inplace_days2nanoseconds(&mday);
-		__hybrid_int128_add128(new_months, mday);
-		extra_nano = self->t_nanos; /* Keep hour+minute+second+nanosecond */
-		__hybrid_int128_floormod64(extra_nano, NANOSECONDS_PER_DAY);
-		__hybrid_int128_add128(new_months, extra_nano);
+		__hybrid_int128_add128(new_months, nano_since_start_of_month);
 		self->t_nanos = new_months;
 	}	break;
 
