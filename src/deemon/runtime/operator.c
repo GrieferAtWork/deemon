@@ -3555,7 +3555,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithSizeAndTryGetItemIndex, 
 	for (i = 1; i < size; ++i) {
 		Dee_hash_t elem_hash;
 		elem = DeeType_INVOKE_TRYGETITEMINDEX_NODEFAULT(tp_self, self, i);
-		if unlikely(elem)
+		if unlikely(!elem)
 			goto err;
 		if unlikely(elem == ITER_DONE) {
 			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
