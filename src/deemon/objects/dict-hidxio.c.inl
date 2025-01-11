@@ -80,13 +80,13 @@ F(Dee_dict_sethidx)(void *__restrict htab, size_t index, size_t value) {
 }
 
 PRIVATE NONNULL((1)) void DCALL
-F(Dee_dict_movhidx)(void *__restrict dst, void const *__restrict src, size_t n_words) {
+F(Dee_dict_movhidx)(void *dst, void const *src, size_t n_words) {
 	LOCAL_memmove(dst, src, n_words);
 }
 
 #if LOCAL_HIDXIO_NBITS < ((1 << (DEE_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__)
 PRIVATE NONNULL((1)) void DCALL
-F(Dee_dict_uprhidx)(void *__restrict dst, void const *__restrict src, size_t n_words) {
+F(Dee_dict_uprhidx)(void *dst, void const *src, size_t n_words) {
 	Tupr *tdst = (Tupr *)dst;
 	T *tsrc = (T *)src;
 	ASSERT(dst >= src);
@@ -99,7 +99,7 @@ F(Dee_dict_uprhidx)(void *__restrict dst, void const *__restrict src, size_t n_w
 
 #if LOCAL_HIDXIO_NBITS > (1 * __CHAR_BIT__)
 PRIVATE NONNULL((1)) void DCALL
-F(Dee_dict_dwnhidx)(void *__restrict dst, void const *__restrict src, size_t n_words) {
+F(Dee_dict_dwnhidx)(void *dst, void const *src, size_t n_words) {
 	size_t i;
 	Tlwr *tdst = (Tlwr *)dst;
 	T *tsrc = (T *)src;

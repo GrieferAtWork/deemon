@@ -284,9 +284,9 @@ PRIVATE struct type_iterator diter_iterator = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_bool(DictIterator *__restrict self) {
 	Dict *dict = self->di_dict;
-	size_t vidx = atomic_read(&self->di_vidx);
+	/*virt*/Dee_dict_vidx_t vidx = atomic_read(&self->di_vidx);
 	struct Dee_dict_item *virt_vtab;
-	ASSERT(vidx >= 1);
+	ASSERT(vidx >= Dee_dict_vidx_tovirt(0));
 	DeeDict_LockRead(dict);
 	virt_vtab = _DeeDict_GetVirtVTab(dict);
 	for (; Dee_dict_vidx_virt_lt_real(vidx, dict->d_vsize); ++vidx) {
@@ -700,7 +700,7 @@ dict_verify(Dict *__restrict self) {
 	}
 	for (i = 0;; ++i) {
 		Dee_dict_vidx_t vidx;
-		ASSERTF(i <= self->d_hmask, "htab contains no EOF pointers (infinite loop would occurr on non-present item lookup)");
+		ASSERTF(i <= self->d_hmask, "htab contains no EOF pointers (infinite loop would occur on non-present item lookup)");
 		vidx = (*self->d_hidxget)(self->d_htab, i);
 		if (vidx == Dee_DICT_HTAB_EOF)
 			break;
@@ -717,7 +717,7 @@ dict_verify(Dict *__restrict self) {
 			struct Dee_dict_item *hitem;
 			vidx = _DeeDict_HTabGet(self, hs);
 			ASSERTF(vidx != Dee_DICT_HTAB_EOF,
-			        "End-of-hash-chain[hash:%#" PRFxSIZ "] before item idx=%" PRFuSIZ ",count=%" PRFuSIZ " %r:%r was found",
+			        "End-of-hash-chain[hash:%#" PRFxSIZ "] before item idx=%" PRFuSIZ ",count=%" PRFuSIZ " <%r:%r> was found",
 			        item->di_hash, Dee_dict_vidx_toreal(i), self->d_vsize,
 			        item->di_key, item->di_value);
 			hitem = &_DeeDict_GetVirtVTab(self)[vidx];
@@ -809,13 +809,14 @@ DeeDict_NewWithWeakHint(size_t num_items) {
 }
 
 LOCAL NONNULL((1)) void DCALL
-dict_htab_insert8(Dict *__restrict self, Dee_hash_t hash, size_t vidx) {
+dict_htab_insert8(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_dict_vidx_t vidx) {
 	Dee_hash_t hs, perturb;
 	uint8_t *htab = (uint8_t *)self->d_htab;
 	_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-	for (;; _DeeDict_HashIdxAdv(~, &hs, &perturb)) {
-		if likely(htab[hs & self->d_hmask] == 0) {
-			htab[hs & self->d_hmask] = (uint8_t)vidx;
+	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+		size_t htab_idx = hs & self->d_hmask;
+		if likely(htab[htab_idx] == Dee_DICT_HTAB_EOF) {
+			htab[htab_idx] = (uint8_t)vidx;
 			break;
 		}
 	}
@@ -823,13 +824,14 @@ dict_htab_insert8(Dict *__restrict self, Dee_hash_t hash, size_t vidx) {
 
 #if DEE_DICT_HIDXIO_COUNT >= 2
 LOCAL NONNULL((1)) void DCALL
-dict_htab_insert16(Dict *__restrict self, Dee_hash_t hash, size_t vidx) {
+dict_htab_insert16(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_dict_vidx_t vidx) {
 	Dee_hash_t hs, perturb;
 	uint16_t *htab = (uint16_t *)self->d_htab;
 	_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-	for (;; _DeeDict_HashIdxAdv(~, &hs, &perturb)) {
-		if likely(htab[hs & self->d_hmask] == 0) {
-			htab[hs & self->d_hmask] = (uint16_t)vidx;
+	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+		size_t htab_idx = hs & self->d_hmask;
+		if likely(htab[htab_idx] == Dee_DICT_HTAB_EOF) {
+			htab[htab_idx] = (uint16_t)vidx;
 			break;
 		}
 	}
@@ -838,13 +840,14 @@ dict_htab_insert16(Dict *__restrict self, Dee_hash_t hash, size_t vidx) {
 
 #if DEE_DICT_HIDXIO_COUNT >= 3
 LOCAL NONNULL((1)) void DCALL
-dict_htab_insert32(Dict *__restrict self, Dee_hash_t hash, size_t vidx) {
+dict_htab_insert32(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_dict_vidx_t vidx) {
 	Dee_hash_t hs, perturb;
 	uint32_t *htab = (uint32_t *)self->d_htab;
 	_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-	for (;; _DeeDict_HashIdxAdv(~, &hs, &perturb)) {
-		if likely(htab[hs & self->d_hmask] == 0) {
-			htab[hs & self->d_hmask] = (uint32_t)vidx;
+	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+		size_t htab_idx = hs & self->d_hmask;
+		if likely(htab[htab_idx] == Dee_DICT_HTAB_EOF) {
+			htab[htab_idx] = (uint32_t)vidx;
 			break;
 		}
 	}
@@ -853,13 +856,14 @@ dict_htab_insert32(Dict *__restrict self, Dee_hash_t hash, size_t vidx) {
 
 #if DEE_DICT_HIDXIO_COUNT >= 4
 LOCAL NONNULL((1)) void DCALL
-dict_htab_insert64(Dict *__restrict self, Dee_hash_t hash, size_t vidx) {
+dict_htab_insert64(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_dict_vidx_t vidx) {
 	Dee_hash_t hs, perturb;
 	uint64_t *htab = (uint64_t *)self->d_htab;
 	_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-	for (;; _DeeDict_HashIdxAdv(~, &hs, &perturb)) {
-		if likely(htab[hs & self->d_hmask] == 0) {
-			htab[hs & self->d_hmask] = (uint64_t)vidx;
+	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+		size_t htab_idx = hs & self->d_hmask;
+		if likely(htab[htab_idx] == Dee_DICT_HTAB_EOF) {
+			htab[htab_idx] = (uint64_t)vidx;
 			break;
 		}
 	}
@@ -1080,7 +1084,7 @@ dict_trygrow_vtab_and_htab(Dict *__restrict self) {
 		}
 	} else {
 		/* Must rebuild d_htab */
-		self->d_hmask = new_hmask;
+		self->d_hmask   = new_hmask;
 		self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
 		self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
 		dict_htab_rebuild(self);

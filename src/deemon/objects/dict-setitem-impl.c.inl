@@ -669,6 +669,8 @@ force_grow_without_locks:
 		} else {
 			goto do_dict_trygrow_vtab_and_htab;
 		}
+	} else if (_DeeDict_ShouldGrowHTab(self)) {
+		/* TODO: Try to grow the hash-table */
 	}
 
 	/************************************************************************/

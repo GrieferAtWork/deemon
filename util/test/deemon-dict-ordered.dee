@@ -142,8 +142,12 @@ d.clear();
 
 
 /* Something simple and easy to debug (because hash(int) == int) */
-for (local i: [:1024])
+for (local i: [:1024]) {
+	assert d.__vused__ == i;
+	assert d.__vsize__ == i;
+	assert hash(i) == i;
 	d[i] = f"Jo! {i * 2}";
+}
 assert #d == 1024;
 local expected = 0;
 for (local key, value: d) {
@@ -155,8 +159,11 @@ d.clear();
 
 
 /* The same test again, but more complicated (because hash(str(int)) != int) */
-for (local i: [:1024])
+for (local i: [:1024]) {
+	assert d.__vused__ == i;
+	assert d.__vsize__ == i;
 	d[str i] = f"Jo! {i * 2}";
+}
 assert #d == 1024;
 local expected = 0;
 for (local key, value: d) {
