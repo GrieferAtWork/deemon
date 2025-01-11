@@ -152,9 +152,9 @@ DDATDEF __BYTE_TYPE__ const _DeeDict_EmptyTab[];
 #define Dee_dict_vidx_virt_lt_real(virt_self, real_count) ((virt_self) <= (real_count))
 /*#define Dee_dict_vidx_virt_lt_real(virt_self, real_count) (Dee_dict_vidx_toreal(virt_self) < (real_count))*/
 
-typedef NONNULL_T((1)) void (DCALL *Dee_dict_movhidx_t)(void *__restrict dst, void const *__restrict src, size_t n_words);
-typedef NONNULL_T((1)) void (DCALL *Dee_dict_uprhidx_t)(void *__restrict dst, void const *__restrict src, size_t n_words);
-typedef NONNULL_T((1)) void (DCALL *Dee_dict_dwnhidx_t)(void *__restrict dst, void const *__restrict src, size_t n_words);
+typedef NONNULL_T((1)) void (DCALL *Dee_dict_movhidx_t)(void *dst, void const *src, size_t n_words);
+typedef NONNULL_T((1)) void (DCALL *Dee_dict_uprhidx_t)(void *dst, void const *src, size_t n_words);
+typedef NONNULL_T((1)) void (DCALL *Dee_dict_dwnhidx_t)(void *dst, void const *src, size_t n_words);
 struct Dee_dict_hidxio_struct {
 	Dee_dict_gethidx_t dhxio_get; /* Getter */
 	Dee_dict_sethidx_t dhxio_set; /* Setter */

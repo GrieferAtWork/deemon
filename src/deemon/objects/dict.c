@@ -673,7 +673,7 @@ dict_verify(Dict *__restrict self) {
 	ASSERT(IS_POWER_OF_TWO(self->d_hmask + 1));
 	ASSERT(self->d_htab == _DeeDict_GetRealVTab(self) + self->d_valloc);
 	hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	ASSERT(hidxio >= 0 && hidxio < DEE_DICT_HIDXIO_COUNT);
+	ASSERT(/*hidxio >= 0 &&*/ hidxio < DEE_DICT_HIDXIO_COUNT);
 	ASSERT(self->d_hidxget == Dee_dict_hidxio[hidxio].dhxio_get);
 	ASSERT(self->d_hidxset == Dee_dict_hidxio[hidxio].dhxio_set);
 	for (i = Dee_dict_vidx_tovirt(0), real_vused = 0;
@@ -3018,7 +3018,7 @@ dict_mh_seq_pushfront(Dict *self, DeeObject *key_and_value_tuple) {
 	return dict_mh_seq_insert(self, 0, key_and_value_tuple);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_mh_seq_append(Dict *self, DeeObject *key_and_value_tuple) {
 	int result;
 	DREF DeeObject *key_and_value[2];

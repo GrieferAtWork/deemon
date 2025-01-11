@@ -71,7 +71,7 @@ DECL_BEGIN
 #define LOCAL_dict_htab_modify32 PP_CAT2(LOCAL_dict_htab_modify, 32)
 #define LOCAL_dict_htab_modify64 PP_CAT2(LOCAL_dict_htab_modify, 64)
 
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
+LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify8(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint8_t)) {
 	size_t i;
 	uint8_t *htab = (uint8_t *)self->d_htab;
@@ -81,7 +81,7 @@ LOCAL_dict_htab_modify8(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint
 }
 
 #if DEE_DICT_HIDXIO_COUNT >= 2
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
+LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify16(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint16_t)) {
 	size_t i;
 	uint16_t *htab = (uint16_t *)self->d_htab;
@@ -92,7 +92,7 @@ LOCAL_dict_htab_modify16(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 #endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
 
 #if DEE_DICT_HIDXIO_COUNT >= 3
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
+LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify32(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint32_t)) {
 	size_t i;
 	uint32_t *htab = (uint32_t *)self->d_htab;
@@ -103,7 +103,7 @@ LOCAL_dict_htab_modify32(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 #endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
 
 #if DEE_DICT_HIDXIO_COUNT >= 4
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
+LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify64(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint64_t)) {
 	size_t i;
 	uint64_t *htab = (uint64_t *)self->d_htab;
@@ -113,7 +113,7 @@ LOCAL_dict_htab_modify64(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 }
 #endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
 
-LOCAL ATTR_NOINLINE NONNULL((1)) void DCALL
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(Dee_dict_vidx_t)) {
 	if (DEE_DICT_HIDXIO_IS8(self->d_valloc)) {
 		LOCAL_dict_htab_modify8(self LOCAL_dict_htab_modify__ARGS(uint8_t));
