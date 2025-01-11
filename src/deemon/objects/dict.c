@@ -1573,8 +1573,8 @@ dict_makespace_at(Dict *__restrict self, /*real*/ Dee_dict_vidx_t vtab_idx) {
  * @return:  0: It is guarantied that "index == rhs"
  * @return: -1: Comparison cannot be done "fast" - load "rhs" properly, release locks, and try again. */
 PRIVATE WUNUSED NONNULL((2)) int DCALL fastcmp_index(size_t lhs, DeeObject *rhs);
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL fastcmp_string(char const *lhs, DeeObject *rhs);
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL fastcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs);
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL boolcmp_string(char const *lhs, DeeObject *rhs);
+PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL boolcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs);
 
 /* Slow equivalents to the above -- only use these when the above returned "-1"
  * Return value is like `DeeObject_TryCompareEq()' (iow: Dee_COMPARE_ERR on error) */
@@ -1702,34 +1702,32 @@ fastcmp_index(size_t lhs, DeeObject *rhs) {
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-fastcmp_string(char const *lhs, DeeObject *rhs) {
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+boolcmp_string(char const *lhs, DeeObject *rhs) {
 	if (DeeString_Check(rhs))
-		return !!strcmp(lhs, DeeString_STR(rhs));
+		return strcmp(lhs, DeeString_STR(rhs)) == 0;
 	if (DeeBytes_Check(rhs)) {
 		size_t lhslen = strlen(lhs);
 		if (lhslen != DeeBytes_SIZE(rhs))
-			return 1;
-		return !!memcmp(lhs, DeeBytes_DATA(rhs), lhslen);
+			return false;
+		return memcmp(lhs, DeeBytes_DATA(rhs), lhslen) == 0;
 	}
-	/* TODO: No need for "-1" here -- re-write consumers of this function to take advantage of that fact! */
-	return -1;
+	return false;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-fastcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs) {
+PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL
+boolcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs) {
 	if (DeeString_Check(rhs)) {
 		if (lhslen != DeeString_SIZE(rhs))
-			return 1;
-		return !!memcmp(lhs, DeeString_STR(rhs), lhslen);
+			return false;
+		return memcmp(lhs, DeeString_STR(rhs), lhslen) == 0;
 	}
 	if (DeeBytes_Check(rhs)) {
 		if (lhslen != DeeBytes_SIZE(rhs))
-			return 1;
-		return !!memcmp(lhs, DeeBytes_DATA(rhs), lhslen);
+			return false;
+		return memcmp(lhs, DeeBytes_DATA(rhs), lhslen) == 0;
 	}
-	/* TODO: No need for "-1" here -- re-write consumers of this function to take advantage of that fact! */
-	return -1;
+	return false;
 }
 
 /* Slow equivalents to the above -- only use these when the above returned "-1"

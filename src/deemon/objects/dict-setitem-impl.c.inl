@@ -20,8 +20,8 @@
 #ifdef __INTELLISENSE__
 #include "dict.c"
 //#define DEFINE_dict_setitem
-#define DEFINE_dict_setitem_at
-//#define DEFINE_dict_setitem_string_hash
+//#define DEFINE_dict_setitem_at
+#define DEFINE_dict_setitem_string_hash
 //#define DEFINE_dict_setitem_index
 //#define DEFINE_dict_setitem_string_len_hash
 //#define DEFINE_dict_setitem_unlocked
@@ -99,8 +99,7 @@ DECL_BEGIN
 #define LOCAL_HAS_keyob
 #define LOCAL_new_keyob()                        DeeString_NewWithHash(key, hash)
 //efine LOCAL_trynew_keyob()                     DeeString_TryNewWithHash(key, hash)
-#define LOCAL_fastcmp(rhs)                       fastcmp_string(key, rhs)
-//efine LOCAL_slowcmp(rhs)                       slowcmp_string(key, rhs)
+#define LOCAL_boolcmp(rhs)                       boolcmp_string(key, rhs)
 #define LOCAL_matched_keyob_tryfrom(matched_key) matched_keyob_tryfrom_string(key, matched_key)
 #elif defined(LOCAL_HAS_KEY_IS_STRING_LEN_HASH)
 #define LOCAL_NONNULL    NONNULL((1, 2, 5))
@@ -110,8 +109,7 @@ DECL_BEGIN
 #define LOCAL_HAS_keyob
 #define LOCAL_new_keyob()                        DeeString_NewSizedWithHash(key, keylen, hash)
 //efine LOCAL_trynew_keyob()                     DeeString_TryNewSizedWithHash(key, keylen, hash)
-#define LOCAL_fastcmp(rhs)                       fastcmp_string_len(key, keylen, rhs)
-//efine LOCAL_slowcmp(rhs)                       slowcmp_string_len(key, keylen, rhs)
+#define LOCAL_boolcmp(rhs)                       boolcmp_string_len(key, keylen, rhs)
 #define LOCAL_matched_keyob_tryfrom(matched_key) matched_keyob_tryfrom_string_len(key, keylen, matched_key)
 #elif defined(LOCAL_HAS_KEY_IS_INDEX)
 #define LOCAL_NONNULL    NONNULL((1, 3))
@@ -232,7 +230,9 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #ifdef LOCAL_IS_SETNEW
 		DREF DeeObject *item_value;
 #endif /* LOCAL_IS_SETNEW */
+#ifndef LOCAL_boolcmp
 		int item_key_cmp_caller_key;
+#endif /* !LOCAL_boolcmp */
 		struct Dee_dict_item *item;
 		size_t htab_idx;          /* hash-index in "d_htab" */
 		Dee_dict_vidx_t vtab_idx; /* hash-index in "d_vtab" */
@@ -269,10 +269,40 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 		if (item->di_hash != LOCAL_hash)
 			continue; /* Different hash */
 
+		/* Helper macro used to verify that the dict didn't change. */
+#ifdef LOCAL_IS_UNLOCKED
+#define LOCAL_verify_unchanged_after_unlock(goto_if_changed) (void)0
+#else /* LOCAL_IS_UNLOCKED */
+#define LOCAL_verify_unchanged_after_unlock(goto_if_changed)                            \
+	do {                                                                                \
+		if unlikely(htab_idx != (hs & self->d_hmask))                                   \
+			goto goto_if_changed;                                                       \
+		if unlikely(vtab_idx != (*self->d_hidxget)(self->d_htab, htab_idx))             \
+			goto goto_if_changed;                                                       \
+		if unlikely(item != &_DeeDict_GetVirtVTab(self)[vtab_idx])                      \
+			goto goto_if_changed;                                                       \
+		if unlikely(item->di_key != item_key)                                           \
+			goto goto_if_changed;                                                       \
+		if unlikely(item->di_hash != LOCAL_hash)                                        \
+			goto goto_if_changed;                                                       \
+		if (result_htab_idx != (size_t)-1) {                                            \
+			/*virt*/ Dee_dict_vidx_t first_deleted_vtab_idx;                            \
+			first_deleted_vtab_idx = (*self->d_hidxget)(self->d_htab, result_htab_idx); \
+			if unlikely(first_deleted_vtab_idx == Dee_DICT_HTAB_EOF ||                  \
+			            _DeeDict_GetVirtVTab(self)[first_deleted_vtab_idx].di_key)      \
+				result_htab_idx = (size_t)-1;                                           \
+		}                                                                               \
+	}	__WHILE0
+#endif /* !LOCAL_IS_UNLOCKED */
+
+
+#ifdef LOCAL_boolcmp
+		if likely(LOCAL_boolcmp(item_key))
+#else /* LOCAL_boolcmp */
 		/* Special optimizations when the caller-given "key" is a special value. */
 #ifdef LOCAL_fastcmp
 		{
-			int fastcmp_result = LOCAL_fastcmp(item->di_key);
+			int fastcmp_result = LOCAL_fastcmp(item_key);
 			if likely(fastcmp_result == 0) {
 				/* Found the item! */
 #ifdef LOCAL_IS_SETNEW
@@ -322,33 +352,6 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* LOCAL_IS_SETNEW */
 		LOCAL_DeeDict_LockEnd(self);
 
-		/* Special case used to verify that the dict didn't change. */
-#ifdef LOCAL_IS_UNLOCKED
-#define LOCAL_verify_unchanged_after_unlock(goto_if_changed) (void)0
-#else /* LOCAL_IS_UNLOCKED */
-#define LOCAL_verify_unchanged_after_unlock(goto_if_changed)                            \
-	do {                                                                                \
-		if unlikely(htab_idx != (hs & self->d_hmask))                                   \
-			goto goto_if_changed;                                                       \
-		if unlikely(vtab_idx != (*self->d_hidxget)(self->d_htab, htab_idx))             \
-			goto goto_if_changed;                                                       \
-		if unlikely(item != &_DeeDict_GetVirtVTab(self)[vtab_idx])                      \
-			goto goto_if_changed;                                                       \
-		if unlikely(item->di_key != item_key)                                           \
-			goto goto_if_changed;                                                       \
-		if unlikely(item->di_hash != LOCAL_hash)                                        \
-			goto goto_if_changed;                                                       \
-		if (result_htab_idx != (size_t)-1) {                                            \
-			/*virt*/ Dee_dict_vidx_t first_deleted_vtab_idx;                            \
-			first_deleted_vtab_idx = (*self->d_hidxget)(self->d_htab, result_htab_idx); \
-			if unlikely(first_deleted_vtab_idx == Dee_DICT_HTAB_EOF ||                  \
-			            _DeeDict_GetVirtVTab(self)[first_deleted_vtab_idx].di_key)      \
-				result_htab_idx = (size_t)-1;                                           \
-		}                                                                               \
-	}	__WHILE0
-#endif /* !LOCAL_IS_UNLOCKED */
-
-
 		/* Regular caller-given key vs. dict key compare. */
 #ifdef LOCAL_slowcmp
 		item_key_cmp_caller_key = LOCAL_slowcmp(item_key);
@@ -369,15 +372,51 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* !... */
 
 		/* Case: keys are equal, meaning we must override this item! */
-		if likely(item_key_cmp_caller_key == 0) {
+		if likely(item_key_cmp_caller_key == 0)
+#endif /* !LOCAL_boolcmp */
+		{
 #ifdef LOCAL_IS_SETNEW
+#ifdef LOCAL_boolcmp
+			LOCAL_DeeDict_LockEnd(self);
+#else /* LOCAL_boolcmp */
 			Dee_Decref_unlikely(item_key);
+#endif /* !LOCAL_boolcmp */
 			LOCAL_cleanup_data_for_noop_return();
 			return item_value;
 #else /* LOCAL_IS_SETNEW */
 			DREF DeeObject *old_value;
 			/*virt*/Dee_dict_vidx_t result_vidx;
 
+#ifdef LOCAL_boolcmp
+			/* At this point we're still holding a read-lock.
+			 *
+			 * If we're able to upgrade that lock, then we won't
+			 * even have to check if the dict changed! */
+			if (keyob == NULL) {
+#ifdef LOCAL_matched_keyob_tryfrom
+				keyob = LOCAL_matched_keyob_tryfrom(item_key);
+				if unlikely(!keyob)
+#endif /* LOCAL_matched_keyob_tryfrom */
+				{
+					Dee_Incref(item_key);
+					LOCAL_DeeDict_LockEnd(self);
+					keyob = LOCAL_new_keyob();
+					Dee_Decref_unlikely(item_key);
+					if unlikely(!keyob)
+						goto err_nokeyob;
+					LOCAL_DeeDict_LockWrite(self);
+					LOCAL_IF_NOT_UNLOCKED(goto override_item_before_consistency_check);
+				}
+			}
+#ifndef LOCAL_IS_UNLOCKED
+			if (!LOCAL_DeeDict_LockUpgrade(self)) {
+override_item_before_consistency_check:
+				LOCAL_verify_unchanged_after_unlock(downgrade_lock_and_try_again);
+#define NEED_downgrade_lock_and_try_again
+			}
+#endif /* !LOCAL_IS_UNLOCKED */
+
+#else /* LOCAL_boolcmp */
 			/* Allocate a key object if necessary */
 #ifdef LOCAL_HAS_keyob
 			if (keyob == NULL) {
@@ -408,6 +447,7 @@ override_item_before_consistency_check:
 #undef NEED_override_item_after_consistency_check
 override_item_after_consistency_check:
 #endif /* NEED_override_item_after_consistency_check */
+#endif /* !LOCAL_boolcmp */
 
 			/************************************************************************/
 			/* OVERRIDE EXISTING "item"                                             */
@@ -564,6 +604,7 @@ done_overwrite_unlock_dict:
 #endif /* !LOCAL_IS_SETNEW */
 		}
 
+#ifndef LOCAL_boolcmp
 #ifdef LOCAL_IS_SETNEW
 		Dee_Decref_unlikely(item_value);
 #endif /* LOCAL_IS_SETNEW */
@@ -581,6 +622,7 @@ done_overwrite_unlock_dict:
 			LOCAL_DeeDict_LockRead(self);
 		}
 		LOCAL_verify_unchanged_after_unlock(again_with_lock);
+#endif /* !LOCAL_boolcmp */
 #undef LOCAL_verify_unchanged_after_unlock
 	}
 #ifdef LOCAL_IS_SETOLD
@@ -765,6 +807,7 @@ downgrade_lock_and_try_again:
 
 #undef LOCAL_new_keyob
 #undef LOCAL_trynew_keyob
+#undef LOCAL_boolcmp
 #undef LOCAL_fastcmp
 #undef LOCAL_slowcmp
 #undef LOCAL_matched_keyob_tryfrom
