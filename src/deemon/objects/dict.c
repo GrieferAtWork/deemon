@@ -2610,13 +2610,13 @@ dict_clear(Dict *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_bool(Dict *__restrict self) {
-	return atomic_read(&self->d_vused) != 0;
+	return DeeDict_SIZE_ATOMIC(self) != 0;
 }
 
 #define dict_size_fast dict_size
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 dict_size(Dict *__restrict self) {
-	return atomic_read(&self->d_vused);
+	return DeeDict_SIZE_ATOMIC(self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DictIterator *DCALL
@@ -2638,7 +2638,7 @@ err:
 #ifndef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_sizeob(Dict *__restrict self) {
-	size_t result = atomic_read(&self->d_vused);
+	size_t result = DeeDict_SIZE_ATOMIC(self);
 	return DeeInt_NewSize(result);
 }
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -3433,7 +3433,7 @@ dict_sizeof(Dict *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_nonempty_as_bound(Dict *__restrict self) {
-	size_t size = atomic_read(&self->d_vused);
+	size_t size = DeeDict_SIZE_ATOMIC(self);
 	return Dee_BOUND_FROMBOOL(size);
 }
 
@@ -3817,7 +3817,7 @@ dict_mh_seq_compare(Dict *lhs, DeeObject *rhs) {
 		return -1;
 	if (foreach_status == DICT_COMPARE_SEQ_FOREACH_GREATER)
 		return 1;
-	lhs_size = atomic_read(&lhs->d_vused);
+	lhs_size = DeeDict_SIZE_ATOMIC(lhs);
 	if (data.dcsfd_index < lhs_size)
 		return 1;
 	return 0;
@@ -3837,7 +3837,7 @@ dict_mh_seq_compare_eq(Dict *lhs, DeeObject *rhs) {
 		goto err;
 	if (foreach_status == DICT_COMPARE_SEQ_FOREACH_NOTEQUAL)
 		return 1;
-	lhs_size = atomic_read(&lhs->d_vused);
+	lhs_size = DeeDict_SIZE_ATOMIC(lhs);
 	if (data.dcsfd_index < lhs_size)
 		return 1;
 	return 0;

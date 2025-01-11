@@ -22,12 +22,16 @@
 
 #include "api.h"
 
-#include <stdarg.h>
-#include <stdbool.h>
+#include <hybrid/host.h>
+
 #include <stddef.h>
 
 #include "object.h"
 #include "util/lock.h"
+
+#ifndef __INTELLISENSE__
+#include "util/atomic.h"
+#endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 
@@ -111,10 +115,6 @@ struct Dee_dict_object {
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
 };
-
-/* Return the # of bound key within "self". */
-#define DeeDict_SIZE(self)        ((self)->d_vused)
-#define DeeDict_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->d_vused)
 
 DDATDEF __BYTE_TYPE__ const _DeeDict_EmptyTab[];
 #define DeeDict_EmptyVTab /*virt*/ ((struct Dee_dict_item *)_DeeDict_EmptyTab - 1)
@@ -257,10 +257,6 @@ struct Dee_dict_object {
 	Dee_WEAKREF_SUPPORT
 };
 
-/* Return the # of bound key within "self". */
-#define DeeDict_SIZE(self)        ((self)->d_used)
-#define DeeDict_SIZE_ATOMIC(self) atomic_read(&(self)->d_used)
-
 #ifdef CONFIG_NO_THREADS
 #define Dee_DICT_INIT \
 	{ Dee_OBJECT_HEAD_INIT(&DeeDict_Type), 0, 0, 0, (struct Dee_dict_item *)DeeDict_EmptyItems, Dee_WEAKREF_SUPPORT_INIT }
@@ -391,6 +387,32 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 #define DeeDict_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->d_lock)
 #define DeeDict_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->d_lock)
 #define DeeDict_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->d_lock)
+
+
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
+#define _Dee_DICT_SIZE_FIELD d_vused
+#else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+#define _Dee_DICT_SIZE_FIELD d_used
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+
+/* Return the # of bound key within "self". */
+#define DeeDict_SIZE(self) ((self)->_Dee_DICT_SIZE_FIELD)
+#ifdef __INTELLISENSE__
+#define DeeDict_SIZE_ATOMIC(self) DeeDict_SIZE(self)
+#elif defined(__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC) || defined(CONFIG_NO_THREADS)
+#define DeeDict_SIZE_ATOMIC(self) Dee_atomic_read(&(self)->_Dee_DICT_SIZE_FIELD)
+#else /* __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC || CONFIG_NO_THREADS */
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t
+(DeeDict_SIZE_ATOMIC)(DeeDictObject *__restrict self) {
+	size_t result;
+	DeeDict_LockRead(self);
+	result = self->_Dee_DICT_SIZE_FIELD;
+	DeeDict_LockEndRead(self);
+	return result;
+}
+#endif /* !__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC && !CONFIG_NO_THREADS */
+
+
 
 DECL_END
 

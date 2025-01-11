@@ -343,13 +343,13 @@
 
 /* >> __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC
  * When defined, properly aligned writes to word types with sizes
- * that are <= sizeof(__REGISTER_TYPE__) are inherently atomic.
+ * that are <=  sizeof(__REGISTER_TYPE__) are inherently  atomic.
  *
  * As a consequence, `__hybrid_atomic_load()' can be used to load
  * such words, even if those words are written without the use of
  * `__hybrid_atomic_store()' or similar.
  *
- * Another way of looking at this option is:
+ * Another   way  of  looking   at  this  option  is:
  * >> #ifdef __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC
  * >> __hybrid_atomic_store(&p, v, __ATOMIC_RELAXED);
  * >> p = v; // ^ literally the same as as this line.
