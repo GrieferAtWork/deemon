@@ -206,13 +206,13 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 				/* Found the item! */
 #ifndef LOCAL_IS_UNLOCKED
 				if (LOCAL_DeeDict_LockTryUpgrade(self))
-					goto override_item_after_consistency_check;
-#define NEED_override_item_after_consistency_check
+					goto delete_item_after_consistency_check;
+#define NEED_delete_item_after_consistency_check
 				LOCAL_DeeDict_LockEndRead(self);
 				LOCAL_DeeDict_LockWrite(self);
 #endif /* !LOCAL_IS_UNLOCKED */
-				goto override_item_before_consistency_check;
-#define NEED_override_item_before_consistency_check
+				goto delete_item_before_consistency_check;
+#define NEED_delete_item_before_consistency_check
 			}
 			if (fastcmp_result > 0)
 				continue; /* Wrong key (hash just matched by random) */
@@ -221,7 +221,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 
 		/* Load item key and release dict lock (so we can do compare) */
 		Dee_Incref(item_key);
-		LOCAL_DeeDict_LockEnd(self);
+		LOCAL_DeeDict_LockEndRead(self);
 
 		/* Regular caller-given key vs. dict key compare. */
 #ifdef LOCAL_slowcmp
@@ -253,18 +253,18 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 			/* Drop the reference to the existing key, as used for the compare,  */
 			Dee_Decref_unlikely(item_key);
 			LOCAL_DeeDict_LockWrite(self);
-#ifdef NEED_override_item_before_consistency_check
-#undef NEED_override_item_before_consistency_check
-override_item_before_consistency_check:
-#endif /* NEED_override_item_before_consistency_check */
+#ifdef NEED_delete_item_before_consistency_check
+#undef NEED_delete_item_before_consistency_check
+delete_item_before_consistency_check:
+#endif /* NEED_delete_item_before_consistency_check */
 #ifndef LOCAL_IS_UNLOCKED
 			LOCAL_verify_unchanged_after_unlock(downgrade_lock_and_try_again);
 #define NEED_downgrade_lock_and_try_again
 #endif /* !LOCAL_IS_UNLOCKED */
-#ifdef NEED_override_item_after_consistency_check
-#undef NEED_override_item_after_consistency_check
-override_item_after_consistency_check:
-#endif /* NEED_override_item_after_consistency_check */
+#ifdef NEED_delete_item_after_consistency_check
+#undef NEED_delete_item_after_consistency_check
+delete_item_after_consistency_check:
+#endif /* NEED_delete_item_after_consistency_check */
 #endif /* !LOCAL_boolcmp */
 
 			/************************************************************************/
@@ -347,12 +347,7 @@ downgrade_lock_and_try_again:
 #endif /* NEED_downgrade_lock_and_try_again */
 
 #undef LOCAL_hash
-#undef _LOCAL_incref_key_for_populate_item_key_and_value
-#undef _LOCAL_incref_value_for_populate_item_key_and_value
-#undef LOCAL_cleanup_data_for_noop_return
-#undef LOCAL_populate_item_key_and_value
 }
-
 
 #undef LOCAL_boolcmp
 #undef LOCAL_fastcmp
