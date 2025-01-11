@@ -159,7 +159,9 @@ EXPORTS
 	DeeDict_FromSequenceInherited@4=_DeeDict_FromSequenceInherited@4
 	DeeDict_NewKeyValuesInherited@8=_DeeDict_NewKeyValuesInherited@8
 	DeeDict_NewWithHint@4=_DeeDict_NewWithHint@4
+	DeeDict_NewWithWeakHint@4=_DeeDict_NewWithWeakHint@4
 	DeeDict_TryNewWithHint@4=_DeeDict_TryNewWithHint@4
+	DeeDict_TryNewWithWeakHint@4=_DeeDict_TryNewWithWeakHint@4
 	DeeError_Catch@4=_DeeError_Catch@4
 	DeeError_Current@0=_DeeError_Current@0
 	DeeError_CurrentIs@4=_DeeError_CurrentIs@4
@@ -780,6 +782,7 @@ EXPORTS
 	DeeObject_InplaceXor@8=_DeeObject_InplaceXor@8
 	DeeObject_InplaceXorUInt32@8=_DeeObject_InplaceXorUInt32@8
 	DeeObject_Int@4=_DeeObject_Int@4
+	DeeObject_IntInherited@4=_DeeObject_IntInherited@4
 	DeeObject_Inv@4=_DeeObject_Inv@4
 	DeeObject_InvokeOperator@16=_DeeObject_InvokeOperator@16
 	DeeObject_Iter@4=_DeeObject_Iter@4
@@ -1040,6 +1043,7 @@ EXPORTS
 	DeeObject_VTInvokeOperatorf@20=_DeeObject_VTInvokeOperatorf@20
 	DeeObject_VThisCallf@16=_DeeObject_VThisCallf@16
 	DeeObject_Visit@12=_DeeObject_Visit@12
+	DeeObject_XHashv@8=_DeeObject_XHashv@8
 	DeeObject_XInplaceDeepCopyWithLock@8=_DeeObject_XInplaceDeepCopyWithLock@8
 	DeeObject_XInplaceDeepCopyWithRWLock@8=_DeeObject_XInplaceDeepCopyWithRWLock@8
 	DeeObject_Xor@8=_DeeObject_Xor@8
@@ -1319,6 +1323,8 @@ EXPORTS
 	Dee_ddi_next_state@12=_Dee_ddi_next_state@12
 	Dee_ddi_state_fini@4=_Dee_ddi_state_fini@4
 	Dee_ddi_state_init@12=_Dee_ddi_state_init@12
+	Dee_dict_gethidx8@8=_Dee_dict_gethidx8@8
+	Dee_dict_sethidx8@12=_Dee_dict_sethidx8@12
 	Dee_event_waitfor@4=_Dee_event_waitfor@4
 	Dee_event_waitfor_timed@12=_Dee_event_waitfor_timed@12
 	Dee_once_abort@4=_Dee_once_abort@4
@@ -1437,6 +1443,7 @@ EXPORTS
 	_DeeNone_NewRef6@24=__DeeNone_NewRef6@24
 	_DeeNone_NewRef7@28=__DeeNone_NewRef7@28
 	_DeeNone_reti0_6@24=__DeeNone_reti0_6@24
+	_DeeNone_reti1_1@4=__DeeNone_reti1_1@4
 	_DeeNone_reti1_2@8=__DeeNone_reti1_2@8
 	_DeeNone_reti1_3@12=__DeeNone_reti1_3@12
 	_DeeNone_reti1_4@16=__DeeNone_reti1_4@16
