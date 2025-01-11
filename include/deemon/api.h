@@ -414,9 +414,10 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
+/* Experimental feature switch: Dict-s retain the order in which items are added. */
 #if (!defined(CONFIG_EXPERIMENTAL_ORDERED_DICTS) && \
      !defined(CONFIG_NO_EXPERIMENTAL_ORDERED_DICTS))
-#if 0 /* Seems to be working (tests run to completion), but still needs more testing... */
+#if 1
 #define CONFIG_EXPERIMENTAL_ORDERED_DICTS
 #else
 #define CONFIG_NO_EXPERIMENTAL_ORDERED_DICTS
