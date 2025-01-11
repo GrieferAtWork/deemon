@@ -2728,55 +2728,86 @@ err_temp:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dict_enumerate_index(Dict *__restrict self, Dee_enumerate_index_t cb,
                      void *arg, size_t start, size_t end) {
-	Dee_dict_vidx_t i;
+	Dee_hash_t hash;
 	Dee_ssize_t temp, result = 0;
 	DeeDict_LockRead(self);
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
-		DREF DeeObject *key, *value;
-		struct Dee_dict_item *item;
-		size_t index, key_index;
-		item  = &_DeeDict_GetVirtVTab(self)[i];
-		index = item->di_hash;
 
-		/* Integer hashes are equal to the integer itself, so
-		 * if the hash doesn't fall into the start...end range,
-		 * then we know it shouldn't be enumerated! */
-		if (index < start)
-			continue;
-		if (index >= end)
-			continue;
-		key = item->di_key;
-		if unlikely(!key)
-			continue; /* Deleted, and not-yet-optimized key */
-		if likely(DeeInt_Check(key)) {
-			if (!DeeInt_TryAsSize(key, &key_index))
-				continue; /* Hash only matched due to overflow... */
-			ASSERTF(key_index == index, "Huh? Is the hash incorrect?");
-			value = item->di_value;
-			Dee_Incref(value);
-			DeeDict_LockEndRead(self);
-		} else {
-			bool ok;
-			Dee_Incref(key);
-			value = item->di_value;
-			Dee_Incref(value);
-			DeeDict_LockEndRead(self);
-			key = DeeObject_IntInherited(key);
-			if unlikely(!key)
-				goto err;
-			ok = DeeInt_TryAsSize(key, &key_index) &&
-			     key_index == index;
-			Dee_Decref(key);
-			if (!ok)
-				continue; /* Hash only matched due to overflow... */
+	/* Take advantage of the fact that "hash(int) == int" */
+	for (hash = start; hash < end; ++hash) {
+		Dee_hash_t hs, perturb;
+		DREF DeeObject *value;
+again_search_for_hash:
+
+		/* Search for an integer-key matching "hash" */
+		_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
+		for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+			struct Dee_dict_item *item;
+			DREF DeeObject *key;
+			size_t key_value;
+			Dee_dict_vidx_t vtab_idx = _DeeDict_HTabGet(self, hs);
+			if (vtab_idx == Dee_DICT_HTAB_EOF)
+				goto continue_with_next_hash;
+			item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
+			if unlikely(item->di_hash != hash)
+				continue;
+			key = item->di_key;
+			if likely(DeeInt_Check(key)) {
+				if unlikely(!DeeInt_TryAsSize(key, &key_value))
+					continue;
+				if unlikely(key_value != hash)
+					continue;
+				value = item->di_value;
+				Dee_Incref(value);
+				DeeDict_LockEndRead(self);
+			} else {
+#ifndef __OPTIMIZE_SIZE__
+				/* Check: can "key" be converted to an integer; if not, then it can't be correct.
+				 * NOTE: This same check is semantically repeated by the
+				 *       `DeeError_Catch(&DeeError_NotImplemented)' below. */
+				DeeTypeObject *tp_key = Dee_TYPE(key);
+				if ((!tp_key->tp_math || !tp_key->tp_math->tp_int) && !DeeType_InheritInt(tp_key))
+					continue;
+#endif /* !__OPTIMIZE_SIZE__ */
+				value = item->di_value;
+				Dee_Incref(key);
+				Dee_Incref(value);
+				DeeDict_LockEndRead(self);
+				key = DeeObject_IntInherited(key);
+				if unlikely(!key) {
+					Dee_Decref_unlikely(value);
+					if (DeeError_Catch(&DeeError_NotImplemented))
+						goto continue_searching;
+					goto err;
+				}
+				if unlikely(!DeeInt_TryAsSize(key, &key_value) || key_value != hash) {
+					Dee_Decref_unlikely(key);
+					Dee_Decref_unlikely(value);
+continue_searching:
+					DeeDict_LockRead(self);
+					if unlikely(item < _DeeDict_GetRealVTab(self))
+						goto again_search_for_hash;
+					if unlikely(item >= _DeeDict_GetRealVTab(self) + self->d_vsize)
+						goto again_search_for_hash;
+					if unlikely(item->di_hash != hash)
+						goto again_search_for_hash;
+					if unlikely(item->di_key != key)
+						goto again_search_for_hash;
+					if unlikely(item->di_value != value)
+						goto again_search_for_hash;
+					continue;
+				}
+				/* Found the relevant item! */
+				Dee_Decref_unlikely(key);
+			}
+			break;
 		}
-		temp = (*cb)(arg, key_index, value);
+		temp = (*cb)(arg, hash, value);
 		Dee_Decref_unlikely(value);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
 		DeeDict_LockRead(self);
+continue_with_next_hash:;
 	}
 	DeeDict_LockEndRead(self);
 	return result;
@@ -3455,7 +3486,7 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&dict_enumerate_index, /* TODO: Optimization: only need to enumerate integer keys, so we can take advantage of the fact that "hash(int) == int". */
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&dict_enumerate_index,
 	/* .tp_iterkeys                   = */ &DeeMap_DefaultIterKeysWithIter,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_hasitem,
