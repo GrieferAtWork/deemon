@@ -3954,6 +3954,10 @@ err:
 }
 
 
+#define D_TKey   "?O"
+#define D_TValue "?O"
+#define D_TItem  "?T2" D_TKey D_TValue
+
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deprecated_d100_get_maxloadfactor(DeeObject *__restrict self);
@@ -3962,12 +3966,12 @@ deprecated_d100_get_maxloadfactor(DeeObject *__restrict self);
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_getset tpconst dict_getsets[] = {
-	TYPE_GETSET_BOUND(STR_first, &dict_getfirst, &dict_delfirst, &dict_setfirst, &dict_nonempty_as_bound, "->?T2?O?O"),
-	TYPE_GETSET_BOUND(STR_last, &dict_getlast, &dict_dellast, &dict_setlast, &dict_nonempty_as_bound, "->?T2?O?O"),
-	TYPE_GETSET_BOUND("firstkey", &dict_getfirstkey, &dict_delfirst, &dict_setfirstkey, &dict_nonempty_as_bound, "->?O"),
-	TYPE_GETSET_BOUND("lastkey", &dict_getlastkey, &dict_dellast, &dict_setlastkey, &dict_nonempty_as_bound, "->?O"),
-	TYPE_GETSET_BOUND("firstvalue", &dict_getfirstvalue, &dict_delfirst, &dict_setfirstvalue, &dict_nonempty_as_bound, "->?O"),
-	TYPE_GETSET_BOUND("lastvalue", &dict_getlastvalue, &dict_dellast, &dict_setlastvalue, &dict_nonempty_as_bound, "->?O"),
+	TYPE_GETSET_BOUND(STR_first, &dict_getfirst, &dict_delfirst, &dict_setfirst, &dict_nonempty_as_bound, "->" D_TItem),
+	TYPE_GETSET_BOUND(STR_last, &dict_getlast, &dict_dellast, &dict_setlast, &dict_nonempty_as_bound, "->" D_TItem),
+	TYPE_GETSET_BOUND("firstkey", &dict_getfirstkey, &dict_delfirst, &dict_setfirstkey, &dict_nonempty_as_bound, "->" D_TKey),
+	TYPE_GETSET_BOUND("lastkey", &dict_getlastkey, &dict_dellast, &dict_setlastkey, &dict_nonempty_as_bound, "->" D_TKey),
+	TYPE_GETSET_BOUND("firstvalue", &dict_getfirstvalue, &dict_delfirst, &dict_setfirstvalue, &dict_nonempty_as_bound, "->" D_TValue),
+	TYPE_GETSET_BOUND("lastvalue", &dict_getlastvalue, &dict_dellast, &dict_setlastvalue, &dict_nonempty_as_bound, "->" D_TValue),
 
 	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence, "->?#Frozen"),
@@ -4042,12 +4046,12 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	                "#r{Indicative of the ?. having sufficient preallocated space on return}"
 	                "Try to preallocate buffer space for ${({#this, total} > ...) + more} items"),
 
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_xchitem, "(index:?Dint,item:?T2?O?O)->?T2?O?O"),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_xchitem, "(index:?Dint,item:" D_TItem ")->" D_TItem),
 	TYPE_METHOD_HINTREF(explicit_seq_erase),
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_insert, "(index:?Dint,item:?T2?O?O)"),
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_append, "(item:?T2?O?O)"),
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_pushfront, "(item:?T2?O?O)"),
-	TYPE_METHOD_HINTREF_DOC(explicit_seq_pop, "(index=!-1)->?T2?O?O"),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_insert, "(index:?Dint,item:" D_TItem ")"),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_append, "(item:" D_TItem ")"),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_pushfront, "(item:" D_TItem ")"),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_pop, "(index=!-1)->" D_TItem),
 	TYPE_METHOD_HINTREF(explicit_seq_removeif),
 	TYPE_METHOD_HINTREF(explicit_seq_reverse),
 	TYPE_METHOD_END
@@ -4162,13 +4166,15 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	                         /**/ "at all may be pre-allocated.\n"
 	                         "\n"
 
-	                         "(items:?S?T2?O?O)\n"
+	                         "(items:?S" D_TItem ")\n"
+	                         "(items:?M" D_TKey D_TValue ")\n"
 	                         "Create a new ?., using key-value pairs extracted from @items.\n"
 	                         "Iterate @items and unpack each element into 2 others, using them "
 	                         /**/ "as key and value to insert into @this ?.\n"
 	                         "\n"
 
-	                         ":=(items:?S?T2?O?O)->\n"
+	                         ":=(items:?S" D_TItem ")->\n"
+	                         ":=(items:?M" D_TKey D_TValue ")->\n"
 	                         "Replace the contents of @this dict with @items\n"
 	                         "\n"
 
@@ -4184,20 +4190,20 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	                         "Return the number of key-value pairs\n"
 	                         "\n"
 
-	                         "contains(key)->\n"
+	                         "contains(key:" D_TKey ")->\n"
 	                         "Check if the dict contains a @key\n"
 	                         "\n"
 
-	                         "[](key)->\n"
+	                         "[](key:" D_TKey ")->" D_TValue "\n"
 	                         "#tKeyError{Given @key doesn't exist}\n"
 	                         "Return the value associated with @key\n"
 	                         "\n"
 
-	                         "del[](key)->\n"
+	                         "del[](key:" D_TKey ")->\n"
 	                         "Remove @key from @this. No-op if @key doesn't exist (s.a. ?#remove)\n"
 	                         "\n"
 
-	                         "[]=(key,value)->\n"
+	                         "[]=(key:" D_TKey ",value:" D_TValue ")->\n"
 	                         "Insert/override @key by assigning @value"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Dict),
