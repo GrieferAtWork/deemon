@@ -450,6 +450,22 @@ PRIVATE NONNULL((1)) void DCALL Dee_dict_dwnhidx64(void *__restrict dst, void co
 #define Dee_dict_uprhidx32_PTR NULL
 #endif /* !Dee_dict_uprhidx32_PTR */
 
+#if DEE_DICT_HIDXIO_COUNT >= 2
+#define IF_DEE_DICT_HIDXIO_COUNT_GE_2(...) __VA_ARGS__
+#else /* DEE_DICT_HIDXIO_COUNT >= 2 */
+#define IF_DEE_DICT_HIDXIO_COUNT_GE_2(...) /* nothing */
+#endif /* DEE_DICT_HIDXIO_COUNT < 2 */
+#if DEE_DICT_HIDXIO_COUNT >= 3
+#define IF_DEE_DICT_HIDXIO_COUNT_GE_3(...) __VA_ARGS__
+#else /* DEE_DICT_HIDXIO_COUNT >= 3 */
+#define IF_DEE_DICT_HIDXIO_COUNT_GE_3(...) /* nothing */
+#endif /* DEE_DICT_HIDXIO_COUNT < 3 */
+#if DEE_DICT_HIDXIO_COUNT >= 4
+#define IF_DEE_DICT_HIDXIO_COUNT_GE_4(...) __VA_ARGS__
+#else /* DEE_DICT_HIDXIO_COUNT >= 4 */
+#define IF_DEE_DICT_HIDXIO_COUNT_GE_4(...) /* nothing */
+#endif /* DEE_DICT_HIDXIO_COUNT < 4 */
+
 
 #ifndef __INTELLISENSE__
 DECL_END
@@ -475,15 +491,9 @@ DECL_BEGIN
 
 PUBLIC_TPCONST struct Dee_dict_hidxio_struct tpconst Dee_dict_hidxio[DEE_DICT_HIDXIO_COUNT] = {
 	/* [0] = */ { &Dee_dict_gethidx8, &Dee_dict_sethidx8, &Dee_dict_movhidx8, Dee_dict_uprhidx8_PTR, NULL },
-#if DEE_DICT_HIDXIO_COUNT >= 2
-	/* [1] = */ { &Dee_dict_gethidx16, &Dee_dict_sethidx16, &Dee_dict_movhidx16, Dee_dict_uprhidx16_PTR, &Dee_dict_dwnhidx16 },
-#if DEE_DICT_HIDXIO_COUNT >= 3
-	/* [2] = */ { &Dee_dict_gethidx32, &Dee_dict_sethidx32, &Dee_dict_movhidx32, Dee_dict_uprhidx32_PTR, &Dee_dict_dwnhidx32 },
-#if DEE_DICT_HIDXIO_COUNT >= 4
-	/* [3] = */ { &Dee_dict_gethidx64, &Dee_dict_sethidx64, &Dee_dict_movhidx64, NULL, &Dee_dict_dwnhidx64 },
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
+	/* [1] = */ IF_DEE_DICT_HIDXIO_COUNT_GE_2({ &Dee_dict_gethidx16, &Dee_dict_sethidx16, &Dee_dict_movhidx16, Dee_dict_uprhidx16_PTR, &Dee_dict_dwnhidx16 },)
+	/* [2] = */ IF_DEE_DICT_HIDXIO_COUNT_GE_3({ &Dee_dict_gethidx32, &Dee_dict_sethidx32, &Dee_dict_movhidx32, Dee_dict_uprhidx32_PTR, &Dee_dict_dwnhidx32 },)
+	/* [3] = */ IF_DEE_DICT_HIDXIO_COUNT_GE_4({ &Dee_dict_gethidx64, &Dee_dict_sethidx64, &Dee_dict_movhidx64, NULL, &Dee_dict_dwnhidx64 },)
 };
 
 
@@ -3482,14 +3492,6 @@ PRIVATE struct type_seq dict_seq = {
 };
 
 
-#ifndef CONFIG_NO_DEEMON_100_COMPAT
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deprecated_d100_get_maxloadfactor(DeeObject *__restrict self);
-#define deprecated_d100_del_maxloadfactor (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
-#define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
-#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_sizeof(Dict *__restrict self) {
 	size_t hmask, valloc, result;
@@ -3924,6 +3926,13 @@ dict_mh_seq_trycompare_eq(Dict *lhs, DeeObject *rhs) {
 }
 
 
+#ifndef CONFIG_NO_DEEMON_100_COMPAT
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deprecated_d100_get_maxloadfactor(DeeObject *__restrict self);
+#define deprecated_d100_del_maxloadfactor (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
+#define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
+#endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
 PRIVATE struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETSET_BOUND(STR_first, &dict_getfirst, &dict_delfirst, &dict_setfirst, &dict_nonempty_as_bound, "->?T2?O?O"),
 	TYPE_GETSET_BOUND(STR_last, &dict_getlast, &dict_dellast, &dict_setlast, &dict_nonempty_as_bound, "->?T2?O?O"),
@@ -3934,6 +3943,17 @@ PRIVATE struct type_getset tpconst dict_getsets[] = {
 
 	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence, "->?#Frozen"),
+	TYPE_GETTER_F("__sizeof__", &dict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__hdxio__", &dict___hdxio__, METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Size shift-multipler for htab words (word size is ${1 << __hdxio__})\n"
+	              "#T{?#__hdxio__|htab word type~"
+	              /**/ "$0|?Ectypes:uint8_t"
+	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
+	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
+	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
+	              "}"),
+
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_GETSET_F("max_load_factor",
 	              &deprecated_d100_get_maxloadfactor,
@@ -3943,10 +3963,6 @@ PRIVATE struct type_getset tpconst dict_getsets[] = {
 	              "->?Dfloat\n"
 	              "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER_F("__sizeof__", &dict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
-	TYPE_GETTER_F("__hdxio__", &dict___hdxio__, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "Size shift-multipler for htab words (word size is ${1 << __hdxio__})"),
 	TYPE_GETSET_END
 };
 
@@ -4048,7 +4064,7 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 
 PRIVATE struct type_method tpconst dict_class_methods[] = {
 	TYPE_KWMETHOD_F("fromkeys", &dict_fromkeys_f, METHOD_FNOREFESCAPE,
-	                "(keys:?S?O,value=!n,valuefor?:DCallable)->?.\n"
+	                "(keys:?DSet,value=!N,valuefor?:?DCallable)->?.\n"
 	                "Construct a new ?. from @keys, and @value (or ${valuefor(key)}) as value."),
 	TYPE_METHOD_END
 };
@@ -4080,12 +4096,25 @@ PRIVATE struct type_operator const dict_operators[] = {
 PUBLIC DeeTypeObject DeeDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Dict),
-	/* .tp_doc      = */ DOC("The builtin ?DMapping object for translating keys to items: ${{Key: Value}}\n"
+	/* .tp_doc      = */ DOC("The builtin ?DMapping object for translating keys to items: ${{Key: Value}} (or ${{(Key, Value)...}})\n"
+	                         "${"
+	                         /**/ "import Dict, Object from deemon;\n"
+	                         /**/ "\\\n"
+	                         /**/ "local d: {Object: Object} = Dict();\n"
+	                         /**/ "d[\"first\"] = 10;\n"
+	                         /**/ "d[\"second\"] = 20;\n"
+	                         /**/ "d[true] = \"yes\";\n"
+	                         /**/ "\\\n"
+	                         /**/ "/* Dict({ \"first\": 10, \"second\": 10, true: \"yes\" }) */\n"
+	                         /**/ "print repr d;"
+	                         "}\n"
 	                         "Dicts also retain the order in which items are inserted, such that during "
 	                         /**/ "enumeration, key-value pairs (aka. items) are enumerated from least-recently, "
 	                         /**/ "to most-recently inserted.\n"
 	                         "In order to easier control the order of items, certain ?DSequence functions are "
-	                         /**/ "also implemented, such as ?#__seq_insert__ or ?#__seq_erase__.\n"
+	                         /**/ "also implemented, such as ?#__seq_insert__ or ?#__seq_erase__. These should "
+	                         /**/ "not be called directly, and can instead be used as ${this.insert(0, (key, value))} "
+	                         /**/ "or ${(this as Sequence).insert(0, (key, value))}.\n"
 	                         "\n"
 
 	                         "()\n"
@@ -4105,6 +4134,14 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	                         "Create a new ?., using key-value pairs extracted from @items.\n"
 	                         "Iterate @items and unpack each element into 2 others, using them "
 	                         /**/ "as key and value to insert into @this ?.\n"
+	                         "\n"
+
+	                         ":=(items:?S?T2?O?O)->\n"
+	                         "Replace the contents of @this dict with @items\n"
+	                         "\n"
+
+	                         "move:=(other:?.)->\n"
+	                         "Similar to ?#{op:assign}, but also clear @other at the same time\n"
 	                         "\n"
 
 	                         "iter->\n"
