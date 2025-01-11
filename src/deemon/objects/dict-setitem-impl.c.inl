@@ -409,7 +409,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 				}
 			}
 #ifndef LOCAL_IS_UNLOCKED
-			if (!LOCAL_DeeDict_LockUpgrade(self)) {
+			if unlikely(!LOCAL_DeeDict_LockUpgrade(self)) {
 override_item_before_consistency_check:
 				LOCAL_verify_unchanged_after_unlock(downgrade_lock_and_try_again);
 #define NEED_downgrade_lock_and_try_again
@@ -613,6 +613,8 @@ done_overwrite_unlock_dict:
 		Dee_Decref_unlikely(item_key);
 		if unlikely(item_key_cmp_caller_key == Dee_COMPARE_ERR)
 			goto err;
+
+		/* Re-acquire lock */
 #ifndef LOCAL_IS_SETOLD
 		LOCAL_IF_NOT_UNLOCKED(if (use_write_lock) {
 			LOCAL_DeeDict_LockWrite(self);
@@ -621,6 +623,8 @@ done_overwrite_unlock_dict:
 		{
 			LOCAL_DeeDict_LockRead(self);
 		}
+
+		/* Check if the dict changed. */
 		LOCAL_verify_unchanged_after_unlock(again_with_lock);
 #endif /* !LOCAL_boolcmp */
 #undef LOCAL_verify_unchanged_after_unlock
