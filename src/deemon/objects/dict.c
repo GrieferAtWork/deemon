@@ -534,14 +534,14 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 #define _DeeDict_ShouldShrinkHTab(self) \
 	_DeeDict_ShouldShrinkHTab2((self)->d_valloc, (self)->d_hmask)
 #define _DeeDict_ShouldShrinkHTab2(valloc, hmask) \
-	(((valloc)*DICT_VTAB_HTAB_RATIO_V) <          \
-	 (((hmask) >> 1) * DICT_VTAB_HTAB_RATIO_H))
+	(((valloc)*DICT_VTAB_HTAB_RATIO_H) <=         \
+	 (((hmask) >> 1) * DICT_VTAB_HTAB_RATIO_V))
 
 /* Returns true if the htab can be shrunk. */
 #define _DeeDict_CanShrinkHTab(self) \
 	_DeeDict_CanShrinkHTab2((self)->d_valloc, (self)->d_hmask)
 #define _DeeDict_CanShrinkHTab2(valloc, hmask) \
-	((valloc) < ((hmask) >> 1))
+	((valloc) <= ((hmask) >> 1))
 
 
 #define NULL_IF__DeeDict_EmptyTab(/*real*/ p) \
@@ -1410,13 +1410,14 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 	old_hmask = self->d_hmask;
 	new_hmask = old_hmask;
 	if (fully_shrink) {
-		while (_DeeDict_CanShrinkHTab2(self->d_valloc, new_hmask))
+		while (_DeeDict_CanShrinkHTab2(new_valloc, new_hmask))
 			new_hmask >>= 1;
 	} else {
-		while (_DeeDict_ShouldShrinkHTab2(self->d_valloc, new_hmask))
+		while (_DeeDict_ShouldShrinkHTab2(new_valloc, new_hmask))
 			new_hmask >>= 1;
 	}
 	ASSERT(new_hmask <= old_hmask);
+	ASSERT(new_hmask >= new_valloc);
 
 	/* Shrink dict hash-table in-place (so we can then inplace-realloc-trunc the table heap area) */
 	if (old_hmask == new_hmask) {
