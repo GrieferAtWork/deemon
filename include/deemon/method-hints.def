@@ -250,7 +250,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_METHOD(seq_extend, "extend", "(items:?DSequence)")
 Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_extend, "__seq_extend__", seq_extend)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 3)), DREF DeeObject *, DCALL, seq_xchitem_index, (DeeObject *self, size_t index, DeeObject *value))
-Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_xchitem, "xchitem", "(index:?Dint,value)->")
+Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_xchitem, "xchitem", "(index:?Dint,item)->")
 Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(explicit_seq_xchitem, "__seq_xchitem__", seq_xchitem)
 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_clear, (DeeObject *self))

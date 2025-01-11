@@ -845,11 +845,27 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireDelItem(self))
 		return self->tp_seq->tp_delitem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_mh_seq_operator_delitem_index_t tsc_seq_operator_delitem_index;
+		tsc_seq_operator_delitem_index = DeeType_RequireSeqOperatorDelItemIndex(self);
+		if (tsc_seq_operator_delitem_index == &DeeSeq_DefaultOperatorDelItemIndexWithEmpty)
+			return &DeeSeq_DefaultOperatorDelItemWithEmpty;
+		if (tsc_seq_operator_delitem_index != &DeeSeq_DefaultOperatorDelItemIndexWithError)
+			return &DeeSeq_DefaultOperatorDelItemWithSeqDelItemIndex;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSetItem)
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireSetItem(self))
 		return self->tp_seq->tp_setitem;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_mh_seq_operator_setitem_index_t tsc_seq_operator_setitem_index;
+		tsc_seq_operator_setitem_index = DeeType_RequireSeqOperatorSetItemIndex(self);
+		if (tsc_seq_operator_setitem_index == &DeeSeq_DefaultOperatorSetItemIndexWithEmpty)
+			return &DeeSeq_DefaultOperatorSetItemWithEmpty;
+		if (tsc_seq_operator_setitem_index != &DeeSeq_DefaultOperatorSetItemIndexWithError)
+			return &DeeSeq_DefaultOperatorSetItemWithSeqSetItemIndex;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorGetRange)
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireGetRange(self))
@@ -861,18 +877,34 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
 			return &DeeSeq_DefaultOperatorGetRangeWithEmpty;
 		if (tsc_seq_operator_iter != &DeeSeq_DefaultOperatorIterWithError)
-			return &DeeSeq_DefaultOperatorGetRangeWithSeqGetRangeIndexAndGetRangeIndexN;
+			return &DeeSeq_DefaultOperatorGetRangeWithSeqGetRangeIndexAndSeqGetRangeIndexN;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorDelRange)
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireDelRange(self))
 		return self->tp_seq->tp_delrange;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_mh_seq_operator_iter_t tsc_seq_operator_iter;
+		tsc_seq_operator_iter = DeeType_RequireSeqOperatorIter(self);
+		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
+			return &DeeSeq_DefaultOperatorDelRangeWithEmpty;
+		if (tsc_seq_operator_iter != &DeeSeq_DefaultOperatorIterWithError)
+			return &DeeSeq_DefaultOperatorDelRangeWithSeqDelRangeIndexAndSeqDelRangeIndexN;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorSetRange)
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireSetRange(self))
 		return self->tp_seq->tp_setrange;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	{
+		Dee_mh_seq_operator_iter_t tsc_seq_operator_iter;
+		tsc_seq_operator_iter = DeeType_RequireSeqOperatorIter(self);
+		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
+			return &DeeSeq_DefaultOperatorSetRangeWithEmpty;
+		if (tsc_seq_operator_iter != &DeeSeq_DefaultOperatorIterWithError)
+			return &DeeSeq_DefaultOperatorSetRangeWithSeqSetRangeIndexAndSeqSetRangeIndexN;
+	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorForeach)
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_RequireForeach(self))
@@ -1035,7 +1067,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
 			return &DeeSeq_DefaultOperatorGetRangeIndexWithEmpty;
 		if (tsc_seq_operator_iter != &DeeSeq_DefaultOperatorIterWithError)
-			return &DeeSeq_DefaultOperatorGetRangeIndexWithIterAndSeqSize;
+			return &DeeSeq_DefaultOperatorGetRangeIndexWithSeqIterAndSeqSize;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorDelRangeIndex)
 #ifndef LOCAL_FOR_OPTIMIZE
@@ -1058,7 +1090,7 @@ LOCAL_DeeType_RequireSeqOperatorFoo_uncached(DeeTypeObject *__restrict self) {
 		if (tsc_seq_operator_iter == &DeeSeq_DefaultOperatorIterWithEmpty)
 			return &DeeSeq_DefaultOperatorGetRangeIndexNWithEmpty;
 		if (tsc_seq_operator_iter != &DeeSeq_DefaultOperatorIterWithError)
-			return &DeeSeq_DefaultOperatorGetRangeIndexNWithIterAndSeqSize;
+			return &DeeSeq_DefaultOperatorGetRangeIndexNWithSeqIterAndSeqSize;
 	}
 #elif defined(DEFINE_DeeType_RequireSeqOperatorDelRangeIndexN)
 #ifndef LOCAL_FOR_OPTIMIZE

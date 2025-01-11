@@ -331,13 +331,18 @@ template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCAL
 	  (Dee_objmethod_t)&DeeMH_##attr_name, \
 	  DeeMH_##attr_name##_doc,             \
 	  _Dee_TMH_WRAPPER_FLAGS_##attr_name }
+#define Dee_TYPE_METHOD_HINTREF_DOC(attr_name, doc) \
+	{ DeeMH_##attr_name##_name,                     \
+	  (Dee_objmethod_t)&DeeMH_##attr_name, doc,     \
+	  _Dee_TMH_WRAPPER_FLAGS_##attr_name }
 
 
 #ifdef DEE_SOURCE
-#define TYPE_METHOD_HINT     Dee_TYPE_METHOD_HINT
-#define TYPE_METHOD_HINT_F   Dee_TYPE_METHOD_HINT_F
-#define TYPE_METHOD_HINT_END Dee_TYPE_METHOD_HINT_END
-#define TYPE_METHOD_HINTREF  Dee_TYPE_METHOD_HINTREF
+#define TYPE_METHOD_HINT        Dee_TYPE_METHOD_HINT
+#define TYPE_METHOD_HINT_F      Dee_TYPE_METHOD_HINT_F
+#define TYPE_METHOD_HINT_END    Dee_TYPE_METHOD_HINT_END
+#define TYPE_METHOD_HINTREF     Dee_TYPE_METHOD_HINTREF
+#define TYPE_METHOD_HINTREF_DOC Dee_TYPE_METHOD_HINTREF_DOC
 #endif /* DEE_SOURCE */
 
 /* Returns a pointer to method hint's entry in `self->tp_method_hints' */

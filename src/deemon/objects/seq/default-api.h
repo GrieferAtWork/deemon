@@ -288,11 +288,11 @@ for (local seqClass, name: operatorNames) {
 #define DeeSeq_VariantsFor_OperatorSizeOb(cb)                  cb(DeeSeq_OperatorSizeOb) cb(DeeSeq_DefaultOperatorSizeObWithEmpty) cb(DeeSeq_DefaultOperatorSizeObWithSeqOperatorSize) cb(DeeSeq_DefaultOperatorSizeObWithError)
 #define DeeSeq_VariantsFor_OperatorContains(cb)                cb(DeeSeq_OperatorContains) cb(DeeSeq_DefaultOperatorContainsWithMapTryGetItem) cb(DeeSeq_DefaultOperatorContainsWithEmpty) cb(DeeSeq_DefaultContainsWithForeachDefault) cb(DeeSeq_DefaultOperatorContainsWithError)
 #define DeeSeq_VariantsFor_OperatorGetItem(cb)                 cb(DeeSeq_OperatorGetItem) cb(DeeSeq_DefaultOperatorGetItemWithEmpty) cb(DeeSeq_DefaultOperatorGetItemWithSeqGetItemIndex) cb(DeeSeq_DefaultOperatorGetItemWithError)
-#define DeeSeq_VariantsFor_OperatorDelItem(cb)                 cb(DeeSeq_OperatorDelItem) cb(DeeSeq_DefaultOperatorDelItemWithError)
-#define DeeSeq_VariantsFor_OperatorSetItem(cb)                 cb(DeeSeq_OperatorSetItem) cb(DeeSeq_DefaultOperatorSetItemWithError)
-#define DeeSeq_VariantsFor_OperatorGetRange(cb)                cb(DeeSeq_OperatorGetRange) cb(DeeSeq_DefaultOperatorGetRangeWithEmpty) cb(DeeSeq_DefaultOperatorGetRangeWithSeqGetRangeIndexAndGetRangeIndexN) cb(DeeSeq_DefaultOperatorGetRangeWithError)
-#define DeeSeq_VariantsFor_OperatorDelRange(cb)                cb(DeeSeq_OperatorDelRange) cb(DeeSeq_DefaultOperatorDelRangeWithError)
-#define DeeSeq_VariantsFor_OperatorSetRange(cb)                cb(DeeSeq_OperatorSetRange) cb(DeeSeq_DefaultOperatorSetRangeWithError)
+#define DeeSeq_VariantsFor_OperatorDelItem(cb)                 cb(DeeSeq_OperatorDelItem) cb(DeeSeq_DefaultOperatorDelItemWithEmpty) cb(DeeSeq_DefaultOperatorDelItemWithSeqDelItemIndex) cb(DeeSeq_DefaultOperatorDelItemWithError)
+#define DeeSeq_VariantsFor_OperatorSetItem(cb)                 cb(DeeSeq_OperatorSetItem) cb(DeeSeq_DefaultOperatorSetItemWithEmpty) cb(DeeSeq_DefaultOperatorSetItemWithSeqSetItemIndex) cb(DeeSeq_DefaultOperatorSetItemWithError)
+#define DeeSeq_VariantsFor_OperatorGetRange(cb)                cb(DeeSeq_OperatorGetRange) cb(DeeSeq_DefaultOperatorGetRangeWithEmpty) cb(DeeSeq_DefaultOperatorGetRangeWithSeqGetRangeIndexAndSeqGetRangeIndexN) cb(DeeSeq_DefaultOperatorGetRangeWithError)
+#define DeeSeq_VariantsFor_OperatorDelRange(cb)                cb(DeeSeq_OperatorDelRange) cb((*(Dee_mh_seq_operator_delrange_t)&_DeeNone_reti0_3)) cb(DeeSeq_DefaultOperatorDelRangeWithSeqDelRangeIndexAndSeqDelRangeIndexN) cb(DeeSeq_DefaultOperatorDelRangeWithError)
+#define DeeSeq_VariantsFor_OperatorSetRange(cb)                cb(DeeSeq_OperatorSetRange) cb((*(Dee_mh_seq_operator_setrange_t)&_DeeNone_reti0_4)) cb(DeeSeq_DefaultOperatorSetRangeWithSeqSetRangeIndexAndSeqSetRangeIndexN) cb(DeeSeq_DefaultOperatorSetRangeWithError)
 #define DeeSeq_VariantsFor_OperatorForeach(cb)                 cb(DeeSeq_OperatorForeach) cb(DeeSeq_DefaultOperatorForeachWithError)
 #define DeeSeq_VariantsFor_OperatorForeachPair(cb)             cb(DeeSeq_OperatorForeachPair) cb((*(Dee_mh_seq_operator_foreach_pair_t)&DeeSeq_DefaultOperatorForeachWithError))
 #define DeeSeq_VariantsFor_OperatorEnumerate(cb)               cb(DeeSeq_OperatorEnumerate) cb((*(Dee_mh_seq_operator_enumerate_t)&DeeSeq_DefaultOperatorForeachWithEmpty)) cb(DeeSeq_DefaultEnumerateWithCounterAndForeach) cb((*(Dee_mh_seq_operator_enumerate_t)&DeeSeq_DefaultOperatorForeachWithError))
@@ -307,10 +307,10 @@ for (local seqClass, name: operatorNames) {
 #define DeeSeq_VariantsFor_OperatorSetItemIndex(cb)            cb(DeeSeq_OperatorSetItemIndex) cb(DeeSeq_DefaultOperatorSetItemIndexWithError)
 #define DeeSeq_VariantsFor_OperatorBoundItemIndex(cb)          cb(DeeSeq_OperatorBoundItemIndex) cb((*(Dee_mh_seq_operator_bounditem_index_t)&DeeSeq_DefaultOperatorBoundItemWithEmpty)) cb(DeeSeq_DefaultOperatorBoundItemIndexWithSeqSize) cb(DeeSeq_DefaultOperatorBoundItemIndexWithError)
 #define DeeSeq_VariantsFor_OperatorHasItemIndex(cb)            cb(DeeSeq_OperatorHasItemIndex) cb((*(Dee_mh_seq_operator_hasitem_index_t)&(*(Dee_mh_seq_operator_hasitem_t)&_DeeNone_reti0_2))) cb(DeeSeq_DefaultOperatorHasItemIndexWithSeqSize) cb(DeeSeq_DefaultOperatorHasItemIndexWithError)
-#define DeeSeq_VariantsFor_OperatorGetRangeIndex(cb)           cb(DeeSeq_OperatorGetRangeIndex) cb((*(Dee_mh_seq_operator_getrange_index_t)&DeeSeq_DefaultOperatorGetRangeWithEmpty)) cb(DeeSeq_DefaultOperatorGetRangeIndexWithIterAndSeqSize) cb(DeeSeq_DefaultOperatorGetRangeIndexWithError)
+#define DeeSeq_VariantsFor_OperatorGetRangeIndex(cb)           cb(DeeSeq_OperatorGetRangeIndex) cb((*(Dee_mh_seq_operator_getrange_index_t)&DeeSeq_DefaultOperatorGetRangeWithEmpty)) cb(DeeSeq_DefaultOperatorGetRangeIndexWithSeqIterAndSeqSize) cb(DeeSeq_DefaultOperatorGetRangeIndexWithError)
 #define DeeSeq_VariantsFor_OperatorDelRangeIndex(cb)           cb(DeeSeq_OperatorDelRangeIndex) cb(DeeSeq_DefaultOperatorDelRangeIndexWithError)
 #define DeeSeq_VariantsFor_OperatorSetRangeIndex(cb)           cb(DeeSeq_OperatorSetRangeIndex) cb(DeeSeq_DefaultOperatorSetRangeIndexWithError)
-#define DeeSeq_VariantsFor_OperatorGetRangeIndexN(cb)          cb(DeeSeq_OperatorGetRangeIndexN) cb(DeeSeq_DefaultOperatorGetRangeIndexNWithEmpty) cb(DeeSeq_DefaultOperatorGetRangeIndexNWithIterAndSeqSize) cb(DeeSeq_DefaultOperatorGetRangeIndexNWithError)
+#define DeeSeq_VariantsFor_OperatorGetRangeIndexN(cb)          cb(DeeSeq_OperatorGetRangeIndexN) cb(DeeSeq_DefaultOperatorGetRangeIndexNWithEmpty) cb(DeeSeq_DefaultOperatorGetRangeIndexNWithSeqIterAndSeqSize) cb(DeeSeq_DefaultOperatorGetRangeIndexNWithError)
 #define DeeSeq_VariantsFor_OperatorDelRangeIndexN(cb)          cb(DeeSeq_OperatorDelRangeIndexN) cb(DeeSeq_DefaultOperatorDelRangeIndexNWithError)
 #define DeeSeq_VariantsFor_OperatorSetRangeIndexN(cb)          cb(DeeSeq_OperatorSetRangeIndexN) cb(DeeSeq_DefaultOperatorSetRangeIndexNWithError)
 #define DeeSeq_VariantsFor_OperatorTryGetItem(cb)              cb(DeeSeq_OperatorTryGetItem) cb(DeeSeq_DefaultOperatorTryGetItemWithEmpty) cb(DeeSeq_DefaultOperatorTryGetItemWithSeqTryGetItemIndex) cb(DeeSeq_DefaultOperatorGetItemWithError)
@@ -829,20 +829,24 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetIt
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetItemWithEmpty(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetItemWithError(DeeObject *self, DeeObject *index);
 
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorDelItemWithSeqDelItemIndex(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorDelItemWithEmpty(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultOperatorDelItemWithError(DeeObject *self, DeeObject *index);
 
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_DefaultOperatorSetItemWithSeqSetItemIndex(DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_DefaultOperatorSetItemWithEmpty(DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_DefaultOperatorSetItemWithError(DeeObject *self, DeeObject *index, DeeObject *value);
 
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeWithSeqGetRangeIndexAndGetRangeIndexN(DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeWithSeqGetRangeIndexAndSeqGetRangeIndexN(DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeWithEmpty(DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end);
 
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_DefaultOperatorDelRangeWithSeqDelRangeIndexAndSeqDelRangeIndexN(DeeObject *self, DeeObject *start, DeeObject *end);
 #define DeeSeq_DefaultOperatorDelRangeWithEmpty (*(Dee_mh_seq_operator_delrange_t)&_DeeNone_reti0_3)
 /*INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_DefaultOperatorDelRangeWithEmpty(DeeObject *self, DeeObject *start, DeeObject *end);*/
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_DefaultOperatorDelRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end);
 
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL DeeSeq_DefaultOperatorSetRangeWithSeqSetRangeIndexAndSeqSetRangeIndexN(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
 #define DeeSeq_DefaultOperatorSetRangeWithEmpty (*(Dee_mh_seq_operator_setrange_t)&_DeeNone_reti0_4)
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL DeeSeq_DefaultOperatorSetRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
 
@@ -899,7 +903,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultOperatorHasItemIndexWithSeqS
 #define DeeSeq_DefaultOperatorHasItemIndexWithEmpty (*(Dee_mh_seq_operator_hasitem_index_t)&DeeSeq_DefaultOperatorHasItemWithEmpty)
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultOperatorHasItemIndexWithError(DeeObject *self, size_t index);
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeIndexWithIterAndSeqSize(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeIndexWithSeqIterAndSeqSize(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
 /*INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeIndexWithEmpty(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);*/
 #define DeeSeq_DefaultOperatorGetRangeIndexWithEmpty (*(Dee_mh_seq_operator_getrange_index_t)&DeeSeq_DefaultOperatorGetRangeWithEmpty)
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeIndexWithError(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
@@ -912,7 +916,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultOperatorDelRangeIndexWithErr
 /*INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_DefaultOperatorSetRangeIndexWithEmpty(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);*/
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_DefaultOperatorSetRangeIndexWithError(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeIndexNWithIterAndSeqSize(DeeObject *self, Dee_ssize_t start);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeIndexNWithSeqIterAndSeqSize(DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeIndexNWithEmpty(DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_DefaultOperatorGetRangeIndexNWithError(DeeObject *self, Dee_ssize_t start);
 

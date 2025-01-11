@@ -55,6 +55,8 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/default-compare.h"
+#include "seq/default-api.h"
 #include "seq/hashfilter.h"
 
 #ifndef SIZE_MAX
@@ -1652,6 +1654,7 @@ fastcmp_string(char const *lhs, DeeObject *rhs) {
 			return 1;
 		return !!memcmp(lhs, DeeBytes_DATA(rhs), lhslen);
 	}
+	/* TODO: No need for "-1" here -- re-write consumers of this function to take advantage of that fact! */
 	return -1;
 }
 
@@ -1667,6 +1670,7 @@ fastcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs) {
 			return 1;
 		return !!memcmp(lhs, DeeBytes_DATA(rhs), lhslen);
 	}
+	/* TODO: No need for "-1" here -- re-write consumers of this function to take advantage of that fact! */
 	return -1;
 }
 
@@ -3003,6 +3007,11 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_mh_seq_pushfront(Dict *self, DeeObject *key_and_value_tuple) {
+	return dict_mh_seq_insert(self, 0, key_and_value_tuple);
+}
+
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 dict_mh_seq_append(Dict *self, DeeObject *key_and_value_tuple) {
 	int result;
@@ -3511,6 +3520,50 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_mh_seq_enumerate_index(Dict *__restrict self, Dee_enumerate_index_t proc,
+                            void *arg, size_t start, size_t end) {
+	Dee_ssize_t temp, result = 0;
+	for (;;) {
+		DREF DeeTupleObject *item_pair;
+		DREF DeeObject *item_key;
+		DREF DeeObject *item_value;
+		struct Dee_dict_item *item;
+		DeeDict_LockReadAndOptimize(self);
+		if (end > self->d_vused)
+			end = self->d_vused;
+		if (start >= end)
+			break;
+		item = &_DeeDict_GetRealVTab(self)[start];
+		ASSERTF(item->di_key, "The dict should be have been optimized above!");
+		item_key   = item->di_key;
+		item_value = item->di_value;
+		Dee_Incref(item_key);
+		Dee_Incref(item_value);
+		DeeDict_LockEndRead(self);
+		item_pair = DeeTuple_NewUninitialized(2);
+		if unlikely(!item_pair) {
+			Dee_Decref_unlikely(item_key);
+			Dee_Decref_unlikely(item_value);
+			goto err;
+		}
+		item_pair->t_elem[0] = item_key;  /* Inherit reference */
+		item_pair->t_elem[1] = item_value; /* Inherit reference */
+		temp = (*proc)(arg, start, (DeeObject *)item_pair);
+		Dee_Decref_likely(item_pair);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		++start;
+	}
+	DeeDict_LockEndRead(self);
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dict_mh_seq_enumerate_index_reverse(Dict *__restrict self, Dee_enumerate_index_t proc,
                                     void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
@@ -3662,6 +3715,140 @@ err:
 }
 
 
+struct dict_compare_seq_foreach_data {
+	Dict                   *dcsfd_lhs;   /* [1..1] lhs-dict. */
+	/*real*/Dee_dict_vidx_t dcsfd_index; /* Next index into "dcsfd_lhs" to compare against. */
+};
+#define DICT_COMPARE_SEQ_FOREACH_ERROR    (-1)
+#define DICT_COMPARE_SEQ_FOREACH_EQUAL    (0)
+#define DICT_COMPARE_SEQ_FOREACH_NOTEQUAL (-2)
+#define DICT_COMPARE_SEQ_FOREACH_LESS     (-2)
+#define DICT_COMPARE_SEQ_FOREACH_GREATER  (-3)
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+dict_compare_seq_foreach(void *arg, DeeObject *rhs_item) {
+	Dict *dict;
+	int cmp_result;
+	struct Dee_dict_item *lhs_item;
+	DREF DeeObject *lhs_key_and_value[2];
+	struct dict_compare_seq_foreach_data *data;
+	data = (struct dict_compare_seq_foreach_data *)arg;
+	dict = data->dcsfd_lhs;
+	DeeDict_LockReadAndOptimize(dict);
+	if unlikely(data->dcsfd_index >= dict->d_vused) {
+		DeeDict_LockEndRead(dict);
+		return DICT_COMPARE_SEQ_FOREACH_LESS;
+	}
+	lhs_item = &_DeeDict_GetRealVTab(dict)[data->dcsfd_index];
+	ASSERT(lhs_item->di_key);
+	lhs_key_and_value[0] = lhs_item->di_key;
+	lhs_key_and_value[1] = lhs_item->di_value;
+	Dee_Incref(lhs_key_and_value[0]);
+	Dee_Incref(lhs_key_and_value[1]);
+	DeeDict_LockEndRead(dict);
+	cmp_result = seq_docompare__lhs_vector(lhs_key_and_value, 2, rhs_item);
+	Dee_Decref_unlikely(lhs_key_and_value[1]);
+	Dee_Decref_unlikely(lhs_key_and_value[0]);
+	if unlikely(cmp_result == Dee_COMPARE_ERR)
+		goto err;
+	++data->dcsfd_index;
+	if (cmp_result < 0)
+		return DICT_COMPARE_SEQ_FOREACH_LESS;
+	if (cmp_result > 0)
+		return DICT_COMPARE_SEQ_FOREACH_GREATER;
+	return DICT_COMPARE_SEQ_FOREACH_EQUAL;
+err:
+	return DICT_COMPARE_SEQ_FOREACH_ERROR;
+}
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+dict_compare_eq_seq_foreach(void *arg, DeeObject *rhs_item) {
+	Dict *dict;
+	int cmp_result;
+	struct Dee_dict_item *lhs_item;
+	DREF DeeObject *lhs_key_and_value[2];
+	struct dict_compare_seq_foreach_data *data;
+	DeeTypeObject *tp_rhs_item = Dee_TYPE(rhs_item);
+	if ((!tp_rhs_item->tp_seq || !tp_rhs_item->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs_item))
+		return DICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
+	data = (struct dict_compare_seq_foreach_data *)arg;
+	dict = data->dcsfd_lhs;
+	DeeDict_LockReadAndOptimize(dict);
+	if unlikely(data->dcsfd_index >= dict->d_vused) {
+		DeeDict_LockEndRead(dict);
+		return DICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
+	}
+	lhs_item = &_DeeDict_GetRealVTab(dict)[data->dcsfd_index];
+	ASSERT(lhs_item->di_key);
+	lhs_key_and_value[0] = lhs_item->di_key;
+	lhs_key_and_value[1] = lhs_item->di_value;
+	Dee_Incref(lhs_key_and_value[0]);
+	Dee_Incref(lhs_key_and_value[1]);
+	DeeDict_LockEndRead(dict);
+	cmp_result = seq_docompareeq__lhs_vector(lhs_key_and_value, 2, rhs_item);
+	Dee_Decref_unlikely(lhs_key_and_value[1]);
+	Dee_Decref_unlikely(lhs_key_and_value[0]);
+	if unlikely(cmp_result == Dee_COMPARE_ERR)
+		goto err;
+	++data->dcsfd_index;
+	if (cmp_result != 0)
+		return DICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
+	return DICT_COMPARE_SEQ_FOREACH_EQUAL;
+err:
+	return DICT_COMPARE_SEQ_FOREACH_ERROR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_mh_seq_compare(Dict *lhs, DeeObject *rhs) {
+	size_t lhs_size;
+	Dee_ssize_t foreach_status;
+	struct dict_compare_seq_foreach_data data;
+	data.dcsfd_index = 0;
+	data.dcsfd_lhs   = lhs;
+	foreach_status   = DeeObject_Foreach(rhs, &dict_compare_seq_foreach, &data);
+	if unlikely(foreach_status == DICT_COMPARE_SEQ_FOREACH_ERROR)
+		goto err;
+	if (foreach_status == DICT_COMPARE_SEQ_FOREACH_LESS)
+		return -1;
+	if (foreach_status == DICT_COMPARE_SEQ_FOREACH_GREATER)
+		return 1;
+	lhs_size = atomic_read(&lhs->d_vused);
+	if (data.dcsfd_index < lhs_size)
+		return 1;
+	return 0;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_mh_seq_compare_eq(Dict *lhs, DeeObject *rhs) {
+	size_t lhs_size;
+	Dee_ssize_t foreach_status;
+	struct dict_compare_seq_foreach_data data;
+	data.dcsfd_index = 0;
+	data.dcsfd_lhs   = lhs;
+	foreach_status   = DeeObject_Foreach(rhs, &dict_compare_eq_seq_foreach, &data);
+	if unlikely(foreach_status == DICT_COMPARE_SEQ_FOREACH_ERROR)
+		goto err;
+	if (foreach_status == DICT_COMPARE_SEQ_FOREACH_NOTEQUAL)
+		return 1;
+	lhs_size = atomic_read(&lhs->d_vused);
+	if (data.dcsfd_index < lhs_size)
+		return 1;
+	return 0;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_mh_seq_trycompare_eq(Dict *lhs, DeeObject *rhs) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
+		return 1;
+	return dict_mh_seq_compare_eq(lhs, rhs);
+}
+
+
 PRIVATE struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETSET_BOUND(STR_first, &dict_getfirst, &dict_delfirst, &dict_setfirst, &dict_nonempty_as_bound, "->?T2?O?O"),
 	TYPE_GETSET_BOUND(STR_last, &dict_getlast, &dict_dellast, &dict_setlast, &dict_nonempty_as_bound, "->?T2?O?O"),
@@ -3726,24 +3913,16 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 	              "#r{Returns !t if memory was released}"
 	              "Release unused memory"),
 
-	TYPE_METHOD_HINTREF(explicit_seq_xchitem),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_xchitem, "(index:?Dint,item:?T2?O?O)->?T2?O?O"),
 	TYPE_METHOD_HINTREF(explicit_seq_erase),
-	TYPE_METHOD_HINTREF(explicit_seq_insert),
-	TYPE_METHOD_HINTREF(explicit_seq_append),
-	TYPE_METHOD_HINTREF(explicit_seq_pop),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_insert, "(index:?Dint,item:?T2?O?O)"),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_append, "(item:?T2?O?O)"),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_pushfront, "(item:?T2?O?O)"),
+	TYPE_METHOD_HINTREF_DOC(explicit_seq_pop, "(index=!-1)->?T2?O?O"),
 	TYPE_METHOD_HINTREF(explicit_seq_removeif),
 	TYPE_METHOD_HINTREF(explicit_seq_reverse),
 	TYPE_METHOD_END
 };
-
-#ifdef DCALL_CALLER_CLEANUP
-#define dict_bool_3 (*(int (DCALL *)(Dict *__restrict, size_t, size_t))&dict_bool)
-#else /* DCALL_CALLER_CLEANUP */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_bool_3(Dict *__restrict self, size_t UNUSED(a), size_t UNUSED(b)) {
-	return dict_bool(self);
-}
-#endif /* !DCALL_CALLER_CLEANUP */
 
 PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_clear, &dict_mh_clear, METHOD_FNOREFESCAPE),
@@ -3760,33 +3939,27 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &dict_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetfirst, &dict_trygetfirst, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_trygetlast, &dict_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_foreach_pair, &dict_foreach_pair, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_enumerate_index, &dict_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_size, &dict_size, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_size_fast, &dict_size_fast, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_getitem_index, &dict_mh_seq_getitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trygetitem_index, &dict_mh_seq_trygetitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_delitem_index, &dict_mh_seq_delitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_setitem_index, &dict_mh_seq_setitem_index, METHOD_FNOREFESCAPE),
-//TODO: Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_compare_eq, (DeeObject *self, DeeObject *some_object))
-//TODO: Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_compare, (DeeObject *self, DeeObject *some_object))
-//TODO: Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_trycompare_eq, (DeeObject *self, DeeObject *some_object))
+	TYPE_METHOD_HINT_F(seq_operator_compare_eq, &dict_mh_seq_compare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_compare, &dict_mh_seq_compare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_trycompare_eq, &dict_mh_seq_trycompare_eq, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_xchitem_index, &dict_mh_seq_xchitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_erase, &dict_mh_seq_erase, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_insert, &dict_mh_seq_insert, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_pushfront, &dict_mh_seq_pushfront, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_append, &dict_mh_seq_append, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_pop, &dict_mh_seq_pop, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_removeif, &dict_mh_seq_removeif, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_reverse, &dict_mh_seq_reverse, METHOD_FNOREFESCAPE),
 //TODO:	TYPE_METHOD_HINT_F(seq_sort, &dict_mh_sort, METHOD_FNOREFESCAPE),
 //TODO:	TYPE_METHOD_HINT_F(seq_sort_with_key, &dict_mh_sort_with_key, METHOD_FNOREFESCAPE),
-
-	/* Dicts are made up of non-empty tuples, so there is never an sequence-like elem that is "false"
-	 * In other words: Dict.all() is always true. */
-	TYPE_METHOD_HINT_F(seq_all, &_DeeNone_reti1_1, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_all_with_range, (int (DCALL *)(DeeObject *, size_t, size_t))&_DeeNone_reti1_3, METHOD_FNOREFESCAPE),
-
-	/* Similar to "seq_all", all sequence-like dict items are "true",
-	 * so "Dict.any()" is true if the dict is non-empty. */
-	TYPE_METHOD_HINT_F(seq_any, &dict_bool, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_any_with_range, &dict_bool_3, METHOD_FNOREFESCAPE),
-
 	TYPE_METHOD_HINT_END
 };
 
@@ -3824,7 +3997,12 @@ PRIVATE struct type_operator const dict_operators[] = {
 PUBLIC DeeTypeObject DeeDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Dict),
-	/* .tp_doc      = */ DOC("The builtin mapping object for translating keys to items\n"
+	/* .tp_doc      = */ DOC("The builtin ?DMapping object for translating keys to items: ${{Key: Value}}\n"
+	                         "Dicts also retain the order in which items are inserted, such that during "
+	                         /**/ "enumeration, key-value pairs (aka. items) are enumerated from least-recently, "
+	                         /**/ "to most-recently inserted.\n"
+	                         "In order to easier control the order of items, certain ?DSequence functions are "
+	                         /**/ "also implemented, such as ?#__seq_insert__ or ?#__seq_erase__.\n"
 	                         "\n"
 
 	                         "()\n"
@@ -3841,9 +4019,34 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	                         "\n"
 
 	                         "(items:?S?T2?O?O)\n"
-	                         "Create a new ?., using key-items pairs extracted from @items.\n"
+	                         "Create a new ?., using key-value pairs extracted from @items.\n"
 	                         "Iterate @items and unpack each element into 2 others, using them "
-	                         /**/ "as key and value to insert into @this ?."),
+	                         /**/ "as key and value to insert into @this ?.\n"
+	                         "\n"
+
+	                         "iter->\n"
+	                         "Enumerate key-value pairs stored in the ?.\n"
+	                         "\n"
+
+	                         "size->\n"
+	                         "Return the number of key-value pairs\n"
+	                         "\n"
+
+	                         "contains(key)->\n"
+	                         "Check if the dict contains a @key\n"
+	                         "\n"
+
+	                         "[](key)->\n"
+	                         "#tKeyError{Given @key doesn't exist}\n"
+	                         "Return the value associated with @key\n"
+	                         "\n"
+
+	                         "del[](key)->\n"
+	                         "Remove @key from @this. No-op if @key doesn't exist (s.a. ?#remove)\n"
+	                         "\n"
+
+	                         "[]=(key,value)->\n"
+	                         "Insert/override @key by assigning @value"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Dict),
 	/* .tp_features = */ TF_NONE,

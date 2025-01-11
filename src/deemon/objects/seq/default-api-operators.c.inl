@@ -146,6 +146,16 @@ DeeSeq_DefaultOperatorGetItemWithError(DeeObject *self, DeeObject *index) {
 
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_DefaultOperatorDelItemWithSeqDelItemIndex(DeeObject *self, DeeObject *index) {
+	size_t index_value;
+	if unlikely(DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeSeq_OperatorDelItemIndex(self, index_value);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultOperatorDelItemWithEmpty(DeeObject *self, DeeObject *index) {
 	return err_index_out_of_bounds_ob_x(self, index, DeeInt_Zero);
 }
@@ -155,6 +165,16 @@ DeeSeq_DefaultOperatorDelItemWithError(DeeObject *self, DeeObject *index) {
 	return err_seq_unsupportedf(self, "operator del[] (%r)", index);
 }
 
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeSeq_DefaultOperatorSetItemWithSeqSetItemIndex(DeeObject *self, DeeObject *index, DeeObject *value) {
+	size_t index_value;
+	if unlikely(DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeSeq_OperatorSetItemIndex(self, index_value, value);
+err:
+	return -1;
+}
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeSeq_DefaultOperatorSetItemWithEmpty(DeeObject *self, DeeObject *index, DeeObject *value) {
@@ -169,7 +189,7 @@ DeeSeq_DefaultOperatorSetItemWithError(DeeObject *self, DeeObject *index, DeeObj
 
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeSeq_DefaultOperatorGetRangeWithSeqGetRangeIndexAndGetRangeIndexN(DeeObject *self,
+DeeSeq_DefaultOperatorGetRangeWithSeqGetRangeIndexAndSeqGetRangeIndexN(DeeObject *self,
                                                                     DeeObject *start,
                                                                     DeeObject *end) {
 	Dee_ssize_t start_index, end_index;
@@ -200,10 +220,38 @@ DeeSeq_DefaultOperatorGetRangeWithError(DeeObject *self, DeeObject *start, DeeOb
 
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeSeq_DefaultOperatorDelRangeWithSeqDelRangeIndexAndSeqDelRangeIndexN(DeeObject *self, DeeObject *start, DeeObject *end) {
+	Dee_ssize_t start_index, end_index;
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end))
+		return DeeSeq_OperatorDelRangeIndexN(self, start_index);
+	if (DeeObject_AsSSize(end, &end_index))
+		goto err;
+	return DeeSeq_OperatorDelRangeIndex(self, start_index, end_index);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeSeq_DefaultOperatorDelRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end) {
 	return err_seq_unsupportedf(self, "operator del[:](%r, %r)", start, end);
 }
 
+
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeSeq_DefaultOperatorSetRangeWithSeqSetRangeIndexAndSeqSetRangeIndexN(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values) {
+	Dee_ssize_t start_index, end_index;
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end))
+		return DeeSeq_OperatorSetRangeIndexN(self, start_index, values);
+	if (DeeObject_AsSSize(end, &end_index))
+		goto err;
+	return DeeSeq_OperatorSetRangeIndex(self, start_index, end_index, values);
+err:
+	return -1;
+}
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeSeq_DefaultOperatorSetRangeWithError(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values) {
@@ -404,9 +452,9 @@ DeeSeq_DefaultOperatorHasItemIndexWithError(DeeObject *self, size_t index) {
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_DefaultOperatorGetRangeIndexWithIterAndSeqSize(DeeObject *self,
-                                                      Dee_ssize_t start,
-                                                      Dee_ssize_t end) {
+DeeSeq_DefaultOperatorGetRangeIndexWithSeqIterAndSeqSize(DeeObject *self,
+                                                         Dee_ssize_t start,
+                                                         Dee_ssize_t end) {
 	DREF DefaultSequence_WithIterAndLimit *result;
 	struct Dee_seq_range range;
 	if (start >= 0 && end >= 0) {
@@ -454,7 +502,7 @@ DeeSeq_DefaultOperatorSetRangeIndexWithError(DeeObject *self, Dee_ssize_t start,
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_DefaultOperatorGetRangeIndexNWithIterAndSeqSize(DeeObject *self, Dee_ssize_t start) {
+DeeSeq_DefaultOperatorGetRangeIndexNWithSeqIterAndSeqSize(DeeObject *self, Dee_ssize_t start) {
 	DREF DefaultSequence_WithIterAndLimit *result;
 	size_t used_start;
 	if (start >= 0) {

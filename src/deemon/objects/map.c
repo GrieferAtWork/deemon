@@ -267,7 +267,39 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	            "(items:?S?T2?O?O)\n"
 	            "A deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+
+	TYPE_METHOD_HINTREF(explicit_seq_any),
+	TYPE_METHOD_HINTREF(explicit_seq_all),
 	TYPE_METHOD_END
+};
+
+#ifdef DCALL_CALLER_CLEANUP
+#define DeeMap_OperatorBool_3 (*(int (DCALL *)(DeeObject *, size_t, size_t))&DeeMap_OperatorBool)
+#else /* DCALL_CALLER_CLEANUP */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeMap_OperatorBool_3(DeeObject *self, size_t start, size_t end) {
+	(void)start;
+	(void)end;
+	return DeeMap_OperatorBool(self);
+}
+#endif /* !DCALL_CALLER_CLEANUP */
+
+PRIVATE struct type_method_hint tpconst map_method_hints[] = {
+	/* Mappings are made up of non-empty tuples, so there is never an sequence-like elem that is "false"
+	 * In other words: Mapping.all() is always true. */
+	TYPE_METHOD_HINT_F(seq_all, &_DeeNone_reti1_1, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_key, &DeeSeq_DefaultAllWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range, (int (DCALL *)(DeeObject *, size_t, size_t))&_DeeNone_reti1_3, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &DeeSeq_DefaultAllWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+
+	/* Mappings to "seq_all", all sequence-like map items are "true",
+	 * so "Mapping.any()" is true if the map is non-empty. */
+	TYPE_METHOD_HINT_F(seq_any, &DeeMap_OperatorBool, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_key, &DeeSeq_DefaultAnyWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_range, &DeeMap_OperatorBool_3, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &DeeSeq_DefaultAnyWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+
+	TYPE_METHOD_HINT_END
 };
 
 
@@ -594,7 +626,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ map_class_getsets,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ map_method_hints,
 	/* .tp_call_kw       = */ NULL,
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ map_operators,

@@ -6989,7 +6989,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeMH_seq_xchitem(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_value,
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
 	                    UNPuSIZ "o:xchitem", &index, &value))
 		goto err;
 	return DeeSeq_InvokeXchItemIndex(self, index, value);
