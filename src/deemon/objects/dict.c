@@ -3925,6 +3925,34 @@ dict_mh_seq_trycompare_eq(Dict *lhs, DeeObject *rhs) {
 	return dict_mh_seq_compare_eq(lhs, rhs);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+dict_mh_setold(Dict *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value;
+	old_value = dict_mh_setold_ex(self, key, value);
+	if (old_value == ITER_DONE)
+		return 0;
+	if unlikely(!old_value)
+		goto err;
+	Dee_Decref(old_value);
+	return 1;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+dict_mh_setnew(Dict *self, DeeObject *key, DeeObject *value) {
+	DREF DeeObject *old_value;
+	old_value = dict_mh_setnew_ex(self, key, value);
+	if (old_value == ITER_DONE)
+		return 1;
+	if unlikely(!old_value)
+		goto err;
+	Dee_Decref(old_value);
+	return 0;
+err:
+	return -1;
+}
+
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3990,6 +4018,8 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 //	TYPE_KWMETHOD("byhash", &dict_byhash, DOC_GET(map_byhash_doc)), /* TODO */
 	TYPE_METHOD_HINTREF(seq_clear),
 	TYPE_METHOD_HINTREF(map_pop),
+	TYPE_METHOD_HINTREF(map_setold),
+	TYPE_METHOD_HINTREF(map_setnew),
 	TYPE_METHOD_HINTREF(map_setold_ex),
 	TYPE_METHOD_HINTREF(map_setnew_ex),
 	TYPE_METHOD_HINTREF(map_setdefault),
@@ -4025,6 +4055,8 @@ PRIVATE struct type_method tpconst dict_methods[] = {
 
 PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_clear, &dict_mh_clear, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setold, &dict_mh_setold, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(map_setnew, &dict_mh_setnew, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(map_setold_ex, &dict_mh_setold_ex, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(map_setnew_ex, &dict_mh_setnew_ex, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(map_setdefault, &dict_mh_setdefault, METHOD_FNOREFESCAPE),
