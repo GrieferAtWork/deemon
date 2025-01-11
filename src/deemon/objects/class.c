@@ -5433,6 +5433,7 @@ no_base:
 				Dee_Decref_unlikely(self->cb_base);
 				goto err;
 			}
+			self->cb_mro = NULL;
 			goto done;
 		}
 
