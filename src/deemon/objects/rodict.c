@@ -20,12 +20,17 @@
 #ifndef GUARD_DEEMON_OBJECTS_RODICT_C
 #define GUARD_DEEMON_OBJECTS_RODICT_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+
+#include <hybrid/typecore.h>
+/**/
+
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
@@ -42,14 +47,860 @@
 #include "generic-proxy.h"
 #include "seq/hashfilter.h"
 
+/**/
+#include "dict.h"
+
+#ifdef __OPTIMIZE_SIZE__
+#define NULL_IF_Os(v) NULL
+#else /* __OPTIMIZE_SIZE__ */
+#define NULL_IF_Os(v) v
+#endif /* !__OPTIMIZE_SIZE__ */
+
 DECL_BEGIN
 
-#ifndef CONFIG_HAVE_strcmp
-#define CONFIG_HAVE_strcmp
-#undef strcmp
-#define strcmp dee_strcmp
-DeeSystem_DEFINE_strcmp(dee_strcmp)
-#endif /* !CONFIG_HAVE_strcmp */
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
+
+typedef DeeRoDictObject RoDict;
+
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+
+/************************************************************************/
+/* RODICT HELPERS                                                       */
+/************************************************************************/
+#define _RoDict_TryMalloc(sizeof)     ((DREF RoDict *)DeeObject_TryMalloc(sizeof))
+#define _RoDict_TryCalloc(sizeof)     ((DREF RoDict *)DeeObject_TryCalloc(sizeof))
+#define _RoDict_TryRealloc(p, sizeof) ((DREF RoDict *)DeeObject_TryRealloc(p, sizeof))
+#define _RoDict_Malloc(sizeof)        ((DREF RoDict *)DeeObject_Malloc(sizeof))
+#define _RoDict_Calloc(sizeof)        ((DREF RoDict *)DeeObject_Calloc(sizeof))
+#define _RoDict_Realloc(p, sizeof)    ((DREF RoDict *)DeeObject_Realloc(p, sizeof))
+#define _RoDict_Free(p)               DeeObject_Free(p)
+
+#define _RoDict_SizeOf(valloc, hmask) \
+	_RoDict_SizeOf3(valloc, hmask, DEE_DICT_HIDXIO_FROMALLOC(valloc))
+#define _RoDict_SafeSizeOf(valloc, hmask) \
+	_RoDict_SafeSizeOf3(valloc, hmask, DEE_DICT_HIDXIO_FROMALLOC(valloc))
+#define _RoDict_SizeOf3(valloc, hmask, hidxio)   \
+	(offsetof(DeeRoDictObject, rd_vtab) +               \
+	 ((size_t)(valloc) * sizeof(struct Dee_dict_item)) + \
+	 (((size_t)(hmask) + 1) << hidxio))
+LOCAL ATTR_CONST size_t DCALL
+_RoDict_SafeSizeOf3(size_t valloc, size_t hmask, shift_t hidxio) {
+	size_t result, hmask_size;
+	if (OVERFLOW_UMUL(valloc, sizeof(struct Dee_dict_item), &result))
+		goto toobig;
+	if (OVERFLOW_UADD(hmask, 1, &hmask_size))
+		goto toobig;
+	if unlikely(((hmask_size << hidxio) >> hidxio) != hmask_size)
+		goto toobig;
+	hmask_size <<= hidxio;
+	if (OVERFLOW_UADD(result, hmask_size, &result))
+		goto toobig;
+	if (OVERFLOW_UADD(result, offsetof(DeeRoDictObject, rd_vtab), &result))
+		goto toobig;
+	return result;
+toobig:
+	return (size_t)-1; /* Force down-stream allocation failure */
+}
+
+PRIVATE NONNULL((1, 3)) void DCALL
+hmask_memcpy_and_maybe_downcast(void *__restrict dst, shift_t dst_hidxio,
+                                void const *__restrict src, shift_t src_hidxio,
+                                size_t n_words) {
+	ASSERT(dst_hidxio <= src_hidxio);
+	if likely(dst_hidxio == src_hidxio) {
+		memcpy(dst, src, n_words << dst_hidxio);
+	} else {
+		size_t i;
+		Dee_dict_gethidx_t src_get = Dee_dict_hidxio[src_hidxio].dhxio_get;
+		Dee_dict_sethidx_t dst_set = Dee_dict_hidxio[dst_hidxio].dhxio_set;
+		for (i = 0; i < n_words; ++i) {
+			/*virt*/Dee_dict_vidx_t word;
+			word = (*src_get)(src, i);
+			(*dst_set)(dst, i, word);
+		}
+	}
+}
+
+PRIVATE NONNULL((1, 3)) void DCALL
+hmask_memmovedown_and_maybe_downcast(void *dst, shift_t dst_hidxio,
+                                     void const *src, shift_t src_hidxio,
+                                     size_t n_words) {
+	ASSERT(dst_hidxio <= src_hidxio);
+	if likely(dst_hidxio == src_hidxio) {
+		memmovedown(dst, src, n_words << dst_hidxio);
+	} else {
+		Dee_dict_gethidx_t src_get = Dee_dict_hidxio[src_hidxio].dhxio_get;
+		Dee_dict_sethidx_t dst_set = Dee_dict_hidxio[dst_hidxio].dhxio_set;
+		while (n_words) {
+			/*virt*/Dee_dict_vidx_t word;
+			--n_words;
+			word = (*src_get)(src, n_words);
+			(*dst_set)(dst, n_words, word);
+		}
+	}
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1, 2)) void DCALL
+rodict_htab_decafter(RoDict *__restrict me, Dee_dict_sethidx_t hidxset,
+                     /*virt*/Dee_dict_vidx_t vtab_threshold) {
+	Dee_hash_t i;
+	Dee_dict_gethidx_t hidxget = me->rd_hidxget;
+	for (i = 0; i <= me->rd_hmask; ++i) {
+		/*virt*/Dee_dict_vidx_t vtab_idx;
+		vtab_idx = (*hidxget)(me->rd_htab, i);
+		if (vtab_idx >= vtab_threshold) {
+			--vtab_idx;
+			(*hidxset)(me->rd_htab, i, vtab_idx);
+		}
+	}
+}
+
+/* Re-build the htab (the caller must first bzero it) */
+PRIVATE NONNULL((1)) void DCALL
+rodict_htab_rebuild(RoDict *__restrict me, Dee_dict_sethidx_t hidxset) {
+	/*real*/Dee_dict_vidx_t i;
+	Dee_dict_gethidx_t hidxget = me->rd_hidxget;
+	for (i = 0; i < me->rd_vsize; ++i) {
+		Dee_hash_t hs, perturb;
+		struct Dee_dict_item *item = &_DeeRoDict_GetRealVTab(me)[i];
+		_DeeRoDict_HashIdxInit(me, &hs, &perturb, item->di_hash);
+		for (;; _DeeRoDict_HashIdxAdv(me, &hs, &perturb)) {
+			/*virt*/Dee_dict_vidx_t vtab_idx;
+			size_t htab_idx = hs & me->rd_hmask;
+			vtab_idx = (*hidxget)(me->rd_htab, htab_idx);
+			if unlikely(vtab_idx != Dee_DICT_HTAB_EOF)
+				continue;
+			(*hidxset)(me->rd_htab, htab_idx, Dee_dict_vidx_tovirt(i));
+			break;
+		}
+	}
+}
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* RODICT BUILDER API                                                   */
+/************************************************************************/
+PUBLIC NONNULL((1)) void DCALL
+Dee_rodict_builder_fini(struct Dee_rodict_builder *__restrict self) {
+	size_t i;
+	RoDict *dict = self->rdb_dict;
+	if unlikely(!dict)
+		return;
+	for (i = 0; i < dict->rd_vsize; ++i) {
+		struct Dee_dict_item *item;
+		item = &_DeeRoDict_GetRealVTab(dict)[i];
+		Dee_Decref(item->di_value);
+		Dee_Decref(item->di_key);
+	}
+	_RoDict_Free(dict);
+}
+
+PUBLIC NONNULL((1)) void DCALL
+Dee_rodict_builder_init_with_hint(struct Dee_rodict_builder *__restrict self,
+                                  size_t num_items) {
+	RoDict *dict;
+	size_t sizeof_dict;
+	size_t hmask;
+	shift_t hidxio;
+	hidxio      = DEE_DICT_HIDXIO_FROMALLOC(num_items);
+	hmask       = dict_hmask_from_count(num_items);
+	sizeof_dict = _RoDict_SafeSizeOf3(num_items, hmask, hidxio);
+	dict        = _RoDict_TryMalloc(sizeof_dict);
+	if unlikely(!dict) {
+		hmask       = dict_tiny_hmask_from_count(num_items);
+		sizeof_dict = _RoDict_SafeSizeOf3(num_items, hmask, hidxio);
+		dict        = _RoDict_TryMalloc(sizeof_dict);
+		if unlikely(!dict) {
+			Dee_rodict_builder_init(self);
+			return;
+		}
+	}
+	dict->rd_vsize   = 0;
+	dict->rd_hmask   = hmask;
+	dict->rd_hidxget = Dee_dict_hidxio[hidxio].dhxio_get;
+	dict->rd_htab    = _DeeRoDict_GetRealVTab(dict) + num_items;
+	bzero(dict->rd_htab, (hmask + 1) << hidxio);
+	self->rdb_dict    = dict;
+	self->rdb_valloc  = num_items;
+	self->rdb_hidxset = Dee_dict_hidxio[hidxio].dhxio_set;
+}
+
+/* Truncate the vtab of "self" to "new_vsize" elements.
+ *
+ * Dropped elements are NOT finalized (if they were ever
+ * initialized to begin with), and if the htab changes
+ * word size as a result, it will be truncated accordingly. */
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) RoDict *DCALL
+rodict_trunc_vtab(RoDict *__restrict self, size_t old_valloc, size_t new_valloc) {
+	RoDict *result;
+	void *old_htab, *new_htab;
+	shift_t old_hidxio, new_hidxio;
+	size_t new_sizeof;
+	ASSERT(new_valloc < old_valloc);
+	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(old_valloc);
+	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+	old_htab   = self->rd_htab;
+	new_htab   = _DeeRoDict_GetRealVTab(self) + new_valloc;
+	ASSERT(old_htab == _DeeRoDict_GetRealVTab(self) + self->rd_vsize);
+	hmask_memmovedown_and_maybe_downcast(new_htab, new_hidxio,
+	                                     old_htab, old_hidxio,
+	                                     self->rd_hmask + 1);
+	self->rd_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+	new_sizeof = _RoDict_SizeOf3(new_valloc, self->rd_hmask, new_hidxio);
+	result = _RoDict_TryRealloc(self, new_sizeof);
+	if unlikely(!result)
+		result = self;
+	result->rd_htab = _DeeRoDict_GetRealVTab(result) + new_valloc;
+	return result;
+}
+
+/* Pack the result of the builder and return it.
+ * This function never fails, but "self" becomes invalid as a result. */
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeRoDictObject *DCALL
+Dee_rodict_builder_pack(struct Dee_rodict_builder *__restrict self) {
+	RoDict *result = self->rdb_dict;
+	if unlikely(!result) {
+		ASSERT(self->rdb_valloc == 0);
+		result = (DREF DeeRoDictObject *)Dee_EmptyRoDict;
+		Dee_Incref(result);
+	} else {
+		ASSERT(result->rd_vsize <= self->rdb_valloc);
+		/* Free unused memory if there are unused buffers. */
+		if unlikely(result->rd_vsize < self->rdb_valloc)
+			result = rodict_trunc_vtab(result, self->rdb_valloc, result->rd_vsize);
+		DeeObject_Init(result, &DeeRoDict_Type);
+	}
+	DBG_memset(self, 0xcc, sizeof(struct Dee_rodict_builder));
+	return result;
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+rodict_builder_first_setitem(struct Dee_rodict_builder *me,
+                             /*inherit(always)*/ DREF DeeObject *key,
+                             /*inherit(always)*/ DREF DeeObject *value) {
+	RoDict *dict;
+	size_t valloc, hmask;
+	ASSERT(!me->rdb_dict);
+	valloc = DICT_FROMSEQ_DEFAULT_HINT;
+	hmask  = dict_hmask_from_count(valloc);
+	ASSERT(DEE_DICT_HIDXIO_FROMALLOC(valloc) == 0);
+	dict = _RoDict_TryMalloc(_RoDict_SizeOf3(valloc, hmask, 0));
+	if unlikely(!dict) {
+		valloc = 1;
+		hmask  = dict_tiny_hmask_from_count(valloc);
+		ASSERT(DEE_DICT_HIDXIO_FROMALLOC(valloc) == 0);
+		dict = _RoDict_Malloc(_RoDict_SizeOf3(valloc, hmask, 0));
+		if unlikely(!dict)
+			goto err;
+	}
+	me->rdb_valloc   = valloc;
+	me->rdb_dict     = dict;
+	me->rdb_hidxset  = &Dee_dict_sethidx8;
+	dict->rd_vsize   = 1;
+	dict->rd_hmask   = hmask;
+	dict->rd_hidxget = &Dee_dict_gethidx8;
+	dict->rd_htab    = _DeeRoDict_GetRealVTab(dict) + valloc;
+	bzero(dict->rd_htab, hmask + 1);
+	dict->rd_vtab[0].di_hash  = DeeObject_Hash(key);
+	dict->rd_vtab[0].di_key   = key;   /* Inherit reference */
+	dict->rd_vtab[0].di_value = value; /* Inherit reference */
+	((uint8_t *)dict->rd_htab)[dict->rd_vtab[0].di_hash & hmask] = Dee_dict_vidx_tovirt(0);
+	return 0;
+err:
+	Dee_Decref_unlikely(value);
+	Dee_Decref_unlikely(key);
+	return -1;
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1)) int DCALL
+rodict_builder_grow(struct Dee_rodict_builder *__restrict me) {
+	size_t min_valloc, new_sizeof;
+	RoDict *old_dict, *new_dict;
+	size_t old_hmask, new_hmask;
+	size_t old_valloc, new_valloc;
+	shift_t old_hidxio, new_hidxio;
+
+	/* Calculate desired change in buffer size (s.a. `dict_trygrow_vtab_and_htab_with()') */
+	old_dict = me->rdb_dict;
+	ASSERT(old_dict);
+	min_valloc = old_dict->rd_vsize + 1;
+	old_hmask  = old_dict->rd_hmask;
+	new_hmask  = dict_hmask_from_count(min_valloc);
+	if unlikely(new_hmask < old_hmask)
+		new_hmask = old_hmask;
+	if (new_hmask <= old_hmask && _DeeDict_ShouldGrowHTab2(old_dict->rd_vsize, old_dict->rd_hmask))
+		new_hmask = (new_hmask << 1) | 1;
+	old_valloc = me->rdb_valloc;
+	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, true);
+	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(old_valloc);
+	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
+
+	/* Do the allocation. */
+	new_sizeof = _RoDict_SafeSizeOf3(new_valloc, new_hmask, new_hidxio);
+	new_dict   = _RoDict_TryRealloc(old_dict, new_sizeof);
+	if unlikely(!new_dict) {
+		/* Try again with a smaller buffer size */
+		new_hmask  = dict_tiny_hmask_from_count(min_valloc);
+		new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, false);
+		new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
+		new_sizeof = _RoDict_SafeSizeOf3(new_valloc, new_hmask, new_hidxio);
+		new_dict   = _RoDict_Realloc(old_dict, new_sizeof);
+		if unlikely(!new_dict)
+			goto err;
+	}
+
+	/* Write-back results. */
+	me->rdb_dict         = new_dict;
+	me->rdb_valloc       = new_valloc;
+	me->rdb_hidxset      = Dee_dict_hidxio[new_hidxio].dhxio_set;
+	new_dict->rd_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
+	new_dict->rd_hmask   = new_hmask;
+	new_dict->rd_htab    = _DeeRoDict_GetRealVTab(new_dict) + new_valloc;
+
+	ASSERT(new_hmask >= old_hmask);
+	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
+	if (new_hmask == old_hmask) {
+		/* Move/scale the htab so it appears in the correct position. */
+		void *old_htab = _DeeRoDict_GetRealVTab(new_dict) + old_valloc;
+		void *new_htab = new_dict->rd_htab;
+		if likely(old_hidxio == new_hidxio) {
+			(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, old_htab, new_hmask + 1);
+		} else {
+			(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, old_htab, new_hmask + 1);
+		}
+	} else {
+		/* Rebuild the htab */
+		bzero(new_dict->rd_htab, (new_hmask + 1) << new_hidxio);
+		rodict_htab_rebuild(new_dict, me->rdb_hidxset);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_pair_t" */
+Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restrict self,
+                                     /*inherit(always)*/ DREF DeeObject *key,
+                                     /*inherit(always)*/ DREF DeeObject *value) {
+	RoDict *dict;
+	size_t result_htab_idx;
+	struct Dee_dict_item *item;
+	Dee_hash_t hash, hs, perturb;
+	struct Dee_rodict_builder *me;
+	me   = (struct Dee_rodict_builder *)self;
+	dict = me->rdb_dict;
+	if unlikely(!dict)
+		return rodict_builder_first_setitem(me, key, value);
+	ASSERT(dict->rd_vsize <= me->rdb_valloc);
+
+	/* Check if the key already exists (and if so: override it) */
+	hash = DeeObject_Hash(key);
+	_DeeRoDict_HashIdxInit(dict, &hs, &perturb, hash);
+	for (;; _DeeRoDict_HashIdxAdv(dict, &hs, &perturb)) {
+		int key_cmp;
+		/*virt*/Dee_dict_vidx_t vtab_idx;
+		result_htab_idx = hs & dict->rd_hmask;
+		vtab_idx = (*dict->rd_hidxget)(dict->rd_htab, result_htab_idx);
+		if (vtab_idx == Dee_DICT_HTAB_EOF)
+			break; /* EOF */
+		item = &_DeeRoDict_GetVirtVTab(dict)[vtab_idx];
+		if (item->di_hash != hash)
+			continue;
+		key_cmp = DeeObject_TryCompareEq(key, item->di_key);
+		if unlikely(key_cmp == Dee_COMPARE_ERR)
+			goto err;
+		if (key_cmp == 0) {
+			/* Found the key -> override it */
+			ASSERT(Dee_dict_vidx_toreal(vtab_idx) <= dict->rd_vsize - 1);
+			Dee_Decref(item->di_key);
+			Dee_Decref(item->di_value);
+			if (Dee_dict_vidx_toreal(vtab_idx) != dict->rd_vsize - 1) {
+				/* Must down-shift the old location. */
+				size_t n_after = (dict->rd_vsize - 1) - Dee_dict_vidx_toreal(vtab_idx);
+				ASSERT(n_after > 0);
+				memmovedownc(item, item + 1, n_after, sizeof(struct Dee_dict_item));
+				rodict_htab_decafter(dict, me->rdb_hidxset, vtab_idx);
+				item = &_DeeRoDict_GetRealVTab(dict)[dict->rd_vsize - 1];
+				item->di_hash = hash;
+			}
+			ASSERT(item->di_hash == hash);
+			item->di_key   = key;   /* Inherit reference */
+			item->di_value = value; /* Inherit reference */
+			return 0;
+		}
+	}
+
+	/* Insert the key/value pair into the dict. */
+	if unlikely(dict->rd_vsize >= me->rdb_valloc) {
+		size_t old_hmask = dict->rd_hmask;
+		if unlikely(rodict_builder_grow(me))
+			goto err;
+		dict = me->rdb_dict;
+		if (dict->rd_hmask != old_hmask) {
+			/* Must re-discover the end of the relevant hash-chain */
+			_DeeRoDict_HashIdxInit(dict, &hs, &perturb, hash);
+			for (;; _DeeRoDict_HashIdxAdv(dict, &hs, &perturb)) {
+				result_htab_idx = hs & dict->rd_hmask;
+				if ((*dict->rd_hidxget)(dict->rd_htab, result_htab_idx) == Dee_DICT_HTAB_EOF)
+					break; /* EOF */
+			}
+		}
+	}
+	ASSERT(dict->rd_vsize < me->rdb_valloc);
+
+	/* Append new item at the end of the vtab (and link it in the htab) */
+	item = &_DeeRoDict_GetRealVTab(dict)[dict->rd_vsize];
+	item->di_hash  = hash;
+	item->di_key   = key;   /* Inherit reference */
+	item->di_value = value; /* Inherit reference */
+	(*me->rdb_hidxset)(dict->rd_htab, result_htab_idx, Dee_dict_vidx_tovirt(dict->rd_vsize));
+	++dict->rd_vsize;
+	return 0;
+err:
+	Dee_Decref_unlikely(value);
+	Dee_Decref_unlikely(key);
+	return -1;
+}
+
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_pair_t" */
+Dee_rodict_builder_setitem(/*struct Dee_rodict_builder*/ void *__restrict self,
+                           DeeObject *key, DeeObject *value) {
+	Dee_Incref(key);
+	Dee_Incref(value);
+	return Dee_rodict_builder_setitem_inherited(self, key, value);
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
+rodict_from_generic_sequence(DeeObject *__restrict self) {
+	size_t hint;
+	struct Dee_rodict_builder builder;
+	hint = DeeObject_SizeFast(self);
+	if (hint != (size_t)-1) {
+		Dee_rodict_builder_init_with_hint(&builder, hint);
+	} else {
+		Dee_rodict_builder_init(&builder);
+	}
+	if unlikely(Dee_rodict_builder_update(&builder, self))
+		goto err;
+	return Dee_rodict_builder_pack(&builder);
+err:
+	Dee_rodict_builder_fini(&builder);
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoDict_FromSequence(DeeObject *__restrict self) {
+	if (DeeRoDict_Check(self))
+		return_reference_(self);
+	if (DeeDict_CheckExact(self))
+		return DeeRoDict_FromDict(self);
+	return (DREF DeeObject *)rodict_from_generic_sequence(self);
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self) {
+	DREF RoDict *result;
+	size_t sizeof_result;
+	size_t vsize;
+	size_t i, hmask;
+	shift_t src_hidxio;
+	shift_t dst_hidxio;
+	DeeDictObject *me = (DeeDictObject *)self;
+	ASSERT_OBJECT_TYPE(me, &DeeDict_Type);
+again:
+	DeeDict_LockReadAndOptimize(me);
+	vsize         = me->d_vused;
+	hmask         = me->d_hmask;
+	src_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(me->d_valloc);
+	dst_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(vsize);
+	sizeof_result = _RoDict_SizeOf3(vsize, hmask, dst_hidxio);
+	result = _RoDict_TryMalloc(sizeof_result);
+	if unlikely(!result) {
+		DeeDict_LockEndRead(me);
+		result = _RoDict_Malloc(sizeof_result);
+		if unlikely(!result)
+			goto err;
+		DeeDict_LockReadAndOptimize(me);
+		if unlikely(vsize != me->d_vused ||
+		            hmask != me->d_hmask) {
+			DeeDict_LockEndRead(me);
+			_RoDict_Free(result);
+			goto again;
+		}
+	}
+	/* Copy over data as-is from the dict (no need to rehash or anything). */
+	result->rd_htab = mempcpyc(_DeeRoDict_GetRealVTab(result),
+	                           _DeeDict_GetRealVTab(me), vsize,
+	                           sizeof(struct Dee_dict_item));
+	hmask_memcpy_and_maybe_downcast(result->rd_htab, dst_hidxio,
+	                              me->d_htab, src_hidxio,
+	                              hmask + 1);
+	for (i = 0; i < vsize; ++i) {
+		struct Dee_dict_item *item;
+		item = &_DeeRoDict_GetRealVTab(result)[i];
+		ASSERT(item->di_key);
+		Dee_Incref(item->di_key);
+		Dee_Incref(item->di_value);
+	}
+	DeeDict_LockEndRead(me);
+	result->rd_vsize   = vsize;
+	result->rd_hmask   = hmask;
+	result->rd_hidxget = Dee_dict_hidxio[dst_hidxio].dhxio_get;
+	DeeObject_Init(result, &DeeRoDict_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* RODICT ITERATOR                                                      */
+/************************************************************************/
+/* TODO */
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* RODICT                                                               */
+/************************************************************************/
+
+PUBLIC struct Dee_empty_rodict_object DeeRoDict_EmptyInstance = {
+	OBJECT_HEAD_INIT(&DeeRoDict_Type),
+	/* .rd_vsize     = */ 0,
+	/* .rd_hmask     = */ 0,
+	/* .rd_hidxget   = */ &Dee_dict_gethidx8,
+	/* .rd_htab      = */ DeeRoDict_EmptyInstance.rd_htab_data,
+	/* .rd_vtab      = */ /*{},*/
+	/* .rd_htab_data = */ { 0 },
+};
+
+
+PRIVATE WUNUSED DREF RoDict *DCALL rodict_ctor(void) {
+	return_reference_((DREF RoDict *)Dee_EmptyRoDict);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
+rodict_deepcopy(RoDict *__restrict self) {
+	/* TODO */
+}
+
+PRIVATE WUNUSED DREF RoDict *DCALL
+rodict_init(size_t argc, DeeObject *const *argv) {
+	DeeObject *seq;
+	if (DeeArg_Unpack(argc, argv, "o:_RoDict", &seq))
+		goto err;
+	return (DREF RoDict *)DeeRoDict_FromSequence(seq);
+err:
+	return NULL;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+rodict_fini(RoDict *__restrict self) {
+	size_t i;
+	for (i = 0; i < self->rd_vsize; ++i) {
+		struct Dee_dict_item *item;
+		item = &_DeeRoDict_GetRealVTab(self)[i];
+		Dee_Decref(item->di_key);
+		Dee_Decref(item->di_value);
+	}
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+rodict_visit(RoDict *__restrict self, dvisit_t proc, void *arg) {
+	size_t i;
+	for (i = 0; i < self->rd_vsize; ++i) {
+		struct Dee_dict_item *item;
+		item = &_DeeRoDict_GetRealVTab(self)[i];
+		Dee_Visit(item->di_key);
+		Dee_Visit(item->di_value);
+	}
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rodict_bool(RoDict *__restrict self) {
+	return self->rd_vsize ? 1 : 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rodict_printrepr(RoDict *__restrict self,
+                 Dee_formatprinter_t printer, void *arg) {
+#define RODICT_REPR_EMPTY "Dict.Frozen()"
+#define RODICT_REPR_HEAD  "{ "
+#define RODICT_REPR_TAIL  " }.frozen"
+	/*real*/Dee_dict_vidx_t i;
+	Dee_ssize_t temp, result;
+	if unlikely(!self->rd_vsize)
+		return DeeFormat_PRINT(printer, arg, RODICT_REPR_EMPTY);
+	result = DeeFormat_PRINT(printer, arg, RODICT_REPR_HEAD);
+	if unlikely(result < 0)
+		goto done;
+	for (i = 0; i < self->rd_vsize; ++i) {
+		struct Dee_dict_item *item;
+		if (i) {
+			temp = DeeFormat_PRINT(printer, arg, ", ");
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+		item = &_DeeRoDict_GetRealVTab(self)[i];
+		temp = DeeFormat_Printf(printer, arg, "%r: %r", item->di_key, item->di_value);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	temp = DeeFormat_PRINT(printer, arg, RODICT_REPR_TAIL);
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+done:
+	return result;
+err_temp:
+	return temp;
+#undef RODICT_REPR_EMPTY
+#undef RODICT_REPR_HEAD
+#undef RODICT_REPR_TAIL
+}
+
+
+
+PRIVATE struct type_seq rodict_seq = {
+	/* .tp_iter                         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_iter,
+	/* .tp_sizeob                       = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_sizeob),
+	/* .tp_contains                     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_contains,
+	/* .tp_getitem                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_getitem,
+	/* .tp_delitem                      = */ NULL,
+	/* .tp_setitem                      = */ NULL,
+	/* .tp_getrange                     = */ NULL,
+	/* .tp_delrange                     = */ NULL,
+	/* .tp_setrange                     = */ NULL,
+	/* .tp_foreach                      = */ NULL,
+	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rodict_foreach_pair,
+	/* .tp_enumerate                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rodict_foreach_pair,
+	/* .tp_enumerate_index              = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&rodict_enumerate_index,
+	/* .tp_iterkeys                     = */ &DeeMap_DefaultIterKeysWithIter,
+	/* .tp_bounditem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodict_bounditem,
+	/* .tp_hasitem                      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodict_hasitem,
+	/* .tp_size                         = */ (size_t (DCALL *)(DeeObject *__restrict))&rodict_size,
+	/* .tp_size_fast                    = */ (size_t (DCALL *)(DeeObject *__restrict))&rodict_size_fast,
+	/* .tp_getitem_index                = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rodict_getitem_index,
+	/* .tp_getitem_index_fast           = */ NULL,
+	/* .tp_delitem_index                = */ NULL,
+	/* .tp_setitem_index                = */ NULL,
+	/* .tp_bounditem_index              = */ (int (DCALL *)(DeeObject *, size_t))&rodict_bounditem_index,
+	/* .tp_hasitem_index                = */ (int (DCALL *)(DeeObject *, size_t))&rodict_hasitem_index,
+	/* .tp_getrange_index               = */ NULL,
+	/* .tp_delrange_index               = */ NULL,
+	/* .tp_setrange_index               = */ NULL,
+	/* .tp_getrange_index_n             = */ NULL,
+	/* .tp_delrange_index_n             = */ NULL,
+	/* .tp_setrange_index_n             = */ NULL,
+	/* .tp_trygetitem                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_trygetitem,
+	/* .tp_trygetitem_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rodict_trygetitem_index,
+	/* .tp_trygetitem_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_trygetitem_string_hash,
+	/* .tp_getitem_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_getitem_string_hash,
+	/* .tp_delitem_string_hash          = */ NULL,
+	/* .tp_setitem_string_hash          = */ NULL,
+	/* .tp_bounditem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_bounditem_string_hash,
+	/* .tp_hasitem_string_hash          = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&rodict_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash      = */ NULL,
+	/* .tp_setitem_string_len_hash      = */ NULL,
+	/* .tp_bounditem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash      = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&rodict_hasitem_string_len_hash,
+	/* .tp_asvector                     = */ NULL,
+	/* .tp_unpack                       = */ NULL,
+	/* .tp_unpack_ex                    = */ NULL,
+	/* .tp_unpack_ub                    = */ NULL,
+	/* .tp_getitemnr                    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&rodict_getitemnr,
+	/* .tp_getitemnr_string_hash        = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&rodict_getitemnr_string_hash,
+	/* .tp_getitemnr_string_len_hash    = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&rodict_getitemnr_string_len_hash,
+	/* .tp_trygetitemnr                 = */ (DeeObject *(DCALL *)(DeeObject *__restrict, /*string*/ DeeObject *__restrict))&rodict_trygetitemnr,
+	/* .tp_trygetitemnr_string_hash     = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, Dee_hash_t))&rodict_trygetitemnr_string_hash,
+	/* .tp_trygetitemnr_string_len_hash = */ (DeeObject *(DCALL *)(DeeObject *__restrict, char const *__restrict, size_t, Dee_hash_t))&rodict_trygetitemnr_string_len_hash,
+};
+
+
+#define D_TKey   "?O"
+#define D_TValue "?O"
+#define D_TItem  "?T2" D_TKey D_TValue
+
+PRIVATE struct type_getset tpconst rodict_getsets[] = {
+	TYPE_GETTER_BOUND(STR_first, &rodict_getfirst, &rodict_nonempty_as_bound, "->" D_TItem),
+	TYPE_GETTER_BOUND(STR_last, &rodict_getlast, &rodict_nonempty_as_bound, "->" D_TItem),
+	TYPE_GETTER_BOUND("firstkey", &rodict_getfirstkey, &rodict_nonempty_as_bound, "->" D_TKey),
+	TYPE_GETTER_BOUND("lastkey", &rodict_getlastkey, &rodict_nonempty_as_bound, "->" D_TKey),
+	TYPE_GETTER_BOUND("firstvalue", &rodict_getfirstvalue, &rodict_nonempty_as_bound, "->" D_TValue),
+	TYPE_GETTER_BOUND("lastvalue", &rodict_getlastvalue, &rodict_nonempty_as_bound, "->" D_TValue),
+
+	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_F("__sizeof__", &rodict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__hidxio__", &rodict___hidxio__, METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Size shift-multipler for htab words (word size is ${1 << __hidxio__})\n"
+	              "#T{?#__hidxio__|htab word type~"
+	              /**/ "$0|?Ectypes:uint8_t"
+	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
+	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
+	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
+	              "}"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst rodict_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__vsize__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
+	                      offsetof(RoDict, rd_vsize), "## of used vtab slots (excluding deleted slots; same as ?#{op:size})"),
+	TYPE_MEMBER_FIELD_DOC("__hmask__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
+	                      offsetof(RoDict, rd_hmask), "Currently active hash-mask"),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst rodict_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &RoDictIterator_Type),
+	TYPE_MEMBER_CONST("Frozen", &DeeRoDict_Type),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_method tpconst rodict_methods[] = {
+//	TYPE_KWMETHOD("byhash", &rodict_byhash, DOC_GET(map_byhash_doc)), /* TODO */
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst rodict_method_hints[] = {
+	/* Operators for "Dict as Sequence" (specifically defined because dicts are ordered) */
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &rodict_mh_seq_foreach_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &rodict_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetfirst, &rodict_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetlast, &rodict_trygetlast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_foreach_pair, &rodict_foreach_pair, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_enumerate_index, &rodict_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_size, &rodict_size, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_size_fast, &rodict_size_fast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_getitem_index, &rodict_mh_seq_getitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_trygetitem_index, &rodict_mh_seq_trygetitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_compare_eq, &rodict_mh_seq_compare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_compare, &rodict_mh_seq_compare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_trycompare_eq, &rodict_mh_seq_trycompare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_method tpconst rodict_class_methods[] = {
+	TYPE_KWMETHOD_F("fromkeys", &rodict_fromkeys_f, METHOD_FNOREFESCAPE,
+	                "(keys:?DSet,value=!N,valuefor?:?DCallable)->?.\n"
+	                "Construct a new ?. from @keys, and @value (or ${valuefor(key)}) as value."),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_operator const rodict_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH | METHOD_FNOREFESCAPE),
+	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
+	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ | METHOD_FNOREFESCAPE),
+	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_002B_LO, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
+	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
+	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
+	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITER, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS | METHOD_FNOREFESCAPE),
+};
+
+PUBLIC DeeTypeObject DeeRoDict_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_RoDict",
+	/* .tp_doc      = */ DOC("Read-only / frozen variant of ?DDict\n"
+	                         "\n"
+
+	                         "()\n"
+	                         "Returns an empty ?.\n"
+	                         "\n"
+
+	                         "(dict:?DDict)\n"
+	                         "(map:?M?O?O)\n"
+	                         "(seq:?ST2?O?O)\n"
+	                         "Convert the given dict/map/seq into an ?. and return it"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_KW, /* RoDict offers KW-support (because items cannot be removed, values can be loaded as NOREF) */
+	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&rodict_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&rodict_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&rodict_init,
+				/* .tp_free      = */ (dfunptr_t)NULL
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&rodict_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rodict_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodict_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL, /* TODO: &rodict_cmp */
+	/* .tp_seq           = */ &rodict_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ rodict_methods,
+	/* .tp_getsets       = */ rodict_getsets,
+	/* .tp_members       = */ rodict_members,
+	/* .tp_class_methods = */ rodict_class_methods,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ rodict_class_members,
+	/* .tp_method_hints  = */ rodict_method_hints,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ rodict_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(rodict_operators)
+};
+
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 #define DO(err, expr)                    \
 	do {                                 \
@@ -57,8 +908,6 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 			goto err;                    \
 		result += temp;                  \
 	}	__WHILE0
-
-typedef DeeRoDictObject RoDict;
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(RoDict, rodi_dict) /* [1..1][const] The RoDict being iterated. */
@@ -344,7 +1193,7 @@ DeeRoDict_Rehash(/*inherit(on_success)*/ DREF RoDict *__restrict self, size_t ne
 		if (!self->rd_elem[i].rdi_key)
 			continue;
 		perturb = j = self->rd_elem[i].rdi_hash & new_mask;
-		for (;; RODICT_HASHNX(j, perturb)) {
+		for (;; DeeRoDict_HashNx(j, perturb)) {
 			item = &result->rd_elem[j & new_mask];
 			if (!item->rdi_key)
 				break;
@@ -379,7 +1228,7 @@ DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict p_self,
 	/* Insert the new key/value-pair into the RoDict. */
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & me->rd_mask;
-	for (;; RODICT_HASHNX(i, perturb)) {
+	for (;; DeeRoDict_HashNx(i, perturb)) {
 		int error;
 		item = &me->rd_elem[i & me->rd_mask];
 		if (!item->rdi_key)
@@ -511,7 +1360,7 @@ rodict_contains(RoDict *self, DeeObject *key) {
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & self->rd_mask;
-	for (;; RODICT_HASHNX(i, perturb)) {
+	for (;; DeeRoDict_HashNx(i, perturb)) {
 		int error;
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->rdi_key)
@@ -537,7 +1386,7 @@ rodict_getitemnr(RoDict *__restrict self, DeeObject *__restrict key) {
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & self->rd_mask;
-	for (;; RODICT_HASHNX(i, perturb)) {
+	for (;; DeeRoDict_HashNx(i, perturb)) {
 		int error;
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->rdi_key)
@@ -563,9 +1412,9 @@ rodict_getitemnr_string_hash(DeeRoDictObject *__restrict self,
                              Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -585,9 +1434,9 @@ rodict_getitemnr_string_len_hash(DeeRoDictObject *__restrict self,
                                  size_t keylen, Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -607,10 +1456,10 @@ rodict_trygetitemnr(DeeRoDictObject *__restrict self,
 	Dee_hash_t i, perturb, hash;
 	struct rodict_item *item;
 	hash     = DeeObject_Hash(key);
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
 		int error;
-		item = RODICT_HASHIT(self, i);
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -634,9 +1483,9 @@ rodict_trygetitemnr_string_hash(DeeRoDictObject *__restrict self,
                                 Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -655,9 +1504,9 @@ rodict_trygetitemnr_string_len_hash(DeeRoDictObject *__restrict self,
                                     size_t keylen, Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -717,7 +1566,7 @@ rodict_getitem(RoDict *self, DeeObject *key) {
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & self->rd_mask;
-	for (;; RODICT_HASHNX(i, perturb)) {
+	for (;; DeeRoDict_HashNx(i, perturb)) {
 		int error;
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->rdi_key)
@@ -743,9 +1592,9 @@ rodict_getitem_string_hash(DeeRoDictObject *__restrict self,
                            Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -765,9 +1614,9 @@ rodict_getitem_string_len_hash(DeeRoDictObject *__restrict self,
                                size_t keylen, Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -808,10 +1657,10 @@ rodict_bool(RoDict *__restrict self) {
 	return self->rd_size != 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rodict_printrepr(RoDict *__restrict self,
-                 dformatprinter printer, void *arg) {
-	dssize_t temp, result;
+                 Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result;
 	bool is_first = true;
 	size_t i;
 	result = DeeFormat_PRINT(printer, arg, "Dict.Frozen({ ");
@@ -866,7 +1715,7 @@ rodict_hasitem(RoDict *self, DeeObject *key) {
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & self->rd_mask;
-	for (;; RODICT_HASHNX(i, perturb)) {
+	for (;; DeeRoDict_HashNx(i, perturb)) {
 		int error;
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->rdi_key)
@@ -891,9 +1740,9 @@ rodict_hasitem_string_hash(DeeRoDictObject *__restrict self,
                            Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -912,9 +1761,9 @@ rodict_hasitem_string_len_hash(DeeRoDictObject *__restrict self,
                                size_t keylen, Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -933,7 +1782,7 @@ rodict_trygetitem(RoDict *self, DeeObject *key) {
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & self->rd_mask;
-	for (;; RODICT_HASHNX(i, perturb)) {
+	for (;; DeeRoDict_HashNx(i, perturb)) {
 		int error;
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->rdi_key)
@@ -958,9 +1807,9 @@ rodict_trygetitem_string_hash(DeeRoDictObject *__restrict self,
                               Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -979,9 +1828,9 @@ rodict_trygetitem_string_len_hash(DeeRoDictObject *__restrict self,
                                   size_t keylen, Dee_hash_t hash) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
-		item = RODICT_HASHIT(self, i);
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		item = DeeRoDict_HashIt(self, i);
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -1199,7 +2048,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&rodict_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&rodict_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&rodict_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rodict_visit,
@@ -1233,6 +2082,7 @@ PUBLIC struct Dee_empty_rodict_object DeeRoDict_EmptyInstance = {
 	/* .rd_elem = */ {{ NULL, NULL, 0 }}
 };
 
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 DECL_END
 

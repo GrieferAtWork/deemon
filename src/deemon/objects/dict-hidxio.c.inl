@@ -30,7 +30,7 @@ DECL_BEGIN
 #if LOCAL_HIDXIO_NBITS == 8
 #define LOCAL_MAYBE_PUBLIC PUBLIC
 #else /* LOCAL_HIDXIO_NBITS == 8 */
-#define LOCAL_MAYBE_PUBLIC PRIVATE
+#define LOCAL_MAYBE_PUBLIC INTERN
 #endif /* LOCAL_HIDXIO_NBITS == 8 */
 
 #if LOCAL_HIDXIO_NBITS == 4
@@ -70,7 +70,7 @@ DECL_BEGIN
 #define Tupr PP_CAT3(uint, LOCAL_HIDXIO_NBITS_MUL2, _t)
 
 LOCAL_MAYBE_PUBLIC WUNUSED NONNULL((1)) size_t DCALL
-F(Dee_dict_gethidx)(void *__restrict htab, size_t index) {
+F(Dee_dict_gethidx)(void const *__restrict htab, size_t index) {
 	return ((T const *)htab)[index];
 }
 
@@ -79,13 +79,13 @@ F(Dee_dict_sethidx)(void *__restrict htab, size_t index, size_t value) {
 	((T *)htab)[index] = (T)value;
 }
 
-PRIVATE NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 F(Dee_dict_movhidx)(void *dst, void const *src, size_t n_words) {
 	LOCAL_memmove(dst, src, n_words);
 }
 
 #if LOCAL_HIDXIO_NBITS < ((1 << (DEE_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__)
-PRIVATE NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 F(Dee_dict_uprhidx)(void *dst, void const *src, size_t n_words) {
 	Tupr *tdst = (Tupr *)dst;
 	T *tsrc = (T *)src;
@@ -98,7 +98,7 @@ F(Dee_dict_uprhidx)(void *dst, void const *src, size_t n_words) {
 #endif /* LOCAL_HIDXIO_NBITS < ((1 << (DEE_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__) */
 
 #if LOCAL_HIDXIO_NBITS > (1 * __CHAR_BIT__)
-PRIVATE NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 F(Dee_dict_dwnhidx)(void *dst, void const *src, size_t n_words) {
 	size_t i;
 	Tlwr *tdst = (Tlwr *)dst;

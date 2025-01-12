@@ -113,7 +113,7 @@ LOCAL_dict_htab_modify64(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 }
 #endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
 
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+INTERN ATTR_NOINLINE NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(Dee_dict_vidx_t)) {
 	if (DEE_DICT_HIDXIO_IS8(self->d_valloc)) {
 		LOCAL_dict_htab_modify8(self LOCAL_dict_htab_modify__ARGS(uint8_t));

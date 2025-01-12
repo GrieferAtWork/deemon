@@ -55,19 +55,13 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
-#include "seq/default-compare.h"
 #include "seq/default-api.h"
+#include "seq/default-compare.h"
 #include "seq/hashfilter.h"
 
-#ifndef SIZE_MAX
-#include <hybrid/limitcore.h>
-#ifndef SIZE_MAX
-#define SIZE_MAX __SIZE_MAX__
-#endif /* !SIZE_MAX */
-#endif /* !SIZE_MAX */
+/**/
+#include "dict.h"
 
-#undef shift_t
-#define shift_t __SHIFT_TYPE__
 #undef byte_t
 #define byte_t __BYTE_TYPE__
 
@@ -84,13 +78,6 @@ DECL_BEGIN
 #else /* !NDEBUG */
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
-
-#ifndef CONFIG_HAVE_strcmp
-#define CONFIG_HAVE_strcmp
-#undef strcmp
-#define strcmp dee_strcmp
-DeeSystem_DEFINE_strcmp(dee_strcmp)
-#endif /* !CONFIG_HAVE_strcmp */
 
 typedef DeeDictObject Dict;
 
@@ -408,38 +395,6 @@ PUBLIC_CONST byte_t const _DeeDict_EmptyTab[] = { 0 };
 #define _DeeDict_TabsTryRealloc(ptr, n_bytes) Dee_TryRealloc(ptr, n_bytes)
 #define _DeeDict_TabsFree(ptr)                Dee_Free(ptr)
 
-
-DFUNDEF WUNUSED NONNULL((1)) size_t DCALL Dee_dict_gethidx8(void *__restrict htab, size_t index);
-DFUNDEF NONNULL((1)) void DCALL Dee_dict_sethidx8(void *__restrict htab, size_t index, size_t value);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_movhidx8(void *__restrict dst, void const *__restrict src, size_t n_words);
-
-#if DEE_DICT_HIDXIO_COUNT >= 2
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL Dee_dict_gethidx16(void *__restrict htab, size_t index);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_sethidx16(void *__restrict htab, size_t index, size_t value);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_movhidx16(void *__restrict dst, void const *__restrict src, size_t n_words);
-#define Dee_dict_uprhidx8_PTR &Dee_dict_uprhidx8
-PRIVATE NONNULL((1)) void DCALL Dee_dict_uprhidx8(void *__restrict dst, void const *__restrict src, size_t n_words);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_dwnhidx16(void *__restrict dst, void const *__restrict src, size_t n_words);
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
-
-#if DEE_DICT_HIDXIO_COUNT >= 3
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL Dee_dict_gethidx32(void *__restrict htab, size_t index);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_sethidx32(void *__restrict htab, size_t index, size_t value);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_movhidx32(void *__restrict dst, void const *__restrict src, size_t n_words);
-#define Dee_dict_uprhidx16_PTR &Dee_dict_uprhidx16
-PRIVATE NONNULL((1)) void DCALL Dee_dict_uprhidx16(void *__restrict dst, void const *__restrict src, size_t n_words);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_dwnhidx32(void *__restrict dst, void const *__restrict src, size_t n_words);
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
-
-#if DEE_DICT_HIDXIO_COUNT >= 4
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL Dee_dict_gethidx64(void *__restrict htab, size_t index);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_sethidx64(void *__restrict htab, size_t index, size_t value);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_movhidx64(void *__restrict dst, void const *__restrict src, size_t n_words);
-#define Dee_dict_uprhidx32_PTR &Dee_dict_uprhidx32
-PRIVATE NONNULL((1)) void DCALL Dee_dict_uprhidx32(void *__restrict dst, void const *__restrict src, size_t n_words);
-PRIVATE NONNULL((1)) void DCALL Dee_dict_dwnhidx64(void *__restrict dst, void const *__restrict src, size_t n_words);
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
-
 #ifndef Dee_dict_uprhidx8_PTR
 #define Dee_dict_uprhidx8_PTR NULL
 #endif /* !Dee_dict_uprhidx8_PTR */
@@ -449,23 +404,6 @@ PRIVATE NONNULL((1)) void DCALL Dee_dict_dwnhidx64(void *__restrict dst, void co
 #ifndef Dee_dict_uprhidx32_PTR
 #define Dee_dict_uprhidx32_PTR NULL
 #endif /* !Dee_dict_uprhidx32_PTR */
-
-#if DEE_DICT_HIDXIO_COUNT >= 2
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_2(...) __VA_ARGS__
-#else /* DEE_DICT_HIDXIO_COUNT >= 2 */
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_2(...) /* nothing */
-#endif /* DEE_DICT_HIDXIO_COUNT < 2 */
-#if DEE_DICT_HIDXIO_COUNT >= 3
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_3(...) __VA_ARGS__
-#else /* DEE_DICT_HIDXIO_COUNT >= 3 */
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_3(...) /* nothing */
-#endif /* DEE_DICT_HIDXIO_COUNT < 3 */
-#if DEE_DICT_HIDXIO_COUNT >= 4
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_4(...) __VA_ARGS__
-#else /* DEE_DICT_HIDXIO_COUNT >= 4 */
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_4(...) /* nothing */
-#endif /* DEE_DICT_HIDXIO_COUNT < 4 */
-
 
 #ifndef __INTELLISENSE__
 DECL_END
@@ -496,186 +434,18 @@ PUBLIC_TPCONST struct Dee_dict_hidxio_struct tpconst Dee_dict_hidxio[DEE_DICT_HI
 	/* [3] = */ IF_DEE_DICT_HIDXIO_COUNT_GE_4({ &Dee_dict_gethidx64, &Dee_dict_sethidx64, &Dee_dict_movhidx64, NULL, &Dee_dict_dwnhidx64 },)
 };
 
-
-
-/* This right here encodes our target ratio of used vs. unused hash indices.
- * Currently, we aim for a ratio of:
- * >> d_valloc * 2   ~=   d_hmask * 3 */
-#define DICT_VTAB_HTAB_RATIO_V 2
-#define DICT_VTAB_HTAB_RATIO_H 3
-
-STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
-
-/* Returns true if "d_htab" *should* be grown to its next larger multiple */
-#define _DeeDict_ShouldGrowHTab(self)                                                       \
-	((dict_suggesed_max_valloc_from_count((self)->d_vused + 1) * DICT_VTAB_HTAB_RATIO_V) >= \
-	 ((self)->d_hmask * DICT_VTAB_HTAB_RATIO_H))
-
-/* Returns true if "d_htab" *MUST* be grown to its next larger
- * multiple (before a new item can be added to the dict) */
-#define _DeeDict_MustGrowHTab(self) \
-	((self)->d_valloc >= (self)->d_hmask)
-
-
-/* Evaluates to true if the dict's "d_vtab" should be optimized.
- * s.a. `dict_optimize_vtab()' */
-#define _DeeDict_ShouldOptimizeVTab(self) \
-	(((self)->d_vsize >> 1) > (self)->d_vused)
-#define _DeeDict_CanOptimizeVTab(self) \
-	((self)->d_vsize > (self)->d_vused)
-
-#define _DeeDict_MustGrowVTab(self) \
-	((self)->d_vsize >= (self)->d_valloc)
-#define _DeeDict_CanGrowVTab(self) \
-	((self)->d_valloc < (self)->d_hmask)
-
-
-/* Returns true if the vtab should shrink following an item being deleted. */
-#define _DeeDict_ShouldShrinkVTab(self) \
-	(_DeeDict_ShouldShrinkVTab_NEWALLOC(self) < (self)->d_valloc)
-#define _DeeDict_ShouldShrinkVTab_NEWALLOC(self) \
-	((self)->d_vused << 1) /* Shrink the vtab when more than half of it is unused */
-
-/* Returns true if the vtab can be shrunk. */
-#define _DeeDict_CanShrinkVTab(self) \
-	((self)->d_vused < (self)->d_valloc)
-
-/* Returns true if the htab should shrink following the vtab having been shrunk */
-#define _DeeDict_ShouldShrinkHTab(self) \
-	_DeeDict_ShouldShrinkHTab2((self)->d_valloc, (self)->d_hmask)
-#define _DeeDict_ShouldShrinkHTab2(valloc, hmask) \
-	(((valloc)*DICT_VTAB_HTAB_RATIO_H) <=         \
-	 (((hmask) >> 1) * DICT_VTAB_HTAB_RATIO_V) && (hmask))
-
-/* Returns true if the htab can be shrunk. */
-#define _DeeDict_CanShrinkHTab(self) \
-	_DeeDict_CanShrinkHTab2((self)->d_valloc, (self)->d_hmask)
-#define _DeeDict_CanShrinkHTab2(valloc, hmask) \
-	((valloc) <= ((hmask) >> 1) && (hmask))
-
-
-#define NULL_IF__DeeDict_EmptyTab(/*real*/ p) \
-	((p) == (struct Dee_dict_item *)_DeeDict_EmptyTab ? NULL : (p))
-
-/* Default hint in `DeeDict_FromSequence' when the sequence doesn't provide one itself. */
-#ifndef DICT_FROMSEQ_DEFAULT_HINT
-#define DICT_FROMSEQ_DEFAULT_HINT 64
-#endif /* !DICT_FROMSEQ_DEFAULT_HINT */
-
-
 #undef DICT_NDEBUG
 #if defined(NDEBUG) || 0 /* TODO: Change this "0" to a "1" once dicts have become stable enough. */
 #define DICT_NDEBUG
 #endif /* NDEBUG */
 
+#define NULL_IF__DeeDict_EmptyTab(/*real*/ p) \
+	((p) == (struct Dee_dict_item *)_DeeDict_EmptyTab ? NULL : (p))
 
 #define HAVE_dict_setitem_unlocked
 #ifdef __OPTIMIZE_SIZE__
 #undef HAVE_dict_setitem_unlocked
 #endif /* __OPTIMIZE_SIZE__ */
-
-
-LOCAL ATTR_CONST size_t DCALL
-dict_suggesed_max_valloc_from_count(size_t num_item) {
-	shift_t items_nbits;
-	size_t result;
-	ASSERT(num_item > 0);
-	items_nbits = CLZ(num_item);
-	if unlikely(!items_nbits)
-		return (size_t)-1;
-	items_nbits = (sizeof(size_t) * __CHAR_BIT__) - items_nbits;
-	result = ((size_t)1 << (items_nbits)) |
-	         ((size_t)1 << (items_nbits + 1));
-	ASSERT(result >= num_item);
-	return result;
-}
-
-/* Calculate what would be a good "d_valloc" for a given "d_hmask" and "d_vsize" */
-LOCAL ATTR_CONST size_t DCALL
-dict_valloc_from_hmask_and_count(size_t hmask, size_t num_item, bool allow_overalloc) {
-	size_t result, max_valloc;
-	ASSERT(num_item <= hmask);
-	if (!allow_overalloc)
-		return num_item;
-	result = (hmask / DICT_VTAB_HTAB_RATIO_H) * DICT_VTAB_HTAB_RATIO_V;
-	ASSERT(result <= hmask);
-	if unlikely(result < num_item)
-		return num_item;
-	if unlikely(!num_item)
-		return 0;
-	max_valloc = dict_suggesed_max_valloc_from_count(num_item);
-	if (result > max_valloc)
-		result = max_valloc;
-	ASSERT(result >= num_item);
-	ASSERT(result <= hmask);
-	return result;
-}
-
-
-LOCAL ATTR_CONST size_t DCALL
-dict_hmask_from_count(size_t num_item) {
-	size_t result;
-	shift_t mask_nbits;
-	if unlikely(!num_item)
-		return 0;
-	if (OVERFLOW_UADD(num_item, DICT_VTAB_HTAB_RATIO_H - 1, &result))
-		goto fallback;
-	if (OVERFLOW_UMUL(result, DICT_VTAB_HTAB_RATIO_H, &result))
-		goto fallback;
-#if DICT_VTAB_HTAB_RATIO_V == 2
-	result >>= 1;
-#else /* DICT_VTAB_HTAB_RATIO_V == 2 */
-	result /= DICT_VTAB_HTAB_RATIO_V;
-#endif /* DICT_VTAB_HTAB_RATIO_V != 2 */
-	ASSERT(result);
-	mask_nbits = CLZ(result);
-	mask_nbits = (sizeof(size_t) * __CHAR_BIT__) - mask_nbits;
-	result = 1;
-	result <<= mask_nbits;
-	--result;
-	ASSERT(result >= num_item);
-	ASSERT(dict_valloc_from_hmask_and_count(result, num_item, true) >= num_item);
-	ASSERT(dict_valloc_from_hmask_and_count(result, num_item, false) >= num_item);
-	return result;
-fallback:
-	return SIZE_MAX;
-}
-
-LOCAL ATTR_CONST size_t DCALL
-dict_tiny_hmask_from_count(size_t num_item) {
-	size_t result;
-	shift_t mask_nbits;
-	if unlikely(!num_item)
-		return 0;
-	mask_nbits = CLZ(num_item);
-	mask_nbits = (sizeof(size_t) * __CHAR_BIT__) - mask_nbits;
-	result = 1;
-	result <<= mask_nbits;
-	--result;
-	ASSERT(result >= num_item);
-	ASSERT(dict_valloc_from_hmask_and_count(result, num_item, true) >= num_item);
-	ASSERT(dict_valloc_from_hmask_and_count(result, num_item, false) >= num_item);
-	return result;
-}
-
-#define dict_sizeoftabs_from_hmask_and_valloc(hmask, valloc) \
-	dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, DEE_DICT_HIDXIO_FROMALLOC(valloc))
-LOCAL ATTR_CONST size_t DCALL
-dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(size_t hmask, size_t valloc, shift_t hidxio) {
-	size_t result, hmask_size;
-	if (OVERFLOW_UMUL(valloc, sizeof(struct Dee_dict_item), &result))
-		goto toobig;
-	if (OVERFLOW_UADD(hmask, 1, &hmask_size))
-		goto toobig;
-	if unlikely(((hmask_size << hidxio) >> hidxio) != hmask_size)
-		goto toobig;
-	hmask_size <<= hidxio;
-	if (OVERFLOW_UADD(result, hmask_size, &result))
-		goto toobig;
-	return result;
-toobig:
-	return (size_t)-1; /* Force down-stream allocation failure */
-}
 
 
 #ifdef DICT_NDEBUG
@@ -967,7 +737,7 @@ dict_do_optimize_vtab_without_rebuild(Dict *__restrict self) {
 	ASSERT(self->d_vsize < self->d_valloc);
 }
 
-PRIVATE NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 dict_optimize_vtab(Dict *__restrict self) {
 	ASSERT(_DeeDict_CanOptimizeVTab(self));
 	dict_do_optimize_vtab_without_rebuild(self);
@@ -1080,7 +850,6 @@ dict_trygrow_vtab_and_htab_with(Dict *__restrict self,
 	if unlikely(!new_vtab) {
 		new_hmask  = dict_tiny_hmask_from_count(min_valloc);
 		new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, false);
-		old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
 		new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
 		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
 		new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
@@ -1565,29 +1334,6 @@ dict_makespace_at(Dict *__restrict self, /*real*/ Dee_dict_vidx_t vtab_idx) {
 		dict_makespace_at_impl(self, vtab_idx);
 }
 
-
-
-/* Fast-compare functions that never throw or invoke user-code:
- * - Can be called while holding locks.
- * @return:  1: It is guarantied that "index != rhs"
- * @return:  0: It is guarantied that "index == rhs"
- * @return: -1: Comparison cannot be done "fast" - load "rhs" properly, release locks, and try again. */
-PRIVATE WUNUSED NONNULL((2)) int DCALL fastcmp_index(size_t lhs, DeeObject *rhs);
-PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL boolcmp_string(char const *lhs, DeeObject *rhs);
-PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL boolcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs);
-
-/* Slow equivalents to the above -- only use these when the above returned "-1"
- * Return value is like `DeeObject_TryCompareEq()' (iow: Dee_COMPARE_ERR on error) */
-PRIVATE WUNUSED NONNULL((2)) int DCALL slowcmp_index(size_t lhs, DeeObject *rhs);
-//PRIVATE WUNUSED NONNULL((1, 2)) int DCALL slowcmp_string(char const *lhs, DeeObject *rhs);
-//PRIVATE WUNUSED NONNULL((1, 3)) int DCALL slowcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs);
-
-PRIVATE WUNUSED NONNULL((2)) DREF DeeObject *DCALL matched_keyob_tryfrom_index(size_t key, DeeObject *matched_key);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL matched_keyob_tryfrom_string(char const *key, DeeObject *matched_key);
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL matched_keyob_tryfrom_string_len(char const *key, size_t keylen, DeeObject *matched_key);
-
-
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL dict_getitem(Dict *self, DeeObject *key);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_getitem_index(Dict *self, size_t index);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL dict_getitem_string_hash(Dict *self, char const *key, Dee_hash_t hash);
@@ -1681,110 +1427,6 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL dict_mh_pop_with_defaul
 #ifdef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL dict_popvalue(Dict *self, DeeObject *key);
 #endif /* __OPTIMIZE_SIZE__ */
-
-
-
-
-
-/* Fast-compare functions that never throw or invoke user-code:
- * - Can be called while holding locks.
- * @return:  1: It is guarantied that "index != rhs"
- * @return:  0: It is guarantied that "index == rhs"
- * @return: -1: Comparison cannot be done "fast" - load "rhs" properly, release locks, and try again. */
-PRIVATE WUNUSED NONNULL((2)) int DCALL
-fastcmp_index(size_t lhs, DeeObject *rhs) {
-	if (DeeInt_Check(rhs)) {
-		size_t rhs_value;
-		if (!DeeInt_TryAsSize(rhs, &rhs_value))
-			return 1;
-		return lhs == rhs_value ? 0 : 1;
-	}
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-boolcmp_string(char const *lhs, DeeObject *rhs) {
-	if (DeeString_Check(rhs))
-		return strcmp(lhs, DeeString_STR(rhs)) == 0;
-	if (DeeBytes_Check(rhs)) {
-		size_t lhslen = strlen(lhs);
-		if (lhslen != DeeBytes_SIZE(rhs))
-			return false;
-		return memcmp(lhs, DeeBytes_DATA(rhs), lhslen) == 0;
-	}
-	return false;
-}
-
-PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL
-boolcmp_string_len(char const *lhs, size_t lhslen, DeeObject *rhs) {
-	if (DeeString_Check(rhs)) {
-		if (lhslen != DeeString_SIZE(rhs))
-			return false;
-		return memcmp(lhs, DeeString_STR(rhs), lhslen) == 0;
-	}
-	if (DeeBytes_Check(rhs)) {
-		if (lhslen != DeeBytes_SIZE(rhs))
-			return false;
-		return memcmp(lhs, DeeBytes_DATA(rhs), lhslen) == 0;
-	}
-	return false;
-}
-
-/* Slow equivalents to the above -- only use these when the above returned "-1"
- * Return value is like `DeeObject_TryCompareEq()' (iow: Dee_COMPARE_ERR on error) */
-PRIVATE WUNUSED NONNULL((2)) int DCALL
-slowcmp_index(size_t lhs, DeeObject *rhs) {
-	bool ok;
-	size_t rhs_value;
-	DREF DeeObject *rhs_as_int;
-	rhs_as_int = DeeObject_Int(rhs);
-	if unlikely(!rhs_as_int)
-		goto err;
-	ok = DeeInt_TryAsSize(rhs_as_int, &rhs_value);
-	Dee_Decref(rhs_as_int);
-	if (!ok)
-		return 1;
-	return lhs == rhs_value ? 0 : 1;
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((2)) DREF DeeObject *DCALL
-matched_keyob_tryfrom_index(size_t key, DeeObject *matched_key) {
-	if (DeeInt_Check(matched_key))
-		return_reference_(matched_key);
-#ifdef DeeInt_TryNewSize
-	return DeeInt_TryNewSize(key);
-#else /* DeeInt_TryNewSize */
-	(void)key;
-	return NULL;
-#endif /* !DeeInt_TryNewSize */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-matched_keyob_tryfrom_string(char const *key, DeeObject *matched_key) {
-	if (DeeString_Check(matched_key))
-		return_reference_(matched_key);
-#ifdef DeeString_TryNew
-	return DeeString_TryNew(key);
-#else /* DeeString_TryNew */
-	(void)key;
-	return NULL;
-#endif /* !DeeString_TryNew */
-}
-
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-matched_keyob_tryfrom_string_len(char const *key, size_t keylen, DeeObject *matched_key) {
-	if (DeeString_Check(matched_key))
-		return_reference_(matched_key);
-#ifdef DeeString_TryNewSized
-	return DeeString_TryNewSized(key, keylen);
-#else /* DeeString_TryNewSized */
-	(void)key;
-	(void)keylen;
-	return NULL;
-#endif /* !DeeString_TryNewSized */
-}
 
 
 
@@ -2009,16 +1651,6 @@ dict_fromsequence_foreach_cb(void *self, DeeObject *key, DeeObject *value) {
 	return dict_setitem_unlocked((Dict *)self, key, value);
 }
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
-
-PRIVATE NONNULL((1)) void DCALL
-DeeDict_LockReadAndOptimize(Dict *__restrict self) {
-	DeeDict_LockRead(self);
-	if (_DeeDict_CanOptimizeVTab(self)) {
-		if (DeeDict_LockUpgrade(self) || _DeeDict_CanOptimizeVTab(self))
-			dict_optimize_vtab(self);
-		DeeDict_LockDowngrade(self);
-	}
-}
 
 #undef DICT_INITFROM_NEEDSLOCK
 #ifndef HAVE_dict_setitem_unlocked /* Because of "#define dict_setitem_unlocked dict_setitem" */
@@ -3575,10 +3207,10 @@ DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict___hdxio__(Dict *__restrict self) {
+dict___hidxio__(Dict *__restrict self) {
 	size_t valloc = atomic_read(&self->d_valloc);
-	shift_t hdxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
-	return DeeInt_NEWU(hdxio);
+	shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(valloc);
+	return DeeInt_NEWU(hidxio);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -4006,10 +3638,10 @@ PRIVATE struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence, "->?#Frozen"),
 	TYPE_GETTER_F("__sizeof__", &dict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
-	TYPE_GETTER_F("__hdxio__", &dict___hdxio__, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("__hidxio__", &dict___hidxio__, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
-	              "Size shift-multipler for htab words (word size is ${1 << __hdxio__})\n"
-	              "#T{?#__hdxio__|htab word type~"
+	              "Size shift-multipler for htab words (word size is ${1 << __hidxio__})\n"
+	              "#T{?#__hidxio__|htab word type~"
 	              /**/ "$0|?Ectypes:uint8_t"
 	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
 	              /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
@@ -4034,9 +3666,9 @@ PRIVATE struct type_member tpconst dict_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__valloc__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
 	                      offsetof(Dict, d_valloc), "## of allocated vtab slots"),
 	TYPE_MEMBER_FIELD_DOC("__vsize__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
-	                      offsetof(Dict, d_vsize), "## of used vtab (including deleted slots)"),
+	                      offsetof(Dict, d_vsize), "## of used vtab slots (including deleted slots)"),
 	TYPE_MEMBER_FIELD_DOC("__vused__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
-	                      offsetof(Dict, d_vused), "## of used vtab (excluding deleted slots; same as ?#{op:size})"),
+	                      offsetof(Dict, d_vused), "## of used vtab slots (excluding deleted slots; same as ?#{op:size})"),
 	TYPE_MEMBER_FIELD_DOC("__hmask__", STRUCT_CONST | STRUCT_ATOMIC | STRUCT_SIZE_T,
 	                      offsetof(Dict, d_hmask), "Currently active hash-mask"),
 	TYPE_MEMBER_END
@@ -4286,6 +3918,14 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 };
 
 #else /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
+
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
 
 /* A dummy object used by Dict and HashSet to refer to deleted
  * keys that are still apart of the hash chain.

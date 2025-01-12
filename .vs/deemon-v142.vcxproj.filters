@@ -702,6 +702,9 @@
 		<ClInclude Include="..\src\deemon\objects\dict-setitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\file-operator.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>

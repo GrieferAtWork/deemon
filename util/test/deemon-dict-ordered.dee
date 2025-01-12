@@ -23,7 +23,7 @@ import * from deemon;
 
 /* Check if "CONFIG_EXPERIMENTAL_ORDERED_DICTS" was enabled when building deemon.
  * TODO: Remove this check once "CONFIG_EXPERIMENTAL_ORDERED_DICTS" becomes mandatory */ 
-if (!hasattr(Dict, "__hdxio__"))
+if (!hasattr(Dict, "__hidxio__"))
 	return;
 
 /* A simple test */
@@ -198,4 +198,4 @@ assert !d.__valloc__;
 assert !d.__vsize__;
 assert !d.__vused__;
 assert !d.__hmask__;
-assert !d.__hdxio__;
+assert !d.__hidxio__;

@@ -424,6 +424,16 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_DICTS */
 
+/* Experimental feature switch: RoDict-s retain the order in which items are added. */
+#if (!defined(CONFIG_EXPERIMENTAL_ORDERED_RODICTS) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_ORDERED_RODICTS))
+#if defined(CONFIG_EXPERIMENTAL_ORDERED_DICTS) && 0 /* Implementation incomplete */
+#define CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+#else
+#define CONFIG_NO_EXPERIMENTAL_ORDERED_RODICTS
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_RODICTS */
+
 /************************************************************************/
 
 

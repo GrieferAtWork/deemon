@@ -180,8 +180,8 @@ rodict_insert_nocheck(DeeRoDictObject *__restrict self,
                       /*inherit(always)*/ DREF DeeObject *value) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = RODICT_HASHST(self, hash);
-	for (;; RODICT_HASHNX(i, perturb)) {
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->rdi_key)
 			break;

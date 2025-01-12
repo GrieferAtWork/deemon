@@ -93,23 +93,23 @@ struct Dee_dict_item {
 /* Index for "d_vtab" (real and virt version) */
 typedef size_t Dee_dict_vidx_t;
 
-typedef WUNUSED_T NONNULL_T((1)) /*virt*/Dee_dict_vidx_t (DCALL *Dee_dict_gethidx_t)(void *__restrict htab, size_t index);
+typedef WUNUSED_T NONNULL_T((1)) /*virt*/Dee_dict_vidx_t (DCALL *Dee_dict_gethidx_t)(void const *__restrict htab, size_t index);
 typedef NONNULL_T((1)) void (DCALL *Dee_dict_sethidx_t)(void *__restrict htab, size_t index, /*virt*/Dee_dict_vidx_t value);
 
-DFUNDEF WUNUSED NONNULL((1)) Dee_dict_vidx_t DCALL Dee_dict_gethidx8(void *__restrict htab, size_t index);
+DFUNDEF WUNUSED NONNULL((1)) Dee_dict_vidx_t DCALL Dee_dict_gethidx8(void const *__restrict htab, size_t index);
 DFUNDEF NONNULL((1)) void DCALL Dee_dict_sethidx8(void *__restrict htab, size_t index, Dee_dict_vidx_t value);
 
 struct Dee_dict_object {
 	Dee_OBJECT_HEAD /* GC Object */
-	size_t                  d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1') */
+	/*real*/Dee_dict_vidx_t d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1') */
 	/*real*/Dee_dict_vidx_t d_vsize;   /* [lock(d_lock)][<= d_valloc] 1+ the greatest index in "d_vtab" that was ever initialized (and also the index of the next item in "d_vtab" to-be populated). */
 	size_t                  d_vused;   /* [lock(d_lock)][<= d_vsize] # of non-NULL keys in "d_vtab". */
 	struct Dee_dict_item   *d_vtab;    /* [lock(d_lock)][0..d_vsize][owned_if(!= INTERNAL(DeeDict_EmptyTab))]
 	                                    * [OWNED_AT(. + 1)] Value-table (offset by 1 to account for special meaning of index==Dee_DICT_HTAB_EOF) */
-	size_t                  d_hmask;   /* [lock(d_lock)] Hash mask (allocated hash-map size, minus 1). */
-	Dee_dict_gethidx_t      d_hidxget; /* [lock(d_lock)] Getter for "d_htab" (always depends on "d_valloc") */
-	Dee_dict_sethidx_t      d_hidxset; /* [lock(d_lock)] Setter for "d_htab" (always depends on "d_valloc") */
-	void                   *d_htab;    /* [lock(d_lock)][== (byte_t *)(d_vtab + 1) + d_valloc] Hash-table (contains indices into "d_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+	Dee_hash_t              d_hmask;   /* [lock(d_lock)] Hash mask (allocated hash-map size, minus 1). */
+	Dee_dict_gethidx_t      d_hidxget; /* [lock(d_lock)][1..1] Getter for "d_htab" (always depends on "d_valloc") */
+	Dee_dict_sethidx_t      d_hidxset; /* [lock(d_lock)][1..1] Setter for "d_htab" (always depends on "d_valloc") */
+	void                   *d_htab;    /* [lock(d_lock)][== (byte_t *)(_DeeDict_GetRealVTab(this) + d_valloc)] Hash-table (contains indices into "d_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t     d_lock;    /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
@@ -223,8 +223,13 @@ DDATDEF struct Dee_dict_hidxio_struct Dee_tpconst Dee_dict_hidxio[DEE_DICT_HIDXI
 
 /* Advance hash-index */
 #define _DeeDict_HashIdxInit(self, p_hs, p_perturb, hash) \
-	(void)(*(p_hs) = (*(p_perturb) = (hash)) & (self)->d_hmask)
+	__DeeDict_HashIdxInitEx(p_hs, p_perturb, hash, (self)->d_hmask)
 #define _DeeDict_HashIdxAdv(self, p_hs, p_perturb) \
+	__DeeDict_HashIdxAdvEx(p_hs, p_perturb)
+
+#define __DeeDict_HashIdxInitEx(p_hs, p_perturb, hash, hmask) \
+	(void)(*(p_hs) = (*(p_perturb) = (hash)) & (hmask))
+#define __DeeDict_HashIdxAdvEx(p_hs, p_perturb) \
 	(void)(*(p_hs) = (*(p_hs) << 2) + *(p_hs) + *(p_perturb) + 1, *(p_perturb) >>= 5)
 
 /* Get/set vtab-index "i" of htab at a given "hs" */

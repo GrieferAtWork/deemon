@@ -22,20 +22,17 @@
 
 #include "api.h"
 
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+#include "dict.h"
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 #include "object.h"
 
-#include <stdarg.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_rodict_item   rodict_item
 #define Dee_rodict_object rodict_object
-#define RODICT_HASHST     DeeRoDict_HashSt
-#define RODICT_HASHNX     DeeRoDict_HashNx
-#define RODICT_HASHIT     DeeRoDict_HashIt
 #endif /* DEE_SOURCE */
 
 /* A read-only variant of a Dict object, who's main purpose is to be used by
@@ -54,6 +51,119 @@ DECL_BEGIN
  * NOTE: `_RoDict' is exported as `deemon.Dict.Frozen' */
 typedef struct Dee_rodict_object DeeRoDictObject;
 
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+#ifdef DEE_SOURCE
+#define Dee_rodict_builder rodict_builder
+#endif /* DEE_SOURCE */
+
+struct Dee_rodict_object {
+	Dee_OBJECT_HEAD /* All of the below fields are [const] */
+	/*real*/Dee_dict_vidx_t                       rd_vsize;      /* # of key-value pairs in the dict. */
+	Dee_hash_t                                    rd_hmask;      /* [>= rd_vsize] Hash-mask */
+	Dee_dict_gethidx_t                            rd_hidxget;    /* [1..1] Getter for "rd_htab" */
+	void                                         *rd_htab;       /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_dict_item, rd_vtab);      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
+//	COMPILER_FLEXIBLE_ARRAY(byte_t,               rd_htab_data); /* Dict hash-table. */
+};
+
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoDict_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self);
+
+
+/* Special empty instance of `DeeRoDict_Type'
+ * NOTE: This is _NOT_ a singleton! */
+#ifdef GUARD_DEEMON_OBJECTS_RODICT_C
+struct Dee_empty_rodict_object {
+	Dee_OBJECT_HEAD
+	size_t                                        rd_vsize;        /* # of key-value pairs in the dict. */
+	size_t                                        rd_hmask;        /* [>= rd_vsize] Hash-mask */
+	Dee_dict_gethidx_t                            rd_hidxget;      /* [1..1] Getter for "rd_htab" */
+	void                                         *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+//	struct Dee_dict_item                          rd_vtab[0];      /* [rd_vsize] Dict key-item pairs. */
+	__BYTE_TYPE__                                 rd_htab_data[1]; /* Dict key-item pairs. */
+};
+DDATDEF struct Dee_empty_rodict_object DeeRoDict_EmptyInstance;
+#define Dee_EmptyRoDict ((DeeObject *)&DeeRoDict_EmptyInstance)
+#else /* GUARD_DEEMON_OBJECTS_RODICT_C */
+DDATDEF DeeObject DeeRoDict_EmptyInstance;
+#define Dee_EmptyRoDict (&DeeRoDict_EmptyInstance)
+#endif /* !GUARD_DEEMON_OBJECTS_RODICT_C */
+
+
+
+/************************************************************************/
+/* RODICT BUILDER API                                                   */
+/************************************************************************/
+struct Dee_rodict_builder {
+	/* In an rodict builder, the following are true:
+	 * - rdb_dict->ob_refcnt:  [UNDEFINED]
+	 * - rdb_dict->ob_type:    [UNDEFINED]
+	 * - rdb_dict->rd_vtab:    [0..rdb_dict->rd_vsize|ALLOC(rdb_valloc)] (out-of-bound keys are undefined)
+	 * - rdb_dict->rd_htab:    [== _DeeRoDict_GetRealVTab(rdb_dict) + rdb_valloc]
+	 * - rdb_dict->rd_hidxget: [== Dee_dict_hidxio[DEE_DICT_HIDXIO_FROMALLOC(rdb_valloc)].dhxio_get] */
+	DeeRoDictObject   *rdb_dict;    /* [1..1][owned] The dict being built. */
+	size_t             rdb_valloc;  /* Allocated size of `rdb_dict' (or 0 when `rdb_dict' is `NULL') */
+	Dee_dict_sethidx_t rdb_hidxset; /* [?..1][valid_if(rdb_dict)] Setter for `rdb_dict->rd_htab' */
+};
+
+#define Dee_RODICT_BUILDER_INIT { NULL, 0, NULL }
+#define Dee_rodict_builder_init(self) \
+	(void)((self)->rdb_dict   = NULL, \
+	       (self)->rdb_valloc = 0)
+#define Dee_rodict_builder_cinit(self)           \
+	(void)(Dee_ASSERT((self)->rdb_dict == NULL), \
+	       Dee_ASSERT((self)->rdb_valloc == 0))
+DFUNDEF NONNULL((1)) void DCALL
+Dee_rodict_builder_fini(struct Dee_rodict_builder *__restrict self);
+
+DFUNDEF NONNULL((1)) void DCALL
+Dee_rodict_builder_init_with_hint(struct Dee_rodict_builder *__restrict self,
+                                  size_t num_items);
+
+/* Pack the result of the builder and return it.
+ * This function never fails, but "self" becomes invalid as a result. */
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeRoDictObject *DCALL
+Dee_rodict_builder_pack(struct Dee_rodict_builder *__restrict self);
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_pair_t" */
+Dee_rodict_builder_setitem(/*struct Dee_rodict_builder*/ void *__restrict self,
+                           DeeObject *key, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_pair_t" */
+Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restrict self,
+                                     /*inherit(always)*/ DREF DeeObject *key,
+                                     /*inherit(always)*/ DREF DeeObject *value);
+#define Dee_rodict_builder_update(self, mapping) \
+	DeeObject_ForeachPair(mapping, &Dee_rodict_builder_setitem, self)
+
+
+
+
+#ifdef DEE_SOURCE
+
+/* Advance hash-index */
+#define _DeeRoDict_HashIdxInit(self, p_hs, p_perturb, hash) \
+	__DeeDict_HashIdxInitEx(p_hs, p_perturb, hash, (self)->rd_hmask)
+#define _DeeRoDict_HashIdxAdv(self, p_hs, p_perturb) \
+	__DeeDict_HashIdxAdvEx(p_hs, p_perturb)
+
+/* Get/set vtab-index "i" of htab at a given "hs" */
+#define /*virt*/_DeeRoDict_HTabGet(self, hs) (*(self)->rd_hidxget)((self)->rd_htab, (hs) & (self)->rd_hmask)
+
+/* Get "rd_vtab" in both its:
+ * - virt[ual] (index starts at 1), and
+ * - real (index starts at 0) form */
+#define _DeeRoDict_GetVirtVTab(self) ((self)->rd_vtab - 1)
+#define _DeeRoDict_GetRealVTab(self) ((self)->rd_vtab)
+#endif /* DEE_SOURCE */
+
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+
+#ifdef DEE_SOURCE
+#define Dee_rodict_item rodict_item
+#endif /* DEE_SOURCE */
+
 struct Dee_rodict_item {
 	DREF DeeObject *rdi_key;   /* [0..1][const] Dictionary item key. */
 	DREF DeeObject *rdi_value; /* [1..1][valid_if(rdi_key)][const] Dictionary item value. */
@@ -66,22 +176,6 @@ struct Dee_rodict_object {
 	size_t                                          rd_size;  /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_rodict_item, rd_elem); /* [rd_mask+1] Dict key-item pairs. */
 };
-
-/* The main `_RoDict' container class. */
-DDATDEF DeeTypeObject DeeRoDict_Type;
-#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */
-#define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
-
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoDict_FromSequence(DeeObject *__restrict self);
-
-/* Internal functions for constructing a read-only Dict object. */
-DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_New(void);
-DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_Insert(/*in|out*/ DREF DeeRoDictObject **__restrict p_self,
-                 DeeObject *key, DeeObject *value);
-
 
 /* Special empty instance of `DeeRoDict_Type'
  * NOTE: This is _NOT_ a singleton! */
@@ -103,6 +197,22 @@ DDATDEF DeeObject DeeRoDict_EmptyInstance;
 #define DeeRoDict_HashSt(self, hash)  ((hash) & (self)->rd_mask)
 #define DeeRoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define DeeRoDict_HashIt(self, i)     ((self)->rd_elem+((i) & (self)->rd_mask))
+
+/* Internal functions for constructing a read-only Dict object. */
+DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_New(void);
+DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeRoDict_Insert(/*in|out*/ DREF DeeRoDictObject **__restrict p_self,
+                 DeeObject *key, DeeObject *value);
+
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoDict_FromSequence(DeeObject *__restrict self);
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+
+/* The main `_RoDict' container class. */
+DDATDEF DeeTypeObject DeeRoDict_Type;
+#define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */
+#define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
 
 DECL_END
 

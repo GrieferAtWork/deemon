@@ -55,8 +55,6 @@ stringordinals_ctor(StringOrdinals *__restrict self) {
 	self->so_ptr.ptr = DeeString_STR(Dee_EmptyString);
 	Dee_Incref(Dee_EmptyString);
 	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
