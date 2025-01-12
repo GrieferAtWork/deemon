@@ -300,6 +300,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #else /* LOCAL_slowcmp */
 		item_key_cmp_caller_key = DeeObject_TryCompareEq(key, item_key);
 #endif /* !LOCAL_slowcmp */
+		Dee_Decref_unlikely(item_key);
 
 		/* Case: keys are equal, meaning we must override this item! */
 		if likely(item_key_cmp_caller_key == 0) {
@@ -313,7 +314,6 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #ifndef LOCAL_PRESENT
 		Dee_Decref_unlikely(item_value);
 #endif /* LOCAL_PRESENT */
-		Dee_Decref_unlikely(item_key);
 
 		/* Check for error during compare. */
 		if unlikely(item_key_cmp_caller_key == Dee_COMPARE_ERR)
