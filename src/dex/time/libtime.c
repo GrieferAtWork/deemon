@@ -1641,7 +1641,7 @@ print_number_2:
 							if (value < 0)
 								value = -value;
 							if (value >= 1 && value <= 3)
-								suffix_offset = (uint8_t)value * 3;
+								suffix_offset = ((uint8_t)value - 1) * 2;
 						}
 						print(_suffix_values + suffix_offset, 2);
 					}

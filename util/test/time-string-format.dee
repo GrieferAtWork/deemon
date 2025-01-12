@@ -1,0 +1,40 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+import * from time;
+
+function strtime(t: Time): string {
+	return t.format("%A, the %[n:mday] of %B %Y, %H:%M:%S");
+}
+
+/* Assert that string-formatting of Time works. */
+assert "Sunday, the 29th of February 1976, 00:00:00" ==
+	strtime(Time(year: 1976, month: 2, day: 29));
+assert "Monday, the 1st of March 1976, 00:00:00" ==
+	strtime(Time(year: 1976, month: 3, day: 1));
+assert "Tuesday, the 2nd of March 1976, 00:00:00" ==
+	strtime(Time(year: 1976, month: 3, day: 2));
+assert "Wednesday, the 3rd of March 1976, 00:00:00" ==
+	strtime(Time(year: 1976, month: 3, day: 3));
+assert "Thursday, the 4th of March 1976, 00:00:00" ==
+	strtime(Time(year: 1976, month: 3, day: 4));
+assert "Friday, the 5th of March 1976, 00:00:00" ==
+	strtime(Time(year: 1976, month: 3, day: 5));
