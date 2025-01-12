@@ -2348,7 +2348,6 @@ code_printrepr(DeeCodeObject *__restrict self,
 				DO(DeeFormat_PRINT(printer, arg, ", "));
 			ob = self->co_constv[i];
 			temp = DeeFormat_PrintObjectRepr(printer, arg, ob);
-			Dee_Decref_unlikely(ob);
 			if unlikely(temp < 0)
 				goto err;
 			result += temp;
