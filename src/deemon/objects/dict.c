@@ -58,6 +58,7 @@
 #include "../runtime/strings.h"
 #include "seq/default-api.h"
 #include "seq/default-compare.h"
+#include "seq/default-map-proxy.h"
 #include "seq/hashfilter.h"
 
 /**/
@@ -309,7 +310,7 @@ PRIVATE struct type_cmp diter_cmp = {
 };
 
 
-PRIVATE struct type_member tpconst dict_iterator_members[] = {
+PRIVATE struct type_member tpconst diter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?DDict"),
 	TYPE_MEMBER_END
 };
@@ -357,7 +358,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ dict_iterator_members,
+	/* .tp_members       = */ diter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -1659,106 +1660,49 @@ dict_fromsequence_foreach_cb(void *self, DeeObject *key, DeeObject *value) {
 #endif /* !HAVE_dict_setitem_unlocked */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_init_fromcopy(Dict *__restrict self, Dict *__restrict other) {
-	size_t copy_hmask;
-	size_t copy_valloc;
-	size_t copy_vsize;
-	shift_t copy_hidxio;
-	void *copy_tabs;
-	size_t copy_tabssz;
-	struct Dee_dict_item *copy_vtab;
-	void *copy_htab;
-again:
-	DeeDict_LockReadAndOptimize(other);
+dict_init_fromcopy(Dict *__restrict self, Dict *__restrict other);
+#ifndef __OPTIMIZE_SIZE__
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_init_fromcopy_keysonly(Dict *__restrict self, Dict *__restrict other);
+#define HAVE_dict_init_fromcopy_keysonly
+#endif /* !__OPTIMIZE_SIZE__ */
 
-	/* Figure out size of the copied tables. */
-	copy_vsize  = other->d_vsize;
-	copy_hmask  = dict_hmask_from_count(copy_vsize);
-	copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, true);
-	if (copy_valloc >= other->d_valloc) {
-		copy_valloc = other->d_valloc;
-	} else {
-		copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
-		if unlikely(copy_valloc > other->d_valloc)
-			copy_valloc = other->d_valloc;
-	}
-	copy_hidxio = DEE_DICT_HIDXIO_FROMALLOC(copy_valloc);
-	copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
-	copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
+#ifndef __INTELLISENSE__
+DECL_END
+#define DEFINE_dict_init_fromcopy
+#include "dict-init-copyfrom.c.inl"
+#ifndef __OPTIMIZE_SIZE__
+#define DEFINE_dict_init_fromcopy_keysonly
+#include "dict-init-copyfrom.c.inl"
+#endif /* !__OPTIMIZE_SIZE__ */
+DECL_BEGIN
+#endif /* !__INTELLISENSE__ */
 
-	/* Try to allocate smaller tables if the first allocation failed. */
-	if unlikely(!copy_tabs) {
-		copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
-		if unlikely(copy_valloc > other->d_valloc)
-			copy_valloc = other->d_valloc;
-		copy_hidxio = DEE_DICT_HIDXIO_FROMALLOC(copy_valloc);
-		copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
-		copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
-		if unlikely(!copy_tabs) {
-			DeeDict_LockEndRead(other);
-			copy_tabs = _DeeDict_TabsMalloc(copy_tabssz);
-			if unlikely(!copy_tabs)
-				goto err;
-			DeeDict_LockReadAndOptimize(other);
-			if unlikely(copy_vsize < other->d_vsize) {
-				DeeDict_LockEndRead(other);
-				_DeeDict_TabsFree(copy_tabs);
-				goto again;
-			}
-		}
-	}
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_init_fromrodict_noincref(Dict *__restrict self, DeeRoDictObject *__restrict other) {
+	size_t tabssz;
+	shift_t hidxio;
+	struct Dee_dict_item *vtab;
+	self->d_valloc  = other->rd_vsize;
+	self->d_vsize   = other->rd_vsize;
+	self->d_vused   = other->rd_vsize;
+	self->d_hmask   = other->rd_hmask;
+	self->d_hidxget = other->rd_hidxget;
+	ASSERT(self->d_valloc <= self->d_hmask);
+	hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+	ASSERT(self->d_hidxget == Dee_dict_hidxio[hidxio].dhxio_get);
+	self->d_hidxset = Dee_dict_hidxio[hidxio].dhxio_set;
+	tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, self->d_valloc, hidxio);
+	vtab   = (struct Dee_dict_item *)_DeeDict_TabsMalloc(tabssz);
+	if unlikely(!vtab)
+		goto err;
 
-	/* Copy data into copy's tables. */
-	copy_vtab = (struct Dee_dict_item *)copy_tabs;
-	copy_htab = (struct Dee_dict_item *)copy_tabs + copy_valloc;
-	copy_vtab = (struct Dee_dict_item *)memcpyc(copy_vtab, _DeeDict_GetRealVTab(other), other->d_vsize,
-	                                            sizeof(struct Dee_dict_item));
-
-	/* Create reference to copied objects. */
-	{
-		size_t i;
-		for (i = 0; i < copy_vsize; ++i) {
-			struct Dee_dict_item *item;
-			item = &copy_vtab[i];
-			ASSERTF(item->di_key, "Table was optimized above, so there should be no deleted keys!");
-			Dee_Incref(item->di_key);
-			Dee_Incref(item->di_value);
-		}
-	}
-
-	/* Fill in control structures. */
-	self->d_valloc  = copy_valloc;
-	self->d_vsize   = copy_vsize;
-	self->d_vused   = other->d_vused;
-	_DeeDict_SetRealVTab(self, copy_vtab);
-	self->d_hmask   = copy_hmask;
-	self->d_hidxget = Dee_dict_hidxio[copy_hidxio].dhxio_get;
-	self->d_hidxset = Dee_dict_hidxio[copy_hidxio].dhxio_set;
-	self->d_htab    = copy_htab;
-
-	if (copy_hmask == other->d_hmask) {
-		/* No need to re-build the hash table. Can instead copy is verbatim. */
-		shift_t orig_hidxio = DEE_DICT_HIDXIO_FROMALLOC(other->d_valloc);
-		size_t htab_words = copy_hmask + 1;
-		ASSERT(copy_hidxio <= orig_hidxio || (copy_hidxio + 1) == orig_hidxio);
-		if (orig_hidxio == copy_hidxio) {
-			size_t sizeof_htab = htab_words << copy_hidxio;
-			(void)memcpy(copy_htab, other->d_htab, sizeof_htab);
-		} else if (copy_hidxio > orig_hidxio) {
-			(*Dee_dict_hidxio[copy_hidxio].dhxio_upr)(copy_htab, other->d_htab, htab_words);
-		} else if (copy_hidxio == orig_hidxio - 1) {
-			(*Dee_dict_hidxio[copy_hidxio].dhxio_dwn)(copy_htab, other->d_htab, htab_words);
-		} else {
-			size_t i;
-			ASSERT(copy_hidxio < orig_hidxio);
-			for (i = 0; i < htab_words; ++i)
-				(*self->d_hidxset)(copy_htab, i, (*other->d_hidxget)(other->d_htab, i));
-		}
-	} else {
-		/* Copy has a different hash-mask -> hash table cannot be copied and needs to be re-build! */
-		dict_htab_rebuild_after_optimize(self);
-	}
-	DeeDict_LockEndRead(other);
+	/* Because they're binary-compatible, we can just copy data from "other" as-is.
+	 * This will duplicate both the vtab, as well as the htab! */
+	vtab = (struct Dee_dict_item *)memcpy(vtab, other->rd_vtab, tabssz);
+	_DeeDict_SetRealVTab(self, vtab);
+	self->d_htab = vtab + self->d_valloc;
 #ifdef DICT_INITFROM_NEEDSLOCK
 	Dee_atomic_rwlock_init(&self->d_lock);
 #endif /* DICT_INITFROM_NEEDSLOCK */
@@ -1766,6 +1710,39 @@ again:
 err:
 	return -1;
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_init_fromrodict(Dict *__restrict self, DeeRoDictObject *__restrict other) {
+	int result = dict_init_fromrodict_noincref(self, other);
+	if likely(result == 0) {
+		size_t i;
+		struct Dee_dict_item *vtab;
+		vtab = _DeeDict_GetRealVTab(self);
+		for (i = 0; i < self->d_vused; ++i) {
+			struct Dee_dict_item *item = &vtab[i];
+			Dee_Incref(item->di_key);
+			Dee_Incref(item->di_value);
+		}
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_init_fromrodict_keysonly(Dict *__restrict self, DeeRoDictObject *__restrict other) {
+	int result = dict_init_fromrodict_noincref(self, other);
+	if likely(result == 0) {
+		size_t i;
+		struct Dee_dict_item *vtab;
+		vtab = _DeeDict_GetRealVTab(self);
+		for (i = 0; i < self->d_vused; ++i) {
+			struct Dee_dict_item *item = &vtab[i];
+			Dee_Incref(item->di_key);
+			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
+		}
+	}
+	return result;
+}
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL
 dict_new_copy(Dict *__restrict self) {
@@ -1796,11 +1773,13 @@ DeeDict_FromSequence(DeeObject *__restrict self) {
 		 * Optimize "self" and then duplicate its control structures */
 		return (DREF DeeObject *)dict_new_copy((Dict *)self);
 	}
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 	if (DeeRoDict_Check(self)) {
 		/* Special optimization when "self" is an RoDict:
 		 * Duplicate its control structures */
-		/* TODO */
+		return DeeDict_FromRoDict(self);
 	}
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	hint = DeeObject_SizeFast(self);
 	if likely(hint == (size_t)-1) {
 		result = (DREF Dict *)DeeDict_TryNewWithHint(hint);
@@ -1835,9 +1814,29 @@ DeeDict_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeDict_FromRoDict(DeeObject *__restrict self) {
-	/* TODO */
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+	DREF Dict *result;
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeRoDict_Type);
+	result = DeeGCObject_MALLOC(Dict);
+	if unlikely(!result)
+		goto err;
+	if unlikely(dict_init_fromrodict(result, (DeeRoDictObject *)self))
+		goto err_r;
+#ifndef DICT_INITFROM_NEEDSLOCK
+	Dee_atomic_rwlock_init(&result->d_lock);
+#endif /* !DICT_INITFROM_NEEDSLOCK */
+	weakref_support_init(result);
+	DeeObject_Init(result, &DeeDict_Type);
+	return (DREF DeeObject *)DeeGC_TRACK(Dict, result);
+err_r:
+	DeeGCObject_FREE(result);
+err:
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	return DeeDict_FromSequence(self);
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 }
+
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) int DCALL
 dict_insert_items_inherited_after_first_duplicate(Dict *self, struct Dee_dict_item *item,
@@ -2097,9 +2096,11 @@ dict_initfrom_seq(Dict *__restrict self, DeeObject *seq) {
 		return dict_init_fromcopy(self, (Dict *)seq);
 
 	/* Special optimization when "seq" is an RoDict: Duplicate its control structures */
-	if (DeeRoDict_Check(seq)) {
-		/* TODO */
-	}
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+	if (DeeRoDict_Check(seq))
+		return dict_init_fromrodict(self, (DeeRoDictObject *)seq);
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+
 	hint = DeeObject_SizeFast(seq);
 	if likely(hint != (size_t)-1) {
 		dict_initfrom_hint(self, hint, false);
@@ -3514,19 +3515,134 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_init_values_after_keys(Dict *__restrict self, DeeObject *value, DeeObject *valuefor) {
+	size_t i;
+	struct Dee_dict_item *vtab = _DeeDict_GetRealVTab(self);
+	if (valuefor) {
+		for (i = 0; i < self->d_vsize; ++i) {
+			DREF DeeObject *computed_value;
+			struct Dee_dict_item *item = &vtab[i];
+			computed_value = DeeObject_Call(valuefor, 1, &item->di_key);
+			if unlikely(!computed_value)
+				goto err_values_before_i;
+			item->di_value = computed_value; /* Inherit reference */
+		}
+	} else {
+		for (i = 0; i < self->d_vsize; ++i)
+			vtab[i].di_value = value; /* Inherit reference */
+		Dee_Incref_n(value, self->d_vsize);
+	}
+	return 0;
+err_values_before_i:
+	while (i) {
+		--i;
+		Dee_Decref(vtab[i].di_value);
+	}
+/*err:*/
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dict_fini_keysonly(Dict *__restrict self) {
+	if (self->d_vtab != DeeDict_EmptyVTab) {
+		size_t i;
+		struct Dee_dict_item *vtab;
+		vtab = _DeeDict_GetRealVTab(self);
+		for (i = 0; i < self->d_vsize; ++i)
+			Dee_Decref(vtab[i].di_key);
+		_DeeDict_TabsFree(vtab);
+	}
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Dict *DCALL
+dict_from_dict_keys(Dict *dict_keys, DeeObject *value, DeeObject *valuefor) {
+	DREF Dict *result;
+	result = DeeGCObject_MALLOC(Dict);
+	if unlikely(!result)
+		goto err;
+#ifdef HAVE_dict_init_fromcopy_keysonly
+	if unlikely(dict_init_fromcopy_keysonly(result, dict_keys))
+		goto err_r;
+	ASSERT(result->d_vused == result->d_vsize);
+#else /* HAVE_dict_init_fromcopy_keysonly */
+	if unlikely(dict_init_fromcopy(result, dict_keys))
+		goto err_r;
+	ASSERT(result->d_vused == result->d_vsize);
+	{
+		size_t i;
+		struct Dee_dict_item *vtab = _DeeDict_GetRealVTab(result);
+		for (i = 0; i < result->d_vsize; ++i) {
+			struct Dee_dict_item *item = &vtab[i];
+			Dee_Decref_unlikely(item->di_value);
+			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
+		}
+	}
+#endif /* !HAVE_dict_init_fromcopy_keysonly */
+	if unlikely(dict_init_values_after_keys(result, value, valuefor))
+		goto err_r_keysonly;
+#ifndef DICT_INITFROM_NEEDSLOCK
+	Dee_atomic_rwlock_init(&result->d_lock);
+#endif /* !DICT_INITFROM_NEEDSLOCK */
+	weakref_support_init(result);
+	return result;
+err_r_keysonly:
+	dict_fini_keysonly(result);
+err_r:
+	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
+
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Dict *DCALL
+dict_from_rodict_keys(DeeRoDictObject *dict_keys, DeeObject *value, DeeObject *valuefor) {
+	DREF Dict *result;
+	result = DeeGCObject_MALLOC(Dict);
+	if unlikely(!result)
+		goto err;
+	if unlikely(dict_init_fromrodict_keysonly(result, dict_keys))
+		goto err_r;
+	if unlikely(dict_init_values_after_keys(result, value, valuefor))
+		goto err_r_keysonly;
+#ifndef DICT_INITFROM_NEEDSLOCK
+	Dee_atomic_rwlock_init(&result->d_lock);
+#endif /* !DICT_INITFROM_NEEDSLOCK */
+	weakref_support_init(result);
+	return result;
+err_r_keysonly:
+	dict_fini_keysonly(result);
+err_r:
+	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Dict *DCALL
 dict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
 	struct dict_fromkeys_data data;
 	Dee_ssize_t foreach_status;
+	DeeTypeObject *tp_keys = Dee_TYPE(keys);
 	size_t hint;
 
-	/* Special optimization when "seq" is a HashSet: Duplicate its control structures */
-	if (DeeHashSet_CheckExact(keys)) {
+	/* Optimizations for special, known keys types. */
+	if (tp_keys == &DefaultSequence_MapKeys_Type) {
+		/* Special optimization when "keys" are the keys of another Dict/RoDict */
+		DefaultSequence_MapProxy *proxy = (DefaultSequence_MapProxy *)keys;
+		DeeObject *mapping_of_keys = proxy->dsmp_map;
+		DeeTypeObject *tp_mapping_of_keys = Dee_TYPE(mapping_of_keys);
+		if (tp_mapping_of_keys == &DeeDict_Type)
+			return dict_from_dict_keys((Dict *)mapping_of_keys, value, valuefor);
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+		if (tp_mapping_of_keys == &DeeRoDict_Type)
+			return dict_from_rodict_keys((DeeRoDictObject *)mapping_of_keys, value, valuefor);
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+	} else if (tp_keys == &DeeHashSet_Type) {
+		/* Special optimization when "keys" is a HashSet: Duplicate its control structures */
 		/* TODO: do this once "HashSet" uses the same data structure as Dict. */
-	}
-
-	/* Special optimization when "seq" is a RoSet: Duplicate its control structures */
-	if (DeeRoSet_Check(keys)) {
+	} else if (tp_keys == &DeeRoSet_Type) {
+		/* Special optimization when "keys" is a RoSet: Duplicate its control structures */
 		/* TODO: do this once "RoSet" uses the same data structure as Dict. */
 	}
 

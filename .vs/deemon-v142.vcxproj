@@ -242,6 +242,7 @@
 		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-hidxio.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-htabmod.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\dict-init-copyfrom.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-setitem-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict.h" />
 		<ClInclude Include="..\src\deemon\objects\file-operator.c.inl" />
