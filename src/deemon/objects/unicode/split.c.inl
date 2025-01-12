@@ -28,6 +28,8 @@
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>
 
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 INTDEF DeeTypeObject StringSplit_Type;
@@ -38,22 +40,20 @@ INTDEF DeeTypeObject StringLineSplit_Type;
 INTDEF DeeTypeObject StringLineSplitIterator_Type;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeStringObject *s_str; /* [1..1][const] The string that is being split. */
-	DREF DeeStringObject *s_sep; /* [1..1][const] The string to search for. */
+	PROXY_OBJECT_HEAD2_EX(DeeStringObject, s_str, /* [1..1][const] The string that is being split. */
+	                      DeeStringObject, s_sep) /* [1..1][const] The string to search for. */
 } StringSplit;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF StringSplit *s_split; /* [1..1][const] The split descriptor object. */
-	uint8_t          *s_next;  /* [0..1][atomic] Pointer to the starting address of the next split
-	                            *                (points into the s_enc-specific string of `s_split->s_str')
-	                            *                When the iterator is exhausted, this pointer is set to `NULL'. */
-	uint8_t          *s_begin; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
-	uint8_t          *s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
-	uint8_t          *s_sep;   /* [1..1][const] The starting address of the `s_enc'-encoded string of `s_split->s_sep'. */
-	size_t            s_sepsz; /* [1..1][const][== WSTR_LENGTH(s_sep)] The length of separator string. */
-	int               s_width; /* [const] The width of `s_split->s_str' */
+	PROXY_OBJECT_HEAD_EX(StringSplit, s_split) /* [1..1][const] The split descriptor object. */
+	uint8_t                          *s_next;  /* [0..1][atomic] Pointer to the starting address of the next split
+	                                            *                (points into the s_enc-specific string of `s_split->s_str')
+	                                            *                When the iterator is exhausted, this pointer is set to `NULL'. */
+	uint8_t                          *s_begin; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
+	uint8_t                          *s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
+	uint8_t                          *s_sep;   /* [1..1][const] The starting address of the `s_enc'-encoded string of `s_split->s_sep'. */
+	size_t                            s_sepsz; /* [1..1][const][== WSTR_LENGTH(s_sep)] The length of separator string. */
+	int                               s_width; /* [const] The width of `s_split->s_str' */
 } StringSplitIterator;
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -177,15 +177,9 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 }
 
 
-PRIVATE NONNULL((1)) void DCALL
-splititer_fini(StringSplitIterator *__restrict self) {
-	Dee_Decref(self->s_split);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-splititer_visit(StringSplitIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->s_split);
-}
+STATIC_ASSERT(offsetof(StringSplitIterator, s_split) == offsetof(ProxyObject, po_obj));
+#define splititer_fini  generic_proxy_fini
+#define splititer_visit generic_proxy_visit
 
 #define GET_SPLIT_NEXT(x) atomic_read(&(x)->s_next)
 
@@ -321,7 +315,9 @@ err:
 INTERN DeeTypeObject StringSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSplitIterator",
-	/* .tp_doc      = */ DOC("next->?Dstring"),
+	/* .tp_doc      = */ DOC("(split:?Ert:StringSplit)\n"
+	                         "\n"
+	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -367,7 +363,9 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseSplitIterator",
-	/* .tp_doc      = */ DOC("next->?Dstring"),
+	/* .tp_doc      = */ DOC("(split:?Ert:StringCaseSplit)\n"
+	                         "\n"
+	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -412,17 +410,12 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 
 
 
-PRIVATE NONNULL((1)) void DCALL
-split_fini(StringSplit *__restrict self) {
-	Dee_Decref(self->s_str);
-	Dee_Decref(self->s_sep);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-split_visit(StringSplit *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->s_str);
-	Dee_Visit(self->s_sep);
-}
+STATIC_ASSERT(offsetof(StringSplit, s_str) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(StringSplit, s_str) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(StringSplit, s_sep) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(StringSplit, s_sep) == offsetof(ProxyObject2, po_obj2));
+#define split_fini  generic_proxy2_fini
+#define split_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 split_bool(StringSplit *__restrict self) {
@@ -569,8 +562,7 @@ err:
 INTERN DeeTypeObject StringSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSplit",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(s:?Dstring,sep:?Dstring)"),
+	/* .tp_doc      = */ DOC("(s:?Dstring,sep:?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -616,8 +608,7 @@ INTERN DeeTypeObject StringSplit_Type = {
 INTERN DeeTypeObject StringCaseSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseSplit",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(s:?Dstring,sep:?Dstring)"),
+	/* .tp_doc      = */ DOC("(s:?Dstring,sep:?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -702,21 +693,19 @@ done:
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeStringObject *ls_str;   /* [1..1][const] The string that is being split into lines. */
-	bool                  ls_keep;  /* [const] True if line-ends should be kept in resulting strings. */
+	PROXY_OBJECT_HEAD_EX(DeeStringObject, ls_str)  /* [1..1][const] The string that is being split into lines. */
+	bool                                  ls_keep; /* [const] True if line-ends should be kept in resulting strings. */
 } LineSplit;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF LineSplit *ls_split; /* [1..1][const] The split descriptor object. */
-	uint8_t        *ls_next;  /* [0..1][atomic] Pointer to the starting address of the next split
-	                           *                (points into the s_enc-specific string of `ls_split->ls_str')
-	                           *                When the iterator is exhausted, this pointer is set to NULL. */
-	uint8_t        *ls_begin; /* [1..1][const] The starting address of the width string of `ls_split->ls_str'. */
-	uint8_t        *ls_end;   /* [1..1][const] The end address of the width string of `ls_split->ls_str'. */
-	int             ls_width; /* [const] The width of `ls_split->ls_str' */
-	bool            ls_keep;  /* [const] True if line-ends should be kept in resulting strings. */
+	PROXY_OBJECT_HEAD_EX(LineSplit, ls_split) /* [1..1][const] The split descriptor object. */
+	uint8_t                        *ls_next;  /* [0..1][atomic] Pointer to the starting address of the next split
+	                                           *                (points into the s_enc-specific string of `ls_split->ls_str')
+	                                           *                When the iterator is exhausted, this pointer is set to NULL. */
+	uint8_t                        *ls_begin; /* [1..1][const] The starting address of the width string of `ls_split->ls_str'. */
+	uint8_t                        *ls_end;   /* [1..1][const] The end address of the width string of `ls_split->ls_str'. */
+	int                             ls_width; /* [const] The width of `ls_split->ls_str' */
+	bool                            ls_keep;  /* [const] True if line-ends should be kept in resulting strings. */
 } LineSplitIterator;
 
 LOCAL uint8_t *DCALL
@@ -888,7 +877,9 @@ err:
 INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringLineSplitIterator",
-	/* .tp_doc      = */ DOC("next->?Dstring"),
+	/* .tp_doc      = */ DOC("(split:?Ert:StringLineSplit)\n"
+	                         "\n"
+	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -960,15 +951,9 @@ PRIVATE struct type_seq linesplit_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&linesplit_iter
 };
 
-PRIVATE NONNULL((1)) void DCALL
-linesplit_fini(LineSplit *__restrict self) {
-	Dee_Decref(self->ls_str);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-linesplit_visit(LineSplit *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->ls_str);
-}
+STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(ProxyObject, po_obj));
+#define linesplit_fini  generic_proxy_fini
+#define linesplit_visit generic_proxy_visit
 
 STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(StringSplit, s_str));
 #define linesplit_bool split_bool
@@ -1013,8 +998,7 @@ err:
 INTERN DeeTypeObject StringLineSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringLineSplit",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(s:?Dstring,keepends=!f)"),
+	/* .tp_doc      = */ DOC("(s:?Dstring,keepends=!f)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

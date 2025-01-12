@@ -33,6 +33,7 @@
 #include <hybrid/align.h>
 
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
@@ -40,29 +41,17 @@ DECL_BEGIN
 #define byte_t __BYTE_TYPE__
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeBytesObject *b_str;   /* [1..1][const] The Bytes object that is being segmented. */
-	size_t               b_siz;   /* [!0][const] The size of a single segment. */
-	DWEAK byte_t        *b_ptr;   /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
-	byte_t              *b_end;   /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
+	PROXY_OBJECT_HEAD_EX(DeeBytesObject, b_str) /* [1..1][const] The Bytes object that is being segmented. */
+	size_t                               b_siz; /* [!0][const] The size of a single segment. */
+	DWEAK byte_t                        *b_ptr; /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
+	byte_t                              *b_end; /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
 } BytesSegmentsIterator;
-
 #define READ_PTR(x) atomic_read(&(x)->b_ptr)
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeBytesObject *b_str; /* [1..1][const] The Bytes object that is being segmented. */
-	size_t               b_siz; /* [!0][const] The size of a single segment. */
+	PROXY_OBJECT_HEAD_EX(DeeBytesObject, b_str) /* [1..1][const] The Bytes object that is being segmented. */
+	size_t                               b_siz; /* [!0][const] The size of a single segment. */
 } BytesSegments;
-
-STATIC_ASSERT(offsetof(StringSegmentsIterator, s_str) == offsetof(BytesSegmentsIterator, b_str));
-STATIC_ASSERT(offsetof(StringSegmentsIterator, s_siz) == offsetof(BytesSegmentsIterator, b_siz));
-STATIC_ASSERT(offsetof(StringSegmentsIterator, s_ptr) == offsetof(BytesSegmentsIterator, b_ptr));
-STATIC_ASSERT(offsetof(StringSegmentsIterator, s_end) == offsetof(BytesSegmentsIterator, b_end));
-STATIC_ASSERT(offsetof(StringSegments, s_str) == offsetof(BytesSegments, b_str));
-STATIC_ASSERT(offsetof(StringSegments, s_siz) == offsetof(BytesSegments, b_siz));
-
-
 
 INTDEF DeeTypeObject BytesSegmentsIterator_Type;
 INTDEF DeeTypeObject BytesSegments_Type;
@@ -128,14 +117,16 @@ bsegiter_next(BytesSegmentsIterator *__restrict self) {
 	return DeeBytes_NewSubView(self->b_str, ptr, part_size);
 }
 
-#define bsegiter_fini ssegiter_fini
+STATIC_ASSERT(offsetof(BytesSegmentsIterator, b_str) == offsetof(ProxyObject, po_obj));
+#define bsegiter_fini  generic_proxy_fini
+#define bsegiter_visit generic_proxy_visit
+
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_str) == offsetof(BytesSegmentsIterator, b_str));
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_siz) == offsetof(BytesSegmentsIterator, b_siz));
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_ptr) == offsetof(BytesSegmentsIterator, b_ptr));
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_end) == offsetof(BytesSegmentsIterator, b_end));
 #define bsegiter_bool ssegiter_bool
-
-PRIVATE NONNULL((1, 2)) void DCALL
-bsegiter_visit(BytesSegmentsIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->b_str);
-}
-
+#define bsegiter_cmp  ssegiter_cmp
 
 PRIVATE WUNUSED NONNULL((1)) DREF BytesSegments *DCALL
 bsegiter_getseq(BytesSegmentsIterator *__restrict self) {
@@ -148,12 +139,12 @@ PRIVATE struct type_getset tpconst bsegiter_getsets[] = {
 	TYPE_GETSET_END
 };
 
-#define bsegiter_cmp ssegiter_cmp
-
 INTERN DeeTypeObject BytesSegmentsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSegmentsIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(seg:?Ert:BytesSegments)\n"
+	                         "\n"
+	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -224,17 +215,14 @@ err:
 	return -1;
 }
 
-#define bseg_fini sseg_fini
-PRIVATE NONNULL((1, 2)) void DCALL
-bseg_visit(BytesSegments *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->b_str);
-}
+STATIC_ASSERT(offsetof(BytesSegments, b_str) == offsetof(ProxyObject, po_obj));
+#define bseg_fini  generic_proxy_fini
+#define bseg_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_bool(BytesSegments *__restrict self) {
 	return !DeeBytes_IsEmpty(self->b_str);
 }
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF BytesSegmentsIterator *DCALL
 bseg_iter(BytesSegments *__restrict self) {
@@ -408,7 +396,7 @@ PRIVATE struct type_member tpconst bseg_class_members[] = {
 INTERN DeeTypeObject BytesSegments_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSegments",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(s:?DBytes,siz:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

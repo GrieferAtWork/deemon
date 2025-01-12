@@ -31,24 +31,22 @@
 #include <hybrid/align.h>
 
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeStringObject *s_str;   /* [1..1][const] The string that is being segmented. */
-	size_t                s_siz;   /* [!0][const] The size of a single segment. */
-	DWEAK uint8_t        *s_ptr;   /* [1..1][in(DeeString_WSTR(s_str))] Pointer to the start of the next segment. */
-	uint8_t              *s_end;   /* [1..1][== DeeString_WEND(s_str)] End pointer. */
-	unsigned int          s_width; /* [const] The width of a single character. */
+	PROXY_OBJECT_HEAD_EX(DeeStringObject, s_str)   /* [1..1][const] The string that is being segmented. */
+	size_t                                s_siz;   /* [!0][const] The size of a single segment. */
+	DWEAK uint8_t                        *s_ptr;   /* [1..1][in(DeeString_WSTR(s_str))] Pointer to the start of the next segment. */
+	uint8_t                              *s_end;   /* [1..1][== DeeString_WEND(s_str)] End pointer. */
+	unsigned int                          s_width; /* [const] The width of a single character. */
 } StringSegmentsIterator;
 #define READ_PTR(x) atomic_read(&(x)->s_ptr)
 
-
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeStringObject *s_str; /* [1..1][const] The string that is being segmented. */
-	size_t                s_siz; /* [!0][const] The size of a single segment. */
+	PROXY_OBJECT_HEAD_EX(DeeStringObject, s_str) /* [1..1][const] The string that is being segmented. */
+	size_t                                s_siz; /* [!0][const] The size of a single segment. */
 } StringSegments;
 
 
@@ -120,15 +118,9 @@ ssegiter_next(StringSegmentsIterator *__restrict self) {
 	return DeeString_NewWithWidth(ptr, part_size, self->s_width);
 }
 
-PRIVATE NONNULL((1)) void DCALL
-ssegiter_fini(StringSegmentsIterator *__restrict self) {
-	Dee_Decref(self->s_str);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-ssegiter_visit(StringSegmentsIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->s_str);
-}
+STATIC_ASSERT(offsetof(StringSegmentsIterator, s_str) == offsetof(ProxyObject, po_obj));
+#define ssegiter_fini  generic_proxy_fini
+#define ssegiter_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_bool(StringSegmentsIterator *__restrict self) {
@@ -173,7 +165,9 @@ PRIVATE struct type_cmp ssegiter_cmp = {
 INTERN DeeTypeObject StringSegmentsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSegmentsIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(seg:?Ert:StringSegments)\n"
+	                         "\n"
+	                         "next->?Dstring"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -246,15 +240,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-sseg_fini(StringSegments *__restrict self) {
-	Dee_Decref(self->s_str);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-sseg_visit(StringSegments *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->s_str);
-}
+STATIC_ASSERT(offsetof(StringSegments, s_str) == offsetof(ProxyObject, po_obj));
+#define sseg_fini  generic_proxy_fini
+#define sseg_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_bool(StringSegments *__restrict self) {
@@ -396,50 +384,38 @@ err_index:
 
 
 PRIVATE struct type_seq sseg_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sseg_iter,
-	/* .tp_sizeob                     = */ NULL,
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sseg_contains,
-	/* .tp_getitem                    = */ NULL,
-	/* .tp_delitem                    = */ NULL,
-	/* .tp_setitem                    = */ NULL,
-	/* .tp_getrange                   = */ NULL,
-	/* .tp_delrange                   = */ NULL,
-	/* .tp_setrange                   = */ NULL,
-	/* .tp_foreach                    = */ NULL,
-	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ NULL,
-	/* .tp_hasitem                    = */ NULL,
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sseg_size,
-	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&sseg_size,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sseg_getitem_index,
-	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ NULL,
-	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
-	/* .tp_getrange_index             = */ NULL,
-	/* .tp_delrange_index             = */ NULL,
-	/* .tp_setrange_index             = */ NULL,
-	/* .tp_getrange_index_n           = */ NULL,
-	/* .tp_delrange_index_n           = */ NULL,
-	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
-	/* .tp_trygetitem_string_hash     = */ NULL,
-	/* .tp_getitem_string_hash        = */ NULL,
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ NULL,
-	/* .tp_hasitem_string_hash        = */ NULL,
-	/* .tp_trygetitem_string_len_hash = */ NULL,
-	/* .tp_getitem_string_len_hash    = */ NULL,
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ NULL,
-	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sseg_iter,
+	/* .tp_sizeob             = */ NULL,
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sseg_contains,
+	/* .tp_getitem            = */ NULL,
+	/* .tp_delitem            = */ NULL,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ NULL,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_foreach            = */ NULL,
+	/* .tp_foreach_pair       = */ NULL,
+	/* .tp_enumerate          = */ NULL,
+	/* .tp_enumerate_index    = */ NULL,
+	/* .tp_iterkeys           = */ NULL,
+	/* .tp_bounditem          = */ NULL,
+	/* .tp_hasitem            = */ NULL,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&sseg_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&sseg_size,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sseg_getitem_index,
+	/* .tp_getitem_index_fast = */ NULL,
+	/* .tp_delitem_index      = */ NULL,
+	/* .tp_setitem_index      = */ NULL,
+	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_hasitem_index      = */ NULL,
+	/* .tp_getrange_index     = */ NULL,
+	/* .tp_delrange_index     = */ NULL,
+	/* .tp_setrange_index     = */ NULL,
+	/* .tp_getrange_index_n   = */ NULL,
+	/* .tp_delrange_index_n   = */ NULL,
+	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_trygetitem         = */ NULL,
+	/* .tp_trygetitem_index   = */ NULL,
 };
 
 
@@ -458,7 +434,7 @@ PRIVATE struct type_member tpconst sseg_class_members[] = {
 INTERN DeeTypeObject StringSegments_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringSegments",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(s:?Dstring,siz:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

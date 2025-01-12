@@ -69,6 +69,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_init(ProxyObject *__restrict
 
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy_visit(ProxyObject *__restrict self, dvisit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy_fini(ProxyObject *__restrict self);
+#define generic_proxy_fini_likely   generic_proxy_fini
 #define generic_proxy_fini_unlikely generic_proxy_fini
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_copy_alias12(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
@@ -78,6 +79,14 @@ INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy2_init(ProxyObject2 *__restri
 
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy2_visit(ProxyObject2 *__restrict self, dvisit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy2_fini(ProxyObject2 *__restrict self);
+#define generic_proxy2_fini_normal_likely     generic_proxy2_fini
+#define generic_proxy2_fini_normal_unlikely   generic_proxy2_fini
+#define generic_proxy2_fini_likely_normal     generic_proxy2_fini
+#define generic_proxy2_fini_likely_likely     generic_proxy2_fini
+#define generic_proxy2_fini_likely_unlikely   generic_proxy2_fini
+#define generic_proxy2_fini_unlikely_normal   generic_proxy2_fini
+#define generic_proxy2_fini_unlikely_likely   generic_proxy2_fini
+#define generic_proxy2_fini_unlikely_unlikely generic_proxy2_fini
 
 INTDEF NONNULL((1)) int DCALL generic_proxy2_bool_1or2(ProxyObject2 *__restrict self);
 

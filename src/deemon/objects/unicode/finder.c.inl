@@ -27,25 +27,25 @@
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>
 
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 typedef struct {
-	OBJECT_HEAD
-	DREF String *sf_str;    /* [1..1][const] The string that is being searched. */
-	DREF String *sf_needle; /* [1..1][const] The needle being searched for. */
-	size_t       sf_start;  /* [const] Starting search index. */
-	size_t       sf_end;    /* [const] End search index. */
+	PROXY_OBJECT_HEAD2_EX(String, sf_str,    /* [1..1][const] The string that is being searched. */
+	                      String, sf_needle) /* [1..1][const] The needle being searched for. */
+	size_t                        sf_start;  /* [const] Starting search index. */
+	size_t                        sf_end;    /* [const] End search index. */
 } StringFind;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF StringFind     *sfi_find;       /* [1..1][const] The underlying find-controller. */
-	union dcharptr       sfi_start;      /* [1..1][const] Starting pointer. */
-	DWEAK union dcharptr sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	union dcharptr       sfi_end;        /* [1..1][const] End pointer. */
-	union dcharptr       sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
-	size_t               sfi_needle_len; /* [const] Length of the needle being searched. */
-	unsigned int         sfi_width;      /* [const] The common width of the searched, and needle string. */
+	PROXY_OBJECT_HEAD_EX(StringFind, sfi_find)       /* [1..1][const] The underlying find-controller. */
+	union dcharptr                   sfi_start;      /* [1..1][const] Starting pointer. */
+	DWEAK union dcharptr             sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
+	union dcharptr                   sfi_end;        /* [1..1][const] End pointer. */
+	union dcharptr                   sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
+	size_t                           sfi_needle_len; /* [const] Length of the needle being searched. */
+	unsigned int                     sfi_width;      /* [const] The common width of the searched, and needle string. */
 } StringFindIterator;
 
 INTDEF WUNUSED DREF DeeObject *DCALL
@@ -99,6 +99,7 @@ err:
 	return -1;
 }
 
+#define scfi_copy sfi_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sfi_copy(StringFindIterator *__restrict self,
          StringFindIterator *__restrict other) {
@@ -246,8 +247,8 @@ again:
 	return ITER_DONE;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-scfi_next(StringFindIterator *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+scfi_nextpair(StringFindIterator *__restrict self, DREF DeeObject *pair[2]) {
 	union dcharptr ptr, new_ptr;
 	size_t match_length, result;
 again:
@@ -290,23 +291,28 @@ again:
 		result = (size_t)(new_ptr.cp32 - self->sfi_start.cp32);
 		break;
 	}
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     result,
-	                     result + match_length);
+	pair[0] = DeeInt_NewSize(result);
+	if unlikely(!pair[0])
+		goto err;
+	pair[1] = DeeInt_NewSize(result + match_length);
+	if unlikely(!pair[1])
+		goto err_pair_0;
+	return 0;
 iter_done:
-	return ITER_DONE;
+	return 1;
+err_pair_0:
+	Dee_Decref(pair[0]);
+err:
+	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-sfi_fini(StringFindIterator *__restrict self) {
-	Dee_Decref(self->sfi_find);
-}
+PRIVATE struct type_iterator scfi_iterator = {
+	/* .tp_nextpair = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&scfi_nextpair,
+};
 
-PRIVATE NONNULL((1, 2)) void DCALL
-sfi_visit(StringFindIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->sfi_find);
-}
+STATIC_ASSERT(offsetof(StringFindIterator, sfi_find) == offsetof(ProxyObject, po_obj));
+#define sfi_fini  generic_proxy_fini
+#define sfi_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_bool(StringFindIterator *__restrict self) {
@@ -392,6 +398,7 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
+#define scfi_cmp sfi_cmp
 PRIVATE struct type_cmp sfi_cmp = {
 	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&sfi_hash,
 	/* .tp_compare_eq = */ NULL,
@@ -402,7 +409,9 @@ PRIVATE struct type_cmp sfi_cmp = {
 INTERN DeeTypeObject StringFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringFindIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(find:?Ert:StringFind)\n"
+	                         "\n"
+	                         "next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -448,7 +457,9 @@ INTERN DeeTypeObject StringFindIterator_Type = {
 INTERN DeeTypeObject StringCaseFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseFindIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(find:?Ert:StringCaseFind)\n"
+	                         "\n"
+	                         "next->?X2?Dint?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -457,7 +468,7 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)&scfi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&sfi_copy,
+				/* .tp_copy_ctor = */ (dfunptr_t)&scfi_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&scfi_init,
 				TYPE_FIXED_ALLOCATOR(StringFindIterator)
@@ -476,10 +487,10 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sfi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &sfi_cmp,
+	/* .tp_cmp           = */ &scfi_cmp,
 	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scfi_next,
-	/* .tp_iterator      = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ &scfi_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
@@ -496,6 +507,7 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 
 
 
+#define scf_ctor sf_ctor
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_ctor(StringFind *__restrict self) {
 	self->sf_str    = (DREF String *)Dee_EmptyString;
@@ -506,6 +518,7 @@ sf_ctor(StringFind *__restrict self) {
 	return 0;
 }
 
+#define scf_init sf_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_init(StringFind *__restrict self,
         size_t argc, DeeObject *const *argv) {
@@ -526,17 +539,12 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-sf_fini(StringFind *__restrict self) {
-	Dee_Decref(self->sf_str);
-	Dee_Decref(self->sf_needle);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-sf_visit(StringFind *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->sf_str);
-	Dee_Visit(self->sf_needle);
-}
+STATIC_ASSERT(offsetof(StringFind, sf_str) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(StringFind, sf_str) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(StringFind, sf_needle) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(StringFind, sf_needle) == offsetof(ProxyObject2, po_obj2));
+#define sf_fini  generic_proxy2_fini
+#define sf_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF StringFindIterator *DCALL
 sf_iter(StringFind *__restrict self) {
@@ -605,7 +613,7 @@ PRIVATE struct type_member tpconst scf_class_members[] = {
 INTERN DeeTypeObject StringFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringFind",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -651,7 +659,7 @@ INTERN DeeTypeObject StringFind_Type = {
 INTERN DeeTypeObject StringCaseFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringCaseFind",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(s:?Dstring,needle:?Dstring,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

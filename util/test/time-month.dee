@@ -30,7 +30,7 @@ function getYMD(t: Time): (int, int, int) {
 /* Make sure that months in leap-years are handled correctly.
  *
  * Before, there was an off-by-one error, where setting the
- * month of a leap-year would subtract 1 year. */
+ * month of certain leap-years would subtract 1 year. */
 assert getYMD(Time(year: 103, month: 2, day: 29)) == (103, 3, 1);
 assert getYMD(Time(year: 104, month: 2, day: 29)) == (104, 2, 29);
 assert getYMD(Time(year: 105, month: 2, day: 29)) == (105, 3, 1);

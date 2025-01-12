@@ -30,6 +30,7 @@
 #include <deemon/util/atomic.h>
 
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
@@ -44,22 +45,20 @@ INTDEF DeeTypeObject BytesLineSplitIterator_Type;
 INTDEF DeeTypeObject BytesLineSplit_Type;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF Bytes     *bs_bytes;     /* [1..1][const] The Bytes object being split. */
-	DREF DeeObject *bs_sep_owner; /* [0..1][const] The owner of the split sequence. */
-	byte_t         *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
-	size_t          bs_sep_len;   /* [const] Length of the separation sequence (in bytes). */
-	byte_t          bs_sep_buf[sizeof(void *)]; /* A small inline-buffer used for single-byte splits. */
+	PROXY_OBJECT_HEAD2_EX(Bytes,     bs_bytes,     /* [1..1][const] The Bytes object being split. */
+	                      DeeObject, bs_sep_owner) /* [0..1][const] The owner of the split sequence. */
+	byte_t                          *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
+	size_t                           bs_sep_len;   /* [const] Length of the separation sequence (in bytes). */
+	byte_t                           bs_sep_buf[sizeof(void *)]; /* A small inline-buffer used for single-byte splits. */
 } BytesSplit;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF BytesSplit *bsi_split;    /* [1..1][const] The underlying split controller. */
-	DWEAK byte_t    *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
-	byte_t          *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
-	Bytes           *bsi_bytes;    /* [1..1][const][== bsi_split->bs_bytes] The Bytes object being split. */
-	byte_t          *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
-	size_t           bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
+	PROXY_OBJECT_HEAD_EX(BytesSplit, bsi_split)    /* [1..1][const] The underlying split controller. */
+	DWEAK byte_t                    *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
+	byte_t                          *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
+	Bytes                           *bsi_bytes;    /* [1..1][const][== bsi_split->bs_bytes] The Bytes object being split. */
+	byte_t                          *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
+	size_t                           bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
 } BytesSplitIterator;
 
 #define READ_BSI_ITER(x) atomic_read(&(x)->bsi_iter)
@@ -70,13 +69,11 @@ bsi_init(BytesSplitIterator *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:_BytesSplitIterator",
 	                  &self->bsi_split))
 		goto err;
-	if (Dee_TYPE(self) == &BytesSplitIterator_Type) {
-		if (DeeObject_AssertTypeExact(self->bsi_split, &BytesSplit_Type))
-			goto err;
-	} else {
-		if (DeeObject_AssertTypeExact(self->bsi_split, &BytesCaseSplit_Type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeExact(self->bsi_split,
+	                              Dee_TYPE(self) == &BytesSplitIterator_Type
+	                              ? &BytesSplit_Type
+	                              : &BytesCaseSplit_Type))
+		goto err;
 	self->bsi_bytes = self->bsi_split->bs_bytes;
 	self->bsi_iter  = DeeBytes_DATA(self->bsi_bytes);
 	self->bsi_end   = self->bsi_iter + DeeBytes_SIZE(self->bsi_bytes);
@@ -142,15 +139,9 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-bsi_fini(BytesSplitIterator *__restrict self) {
-	Dee_Decref(self->bsi_split);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-bsi_visit(BytesSplitIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->bsi_split);
-}
+STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_split) == offsetof(ProxyObject, po_obj));
+#define bsi_fini  generic_proxy_fini
+#define bsi_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsi_bool(BytesSplitIterator *__restrict self) {
@@ -259,7 +250,9 @@ PRIVATE struct type_member tpconst bcsi_members[] = {
 INTERN DeeTypeObject BytesSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesSplitIterator",
-	/* .tp_doc      = */ DOC("next->?DBytes"),
+	/* .tp_doc      = */ DOC("(split:?Ert:BytesSplit)\n"
+	                         "\n"
+	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -305,7 +298,9 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseSplitIterator",
-	/* .tp_doc      = */ DOC("next->?DBytes"),
+	/* .tp_doc      = */ DOC("(split:?Ert:BytesCaseSplit)\n"
+	                         "\n"
+	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -739,37 +734,33 @@ err_r:
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF Bytes *bls_bytes;    /* [1..1][const] The Bytes object being split. */
-	bool        bls_keepends; /* [const] If true, keep line endings. */
+	PROXY_OBJECT_HEAD_EX(Bytes, bls_bytes)    /* [1..1][const] The Bytes object being split. */
+	bool                        bls_keepends; /* [const] If true, keep line endings. */
 } BytesLineSplit;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF Bytes   *blsi_bytes;    /* [1..1][const] The Bytes object being split. */
-	DWEAK byte_t *blsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
-	byte_t       *blsi_end;      /* [1..1][== DeeBytes_TERM(blsi_bytes)] Pointer to the end of input data. */
-	bool          blsi_keepends; /* [const] If true, keep line endings. */
+	PROXY_OBJECT_HEAD_EX(Bytes, blsi_bytes)    /* [1..1][const] The Bytes object being split. */
+	DWEAK byte_t               *blsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
+	byte_t                     *blsi_end;      /* [1..1][== DeeBytes_TERM(blsi_bytes)] Pointer to the end of input data. */
+	bool                        blsi_keepends; /* [const] If true, keep line endings. */
 } BytesLineSplitIterator;
 #define READ_BLSI_ITER(x) atomic_read(&(x)->blsi_iter)
 
-STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_split) ==
-              offsetof(BytesLineSplitIterator, blsi_bytes));
-STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_iter) ==
-              offsetof(BytesLineSplitIterator, blsi_iter));
+STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_split) == offsetof(BytesLineSplitIterator, blsi_bytes));
+STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_iter) == offsetof(BytesLineSplitIterator, blsi_iter));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blsi_init(BytesLineSplitIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	BytesLineSplit *ls;
-	self->blsi_keepends = false;
-	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplitIterator", &ls, &self->blsi_keepends))
+	if (DeeArg_Unpack(argc, argv, "o:_BytesLineSplitIterator", &ls))
 		goto err;
 	if (DeeObject_AssertTypeExact(ls, &BytesLineSplit_Type))
 		goto err;
-	self->blsi_bytes = ls->bls_bytes;
-	self->blsi_iter  = DeeBytes_DATA(self->blsi_bytes);
-	self->blsi_end   = self->blsi_iter + DeeBytes_SIZE(self->blsi_bytes);
+	self->blsi_bytes    = ls->bls_bytes;
+	self->blsi_iter     = DeeBytes_DATA(self->blsi_bytes);
+	self->blsi_end      = self->blsi_iter + DeeBytes_SIZE(self->blsi_bytes);
+	self->blsi_keepends = ls->bls_keepends;
 	if (self->blsi_iter == self->blsi_end)
 		self->blsi_iter = NULL;
 	Dee_Incref(self->blsi_bytes);
@@ -818,10 +809,12 @@ err:
 	return -1;
 }
 
-#define blsi_fini   bsi_fini
-#define blsi_visit  bsi_visit
-#define blsi_bool   bsi_bool
-#define blsi_cmp    bsi_cmp
+STATIC_ASSERT(offsetof(BytesLineSplitIterator, blsi_bytes) == offsetof(ProxyObject, po_obj));
+#define blsi_fini  generic_proxy_fini
+#define blsi_visit generic_proxy_visit
+
+#define blsi_bool bsi_bool
+#define blsi_cmp  bsi_cmp
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blsi_next(BytesLineSplitIterator *__restrict self) {
@@ -889,7 +882,9 @@ PRIVATE struct type_member tpconst blsi_members[] = {
 INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesLineSplitIterator",
-	/* .tp_doc      = */ DOC("next->?DBytes"),
+	/* .tp_doc      = */ DOC("(split:?Ert:BytesLineSplit)\n"
+	                         "\n"
+	                         "next->?DBytes"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -932,11 +927,6 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-
-STATIC_ASSERT(offsetof(BytesLineSplitIterator, blsi_bytes) ==
-              offsetof(BytesLineSplit, bls_bytes));
-STATIC_ASSERT(offsetof(BytesSplit, bs_bytes) ==
-              offsetof(BytesLineSplit, bls_bytes));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bls_ctor(BytesLineSplit *__restrict self) {
@@ -981,9 +971,12 @@ err:
 	return -1;
 }
 
-#define bls_fini    blsi_fini
-#define bls_visit   blsi_visit
-#define bls_bool    bs_bool
+STATIC_ASSERT(offsetof(BytesLineSplit, bls_bytes) == offsetof(ProxyObject, po_obj));
+#define bls_fini  generic_proxy_fini
+#define bls_visit generic_proxy_visit
+
+STATIC_ASSERT(offsetof(BytesSplit, bs_bytes) == offsetof(BytesLineSplit, bls_bytes));
+#define bls_bool bs_bool
 
 PRIVATE WUNUSED NONNULL((1)) DREF BytesLineSplitIterator *DCALL
 bls_iter(BytesLineSplit *__restrict self) {
@@ -1004,15 +997,7 @@ done:
 }
 
 PRIVATE struct type_seq bls_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bls_iter,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bls_iter,
 };
 
 PRIVATE struct type_member tpconst bls_members[] = {
@@ -1029,8 +1014,7 @@ PRIVATE struct type_member tpconst bls_class_members[] = {
 INTERN DeeTypeObject BytesLineSplit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesLineSplit",
-	/* .tp_doc      = */ DOC("()\n"
-	                         "(bytes:?DBytes,keepends=!f)"),
+	/* .tp_doc      = */ DOC("(bytes:?DBytes,keepends=!f)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1073,8 +1057,6 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 	/* .tp_class_members = */ bls_class_members
 };
 
-
-
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_SplitLines(Bytes *__restrict self,
                     bool keepends) {
@@ -1089,7 +1071,6 @@ DeeBytes_SplitLines(Bytes *__restrict self,
 done:
 	return (DREF DeeObject *)result;
 }
-
 
 DECL_END
 

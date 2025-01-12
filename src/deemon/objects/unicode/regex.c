@@ -198,7 +198,7 @@ char const *DCALL re_strerror(re_errno_t error) {
 	return result;
 }
 
-PRIVATE int DCALL re_handle_error(re_errno_t error) {
+PRIVATE WUNUSED int DCALL re_handle_error(re_errno_t error) {
 	DeeTypeObject *error_type;
 	char const *message;
 	switch (error) {

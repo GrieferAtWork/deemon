@@ -28,28 +28,28 @@
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>
 
+#include "../generic-proxy.h"
+
 DECL_BEGIN
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
 
 typedef struct {
-	OBJECT_HEAD
-	DREF Bytes     *bf_bytes;  /* [1..1][const] The bytes that is being searched. */
-	DREF DeeObject *bf_other;  /* [1..1][const] The needle object. */
-	Needle          bf_needle; /* [const] The needle being searched for. */
-	byte_t         *bf_start;  /* [1..1][const] Starting pointer. */
-	byte_t         *bf_end;    /* [1..1][const] End pointer. */
+	PROXY_OBJECT_HEAD2_EX(Bytes,     bf_bytes,  /* [1..1][const] The bytes that is being searched. */
+	                      DeeObject, bf_other); /* [1..1][const] The needle object. */
+	Needle                           bf_needle; /* [const] The needle being searched for. */
+	byte_t                          *bf_start;  /* [1..1][const] Starting pointer. */
+	byte_t                          *bf_end;    /* [1..1][const] End pointer. */
 } BytesFind;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF BytesFind *bfi_find;       /* [1..1][const] The underlying find-controller. */
-	byte_t         *bfi_start;      /* [1..1][const] Starting pointer. */
-	DWEAK byte_t   *bfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	byte_t         *bfi_end;        /* [1..1][const] End pointer. */
-	byte_t         *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
-	size_t          bfi_needle_len; /* [const] Length of the needle being searched. */
+	PROXY_OBJECT_HEAD_EX(BytesFind, bfi_find)       /* [1..1][const] The underlying find-controller. */
+	byte_t                         *bfi_start;      /* [1..1][const] Starting pointer. */
+	DWEAK byte_t                   *bfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
+	byte_t                         *bfi_end;        /* [1..1][const] End pointer. */
+	byte_t                         *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
+	size_t                          bfi_needle_len; /* [const] Length of the needle being searched. */
 } BytesFindIterator;
 
 INTDEF WUNUSED DREF DeeObject *DCALL
@@ -59,7 +59,6 @@ INTDEF WUNUSED DREF DeeObject *DCALL
 DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
                      size_t start, size_t end);
 #define READ_PTR(x) atomic_read(&(x)->bfi_ptr)
-
 
 INTDEF DeeTypeObject BytesFindIterator_Type;
 INTDEF DeeTypeObject BytesFind_Type;
@@ -99,6 +98,7 @@ err:
 	return -1;
 }
 
+#define bcfi_copy bfi_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bfi_copy(BytesFindIterator *__restrict self,
          BytesFindIterator *__restrict other) {
@@ -188,15 +188,9 @@ again:
 	return ITER_DONE;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-bfi_fini(BytesFindIterator *__restrict self) {
-	Dee_Decref(self->bfi_find);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-bfi_visit(BytesFindIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->bfi_find);
-}
+STATIC_ASSERT(offsetof(BytesFindIterator, bfi_find) == offsetof(ProxyObject, po_obj));
+#define bfi_fini  generic_proxy_fini
+#define bfi_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_bool(BytesFindIterator *__restrict self) {
@@ -248,6 +242,7 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
+#define bcfi_cmp bfi_cmp
 PRIVATE struct type_cmp bfi_cmp = {
 	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&bfi_hash,
 	/* .tp_compare_eq = */ NULL,
@@ -258,7 +253,9 @@ PRIVATE struct type_cmp bfi_cmp = {
 INTERN DeeTypeObject BytesFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesFindIterator",
-	/* .tp_doc      = */ DOC("next->?Dint"),
+	/* .tp_doc      = */ DOC("(find:?Ert:BytesFind)\n"
+	                         "\n"
+	                         "next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -304,7 +301,9 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesCaseFindIterator",
-	/* .tp_doc      = */ DOC("next->?Dint"),
+	/* .tp_doc      = */ DOC("(find:?Ert:BytesCaseFind)\n"
+	                         "\n"
+	                         "next->?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -313,7 +312,7 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)&bcfi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&bfi_copy,
+				/* .tp_copy_ctor = */ (dfunptr_t)&bcfi_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&bcfi_init,
 				TYPE_FIXED_ALLOCATOR(BytesFindIterator)
@@ -332,7 +331,7 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bfi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &bfi_cmp,
+	/* .tp_cmp           = */ &bcfi_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bcfi_next,
 	/* .tp_iterator      = */ NULL,
@@ -389,17 +388,12 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-bf_fini(BytesFind *__restrict self) {
-	Dee_Decref(self->bf_bytes);
-	Dee_Decref(self->bf_other);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-bf_visit(BytesFind *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->bf_bytes);
-	Dee_Visit(self->bf_other);
-}
+STATIC_ASSERT(offsetof(BytesFind, bf_bytes) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(BytesFind, bf_bytes) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(BytesFind, bf_other) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(BytesFind, bf_other) == offsetof(ProxyObject2, po_obj2));
+#define bf_fini  generic_proxy2_fini
+#define bf_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF BytesFindIterator *DCALL
 bf_iter(BytesFind *__restrict self) {

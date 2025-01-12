@@ -2222,7 +2222,7 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 		for (i = 0; i < num_items; ++i) {
 			DREF DeeObject *key   = key_values[(i * 2) + 0];
 			DREF DeeObject *value = key_values[(i * 2) + 1];
-			/* FIXME: This decrefs duplicate keys immediately, which won't be restored on error. */
+			/* FIXME: TODO: This decrefs duplicate keys immediately, which won't be restored on error. */
 			if unlikely(dict_setitem_unlocked_fast_inherited(result, key, value))
 				goto err_r;
 		}
@@ -2236,6 +2236,7 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 		for (i = 0; i < num_items; ++i) {
 			DREF DeeObject *key   = key_values[(i * 2) + 0];
 			DREF DeeObject *value = key_values[(i * 2) + 1];
+			/* FIXME: TODO: This decrefs duplicate keys immediately, which won't be restored on error. */
 			if unlikely(dict_setitem_unlocked(result, key, value))
 				goto err_r;
 			ASSERT(DeeObject_IsShared(key));

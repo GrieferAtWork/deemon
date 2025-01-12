@@ -37,6 +37,7 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
@@ -44,22 +45,20 @@ typedef DeeStringObject String;
 
 
 typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *ss_data;   /* [1..1][const] The string data object (either a string, or Bytes object). */
-	DREF DeeObject *ss_format; /* [1..1][const] The scanner format object (either a string, or Bytes object). */
+	PROXY_OBJECT_HEAD2(ss_data,   /* [1..1][const] The string data object (either a string, or Bytes object). */
+	                   ss_format) /* [1..1][const] The scanner format object (either a string, or Bytes object). */
 } StringScanner;
 
 typedef struct {
-	OBJECT_HEAD
-	DREF StringScanner *si_scanner; /* [1..1][const] The underlying scanner. */
-	char               *si_datend;  /* [1..1][const] End address of the input data (dereferences to a NUL-character). */
-	char               *si_fmtend;  /* [1..1][const] End address of the format string (dereferences to a NUL-character). */
+	PROXY_OBJECT_HEAD_EX(StringScanner, si_scanner) /* [1..1][const] The underlying scanner. */
+	char                               *si_datend;  /* [1..1][const] End address of the input data (dereferences to a NUL-character). */
+	char                               *si_fmtend;  /* [1..1][const] End address of the format string (dereferences to a NUL-character). */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t   si_lock;    /* Lock for modifying the data and format pointers.
-	                                 * NOTE: Not required to be held when reading those pointers! */
+	Dee_atomic_lock_t                   si_lock;    /* Lock for modifying the data and format pointers.
+	                                                 * NOTE: Not required to be held when reading those pointers! */
 #endif /* !CONFIG_NO_THREADS */
-	char               *si_datiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current data pointer (UTF-8). */
-	char               *si_fmtiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current format pointer (UTF-8). */
+	char                               *si_datiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current data pointer (UTF-8). */
+	char                               *si_fmtiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current format pointer (UTF-8). */
 } StringScanIterator;
 
 #define StringScanIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->si_lock)
@@ -76,10 +75,8 @@ INTDEF DeeTypeObject StringScanIterator_Type;
 INTDEF DeeTypeObject StringScan_Type;
 
 
-LOCAL bool DCALL
-match_contains(char *__restrict sel_start,
-               char *__restrict sel_end,
-               uint32_t ch) {
+LOCAL WUNUSED NONNULL((1, 2)) bool DCALL
+match_contains(char *sel_start, char *sel_end, uint32_t ch) {
 	while (sel_start < sel_end) {
 		uint32_t sel_ch = unicode_readutf8_n(&sel_start, sel_end);
 		/* Deal with character escaping. */
@@ -526,17 +523,9 @@ err:
 	return NULL;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-ssi_fini(StringScanIterator *__restrict self) {
-	/* likely: it was probably only created for iteration,
-	 *         in which case it'll be destroyed with us. */
-	Dee_Decref_likely(self->si_scanner);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-ssi_visit(StringScanIterator *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->si_scanner);
-}
+STATIC_ASSERT(offsetof(StringScanIterator, si_scanner) == offsetof(ProxyObject, po_obj));
+#define ssi_fini  generic_proxy_fini_likely /* likely: it was probably only created for iteration, in which case it'll be destroyed with us. */
+#define ssi_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 ssi_hash(StringScanIterator *self) {
@@ -585,7 +574,7 @@ ssi_copy(StringScanIterator *__restrict self,
 INTERN DeeTypeObject StringScanIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringScanIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -633,18 +622,12 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 
 
 
-PRIVATE NONNULL((1)) void DCALL
-ss_fini(StringScanner *__restrict self) {
-	Dee_Decref(self->ss_data);
-	/* unlikely: it's probably a string constant */
-	Dee_Decref_unlikely(self->ss_format);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-ss_visit(StringScanner *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->ss_data);
-	Dee_Visit(self->ss_format);
-}
+STATIC_ASSERT(offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT(offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj1) ||
+              offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj2));
+#define ss_fini  generic_proxy2_fini_normal_unlikely /* unlikely: it's probably a string constant */
+#define ss_visit generic_proxy2_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF StringScanIterator *DCALL
 ss_iter(StringScanner *__restrict self) {
@@ -686,7 +669,7 @@ err_r:
 }
 
 PRIVATE struct type_seq ss_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ss_iter
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ss_iter
 };
 
 PRIVATE struct type_member tpconst ss_members[] = {

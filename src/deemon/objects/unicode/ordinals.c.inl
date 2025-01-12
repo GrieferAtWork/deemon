@@ -24,34 +24,54 @@
 #include "string_functions.c"
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/arg.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
 #include "../../runtime/strings.h"
+#include "../generic-proxy.h"
 
 DECL_BEGIN
 
 typedef struct {
 	/* A proxy object for viewing the characters of a string as an array of unsigned
 	 * integers representing the unicode character codes for each character. */
-	OBJECT_HEAD
-	DREF DeeStringObject *so_str;   /* [1..1][const] The string who's character ordinals are being viewed. */
-	unsigned int          so_width; /* [const][== DeeString_WIDTH(so_str)] The string's character width. */
-	union dcharptr        so_ptr;   /* [const][== DeeString_WSTR(so_str)] The effective character array. */
+	PROXY_OBJECT_HEAD_EX(DeeStringObject, so_str)   /* [1..1][const] The string who's character ordinals are being viewed. */
+	unsigned int                          so_width; /* [const][== DeeString_WIDTH(so_str)] The string's character width. */
+	union dcharptr                        so_ptr;   /* [const][== DeeString_WSTR(so_str)] The effective character array. */
 } StringOrdinals;
 
 INTDEF DeeTypeObject StringOrdinals_Type;
 
-PRIVATE NONNULL((1)) void DCALL
-stringordinals_fini(StringOrdinals *__restrict self) {
-	Dee_Decref(self->so_str);
+STATIC_ASSERT(offsetof(StringOrdinals, so_str) == offsetof(ProxyObject, po_obj));
+#define stringordinals_fini  generic_proxy_fini
+#define stringordinals_visit generic_proxy_visit
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+stringordinals_ctor(StringOrdinals *__restrict self) {
+	self->so_str     = (DREF DeeStringObject *)Dee_EmptyString;
+	self->so_width   = STRING_WIDTH_1BYTE;
+	self->so_ptr.ptr = DeeString_STR(Dee_EmptyString);
+	Dee_Incref(Dee_EmptyString);
+	return 0;
+err:
+	return -1;
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-stringordinals_visit(StringOrdinals *__restrict self,
-                     dvisit_t proc, void *arg) {
-	Dee_Visit(self->so_str);
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+stringordinals_init(StringOrdinals *__restrict self,
+                    size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o:_StringOrdinals", &self->so_str))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->so_str, &DeeString_Type))
+		goto err;
+	self->so_width   = DeeString_WIDTH(self->so_str);
+	self->so_ptr.ptr = DeeString_WSTR(self->so_str);
+	Dee_Incref(self->so_str);
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -111,50 +131,38 @@ err:
 
 
 PRIVATE struct type_seq stringordinals_seq = {
-	/* .tp_iter                       = */ NULL,
-	/* .tp_sizeob                     = */ NULL,
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_contains,
-	/* .tp_getitem                    = */ NULL,
-	/* .tp_delitem                    = */ NULL,
-	/* .tp_setitem                    = */ NULL,
-	/* .tp_getrange                   = */ NULL,
-	/* .tp_delrange                   = */ NULL,
-	/* .tp_setrange                   = */ NULL,
-	/* .tp_foreach                    = */ NULL,
-	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
-	/* .tp_iterkeys                   = */ NULL,
-	/* .tp_bounditem                  = */ NULL,
-	/* .tp_hasitem                    = */ NULL,
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&stringordinals_size,
-	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&stringordinals_size,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&stringordinals_getitem_index,
-	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ NULL,
-	/* .tp_setitem_index              = */ NULL,
-	/* .tp_bounditem_index            = */ NULL,
-	/* .tp_hasitem_index              = */ NULL,
-	/* .tp_getrange_index             = */ NULL,
-	/* .tp_delrange_index             = */ NULL,
-	/* .tp_setrange_index             = */ NULL,
-	/* .tp_getrange_index_n           = */ NULL,
-	/* .tp_delrange_index_n           = */ NULL,
-	/* .tp_setrange_index_n           = */ NULL,
-	/* .tp_trygetitem                 = */ NULL,
-	/* .tp_trygetitem_index           = */ NULL,
-	/* .tp_trygetitem_string_hash     = */ NULL,
-	/* .tp_getitem_string_hash        = */ NULL,
-	/* .tp_delitem_string_hash        = */ NULL,
-	/* .tp_setitem_string_hash        = */ NULL,
-	/* .tp_bounditem_string_hash      = */ NULL,
-	/* .tp_hasitem_string_hash        = */ NULL,
-	/* .tp_trygetitem_string_len_hash = */ NULL,
-	/* .tp_getitem_string_len_hash    = */ NULL,
-	/* .tp_delitem_string_len_hash    = */ NULL,
-	/* .tp_setitem_string_len_hash    = */ NULL,
-	/* .tp_bounditem_string_len_hash  = */ NULL,
-	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_iter               = */ NULL,
+	/* .tp_sizeob             = */ NULL,
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_contains,
+	/* .tp_getitem            = */ NULL,
+	/* .tp_delitem            = */ NULL,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ NULL,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_foreach            = */ NULL,
+	/* .tp_foreach_pair       = */ NULL,
+	/* .tp_enumerate          = */ NULL,
+	/* .tp_enumerate_index    = */ NULL,
+	/* .tp_iterkeys           = */ NULL,
+	/* .tp_bounditem          = */ NULL,
+	/* .tp_hasitem            = */ NULL,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&stringordinals_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&stringordinals_size,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&stringordinals_getitem_index,
+	/* .tp_getitem_index_fast = */ NULL,
+	/* .tp_delitem_index      = */ NULL,
+	/* .tp_setitem_index      = */ NULL,
+	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_hasitem_index      = */ NULL,
+	/* .tp_getrange_index     = */ NULL,
+	/* .tp_delrange_index     = */ NULL,
+	/* .tp_setrange_index     = */ NULL,
+	/* .tp_getrange_index_n   = */ NULL,
+	/* .tp_delrange_index_n   = */ NULL,
+	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_trygetitem         = */ NULL,
+	/* .tp_trygetitem_index   = */ NULL,
 };
 
 PRIVATE struct type_member tpconst stringordinals_members[] = {
@@ -166,7 +174,7 @@ PRIVATE struct type_member tpconst stringordinals_members[] = {
 INTERN DeeTypeObject StringOrdinals_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_StringOrdinals",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(s:?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -174,10 +182,10 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_ctor      = */ (dfunptr_t)&stringordinals_ctor,
 				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&stringordinals_init,
 				TYPE_FIXED_ALLOCATOR(StringOrdinals)
 			}
 		},
