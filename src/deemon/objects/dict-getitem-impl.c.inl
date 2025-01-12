@@ -142,13 +142,11 @@ DECL_BEGIN
 #define LOCAL_NONNULL    NONNULL((1, 2))
 #define LOCAL_KEY_PARAMS char const *key, Dee_hash_t hash
 #define LOCAL_HAS_PARAM_HASH
-#define LOCAL_HAS_KEY_IS_STRING
 #define LOCAL_boolcmp(rhs) boolcmp_string(key, rhs)
 #elif defined(LOCAL_HAS_KEY_IS_STRING_LEN_HASH)
 #define LOCAL_NONNULL    NONNULL((1, 2))
 #define LOCAL_KEY_PARAMS char const *key, size_t keylen, Dee_hash_t hash
 #define LOCAL_HAS_PARAM_HASH
-#define LOCAL_HAS_KEY_IS_STRING
 #define LOCAL_boolcmp(rhs) boolcmp_string_len(key, keylen, rhs)
 #elif defined(LOCAL_HAS_KEY_IS_INDEX)
 #define LOCAL_NONNULL    NONNULL((1))
@@ -387,7 +385,6 @@ err:
 #undef LOCAL_MISSING
 #undef LOCAL_ERR
 #undef LOCAL_HAS_KEY_IS_INDEX
-#undef LOCAL_HAS_KEY_IS_STRING
 #undef LOCAL_HAS_KEY_IS_STRING_HASH
 #undef LOCAL_HAS_KEY_IS_STRING_LEN_HASH
 #undef LOCAL_IS_TRY

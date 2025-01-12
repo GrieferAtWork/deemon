@@ -735,6 +735,9 @@
 		<ClInclude Include="..\src\deemon\objects\object-destroy.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>

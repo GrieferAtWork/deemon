@@ -254,6 +254,7 @@
 		<ClInclude Include="..\src\deemon\objects\int-8bit.h" />
 		<ClInclude Include="..\src\deemon\objects\int_logic.h" />
 		<ClInclude Include="..\src\deemon\objects\object-destroy.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\cached-seq.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\combinations.h" />

@@ -1711,7 +1711,9 @@ struct Dee_type_constructor {
 	/* NOTE: `tp_move_assign' is favored in code such as this:
 	 * >> local my_list = [];
 	 * >> my_list := copy     get_other_list(); // Will try to move-assign the copy.
-	 * >> my_list := deepcopy get_other_list(); // Will try to move-assign the deep copy. */
+	 * >> my_list := deepcopy get_other_list(); // Will try to move-assign the deep copy.
+	 * @return: == 0: Success
+	 * @return: != 0: Error was thrown */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_assign)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_move_assign)(DeeObject *self, DeeObject *other);
 
@@ -1760,7 +1762,8 @@ struct Dee_type_constructor {
 	 * >> err:
 	 * >>     deepcopy_end();
 	 * >>     return NULL;
-	 */
+	 * @return: == 0: Success
+	 * @return: != 0: Error was thrown */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_deepload)(DeeObject *__restrict self);
 
 	/* Callback for `DeeObject_Destroy()' (usually auto-assigned by `DeeType_RequireDestroy()', but
@@ -1773,6 +1776,9 @@ struct Dee_type_cast {
 	/* Instance casting operators. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_str)(DeeObject *__restrict self);
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_repr)(DeeObject *__restrict self);
+	/* @return:  > 0: Object is true
+	 * @return: == 0: Object is false
+	 * @return: <  0: Error was thrown */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_bool)(DeeObject *__restrict self);
 	/* Optional fast-pass operator for `DeeObject_Print(tp_str(self), printer, arg)' */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_print)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
@@ -2760,6 +2766,14 @@ myob_asvector(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	return (size_t)DeeError_NOTIMPLEMENTED();
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+myob_asvector_nothrow(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	(void)self;
+	(void)dst;
+	(void)dst_length;
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 myob_unpack(MyObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	(void)self;
@@ -2831,6 +2845,7 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_bounditem_string_len_hash,
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&myob_hasitem_string_len_hash,
 	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector,
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_asvector_nothrow,
 	/* .tp_unpack                     = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_unpack,
 	/* .tp_unpack_ex                  = */ (int (DCALL *)(DeeObject *, size_t, size_t, DREF DeeObject **))&myob_unpack_ex,
 	/* .tp_unpack_ub                  = */ (int (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&myob_unpack_ub,
@@ -4800,12 +4815,18 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithRWLock(/
 #define DeeObject_XInplaceDeepCopyWithRWLock(p_self, p_lock) DeeObject_XInplaceDeepCopy(p_self)
 #endif /* CONFIG_NO_THREADS */
 
+/* @return: == 0: Success
+ * @return: != 0: Error was thrown */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_Assign(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_MoveAssign(DeeObject *self, DeeObject *other);
 
 /* Object conversion operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Str(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Repr(DeeObject *__restrict self);
+
+/* @return:  > 0: Object is true
+ * @return: == 0: Object is false
+ * @return: <  0: Error was thrown */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_Bool(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_BoolInherited(/*inherit(always)*/ DREF DeeObject *__restrict self);
 
