@@ -2300,13 +2300,12 @@ code_print(DeeCodeObject *__restrict self,
            dformatprinter printer, void *arg) {
 	dssize_t result;
 	DREF DeeObject *name = code_get_name(self);
-	if unlikely(!name)
+	if unlikely(!name) {
+		if (DeeError_Catch(&DeeError_UnboundAttribute))
+			return DeeFormat_PRINT(printer, arg, "<code for <anonymous>>");
 		goto err;
-	if (DeeNone_Check(name)) {
-		result = DeeFormat_PRINT(printer, arg, "<code for <anonymous>>");
-	} else {
-		result = DeeFormat_Printf(printer, arg, "<code for %r>", name);
 	}
+	result = DeeFormat_Printf(printer, arg, "<code for %r>", name);
 	Dee_Decref(name);
 	return result;
 err:
