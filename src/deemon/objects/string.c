@@ -546,6 +546,15 @@ string_bool(String *__restrict self) {
 	return !DeeString_IsEmpty(self);
 }
 
+#ifdef Dee_BOUND_PRESENT_MAYALIAS_BOOL
+#define string_bool_asbound string_bool
+#else /* Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+string_bool_asbound(String *__restrict self) {
+	return Dee_BOUND_FROMBOOL(!DeeString_IsEmpty(self));
+}
+#endif /* !Dee_BOUND_PRESENT_MAYALIAS_BOOL */
+
 INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 DeeString_Hash(DeeObject *__restrict self) {
 	Dee_hash_t result;
@@ -1077,23 +1086,6 @@ string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
 	return string_compare_seq(lhs, rhs);
 }
 
-
-PRIVATE struct type_method_hint tpconst string_method_hints[] = {
-	/* This stuff here is needed so that `("foo" as Sequence) <=> ["f", "o", "o"]' works. */
-	TYPE_METHOD_HINT(seq_operator_compare_eq, &string_mh_seq_compare_eq),
-	TYPE_METHOD_HINT(seq_operator_compare, &string_mh_seq_compare),
-	TYPE_METHOD_HINT(seq_operator_trycompare_eq, &string_mh_seq_trycompare_eq),
-	TYPE_METHOD_HINT(seq_operator_eq, &DeeSeq_DefaultOperatorEqWithSeqCompareEq),
-	TYPE_METHOD_HINT(seq_operator_ne, &DeeSeq_DefaultOperatorNeWithSeqCompareEq),
-	TYPE_METHOD_HINT(seq_operator_lo, &DeeSeq_DefaultOperatorLoWithSeqCompare),
-	TYPE_METHOD_HINT(seq_operator_le, &DeeSeq_DefaultOperatorLeWithSeqCompare),
-	TYPE_METHOD_HINT(seq_operator_gr, &DeeSeq_DefaultOperatorGrWithSeqCompare),
-	TYPE_METHOD_HINT(seq_operator_ge, &DeeSeq_DefaultOperatorGeWithSeqCompare),
-	TYPE_METHOD_HINT_END
-};
-
-
-
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(String, si_string); /* [1..1][const] The string that is being iterated. */
 	union dcharptr               si_iter;    /* [1..1][weak] The current iterator position. */
@@ -1579,6 +1571,221 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+string_foreach_reverse(String *self, Dee_foreach_t proc, void *arg) {
+	union dcharptr ptr, end;
+	Dee_ssize_t temp, result = 0;
+	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+
+	CASE_WIDTH_1BYTE:
+		ptr.cp8 = DeeString_Get1Byte((DeeObject *)self);
+		end.cp8 = ptr.cp8 + WSTR_LENGTH(ptr.cp8);
+		while (ptr.cp8 < end.cp8) {
+			--end.cp8;
+#ifdef CONFIG_STRING_LATIN1_STATIC
+			temp = (*proc)(arg, (DeeObject *)&DeeString_Latin1[*end.cp8]);
+#else /* CONFIG_STRING_LATIN1_STATIC */
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(*end.cp8);
+			if unlikely(!elem)
+				goto err;
+			temp = (*proc)(arg, elem);
+			Dee_Decref(elem);
+#endif /* !CONFIG_STRING_LATIN1_STATIC */
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+		break;
+
+	CASE_WIDTH_2BYTE:
+		ptr.cp16 = DeeString_Get2Byte((DeeObject *)self);
+		end.cp16 = ptr.cp16 + WSTR_LENGTH(ptr.cp16);
+		while (ptr.cp16 < end.cp16) {
+			DREF DeeObject *elem;
+			--end.cp16;
+			elem = DeeString_Chr(*end.cp16);
+			if unlikely(!elem)
+				goto err;
+			temp = (*proc)(arg, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+		break;
+
+	CASE_WIDTH_4BYTE:
+		ptr.cp32 = DeeString_Get4Byte((DeeObject *)self);
+		end.cp32 = ptr.cp32 + WSTR_LENGTH(ptr.cp32);
+		while (ptr.cp32 < end.cp32) {
+			DREF DeeObject *elem;
+			--end.cp32;
+			elem = DeeString_Chr(*end.cp32);
+			if unlikely(!elem)
+				goto err;
+			temp = (*proc)(arg, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+		break;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+string_enumerate_index(String *self, Dee_enumerate_index_t cb,
+                       void *arg, size_t start, size_t end) {
+	union dcharptr ptr;
+	Dee_ssize_t temp, result = 0;
+	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+
+	CASE_WIDTH_1BYTE: {
+		size_t i;
+		ptr.cp8 = DeeString_Get1Byte((DeeObject *)self);
+		if (end > WSTR_LENGTH(ptr.cp8))
+			end = WSTR_LENGTH(ptr.cp8);
+		for (i = start; i < end; ++i) {
+			uint8_t ch = ptr.cp8[i];
+#ifdef CONFIG_STRING_LATIN1_STATIC
+			temp = (*cb)(arg, i, (DeeObject *)&DeeString_Latin1[ch]);
+#else /* CONFIG_STRING_LATIN1_STATIC */
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(ch);
+			if unlikely(!elem)
+				goto err;
+			temp = (*cb)(arg, i, elem);
+			Dee_Decref(elem);
+#endif /* !CONFIG_STRING_LATIN1_STATIC */
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}	break;
+
+	CASE_WIDTH_2BYTE: {
+		size_t i;
+		ptr.cp16 = DeeString_Get2Byte((DeeObject *)self);
+		if (end > WSTR_LENGTH(ptr.cp16))
+			end = WSTR_LENGTH(ptr.cp16);
+		for (i = start; i < end; ++i) {
+			uint16_t ch = ptr.cp16[i];
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(ch);
+			if unlikely(!elem)
+				goto err;
+			temp = (*cb)(arg, i, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}	break;
+
+	CASE_WIDTH_4BYTE: {
+		size_t i;
+		ptr.cp32 = DeeString_Get4Byte((DeeObject *)self);
+		if (end > WSTR_LENGTH(ptr.cp32))
+			end = WSTR_LENGTH(ptr.cp32);
+		for (i = start; i < end; ++i) {
+			uint32_t ch = ptr.cp32[i];
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(ch);
+			if unlikely(!elem)
+				goto err;
+			temp = (*cb)(arg, i, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}	break;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+string_enumerate_index_reverse(String *self, Dee_enumerate_index_t cb,
+                               void *arg, size_t start, size_t end) {
+	union dcharptr ptr;
+	Dee_ssize_t temp, result = 0;
+	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+
+	CASE_WIDTH_1BYTE: {
+		ptr.cp8 = DeeString_Get1Byte((DeeObject *)self);
+		if (end > WSTR_LENGTH(ptr.cp8))
+			end = WSTR_LENGTH(ptr.cp8);
+		while (end > start) {
+			uint8_t ch = ptr.cp8[--end];
+#ifdef CONFIG_STRING_LATIN1_STATIC
+			temp = (*cb)(arg, end, (DeeObject *)&DeeString_Latin1[ch]);
+#else /* CONFIG_STRING_LATIN1_STATIC */
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(ch);
+			if unlikely(!elem)
+				goto err;
+			temp = (*cb)(arg, end, elem);
+			Dee_Decref(elem);
+#endif /* !CONFIG_STRING_LATIN1_STATIC */
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}	break;
+
+	CASE_WIDTH_2BYTE: {
+		ptr.cp16 = DeeString_Get2Byte((DeeObject *)self);
+		if (end > WSTR_LENGTH(ptr.cp16))
+			end = WSTR_LENGTH(ptr.cp16);
+		while (end > start) {
+			uint16_t ch = ptr.cp16[--end];
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(ch);
+			if unlikely(!elem)
+				goto err;
+			temp = (*cb)(arg, end, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}	break;
+
+	CASE_WIDTH_4BYTE: {
+		ptr.cp32 = DeeString_Get4Byte((DeeObject *)self);
+		if (end > WSTR_LENGTH(ptr.cp32))
+			end = WSTR_LENGTH(ptr.cp32);
+		while (end > start) {
+			uint32_t ch = ptr.cp32[--end];
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(ch);
+			if unlikely(!elem)
+				goto err;
+			temp = (*cb)(arg, end, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+	}	break;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 string_asvector(String *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t result;
@@ -1705,7 +1912,7 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&string_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&string_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ &DeeObject_DefaultHasItemWithHasItemIndex,
@@ -1842,7 +2049,7 @@ string_getfirst(String *__restrict self) {
 		goto err_empty;
 	return DeeString_Chr(STRING_WIDTH_GETCHAR(width, str, 0));
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	err_unbound_attribute_string(&DeeString_Type, STR_first);
 	return NULL;
 }
 
@@ -1855,8 +2062,31 @@ string_getlast(String *__restrict self) {
 		goto err_empty;
 	return DeeString_Chr(STRING_WIDTH_GETCHAR(width, str, length - 1));
 err_empty:
-	err_empty_sequence((DeeObject *)self);
+	err_unbound_attribute_string(&DeeString_Type, STR_last);
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_trygetfirst(String *__restrict self) {
+	void *str = DeeString_WSTR(self);
+	int width = DeeString_WIDTH(self);
+	if unlikely(!WSTR_LENGTH(str))
+		goto err_empty;
+	return DeeString_Chr(STRING_WIDTH_GETCHAR(width, str, 0));
+err_empty:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_trygetlast(String *__restrict self) {
+	void *str     = DeeString_WSTR(self);
+	int width     = DeeString_WIDTH(self);
+	size_t length = WSTR_LENGTH(str);
+	if unlikely(!length)
+		goto err_empty;
+	return DeeString_Chr(STRING_WIDTH_GETCHAR(width, str, length - 1));
+err_empty:
+	return ITER_DONE;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1998,6 +2228,108 @@ err_too_large:
 #define string_audit_4byte_bytes string_audit_utf32_bytes
 #endif /* CONFIG_HAVE_STRING_AUDITING_INTERNALS */
 
+INTERN WUNUSED NONNULL((1)) DREF String *DCALL
+string_getsubstr(String *__restrict self,
+                 size_t start, size_t end);
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_mh_seq_sum(String *__restrict self) {
+	/* Must handle special case: `({} + ...)' is "none", so
+	 * if the string is empty, we must return "none" here! */
+	if (DeeString_IsEmpty(self))
+		return_none;
+	return_reference_((DeeObject *)self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_mh_seq_sum_with_range(String *__restrict self,
+                             size_t start, size_t end) {
+	if (end > DeeString_WLEN(self))
+		end = DeeString_WLEN(self);
+	if (start >= end)
+		return_none;
+	return (DREF DeeObject *)string_getsubstr(self, start, end);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+string_mh_seq_any_with_range(String *self, size_t start, size_t end) {
+	size_t length;
+	if (start <= end)
+		return 0;
+	if (start == 0)
+		return !DeeString_IsEmpty(self);
+	length = DeeString_WLEN(self);
+	return start < length;
+}
+
+
+PRIVATE struct type_method_hint tpconst string_method_hints[] = {
+	/* Helper hints. */
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &string_foreach_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &string_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetfirst, &string_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_trygetlast, &string_trygetlast, METHOD_FNOREFESCAPE),
+
+	/* This stuff here is needed so that `("foo" as Sequence) <=> ["f", "o", "o"]' works. */
+	TYPE_METHOD_HINT_F(seq_operator_compare_eq, &string_mh_seq_compare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_compare, &string_mh_seq_compare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_trycompare_eq, &string_mh_seq_trycompare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_eq, &DeeSeq_DefaultOperatorEqWithSeqCompareEq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_ne, &DeeSeq_DefaultOperatorNeWithSeqCompareEq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_lo, &DeeSeq_DefaultOperatorLoWithSeqCompare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_le, &DeeSeq_DefaultOperatorLeWithSeqCompare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_gr, &DeeSeq_DefaultOperatorGrWithSeqCompare, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_operator_ge, &DeeSeq_DefaultOperatorGeWithSeqCompare, METHOD_FNOREFESCAPE),
+
+	/* Optimized  */
+	TYPE_METHOD_HINT(seq_sum, &string_mh_seq_sum),
+	TYPE_METHOD_HINT(seq_sum_with_range, &string_mh_seq_sum_with_range),
+
+	/* seq.all() is true if no sequence element evaluations to false.
+	 * Since the elements of strings are all 1-char strings, there can
+	 * never be an empty string (meaning all elements are always true) */
+	TYPE_METHOD_HINT_F(seq_all, &_DeeNone_reti1_1, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_key, &DeeSeq_DefaultAllWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range, (int (DCALL *)(DeeObject *, size_t, size_t))&_DeeNone_reti1_3, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &DeeSeq_DefaultAllWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+
+	/* seq.any() is true if there is at least 1 true element in the
+	 * sequence. Since all elements of strings are 1-char strings,
+	 * which are always true, seq.any() is true if the string is
+	 * non-empty. */
+	TYPE_METHOD_HINT_F(seq_any, &string_bool, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_key, &DeeSeq_DefaultAnyWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_range, &string_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &DeeSeq_DefaultAnyWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+
+	/* These are here because string defines its own "find", "rfind", etc.
+	 * functions that work differently from those defined by Sequence. Since
+	 * we still want "(string as Sequence).find" to behave like the version
+	 * from "Sequence", we have to re-inject the original behavior here, as
+	 * well as link it as explicit method references in "string_functions.c" */
+	TYPE_METHOD_HINT_F(seq_count, &DeeSeq_DefaultCountWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_key, &DeeSeq_DefaultCountWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_range, &DeeSeq_DefaultCountWithRangeWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &DeeSeq_DefaultCountWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains, &DeeSeq_DefaultContainsWithContains, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_key, &DeeSeq_DefaultContainsWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range, &DeeSeq_DefaultContainsWithRangeWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &DeeSeq_DefaultContainsWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith, &DeeSeq_DefaultStartsWithWithSeqTryGetFirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_key, &DeeSeq_DefaultStartsWithWithKeyWithSeqTryGetFirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_range, &DeeSeq_DefaultStartsWithWithRangeWithSeqTryGetItemIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_startswith_with_range_and_key, &DeeSeq_DefaultStartsWithWithRangeAndKeyWithSeqTryGetItemIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith, &DeeSeq_DefaultEndsWithWithSeqTryGetLast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_key, &DeeSeq_DefaultEndsWithWithKeyWithSeqTryGetLast, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_range, &DeeSeq_DefaultEndsWithWithRangeWithSeqSizeAndSeqTryGetItemIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &DeeSeq_DefaultEndsWithWithRangeAndKeyWithSeqSizeAndSeqTryGetItemIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find, &DeeSeq_DefaultFindWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find_with_key, &DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind, &DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_rfind_with_key, &DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse, METHOD_FNOREFESCAPE),
+
+	TYPE_METHOD_HINT_END
+};
 
 PRIVATE struct type_getset tpconst string_getsets[] = {
 	TYPE_GETTER_F("ordinals", &DeeString_Ordinals, METHOD_FCONSTCALL,
@@ -2016,16 +2348,16 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change to true */
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past"),
-	TYPE_GETTER_F(STR_first, &string_getfirst,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?.\n"
-	              "#tValueError{@this ?. is empty}"
-	              "Returns the first character of @this ?."),
-	TYPE_GETTER_F(STR_last, &string_getlast,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?.\n"
-	              "#tValueError{@this ?. is empty}"
-	              "Returns the last character of @this ?."),
+	TYPE_GETTER_BOUND_F(STR_first, &string_getfirst, &string_bool_asbound,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?.\n"
+	                    "#tUnboundAttribute{@this ?. is empty}"
+	                    "Returns the first character of @this ?."),
+	TYPE_GETTER_BOUND_F(STR_last, &string_getlast, &string_bool_asbound,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?.\n"
+	                    "#tUnboundAttribute{@this ?. is empty}"
+	                    "Returns the last character of @this ?."),
 	TYPE_GETTER_F("__sizeof__", &string_sizeof,
 	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because can change when UTF data is allocated */
 	              "->?Dint"),

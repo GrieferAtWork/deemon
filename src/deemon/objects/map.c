@@ -273,16 +273,20 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	TYPE_METHOD_END
 };
 
-#ifdef DCALL_CALLER_CLEANUP
-#define DeeMap_OperatorBool_3 (*(int (DCALL *)(DeeObject *, size_t, size_t))&DeeMap_OperatorBool)
-#else /* DCALL_CALLER_CLEANUP */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeMap_OperatorBool_3(DeeObject *self, size_t start, size_t end) {
-	(void)start;
-	(void)end;
-	return DeeMap_OperatorBool(self);
+map_mh_seq_any_with_range(DeeObject *self, size_t start, size_t end) {
+	size_t map_size;
+	if (start <= end)
+		return 0;
+	if (start == 0)
+		return DeeMap_OperatorBool(self);
+	map_size = DeeMap_OperatorSize(self);
+	if unlikely(map_size == (size_t)-1)
+		goto err;
+	return start < map_size;
+err:
+	return -1;
 }
-#endif /* !DCALL_CALLER_CLEANUP */
 
 PRIVATE struct type_method_hint tpconst map_method_hints[] = {
 	/* Mappings are made up of non-empty tuples, so there is never an sequence-like elem that is "false"
@@ -296,7 +300,7 @@ PRIVATE struct type_method_hint tpconst map_method_hints[] = {
 	 * so "Mapping.any()" is true if the map is non-empty. */
 	TYPE_METHOD_HINT_F(seq_any, &DeeMap_OperatorBool, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_key, &DeeSeq_DefaultAnyWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_any_with_range, &DeeMap_OperatorBool_3, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_any_with_range, &map_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &DeeSeq_DefaultAnyWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
 
 	TYPE_METHOD_HINT_END

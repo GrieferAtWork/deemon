@@ -29,6 +29,7 @@
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/regex.h>
 #include <deemon/seq.h>
@@ -9988,7 +9989,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "#tValueError{@allow_invalid is ?f, and @this ?. contains characters above $0xff}"
 	              "Returns a read-only bytes representation of the characters within ${this.substr(start, end)}, "
 	              /**/ "using a single byte per character. A character greater than $0xff either causes :ValueError "
-	              /**/ "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
+	              /**/ "to be thrown (when @allow_invalid is false), or be replaced with the ASCII character "
 	              /**/ "$\"?\" in the returned Bytes object"),
 	TYPE_METHOD_F("ord", &string_ord,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
@@ -10137,6 +10138,14 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	 * >>       .substitute({ .your_name = "foo", .my_name = "bar" });
 	 * >> print "You owe $guy $$10 dollars!"
 	 * >>       .substitute({ .guy = "me" });
+	 *
+	 * XXX: Why not provide a full wordexp implementation?
+	 *      (except that the caller must provide their own "shellexp"
+	 *      function  that'll be used to expand shell commands like in
+	 *      "foo: $(echo hi), and `echo there`")
+	 * XXX: However, a full wordexp impl would probably be overkill here,
+	 *      so it'd probably be better to just write that in user-code
+	 *      and expose it as `wordexp from wordexp'
 	 */
 
 /* String/Character traits */
@@ -10172,8 +10181,11 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	DEFINE_STRING_TRAIT("isnumeric", string_isnumeric, "qualify as digits or otherwise numeric characters"),
 	DEFINE_STRING_TRAIT("issymstrt", string_issymstrt, "can be used to start a symbol name"),
 	DEFINE_STRING_TRAIT("issymcont", string_issymcont, "can be used to continue a symbol name"),
-	DEFINE_STRING_TRAIT("isspacexlf", string_iscempty, "are space-characters, where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed) (alias for ?#iscempty)"),
+	DEFINE_STRING_TRAIT("isspacexlf", string_iscempty, "are space-characters, where linefeeds are not considered as spaces (Is-Space-eXcluding-Line-Feed) (alias for ?#iscempty)"),
 	DEFINE_STRING_TRAIT("isascii", string_isascii, "are ascii-characters, that is have an ordinal value ${<= 0x7f}"),
+#undef DEFINE_STRING_TRAIT
+#undef DEFINE_STRING_TRAIT_EX
+
 	TYPE_METHOD_F("istitle", &string_istitle,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	              "(index:?Dint)->?Dbool\n"
@@ -10230,7 +10242,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	DEFINE_ANY_STRING_TRAIT("isanynumeric", string_isanynumeric, "qualifies as digit or some other numeric character"),
 	DEFINE_ANY_STRING_TRAIT("isanysymstrt", string_isanysymstrt, "can be used to start a symbol name"),
 	DEFINE_ANY_STRING_TRAIT("isanysymcont", string_isanysymcont, "can be used to continue a symbol name"),
-	DEFINE_ANY_STRING_TRAIT("isanyspacexlf", string_isanycempty, "is a space character, where linefeeds are not considered as spaces (IsSpaceeXcludingLineFeed) (alias for ?#isanycempty)"),
+	DEFINE_ANY_STRING_TRAIT("isanyspacexlf", string_isanycempty, "is a space character, where linefeeds are not considered as spaces (Is-Space-eXcluding-Line-Feed) (alias for ?#isanycempty)"),
 	DEFINE_ANY_STRING_TRAIT("isanyascii", string_isanyascii, " is an ascii character, that is has an ordinal value ${<= 0x7f}"),
 #undef DEFINE_ANY_STRING_TRAIT
 #undef DEFINE_ANY_STRING_TRAIT_EX
@@ -11423,6 +11435,34 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE,
 	                "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	                "Deprecated alias for ?#reversed"),
+
+	/* Override specific sequence functions whilst retaining original behavior.
+	 * s.a. "string_method_hints" */
+	TYPE_METHOD_HINTREF_DOC(seq_any, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	                                 "When @key isn't given, always true if the effective index-range is "
+	                                 /**/ "non-empty (since elements of ${string as Sequence} as always "
+	                                 /**/ "1-characters strings, which are non-empty and thus !t). "
+	                                 /**/ "S.a. ?Aany?DSequence"),
+	TYPE_METHOD_HINTREF_DOC(seq_all, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool\n"
+	                                 "When @key isn't given, always return true (because elements of "
+	                                 /**/ "${string as Sequence} as always 1-characters strings, which "
+	                                 /**/ "are non-empty and thus !t). S.a. ?Aall?DSequence"),
+	TYPE_METHOD_HINTREF_DOC(seq_sum, "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?Dstring?N\n"
+	                                 "Same as ?#substr, but return ?N if instead of $\"\" (an empty string). "
+	                                 /**/ "S.a. ?Asum?DSequence"),
+
+	/* Explicit references to sequence functions whose names we re-use whilst
+	 * implementing different behavior. By also explicitly defining variants
+	 * that implement the original behavior, (e.g.) "(string as Sequence).find"
+	 * will behave as expected (and not call "string.find")
+	 *
+	 * s.a. "string_method_hints" */
+	TYPE_METHOD_HINTREF(explicit_seq_count),
+	TYPE_METHOD_HINTREF(explicit_seq_contains),
+	TYPE_METHOD_HINTREF(explicit_seq_startswith),
+	TYPE_METHOD_HINTREF(explicit_seq_endswith),
+	TYPE_METHOD_HINTREF(explicit_seq_find),
+	TYPE_METHOD_HINTREF(explicit_seq_rfind),
 	TYPE_METHOD_END
 };
 
