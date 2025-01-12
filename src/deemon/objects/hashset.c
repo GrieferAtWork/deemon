@@ -62,7 +62,7 @@ PUBLIC_CONST struct Dee_hashset_item const DeeHashSet_EmptyItems[1] = {
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
 hashset_insert_remainder_with_duplicates(HashSet *self, size_t num_items,
-                                         /*inhert(on_success)*/ DREF DeeObject **items) {
+                                         /*inherit(on_success)*/ DREF DeeObject **items) {
 	size_t key_i = 1;
 	size_t extra_duplicates_c = 0;
 	size_t extra_duplicates_a = 0;

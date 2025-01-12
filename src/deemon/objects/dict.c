@@ -46,6 +46,7 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
+#include <deemon/util/objectlist.h>
 
 #include <hybrid/align.h>
 #include <hybrid/bit.h>
@@ -1838,6 +1839,96 @@ DeeDict_FromRoDict(DeeObject *__restrict self) {
 	return DeeDict_FromSequence(self);
 }
 
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) int DCALL
+dict_insert_items_inherited_after_first_duplicate(Dict *self, struct Dee_dict_item *item,
+                                                  Dee_hash_t htab_idx, size_t num_items,
+                                                  /*inherit(on_success)*/ DREF DeeObject **key_values) {
+	/*virt*/Dee_dict_vidx_t vtab_idx;
+	DREF DeeObject **dups;
+	Dee_hash_t hash;
+	struct Dee_objectlist duplicates;
+	ASSERT(num_items > 0);
+	Dee_objectlist_init(&duplicates);
+	dups = Dee_objectlist_alloc(&duplicates, 2);
+	if unlikely(!dups)
+		goto err_duplicates;
+	dups[0] = item->di_key;   /* Inherit reference (on_success) */
+	dups[1] = item->di_value; /* Inherit reference (on_success) */
+	item->di_key = NULL;      /* Deleted */
+	DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
+	hash = item->di_hash;
+	ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
+	vtab_idx = Dee_dict_vidx_tovirt(self->d_vsize);
+	/*++self->d_vused;*/ /* We're replacing a key, so this isn't being incremented! */
+	++self->d_vsize;
+	item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
+	(*self->d_hidxset)(self->d_htab, htab_idx, vtab_idx);
+	item->di_hash  = hash;
+	item->di_key   = key_values[0]; /* Inherit reference */
+	item->di_value = key_values[1]; /* Inherit reference */
+	--num_items;
+	key_values += 2;
+
+	/* Insert remaining items (and keep colling references to overwritten keys/values) */
+	while (num_items--) {
+		Dee_hash_t hs, perturb;
+		DREF DeeObject *key   = *key_values++;
+		DREF DeeObject *value = *key_values++;
+		hash = DeeObject_Hash(key);
+		_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
+		for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+			int key_cmp;
+			htab_idx = hs & self->d_hmask;
+			vtab_idx = (*self->d_hidxget)(self->d_htab, htab_idx);
+			if likely(vtab_idx == Dee_DICT_HTAB_EOF)
+				break;
+			item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
+			if likely(item->di_hash != hash)
+				continue; /* Not what we're looking for... */
+			if unlikely(!item->di_key)
+				continue; /* Deleted key (highly unlikely, but *could* happen) */
+			key_cmp = DeeObject_TryCompareEq(key, item->di_key);
+			if unlikely(key_cmp == Dee_COMPARE_ERR)
+				goto err_duplicates;
+			if likely(key_cmp != 0)
+				continue;
+
+			/* Another duplicate -> override it like before... */
+			dups = Dee_objectlist_alloc(&duplicates, 2);
+			if unlikely(!dups)
+				goto err_duplicates;
+			dups[0] = item->di_key;   /* Inherit reference */
+			dups[1] = item->di_value; /* Inherit reference */
+			item->di_key = NULL;      /* Deleted */
+			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
+
+			ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
+			vtab_idx = Dee_dict_vidx_tovirt(self->d_vsize);
+			/*++self->d_vused;*/ /* We're replacing a key, so this isn't being incremented! */
+			goto account_size_and_append_item;
+		}
+
+		/* Append key/value-pair at the end of the vtab. */
+		ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
+		vtab_idx = Dee_dict_vidx_tovirt(self->d_vsize);
+		++self->d_vused;
+account_size_and_append_item:
+		++self->d_vsize;
+		item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
+		(*self->d_hidxset)(self->d_htab, htab_idx, vtab_idx);
+		item->di_hash  = hash;
+		item->di_key   = key;   /* Inherit reference */
+		item->di_value = value; /* Inherit reference */
+	}
+
+	/* Drop all of the collected duplicate references */
+	Dee_objectlist_fini(&duplicates);
+	return 0;
+err_duplicates:
+	Dee_objectlist_elemv_free(duplicates.ol_elemv);
+	return -1;
+}
+
 /* Create a new Dict by inheriting a set of passed key-item pairs.
  * @param: key_values: A vector containing `num_items*2' elements,
  *                     even ones being keys and odd ones being items.
@@ -1845,43 +1936,70 @@ DeeDict_FromRoDict(DeeObject *__restrict self) {
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeDict_NewKeyValuesInherited(size_t num_items,
-                              /*inhert(on_success)*/ DREF DeeObject **key_values) {
+                              /*inherit(on_success)*/ DREF DeeObject **key_values) {
+	size_t i;
 	DREF Dict *result;
-#ifdef HAVE_dict_setitem_unlocked_fast_inherited
-	result = (DREF Dict *)DeeDict_TryNewWithHint(num_items);
-	if likely(result) {
-		size_t i;
-		for (i = 0; i < num_items; ++i) {
-			DREF DeeObject *key   = key_values[(i * 2) + 0];
-			DREF DeeObject *value = key_values[(i * 2) + 1];
-			/* FIXME: TODO: This decrefs duplicate keys immediately, which won't be restored on error. */
-			if unlikely(dict_setitem_unlocked_fast_inherited(result, key, value))
+	result = (DREF Dict *)DeeDict_NewWithHint(num_items);
+	if unlikely(!result)
+		goto err;
+	for (i = 0; i < num_items; ++i) {
+		struct Dee_dict_item *item;
+		DREF DeeObject *key   = key_values[(i * 2) + 0];
+		DREF DeeObject *value = key_values[(i * 2) + 1];
+		Dee_hash_t hs, perturb, hash = DeeObject_Hash(key);
+		Dee_hash_t htab_idx;
+		/*virt*/Dee_dict_vidx_t vtab_idx;
+
+		_DeeDict_HashIdxInit(result, &hs, &perturb, hash);
+		for (;; _DeeDict_HashIdxAdv(result, &hs, &perturb)) {
+			int key_cmp;
+			htab_idx = hs & result->d_hmask;
+			vtab_idx = (*result->d_hidxget)(result->d_htab, htab_idx);
+			if likely(vtab_idx == Dee_DICT_HTAB_EOF)
+				break;
+			item = &_DeeDict_GetVirtVTab(result)[vtab_idx];
+			if likely(item->di_hash != hash)
+				continue; /* Not what we're looking for... */
+			if unlikely(!item->di_key)
+				continue; /* Deleted key (highly unlikely, but *could* happen) */
+			key_cmp = DeeObject_TryCompareEq(key, item->di_key);
+			if unlikely(key_cmp == Dee_COMPARE_ERR)
 				goto err_r;
-		}
-	} else
-#endif /* HAVE_dict_setitem_unlocked_fast_inherited */
-	{
-		size_t i;
-		result = (DREF Dict *)DeeDict_New();
-		if unlikely(!result)
-			goto err;
-		for (i = 0; i < num_items; ++i) {
-			DREF DeeObject *key   = key_values[(i * 2) + 0];
-			DREF DeeObject *value = key_values[(i * 2) + 1];
-			/* FIXME: TODO: This decrefs duplicate keys immediately, which won't be restored on error. */
-			if unlikely(dict_setitem_unlocked(result, key, value))
+			if likely(key_cmp != 0)
+				continue;
+
+			/* Damn it! there are duplicate keys in the caller-given items.
+			 * -> Must keep track of those duplicates as we go... */
+			key_values += i * 2;
+			num_items -= i;
+			if unlikely(dict_insert_items_inherited_after_first_duplicate(result, item, htab_idx,
+			                                                              num_items, key_values))
 				goto err_r;
-			ASSERT(DeeObject_IsShared(key));
-			ASSERT(DeeObject_IsShared(value));
-			Dee_DecrefNokill(value);
-			Dee_DecrefNokill(key);
+			dict_verify(result);
+			goto done;
 		}
+
+		/* Append key/value-pair at the end of the vtab. */
+		ASSERTF(result->d_vsize < result->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
+		ASSERT(result->d_vused == result->d_vsize);
+		vtab_idx = Dee_dict_vidx_tovirt(result->d_vsize);
+		++result->d_vused;
+		++result->d_vsize;
+		item = &_DeeDict_GetVirtVTab(result)[vtab_idx];
+		(*result->d_hidxset)(result->d_htab, htab_idx, vtab_idx);
+		item->di_hash  = hash;
+		item->di_key   = key;   /* Inherit reference */
+		item->di_value = value; /* Inherit reference */
 	}
+	dict_verify(result);
+done:
 	return (DREF DeeObject *)result;
 err_r:
 	/* Free "result" without inheriting references to already inserted key/value pairs */
-	if likely(_DeeDict_GetVirtVTab(result) != DeeDict_EmptyVTab)
-		_DeeDict_TabsFree(_DeeDict_GetRealVTab(result));
+	ASSERTF(_DeeDict_GetVirtVTab(result) != DeeDict_EmptyVTab,
+	        "That would mean 'num_items == 0', which it can't "
+	        "be because then we wouldn't have gotten here");
+	_DeeDict_TabsFree(_DeeDict_GetRealVTab(result));
 	Dee_DecrefNokill(&DeeDict_Type);
 	DeeGCObject_FREE(result);
 err:
@@ -4267,7 +4385,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 /************************************************************************/
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
 dict_insert_remainder_with_duplicates(Dict *self, size_t num_items,
-                                      /*inhert(on_success)*/ DREF DeeObject **key_values) {
+                                      /*inherit(on_success)*/ DREF DeeObject **key_values) {
 	size_t keyitem_i = 1;
 	size_t extra_duplicates_c = 0;
 	size_t extra_duplicates_a = 0;
@@ -4350,7 +4468,7 @@ err:
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeDict_NewKeyValuesInherited(size_t num_items,
-                              /*inhert(on_success)*/ DREF DeeObject **key_values) {
+                              /*inherit(on_success)*/ DREF DeeObject **key_values) {
 	DREF Dict *result;
 	/* Allocate the Dict object. */
 	result = DeeGCObject_MALLOC(Dict);

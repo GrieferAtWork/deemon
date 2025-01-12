@@ -377,7 +377,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeDict_SetItemStringLenHash(DeeObje
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeDict_NewKeyValuesInherited(size_t num_items,
-                              /*inhert(on_success)*/ DREF DeeObject **key_values);
+                              /*inherit(on_success)*/ DREF DeeObject **key_values);
 
 /* Locking helpers for `DeeDictObject' */
 #define DeeDict_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->d_lock)

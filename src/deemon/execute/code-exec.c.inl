@@ -384,14 +384,14 @@ PRIVATE int ATTR_FASTCALL
 set_prefix_object_fast(struct code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
-                       /*inhert(always)*/ DREF DeeObject *__restrict value)
+                       /*inherit(always)*/ DREF DeeObject *__restrict value)
 #else /* EXEC_FAST */
 #define set_prefix_object(v) unlikely(set_prefix_object_safe(frame, code, sp, v))
 PRIVATE int ATTR_FASTCALL
 set_prefix_object_safe(struct code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
-                       /*inhert(always)*/ DREF DeeObject *__restrict value)
+                       /*inherit(always)*/ DREF DeeObject *__restrict value)
 #endif /* !EXEC_FAST */
 {
 	DREF DeeObject *old_value;
