@@ -317,28 +317,27 @@ err_cases:
 	{
 		size_t i;
 		DREF DeeRoDictObject *jump_table;
+		struct Dee_rodict_builder jump_table_builder;
 		DREF DeeObject *default_target;
 		int32_t get_cid;
-		jump_table = DeeRoDict_NewWithHint(num_constants);
-		if unlikely(!jump_table)
-			goto err;
+		Dee_rodict_builder_init_with_hint(&jump_table_builder, num_constants);
 		for (i = 0; i < num_constants; ++i) {
+			DeeObject *key;
 			DREF DeeObject *case_target;
 			ASSERT_AST(constant_cases->tl_expr);
 			ASSERT(constant_cases->tl_expr->a_type == AST_CONSTEXPR);
 			ASSERT(constant_cases->tl_asym);
 			case_target = pack_target_tuple(constant_cases->tl_asym);
 			if unlikely(!case_target) {
-err_jump_table:
-				Dee_Decref(jump_table);
+err_jump_table_builder:
+				Dee_rodict_builder_fini(&jump_table_builder);
 				goto err;
 			}
-			temp = DeeRoDict_Insert(&jump_table,
-			                        constant_cases->tl_expr->a_constexpr,
-			                        case_target);
-			Dee_Decref_unlikely(case_target);
+			key = constant_cases->tl_expr->a_constexpr;
+			Dee_Incref(key);
+			temp = Dee_rodict_builder_setitem_inherited(&jump_table_builder, key, case_target);
 			if unlikely(temp)
-				goto err_jump_table;
+				goto err_jump_table_builder;
 			constant_cases = constant_cases->tl_next;
 		}
 
@@ -349,10 +348,14 @@ err_jump_table:
 		 * >>    callattr top, @"get", #2                 // target
 		 * >>    unpack   pop, #2                         // target.PC, target.SP
 		 * >>    jmp      pop, #pop                       // ... */
+		jump_table = Dee_rodict_builder_pack(&jump_table_builder);
 		if (asm_allowconst((DeeObject *)jump_table)) {
 			jumptable_cid = asm_newconst((DeeObject *)jump_table);
-			if unlikely(jumptable_cid < 0)
-				goto err_jump_table;
+			if unlikely(jumptable_cid < 0) {
+err_jump_table:
+				Dee_Decref_likely(jump_table);
+				goto err;
+			}
 			if (asm_gpush_const((uint16_t)jumptable_cid))
 				goto err_jump_table;
 		} else {
@@ -450,11 +453,20 @@ do_generate_block:
 			goto done;
 
 		/* Make sure that all constant cases share the same common SP value. */
-		for (i = 0; i <= jump_table->rd_mask; ++i) {
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+		for (i = 0; i < jump_table->rd_vsize; ++i)
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+		for (i = 0; i <= jump_table->rd_mask; ++i)
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+		{
 			DeeObject *case_target;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+			case_target = _DeeRoDict_GetRealVTab(jump_table)[i].di_value;
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 			if (!jump_table->rd_elem[i].rdi_key)
 				continue;
 			case_target = jump_table->rd_elem[i].rdi_value;
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 			if unlikely(!DeeTuple_Check(case_target))
 				goto done; /* Shouldn't happen */
 			if unlikely(DeeTuple_SIZE(case_target) != 2)
@@ -483,14 +495,29 @@ update_constants:
 			current_assembler.a_constv[default_cid] = DeeTuple_GET(default_target, 0);
 			Dee_Incref(DeeTuple_GET(default_target, 0));
 			Dee_Decref_likely(default_target);
-			for (i = 0; i <= jump_table->rd_mask; ++i) {
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+			for (i = 0; i < jump_table->rd_vsize; ++i)
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+			for (i = 0; i <= jump_table->rd_mask; ++i)
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+			{
 				DeeObject *case_target;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+				struct Dee_dict_item *item;
+				item = &_DeeRoDict_GetRealVTab(jump_table)[i];
+				case_target = item->di_value;
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 				if (!jump_table->rd_elem[i].rdi_key)
 					continue;
 				case_target = jump_table->rd_elem[i].rdi_value;
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 				ASSERT(DeeTuple_Check(case_target));
 				ASSERT(DeeTuple_SIZE(case_target) == 2);
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+				item->di_value = DeeTuple_GET(case_target, 0);
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 				jump_table->rd_elem[i].rdi_value = DeeTuple_GET(case_target, 0);
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 				Dee_Incref(DeeTuple_GET(case_target, 0));
 				Dee_Decref_likely(case_target);
 			}

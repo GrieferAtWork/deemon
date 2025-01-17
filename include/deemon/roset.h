@@ -71,8 +71,8 @@ struct Dee_roset_item {
 
 struct Dee_roset_object {
 	Dee_OBJECT_HEAD
-	size_t                                         rs_mask;  /* [> rs_size] Allocated set size. */
-	size_t                                         rs_size;  /* [< rs_mask] Amount of non-NULL keys. */
+	size_t                                         rs_mask;  /* [>= rs_size] Allocated set size. */
+	size_t                                         rs_size;  /* [<= rs_mask] Amount of non-NULL keys. */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_roset_item, rs_elem); /* [1..rs_mask+1] Set key hash-vector. */
 };
 

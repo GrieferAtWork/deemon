@@ -15333,7 +15333,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterNextWithIterNextPair,
 	error = DeeType_INVOKE_ITERNEXTPAIR_NODEFAULT(tp_self, self, key_and_value);
 	if (error == 0) {
 		DREF DeeTupleObject *result;
-		result = DeeTuple_NewUninitialized(2);
+		result = DeeTuple_NewUninitializedPair();
 		if unlikely(!result)
 			goto err_key_and_value;
 		DeeTuple_SET(result, 0, key_and_value[0]); /* Inherit reference */

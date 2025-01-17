@@ -198,23 +198,20 @@ multiple_continue_at_iter:
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = new_dict; /* Inherit reference. */
 		} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
-			DREF DeeRoDictObject *new_dict;
-			size_t i, length;
-			length   = self->a_multiple.m_astc / 2;
-			new_dict = DeeRoDict_NewWithHint(length);
-			if unlikely(!new_dict)
-				goto err;
+			struct Dee_rodict_builder new_dict;
+			size_t i, length = self->a_multiple.m_astc / 2;
+			Dee_rodict_builder_init_with_hint(&new_dict, length);
 			for (i = 0; i < length; ++i) {
 				DeeObject *key  = self->a_multiple.m_astv[(i * 2) + 0]->a_constexpr;
 				DeeObject *item = self->a_multiple.m_astv[(i * 2) + 1]->a_constexpr;
-				if (DeeRoDict_Insert(&new_dict, key, item)) {
-					Dee_Decref(new_dict);
+				if (Dee_rodict_builder_setitem(&new_dict, key, item)) {
+					Dee_rodict_builder_fini(&new_dict);
 					goto err;
 				}
 			}
 			ast_decrefv(self->a_multiple.m_astv, self->a_multiple.m_astc);
 			Dee_Free(self->a_multiple.m_astv);
-			self->a_constexpr = (DREF DeeObject *)new_dict; /* Inherit reference. */
+			self->a_constexpr = (DREF DeeObject *)Dee_rodict_builder_pack(&new_dict); /* Inherit reference. */
 		} else {
 			goto after_multiple_constexpr;
 		}

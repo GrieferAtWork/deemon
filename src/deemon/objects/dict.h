@@ -408,6 +408,87 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 
+
+
+
+/************************************************************************/
+/* RODICT HELPERS                                                       */
+/************************************************************************/
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+#define _RoDict_TryMalloc(sizeof)     ((DREF DeeRoDictObject *)DeeObject_TryMalloc(sizeof))
+#define _RoDict_TryCalloc(sizeof)     ((DREF DeeRoDictObject *)DeeObject_TryCalloc(sizeof))
+#define _RoDict_TryRealloc(p, sizeof) ((DREF DeeRoDictObject *)DeeObject_TryRealloc(p, sizeof))
+#define _RoDict_Malloc(sizeof)        ((DREF DeeRoDictObject *)DeeObject_Malloc(sizeof))
+#define _RoDict_Calloc(sizeof)        ((DREF DeeRoDictObject *)DeeObject_Calloc(sizeof))
+#define _RoDict_Realloc(p, sizeof)    ((DREF DeeRoDictObject *)DeeObject_Realloc(p, sizeof))
+#define _RoDict_Free(p)               DeeObject_Free(p)
+
+#define _RoDict_SizeOf(valloc, hmask) \
+	_RoDict_SizeOf3(valloc, hmask, DEE_DICT_HIDXIO_FROMALLOC(valloc))
+#define _RoDict_SafeSizeOf(valloc, hmask) \
+	_RoDict_SafeSizeOf3(valloc, hmask, DEE_DICT_HIDXIO_FROMALLOC(valloc))
+#define _RoDict_SizeOf3(valloc, hmask, hidxio)   \
+	(offsetof(DeeRoDictObject, rd_vtab) +               \
+	 ((size_t)(valloc) * sizeof(struct Dee_dict_item)) + \
+	 (((size_t)(hmask) + 1) << hidxio))
+LOCAL ATTR_CONST size_t DCALL
+_RoDict_SafeSizeOf3(size_t valloc, size_t hmask, shift_t hidxio) {
+	size_t result, hmask_size;
+	if (OVERFLOW_UMUL(valloc, sizeof(struct Dee_dict_item), &result))
+		goto toobig;
+	if (OVERFLOW_UADD(hmask, 1, &hmask_size))
+		goto toobig;
+	if unlikely(((hmask_size << hidxio) >> hidxio) != hmask_size)
+		goto toobig;
+	hmask_size <<= hidxio;
+	if (OVERFLOW_UADD(result, hmask_size, &result))
+		goto toobig;
+	if (OVERFLOW_UADD(result, offsetof(DeeRoDictObject, rd_vtab), &result))
+		goto toobig;
+	return result;
+toobig:
+	return (size_t)-1; /* Force down-stream allocation failure */
+}
+
+PRIVATE NONNULL((1, 3)) void DCALL
+hmask_memcpy_and_maybe_downcast(void *__restrict dst, shift_t dst_hidxio,
+                                void const *__restrict src, shift_t src_hidxio,
+                                size_t n_words) {
+	ASSERT(dst_hidxio <= src_hidxio);
+	if likely(dst_hidxio == src_hidxio) {
+		memcpy(dst, src, n_words << dst_hidxio);
+	} else {
+		size_t i;
+		Dee_dict_gethidx_t src_get = Dee_dict_hidxio[src_hidxio].dhxio_get;
+		Dee_dict_sethidx_t dst_set = Dee_dict_hidxio[dst_hidxio].dhxio_set;
+		for (i = 0; i < n_words; ++i) {
+			/*virt*/Dee_dict_vidx_t word;
+			word = (*src_get)(src, i);
+			(*dst_set)(dst, i, word);
+		}
+	}
+}
+
+PRIVATE NONNULL((1, 3)) void DCALL
+hmask_memmovedown_and_maybe_downcast(void *dst, shift_t dst_hidxio,
+                                     void const *src, shift_t src_hidxio,
+                                     size_t n_words) {
+	ASSERT(dst_hidxio <= src_hidxio);
+	if likely(dst_hidxio == src_hidxio) {
+		memmovedown(dst, src, n_words << dst_hidxio);
+	} else {
+		Dee_dict_gethidx_t src_get = Dee_dict_hidxio[src_hidxio].dhxio_get;
+		Dee_dict_sethidx_t dst_set = Dee_dict_hidxio[dst_hidxio].dhxio_set;
+		while (n_words) {
+			/*virt*/Dee_dict_vidx_t word;
+			--n_words;
+			word = (*src_get)(src, n_words);
+			(*dst_set)(dst, n_words, word);
+		}
+	}
+}
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_DICT_H */

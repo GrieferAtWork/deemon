@@ -2575,13 +2575,13 @@ dict_mh_popitem(Dict *__restrict self) {
 	DREF DeeTupleObject *result;
 	struct Dee_dict_item *item;
 	/* Allocate a tuple which we're going to fill with some key-value pair. */
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
 	DeeDict_LockWrite(self);
 	if unlikely(!self->d_vused) {
 		DeeDict_LockEndWrite(self);
-		DeeTuple_FreeUninitialized(result);
+		DeeTuple_FreeUninitializedPair(result);
 		return_none;
 	}
 	item = _DeeDict_GetRealVTab(self) + self->d_vsize - 1;
@@ -2607,14 +2607,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 dict_mh_seq_getitem_index_impl(Dict *__restrict self, size_t index, bool tryget) {
 	struct Dee_dict_item *item;
 	DREF DeeTupleObject *result;
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
 	DeeDict_LockReadAndOptimize(self);
 	if unlikely(index >= self->d_vused) {
 		size_t real_size = self->d_vused;
 		DeeDict_LockEndRead(self);
-		DeeTuple_FreeUninitialized(result);
+		DeeTuple_FreeUninitializedPair(result);
 		if (tryget)
 			return (DREF DeeTupleObject *)ITER_DONE;
 		err_index_out_of_bounds((DeeObject *)self, index, real_size);
@@ -2758,7 +2758,7 @@ dict_mh_seq_xchitem_index_impl(Dict *self, size_t index,
 	}
 	ASSERT(data.dsqsii_deleted_key);
 	ASSERT(data.dsqsii_deleted_value);
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_kv;
 	result->t_elem[0] = data.dsqsii_deleted_key;   /* Inherit reference */
@@ -2947,7 +2947,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 dict_mh_seq_pop(Dict *self, Dee_ssize_t index) {
 	DREF DeeTupleObject *result;
 	struct Dee_dict_item *item;
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
 	DeeDict_LockWrite(self);
@@ -2971,67 +2971,98 @@ dict_mh_seq_pop(Dict *self, Dee_ssize_t index) {
 	DeeDict_LockEndWrite(self);
 	return result;
 err_r:
-	DeeTuple_FreeUninitialized(result);
+	DeeTuple_FreeUninitializedPair(result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 dict_mh_seq_removeif(Dict *self, DeeObject *should, size_t start, size_t end, size_t max) {
-	size_t i, result = 0;
-	DeeDict_LockWrite(self);
-	if (end > self->d_vused)
-		end = self->d_vused;
-	for (i = start; i < end && result < max; ++i) {
+	size_t result = 0;
+	DREF DeeTupleObject *key_and_value;
+	key_and_value = DeeTuple_NewUninitializedPair();
+	if unlikely(!key_and_value)
+		goto err;
+	while (start < end && result < max) {
+		DREF DeeObject *item_key;
+		DREF DeeObject *item_value;
 		struct Dee_dict_item *item;
-		DREF DeeTupleObject *item_key_and_value;
-		DREF DeeObject *item_key, *item_value;
 		DREF DeeObject *should_result_ob;
 		int should_result;
-again_index_i:
-		if (_DeeDict_CanOptimizeVTab(self))
-			dict_optimize_vtab(self);
-		item = &_DeeDict_GetRealVTab(self)[i];
+		DeeDict_LockReadAndOptimize(self);
+again_index_start:
+		if (end > self->d_vused) {
+			end = self->d_vused;
+			if (start >= end) {
+				DeeDict_LockEndRead(self);
+				break;
+			}
+		}
+		item = &_DeeDict_GetRealVTab(self)[start];
 		item_key = item->di_key;
 		Dee_Incref(item_key);
 		item_value = item->di_value;
 		Dee_Incref(item_value);
-		DeeDict_LockEndWrite(self);
-		if (DeeThread_CheckInterrupt())
-			goto err_item_key_and_value;
-		item_key_and_value = DeeTuple_NewUninitialized(2);
-		if unlikely(!item_key_and_value) {
-err_item_key_and_value:
-			Dee_Decref_unlikely(item_key);
-			Dee_Decref_unlikely(item_value);
-			goto err;
-		}
-		item_key_and_value->t_elem[0] = item_key;   /* Inherit reference */
-		item_key_and_value->t_elem[1] = item_value; /* Inherit reference */
-		should_result_ob = DeeObject_Call(should, 1, (DeeObject *const *)&item_key_and_value);
-		Dee_Decref_likely(item_key_and_value);
+		DeeDict_LockEndRead(self);
+		key_and_value->t_elem[0] = item_key;   /* Inherit reference */
+		key_and_value->t_elem[1] = item_value; /* Inherit reference */
+		should_result_ob = DeeObject_Call(should, 1, (DeeObject *const *)&key_and_value);
 		if unlikely(!should_result_ob)
-			goto err;
+			goto err_key_and_value;
 		should_result = DeeObject_BoolInherited(should_result_ob);
 		if unlikely(should_result < 0)
-			goto err;
-		DeeDict_LockWrite(self);
-		if unlikely(item != &_DeeDict_GetRealVTab(self)[i])
-			goto again_index_i;
-		if unlikely(item->di_key != item_key)
-			goto again_index_i;
-		if unlikely(item->di_value != item_value)
-			goto again_index_i;
-		if (should_result) {
-			item->di_key = NULL; /* Delete item */
-			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
-			--self->d_vused;
-			dict_autoshrink(self);
-			++result;
+			goto err_key_and_value;
+		ASSERT(key_and_value->t_elem[0] == item_key);
+		ASSERT(key_and_value->t_elem[1] == item_value);
+
+		/* Reset "key_and_value" for another iteration */
+		if unlikely(DeeObject_IsShared(key_and_value)) {
+			Dee_Decref_unlikely(key_and_value);
+			key_and_value = DeeTuple_NewUninitializedPair();
+			if unlikely(!key_and_value)
+				goto err;
+		} else {
+			Dee_Decref_unlikely(key_and_value->t_elem[0]);
+			Dee_Decref_unlikely(key_and_value->t_elem[1]);
+			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
 		}
+		if (!should_result) {
+			++start;
+			continue;
+		}
+
+		/* Yes: *should* delete this item */
+		DeeDict_LockWrite(self);
+		if unlikely(_DeeDict_CanOptimizeVTab(self))
+			dict_optimize_vtab(self);
+		if unlikely(item != &_DeeDict_GetRealVTab(self)[start])
+			goto downgrade_and_again_index_start;
+		if unlikely(item->di_key != item_key)
+			goto downgrade_and_again_index_start;
+		if unlikely(item->di_value != item_value)
+			goto downgrade_and_again_index_start;
+		item->di_key = NULL; /* Delete item */
+		DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
+		--self->d_vused;
+		dict_autoshrink(self);
+		dict_optimize_vtab(self);
+		ASSERT(self->d_vused == self->d_vsize);
+		++result;
+		++start;
+		if (start >= end || result >= max) {
+			DeeDict_LockEndWrite(self);
+			break;
+		}
+		DeeDict_LockDowngrade(self);
+		goto again_index_start;
 	}
-	DeeDict_LockEndWrite(self);
+	DeeTuple_FreeUninitializedPair(key_and_value);
 	return result;
+downgrade_and_again_index_start:
+	DeeDict_LockDowngrade(self);
+	goto again_index_start;
+err_key_and_value:
+	Dee_Decref_likely(key_and_value);
 err:
 	return (size_t)-1;
 }
@@ -3208,6 +3239,226 @@ dict_cc(Dict *__restrict self) {
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_mh_seq_foreach(Dict *__restrict self, Dee_foreach_t cb, void *arg) {
+	DREF DeeTupleObject *key_and_value;
+	Dee_dict_vidx_t i;
+	Dee_ssize_t temp, result = 0;
+	key_and_value = DeeTuple_NewUninitializedPair();
+	if unlikely(!key_and_value)
+		goto err;
+	DeeDict_LockRead(self);
+	for (i = Dee_dict_vidx_tovirt(0);
+	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+		DREF DeeObject *item_key, *item_value;
+		struct Dee_dict_item *item;
+		item = &_DeeDict_GetVirtVTab(self)[i];
+		item_key  = item->di_key;
+		if unlikely(!item_key)
+			continue; /* Deleted, and not-yet-optimized key */
+		Dee_Incref(item_key);
+		item_value = item->di_value;
+		Dee_Incref(item_value);
+		DeeDict_LockEndRead(self);
+		key_and_value->t_elem[0] = item_key;   /* Inherit reference */
+		key_and_value->t_elem[1] = item_value; /* Inherit reference */
+		temp = (*cb)(arg, (DeeObject *)key_and_value);
+		if unlikely(temp < 0)
+			goto err_temp_key_and_value;
+		result += temp;
+		ASSERT(key_and_value->t_elem[0] == item_key);
+		ASSERT(key_and_value->t_elem[1] == item_value);
+		/* Reset "key_and_value" for another iteration */
+		if unlikely(DeeObject_IsShared(key_and_value)) {
+			Dee_Decref_unlikely(key_and_value);
+			key_and_value = DeeTuple_NewUninitializedPair();
+			if unlikely(!key_and_value)
+				goto err;
+		} else {
+			Dee_Decref_unlikely(key_and_value->t_elem[0]);
+			Dee_Decref_unlikely(key_and_value->t_elem[1]);
+			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
+		}
+		DeeDict_LockRead(self);
+	}
+	DeeDict_LockEndRead(self);
+	DeeTuple_FreeUninitializedPair(key_and_value);
+	return result;
+err_temp_key_and_value:
+	Dee_Decref_likely(key_and_value);
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_mh_seq_foreach_reverse(Dict *__restrict self, Dee_foreach_t cb, void *arg) {
+	DREF DeeTupleObject *key_and_value;
+	Dee_dict_vidx_t i;
+	Dee_ssize_t temp, result = 0;
+	key_and_value = DeeTuple_NewUninitializedPair();
+	if unlikely(!key_and_value)
+		goto err;
+	DeeDict_LockRead(self);
+	i = Dee_dict_vidx_tovirt(self->d_vsize);
+	while (i > Dee_dict_vidx_tovirt(0)) {
+		DREF DeeObject *item_key, *item_value;
+		struct Dee_dict_item *item;
+		--i;
+		item = &_DeeDict_GetVirtVTab(self)[i];
+		item_key  = item->di_key;
+		if unlikely(!item_key)
+			continue; /* Deleted, and not-yet-optimized key */
+		Dee_Incref(item_key);
+		item_value = item->di_value;
+		Dee_Incref(item_value);
+		DeeDict_LockEndRead(self);
+		key_and_value->t_elem[0] = item_key;   /* Inherit reference */
+		key_and_value->t_elem[1] = item_value; /* Inherit reference */
+		temp = (*cb)(arg, (DeeObject *)key_and_value);
+		if unlikely(temp < 0)
+			goto err_temp_key_and_value;
+		result += temp;
+		ASSERT(key_and_value->t_elem[0] == item_key);
+		ASSERT(key_and_value->t_elem[1] == item_value);
+		/* Reset "key_and_value" for another iteration */
+		if unlikely(DeeObject_IsShared(key_and_value)) {
+			Dee_Decref_unlikely(key_and_value);
+			key_and_value = DeeTuple_NewUninitializedPair();
+			if unlikely(!key_and_value)
+				goto err;
+		} else {
+			Dee_Decref_unlikely(key_and_value->t_elem[0]);
+			Dee_Decref_unlikely(key_and_value->t_elem[1]);
+			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
+		}
+		DeeDict_LockRead(self);
+		if unlikely(i > Dee_dict_vidx_tovirt(self->d_vsize))
+			i = Dee_dict_vidx_tovirt(self->d_vsize);
+	}
+	DeeDict_LockEndRead(self);
+	DeeTuple_FreeUninitializedPair(key_and_value);
+	return result;
+err_temp_key_and_value:
+	Dee_Decref_likely(key_and_value);
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_mh_seq_enumerate_index(Dict *__restrict self, Dee_enumerate_index_t cb,
+                            void *arg, size_t start, size_t end) {
+	DREF DeeTupleObject *key_and_value;
+	Dee_ssize_t temp, result = 0;
+	key_and_value = DeeTuple_NewUninitializedPair();
+	if unlikely(!key_and_value)
+		goto err;
+	while (start < end) {
+		DREF DeeObject *item_key;
+		DREF DeeObject *item_value;
+		struct Dee_dict_item *item;
+		DeeDict_LockReadAndOptimize(self);
+		if (end > self->d_vused) {
+			end = self->d_vused;
+			if (start >= end) {
+				DeeDict_LockEndRead(self);
+				break;
+			}
+		}
+		item = &_DeeDict_GetRealVTab(self)[start];
+		item_key = item->di_key;
+		Dee_Incref(item_key);
+		item_value = item->di_value;
+		Dee_Incref(item_value);
+		DeeDict_LockEndRead(self);
+		key_and_value->t_elem[0] = item_key;   /* Inherit reference */
+		key_and_value->t_elem[1] = item_value; /* Inherit reference */
+		temp = (*cb)(arg, start, (DeeObject *)key_and_value);
+		if unlikely(temp < 0)
+			goto err_temp_key_and_value;
+		result += temp;
+		ASSERT(key_and_value->t_elem[0] == item_key);
+		ASSERT(key_and_value->t_elem[1] == item_value);
+		/* Reset "key_and_value" for another iteration */
+		if unlikely(DeeObject_IsShared(key_and_value)) {
+			Dee_Decref_unlikely(key_and_value);
+			key_and_value = DeeTuple_NewUninitializedPair();
+			if unlikely(!key_and_value)
+				goto err;
+		} else {
+			Dee_Decref_unlikely(key_and_value->t_elem[0]);
+			Dee_Decref_unlikely(key_and_value->t_elem[1]);
+			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
+		}
+		++start;
+	}
+	DeeTuple_FreeUninitializedPair(key_and_value);
+	return result;
+err_temp_key_and_value:
+	Dee_Decref_likely(key_and_value);
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_mh_seq_enumerate_index_reverse(Dict *__restrict self, Dee_enumerate_index_t cb,
+                                    void *arg, size_t start, size_t end) {
+	DREF DeeTupleObject *key_and_value;
+	Dee_ssize_t temp, result = 0;
+	key_and_value = DeeTuple_NewUninitializedPair();
+	if unlikely(!key_and_value)
+		goto err;
+	while (start < end) {
+		DREF DeeObject *item_key;
+		DREF DeeObject *item_value;
+		struct Dee_dict_item *item;
+		DeeDict_LockReadAndOptimize(self);
+		if (end > self->d_vused) {
+			end = self->d_vused;
+			if (start >= end) {
+				DeeDict_LockEndRead(self);
+				break;
+			}
+		}
+		--end;
+		item = &_DeeDict_GetRealVTab(self)[end];
+		item_key = item->di_key;
+		Dee_Incref(item_key);
+		item_value = item->di_value;
+		Dee_Incref(item_value);
+		DeeDict_LockEndRead(self);
+		key_and_value->t_elem[0] = item_key;   /* Inherit reference */
+		key_and_value->t_elem[1] = item_value; /* Inherit reference */
+		temp = (*cb)(arg, end, (DeeObject *)key_and_value);
+		if unlikely(temp < 0)
+			goto err_temp_key_and_value;
+		result += temp;
+		ASSERT(key_and_value->t_elem[0] == item_key);
+		ASSERT(key_and_value->t_elem[1] == item_value);
+		/* Reset "key_and_value" for another iteration */
+		if unlikely(DeeObject_IsShared(key_and_value)) {
+			Dee_Decref_unlikely(key_and_value);
+			key_and_value = DeeTuple_NewUninitializedPair();
+			if unlikely(!key_and_value)
+				goto err;
+		} else {
+			Dee_Decref_unlikely(key_and_value->t_elem[0]);
+			Dee_Decref_unlikely(key_and_value->t_elem[1]);
+			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
+		}
+	}
+	DeeTuple_FreeUninitializedPair(key_and_value);
+	return result;
+err_temp_key_and_value:
+	Dee_Decref_likely(key_and_value);
+	return temp;
+err:
+	return -1;
+}
+
+
 PRIVATE struct type_gc dict_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&dict_clear,
 	/* .tp_pclear = */ NULL,
@@ -3235,7 +3486,7 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_getrange                   = */ NULL,
 	/* .tp_delrange                   = */ NULL,
 	/* .tp_setrange                   = */ NULL,
-	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_mh_seq_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&dict_enumerate_index,
@@ -3332,201 +3583,6 @@ dict___hidxio__(Dict *__restrict self) {
 	return DeeInt_NEWU(hidxio);
 }
 
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_mh_seq_foreach(Dict *__restrict self, Dee_foreach_t cb, void *arg) {
-	DREF DeeTupleObject *key_and_value;
-	Dee_dict_vidx_t i;
-	Dee_ssize_t temp, result = 0;
-	key_and_value = DeeTuple_NewUninitialized(2);
-	if unlikely(!key_and_value)
-		goto err;
-	DeeDict_LockRead(self);
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
-		DREF DeeObject *key, *value;
-		struct Dee_dict_item *item;
-		item = &_DeeDict_GetVirtVTab(self)[i];
-		key  = item->di_key;
-		if unlikely(!key)
-			continue; /* Deleted, and not-yet-optimized key */
-		Dee_Incref(key);
-		value = item->di_value;
-		Dee_Incref(value);
-		DeeDict_LockEndRead(self);
-		key_and_value->t_elem[0] = key;   /* Inherit reference */
-		key_and_value->t_elem[1] = value; /* Inherit reference */
-		temp = (*cb)(arg, (DeeObject *)key_and_value);
-		if unlikely(temp < 0)
-			goto err_temp_key_and_value;
-		result += temp;
-		ASSERT(key_and_value->t_elem[0] == key);
-		ASSERT(key_and_value->t_elem[1] == value);
-		/* Reset "key_and_value" for another iteration */
-		if unlikely(DeeObject_IsShared(key_and_value)) {
-			Dee_Decref_unlikely(key_and_value);
-			key_and_value = DeeTuple_NewUninitialized(2);
-			if unlikely(!key_and_value)
-				goto err;
-		} else {
-			Dee_Decref_unlikely(key_and_value->t_elem[0]);
-			Dee_Decref_unlikely(key_and_value->t_elem[1]);
-			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
-		}
-		DeeDict_LockRead(self);
-	}
-	DeeDict_LockEndRead(self);
-	DeeTuple_FreeUninitialized(key_and_value);
-	return result;
-err_temp_key_and_value:
-	Dee_Decref_likely(key_and_value);
-	return temp;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_mh_seq_foreach_reverse(Dict *__restrict self, Dee_foreach_t cb, void *arg) {
-	DREF DeeTupleObject *key_and_value;
-	Dee_dict_vidx_t i;
-	Dee_ssize_t temp, result = 0;
-	key_and_value = DeeTuple_NewUninitialized(2);
-	if unlikely(!key_and_value)
-		goto err;
-	DeeDict_LockRead(self);
-	i = Dee_dict_vidx_tovirt(self->d_vsize);
-	while (i > Dee_dict_vidx_tovirt(0)) {
-		DREF DeeObject *key, *value;
-		struct Dee_dict_item *item;
-		--i;
-		item = &_DeeDict_GetVirtVTab(self)[i];
-		key  = item->di_key;
-		if unlikely(!key)
-			continue; /* Deleted, and not-yet-optimized key */
-		Dee_Incref(key);
-		value = item->di_value;
-		Dee_Incref(value);
-		DeeDict_LockEndRead(self);
-		key_and_value->t_elem[0] = key;   /* Inherit reference */
-		key_and_value->t_elem[1] = value; /* Inherit reference */
-		temp = (*cb)(arg, (DeeObject *)key_and_value);
-		if unlikely(temp < 0)
-			goto err_temp_key_and_value;
-		result += temp;
-		ASSERT(key_and_value->t_elem[0] == key);
-		ASSERT(key_and_value->t_elem[1] == value);
-		/* Reset "key_and_value" for another iteration */
-		if unlikely(DeeObject_IsShared(key_and_value)) {
-			Dee_Decref_unlikely(key_and_value);
-			key_and_value = DeeTuple_NewUninitialized(2);
-			if unlikely(!key_and_value)
-				goto err;
-		} else {
-			Dee_Decref_unlikely(key_and_value->t_elem[0]);
-			Dee_Decref_unlikely(key_and_value->t_elem[1]);
-			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
-		}
-		DeeDict_LockRead(self);
-		if unlikely(i > Dee_dict_vidx_tovirt(self->d_vsize))
-			i = Dee_dict_vidx_tovirt(self->d_vsize);
-	}
-	DeeDict_LockEndRead(self);
-	DeeTuple_FreeUninitialized(key_and_value);
-	return result;
-err_temp_key_and_value:
-	Dee_Decref_likely(key_and_value);
-	return temp;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_mh_seq_enumerate_index(Dict *__restrict self, Dee_enumerate_index_t cb,
-                            void *arg, size_t start, size_t end) {
-	Dee_ssize_t temp, result = 0;
-	for (;;) {
-		DREF DeeTupleObject *item_pair;
-		DREF DeeObject *item_key;
-		DREF DeeObject *item_value;
-		struct Dee_dict_item *item;
-		DeeDict_LockReadAndOptimize(self);
-		if (end > self->d_vused)
-			end = self->d_vused;
-		if (start >= end)
-			break;
-		item = &_DeeDict_GetRealVTab(self)[start];
-		ASSERTF(item->di_key, "The dict should be have been optimized above!");
-		item_key   = item->di_key;
-		item_value = item->di_value;
-		Dee_Incref(item_key);
-		Dee_Incref(item_value);
-		DeeDict_LockEndRead(self);
-		item_pair = DeeTuple_NewUninitialized(2);
-		if unlikely(!item_pair) {
-			Dee_Decref_unlikely(item_key);
-			Dee_Decref_unlikely(item_value);
-			goto err;
-		}
-		item_pair->t_elem[0] = item_key;  /* Inherit reference */
-		item_pair->t_elem[1] = item_value; /* Inherit reference */
-		temp = (*cb)(arg, start, (DeeObject *)item_pair);
-		Dee_Decref_likely(item_pair);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-		++start;
-	}
-	DeeDict_LockEndRead(self);
-	return result;
-err_temp:
-	return temp;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_mh_seq_enumerate_index_reverse(Dict *__restrict self, Dee_enumerate_index_t cb,
-                                    void *arg, size_t start, size_t end) {
-	Dee_ssize_t temp, result = 0;
-	for (;;) {
-		DREF DeeTupleObject *item_pair;
-		DREF DeeObject *item_key;
-		DREF DeeObject *item_value;
-		struct Dee_dict_item *item;
-		DeeDict_LockReadAndOptimize(self);
-		if (end > self->d_vused)
-			end = self->d_vused;
-		if (end <= start)
-			break;
-		--end;
-		item = &_DeeDict_GetRealVTab(self)[end];
-		ASSERTF(item->di_key, "The dict should be have been optimized above!");
-		item_key   = item->di_key;
-		item_value = item->di_value;
-		Dee_Incref(item_key);
-		Dee_Incref(item_value);
-		DeeDict_LockEndRead(self);
-		item_pair = DeeTuple_NewUninitialized(2);
-		if unlikely(!item_pair) {
-			Dee_Decref_unlikely(item_key);
-			Dee_Decref_unlikely(item_value);
-			goto err;
-		}
-		item_pair->t_elem[0] = item_key;  /* Inherit reference */
-		item_pair->t_elem[1] = item_value; /* Inherit reference */
-		temp = (*cb)(arg, end, (DeeObject *)item_pair);
-		Dee_Decref_likely(item_pair);
-		if unlikely(temp < 0)
-			goto err_temp;
-		result += temp;
-	}
-	DeeDict_LockEndRead(self);
-	return result;
-err_temp:
-	return temp;
-err:
-	return -1;
-}
 
 struct dict_fromkeys_data {
 	Dict      *dfkd_dict;  /* [1..1] Dict to insert stuff into. */
@@ -3933,7 +3989,11 @@ PRIVATE struct type_getset tpconst dict_getsets[] = {
 	TYPE_GETSET_BOUND("lastvalue", &dict_getlastvalue, &dict_dellast, &dict_setlastvalue, &dict_nonempty_as_bound, "->" D_TValue),
 
 	TYPE_GETTER(STR_cached, &DeeObject_NewRef, "->?."),
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+	TYPE_GETTER(STR_frozen, &DeeRoDict_FromDict, "->?#Frozen"),
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence, "->?#Frozen"),
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	TYPE_GETTER_F("__sizeof__", &dict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETTER_F("__hidxio__", &dict___hidxio__, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
@@ -6202,7 +6262,7 @@ again:
 			Dee_Incref(key);
 			Dee_Incref(value);
 			DeeDict_LockEndRead(me);
-			match = (DREF DeeObject *)DeeTuple_NewUninitialized(2);
+			match = (DREF DeeObject *)DeeTuple_NewUninitializedPair();
 			if unlikely(!match) {
 				Dee_Decref(key);
 				Dee_Decref(value);
@@ -6215,7 +6275,7 @@ again:
 			if (me->d_elem != vector || me->d_mask != mask ||
 			    item->di_key != key || item->di_value != value) {
 				DeeDict_LockEndRead(me);
-				DeeTuple_FreeUninitialized((DREF DeeTupleObject *)match);
+				DeeTuple_FreeUninitializedPair((DREF DeeTupleObject *)match);
 				goto again;
 			}
 		}
@@ -7163,13 +7223,13 @@ dict_mh_popitem(Dict *__restrict self) {
 	DREF DeeTupleObject *result;
 	struct dict_item *iter;
 	/* Allocate a tuple which we're going to fill with some key-value pair. */
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
 	DeeDict_LockWrite(self);
 	if unlikely(!self->d_used) {
 		DeeDict_LockEndWrite(self);
-		DeeTuple_FreeUninitialized(result);
+		DeeTuple_FreeUninitializedPair(result);
 		return_none;
 	}
 	iter = self->d_elem;

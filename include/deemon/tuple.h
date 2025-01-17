@@ -178,6 +178,15 @@ DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
                          /*inherit(always)*/ DREF DeeObject *const *argv);
 
+/* Helpers for pairs. */
+#define DeeTuple_NewUninitializedPair()      DeeTuple_NewUninitialized(2)
+#define DeeTuple_TryNewUninitializedPair()   DeeTuple_TryNewUninitialized(2)
+#define DeeTuple_FreeUninitializedPair(self) DeeTuple_FreeUninitialized(self)
+#define DeeTuple_PackPair(a, b)              DeeTuple_Pack(2, a, b)
+#define DeeTuple_TryPackPair(a, b)           DeeTuple_TryPack(2, a, b)
+#define DeeTuple_PackPairSymbolic(a, b)      DeeTuple_PackSymbolic(2, a, b)
+#define DeeTuple_TryPackPairSymbolic(a, b)   DeeTuple_TryPackSymbolic(2, a, b)
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_TUPLE_H */

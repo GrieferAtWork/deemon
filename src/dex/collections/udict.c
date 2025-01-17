@@ -1068,13 +1068,13 @@ udict_mh_popitem(UDict *__restrict self) {
 	DREF DeeTupleObject *result;
 	struct udict_item *iter;
 	/* Allocate a tuple which we're going to fill with some key-value pair. */
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
 	UDict_LockWrite(self);
 	if unlikely(!self->ud_used) {
 		UDict_LockEndWrite(self);
-		DeeTuple_FreeUninitialized(result);
+		DeeTuple_FreeUninitializedPair(result);
 		err_empty_sequence((DeeObject *)self);
 		goto err;
 	}

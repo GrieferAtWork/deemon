@@ -1790,14 +1790,12 @@ err_function_code:
 		case DTYPE16_RODICT & 0xff: {
 			uint32_t num_items;
 			uint8_t const *end;
+			struct Dee_rodict_builder result_builder;
 			num_items = Dec_DecodePointer(&reader);
-			result    = (DREF DeeObject *)DeeRoDict_NewWithHint(num_items);
-			if unlikely(!result)
-				goto done;
+			Dee_rodict_builder_init_with_hint(&result_builder, num_items);
 			end = self->df_data + self->df_size;
 			while (num_items--) {
 				DREF DeeObject *key, *value;
-				int error;
 				/* Read the individual Dict key-item pairs. */
 				if unlikely(reader >= end) {
 					key = SET_CORRUPTED(reader, ITER_DONE);
@@ -1805,7 +1803,7 @@ err_function_code:
 					key = DecFile_LoadObject(self, &reader);
 				}
 				if unlikely(!ITER_ISOK(key)) {
-					Dee_Decref(result);
+					Dee_rodict_builder_fini(&result_builder);
 					result = key;
 					goto done;
 				}
@@ -1816,17 +1814,17 @@ err_function_code:
 				}
 				if unlikely(!ITER_ISOK(value)) {
 					Dee_Decref(value);
-					Dee_Decref(result);
+					Dee_rodict_builder_fini(&result_builder);
 					result = value;
 					goto done;
 				}
 				/* Insert the key and item into the Dict. */
-				error = DeeRoDict_Insert((DREF DeeRoDictObject **)&result, key, value);
-				Dee_Decref(value);
-				Dee_Decref(key);
-				if unlikely(error)
-					goto err_r;
+				if unlikely(Dee_rodict_builder_setitem_inherited(&result_builder, key, value)) {
+					Dee_rodict_builder_fini(&result_builder);
+					goto err;
+				}
 			}
+			result = (DREF DeeObject *)Dee_rodict_builder_pack(&result_builder);
 		}	break;
 
 		case DTYPE16_CLASSDESC & 0xff: {

@@ -2267,37 +2267,74 @@ librt_get_CachedSeqWithIterIterator_f(size_t UNUSED(argc), DeeObject *const *UNU
 }
 
 
+PRIVATE struct nonempty_roset_instance_struct {
+	Dee_OBJECT_HEAD
+	size_t                rs_mask;    /* [>= rs_size] Allocated set size. */
+	size_t                rs_size;    /* [<= rs_mask] Amount of non-NULL keys. */
+	struct Dee_roset_item rs_elem[2]; /* [1..rs_mask+1] Set key hash-vector. */
+} nonempty_roset_instance = {
+	OBJECT_HEAD_INIT(&DeeRoSet_Type),
+	/* .rs_mask = */ 1,
+	/* .rs_size = */ 1,
+	/* .rs_elem = */ { { DeeInt_Zero, 0 } } /* hash(int(0)) == 0 */
+};
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_nonempty_stub_set(void) {
-	DREF DeeRoSetObject *result;
-	result = DeeRoSet_NewWithHint(1);
-	if (likely(result) && unlikely(DeeRoSet_Insert(&result, Dee_None)))
-		Dee_Clear(result);
-	return (DREF DeeObject *)result;
-}
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_mask) == offsetof(DeeRoSetObject, rs_mask));
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_size) == offsetof(DeeRoSetObject, rs_size));
+STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_elem) == offsetof(DeeRoSetObject, rs_elem));
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_nonempty_stub_map(void) {
-	DREF DeeRoDictObject *result;
-	result = DeeRoDict_NewWithHint(1);
-	if (likely(result) && unlikely(DeeRoDict_Insert(&result, Dee_None, Dee_None)))
-		Dee_Clear(result);
-	return (DREF DeeObject *)result;
-}
+#define nonempty_stub_set ((DeeObject *)&nonempty_roset_instance)
+
+
+
+PRIVATE struct nonempty_rodict_instance_struct {
+	Dee_OBJECT_HEAD /* All of the below fields are [const] */
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+	/*real*/Dee_dict_vidx_t rd_vsize;        /* # of key-value pairs in the dict. */
+	Dee_hash_t              rd_hmask;        /* [>= rd_vsize] Hash-mask */
+	Dee_dict_gethidx_t      rd_hidxget;      /* [1..1] Getter for "rd_htab" */
+	void                   *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+	struct Dee_dict_item    rd_vtab[1];      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
+	byte_t                  rd_htab_data[2]; /* Dict hash-table. */
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+	size_t                  rd_mask;         /* [const][!0] Allocated dictionary mask. */
+	size_t                  rd_size;         /* [const][< rd_mask] Amount of non-NULL key-item pairs. */
+	struct Dee_rodict_item  rd_elem[2];      /* [rd_mask+1] Dict key-item pairs. */
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+} nonempty_rodict_instance = {
+	OBJECT_HEAD_INIT(&DeeRoDict_Type),
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+	/* .rd_vsize     = */ 1,
+	/* .rd_hmask     = */ 1,
+	/* .rd_hidxget   = */ &Dee_dict_gethidx8,
+	/* .rd_htab      = */ nonempty_rodict_instance.rd_htab_data,
+	/* .rd_vtab      = */ { Dee_DICT_ITEM_INIT(0, DeeInt_Zero, DeeInt_Zero) }, /* hash(int(0)) == 0 */
+	/* .rd_htab_data = */ { Dee_dict_vidx_tovirt(0), Dee_DICT_HTAB_EOF },
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+	/* .rd_mask      = */ 1,
+	/* .rd_size      = */ 1,
+	/* .rd_vtab      = */ { { DeeInt_Zero, DeeInt_Zero, 0 } }, /* hash(int(0)) == 0 */
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+};
+
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_vsize) == offsetof(DeeRoDictObject, rd_vsize));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_hmask) == offsetof(DeeRoDictObject, rd_hmask));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_hidxget) == offsetof(DeeRoDictObject, rd_hidxget));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_htab) == offsetof(DeeRoDictObject, rd_htab));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_vtab) == offsetof(DeeRoDictObject, rd_vtab));
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_mask) == offsetof(DeeRoDictObject, rd_mask));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_size) == offsetof(DeeRoDictObject, rd_size));
+STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_elem) == offsetof(DeeRoDictObject, rd_elem));
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
+
+#define nonempty_stub_map ((DeeObject *)&nonempty_rodict_instance)
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SetInversion_uncached_impl_f(void) {
-	DREF DeeObject *inverse;
-	DREF DeeObject *nonempty_set = librt_get_nonempty_stub_set();
-	if unlikely(!nonempty_set)
-		goto err;
-	inverse = DeeObject_Inv(nonempty_set);
-	Dee_Decref(nonempty_set);
-	return get_type_of(inverse);
-err:
-	return NULL;
+	return get_type_of(DeeObject_Inv(nonempty_stub_set));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2307,154 +2344,42 @@ librt_get_SetInversion_impl_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SetUnion_uncached_impl_f(void) {
-	DREF DeeObject *a, *b, *c;
-	a = librt_get_nonempty_stub_set();
-	if unlikely(!a)
-		goto err;
-	b = librt_get_nonempty_stub_set();
-	if unlikely(!b)
-		goto err_a;
-	c = DeeObject_Or(a, b);
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return get_type_of(c);
-err_a:
-	Dee_Decref(a);
-err:
-	return NULL;
+	return get_type_of(DeeObject_Or(nonempty_stub_set, nonempty_stub_set));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SetSymmetricDifference_uncached_impl_f(void) {
-	DREF DeeObject *a, *b, *c;
-	a = librt_get_nonempty_stub_set();
-	if unlikely(!a)
-		goto err;
-	b = librt_get_nonempty_stub_set();
-	if unlikely(!b)
-		goto err_a;
-	c = DeeObject_Xor(a, b);
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return get_type_of(c);
-err_a:
-	Dee_Decref(a);
-err:
-	return NULL;
+	return get_type_of(DeeObject_Xor(nonempty_stub_set, nonempty_stub_set));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SetIntersection_uncached_impl_f(void) {
-	DREF DeeObject *a, *b, *c;
-	a = librt_get_nonempty_stub_set();
-	if unlikely(!a)
-		goto err;
-	b = librt_get_nonempty_stub_set();
-	if unlikely(!b)
-		goto err_a;
-	c = DeeObject_And(a, b);
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return get_type_of(c);
-err_a:
-	Dee_Decref(a);
-err:
-	return NULL;
+	return get_type_of(DeeObject_And(nonempty_stub_set, nonempty_stub_set));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SetDifference_uncached_impl_f(void) {
-	DREF DeeObject *a, *b, *c;
-	a = librt_get_nonempty_stub_set();
-	if unlikely(!a)
-		goto err;
-	b = librt_get_nonempty_stub_set();
-	if unlikely(!b)
-		goto err_a;
-	c = DeeObject_Sub(a, b);
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return get_type_of(c);
-err_a:
-	Dee_Decref(a);
-err:
-	return NULL;
+	return get_type_of(DeeObject_Sub(nonempty_stub_set, nonempty_stub_set));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapUnion_uncached_impl_f(void) {
-	DREF DeeObject *a, *b, *c;
-	a = librt_get_nonempty_stub_map();
-	if unlikely(!a)
-		goto err;
-	b = librt_get_nonempty_stub_map();
-	if unlikely(!b)
-		goto err_a;
-	c = DeeObject_Or(a, b);
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return get_type_of(c);
-err_a:
-	Dee_Decref(a);
-err:
-	return NULL;
+	return get_type_of(DeeObject_Or(nonempty_stub_map, nonempty_stub_map));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapSymmetricDifference_uncached_impl_f(void) {
-	DREF DeeObject *a, *b, *c;
-	a = librt_get_nonempty_stub_map();
-	if unlikely(!a)
-		goto err;
-	b = librt_get_nonempty_stub_map();
-	if unlikely(!b)
-		goto err_a;
-	c = DeeObject_Xor(a, b);
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return get_type_of(c);
-err_a:
-	Dee_Decref(a);
-err:
-	return NULL;
+	return get_type_of(DeeObject_Xor(nonempty_stub_map, nonempty_stub_map));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapIntersection_uncached_impl_f(void) {
-	DREF DeeObject *a, *b, *c;
-	a = librt_get_nonempty_stub_map();
-	if unlikely(!a)
-		goto err;
-	b = librt_get_nonempty_stub_map();
-	if unlikely(!b)
-		goto err_a;
-	c = DeeObject_And(a, b);
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return get_type_of(c);
-err_a:
-	Dee_Decref(a);
-err:
-	return NULL;
+	return get_type_of(DeeObject_And(nonempty_stub_map, nonempty_stub_map));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapDifference_uncached_impl_f(void) {
-	DREF DeeObject *a, *b, *c;
-	a = librt_get_nonempty_stub_map();
-	if unlikely(!a)
-		goto err;
-	b = librt_get_nonempty_stub_map();
-	if unlikely(!b)
-		goto err_a;
-	c = DeeObject_Sub(a, b);
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return get_type_of(c);
-err_a:
-	Dee_Decref(a);
-err:
-	return NULL;
+	return get_type_of(DeeObject_Sub(nonempty_stub_map, nonempty_stub_map));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

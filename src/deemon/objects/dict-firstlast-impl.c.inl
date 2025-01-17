@@ -153,7 +153,7 @@ LOCAL_dict_getspecial(Dict *__restrict self) {
 	DREF LOCAL_value_type *result;
 	struct Dee_dict_item *item;
 #ifdef LOCAL_IS_PAIR
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
 #endif /* LOCAL_IS_PAIR */
@@ -176,7 +176,7 @@ err_maybe_r_unbound_unlock:
 	DeeDict_LockEndRead(self);
 	err_unbound_attribute_string(&DeeDict_Type, LOCAL_STR_getset);
 #ifdef LOCAL_IS_PAIR
-	DeeTuple_FreeUninitialized(result);
+	DeeTuple_FreeUninitializedPair(result);
 err:
 #endif /* LOCAL_IS_PAIR */
 	return NULL;
@@ -189,7 +189,7 @@ LOCAL_dict_trygetspecial(Dict *__restrict self) {
 	DREF LOCAL_value_type *result;
 	struct Dee_dict_item *item;
 #ifdef LOCAL_IS_PAIR
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
 #endif /* LOCAL_IS_PAIR */
@@ -211,7 +211,7 @@ LOCAL_dict_trygetspecial(Dict *__restrict self) {
 err_maybe_r_unbound_unlock:
 	DeeDict_LockEndRead(self);
 #ifdef LOCAL_IS_PAIR
-	DeeTuple_FreeUninitialized(result);
+	DeeTuple_FreeUninitializedPair(result);
 #endif /* LOCAL_IS_PAIR */
 	return (DREF LOCAL_value_type *)ITER_DONE;
 #ifdef LOCAL_IS_PAIR

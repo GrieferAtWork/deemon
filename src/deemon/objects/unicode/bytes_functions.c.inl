@@ -67,7 +67,7 @@ DeeTuple_NewII(size_t a, size_t b) {
 	bval = DeeInt_NewSize(b);
 	if unlikely(!bval)
 		goto err_aval;
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_aval_bval;
 	DeeTuple_SET(result, 0, aval); /* Inherit reference */

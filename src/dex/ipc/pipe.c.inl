@@ -87,7 +87,7 @@ pipe_new_impl(size_t pipe_size) {
 	writer_file = DeeObject_MALLOC(DeeSystemFileObject);
 	if unlikely(!reader_file)
 		goto err_reader_file;
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_reader_file_writer_file;
 
@@ -169,7 +169,7 @@ pipe_new_impl(size_t pipe_size) {
 	DeeTuple_SET(result, 1, (DeeObject *)writer_file); /* Inherit reference */
 	return result;
 err_reader_file_writer_file_result:
-	DeeTuple_FreeUninitialized(result);
+	DeeTuple_FreeUninitializedPair(result);
 err_reader_file_writer_file:
 	DeeObject_FREE(writer_file);
 err_reader_file:

@@ -44,7 +44,13 @@
 #include <deemon/super.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/typecore.h>
+
+#include "../../objects/dict.h"
 #include "../../runtime/builtin.h"
+
+#undef shift_t
+#define shift_t __SHIFT_TYPE__
 
 DECL_BEGIN
 
@@ -172,13 +178,65 @@ err:
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+
+
+/* NOTE: Caller must ensure that "self" is optimized
+ * @return: * :        read-lock to "self" is still held; success
+ * @return: NULL:      read-lock to "self" was released; error was thrown
+ * @return: ITER_DONE: read-lock to "self" was released; caller should start over */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeRoDictObject *DCALL
+rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
+	DREF DeeRoDictObject *result;
+	size_t sizeof_result;
+	size_t vsize;
+	size_t i, hmask;
+	shift_t src_hidxio;
+	shift_t dst_hidxio;
+	ASSERT(!DeeDict_LockReading(self));
+	ASSERT(!_DeeDict_CanOptimizeVTab(self));
+	DeeDict_LockReadAndOptimize(self);
+	vsize         = self->d_vused;
+	hmask         = self->d_hmask;
+	src_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+	dst_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(vsize);
+	sizeof_result = _RoDict_SizeOf3(vsize, hmask, dst_hidxio);
+	result = _RoDict_TryMalloc(sizeof_result);
+	if unlikely(!result) {
+		DeeDict_LockEndRead(self);
+		return Dee_CollectMemory(sizeof_result)
+		       ? (DREF DeeRoDictObject *)ITER_DONE
+		       : (DREF DeeRoDictObject *)NULL;
+	}
+
+	/* Copy over data as-is from the dict (no need to rehash or anything). */
+	result->rd_htab = mempcpyc(_DeeRoDict_GetRealVTab(result),
+	                           _DeeDict_GetRealVTab(self), vsize,
+	                           sizeof(struct Dee_dict_item));
+	hmask_memcpy_and_maybe_downcast(result->rd_htab, dst_hidxio,
+	                                self->d_htab, src_hidxio,
+	                                hmask + 1);
+	for (i = 0; i < vsize; ++i) {
+		struct Dee_dict_item *item;
+		item = &_DeeRoDict_GetRealVTab(result)[i];
+		ASSERT(item->di_key);
+		Dee_Incref(item->di_key);
+		Dee_Incref(item->di_value);
+	}
+	result->rd_vsize   = vsize;
+	result->rd_hmask   = hmask;
+	result->rd_hidxget = Dee_dict_hidxio[dst_hidxio].dhxio_get;
+	DeeObject_Init(result, &DeeRoDict_Type);
+	return result;
+}
+
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 /* NOTE: _Always_ inherits references to `key' and `value' */
 PRIVATE NONNULL((1, 3, 4)) void DCALL
-rodict_insert_nocheck(DeeRoDictObject *__restrict self,
-                      dhash_t hash,
+rodict_insert_nocheck(DeeRoDictObject *__restrict self, Dee_hash_t hash,
                       /*inherit(always)*/ DREF DeeObject *key,
                       /*inherit(always)*/ DREF DeeObject *value) {
-	size_t i, perturb;
+	Dee_hash_t i, perturb;
 	struct rodict_item *item;
 	perturb = i = DeeRoDict_HashSt(self, hash);
 	for (;; DeeRoDict_HashNx(i, perturb)) {
@@ -192,14 +250,14 @@ rodict_insert_nocheck(DeeRoDictObject *__restrict self,
 	item->rdi_key   = key;   /* Inherit reference. */
 	item->rdi_value = value; /* Inherit reference. */
 }
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 
 /* NOTE: _Always_ inherits references to `key' */
 PRIVATE NONNULL((1, 3)) void DCALL
-roset_insert_nocheck(DeeRoSetObject *__restrict self,
-                     dhash_t hash,
+roset_insert_nocheck(DeeRoSetObject *__restrict self, Dee_hash_t hash,
                      /*inherit(always)*/ DREF DeeObject *key) {
-	size_t i, perturb;
+	Dee_hash_t i, perturb;
 	struct roset_item *item;
 	perturb = i = ROSET_HASHST(self, hash);
 	for (;; ROSET_HASHNX(i, perturb)) {
@@ -452,9 +510,43 @@ check_dict_again:
 		DeeDict_LockRead(val);
 		if (!DeeDict_SIZE(val)) {
 			/* Simple case: The Dict is empty, so we can just pack an empty Dict at runtime. */
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+unlock_and_push_empty_dict:
+#endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 			DeeDict_LockEndRead(val);
 			return asm_gpack_dict(0);
 		}
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+		/* Ensure that "val" is optimized */
+		if unlikely(_DeeDict_CanOptimizeVTab(val)) {
+			bool atomic_upgrade = DeeDict_LockUpgrade(val);
+			if (atomic_upgrade || _DeeDict_CanOptimizeVTab(val))
+				dict_optimize_vtab(val);
+			DeeDict_LockDowngrade(val);
+			if unlikely(!atomic_upgrade && !DeeDict_SIZE(val))
+				goto unlock_and_push_empty_dict;
+		}
+
+		/* Verify constants */
+		for (i = Dee_dict_vidx_tovirt(0);
+		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
+			struct Dee_dict_item *item;
+			item = &_DeeDict_GetVirtVTab(val)[i];
+			if (!asm_allowconst(item->di_key) ||
+			    !asm_allowconst(item->di_value)) {
+				DeeDict_LockEndRead(val);
+				goto push_dict_parts;
+			}
+		}
+
+		/* After verifying constants, directly cast into an RoDict */
+		rodict = rodict_fromdict_locked_or_unlock(val);
+		if unlikely(!ITER_ISOK(rodict)) {
+			if (rodict)
+				goto check_dict_again;
+			goto err;
+		}
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 		for (i = Dee_dict_vidx_tovirt(0);
 		     Dee_dict_vidx_virt_lt_real(i, val->d_vsize); ++i) {
@@ -529,6 +621,7 @@ check_dict_again:
 #endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 		DeeDict_LockEndRead(val);
 		DeeObject_Init(rodict, &DeeRoDict_Type);
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 		/* All right! we've got the ro-Dict all packed together!
 		 * -> Register it as a constant. */

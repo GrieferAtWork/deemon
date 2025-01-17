@@ -2383,7 +2383,7 @@ nextkey:
 			goto nextkey;
 		goto err;
 	}
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_key_value;
 	DeeTuple_SET(result, 0, key);
@@ -2417,7 +2417,7 @@ nextkey:
 			goto nextkey;
 		goto err;
 	}
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_key_value;
 	DeeTuple_SET(result, 0, key);
@@ -2446,7 +2446,7 @@ nextkey:
 			goto err_key;
 		goto nextkey;
 	}
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_key_value;
 	DeeTuple_SET(result, 0, key);
@@ -2475,7 +2475,7 @@ nextkey:
 			goto err_key;
 		goto nextkey;
 	}
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_key_value;
 	DeeTuple_SET(result, 0, key);

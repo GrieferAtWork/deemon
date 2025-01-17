@@ -1669,7 +1669,7 @@ numeric_divmod(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *y;
 	if (DeeArg_Unpack(argc, argv, "o:divmod", &y))
 		goto err;
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err;
 	d = DeeObject_Div(self, y);
@@ -1684,7 +1684,7 @@ numeric_divmod(DeeObject *self, size_t argc, DeeObject *const *argv) {
 err_r_d:
 	Dee_Decref(d);
 err_r:
-	DeeTuple_FreeUninitialized(result);
+	DeeTuple_FreeUninitializedPair(result);
 err:
 	return NULL;
 }

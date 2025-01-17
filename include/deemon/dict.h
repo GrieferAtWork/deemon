@@ -86,9 +86,37 @@ typedef struct Dee_dict_object DeeDictObject;
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 struct Dee_dict_item {
 	Dee_hash_t      di_hash;  /* [valid_if(di_key)] Hash of `di_key' (undefined, but readable when "di_key == NULL") */
-	DREF DeeObject *di_key;   /* [0..1] Dict item key, or "NULL" if deleted and not cleaned up (yet) */
-	DREF DeeObject *di_value; /* [1..1][valid_if(di_key)] Dict item value. */
+	union {
+		DREF DeeObject *di_key_and_value[2]; /* [0..1] Inline vector of the key, followed by its value. */
+		struct {
+			DREF DeeObject *di_key;   /* [0..1] Dict item key, or "NULL" if deleted and not cleaned up (yet) */
+			DREF DeeObject *di_value; /* [1..1][valid_if(di_key)] Dict item value. */
+		}
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+		_di_skv
+#ifdef __COMPILER_HAVE_TRANSPARENT_UNION
+#define di_key   _di_skv.di_key
+#define di_value _di_skv.di_value
+#endif /* __COMPILER_HAVE_TRANSPARENT_UNION */
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+		;
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_di_ukv
+#define di_key_and_value _di_ukv.di_key_and_value
+#ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
+#define di_key   _di_ukv.di_key
+#define di_value _di_ukv.di_value
+#else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
+#define di_key   _di_ukv._di_skv.di_key
+#define di_value _di_ukv._di_skv.di_value
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
+
+/* Static initializer for `struct Dee_dict_item' */
+#define Dee_DICT_ITEM_INIT(hash, key, value) { hash, { { key, value } } }
 
 /* Index for "d_vtab" (real and virt version) */
 typedef size_t Dee_dict_vidx_t;
@@ -247,6 +275,9 @@ struct Dee_dict_item {
 	Dee_hash_t      di_hash;  /* [valid_if(di_key)][lock(:d_lock)] Hash of `di_key' (with a starting value of `0').
 	                           * NOTE: Some random value when `di_key' is the dummy key. */
 };
+
+/* Static initializer for `struct Dee_dict_item' */
+#define Dee_DICT_ITEM_INIT(hash, key, value) { key, value, hash }
 
 struct Dee_dict_object {
 	Dee_OBJECT_HEAD /* GC Object */

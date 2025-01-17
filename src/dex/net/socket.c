@@ -2154,7 +2154,7 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 		goto err_addr;
 
 	/* Create a new tuple to package the 2 objects. */
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_text;
 	if (result_text == ITER_DONE) {
@@ -2234,7 +2234,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 		goto err_addr;
 
 	/* Create a new tuple to package the 2 objects. */
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_addr;
 	if (result_size == 0) {
@@ -2248,7 +2248,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 		DREF DeeObject *result_size_ob;
 		result_size_ob = DeeInt_NewSize((size_t)result_size);
 		if unlikely(!result_size_ob) {
-			DeeTuple_FreeUninitialized(result);
+			DeeTuple_FreeUninitializedPair(result);
 			goto err_addr;
 		}
 		DeeObject_Init(result_addr, &DeeSockAddr_Type);

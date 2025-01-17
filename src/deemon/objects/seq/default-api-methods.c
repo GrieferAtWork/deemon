@@ -7340,7 +7340,7 @@ DeeMH_map_setold_ex(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (old_value == ITER_DONE)
 		return_reference_((DeeObject *)&setold_failed_result);
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_old_value;
 	Dee_Incref(Dee_True);
@@ -7381,7 +7381,7 @@ DeeMH_map_setnew_ex(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (old_value == ITER_DONE)
 		return_reference_((DeeObject *)&setnew_success_result);
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result)
 		goto err_old_value;
 	Dee_Incref(Dee_False);

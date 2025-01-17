@@ -148,7 +148,7 @@ smapiter_next(SharedMapIterator *__restrict self) {
 	}
 
 	/* Got the key+value. Now pack them together into a tuple. */
-	result = DeeTuple_NewUninitialized(2);
+	result = DeeTuple_NewUninitializedPair();
 	if unlikely(!result) {
 		Dee_Decref(result_value);
 		Dee_Decref(result_key);

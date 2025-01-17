@@ -3556,18 +3556,19 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 		DREF DeeObject *cseq;
 		elemv = fg_vtop(self) - (itemc - 1);
 		if (asmap) {
-			cseq = (DREF DeeObject *)DeeRoDict_NewWithHint((size_t)(itemc / 2));
-			if unlikely(!cseq)
-				goto err;
-			for (i = 0; i < (size_t)(itemc / 2); ++i) {
+			struct Dee_rodict_builder cseq_builder;
+			size_t pairc = (size_t)(itemc / 2);
+			Dee_rodict_builder_init_with_hint(&cseq_builder, pairc);
+			for (i = 0; i < pairc; ++i) {
 				DeeObject *key   = memval_const_getobj(&elemv[(i * 2) + 0]);
 				DeeObject *value = memval_const_getobj(&elemv[(i * 2) + 1]);
-				if unlikely(DeeRoDict_Insert((DeeRoDictObject **)&cseq, key, value)) {
-/*err_cseq:*/
-					Dee_Decref_likely(cseq);
+				if unlikely(Dee_rodict_builder_setitem(&cseq_builder, key, value)) {
+/*err_cseq_builder:*/
+					Dee_rodict_builder_fini(&cseq_builder);
 					goto err;
 				}
 			}
+			cseq = (DREF DeeObject *)Dee_rodict_builder_pack(&cseq_builder);
 		} else {
 			cseq = (DREF DeeObject *)DeeTuple_NewUninitialized(itemc);
 			if unlikely(!cseq)
@@ -5262,26 +5263,30 @@ fg_vpackseq(struct fungen *__restrict self,
 		DREF DeeObject *cseq;
 		elemv  = fg_vtop(self) - (elemc - 1);
 		if (asmap) {
-			cseq = (DREF DeeObject *)DeeRoDict_NewWithHint((size_t)(elemc / 2));
-			if unlikely(!cseq)
-				goto err;
-			for (i = 0; i < (size_t)(elemc / 2); ++i) {
+			struct Dee_rodict_builder cseq_builder;
+			size_t pairc = (size_t)(elemc / 2);
+			Dee_rodict_builder_init_with_hint(&cseq_builder, pairc);
+			for (i = 0; i < pairc; ++i) {
 				DeeObject *key   = memval_const_getobj(&elemv[(i * 2) + 0]);
 				DeeObject *value = memval_const_getobj(&elemv[(i * 2) + 1]);
-				if unlikely(DeeRoDict_Insert((DeeRoDictObject **)&cseq, key, value)) {
-err_cseq:
-					Dee_Decref_likely(cseq);
+				if unlikely(Dee_rodict_builder_setitem(&cseq_builder, key, value)) {
+/*err_cseq_builder:*/
+					Dee_rodict_builder_fini(&cseq_builder);
 					goto err;
 				}
 			}
+			cseq = (DREF DeeObject *)Dee_rodict_builder_pack(&cseq_builder);
 		} else if (DeeType_Extends(seq_type, &DeeSet_Type)) {
 			cseq = (DREF DeeObject *)DeeRoSet_NewWithHint(elemc);
 			if unlikely(!cseq)
 				goto err;
 			for (i = 0; i < elemc; ++i) {
 				DeeObject *key = memval_const_getobj(&elemv[i]);
-				if unlikely(DeeRoSet_Insert((DeeRoSetObject **)&cseq, key))
-					goto err_cseq;
+				if unlikely(DeeRoSet_Insert((DeeRoSetObject **)&cseq, key)) {
+/*err_cseq:*/
+					Dee_Decref_likely(cseq);
+					goto err;
+				}
 			}
 		} else {
 			cseq = (DREF DeeObject *)DeeTuple_NewUninitialized(elemc);

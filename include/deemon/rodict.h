@@ -103,7 +103,7 @@ struct Dee_rodict_builder {
 	 * - rdb_dict->rd_vtab:    [0..rdb_dict->rd_vsize|ALLOC(rdb_valloc)] (out-of-bound keys are undefined)
 	 * - rdb_dict->rd_htab:    [== _DeeRoDict_GetRealVTab(rdb_dict) + rdb_valloc]
 	 * - rdb_dict->rd_hidxget: [== Dee_dict_hidxio[DEE_DICT_HIDXIO_FROMALLOC(rdb_valloc)].dhxio_get] */
-	DeeRoDictObject   *rdb_dict;    /* [1..1][owned] The dict being built. */
+	DeeRoDictObject   *rdb_dict;    /* [0..1][owned] The dict being built. */
 	size_t             rdb_valloc;  /* Allocated size of `rdb_dict' (or 0 when `rdb_dict' is `NULL') */
 	Dee_dict_sethidx_t rdb_hidxset; /* [?..1][valid_if(rdb_dict)] Setter for `rdb_dict->rd_htab' */
 };
@@ -201,12 +201,49 @@ DDATDEF DeeObject DeeRoDict_EmptyInstance;
 /* Internal functions for constructing a read-only Dict object. */
 DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_New(void);
 DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
+DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_TryNewWithHint(size_t num_items);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeRoDict_Insert(/*in|out*/ DREF DeeRoDictObject **__restrict p_self,
                  DeeObject *key, DeeObject *value);
 
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_FromSequence(DeeObject *__restrict self);
+
+
+
+
+
+/************************************************************************/
+/* FORWARD-COMPATIBLE RODICT BUILDER                                    */
+/************************************************************************/
+struct Dee_rodict_builder {
+	DeeRoDictObject *rdb_dict; /* [0..1][owned] The dict being built. */
+};
+
+#define Dee_RODICT_BUILDER_INIT        { NULL }
+#define Dee_rodict_builder_init(self)  (void)((self)->rdb_dict = NULL)
+#define Dee_rodict_builder_cinit(self) (void)(Dee_ASSERT((self)->rdb_dict == NULL))
+#define Dee_rodict_builder_fini(self)  (void)Dee_XDecref_likely((self)->rdb_dict)
+#define Dee_rodict_builder_init_with_hint(self, num_items) \
+	(void)((self)->rdb_dict = DeeRoDict_TryNewWithHint(num_items))
+#define Dee_rodict_builder_pack(self) \
+	((self)->rdb_dict ? (self)->rdb_dict : (Dee_Incref(Dee_EmptyRoDict), (DREF DeeRoDictObject *)Dee_EmptyRoDict))
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_pair_t" */
+Dee_rodict_builder_setitem(/*struct Dee_rodict_builder*/ void *__restrict self,
+                           DeeObject *key, DeeObject *value);
+
+LOCAL WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL /* binary-compatible with "Dee_foreach_pair_t" */
+Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restrict self,
+                                     /*inherit(always)*/ DREF DeeObject *key,
+                                     /*inherit(always)*/ DREF DeeObject *value) {
+	int result = Dee_rodict_builder_setitem(self, key, value);
+	Dee_Decref_unlikely(key);
+	Dee_Decref_unlikely(value);
+	return result;
+}
+#define Dee_rodict_builder_update(self, mapping) \
+	DeeObject_ForeachPair(mapping, &Dee_rodict_builder_setitem, self)
+
 #endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 
 /* The main `_RoDict' container class. */
