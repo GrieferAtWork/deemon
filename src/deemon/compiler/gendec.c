@@ -1090,27 +1090,43 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 	if (tp_self == &DeeRoDict_Type) {
 		size_t i;
 		DeeRoDictObject *me = (DeeRoDictObject *)self;
+#ifndef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
 #ifndef NDEBUG
 		size_t num_written = 0;
 #endif /* !NDEBUG */
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 		if (dec_putb((DTYPE16_RODICT & 0xff00) >> 8))
 			goto err;
 		if (dec_putb(DTYPE16_RODICT & 0xff))
 			goto err;
+#ifdef CONFIG_EXPERIMENTAL_ORDERED_RODICTS
+		if (dec_putptr((uint32_t)me->rd_vsize))
+			goto err;
+
+		/* Encode all of the ro-Dict's elements. */
+		for (i = 0; i < me->rd_vsize; ++i) {
+			struct Dee_dict_item *item;
+			item = &_DeeRoDict_GetRealVTab(me)[i];
+
+			/* Emit the Dict key + value pair. */
+			if unlikely(dec_putobj(item->di_key))
+				goto err;
+			if unlikely(dec_putobj(item->di_value))
+				goto err;
+		}
+#else /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 		if (dec_putptr((uint32_t)me->rd_size))
 			goto err;
 
 		/* Encode all of the ro-Dict's elements. */
 		for (i = 0; i <= me->rd_mask; ++i) {
-			int error;
 			if (!me->rd_elem[i].rdi_key)
 				continue;
 
 			/* Emit the Dict key + value pair. */
-			error = dec_putobj(me->rd_elem[i].rdi_key);
-			if (!error)
-				error = dec_putobj(me->rd_elem[i].rdi_value);
-			if unlikely(error)
+			if unlikely(dec_putobj(me->rd_elem[i].rdi_key))
+				goto err;
+			if unlikely(dec_putobj(me->rd_elem[i].rdi_value))
 				goto err;
 #ifndef NDEBUG
 			++num_written;
@@ -1123,6 +1139,7 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 		        "Required = %" PRFuSIZ,
 		        num_written, me->rd_size);
 #endif /* !NDEBUG */
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 		goto done;
 	}
 

@@ -450,7 +450,7 @@ toobig:
 	return (size_t)-1; /* Force down-stream allocation failure */
 }
 
-PRIVATE NONNULL((1, 3)) void DCALL
+LOCAL NONNULL((1, 3)) void DCALL
 hmask_memcpy_and_maybe_downcast(void *__restrict dst, shift_t dst_hidxio,
                                 void const *__restrict src, shift_t src_hidxio,
                                 size_t n_words) {
@@ -469,7 +469,7 @@ hmask_memcpy_and_maybe_downcast(void *__restrict dst, shift_t dst_hidxio,
 	}
 }
 
-PRIVATE NONNULL((1, 3)) void DCALL
+LOCAL NONNULL((1, 3)) void DCALL
 hmask_memmovedown_and_maybe_downcast(void *dst, shift_t dst_hidxio,
                                      void const *src, shift_t src_hidxio,
                                      size_t n_words) {

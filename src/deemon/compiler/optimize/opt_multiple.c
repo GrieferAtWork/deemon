@@ -123,9 +123,8 @@ multiple_continue_at_iter:
 				if unlikely(!cexpr)
 					goto err;
 			} else if (self->a_flag == AST_FMULTIPLE_GENERIC_KEYS) {
-				cexpr = (DREF DeeObject *)DeeRoDict_New();
-				if unlikely(!cexpr)
-					goto err;
+				cexpr = Dee_EmptyRoDict;
+				Dee_Incref(cexpr);
 			} else {
 				goto after_multiple_constexpr;
 			}

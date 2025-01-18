@@ -389,6 +389,7 @@ err:
 #endif /* CONFIG_HAVE_FPU */
 
 
+#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 /* Helpers for quickly filling in dict/set items where the key wasn't a compile-time constant expression.
  * These functions operate in a situation where "self" hasn't been fully initialized yet (i.e. don't do
  * locking, and can assume that "self != key && self != value")
@@ -619,6 +620,7 @@ err:
 	DeeObject_Free(me); /* DeeType_FreeInstance(&DeeRoSet_Type, me); */
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 
 
 DECL_END

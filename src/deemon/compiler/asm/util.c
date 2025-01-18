@@ -498,8 +498,9 @@ push_tuple_parts:
 		 *       Dict.
 		 *   #2: Otherwise, push all Dict key/item pairs manually,
 		 *       before packing everything together as a Dict. */
-		size_t i, ro_mask, num_items;
+		size_t i, num_items;
 #ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS
+		size_t ro_mask;
 		size_t mask;
 		struct dict_item *elem;
 #endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */

@@ -69,6 +69,11 @@
 #include <deemon/util/atomic.h>
 #include <deemon/weakref.h>
 
+#include <hybrid/typecore.h>
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 DECL_BEGIN
 
 /* !!! THIS MODULE IS NON-STANDARD AND MEANT TO EXPOSE IMPLEMENTATION-INTERNALS !!!

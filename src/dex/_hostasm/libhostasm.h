@@ -3993,10 +3993,12 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_TFl
  * space to hold he extra key (and associated value, if any)
  * @return: * :   Always re-return `self' on success.
  * @return: NULL: Error (in this case "self" was freed). */
+#ifndef CONFIG_EXPERIMENTAL_ORDERED_DICTS
 INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL libhostasm_rt_DeeDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key, /*inherit(always)*/ DREF DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL libhostasm_rt_DeeRoDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key, /*inherit(always)*/ DREF DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL libhostasm_rt_DeeHashSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL libhostasm_rt_DeeRoSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key);
+#endif /* !CONFIG_EXPERIMENTAL_ORDERED_DICTS */
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

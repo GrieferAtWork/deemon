@@ -1055,9 +1055,6 @@ EXPORTS
 	_DeeRegex_Search@12=DeeRegex_Search@12
 	_DeeRegex_SearchNoEpsilon@12=DeeRegex_SearchNoEpsilon@12
 	_DeeRoDict_FromSequence@4=DeeRoDict_FromSequence@4
-	_DeeRoDict_Insert@12=DeeRoDict_Insert@12
-	_DeeRoDict_New@0=DeeRoDict_New@0
-	_DeeRoDict_NewWithHint@4=DeeRoDict_NewWithHint@4
 	_DeeRoSet_FromSequence@4=DeeRoSet_FromSequence@4
 	_DeeRoSet_Insert@8=DeeRoSet_Insert@8
 	_DeeRoSet_New@0=DeeRoSet_New@0
