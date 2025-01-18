@@ -280,7 +280,7 @@ DECL_BEGIN
 #define LOCAL_HAS_Dtor 2
 #endif /* !LOCAL_HAS_Dtor */
 #ifndef LOCAL_HAS_HeapType
-#define LOCAL_HAS_HeapType 0
+#define LOCAL_HAS_HeapType 1
 #endif /* !LOCAL_HAS_HeapType */
 #ifndef LOCAL_HAS_Rev
 #define LOCAL_HAS_Rev 1
@@ -423,7 +423,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #endif /* CONFIG_TRACE_REFCHANGES */
 
 #if LOCAL_HAS_HeapType
-#define LOCAL_decref_orig_type() Dee_Decref(orig_type)
+#define LOCAL_decref_orig_type() Dee_Decref_unlikely(orig_type)
 #else /* LOCAL_HAS_HeapType */
 	/* Non-heap types can never be destroyed, so we can use the *Nokill version here! */
 #define LOCAL_decref_orig_type() Dee_DecrefNokill(orig_type)
