@@ -427,8 +427,8 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 	_RoDict_SizeOf3(valloc, hmask, DEE_DICT_HIDXIO_FROMALLOC(valloc))
 #define _RoDict_SafeSizeOf(valloc, hmask) \
 	_RoDict_SafeSizeOf3(valloc, hmask, DEE_DICT_HIDXIO_FROMALLOC(valloc))
-#define _RoDict_SizeOf3(valloc, hmask, hidxio)   \
-	(offsetof(DeeRoDictObject, rd_vtab) +               \
+#define _RoDict_SizeOf3(valloc, hmask, hidxio)           \
+	(offsetof(DeeRoDictObject, rd_vtab) +                \
 	 ((size_t)(valloc) * sizeof(struct Dee_dict_item)) + \
 	 (((size_t)(hmask) + 1) << hidxio))
 LOCAL ATTR_CONST size_t DCALL

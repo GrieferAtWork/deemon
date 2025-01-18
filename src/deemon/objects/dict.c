@@ -1781,7 +1781,7 @@ DeeDict_FromSequence(DeeObject *__restrict self) {
 	}
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_RODICTS */
 	hint = DeeObject_SizeFast(self);
-	if likely(hint == (size_t)-1) {
+	if likely(hint != (size_t)-1) {
 		result = (DREF Dict *)DeeDict_TryNewWithHint(hint);
 	} else {
 		result = (DREF Dict *)DeeDict_TryNewWithWeakHint(DICT_FROMSEQ_DEFAULT_HINT);
@@ -3766,7 +3766,7 @@ dict_fromkeys(DeeObject *keys, DeeObject *value, DeeObject *valuefor) {
 	}
 
 	hint = DeeObject_SizeFast(keys);
-	if likely(hint == (size_t)-1) {
+	if likely(hint != (size_t)-1) {
 		data.dfkd_dict = (DREF Dict *)DeeDict_TryNewWithHint(hint);
 	} else {
 		data.dfkd_dict = (DREF Dict *)DeeDict_TryNewWithWeakHint(DICT_FROMSEQ_DEFAULT_HINT);
