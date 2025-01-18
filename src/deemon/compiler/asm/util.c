@@ -193,7 +193,7 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	size_t i, hmask;
 	shift_t src_hidxio;
 	shift_t dst_hidxio;
-	ASSERT(!DeeDict_LockReading(self));
+	ASSERT(DeeDict_LockReading(self));
 	ASSERT(!_DeeDict_CanOptimizeVTab(self));
 	DeeDict_LockReadAndOptimize(self);
 	vsize         = self->d_vused;

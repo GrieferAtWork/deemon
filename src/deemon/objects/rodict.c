@@ -187,7 +187,7 @@ rodict_trunc_vtab(RoDict *__restrict self, size_t old_valloc, size_t new_valloc)
 	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
 	old_htab   = self->rd_htab;
 	new_htab   = _DeeRoDict_GetRealVTab(self) + new_valloc;
-	ASSERT(old_htab == _DeeRoDict_GetRealVTab(self) + self->rd_vsize);
+	ASSERT(old_htab >= _DeeRoDict_GetRealVTab(self) + self->rd_vsize); /* ">=" because of over-allocation */
 	hmask_memmovedown_and_maybe_downcast(new_htab, new_hidxio,
 	                                     old_htab, old_hidxio,
 	                                     self->rd_hmask + 1);

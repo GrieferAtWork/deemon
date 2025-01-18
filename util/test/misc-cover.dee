@@ -41,6 +41,8 @@ import * from collections;
 		'Dict.Frozen({ 11: 22, "foo": "bar" })',
 		'Dict({ "foo": "bar", 11: 22 }).frozen',
 		'Dict({ 11: 22, "foo": "bar" }).frozen',
+		'{ "foo": "bar", 11: 22 }.frozen',
+		'{ 11: 22, "foo": "bar" }.frozen',
 	};
 	local seq_reprs = {
 		'{ ["foo", "bar"], [11, 22] }',
