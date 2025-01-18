@@ -335,8 +335,7 @@ err_jump_table_builder:
 			}
 			key = constant_cases->tl_expr->a_constexpr;
 			Dee_Incref(key);
-			temp = Dee_rodict_builder_setitem_inherited(&jump_table_builder, key, case_target);
-			if unlikely(temp)
+			if unlikely(Dee_rodict_builder_setitem_inherited(&jump_table_builder, key, case_target))
 				goto err_jump_table_builder;
 			constant_cases = constant_cases->tl_next;
 		}
