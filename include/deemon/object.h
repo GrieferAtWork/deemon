@@ -2196,7 +2196,9 @@ my_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	(unlikely(has_value) < 0 ? Dee_BOUND_ERR : Dee_BOUND_FROMPRESENT_UNBOUND(has_value))
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 struct Dee_type_seq_cache;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 struct Dee_type_seq {
 	/* Sequence operators. */
 	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_iter)(DeeObject *__restrict self);
@@ -2398,9 +2400,11 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr_string_hash)(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) DeeObject *(DCALL *tp_trygetitemnr_string_len_hash)(DeeObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* [0..1][owned][lock(WRITE_ONCE)]
 	 * Internal cache for how sequence functions are implemented for this type. */
 	struct Dee_type_seq_cache *_tp_seqcache;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 #if 0
@@ -4009,7 +4013,7 @@ struct Dee_opinfo const &_Dee_OPINFO_INIT(Dee_operator_t id, uint16_t class_, ui
 #define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T(((v) & UINT16_C(0xff00)) >> 8), T((v) & UINT16_C(0xff))
 #elif __SIZEOF_POINTER__ == 1
 #define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT8_C(0xff))
-#else /* ... */
+#elif !defined(__DEEMON__)
 #error "Unsupported __SIZEOF_POINTER__"
 #endif /* !... */
 
@@ -4144,6 +4148,9 @@ struct Dee_type_operator {
 #endif /* DEE_SOURCE */
 
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+struct Dee_type_mh_cache;
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 struct Dee_type_object {
 	Dee_OBJECT_HEAD
 #ifdef __INTELLISENSE__
@@ -4227,6 +4234,9 @@ struct Dee_type_object {
 	 *            types already defined by DeeType_Type) */
 	struct Dee_type_operator const *tp_operators;
 	size_t tp_operators_size; /* Size of "tp_operators" in items. */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	struct Dee_type_mh_cache *tp_mhcache; /* [0..1][owned][lock(WRITE_ONCE)] Method hint cache. */
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Lazily-filled hash-table of instance members.
 	 * >> The member vectors are great for static allocation, but walking

@@ -1234,11 +1234,11 @@ DeeSet_DefaultOperatorForeachWithError(DeeObject *__restrict self, Dee_foreach_t
 
 
 INTDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-default_size_with_foreach_cb(void *arg, DeeObject *elem);
+default_seq_size_with_foreach_cb(void *arg, DeeObject *elem);
 
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 DeeSet_DefaultOperatorSizeWithSetForeach(DeeObject *__restrict self) {
-	return (size_t)DeeSet_OperatorForeach(self, &default_size_with_foreach_cb, NULL);
+	return (size_t)DeeSet_OperatorForeach(self, &default_seq_size_with_foreach_cb, NULL);
 }
 
 INTERN /*WUNUSED*/ NONNULL((1)) size_t DCALL

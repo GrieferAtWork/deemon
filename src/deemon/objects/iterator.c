@@ -2936,6 +2936,72 @@ INTERN DeeTypeObject IteratorPending_Type = {
 };
 
 
+
+PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeIterator_Foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
+	Dee_ssize_t temp, result;
+	DREF DeeObject *elem;
+	DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self);
+	result = 0;
+	if unlikely(!Dee_TYPE(self)->tp_iter_next && !DeeType_InheritIterNext(Dee_TYPE(self)))
+		goto err_no_iternext;
+	tp_iter_next = Dee_TYPE(self)->tp_iter_next;
+	while (ITER_ISOK(elem = (*tp_iter_next)(self))) {
+		temp = (*cb)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		/* Must check for interrupts because iterator may produce infinite results. */
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	if unlikely(!elem)
+		goto err;
+	return result;
+err_temp:
+	return temp;
+err_no_iternext:
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
+	Dee_ssize_t temp, result;
+	DREF DeeObject *pair[2];
+	int (DCALL *tp_nextpair)(DeeObject *__restrict self, DREF DeeObject *pair[2]);
+	int status;
+	result = 0;
+	if unlikely((!Dee_TYPE(self)->tp_iterator || !Dee_TYPE(self)->tp_iterator->tp_nextpair) &&
+	            !DeeType_InheritIterNext(Dee_TYPE(self)))
+		goto err_no_iternext;
+	tp_nextpair = Dee_TYPE(self)->tp_iterator->tp_nextpair;
+	while ((status = (*tp_nextpair)(self, pair)) == 0) {
+		temp = (*cb)(arg, pair[0], pair[1]);
+		Dee_Decref(pair[1]);
+		Dee_Decref(pair[0]);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		/* Must check for interrupts because iterator may produce infinite results. */
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	if unlikely(status < 0)
+		goto err;
+	return result;
+err_temp:
+	return temp;
+err_no_iternext:
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
+err:
+	return -1;
+}
+
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_ITERATOR_C */

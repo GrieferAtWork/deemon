@@ -11241,7 +11241,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                /**/ "#C{&}|Replaced with the entire sub-string matched by @pattern&"
 	                /**/ "#C{\\n}|Where $n is a digit ${1-9} specifying the n'th (1-based) group in "
 	                /**/ /*   */ "@pattern (groups are determined by parenthesis in regex patterns)&"
-	                /**/ "#C{\\\\}|Outputs a literal $r\"\\\" into the returned ?.&"
+	                /**/ "#C{\\\\\\\\}|Outputs a literal $r\"\\\" into the returned ?.&"
 	                /**/ "#C{\\#&}|Outputs a literal $r\"#&\" into the returned ?."
 	                "}"),
 	TYPE_KWMETHOD_F("refindall", &string_refindall,
@@ -11403,7 +11403,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	                "(pattern:?.,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?S?S?X2?T2?Dint?Dint?N\n"
 	                "Similar to ?#refindall, but rather than only return the character-ranges "
 	                /**/ "matched by the regular expression as a whole, return a sequence of start-/end-"
-	                /**/ "offsets for both the whole match itself (in ${return[0]}), as well as the "
+	                /**/ "offsets for both the whole match itself (in ${return.each[0]}), as well as the "
 	                /**/ "start-/end-offsets of each individual group referenced by @pattern.\n"
 	                "When nothing was matched, an empty sequence is returned (s.a. ?#regmatch)."),
 	TYPE_KWMETHOD_F("regindex", &string_regindex,

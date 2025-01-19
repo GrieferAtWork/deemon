@@ -79,6 +79,12 @@ DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon' */
  *       wrap them just so that "seq" returns the correct object type). */
 DDATDEF DeeTypeObject DeeIterator_Type; /* `Iterator from deemon' */
 
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeIterator_Foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
+
+
 /* An empty instance of a generic sequence object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
  *       calling the constructor of `DeeSeq_Type' with no arguments.

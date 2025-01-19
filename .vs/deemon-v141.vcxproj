@@ -237,6 +237,13 @@
 		<ClInclude Include="..\src\deemon\execute\code-invoke-kw.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h" />
+		<ClInclude Include="..\src\deemon\method-hints\method-hints.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_any.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_first.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_iter.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_iterkeys.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_size.h" />
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-firstlast-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl" />
@@ -318,6 +325,9 @@
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-type.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\builtin.h" />
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h" />
+		<ClInclude Include="..\src\deemon\runtime\method-hint-defaults.h" />
+		<ClInclude Include="..\src\deemon\runtime\method-hint-select.h" />
+		<ClInclude Include="..\src\deemon\runtime\method-hints.h" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\operator-require.h" />
@@ -509,6 +519,9 @@
 		<ClCompile Include="..\src\deemon\runtime\kwds.c" />
 		<ClCompile Include="..\src\deemon\runtime\kwlist.c" />
 		<ClCompile Include="..\src\deemon\runtime\lock.c" />
+		<ClCompile Include="..\src\deemon\runtime\method-hint-defaults.c" />
+		<ClCompile Include="..\src\deemon\runtime\method-hint-select.c" />
+		<ClCompile Include="..\src\deemon\runtime\method-hint-wrappers.c" />
 		<ClCompile Include="..\src\deemon\runtime\method-hints.c" />
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />
@@ -571,6 +584,7 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 		<None Include="..\src\deemon\linker-scripts\link-deemon-gcc-i386-cygwin.def" />
 		<None Include="..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def" />
 		<None Include="..\src\deemon\linker-scripts\link-deemon.dee" />
+		<None Include="..\src\deemon\method-hints\method-hints.dee" />
 		<None Include="..\src\deemon\objects\unicode\db\.gitignore" />
 		<None Include="..\src\deemon\objects\unicode\db\ctype.dee" />
 		<None Include="..\src\deemon\objects\unicode\db\db.dat" />

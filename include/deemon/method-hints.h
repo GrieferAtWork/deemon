@@ -67,8 +67,634 @@ DECL_BEGIN
  * >>     .tp_methods      = myob_methods,
  * >>     .tp_method_hints = myob_method_hints,
  * >> };
- *
  */
+
+
+#if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
+
+/* clang-format off */
+/*[[[deemon (print_Dee_tmh_id from "...src.deemon.method-hints.method-hints")();]]]*/
+/* !!! CAUTION !!! Method hint IDs are prone to arbitrarily change !!!
+ *
+ * Do not make use of these IDs if you're developing a DEX module and
+ * wish to remain compatible with the deemon core across many version. */
+enum Dee_tmh_id {
+	Dee_TMH_seq_operator_bool,
+	Dee_TMH_seq_operator_sizeob,
+	Dee_TMH_seq_operator_size,
+	Dee_TMH_seq_operator_iter,
+	Dee_TMH_seq_operator_foreach,
+	Dee_TMH_seq_operator_foreach_pair,
+	Dee_TMH_seq_operator_iterkeys,
+	Dee_TMH_seq_any,
+	Dee_TMH_seq_any_with_key,
+	Dee_TMH_seq_any_with_range,
+	Dee_TMH_seq_any_with_range_and_key,
+	Dee_TMH_seq_trygetfirst,
+	Dee_TMH_seq_getfirst,
+	Dee_TMH_seq_boundfirst,
+	Dee_TMH_seq_delfirst,
+	Dee_TMH_seq_setfirst,
+	Dee_TMH_COUNT
+};
+/*[[[end]]]*/
+
+/*[[[deemon (printMHTypedefs from "...src.deemon.method-hints.method-hints")();]]]*/
+/* __seq_bool__ */
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_operator_bool_t)(DeeObject *self);
+
+/* __seq_size__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_sizeob_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeMH_seq_operator_size_t)(DeeObject *self);
+
+/* __seq_iter__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_iter_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_t)(DeeObject *self, Dee_foreach_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_pair_t)(DeeObject *self, Dee_foreach_pair_t proc, void *arg);
+
+/* __seq_iterkeys__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_iterkeys_t)(DeeObject *self);
+
+/* Sequence_any, seq_any, __seq_any__, explicit_seq_any */
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_any_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_any_with_key_t)(DeeObject *self, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_any_with_range_t)(DeeObject *self, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeMH_seq_any_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *key);
+
+/* Sequence_first, __seq_first__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_trygetfirst_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_getfirst_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_boundfirst_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_delfirst_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_setfirst_t)(DeeObject *self, DeeObject *value);
+/*[[[end]]]*/
+
+/*[[[deemon (printMethodAttributeDecls from "...src.deemon.method-hints.method-hints")();]]]*/
+#define DeeMA___seq_bool___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_bool___name[]; /* "__seq_bool__" */
+DDATDEF char const DeeMA___seq_bool___doc[];  /* "->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_size___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_size___name[]; /* "__seq_size__" */
+DDATDEF char const DeeMA___seq_size___doc[];  /* "->?Dint" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_iter___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_iter___name[]; /* "__seq_iter__" */
+DDATDEF char const DeeMA___seq_iter___doc[];  /* "->?DIterator" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_iterkeys___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_iterkeys___name[]; /* "__seq_iterkeys__" */
+DDATDEF char const DeeMA___seq_iterkeys___doc[];  /* "->?DIterator" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_iterkeys__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_any___flags Dee_TYPE_METHOD_FKWDS
+DDATDEF char const DeeMA___seq_any___name[]; /* "__seq_any__" */
+DDATDEF char const DeeMA___seq_any___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_any_flags DeeMA___seq_any___flags
+#define DeeMA_Sequence_any_doc   DeeMA___seq_any___doc
+#define DeeMA_Sequence_any       DeeMA___seq_any__
+DDATDEF char const DeeMA_Sequence_any_name[]; /* "any" */
+#define DeeMA_seq_any_flags DeeMA_Sequence_any_flags
+#define DeeMA_seq_any_name  DeeMA_Sequence_any_name
+#define DeeMA_seq_any_doc   DeeMA_Sequence_any_doc
+#define DeeMA_seq_any       DeeMA_Sequence_any
+#define DeeMA_explicit_seq_any_flags DeeMA___seq_any___flags
+#define DeeMA_explicit_seq_any_name  DeeMA___seq_any___name
+#define DeeMA_explicit_seq_any_doc   DeeMA___seq_any___doc
+#define DeeMA_explicit_seq_any       DeeMA___seq_any__
+/*[[[end]]]*/
+/* clang-format on */
+
+/* Same as `DeeType_GetExplicitMethodHint', but also searches the type's
+ * MRO for all matches regarding attributes named "id", and returns the
+ * native version for that attribute (or `NULL' if it doesn't have one)
+ *
+ * This function can also be used to query the optimized, internal
+ * implementation of built-in sequence (TSC) functions.
+ *
+ * Never returns NULL when `id' has an "%{unsupported}" implementation. */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
+
+/* Same as `DeeType_GetMethodHint', but don't make use of the method-hint cache.
+ *
+ * Never returns NULL when `id' has an "%{unsupported}" implementation. */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetUncachedMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
+
+/* Check if `self' specifically is able to supply the method hint `id'
+ * in some form. If not, return `NULL' to indicate this lack of support.
+ *
+ * Note that this function doesn't return "%{unsupported}" implementations. */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
+(DCALL DeeType_GetPrivateMethodHint)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
+
+/* Returns a pointer to method hint's entry in `self->tp_method_hints' */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetExplicitMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
+
+/* Returns the "%{unsupported}" implementation of `id'
+ * (if it has one). If not, return `NULL' instead. */
+DFUNDEF ATTR_CONST WUNUSED Dee_funptr_t
+(DCALL DeeType_GetUnsupportedMethodHint)(enum Dee_tmh_id id);
+
+#define DeeType_TryRequireSeqForeachReverse(self)               ((DeeMH_seq_foreach_reverse_t)DeeType_GetMethodHint(self, Dee_TMH_seq_foreach_reverse))
+#define DeeType_TryRequireSeqEnumerateIndexReverse(self)        ((DeeMH_seq_enumerate_index_reverse_t)DeeType_GetMethodHint(self, Dee_TMH_seq_enumerate_index_reverse))
+#define DeeType_RequireSeqMakeEnumeration(self)                 ((DeeMH_seq_makeenumeration_t)DeeType_GetMethodHint(self, Dee_TMH_seq_makeenumeration))
+#define DeeType_RequireSeqMakeEnumerationWithIntRange(self)     ((DeeMH_seq_makeenumeration_with_int_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_makeenumeration_with_int_range))
+#define DeeType_RequireSeqMakeEnumerationWithRange(self)        ((DeeMH_seq_makeenumeration_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_makeenumeration_with_range))
+#define DeeType_RequireSeqOperatorBool(self)                    ((DeeMH_seq_operator_bool_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_bool))
+#define DeeType_RequireSeqOperatorIter(self)                    ((DeeMH_seq_operator_iter_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_iter))
+#define DeeType_RequireSeqOperatorSizeOb(self)                  ((DeeMH_seq_operator_sizeob_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_sizeob))
+#define DeeType_RequireSeqOperatorContains(self)                ((DeeMH_seq_operator_contains_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_contains))
+#define DeeType_RequireSeqOperatorGetItem(self)                 ((DeeMH_seq_operator_getitem_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_getitem))
+#define DeeType_RequireSeqOperatorDelItem(self)                 ((DeeMH_seq_operator_delitem_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_delitem))
+#define DeeType_RequireSeqOperatorSetItem(self)                 ((DeeMH_seq_operator_setitem_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_setitem))
+#define DeeType_RequireSeqOperatorGetRange(self)                ((DeeMH_seq_operator_getrange_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_getrange))
+#define DeeType_RequireSeqOperatorDelRange(self)                ((DeeMH_seq_operator_delrange_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_delrange))
+#define DeeType_RequireSeqOperatorSetRange(self)                ((DeeMH_seq_operator_setrange_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_setrange))
+#define DeeType_RequireSeqOperatorForeach(self)                 ((DeeMH_seq_operator_foreach_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_foreach))
+#define DeeType_RequireSeqOperatorForeachPair(self)             ((DeeMH_seq_operator_foreach_pair_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_foreach_pair))
+#define DeeType_RequireSeqOperatorEnumerate(self)               ((DeeMH_seq_operator_enumerate_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_enumerate))
+#define DeeType_RequireSeqOperatorEnumerateIndex(self)          ((DeeMH_seq_operator_enumerate_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_enumerate_index))
+#define DeeType_RequireSeqOperatorIterKeys(self)                ((DeeMH_seq_operator_iterkeys_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_iterkeys))
+#define DeeType_RequireSeqOperatorBoundItem(self)               ((DeeMH_seq_operator_bounditem_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_bounditem))
+#define DeeType_RequireSeqOperatorHasItem(self)                 ((DeeMH_seq_operator_hasitem_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_hasitem))
+#define DeeType_RequireSeqOperatorSize(self)                    ((DeeMH_seq_operator_size_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_size))
+#define DeeType_RequireSeqOperatorSizeFast(self)                ((DeeMH_seq_operator_size_fast_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_size_fast))
+#define DeeType_RequireSeqOperatorGetItemIndex(self)            ((DeeMH_seq_operator_getitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_getitem_index))
+#define DeeType_RequireSeqOperatorDelItemIndex(self)            ((DeeMH_seq_operator_delitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_delitem_index))
+#define DeeType_RequireSeqOperatorSetItemIndex(self)            ((DeeMH_seq_operator_setitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_setitem_index))
+#define DeeType_RequireSeqOperatorBoundItemIndex(self)          ((DeeMH_seq_operator_bounditem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_bounditem_index))
+#define DeeType_RequireSeqOperatorHasItemIndex(self)            ((DeeMH_seq_operator_hasitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_hasitem_index))
+#define DeeType_RequireSeqOperatorGetRangeIndex(self)           ((DeeMH_seq_operator_getrange_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_getrange_index))
+#define DeeType_RequireSeqOperatorDelRangeIndex(self)           ((DeeMH_seq_operator_delrange_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_delrange_index))
+#define DeeType_RequireSeqOperatorSetRangeIndex(self)           ((DeeMH_seq_operator_setrange_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_setrange_index))
+#define DeeType_RequireSeqOperatorGetRangeIndexN(self)          ((DeeMH_seq_operator_getrange_index_n_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_getrange_index_n))
+#define DeeType_RequireSeqOperatorDelRangeIndexN(self)          ((DeeMH_seq_operator_delrange_index_n_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_delrange_index_n))
+#define DeeType_RequireSeqOperatorSetRangeIndexN(self)          ((DeeMH_seq_operator_setrange_index_n_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_setrange_index_n))
+#define DeeType_RequireSeqOperatorTryGetItem(self)              ((DeeMH_seq_operator_trygetitem_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_trygetitem))
+#define DeeType_RequireSeqOperatorTryGetItemIndex(self)         ((DeeMH_seq_operator_trygetitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_trygetitem_index))
+#define DeeType_RequireSeqOperatorHash(self)                    ((DeeMH_seq_operator_hash_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_hash))
+#define DeeType_RequireSeqOperatorCompareEq(self)               ((DeeMH_seq_operator_compare_eq_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_compare_eq))
+#define DeeType_RequireSeqOperatorCompare(self)                 ((DeeMH_seq_operator_compare_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_compare))
+#define DeeType_RequireSeqOperatorTryCompareEq(self)            ((DeeMH_seq_operator_trycompare_eq_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_trycompare_eq))
+#define DeeType_RequireSeqOperatorEq(self)                      ((DeeMH_seq_operator_eq_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_eq))
+#define DeeType_RequireSeqOperatorNe(self)                      ((DeeMH_seq_operator_ne_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_ne))
+#define DeeType_RequireSeqOperatorLo(self)                      ((DeeMH_seq_operator_lo_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_lo))
+#define DeeType_RequireSeqOperatorLe(self)                      ((DeeMH_seq_operator_le_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_le))
+#define DeeType_RequireSeqOperatorGr(self)                      ((DeeMH_seq_operator_gr_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_gr))
+#define DeeType_RequireSeqOperatorGe(self)                      ((DeeMH_seq_operator_ge_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_ge))
+#define DeeType_RequireSeqOperatorInplaceAdd(self)              ((DeeMH_seq_operator_inplace_add_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_inplace_add))
+#define DeeType_RequireSeqOperatorInplaceMul(self)              ((DeeMH_seq_operator_inplace_mul_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_inplace_mul))
+#define DeeType_RequireSetOperatorIter(self)                    ((DeeMH_set_operator_iter_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_iter))
+#define DeeType_RequireSetOperatorForeach(self)                 ((DeeMH_set_operator_foreach_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_foreach))
+#define DeeType_RequireSetOperatorSize(self)                    ((DeeMH_set_operator_size_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_size))
+#define DeeType_RequireSetOperatorSizeOb(self)                  ((DeeMH_set_operator_sizeob_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_sizeob))
+#define DeeType_RequireSetOperatorHash(self)                    ((DeeMH_set_operator_hash_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_hash))
+#define DeeType_RequireSetOperatorCompareEq(self)               ((DeeMH_set_operator_compare_eq_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_compare_eq))
+#define DeeType_RequireSetOperatorTryCompareEq(self)            ((DeeMH_set_operator_trycompare_eq_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_trycompare_eq))
+#define DeeType_RequireSetOperatorEq(self)                      ((DeeMH_set_operator_eq_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_eq))
+#define DeeType_RequireSetOperatorNe(self)                      ((DeeMH_set_operator_ne_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_ne))
+#define DeeType_RequireSetOperatorLo(self)                      ((DeeMH_set_operator_lo_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_lo))
+#define DeeType_RequireSetOperatorLe(self)                      ((DeeMH_set_operator_le_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_le))
+#define DeeType_RequireSetOperatorGr(self)                      ((DeeMH_set_operator_gr_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_gr))
+#define DeeType_RequireSetOperatorGe(self)                      ((DeeMH_set_operator_ge_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_ge))
+#define DeeType_RequireSetOperatorInv(self)                     ((DeeMH_set_operator_inv_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_inv))
+#define DeeType_RequireSetOperatorAdd(self)                     ((DeeMH_set_operator_add_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_add))
+#define DeeType_RequireSetOperatorSub(self)                     ((DeeMH_set_operator_sub_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_sub))
+#define DeeType_RequireSetOperatorAnd(self)                     ((DeeMH_set_operator_and_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_and))
+#define DeeType_RequireSetOperatorXor(self)                     ((DeeMH_set_operator_xor_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_xor))
+#define DeeType_RequireSetOperatorInplaceAdd(self)              ((DeeMH_set_operator_inplace_add_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_inplace_add))
+#define DeeType_RequireSetOperatorInplaceSub(self)              ((DeeMH_set_operator_inplace_sub_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_inplace_sub))
+#define DeeType_RequireSetOperatorInplaceAnd(self)              ((DeeMH_set_operator_inplace_and_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_inplace_and))
+#define DeeType_RequireSetOperatorInplaceXor(self)              ((DeeMH_set_operator_inplace_xor_t)DeeType_GetMethodHint(self, Dee_TMH_set_operator_inplace_xor))
+#define DeeType_RequireMapOperatorContains(self)                ((DeeMH_map_operator_contains_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_contains))
+#define DeeType_RequireMapOperatorGetItem(self)                 ((DeeMH_map_operator_getitem_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_getitem))
+#define DeeType_RequireMapOperatorDelItem(self)                 ((DeeMH_map_operator_delitem_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_delitem))
+#define DeeType_RequireMapOperatorSetItem(self)                 ((DeeMH_map_operator_setitem_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_setitem))
+#define DeeType_RequireMapOperatorEnumerate(self)               ((DeeMH_map_operator_enumerate_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_enumerate))
+#define DeeType_RequireMapOperatorEnumerateIndex(self)          ((DeeMH_map_operator_enumerate_index_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_enumerate_index))
+#define DeeType_RequireMapOperatorBoundItem(self)               ((DeeMH_map_operator_bounditem_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_bounditem))
+#define DeeType_RequireMapOperatorHasItem(self)                 ((DeeMH_map_operator_hasitem_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_hasitem))
+#define DeeType_RequireMapOperatorGetItemIndex(self)            ((DeeMH_map_operator_getitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_getitem_index))
+#define DeeType_RequireMapOperatorDelItemIndex(self)            ((DeeMH_map_operator_delitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_delitem_index))
+#define DeeType_RequireMapOperatorSetItemIndex(self)            ((DeeMH_map_operator_setitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_setitem_index))
+#define DeeType_RequireMapOperatorBoundItemIndex(self)          ((DeeMH_map_operator_bounditem_index_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_bounditem_index))
+#define DeeType_RequireMapOperatorHasItemIndex(self)            ((DeeMH_map_operator_hasitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_hasitem_index))
+#define DeeType_RequireMapOperatorTryGetItem(self)              ((DeeMH_map_operator_trygetitem_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_trygetitem))
+#define DeeType_RequireMapOperatorTryGetItemIndex(self)         ((DeeMH_map_operator_trygetitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_trygetitem_index))
+#define DeeType_RequireMapOperatorTryGetItemStringHash(self)    ((DeeMH_map_operator_trygetitem_string_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_trygetitem_string_hash))
+#define DeeType_RequireMapOperatorGetItemStringHash(self)       ((DeeMH_map_operator_getitem_string_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_getitem_string_hash))
+#define DeeType_RequireMapOperatorDelItemStringHash(self)       ((DeeMH_map_operator_delitem_string_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_delitem_string_hash))
+#define DeeType_RequireMapOperatorSetItemStringHash(self)       ((DeeMH_map_operator_setitem_string_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_setitem_string_hash))
+#define DeeType_RequireMapOperatorBoundItemStringHash(self)     ((DeeMH_map_operator_bounditem_string_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_bounditem_string_hash))
+#define DeeType_RequireMapOperatorHasItemStringHash(self)       ((DeeMH_map_operator_hasitem_string_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_hasitem_string_hash))
+#define DeeType_RequireMapOperatorTryGetItemStringLenHash(self) ((DeeMH_map_operator_trygetitem_string_len_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_trygetitem_string_len_hash))
+#define DeeType_RequireMapOperatorGetItemStringLenHash(self)    ((DeeMH_map_operator_getitem_string_len_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_getitem_string_len_hash))
+#define DeeType_RequireMapOperatorDelItemStringLenHash(self)    ((DeeMH_map_operator_delitem_string_len_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_delitem_string_len_hash))
+#define DeeType_RequireMapOperatorSetItemStringLenHash(self)    ((DeeMH_map_operator_setitem_string_len_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_setitem_string_len_hash))
+#define DeeType_RequireMapOperatorBoundItemStringLenHash(self)  ((DeeMH_map_operator_bounditem_string_len_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_bounditem_string_len_hash))
+#define DeeType_RequireMapOperatorHasItemStringLenHash(self)    ((DeeMH_map_operator_hasitem_string_len_hash_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_hasitem_string_len_hash))
+#define DeeType_RequireMapOperatorCompareEq(self)               ((DeeMH_map_operator_compare_eq_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_compare_eq))
+#define DeeType_RequireMapOperatorTryCompareEq(self)            ((DeeMH_map_operator_trycompare_eq_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_trycompare_eq))
+#define DeeType_RequireMapOperatorEq(self)                      ((DeeMH_map_operator_eq_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_eq))
+#define DeeType_RequireMapOperatorNe(self)                      ((DeeMH_map_operator_ne_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_ne))
+#define DeeType_RequireMapOperatorLo(self)                      ((DeeMH_map_operator_lo_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_lo))
+#define DeeType_RequireMapOperatorLe(self)                      ((DeeMH_map_operator_le_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_le))
+#define DeeType_RequireMapOperatorGr(self)                      ((DeeMH_map_operator_gr_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_gr))
+#define DeeType_RequireMapOperatorGe(self)                      ((DeeMH_map_operator_ge_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_ge))
+#define DeeType_RequireMapOperatorAdd(self)                     ((DeeMH_map_operator_add_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_add))
+#define DeeType_RequireMapOperatorSub(self)                     ((DeeMH_map_operator_sub_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_sub))
+#define DeeType_RequireMapOperatorAnd(self)                     ((DeeMH_map_operator_and_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_and))
+#define DeeType_RequireMapOperatorXor(self)                     ((DeeMH_map_operator_xor_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_xor))
+#define DeeType_RequireMapOperatorInplaceAdd(self)              ((DeeMH_map_operator_inplace_add_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_inplace_add))
+#define DeeType_RequireMapOperatorInplaceSub(self)              ((DeeMH_map_operator_inplace_sub_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_inplace_sub))
+#define DeeType_RequireMapOperatorInplaceAnd(self)              ((DeeMH_map_operator_inplace_and_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_inplace_and))
+#define DeeType_RequireMapOperatorInplaceXor(self)              ((DeeMH_map_operator_inplace_xor_t)DeeType_GetMethodHint(self, Dee_TMH_map_operator_inplace_xor))
+#define DeeType_RequireSeqTryGetFirst(self)                     ((DeeMH_seq_trygetfirst_t)DeeType_GetMethodHint(self, Dee_TMH_seq_trygetfirst))
+#define DeeType_RequireSeqBoundFirst(self)                      ((DeeMH_seq_boundfirst_t)DeeType_GetMethodHint(self, Dee_TMH_seq_boundfirst))
+#define DeeType_RequireSeqGetFirst(self)                        ((DeeMH_seq_getfirst_t)DeeType_GetMethodHint(self, Dee_TMH_seq_getfirst))
+#define DeeType_RequireSeqDelFirst(self)                        ((DeeMH_seq_delfirst_t)DeeType_GetMethodHint(self, Dee_TMH_seq_delfirst))
+#define DeeType_RequireSeqSetFirst(self)                        ((DeeMH_seq_setfirst_t)DeeType_GetMethodHint(self, Dee_TMH_seq_setfirst))
+#define DeeType_RequireSeqTryGetLast(self)                      ((DeeMH_seq_trygetlast_t)DeeType_GetMethodHint(self, Dee_TMH_seq_trygetlast))
+#define DeeType_RequireSeqBoundLast(self)                       ((DeeMH_seq_boundlast_t)DeeType_GetMethodHint(self, Dee_TMH_seq_boundlast))
+#define DeeType_RequireSeqGetLast(self)                         ((DeeMH_seq_getlast_t)DeeType_GetMethodHint(self, Dee_TMH_seq_getlast))
+#define DeeType_RequireSeqDelLast(self)                         ((DeeMH_seq_dellast_t)DeeType_GetMethodHint(self, Dee_TMH_seq_dellast))
+#define DeeType_RequireSeqSetLast(self)                         ((DeeMH_seq_setlast_t)DeeType_GetMethodHint(self, Dee_TMH_seq_setlast))
+#define DeeType_RequireSeqAny(self)                             ((DeeMH_seq_any_t)DeeType_GetMethodHint(self, Dee_TMH_seq_any))
+#define DeeType_RequireSeqAnyWithKey(self)                      ((DeeMH_seq_any_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_any_with_key))
+#define DeeType_RequireSeqAnyWithRange(self)                    ((DeeMH_seq_any_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_any_with_range))
+#define DeeType_RequireSeqAnyWithRangeAndKey(self)              ((DeeMH_seq_any_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_any_with_range_and_key))
+#define DeeType_RequireSeqAll(self)                             ((DeeMH_seq_all_t)DeeType_GetMethodHint(self, Dee_TMH_seq_all))
+#define DeeType_RequireSeqAllWithKey(self)                      ((DeeMH_seq_all_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_all_with_key))
+#define DeeType_RequireSeqAllWithRange(self)                    ((DeeMH_seq_all_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_all_with_range))
+#define DeeType_RequireSeqAllWithRangeAndKey(self)              ((DeeMH_seq_all_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_all_with_range_and_key))
+#define DeeType_RequireSeqParity(self)                          ((DeeMH_seq_parity_t)DeeType_GetMethodHint(self, Dee_TMH_seq_parity))
+#define DeeType_RequireSeqParityWithKey(self)                   ((DeeMH_seq_parity_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_parity_with_key))
+#define DeeType_RequireSeqParityWithRange(self)                 ((DeeMH_seq_parity_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_parity_with_range))
+#define DeeType_RequireSeqParityWithRangeAndKey(self)           ((DeeMH_seq_parity_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_parity_with_range_and_key))
+#define DeeType_RequireSeqReduce(self)                          ((DeeMH_seq_reduce_t)DeeType_GetMethodHint(self, Dee_TMH_seq_reduce))
+#define DeeType_RequireSeqReduceWithInit(self)                  ((DeeMH_seq_reduce_with_init_t)DeeType_GetMethodHint(self, Dee_TMH_seq_reduce_with_init))
+#define DeeType_RequireSeqReduceWithRange(self)                 ((DeeMH_seq_reduce_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_reduce_with_range))
+#define DeeType_RequireSeqReduceWithRangeAndInit(self)          ((DeeMH_seq_reduce_with_range_and_init_t)DeeType_GetMethodHint(self, Dee_TMH_seq_reduce_with_range_and_init))
+#define DeeType_RequireSeqMin(self)                             ((DeeMH_seq_min_t)DeeType_GetMethodHint(self, Dee_TMH_seq_min))
+#define DeeType_RequireSeqMinWithKey(self)                      ((DeeMH_seq_min_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_min_with_key))
+#define DeeType_RequireSeqMinWithRange(self)                    ((DeeMH_seq_min_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_min_with_range))
+#define DeeType_RequireSeqMinWithRangeAndKey(self)              ((DeeMH_seq_min_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_min_with_range_and_key))
+#define DeeType_RequireSeqMax(self)                             ((DeeMH_seq_max_t)DeeType_GetMethodHint(self, Dee_TMH_seq_max))
+#define DeeType_RequireSeqMaxWithKey(self)                      ((DeeMH_seq_max_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_max_with_key))
+#define DeeType_RequireSeqMaxWithRange(self)                    ((DeeMH_seq_max_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_max_with_range))
+#define DeeType_RequireSeqMaxWithRangeAndKey(self)              ((DeeMH_seq_max_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_max_with_range_and_key))
+#define DeeType_RequireSeqSum(self)                             ((DeeMH_seq_sum_t)DeeType_GetMethodHint(self, Dee_TMH_seq_sum))
+#define DeeType_RequireSeqSumWithRange(self)                    ((DeeMH_seq_sum_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_sum_with_range))
+#define DeeType_RequireSeqCount(self)                           ((DeeMH_seq_count_t)DeeType_GetMethodHint(self, Dee_TMH_seq_count))
+#define DeeType_RequireSeqCountWithKey(self)                    ((DeeMH_seq_count_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_count_with_key))
+#define DeeType_RequireSeqCountWithRange(self)                  ((DeeMH_seq_count_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_count_with_range))
+#define DeeType_RequireSeqCountWithRangeAndKey(self)            ((DeeMH_seq_count_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_count_with_range_and_key))
+#define DeeType_RequireSeqContains(self)                        ((DeeMH_seq_contains_t)DeeType_GetMethodHint(self, Dee_TMH_seq_contains))
+#define DeeType_RequireSeqContainsWithKey(self)                 ((DeeMH_seq_contains_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_contains_with_key))
+#define DeeType_RequireSeqContainsWithRange(self)               ((DeeMH_seq_contains_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_contains_with_range))
+#define DeeType_RequireSeqContainsWithRangeAndKey(self)         ((DeeMH_seq_contains_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_contains_with_range_and_key))
+#define DeeType_RequireSeqLocate(self)                          ((DeeMH_seq_locate_t)DeeType_GetMethodHint(self, Dee_TMH_seq_locate))
+#define DeeType_RequireSeqLocateWithRange(self)                 ((DeeMH_seq_locate_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_locate_with_range))
+#define DeeType_RequireSeqRLocateWithRange(self)                ((DeeMH_seq_rlocate_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_rlocate_with_range))
+#define DeeType_RequireSeqStartsWith(self)                      ((DeeMH_seq_startswith_t)DeeType_GetMethodHint(self, Dee_TMH_seq_startswith))
+#define DeeType_RequireSeqStartsWithWithKey(self)               ((DeeMH_seq_startswith_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_startswith_with_key))
+#define DeeType_RequireSeqStartsWithWithRange(self)             ((DeeMH_seq_startswith_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_startswith_with_range))
+#define DeeType_RequireSeqStartsWithWithRangeAndKey(self)       ((DeeMH_seq_startswith_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_startswith_with_range_and_key))
+#define DeeType_RequireSeqEndsWith(self)                        ((DeeMH_seq_endswith_t)DeeType_GetMethodHint(self, Dee_TMH_seq_endswith))
+#define DeeType_RequireSeqEndsWithWithKey(self)                 ((DeeMH_seq_endswith_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_endswith_with_key))
+#define DeeType_RequireSeqEndsWithWithRange(self)               ((DeeMH_seq_endswith_with_range_t)DeeType_GetMethodHint(self, Dee_TMH_seq_endswith_with_range))
+#define DeeType_RequireSeqEndsWithWithRangeAndKey(self)         ((DeeMH_seq_endswith_with_range_and_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_endswith_with_range_and_key))
+#define DeeType_RequireSeqFind(self)                            ((DeeMH_seq_find_t)DeeType_GetMethodHint(self, Dee_TMH_seq_find))
+#define DeeType_RequireSeqFindWithKey(self)                     ((DeeMH_seq_find_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_find_with_key))
+#define DeeType_RequireSeqRFind(self)                           ((DeeMH_seq_rfind_t)DeeType_GetMethodHint(self, Dee_TMH_seq_rfind))
+#define DeeType_RequireSeqRFindWithKey(self)                    ((DeeMH_seq_rfind_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_rfind_with_key))
+#define DeeType_RequireSeqErase(self)                           ((DeeMH_seq_erase_t)DeeType_GetMethodHint(self, Dee_TMH_seq_erase))
+#define DeeType_RequireSeqInsert(self)                          ((DeeMH_seq_insert_t)DeeType_GetMethodHint(self, Dee_TMH_seq_insert))
+#define DeeType_RequireSeqInsertAll(self)                       ((DeeMH_seq_insertall_t)DeeType_GetMethodHint(self, Dee_TMH_seq_insertall))
+#define DeeType_RequireSeqPushFront(self)                       ((DeeMH_seq_pushfront_t)DeeType_GetMethodHint(self, Dee_TMH_seq_pushfront))
+#define DeeType_RequireSeqAppend(self)                          ((DeeMH_seq_append_t)DeeType_GetMethodHint(self, Dee_TMH_seq_append))
+#define DeeType_RequireSeqExtend(self)                          ((DeeMH_seq_extend_t)DeeType_GetMethodHint(self, Dee_TMH_seq_extend))
+#define DeeType_RequireSeqXchItemIndex(self)                    ((DeeMH_seq_xchitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_xchitem_index))
+#define DeeType_RequireSeqClear(self)                           ((DeeMH_seq_clear_t)DeeType_GetMethodHint(self, Dee_TMH_seq_clear))
+#define DeeType_RequireSeqPop(self)                             ((DeeMH_seq_pop_t)DeeType_GetMethodHint(self, Dee_TMH_seq_pop))
+#define DeeType_RequireSeqRemove(self)                          ((DeeMH_seq_remove_t)DeeType_GetMethodHint(self, Dee_TMH_seq_remove))
+#define DeeType_RequireSeqRemoveWithKey(self)                   ((DeeMH_seq_remove_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_remove_with_key))
+#define DeeType_RequireSeqRRemove(self)                         ((DeeMH_seq_rremove_t)DeeType_GetMethodHint(self, Dee_TMH_seq_rremove))
+#define DeeType_RequireSeqRRemoveWithKey(self)                  ((DeeMH_seq_rremove_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_rremove_with_key))
+#define DeeType_RequireSeqRemoveAll(self)                       ((DeeMH_seq_removeall_t)DeeType_GetMethodHint(self, Dee_TMH_seq_removeall))
+#define DeeType_RequireSeqRemoveAllWithKey(self)                ((DeeMH_seq_removeall_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_removeall_with_key))
+#define DeeType_RequireSeqRemoveIf(self)                        ((DeeMH_seq_removeif_t)DeeType_GetMethodHint(self, Dee_TMH_seq_removeif))
+#define DeeType_RequireSeqResize(self)                          ((DeeMH_seq_resize_t)DeeType_GetMethodHint(self, Dee_TMH_seq_resize))
+#define DeeType_RequireSeqFill(self)                            ((DeeMH_seq_fill_t)DeeType_GetMethodHint(self, Dee_TMH_seq_fill))
+#define DeeType_RequireSeqReverse(self)                         ((DeeMH_seq_reverse_t)DeeType_GetMethodHint(self, Dee_TMH_seq_reverse))
+#define DeeType_RequireSeqReversed(self)                        ((DeeMH_seq_reversed_t)DeeType_GetMethodHint(self, Dee_TMH_seq_reversed))
+#define DeeType_RequireSeqSort(self)                            ((DeeMH_seq_sort_t)DeeType_GetMethodHint(self, Dee_TMH_seq_sort))
+#define DeeType_RequireSeqSortWithKey(self)                     ((DeeMH_seq_sort_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_sort_with_key))
+#define DeeType_RequireSeqSorted(self)                          ((DeeMH_seq_sorted_t)DeeType_GetMethodHint(self, Dee_TMH_seq_sorted))
+#define DeeType_RequireSeqSortedWithKey(self)                   ((DeeMH_seq_sorted_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_sorted_with_key))
+#define DeeType_RequireSeqBFind(self)                           ((DeeMH_seq_bfind_t)DeeType_GetMethodHint(self, Dee_TMH_seq_bfind))
+#define DeeType_RequireSeqBFindWithKey(self)                    ((DeeMH_seq_bfind_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_bfind_with_key))
+#define DeeType_RequireSeqBPosition(self)                       ((DeeMH_seq_bposition_t)DeeType_GetMethodHint(self, Dee_TMH_seq_bposition))
+#define DeeType_RequireSeqBPositionWithKey(self)                ((DeeMH_seq_bposition_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_bposition_with_key))
+#define DeeType_RequireSeqBRange(self)                          ((DeeMH_seq_brange_t)DeeType_GetMethodHint(self, Dee_TMH_seq_brange))
+#define DeeType_RequireSeqBRangeWithKey(self)                   ((DeeMH_seq_brange_with_key_t)DeeType_GetMethodHint(self, Dee_TMH_seq_brange_with_key))
+#define DeeType_RequireSetInsert(self)                          ((DeeMH_set_insert_t)DeeType_GetMethodHint(self, Dee_TMH_set_insert))
+#define DeeType_RequireSetRemove(self)                          ((DeeMH_set_remove_t)DeeType_GetMethodHint(self, Dee_TMH_set_remove))
+#define DeeType_RequireSetUnify(self)                           ((DeeMH_set_unify_t)DeeType_GetMethodHint(self, Dee_TMH_set_unify))
+#define DeeType_RequireSetInsertAll(self)                       ((DeeMH_set_insertall_t)DeeType_GetMethodHint(self, Dee_TMH_set_insertall))
+#define DeeType_RequireSetRemoveAll(self)                       ((DeeMH_set_removeall_t)DeeType_GetMethodHint(self, Dee_TMH_set_removeall))
+#define DeeType_RequireSetPop(self)                             ((DeeMH_set_pop_t)DeeType_GetMethodHint(self, Dee_TMH_set_pop))
+#define DeeType_RequireSetPopWithDefault(self)                  ((DeeMH_set_pop_with_default_t)DeeType_GetMethodHint(self, Dee_TMH_set_pop_with_default))
+#define DeeType_RequireMapSetOld(self)                          ((DeeMH_map_setold_t)DeeType_GetMethodHint(self, Dee_TMH_map_setold))
+#define DeeType_RequireMapSetOldEx(self)                        ((DeeMH_map_setold_ex_t)DeeType_GetMethodHint(self, Dee_TMH_map_setold_ex))
+#define DeeType_RequireMapSetNew(self)                          ((DeeMH_map_setnew_t)DeeType_GetMethodHint(self, Dee_TMH_map_setnew))
+#define DeeType_RequireMapSetNewEx(self)                        ((DeeMH_map_setnew_ex_t)DeeType_GetMethodHint(self, Dee_TMH_map_setnew_ex))
+#define DeeType_RequireMapSetDefault(self)                      ((DeeMH_map_setdefault_t)DeeType_GetMethodHint(self, Dee_TMH_map_setdefault))
+#define DeeType_RequireMapUpdate(self)                          ((DeeMH_map_update_t)DeeType_GetMethodHint(self, Dee_TMH_map_update))
+#define DeeType_RequireMapRemove(self)                          ((DeeMH_map_remove_t)DeeType_GetMethodHint(self, Dee_TMH_map_remove))
+#define DeeType_RequireMapRemoveKeys(self)                      ((DeeMH_map_removekeys_t)DeeType_GetMethodHint(self, Dee_TMH_map_removekeys))
+#define DeeType_RequireMapPop(self)                             ((DeeMH_map_pop_t)DeeType_GetMethodHint(self, Dee_TMH_map_pop))
+#define DeeType_RequireMapPopWithDefault(self)                  ((DeeMH_map_pop_with_default_t)DeeType_GetMethodHint(self, Dee_TMH_map_pop_with_default))
+#define DeeType_RequireMapPopItem(self)                         ((DeeMH_map_popitem_t)DeeType_GetMethodHint(self, Dee_TMH_map_popitem))
+
+
+/* Generic sequence operators: treat "self" as a (possibly writable) indexable sequence.
+ *
+ * When "self" doesn't override any sequence operators, throw errors (unless
+ * "self" explicitly uses operators from "Sequence", in which case it is treated
+ * like an empty sequence).
+ *
+ * For this purpose, trust the return value of `DeeType_GetSeqClass()',
+ * and wrap/modify operator invocation such that the object behaves as
+ * though it was an indexable sequence. */
+#define DeeSeq_OperatorBool(self)                                  (*DeeType_RequireSeqOperatorBool(Dee_TYPE(self)))(self)
+#define DeeSeq_OperatorIter(self)                                  (*DeeType_RequireSeqOperatorIter(Dee_TYPE(self)))(self)
+#define DeeSeq_OperatorSizeOb(self)                                (*DeeType_RequireSeqOperatorSizeOb(Dee_TYPE(self)))(self)
+#define DeeSeq_OperatorContains(self, some_object)                 (*DeeType_RequireSeqOperatorContains(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorGetItem(self, index)                        (*DeeType_RequireSeqOperatorGetItem(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorDelItem(self, index)                        (*DeeType_RequireSeqOperatorDelItem(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorSetItem(self, index, value)                 (*DeeType_RequireSeqOperatorSetItem(Dee_TYPE(self)))(self, index, value)
+#define DeeSeq_OperatorGetRange(self, start, end)                  (*DeeType_RequireSeqOperatorGetRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_OperatorDelRange(self, start, end)                  (*DeeType_RequireSeqOperatorDelRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_OperatorSetRange(self, start, end, values)          (*DeeType_RequireSeqOperatorSetRange(Dee_TYPE(self)))(self, start, end, values)
+#define DeeSeq_OperatorForeach(self, proc, arg)                    (*DeeType_RequireSeqOperatorForeach(Dee_TYPE(self)))(self, proc, arg)
+#define DeeSeq_OperatorForeachPair(self, proc, arg)                (*DeeType_RequireSeqOperatorForeachPair(Dee_TYPE(self)))(self, proc, arg)
+#define DeeSeq_OperatorEnumerate(self, proc, arg)                  (*DeeType_RequireSeqOperatorEnumerate(Dee_TYPE(self)))(self, proc, arg)
+#define DeeSeq_OperatorEnumerateIndex(self, proc, arg, start, end) (*DeeType_RequireSeqOperatorEnumerateIndex(Dee_TYPE(self)))(self, proc, arg, start, end)
+#define DeeSeq_OperatorIterKeys(self)                              (*DeeType_RequireSeqOperatorIterKeys(Dee_TYPE(self)))(self)
+#define DeeSeq_OperatorBoundItem(self, index)                      (*DeeType_RequireSeqOperatorBoundItem(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorHasItem(self, index)                        (*DeeType_RequireSeqOperatorHasItem(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorSize(self)                                  (*DeeType_RequireSeqOperatorSize(Dee_TYPE(self)))(self)
+#define DeeSeq_OperatorSizeFast(self)                              (*DeeType_RequireSeqOperatorSizeFast(Dee_TYPE(self)))(self)
+#define DeeSeq_OperatorGetItemIndex(self, index)                   (*DeeType_RequireSeqOperatorGetItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorDelItemIndex(self, index)                   (*DeeType_RequireSeqOperatorDelItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorSetItemIndex(self, index, value)            (*DeeType_RequireSeqOperatorSetItemIndex(Dee_TYPE(self)))(self, index, value)
+#define DeeSeq_OperatorBoundItemIndex(self, index)                 (*DeeType_RequireSeqOperatorBoundItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorHasItemIndex(self, index)                   (*DeeType_RequireSeqOperatorHasItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorGetRangeIndex(self, start, end)             (*DeeType_RequireSeqOperatorGetRangeIndex(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_OperatorDelRangeIndex(self, start, end)             (*DeeType_RequireSeqOperatorDelRangeIndex(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_OperatorSetRangeIndex(self, start, end, values)     (*DeeType_RequireSeqOperatorSetRangeIndex(Dee_TYPE(self)))(self, start, end, values)
+#define DeeSeq_OperatorGetRangeIndexN(self, start)                 (*DeeType_RequireSeqOperatorGetRangeIndexN(Dee_TYPE(self)))(self, start)
+#define DeeSeq_OperatorDelRangeIndexN(self, start)                 (*DeeType_RequireSeqOperatorDelRangeIndexN(Dee_TYPE(self)))(self, start)
+#define DeeSeq_OperatorSetRangeIndexN(self, start, values)         (*DeeType_RequireSeqOperatorSetRangeIndexN(Dee_TYPE(self)))(self, start, values)
+#define DeeSeq_OperatorTryGetItem(self, index)                     (*DeeType_RequireSeqOperatorTryGetItem(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorTryGetItemIndex(self, index)                (*DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeSeq_OperatorHash(self)                                  (*DeeType_RequireSeqOperatorHash(Dee_TYPE(self)))(self)
+#define DeeSeq_OperatorCompareEq(self, some_object)                (*DeeType_RequireSeqOperatorCompareEq(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorCompare(self, some_object)                  (*DeeType_RequireSeqOperatorCompare(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorTryCompareEq(self, some_object)             (*DeeType_RequireSeqOperatorTryCompareEq(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorEq(self, some_object)                       (*DeeType_RequireSeqOperatorEq(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorNe(self, some_object)                       (*DeeType_RequireSeqOperatorNe(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorLo(self, some_object)                       (*DeeType_RequireSeqOperatorLo(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorLe(self, some_object)                       (*DeeType_RequireSeqOperatorLe(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorGr(self, some_object)                       (*DeeType_RequireSeqOperatorGr(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorGe(self, some_object)                       (*DeeType_RequireSeqOperatorGe(Dee_TYPE(self)))(self, some_object)
+#define DeeSeq_OperatorInplaceAdd(p_self, some_object)             (*DeeType_RequireSeqOperatorInplaceAdd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeSeq_OperatorInplaceMul(p_self, some_object)             (*DeeType_RequireSeqOperatorInplaceMul(Dee_TYPE(*(p_self))))(p_self, some_object)
+
+/* Generic set operators: treat "self" as a (possibly writable) set that can
+ * be enumerated (via iter/foreach) to yield keys.
+ *
+ * When "self" doesn't override any sequence operators, throw errors (unless
+ * "self" explicitly uses operators from "Set", in which case it is treated
+ * like an empty set).
+ *
+ * For this purpose, trust the return value of `DeeType_GetSeqClass()',
+ * and wrap/modify operator invocation such that the object behaves as
+ * though it was an indexable sequence. */
+#define DeeSet_OperatorBool                            DeeSeq_OperatorBool
+#define DeeSet_OperatorContains                        DeeSeq_OperatorContains
+#define DeeSet_OperatorIter(self)                      (*DeeType_RequireSetOperatorIter(Dee_TYPE(self)))(self)
+#define DeeSet_OperatorForeach(self, cb, arg)          (*DeeType_RequireSetOperatorForeach(Dee_TYPE(self)))(self, cb, arg)
+#define DeeSet_OperatorSize(self)                      (*DeeType_RequireSetOperatorSize(Dee_TYPE(self)))(self)
+#define DeeSet_OperatorSizeOb(self)                    (*DeeType_RequireSetOperatorSizeOb(Dee_TYPE(self)))(self)
+#define DeeSet_OperatorHash(self)                      (*DeeType_RequireSetOperatorHash(Dee_TYPE(self)))(self)
+#define DeeSet_OperatorCompareEq(self, some_object)    (*DeeType_RequireSetOperatorCompareEq(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorTryCompareEq(self, some_object) (*DeeType_RequireSetOperatorTryCompareEq(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorEq(self, some_object)           (*DeeType_RequireSetOperatorEq(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorNe(self, some_object)           (*DeeType_RequireSetOperatorNe(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorLo(self, some_object)           (*DeeType_RequireSetOperatorLo(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorLe(self, some_object)           (*DeeType_RequireSetOperatorLe(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorGr(self, some_object)           (*DeeType_RequireSetOperatorGr(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorGe(self, some_object)           (*DeeType_RequireSetOperatorGe(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorInv(self)                       (*DeeType_RequireSetOperatorInv(Dee_TYPE(self)))(self)
+#define DeeSet_OperatorAdd(self, some_object)          (*DeeType_RequireSetOperatorAdd(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorSub(self, some_object)          (*DeeType_RequireSetOperatorSub(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorAnd(self, some_object)          (*DeeType_RequireSetOperatorAnd(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorXor(self, some_object)          (*DeeType_RequireSetOperatorXor(Dee_TYPE(self)))(self, some_object)
+#define DeeSet_OperatorInplaceAdd(p_self, some_object) (*DeeType_RequireSetOperatorInplaceAdd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeSet_OperatorInplaceSub(p_self, some_object) (*DeeType_RequireSetOperatorInplaceSub(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeSet_OperatorInplaceAnd(p_self, some_object) (*DeeType_RequireSetOperatorInplaceAnd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeSet_OperatorInplaceXor(p_self, some_object) (*DeeType_RequireSetOperatorInplaceXor(Dee_TYPE(*(p_self))))(p_self, some_object)
+
+/* Generic map operators: treat "self" as a (possibly writable) map that
+ * enumerates to yield (key, value) pairs.
+ *
+ * When "self" doesn't override any sequence operators, throw errors (unless
+ * "self" explicitly uses operators from "Mapping", in which case it is treated
+ * like an empty map).
+ *
+ * For this purpose, trust the return value of `DeeType_GetSeqClass()',
+ * and wrap/modify operator invocation such that the object behaves as
+ * though it was an indexable sequence. */
+#define DeeMap_OperatorBool                                                 DeeSeq_OperatorBool
+#define DeeMap_OperatorIter                                                 DeeSeq_OperatorIter
+#define DeeMap_OperatorSizeOb                                               DeeSeq_OperatorSizeOb
+#define DeeMap_OperatorSize                                                 DeeSeq_OperatorSize
+#define DeeMap_OperatorSizeFast                                             DeeSeq_OperatorSizeFast
+#define DeeMap_OperatorForeach                                              DeeSeq_OperatorForeach
+#define DeeMap_OperatorForeachPair                                          DeeSeq_OperatorForeachPair
+#define DeeMap_OperatorContains(self, some_object)                          (*DeeType_RequireMapOperatorContains(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorGetItem(self, index)                                 (*DeeType_RequireMapOperatorGetItem(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorDelItem(self, index)                                 (*DeeType_RequireMapOperatorDelItem(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorSetItem(self, index, value)                          (*DeeType_RequireMapOperatorSetItem(Dee_TYPE(self)))(self, index, value)
+#define DeeMap_OperatorEnumerate(self, proc, arg)                           (*DeeType_RequireMapOperatorEnumerate(Dee_TYPE(self)))(self, proc, arg)
+#define DeeMap_OperatorEnumerateIndex(self, proc, arg, start, end)          (*DeeType_RequireMapOperatorEnumerateIndex(Dee_TYPE(self)))(self, proc, arg, start, end)
+#define DeeMap_OperatorBoundItem(self, index)                               (*DeeType_RequireMapOperatorBoundItem(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorHasItem(self, index)                                 (*DeeType_RequireMapOperatorHasItem(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorGetItemIndex(self, index)                            (*DeeType_RequireMapOperatorGetItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorDelItemIndex(self, index)                            (*DeeType_RequireMapOperatorDelItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorSetItemIndex(self, index, value)                     (*DeeType_RequireMapOperatorSetItemIndex(Dee_TYPE(self)))(self, index, value)
+#define DeeMap_OperatorBoundItemIndex(self, index)                          (*DeeType_RequireMapOperatorBoundItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorHasItemIndex(self, index)                            (*DeeType_RequireMapOperatorHasItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorTryGetItem(self, index)                              (*DeeType_RequireMapOperatorTryGetItem(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorTryGetItemIndex(self, index)                         (*DeeType_RequireMapOperatorTryGetItemIndex(Dee_TYPE(self)))(self, index)
+#define DeeMap_OperatorTryGetItemStringHash(self, key, hash)                (*DeeType_RequireMapOperatorTryGetItemStringHash(Dee_TYPE(self)))(self, key, hash)
+#define DeeMap_OperatorGetItemStringHash(self, key, hash)                   (*DeeType_RequireMapOperatorGetItemStringHash(Dee_TYPE(self)))(self, key, hash)
+#define DeeMap_OperatorDelItemStringHash(self, key, hash)                   (*DeeType_RequireMapOperatorDelItemStringHash(Dee_TYPE(self)))(self, key, hash)
+#define DeeMap_OperatorSetItemStringHash(self, key, hash, value)            (*DeeType_RequireMapOperatorSetItemStringHash(Dee_TYPE(self)))(self, key, hash, value)
+#define DeeMap_OperatorBoundItemStringHash(self, key, hash)                 (*DeeType_RequireMapOperatorBoundItemStringHash(Dee_TYPE(self)))(self, key, hash)
+#define DeeMap_OperatorHasItemStringHash(self, key, hash)                   (*DeeType_RequireMapOperatorHasItemStringHash(Dee_TYPE(self)))(self, key, hash)
+#define DeeMap_OperatorTryGetItemStringLenHash(self, key, keylen, hash)     (*DeeType_RequireMapOperatorTryGetItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
+#define DeeMap_OperatorGetItemStringLenHash(self, key, keylen, hash)        (*DeeType_RequireMapOperatorGetItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
+#define DeeMap_OperatorDelItemStringLenHash(self, key, keylen, hash)        (*DeeType_RequireMapOperatorDelItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
+#define DeeMap_OperatorSetItemStringLenHash(self, key, keylen, hash, value) (*DeeType_RequireMapOperatorSetItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash, value)
+#define DeeMap_OperatorBoundItemStringLenHash(self, key, keylen, hash)      (*DeeType_RequireMapOperatorBoundItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
+#define DeeMap_OperatorHasItemStringLenHash(self, key, keylen, hash)        (*DeeType_RequireMapOperatorHasItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
+#define DeeMap_OperatorHash                                                 DeeSet_OperatorHash
+#define DeeMap_OperatorCompareEq(self, some_object)                         (*DeeType_RequireMapOperatorCompareEq(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorTryCompareEq(self, some_object)                      (*DeeType_RequireMapOperatorTryCompareEq(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorEq(self, some_object)                                (*DeeType_RequireMapOperatorEq(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorNe(self, some_object)                                (*DeeType_RequireMapOperatorNe(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorLo(self, some_object)                                (*DeeType_RequireMapOperatorLo(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorLe(self, some_object)                                (*DeeType_RequireMapOperatorLe(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorGr(self, some_object)                                (*DeeType_RequireMapOperatorGr(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorGe(self, some_object)                                (*DeeType_RequireMapOperatorGe(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorAdd(self, some_object)                               (*DeeType_RequireMapOperatorAdd(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorSub(self, some_object)                               (*DeeType_RequireMapOperatorSub(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorAnd(self, some_object)                               (*DeeType_RequireMapOperatorAnd(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorXor(self, some_object)                               (*DeeType_RequireMapOperatorXor(Dee_TYPE(self)))(self, some_object)
+#define DeeMap_OperatorInplaceAdd(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceAdd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeMap_OperatorInplaceSub(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceSub(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeMap_OperatorInplaceAnd(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceAnd(Dee_TYPE(*(p_self))))(p_self, some_object)
+#define DeeMap_OperatorInplaceXor(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceXor(Dee_TYPE(*(p_self))))(p_self, some_object)
+
+/* Helpers to quickly invoke default sequence functions. */
+#define DeeSeq_InvokeTryGetFirst(self)                                        (*DeeType_RequireSeqTryGetFirst(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeGetFirst(self)                                           (*DeeType_RequireSeqGetFirst(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeBoundFirst(self)                                         (*DeeType_RequireSeqBoundFirst(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeDelFirst(self)                                           (*DeeType_RequireSeqDelFirst(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeSetFirst(self, v)                                        (*DeeType_RequireSeqSetFirst(Dee_TYPE(self)))(self, v)
+#define DeeSeq_InvokeTryGetLast(self)                                         (*DeeType_RequireSeqTryGetLast(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeGetLast(self)                                            (*DeeType_RequireSeqGetLast(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeBoundLast(self)                                          (*DeeType_RequireSeqBoundLast(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeDelLast(self)                                            (*DeeType_RequireSeqDelLast(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeSetLast(self, v)                                         (*DeeType_RequireSeqSetLast(Dee_TYPE(self)))(self, v)
+#define DeeSeq_InvokeCached(self)                                             (*DeeType_RequireSeqCached(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeAny(self)                                                (*DeeType_RequireSeqAny(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeAnyWithKey(self, key)                                    (*DeeType_RequireSeqAnyWithKey(Dee_TYPE(self)))(self, key)
+#define DeeSeq_InvokeAnyWithRange(self, start, end)                           (*DeeType_RequireSeqAnyWithRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeAnyWithRangeAndKey(self, start, end, key)                (*DeeType_RequireSeqAnyWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
+#define DeeSeq_InvokeAll(self)                                                (*DeeType_RequireSeqAll(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeAllWithKey(self, key)                                    (*DeeType_RequireSeqAllWithKey(Dee_TYPE(self)))(self, key)
+#define DeeSeq_InvokeAllWithRange(self, start, end)                           (*DeeType_RequireSeqAllWithRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeAllWithRangeAndKey(self, start, end, key)                (*DeeType_RequireSeqAllWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
+#define DeeSeq_InvokeParity(self)                                             (*DeeType_RequireSeqParity(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeParityWithKey(self, key)                                 (*DeeType_RequireSeqParityWithKey(Dee_TYPE(self)))(self, key)
+#define DeeSeq_InvokeParityWithRange(self, start, end)                        (*DeeType_RequireSeqParityWithRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeParityWithRangeAndKey(self, start, end, key)             (*DeeType_RequireSeqParityWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
+#define DeeSeq_InvokeReduce(self, combine)                                    (*DeeType_RequireSeqReduce(Dee_TYPE(self)))(self, combine)
+#define DeeSeq_InvokeReduceWithInit(self, combine, init)                      (*DeeType_RequireSeqReduceWithInit(Dee_TYPE(self)))(self, combine, init)
+#define DeeSeq_InvokeReduceWithRange(self, combine, start, end)               (*DeeType_RequireSeqReduceWithRange(Dee_TYPE(self)))(self, combine, start, end)
+#define DeeSeq_InvokeReduceWithRangeAndInit(self, combine, start, end, init)  (*DeeType_RequireSeqReduceWithRangeAndInit(Dee_TYPE(self)))(self, combine, start, end, init)
+#define DeeSeq_InvokeMin(self)                                                (*DeeType_RequireSeqMin(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeMinWithKey(self, key)                                    (*DeeType_RequireSeqMinWithKey(Dee_TYPE(self)))(self, key)
+#define DeeSeq_InvokeMinWithRange(self, start, end)                           (*DeeType_RequireSeqMinWithRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeMinWithRangeAndKey(self, start, end, key)                (*DeeType_RequireSeqMinWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
+#define DeeSeq_InvokeMax(self)                                                (*DeeType_RequireSeqMax(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeMaxWithKey(self, key)                                    (*DeeType_RequireSeqMaxWithKey(Dee_TYPE(self)))(self, key)
+#define DeeSeq_InvokeMaxWithRange(self, start, end)                           (*DeeType_RequireSeqMaxWithRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeMaxWithRangeAndKey(self, start, end, key)                (*DeeType_RequireSeqMaxWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
+#define DeeSeq_InvokeSum(self)                                                (*DeeType_RequireSeqSum(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokeSumWithRange(self, start, end)                           (*DeeType_RequireSeqSumWithRange(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeCount(self, item)                                        (*DeeType_RequireSeqCount(Dee_TYPE(self)))(self, item)
+#define DeeSeq_InvokeCountWithKey(self, item, key)                            (*DeeType_RequireSeqCountWithKey(Dee_TYPE(self)))(self, item, key)
+#define DeeSeq_InvokeCountWithRange(self, item, start, end)                   (*DeeType_RequireSeqCountWithRange(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeCountWithRangeAndKey(self, item, start, end, key)        (*DeeType_RequireSeqCountWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeContains(self, item)                                     (*DeeType_RequireSeqContains(Dee_TYPE(self)))(self, item)
+#define DeeSeq_InvokeContainsWithKey(self, item, key)                         (*DeeType_RequireSeqContainsWithKey(Dee_TYPE(self)))(self, item, key)
+#define DeeSeq_InvokeContainsWithRange(self, item, start, end)                (*DeeType_RequireSeqContainsWithRange(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeContainsWithRangeAndKey(self, item, start, end, key)     (*DeeType_RequireSeqContainsWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeLocate(self, match, def)                                 (*DeeType_RequireSeqLocate(Dee_TYPE(self)))(self, match, def)
+#define DeeSeq_InvokeLocateWithRange(self, match, start, end, def)            (*DeeType_RequireSeqLocateWithRange(Dee_TYPE(self)))(self, match, start, end, def)
+#define DeeSeq_InvokeRLocateWithRange(self, match, start, end, def)           (*DeeType_RequireSeqRLocateWithRange(Dee_TYPE(self)))(self, match, start, end, def)
+#define DeeSeq_InvokeStartsWith(self, item)                                   (*DeeType_RequireSeqStartsWith(Dee_TYPE(self)))(self, item)
+#define DeeSeq_InvokeStartsWithWithKey(self, item, key)                       (*DeeType_RequireSeqStartsWithWithKey(Dee_TYPE(self)))(self, item, key)
+#define DeeSeq_InvokeStartsWithWithRange(self, item, start, end)              (*DeeType_RequireSeqStartsWithWithRange(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeStartsWithWithRangeAndKey(self, item, start, end, key)   (*DeeType_RequireSeqStartsWithWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeEndsWith(self, item)                                     (*DeeType_RequireSeqEndsWith(Dee_TYPE(self)))(self, item)
+#define DeeSeq_InvokeEndsWithWithKey(self, item, key)                         (*DeeType_RequireSeqEndsWithWithKey(Dee_TYPE(self)))(self, item, key)
+#define DeeSeq_InvokeEndsWithWithRange(self, item, start, end)                (*DeeType_RequireSeqEndsWithWithRange(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeEndsWithWithRangeAndKey(self, item, start, end, key)     (*DeeType_RequireSeqEndsWithWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeFind(self, item, start, end)                             (*DeeType_RequireSeqFind(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeFindWithKey(self, item, start, end, key)                 (*DeeType_RequireSeqFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeRFind(self, item, start, end)                            (*DeeType_RequireSeqRFind(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeRFindWithKey(self, item, start, end, key)                (*DeeType_RequireSeqRFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeErase(self, index, count)                                (*DeeType_RequireSeqErase(Dee_TYPE(self)))(self, index, count)
+#define DeeSeq_InvokeInsert(self, index, item)                                (*DeeType_RequireSeqInsert(Dee_TYPE(self)))(self, index, item)
+#define DeeSeq_InvokeInsertAll(self, index, items)                            (*DeeType_RequireSeqInsertAll(Dee_TYPE(self)))(self, index, items)
+#define DeeSeq_InvokePushFront(self, item)                                    (*DeeType_RequireSeqPushFront(Dee_TYPE(self)))(self, item)
+#define DeeSeq_InvokeAppend(self, item)                                       (*DeeType_RequireSeqAppend(Dee_TYPE(self)))(self, item)
+#define DeeSeq_InvokeExtend(self, items)                                      (*DeeType_RequireSeqExtend(Dee_TYPE(self)))(self, items)
+#define DeeSeq_InvokeXchItemIndex(self, index, value)                         (*DeeType_RequireSeqXchItemIndex(Dee_TYPE(self)))(self, index, value)
+#define DeeSeq_InvokeClear(self)                                              (*DeeType_RequireSeqClear(Dee_TYPE(self)))(self)
+#define DeeSeq_InvokePop(self, index)                                         (*DeeType_RequireSeqPop(Dee_TYPE(self)))(self, index)
+#define DeeSeq_InvokeRemove(self, item, start, end)                           (*DeeType_RequireSeqRemove(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeRemoveWithKey(self, item, start, end, key)               (*DeeType_RequireSeqRemoveWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeRRemove(self, item, start, end)                          (*DeeType_RequireSeqRRemove(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeRRemoveWithKey(self, item, start, end, key)              (*DeeType_RequireSeqRRemoveWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeRemoveAll(self, item, start, end, max)                   (*DeeType_RequireSeqRemoveAll(Dee_TYPE(self)))(self, item, start, end, max)
+#define DeeSeq_InvokeRemoveAllWithKey(self, item, start, end, max, key)       (*DeeType_RequireSeqRemoveAllWithKey(Dee_TYPE(self)))(self, item, start, end, max, key)
+#define DeeSeq_InvokeRemoveIf(self, should, start, end, max)                  (*DeeType_RequireSeqRemoveIf(Dee_TYPE(self)))(self, should, start, end, max)
+#define DeeSeq_InvokeResize(self, newsize, filler)                            (*DeeType_RequireSeqResize(Dee_TYPE(self)))(self, newsize, filler)
+#define DeeSeq_InvokeFill(self, start, end, filler)                           (*DeeType_RequireSeqFill(Dee_TYPE(self)))(self, start, end, filler)
+#define DeeSeq_InvokeReverse(self, start, end)                                (*DeeType_RequireSeqReverse(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeReversed(self, start, end)                               (*DeeType_RequireSeqReversed(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeSort(self, start, end)                                   (*DeeType_RequireSeqSort(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeSortWithKey(self, start, end, key)                       (*DeeType_RequireSeqSortWithKey(Dee_TYPE(self)))(self, start, end, key)
+#define DeeSeq_InvokeSorted(self, start, end)                                 (*DeeType_RequireSeqSorted(Dee_TYPE(self)))(self, start, end)
+#define DeeSeq_InvokeSortedWithKey(self, start, end, key)                     (*DeeType_RequireSeqSortedWithKey(Dee_TYPE(self)))(self, start, end, key)
+#define DeeSeq_InvokeBFind(self, item, start, end)                            (*DeeType_RequireSeqBFind(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeBFindWithKey(self, item, start, end, key)                (*DeeType_RequireSeqBFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeBPosition(self, item, start, end)                        (*DeeType_RequireSeqBPosition(Dee_TYPE(self)))(self, item, start, end)
+#define DeeSeq_InvokeBPositionWithKey(self, item, start, end, key)            (*DeeType_RequireSeqBPositionWithKey(Dee_TYPE(self)))(self, item, start, end, key)
+#define DeeSeq_InvokeBRange(self, item, start, end, result_range)             (*DeeType_RequireSeqBRange(Dee_TYPE(self)))(self, item, start, end, result_range)
+#define DeeSeq_InvokeBRangeWithKey(self, item, start, end, key, result_range) (*DeeType_RequireSeqBRangeWithKey(Dee_TYPE(self)))(self, item, start, end, key, result_range)
+
+/* Set functions */
+#define DeeSet_InvokeInsert(self, key)              (*DeeType_RequireSetInsert(Dee_TYPE(self)))(self, key)
+#define DeeSet_InvokeRemove(self, key)              (*DeeType_RequireSetRemove(Dee_TYPE(self)))(self, key)
+#define DeeSet_InvokeUnify(self, key)               (*DeeType_RequireSetUnify(Dee_TYPE(self)))(self, key)
+#define DeeSet_InvokeInsertAll(self, keys)          (*DeeType_RequireSetInsertAll(Dee_TYPE(self)))(self, keys)
+#define DeeSet_InvokeRemoveAll(self, keys)          (*DeeType_RequireSetRemoveAll(Dee_TYPE(self)))(self, keys)
+#define DeeSet_InvokePop(self)                      (*DeeType_RequireSetPop(Dee_TYPE(self)))(self)
+#define DeeSet_InvokePopWithDefault(self, default_) (*DeeType_RequireSetPopWithDefault(Dee_TYPE(self)))(self, default_)
+
+/* Map functions */
+#define DeeMap_InvokeSetOld(self, key, value)            (*DeeType_RequireMapSetOld(Dee_TYPE(self)))(self, key, value)
+#define DeeMap_InvokeSetOldEx(self, key, value)          (*DeeType_RequireMapSetOldEx(Dee_TYPE(self)))(self, key, value)
+#define DeeMap_InvokeSetNew(self, key, value)            (*DeeType_RequireMapSetNew(Dee_TYPE(self)))(self, key, value)
+#define DeeMap_InvokeSetNewEx(self, key, value)          (*DeeType_RequireMapSetNewEx(Dee_TYPE(self)))(self, key, value)
+#define DeeMap_InvokeSetDefault(self, key, value)        (*DeeType_RequireMapSetDefault(Dee_TYPE(self)))(self, key, value)
+#define DeeMap_InvokeUpdate(self, items)                 (*DeeType_RequireMapUpdate(Dee_TYPE(self)))(self, items)
+#define DeeMap_InvokeRemove(self, key)                   (*DeeType_RequireMapRemove(Dee_TYPE(self)))(self, key)
+#define DeeMap_InvokeRemoveKeys(self, keys)              (*DeeType_RequireMapRemoveKeys(Dee_TYPE(self)))(self, keys)
+#define DeeMap_InvokePop(self, key)                      (*DeeType_RequireMapPop(Dee_TYPE(self)))(self, key)
+#define DeeMap_InvokePopWithDefault(self, key, default_) (*DeeType_RequireMapPopWithDefault(Dee_TYPE(self)))(self, key, default_)
+#define DeeMap_InvokePopItem(self)                       (*DeeType_RequireMapPopItem(Dee_TYPE(self)))(self)
+#define DeeMap_InvokeKeys(self)                          (*DeeType_RequireMapKeys(Dee_TYPE(self)))(self)
+#define DeeMap_InvokeValues(self)                        (*DeeType_RequireMapValues(Dee_TYPE(self)))(self)
+#define DeeMap_InvokeIterKeys(self)                      (*DeeType_RequireMapIterKeys(Dee_TYPE(self)))(self)
+#define DeeMap_InvokeIterValues(self)                    (*DeeType_RequireMapIterValues(Dee_TYPE(self)))(self)
+
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 enum Dee_tmh_id {
 	/* !!! CAUTION !!! Method hint IDs are prone to arbitrarily change !!!
@@ -275,92 +901,6 @@ for (local newName, none, oldName: MH_ALIASES) {
 #define DeeMH_explicit_map_popitem_doc                 DeeMH_map_popitem_doc
 #define _Dee_TMH_WRAPPER_FLAGS_explicit_map_popitem    _Dee_TMH_WRAPPER_FLAGS_map_popitem
 /*[[[end]]]*/
-
-
-
-/* Used to declare type method hints in C */
-struct Dee_type_method_hint {
-	enum Dee_tmh_id tmh_id;    /* Method hint ID (one of `Dee_TMH_*') */
-	uint32_t        tmh_flags; /* Method flags (set of `Dee_METHOD_F*') */
-	Dee_funptr_t    tmh_func;  /* [1..1] Method hint implementation (custom/type-specific) (NULL marks end-of-list) */
-};
-
-#ifdef __INTELLISENSE__
-/* c++ magic to assert that the function pointers passed to `Dee_TYPE_METHOD_HINT_F'
- * and `Dee_TYPE_METHOD_HINT' are binary-compatible with whatever the resp. method
- * hint expects for its prototype (but note that pointer bases can be exchanged for
- * arbitrary types, meaning this doesn't fail if you use the real object types in
- * function parameters). */
-extern "C++" {namespace __intern {
-template<class T1, class T2> struct __PRIVATE_binary_compatible { enum{_value=false}; };
-template<class T1, class T2> struct __PRIVATE_binary_compatible<T1 *, T2 *> { enum{_value=true}; };
-template<class T> struct __PRIVATE_binary_compatible<T, T> { enum{_value=true}; };
-template<> struct __PRIVATE_binary_compatible<void(), void()> { enum{_value=true}; };
-template<class A1, class A2> struct __PRIVATE_binary_compatible<void(A1), void(A2)>: __PRIVATE_binary_compatible<A1, A2> { };
-template<class A1, class... TARGS1, class A2, class... TARGS2>
-struct __PRIVATE_binary_compatible<void(A1, TARGS1...), void(A2, TARGS2...)> {
-	enum{_value = __PRIVATE_binary_compatible<A1, A2>::_value &&
-	              __PRIVATE_binary_compatible<void(TARGS1...), void(TARGS2...)>::_value};
-};
-template<class T> struct __PRIVATE_match_method_hint { static Dee_funptr_t _match(T); };
-template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCALL *)(TARGS1...)> {
-	template<class RT2, class... TARGS2>
-	static ::__intern::____INTELLISENSE_enableif<
-	::__intern::__PRIVATE_binary_compatible<RT1, RT2>::_value &&
-	::__intern::__PRIVATE_binary_compatible<void(TARGS1...), void(TARGS2...)>::_value,
-	Dee_funptr_t>::__type _match(RT2(DCALL *)(TARGS2...));
-};
-}}
-
-#define Dee_TYPE_METHOD_HINT_F(func_name, func, flags) \
-	{ Dee_TMH_##func_name, flags, ::__intern::__PRIVATE_match_method_hint<Dee_mh_##func_name##_t>::_match(func) }
-#else /* __INTELLISENSE__ */
-#define Dee_TYPE_METHOD_HINT_F(func_name, func, flags) \
-	{ Dee_TMH_##func_name, flags, (Dee_funptr_t)(func) }
-#endif /* !__INTELLISENSE__ */
-#define Dee_TYPE_METHOD_HINT(func_name, func) Dee_TYPE_METHOD_HINT_F(func_name, func, 0)
-#define Dee_TYPE_METHOD_HINT_END { (enum Dee_tmh_id)0, 0, NULL }
-
-
-/* Link a type method in as part of a type's `tp_method_hints' array.
- * Behavior is undefined/depends-on-the-method-in-question if a type
- * defines a method as a hint reference, but fails to implement all
- * method hints used by the hinted method attribute. */
-#define Dee_TYPE_METHOD_HINTREF(attr_name) \
-	{ DeeMH_##attr_name##_name,            \
-	  (Dee_objmethod_t)&DeeMH_##attr_name, \
-	  DeeMH_##attr_name##_doc,             \
-	  _Dee_TMH_WRAPPER_FLAGS_##attr_name }
-#define Dee_TYPE_METHOD_HINTREF_DOC(attr_name, doc) \
-	{ DeeMH_##attr_name##_name,                     \
-	  (Dee_objmethod_t)&DeeMH_##attr_name, doc,     \
-	  _Dee_TMH_WRAPPER_FLAGS_##attr_name }
-
-
-#ifdef DEE_SOURCE
-#define TYPE_METHOD_HINT        Dee_TYPE_METHOD_HINT
-#define TYPE_METHOD_HINT_F      Dee_TYPE_METHOD_HINT_F
-#define TYPE_METHOD_HINT_END    Dee_TYPE_METHOD_HINT_END
-#define TYPE_METHOD_HINTREF     Dee_TYPE_METHOD_HINTREF
-#define TYPE_METHOD_HINTREF_DOC Dee_TYPE_METHOD_HINTREF_DOC
-#endif /* DEE_SOURCE */
-
-/* Returns a pointer to method hint's entry in `self->tp_method_hints' */
-DFUNDEF ATTR_PURE WUNUSED Dee_funptr_t DCALL
-DeeType_GetPrivateMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
-
-/* Same as `DeeType_GetPrivateMethodHint', but also searches the type's
- * MRO for all matches regarding attributes named "id", and returns the
- * native version for that attribute (or `NULL' if it doesn't have one)
- *
- * This function can also be used to query the optimized, internal
- * implementation of built-in sequence (TSC) functions. */
-DFUNDEF ATTR_PURE WUNUSED Dee_funptr_t DCALL
-DeeType_GetMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
-
-
-
-
 
 #ifdef CONFIG_BUILDING_DEEMON
 
@@ -814,6 +1354,93 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_popitem_t DCALL
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 #define DeeType_RequireMapOperatorHash DeeType_RequireSetOperatorHash
+
+/* Returns a pointer to method hint's entry in `self->tp_method_hints' */
+DFUNDEF ATTR_PURE WUNUSED Dee_funptr_t DCALL
+DeeType_GetPrivateMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
+
+/* Same as `DeeType_GetPrivateMethodHint', but also searches the type's
+ * MRO for all matches regarding attributes named "id", and returns the
+ * native version for that attribute (or `NULL' if it doesn't have one)
+ *
+ * This function can also be used to query the optimized, internal
+ * implementation of built-in sequence (TSC) functions. */
+DFUNDEF ATTR_PURE WUNUSED Dee_funptr_t DCALL
+DeeType_GetMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+
+
+
+
+
+/* Used to declare type method hints in C */
+struct Dee_type_method_hint {
+	enum Dee_tmh_id tmh_id;    /* Method hint ID (one of `Dee_TMH_*') */
+	uint32_t        tmh_flags; /* Method flags (set of `Dee_METHOD_F*') */
+	Dee_funptr_t    tmh_func;  /* [1..1] Method hint implementation (custom/type-specific) (NULL marks end-of-list) */
+};
+
+#ifdef __INTELLISENSE__
+/* c++ magic to assert that the function pointers passed to `Dee_TYPE_METHOD_HINT_F'
+ * and `Dee_TYPE_METHOD_HINT' are binary-compatible with whatever the resp. method
+ * hint expects for its prototype (but note that pointer bases can be exchanged for
+ * arbitrary types, meaning this doesn't fail if you use the real object types in
+ * function parameters). */
+extern "C++" {namespace __intern {
+template<class T1, class T2> struct __PRIVATE_binary_compatible { enum{_value=false}; };
+template<class T1, class T2> struct __PRIVATE_binary_compatible<T1 *, T2 *> { enum{_value=true}; };
+template<class T> struct __PRIVATE_binary_compatible<T, T> { enum{_value=true}; };
+template<> struct __PRIVATE_binary_compatible<void(), void()> { enum{_value=true}; };
+template<class A1, class A2> struct __PRIVATE_binary_compatible<void(A1), void(A2)>: __PRIVATE_binary_compatible<A1, A2> { };
+template<class A1, class... TARGS1, class A2, class... TARGS2>
+struct __PRIVATE_binary_compatible<void(A1, TARGS1...), void(A2, TARGS2...)> {
+	enum{_value = __PRIVATE_binary_compatible<A1, A2>::_value &&
+	              __PRIVATE_binary_compatible<void(TARGS1...), void(TARGS2...)>::_value};
+};
+template<class T> struct __PRIVATE_match_method_hint { static Dee_funptr_t _match(T); };
+template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCALL *)(TARGS1...)> {
+	template<class RT2, class... TARGS2>
+	static ::__intern::____INTELLISENSE_enableif<
+	::__intern::__PRIVATE_binary_compatible<RT1, RT2>::_value &&
+	::__intern::__PRIVATE_binary_compatible<void(TARGS1...), void(TARGS2...)>::_value,
+	Dee_funptr_t>::__type _match(RT2(DCALL *)(TARGS2...));
+};
+}}
+
+#define Dee_TYPE_METHOD_HINT_F(func_name, func, flags) \
+	{ Dee_TMH_##func_name, flags, ::__intern::__PRIVATE_match_method_hint<Dee_mh_##func_name##_t>::_match(func) }
+#else /* __INTELLISENSE__ */
+#define Dee_TYPE_METHOD_HINT_F(func_name, func, flags) \
+	{ Dee_TMH_##func_name, flags, (Dee_funptr_t)(func) }
+#endif /* !__INTELLISENSE__ */
+#define Dee_TYPE_METHOD_HINT(func_name, func) Dee_TYPE_METHOD_HINT_F(func_name, func, 0)
+#define Dee_TYPE_METHOD_HINT_END { (enum Dee_tmh_id)0, 0, NULL }
+
+
+/* Link a type method in as part of a type's `tp_method_hints' array.
+ * Behavior is undefined/depends-on-the-method-in-question if a type
+ * defines a method as a hint reference, but fails to implement all
+ * method hints used by the hinted method attribute. */
+#define Dee_TYPE_METHOD_HINTREF(attr_name) \
+	{ DeeMH_##attr_name##_name,            \
+	  (Dee_objmethod_t)&DeeMH_##attr_name, \
+	  DeeMH_##attr_name##_doc,             \
+	  _Dee_TMH_WRAPPER_FLAGS_##attr_name }
+#define Dee_TYPE_METHOD_HINTREF_DOC(attr_name, doc) \
+	{ DeeMH_##attr_name##_name,                     \
+	  (Dee_objmethod_t)&DeeMH_##attr_name, doc,     \
+	  _Dee_TMH_WRAPPER_FLAGS_##attr_name }
+
+
+#ifdef DEE_SOURCE
+#define TYPE_METHOD_HINT        Dee_TYPE_METHOD_HINT
+#define TYPE_METHOD_HINT_F      Dee_TYPE_METHOD_HINT_F
+#define TYPE_METHOD_HINT_END    Dee_TYPE_METHOD_HINT_END
+#define TYPE_METHOD_HINTREF     Dee_TYPE_METHOD_HINTREF
+#define TYPE_METHOD_HINTREF_DOC Dee_TYPE_METHOD_HINTREF_DOC
+#endif /* DEE_SOURCE */
+
 
 DECL_END
 

@@ -64,6 +64,9 @@
 		<Filter Include="src\linker-scripts">
 			<UniqueIdentifier>{372a956e-8c03-4d55-8939-0F28B9353A51}</UniqueIdentifier>
 		</Filter>
+		<Filter Include="src\method-hints">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-85488C26C6F6}</UniqueIdentifier>
+		</Filter>
 		<Filter Include="src\objects">
 			<UniqueIdentifier>{372a956e-8c03-4d55-8939-001F390B7113}</UniqueIdentifier>
 		</Filter>
@@ -684,6 +687,27 @@
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h">
 			<Filter>src\execute</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\method-hints.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_any.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_first.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_iter.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_iterkeys.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_size.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
@@ -925,6 +949,15 @@
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\method-hint-defaults.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\method-hint-select.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\method-hints.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl">
@@ -1496,6 +1529,15 @@
 		<ClCompile Include="..\src\deemon\runtime\lock.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\method-hint-defaults.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\method-hint-select.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\method-hint-wrappers.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\method-hints.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
@@ -1572,6 +1614,9 @@
 		</None>
 		<None Include="..\src\deemon\linker-scripts\link-deemon.dee">
 			<Filter>src\linker-scripts</Filter>
+		</None>
+		<None Include="..\src\deemon\method-hints\method-hints.dee">
+			<Filter>src\method-hints</Filter>
 		</None>
 		<None Include="..\src\deemon\objects\unicode\db\.gitignore">
 			<Filter>src\objects\unicode\db</Filter>

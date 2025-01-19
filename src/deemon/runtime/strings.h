@@ -48,7 +48,7 @@ function defString(name, value?) {
 	print("#define STR_", name.lsstrip("str_"), " DeeString_STR(&", name, ")");
 }
 
-local STRINGS = {
+local STRINGS = List {
 	"Signal",
 	"Error",
 
@@ -324,6 +324,10 @@ local STRINGS = {
 	"fwd",
 	"const",
 };
+
+// Append strings needed for method hints
+import getAllMethodHintAttributes from "..method-hints.method-hints";
+STRINGS.extend(getAllMethodHintAttributes());
 
 local generatedStrings = HashSet();
 for (local s: STRINGS) {
@@ -1117,6 +1121,18 @@ DEF_STRING(str_fwd, "fwd", 0x4d05936a, 0x468b9d355ef7e041)
 #define Dee_HashStr__const _Dee_HashSelectC(0x95daec48, 0x2e9cb1cd0ec552da)
 DEF_STRING(str_const, "const", 0x95daec48, 0x2e9cb1cd0ec552da)
 #define STR_const DeeString_STR(&str_const)
+#define Dee_HashStr____seq_bool__ _Dee_HashSelectC(0x385ee23, 0x45c831bf3a70ded9)
+DEF_STRING(str___seq_bool__, "__seq_bool__", 0x385ee23, 0x45c831bf3a70ded9)
+#define STR___seq_bool__ DeeString_STR(&str___seq_bool__)
+#define Dee_HashStr____seq_size__ _Dee_HashSelectC(0xa1c99855, 0xdd68fbbf0a1a68a1)
+DEF_STRING(str___seq_size__, "__seq_size__", 0xa1c99855, 0xdd68fbbf0a1a68a1)
+#define STR___seq_size__ DeeString_STR(&str___seq_size__)
+#define Dee_HashStr____seq_iter__ _Dee_HashSelectC(0x2fb16a47, 0x49d80da3961f157e)
+DEF_STRING(str___seq_iter__, "__seq_iter__", 0x2fb16a47, 0x49d80da3961f157e)
+#define STR___seq_iter__ DeeString_STR(&str___seq_iter__)
+#define Dee_HashStr____seq_iterkeys__ _Dee_HashSelectC(0x73249c12, 0xc5a53fe1a6aa4d47)
+DEF_STRING(str___seq_iterkeys__, "__seq_iterkeys__", 0x73249c12, 0xc5a53fe1a6aa4d47)
+#define STR___seq_iterkeys__ DeeString_STR(&str___seq_iterkeys__)
 #ifdef Dee_fd_t_IS_HANDLE
 #define Dee_HashStr__getsysfd _Dee_HashSelectC(0x75b169b6, 0x74235841d2ace4f0)
 DEF_STRING(str_getsysfd, "osfhandle_np", 0x75b169b6, 0x74235841d2ace4f0)

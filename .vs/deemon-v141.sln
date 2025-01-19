@@ -456,6 +456,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\threading-lock.dee = ..\util\test\threading-lock.dee
 		..\util\test\threading-once.dee = ..\util\test\threading-once.dee
 		..\util\test\time-month.dee = ..\util\test\time-month.dee
+		..\util\test\time-string-format.dee = ..\util\test\time-string-format.dee
 		..\util\test\time-time.dee = ..\util\test\time-time.dee
 		..\util\test\util-clamprange.dee = ..\util\test\util-clamprange.dee
 	EndProjectSection
