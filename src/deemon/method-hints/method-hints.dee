@@ -33,8 +33,9 @@ global final CTYPE_FORMAT_REPR_CODES: {string: string} = {
 };
 
 function getCTypeFormatReprCode(typ: string): string {
-	typ = typ.rereplace(r"\s*\*\s*", "*");
 	typ = typ.rereplace(r"\b(__restrict|const|volatile)\b", "");
+	typ = typ.rereplace(r"\s*\*\s*", "*");
+	typ = typ.rereplace(r"\b  +\b", "*");
 	return CTYPE_FORMAT_REPR_CODES[typ];
 }
 
@@ -43,7 +44,7 @@ function getCTypeFormatReprCode(typ: string): string {
 global MACROS: {string: string} = Dict();
 
 
-class NativeMethodParam {
+final class NativeMethodParam {
 	this = default;
 	public member typ: string;  /* "DeeObject *__restrict" */
 	public member name: string; /* "self" */
@@ -95,7 +96,7 @@ nope:
 }
 
 global NativeMethod;
-class NativeMethodImpl {
+final class NativeMethodImpl {
 	this = default;
 	public member impl: string | none = none;   /* Implementation body */
 	public member alias: string | none = none;  /* Name of a function to alias */
@@ -267,7 +268,7 @@ function printUserText(text: string, dollarName: string,
 }
 
 global MethodHint;
-class NativeMethod {
+final class NativeMethod {
 	this = default;
 	public member wunused: bool;      /* true */
 	public member returnType: string; /* "int" */
@@ -570,7 +571,7 @@ global final KNOWN_BASE_CLASSES: {string: Type} = {
 	"Numeric": Numeric,
 };
 
-class MethodHintAlias {
+final class MethodHintAlias {
 	this = default;
 	public member baseClass: Type; /* Sequence */
 	public member attr: Type;      /* "any" */
@@ -578,7 +579,7 @@ class MethodHintAlias {
 	public property name: string = { get() -> f"{baseClass}_{attr}"; };
 };
 
-class MethodHint: WeakRefAble {
+final class MethodHint: WeakRefAble {
 	this = default;
 	public member name: string; /* "__seq_any__" */
 	public member declNameAliases: {string...} = []; /* Some more aliases for "name" (for backwards compat) */
@@ -713,7 +714,9 @@ function print_Dee_tmh_id() {
 	print("/* !!! CAUTION !!! Method hint IDs are prone to arbitrarily change !!!");
 	print(" *");
 	print(" * Do not make use of these IDs if you're developing a DEX module and");
-	print(" * wish to remain compatible with the deemon core across many version. */");
+	print(" * wish to remain compatible with the deemon core across many version.");
+	print(" * If that's want you're trying to accomplish, you should instead define");
+	print(" * regular `tp_methods' with names recognized as method hints. */");
 	print("enum Dee_tmh_id {");
 	for (local none, hint: NATIVE_METHOD_HINTS) {
 		print("	Dee_TMH_", hint.name, ",");
@@ -795,6 +798,7 @@ function getAllMhCacheAttributeMembers(): {string...} {
 
 function printMhCacheAttributeMembers() {
 	local all = List(getAllMhCacheAttributeMembers());
+	print("#define MHC_COUNT ", #all);
 	if (all) {
 		for (local name: all) {
 			if (name == all.first)
@@ -887,7 +891,7 @@ function printMhUnsupportedArrayMembers() {
 }
 
 
-class _SpecParserAttrib {
+final class _SpecParserAttrib {
 	this = default;
 	public member kw: bool = false;
 	public member wunused: bool = false;
@@ -904,7 +908,7 @@ class _SpecParserAttrib {
 global final _C_TYPENAME_TOKENS = HashSet.Frozen({
 	"*", "const", "volatile", "DREF", "__restrict" });
 
-class _SpecParserFile {
+final class _SpecParserFile {
 	this = default;
 	public member data: string;
 	public member dataLen: int;
@@ -912,7 +916,7 @@ class _SpecParserFile {
 	public member tokEnd: int = 0;
 };
 
-class _SpecParser {
+final class _SpecParser {
 	this = default;
 	public member data: string;
 	public member dataLen: int;

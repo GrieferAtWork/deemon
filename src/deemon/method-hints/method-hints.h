@@ -27,11 +27,11 @@
 %[include("seq_operator_size.h")]
 %[include("seq_operator_iter.h")]
 %[include("seq_operator_iterkeys.h")]
+%[include("seq_operator_enumerate.h")]
 %[include("seq_any.h")]
+%[include("seq_all.h")]
 %[include("seq_first.h")]
 
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_operator_contains, (DeeObject *self, DeeObject *some_object)) /* Re-uses the __seq_contains__ below */
-//
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_operator_getitem, (DeeObject *self, DeeObject *index))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_operator_trygetitem, (DeeObject *self, DeeObject *index))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_bounditem, (DeeObject *self, DeeObject *index))
@@ -114,24 +114,12 @@
 //                                     "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?S?T2?Dint?O\n"
 //                                     "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N")
 //
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_operator_enumerate, (DeeObject *__restrict self, Dee_enumerate_t proc, void *arg))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_operator_enumerate_index, (DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__seq_enumerate__, "__seq_enumerate__", "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N")
-//
-//
 ///* @return: ITER_DONE: Sequence is empty */
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_trygetfirst, (DeeObject *__restrict self))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_trygetlast, (DeeObject *__restrict self))
 //
 //
 
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_all, (DeeObject *self))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_all_with_key, (DeeObject *self, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_all_with_range, (DeeObject *self, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), int, DCALL, seq_all_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_all, "all", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_all__, "__seq_all__", seq_all)
-//
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_parity, (DeeObject *self))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_parity_with_key, (DeeObject *self, DeeObject *key))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_parity_with_range, (DeeObject *self, size_t start, size_t end))
@@ -182,6 +170,7 @@
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_contains_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_contains_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 //Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_contains, "contains", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
+//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_operator_contains, (DeeObject *self, DeeObject *some_object))
 //Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_contains__, "__seq_contains__", seq_contains)
 //
 ///* Returns the first element (within the given range) where `match(elem)' is true. */

@@ -83,6 +83,30 @@ err:
 	return NULL;
 }
 
+PUBLIC_CONST char const DeeMA___seq_enumerate___name[] = "__seq_enumerate__";
+PUBLIC_CONST char const DeeMA___seq_enumerate___doc[] = "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	Dee_ssize_t foreach_status;
+	DeeObject *cb;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":__seq_enumerate__", &cb, &start, &end))
+		goto err;
+	/* TODO */
+	if (start == 0 && end == (size_t)-1) {
+		foreach_status = DeeSeq_OperatorEnumerate();
+	} else {
+		foreach_status = DeeSeq_OperatorEnumerateIndex();
+	}
+	if unlikely(foreach_status == -1)
+		goto err;
+	/* TODO */
+	return 0;
+err:
+	return NULL;
+}
+
 PUBLIC_CONST char const DeeMA___seq_any___name[] = "__seq_any__";
 PUBLIC_CONST char const DeeMA___seq_any___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool";
 PUBLIC_CONST char const DeeMA_Sequence_any_name[] = "any";
@@ -103,6 +127,34 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		result = !DeeNone_Check(key)
 		         ? DeeSeq_InvokeAnyWithRangeAndKey(self, start, end, key)
 		         : DeeSeq_InvokeAnyWithRange(self, start, end);
+	}
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_all___name[] = "__seq_all__";
+PUBLIC_CONST char const DeeMA___seq_all___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool";
+PUBLIC_CONST char const DeeMA_Sequence_all_name[] = "all";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	int result;
+	DeeObject *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:all",
+	                    &start, &end, &key))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		result = !DeeNone_Check(key)
+		         ? DeeSeq_InvokeAllWithKey(self, key)
+		         : DeeSeq_InvokeAll(self);
+	} else {
+		result = !DeeNone_Check(key)
+		         ? DeeSeq_InvokeAllWithRangeAndKey(self, start, end, key)
+		         : DeeSeq_InvokeAllWithRange(self, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;

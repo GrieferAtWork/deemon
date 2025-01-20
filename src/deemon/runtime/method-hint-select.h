@@ -38,12 +38,19 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_iter_t DCALL mh_sele
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_foreach_t DCALL mh_select_seq_operator_foreach(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_foreach_pair_t DCALL mh_select_seq_operator_foreach_pair(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_iterkeys_t DCALL mh_select_seq_operator_iterkeys(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_enumerate_t DCALL mh_select_seq_operator_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_enumerate_index_t DCALL mh_select_seq_operator_enumerate_index(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_any_t DCALL mh_select_seq_any(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_any_with_key_t DCALL mh_select_seq_any_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_any_with_range_t DCALL mh_select_seq_any_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_any_with_range_and_key_t DCALL mh_select_seq_any_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_t DCALL mh_select_seq_all(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_with_key_t DCALL mh_select_seq_all_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_with_range_t DCALL mh_select_seq_all_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_with_range_and_key_t DCALL mh_select_seq_all_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_trygetfirst_t DCALL mh_select_seq_trygetfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_getfirst_t DCALL mh_select_seq_getfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_boundfirst_t DCALL mh_select_seq_boundfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_delfirst_t DCALL mh_select_seq_delfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_setfirst_t DCALL mh_select_seq_setfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
 /*[[[end]]]*/

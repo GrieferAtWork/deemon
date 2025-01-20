@@ -77,7 +77,9 @@ DECL_BEGIN
 /* !!! CAUTION !!! Method hint IDs are prone to arbitrarily change !!!
  *
  * Do not make use of these IDs if you're developing a DEX module and
- * wish to remain compatible with the deemon core across many version. */
+ * wish to remain compatible with the deemon core across many version.
+ * If that's want you're trying to accomplish, you should instead define
+ * regular `tp_methods' with names recognized as method hints. */
 enum Dee_tmh_id {
 	Dee_TMH_seq_operator_bool,
 	Dee_TMH_seq_operator_sizeob,
@@ -86,10 +88,16 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_operator_foreach,
 	Dee_TMH_seq_operator_foreach_pair,
 	Dee_TMH_seq_operator_iterkeys,
+	Dee_TMH_seq_operator_enumerate,
+	Dee_TMH_seq_operator_enumerate_index,
 	Dee_TMH_seq_any,
 	Dee_TMH_seq_any_with_key,
 	Dee_TMH_seq_any_with_range,
 	Dee_TMH_seq_any_with_range_and_key,
+	Dee_TMH_seq_all,
+	Dee_TMH_seq_all_with_key,
+	Dee_TMH_seq_all_with_range,
+	Dee_TMH_seq_all_with_range_and_key,
 	Dee_TMH_seq_trygetfirst,
 	Dee_TMH_seq_getfirst,
 	Dee_TMH_seq_boundfirst,
@@ -115,11 +123,21 @@ typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_fo
 /* __seq_iterkeys__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_iterkeys_t)(DeeObject *self);
 
+/* __seq_enumerate__ */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_enumerate_t)(DeeObject *self, Dee_enumerate_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4, 5)) Dee_ssize_t (DCALL *DeeMH_seq_operator_enumerate_index_t)(DeeObject *self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+
 /* Sequence_any, seq_any, __seq_any__, explicit_seq_any */
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_any_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_any_with_key_t)(DeeObject *self, DeeObject *key);
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_any_with_range_t)(DeeObject *self, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeMH_seq_any_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *key);
+
+/* Sequence_all, seq_all, __seq_all__, explicit_seq_all */
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_all_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_all_with_key_t)(DeeObject *self, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_all_with_range_t)(DeeObject *self, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeMH_seq_all_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *key);
 
 /* Sequence_first, __seq_first__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_trygetfirst_t)(DeeObject *self);
@@ -150,6 +168,11 @@ DDATDEF char const DeeMA___seq_iterkeys___name[]; /* "__seq_iterkeys__" */
 DDATDEF char const DeeMA___seq_iterkeys___doc[];  /* "->?DIterator" */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_iterkeys__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
+#define DeeMA___seq_enumerate___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_enumerate___name[]; /* "__seq_enumerate__" */
+DDATDEF char const DeeMA___seq_enumerate___doc[];  /* "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
 #define DeeMA___seq_any___flags Dee_TYPE_METHOD_FKWDS
 DDATDEF char const DeeMA___seq_any___name[]; /* "__seq_any__" */
 DDATDEF char const DeeMA___seq_any___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
@@ -166,6 +189,23 @@ DDATDEF char const DeeMA_Sequence_any_name[]; /* "any" */
 #define DeeMA_explicit_seq_any_name  DeeMA___seq_any___name
 #define DeeMA_explicit_seq_any_doc   DeeMA___seq_any___doc
 #define DeeMA_explicit_seq_any       DeeMA___seq_any__
+
+#define DeeMA___seq_all___flags Dee_TYPE_METHOD_FKWDS
+DDATDEF char const DeeMA___seq_all___name[]; /* "__seq_all__" */
+DDATDEF char const DeeMA___seq_all___doc[];  /* "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_all_flags DeeMA___seq_all___flags
+#define DeeMA_Sequence_all_doc   DeeMA___seq_all___doc
+#define DeeMA_Sequence_all       DeeMA___seq_all__
+DDATDEF char const DeeMA_Sequence_all_name[]; /* "all" */
+#define DeeMA_seq_all_flags DeeMA_Sequence_all_flags
+#define DeeMA_seq_all_name  DeeMA_Sequence_all_name
+#define DeeMA_seq_all_doc   DeeMA_Sequence_all_doc
+#define DeeMA_seq_all       DeeMA_Sequence_all
+#define DeeMA_explicit_seq_all_flags DeeMA___seq_all___flags
+#define DeeMA_explicit_seq_all_name  DeeMA___seq_all___name
+#define DeeMA_explicit_seq_all_doc   DeeMA___seq_all___doc
+#define DeeMA_explicit_seq_all       DeeMA___seq_all__
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -201,6 +241,29 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
  * (if it has one). If not, return `NULL' instead. */
 DFUNDEF ATTR_CONST WUNUSED Dee_funptr_t
 (DCALL DeeType_GetUnsupportedMethodHint)(enum Dee_tmh_id id);
+
+struct Dee_type_mh_cache_array {
+	Dee_funptr_t mh_funcs[Dee_TMH_COUNT];
+};
+
+#ifndef __OPTIMIZE_SIZE__
+#undef DeeType_GetMethodHint
+#define DeeType_GetMethodHint(self, id) DeeType_GetMethodHint_inline(self, id)
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetMethodHint_inline)(DeeTypeObject *__restrict self, enum Dee_tmh_id id) {
+	/* NOTE: By inlining the likely case where the method "id" has already been
+	 *       cached, the compiler can optimize calls to method hints to be pretty
+	 *       must just-as-fast as regular operator invocations. */
+	struct Dee_type_mh_cache_array *mhcache;
+	mhcache = (struct Dee_type_mh_cache_array *)self->tp_mhcache;
+	if likely(mhcache) {
+		Dee_funptr_t result = mhcache->mh_funcs[id];
+		if likely(result)
+			return result;
+	}
+	return (DeeType_GetMethodHint)(self, id);
+}
+#endif /* !__OPTIMIZE_SIZE__ */
 
 #define DeeType_TryRequireSeqForeachReverse(self)               ((DeeMH_seq_foreach_reverse_t)DeeType_GetMethodHint(self, Dee_TMH_seq_foreach_reverse))
 #define DeeType_TryRequireSeqEnumerateIndexReverse(self)        ((DeeMH_seq_enumerate_index_reverse_t)DeeType_GetMethodHint(self, Dee_TMH_seq_enumerate_index_reverse))

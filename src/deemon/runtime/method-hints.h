@@ -67,10 +67,16 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_operator_foreach_t mh_seq_operator_foreach;
 	DeeMH_seq_operator_foreach_pair_t mh_seq_operator_foreach_pair;
 	DeeMH_seq_operator_iterkeys_t mh_seq_operator_iterkeys;
+	DeeMH_seq_operator_enumerate_t mh_seq_operator_enumerate;
+	DeeMH_seq_operator_enumerate_index_t mh_seq_operator_enumerate_index;
 	DeeMH_seq_any_t mh_seq_any;
 	DeeMH_seq_any_with_key_t mh_seq_any_with_key;
 	DeeMH_seq_any_with_range_t mh_seq_any_with_range;
 	DeeMH_seq_any_with_range_and_key_t mh_seq_any_with_range_and_key;
+	DeeMH_seq_all_t mh_seq_all;
+	DeeMH_seq_all_with_key_t mh_seq_all_with_key;
+	DeeMH_seq_all_with_range_t mh_seq_all_with_range;
+	DeeMH_seq_all_with_range_and_key_t mh_seq_all_with_range_and_key;
 	DeeMH_seq_trygetfirst_t mh_seq_trygetfirst;
 	DeeMH_seq_getfirst_t mh_seq_getfirst;
 	DeeMH_seq_boundfirst_t mh_seq_boundfirst;
@@ -84,12 +90,15 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
+#define MHC_COUNT 10
 #define MHC_FIRST mhc___seq_bool__
 	union mhc_slot mhc___seq_bool__;
 	union mhc_slot mhc___seq_size__;
 	union mhc_slot mhc___seq_iter__;
 	union mhc_slot mhc___seq_iterkeys__;
+	union mhc_slot mhc___seq_enumerate__;
 	union mhc_slot mhc___seq_any__;
+	union mhc_slot mhc___seq_all__;
 	union mhc_slot mhc_get___seq_first__;
 	union mhc_slot mhc_del___seq_first__;
 	union mhc_slot mhc_set___seq_first__;

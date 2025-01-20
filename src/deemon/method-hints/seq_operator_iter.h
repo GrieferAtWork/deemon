@@ -29,18 +29,18 @@ err:
 	return NULL;
 }
 
-[[wunused]]
-DREF DeeObject *__seq_iter__.seq_operator_iter([[nonnull]] DeeObject *self)
+[[wunused]] DREF DeeObject *
+__seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
 %{$empty = { return_empty_iterator; }}
 {
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
-[[wunused]]
-Dee_ssize_t __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *self,
-                                              [[nonnull]] Dee_foreach_t proc,
-                                              void *arg)
+[[wunused]] Dee_ssize_t
+__seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
+                                  [[nonnull]] Dee_foreach_t proc,
+                                  void *arg)
 %{$empty = 0} %{$with__seq_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
@@ -54,10 +54,10 @@ err:
 	return -1;
 }} = $with__seq_operator_iter;
 
-[[wunused]]
-Dee_ssize_t __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *self,
-                                                   [[nonnull]] Dee_foreach_pair_t proc,
-                                                   void *arg)
+[[wunused]] Dee_ssize_t
+__seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
+                                       [[nonnull]] Dee_foreach_pair_t proc,
+                                       void *arg)
 %{$empty = 0} %{$with__seq_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
@@ -79,16 +79,28 @@ seq_operator_iter = {
 };
 
 seq_operator_foreach = {
+	DeeMH_seq_operator_iter_t seq_operator_iter;
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_RequireForeach(THIS_TYPE))
 		return THIS_TYPE->tp_seq->tp_foreach;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	seq_operator_iter = REQUIRE(seq_operator_iter);
+	if (seq_operator_iter == &default__seq_operator_iter__empty)
+		return &$empty;
+	if (seq_operator_iter)
+		return &$with__seq_operator_iter;
 };
 
 seq_operator_foreach_pair = {
+	DeeMH_seq_operator_iter_t seq_operator_iter;
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_RequireForeachPair(self))
 		return THIS_TYPE->tp_seq->tp_foreach_pair;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	seq_operator_iter = REQUIRE(seq_operator_iter);
+	if (seq_operator_iter == &default__seq_operator_iter__empty)
+		return &$empty;
+	if (seq_operator_iter)
+		return &$with__seq_operator_iter;
 };
 

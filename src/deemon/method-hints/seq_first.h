@@ -25,11 +25,51 @@
 [[getset, alias(Sequence.first)]]
 __seq_first__->?O;
 
+
+%[define(DEFINE_seq_default_getfirst_with_foreach_cb =
+#ifndef DEFINED_seq_default_getfirst_with_foreach_cb
+#define DEFINED_seq_default_getfirst_with_foreach_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seq_default_getfirst_with_foreach_cb(void *arg, DeeObject *item) {
+	Dee_Incref(item);
+	*(DREF DeeObject **)arg = item;
+	return -2;
+}
+#endif /* !DEFINED_seq_default_getfirst_with_foreach_cb */
+)]
+
+
+
+/* Try to return the first element of the sequence (returns ITER_DONE if the sequence is empty) */
 [[wunused]] DREF DeeObject *
-__seq_first__.seq_trygetfirst([[nonnull]] DeeObject *self)
+__seq_first__.seq_trygetfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("first"))} %{$empty = ITER_DONE}
-%{$with__seq_operator_foreach = {
-	// TODO
+%{$with__size_and_getitem_index_fast = {
+	DREF DeeObject *result;
+	size_t size = (*Dee_TYPE(self)->tp_seq->tp_size)(self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (!size)
+		return ITER_DONE;
+	result = (*Dee_TYPE(self)->tp_seq->tp_getitem_index_fast)(self, 0);
+	if (!result)
+		result = ITER_DONE;
+	return result;
+err:
+	return NULL;
+}}
+%{$with__seq_operator_trygetitem_index = {
+	return DeeSeq_OperatorTryGetItemIndex(self, 0);
+}}
+%{$with__seq_operator_foreach = [[prefix(DEFINE_seq_default_getfirst_with_foreach_cb)]] {
+	DREF DeeObject *result;
+	Dee_ssize_t foreach_status;
+	foreach_status = (*Dee_TYPE(self)->tp_seq->tp_foreach)(self, &seq_default_getfirst_with_foreach_cb, &result);
+	if likely(foreach_status == -2)
+		return result;
+	if (foreach_status == 0)
+		return ITER_DONE;
+	return NULL;
 }} {
 	DREF DeeObject *result = LOCAL_GETATTR(self);
 	if (!result && DeeError_Catch(&DeeError_UnboundAttribute))
@@ -37,68 +77,138 @@ __seq_first__.seq_trygetfirst([[nonnull]] DeeObject *self)
 	return result;
 }
 
+
+/* Return the first element of the sequence */
 [[wunused, getset_member("get")]] DREF DeeObject *
-__seq_first__.seq_getfirst([[nonnull]] DeeObject *self)
+__seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias(default__seq_trygetfirst__unsupported)}
 %{$empty = {
 	err_unbound_attribute_string(Dee_TYPE(self), "first");
 	return NULL;
 }}
-%{$with__seq_operator_foreach = {
-	// TODO
+%{$with__seq_operator_getitem_index = {
+	return DeeSeq_OperatorGetItemIndex(self, 0);
+}}
+%{$with__seq_trygetfirst = {
+	DREF DeeObject *result = DeeSeq_InvokeTryGetFirst(self);
+	if unlikely(result == ITER_DONE) {
+		err_unbound_attribute_string(Dee_TYPE(self), "first");
+		result = NULL;
+	}
+	return result;
 }} {
 	return LOCAL_GETATTR(self);
 }
 
+
+/* Check if the first element of the sequence is bound */
 [[wunused, getset_member("bound")]] int
-__seq_first__.seq_boundfirst([[nonnull]] DeeObject *self)
-%{unsupported_alias($empty)} %{$empty = Dee_BOUND_MISSING} {
+__seq_first__.seq_boundfirst([[nonnull]] DeeObject *__restrict self)
+%{unsupported_alias($empty)} %{$empty = Dee_BOUND_MISSING}
+%{$with__seq_operator_bounditem_index = {
+	return DeeSeq_OperatorBoundItemIndex(self, 0);
+}}
+%{$with__seq_trygetfirst = {
+	DREF DeeObject *result = DeeSeq_InvokeTryGetFirst(self);
+	if (result == ITER_DONE)
+		return Dee_BOUND_NO;
+	if unlikely(!result)
+		return Dee_BOUND_ERR;
+	Dee_Decref(result);
+	return Dee_BOUND_YES;
+}} {
 	return LOCAL_BOUNDATTR(self);
 }
 
+
+/* Remove or unbound the first element of the sequence */
 [[wunused, getset_member("del")]] int
-__seq_first__.seq_delfirst([[nonnull]] DeeObject *self)
+__seq_first__.seq_delfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del first"); })}
-%{$empty = 0} {
+%{$empty = 0}
+%{$with__seq_operator_delitem_index = {
+	int result = DeeSeq_OperatorDelItemIndex(self, 0);
+	if (result < 0 && DeeError_Catch(&DeeError_IndexError))
+		result = 0;
+	return result;
+}} {
 	return LOCAL_DELATTR(self);
 }
 
+
+/* Override the first element of the sequence with "value" */
 [[wunused, getset_member("set")]] int
-__seq_first__.seq_setfirst([[nonnull]] DeeObject *self, [[nonnull]] DeeObject *value)
+__seq_first__.seq_setfirst([[nonnull]] DeeObject *self,
+                           [[nonnull]] DeeObject *value)
 %{unsupported({ return err_seq_unsupportedf(self, "first = %r", value); })}
-%{$empty = { return err_empty_sequence(self); }} {
+%{$empty = { return err_empty_sequence(self); }}
+%{$with__seq_operator_setitem_index = {
+	return DeeSeq_OperatorSetItemIndex(self, 0, value);
+}} {
 	return LOCAL_SETATTR(self, value);
 }
 
 
-seq_getfirst = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
-		return &$empty;
-	if (seq_operator_foreach)
-		return &$with__seq_operator_foreach;
-};
+
+
 
 seq_trygetfirst = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
+	if (SEQ_CLASS == Dee_SEQCLASS_SEQ) {
+		if (THIS_TYPE->tp_seq &&
+		    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
+		    THIS_TYPE->tp_seq->tp_size)
+			return &$with__size_and_getitem_index_fast;
+	}
+	seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
+	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 		return &$empty;
-	if (seq_operator_foreach)
+	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_foreach)
 		return &$with__seq_operator_foreach;
+	if (seq_operator_trygetitem_index)
+		return &$with__seq_operator_trygetitem_index;
+};
+
+seq_getfirst = {
+	DeeMH_seq_trygetfirst_t seq_trygetfirst = REQUIRE(seq_trygetfirst);
+	if (seq_trygetfirst == &default__seq_trygetfirst__empty)
+		return &$empty;
+	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index)
+		return &$with__seq_operator_getitem_index;
+	if (seq_trygetfirst)
+		return &$with__seq_trygetfirst;
+};
+
+seq_boundfirst = {
+	DeeMH_seq_trygetfirst_t seq_trygetfirst = REQUIRE(seq_trygetfirst);
+	if (seq_trygetfirst == &default__seq_trygetfirst__empty)
+		return &$empty;
+	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index)
+		return &$with__seq_operator_bounditem_index;
+	if (seq_trygetfirst)
+		return &$with__seq_trygetfirst;
 };
 
 seq_delfirst = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	DeeMH_seq_trygetfirst_t seq_trygetfirst = REQUIRE(seq_trygetfirst);
+	if (seq_trygetfirst == &default__seq_trygetfirst__empty)
 		return &$empty;
-	if (seq_operator_foreach)
+	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index) {
+		if (REQUIRE(seq_operator_delitem_index))
+			return &$with__seq_operator_delitem_index;
+	}
+	if (seq_trygetfirst)
 		return &$unsupported;
 };
 
 seq_setfirst = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	DeeMH_seq_trygetfirst_t seq_trygetfirst = REQUIRE(seq_trygetfirst);
+	if (seq_trygetfirst == &default__seq_trygetfirst__empty)
 		return &$empty;
-	if (seq_operator_foreach)
+	if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_trygetitem_index) {
+		if (REQUIRE(seq_operator_setitem_index))
+			return &$with__seq_operator_setitem_index;
+	}
+	if (seq_trygetfirst)
 		return &$unsupported;
 };

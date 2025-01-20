@@ -56,10 +56,16 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	(Dee_funptr_t)&default__seq_operator_foreach__unsupported,
 	(Dee_funptr_t)&default__seq_operator_foreach_pair__unsupported,
 	(Dee_funptr_t)&default__seq_operator_iterkeys__unsupported,
+	(Dee_funptr_t)&default__seq_operator_enumerate__unsupported,
+	(Dee_funptr_t)&default__seq_operator_enumerate_index__unsupported,
 	(Dee_funptr_t)&default__seq_any__unsupported,
 	(Dee_funptr_t)&default__seq_any_with_key__unsupported,
 	(Dee_funptr_t)&default__seq_any_with_range__unsupported,
 	(Dee_funptr_t)&default__seq_any_with_range_and_key__unsupported,
+	(Dee_funptr_t)&default__seq_all__unsupported,
+	(Dee_funptr_t)&default__seq_all_with_key__unsupported,
+	(Dee_funptr_t)&default__seq_all_with_range__unsupported,
+	(Dee_funptr_t)&default__seq_all_with_range_and_key__unsupported,
 	(Dee_funptr_t)&default__seq_trygetfirst__unsupported,
 	(Dee_funptr_t)&default__seq_getfirst__unsupported,
 	(Dee_funptr_t)&default__seq_boundfirst__unsupported,
@@ -107,10 +113,10 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 	struct Dee_type_mh_cache *mhcache;
 	ASSERT(id < Dee_TMH_COUNT);
 	mhcache = atomic_read(&self->tp_mhcache);
-	if likely(mhcache) {
+	if /*likely*/(mhcache) {
 read_from_mhcache:
 		result = Dee_type_mh_cache_gethint(mhcache, id);
-		if likely(result)
+		if /*likely*/(result)
 			return result;
 		result = DeeType_GetUncachedMethodHint(self, id);
 		Dee_type_mh_cache_sethint(mhcache, id, result);
@@ -219,13 +225,13 @@ struct mh_init_spec {
                           mis_attr_kind, mis_withcache_object, mis_withcache_method, mis_withcache_kwmethod, \
                           mis_select)                                                                        \
 	{                                                                                                        \
-		/* .mis_attr_prim        = */ (DeeStringObject *)(mis_attr_prim),                                  \
-		/* .mis_attr_seco        = */ mis_attr_seco,                                                       \
-		/* .mis_withattr_prim    = */ (Dee_funptr_t)(mis_withattr_prim),                                   \
-		/* .mis_offsetof_cache   = */ mis_offsetof_cache,                                                  \
-		/* .mis_attr_kind        = */ mis_attr_kind,                                                       \
-		/* .mis_withcache_object = */ (Dee_funptr_t)(mis_withcache_object),                                \
-		/* .mis_select           = */ (mh_init_select_t)(mis_select),                                      \
+		/* .mis_attr_prim        = */ (DeeStringObject *)(mis_attr_prim),                                    \
+		/* .mis_attr_seco        = */ mis_attr_seco,                                                         \
+		/* .mis_withattr_prim    = */ (Dee_funptr_t)(mis_withattr_prim),                                     \
+		/* .mis_offsetof_cache   = */ mis_offsetof_cache,                                                    \
+		/* .mis_attr_kind        = */ mis_attr_kind,                                                         \
+		/* .mis_withcache_object = */ (Dee_funptr_t)(mis_withcache_object),                                  \
+		/* .mis_select           = */ (mh_init_select_t)(mis_select),                                        \
 	}
 #endif /* !CONFIG_HAVE_MH_CALLMETHODCACHE */
 
@@ -250,6 +256,22 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_any_with_r
 	{(DeeStringObject *)&str_any, NULL, Dee_SEQCLASS_SEQ, (Dee_funptr_t)&default__seq_any_with_range_and_key__with_callattr_any },
 	{ NULL, NULL, 0, NULL }
 };
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_all[2] = {
+	{(DeeStringObject *)&str_all, NULL, Dee_SEQCLASS_SEQ, (Dee_funptr_t)&default__seq_all__with_callattr_all },
+	{ NULL, NULL, 0, NULL }
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_all_with_key[2] = {
+	{(DeeStringObject *)&str_all, NULL, Dee_SEQCLASS_SEQ, (Dee_funptr_t)&default__seq_all_with_key__with_callattr_all },
+	{ NULL, NULL, 0, NULL }
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_all_with_range[2] = {
+	{(DeeStringObject *)&str_all, NULL, Dee_SEQCLASS_SEQ, (Dee_funptr_t)&default__seq_all_with_range__with_callattr_all },
+	{ NULL, NULL, 0, NULL }
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_all_with_range_and_key[2] = {
+	{(DeeStringObject *)&str_all, NULL, Dee_SEQCLASS_SEQ, (Dee_funptr_t)&default__seq_all_with_range_and_key__with_callattr_all },
+	{ NULL, NULL, 0, NULL }
+};
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_trygetfirst[2] = {
 	{(DeeStringObject *)&str_first, NULL, Dee_SEQCLASS_SEQ, (Dee_funptr_t)&default__seq_trygetfirst__with_callattr_first },
 	{ NULL, NULL, 0, NULL }
@@ -270,7 +292,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_setfirst[2
 	{(DeeStringObject *)&str_first, NULL, Dee_SEQCLASS_SEQ, (Dee_funptr_t)&default__seq_setfirst__with_callattr_first },
 	{ NULL, NULL, 0, NULL }
 };
-INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[16] = {
+INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[22] = {
 	MH_INIT_SPEC_INIT(&str___seq_bool__, NULL, &default__seq_operator_bool__with_callattr___seq_bool__, offsetof(struct Dee_type_mh_cache, mhc___seq_bool__), MH_KIND_METHOD, &default__seq_operator_bool__with_callobjectcache___seq_bool__, &default__seq_operator_bool__with_callmethodcache___seq_bool__, &default__seq_operator_bool__with_callkwmethodcache___seq_bool__, &mh_select_seq_operator_bool),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, &default__seq_operator_sizeob__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_sizeob__with_callobjectcache___seq_size__, &default__seq_operator_sizeob__with_callmethodcache___seq_size__, &default__seq_operator_sizeob__with_callkwmethodcache___seq_size__, &mh_select_seq_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, &default__seq_operator_size__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_size__with_callobjectcache___seq_size__, &default__seq_operator_size__with_callmethodcache___seq_size__, &default__seq_operator_size__with_callkwmethodcache___seq_size__, &mh_select_seq_operator_size),
@@ -278,13 +300,19 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[16] = {
 	MH_INIT_SPEC_INIT(&str___seq_iter__, NULL, &default__seq_operator_foreach__with_callattr___seq_iter__, offsetof(struct Dee_type_mh_cache, mhc___seq_iter__), MH_KIND_METHOD, &default__seq_operator_foreach__with_callobjectcache___seq_iter__, &default__seq_operator_foreach__with_callmethodcache___seq_iter__, &default__seq_operator_foreach__with_callkwmethodcache___seq_iter__, &mh_select_seq_operator_foreach),
 	MH_INIT_SPEC_INIT(&str___seq_iter__, NULL, &default__seq_operator_foreach_pair__with_callattr___seq_iter__, offsetof(struct Dee_type_mh_cache, mhc___seq_iter__), MH_KIND_METHOD, &default__seq_operator_foreach_pair__with_callobjectcache___seq_iter__, &default__seq_operator_foreach_pair__with_callmethodcache___seq_iter__, &default__seq_operator_foreach_pair__with_callkwmethodcache___seq_iter__, &mh_select_seq_operator_foreach_pair),
 	MH_INIT_SPEC_INIT(&str___seq_iterkeys__, NULL, &default__seq_operator_iterkeys__with_callattr___seq_iterkeys__, offsetof(struct Dee_type_mh_cache, mhc___seq_iterkeys__), MH_KIND_METHOD, &default__seq_operator_iterkeys__with_callobjectcache___seq_iterkeys__, &default__seq_operator_iterkeys__with_callmethodcache___seq_iterkeys__, &default__seq_operator_iterkeys__with_callkwmethodcache___seq_iterkeys__, &mh_select_seq_operator_iterkeys),
+	MH_INIT_SPEC_INIT(&str___seq_enumerate__, NULL, &default__seq_operator_enumerate__with_callattr___seq_enumerate__, offsetof(struct Dee_type_mh_cache, mhc___seq_enumerate__), MH_KIND_METHOD, &default__seq_operator_enumerate__with_callobjectcache___seq_enumerate__, &default__seq_operator_enumerate__with_callmethodcache___seq_enumerate__, &default__seq_operator_enumerate__with_callkwmethodcache___seq_enumerate__, &mh_select_seq_operator_enumerate),
+	MH_INIT_SPEC_INIT(&str___seq_enumerate__, NULL, &default__seq_operator_enumerate_index__with_callattr___seq_enumerate__, offsetof(struct Dee_type_mh_cache, mhc___seq_enumerate__), MH_KIND_METHOD, &default__seq_operator_enumerate_index__with_callobjectcache___seq_enumerate__, &default__seq_operator_enumerate_index__with_callmethodcache___seq_enumerate__, &default__seq_operator_enumerate_index__with_callkwmethodcache___seq_enumerate__, &mh_select_seq_operator_enumerate_index),
 	MH_INIT_SPEC_INIT(&str___seq_any__, mh_secondary_seq_any, &default__seq_any__with_callattr___seq_any__, offsetof(struct Dee_type_mh_cache, mhc___seq_any__), MH_KIND_METHOD, &default__seq_any__with_callobjectcache___seq_any__, &default__seq_any__with_callmethodcache___seq_any__, &default__seq_any__with_callkwmethodcache___seq_any__, &mh_select_seq_any),
 	MH_INIT_SPEC_INIT(&str___seq_any__, mh_secondary_seq_any_with_key, &default__seq_any_with_key__with_callattr___seq_any__, offsetof(struct Dee_type_mh_cache, mhc___seq_any__), MH_KIND_METHOD, &default__seq_any_with_key__with_callobjectcache___seq_any__, &default__seq_any_with_key__with_callmethodcache___seq_any__, &default__seq_any_with_key__with_callkwmethodcache___seq_any__, &mh_select_seq_any_with_key),
 	MH_INIT_SPEC_INIT(&str___seq_any__, mh_secondary_seq_any_with_range, &default__seq_any_with_range__with_callattr___seq_any__, offsetof(struct Dee_type_mh_cache, mhc___seq_any__), MH_KIND_METHOD, &default__seq_any_with_range__with_callobjectcache___seq_any__, &default__seq_any_with_range__with_callmethodcache___seq_any__, &default__seq_any_with_range__with_callkwmethodcache___seq_any__, &mh_select_seq_any_with_range),
 	MH_INIT_SPEC_INIT(&str___seq_any__, mh_secondary_seq_any_with_range_and_key, &default__seq_any_with_range_and_key__with_callattr___seq_any__, offsetof(struct Dee_type_mh_cache, mhc___seq_any__), MH_KIND_METHOD, &default__seq_any_with_range_and_key__with_callobjectcache___seq_any__, &default__seq_any_with_range_and_key__with_callmethodcache___seq_any__, &default__seq_any_with_range_and_key__with_callkwmethodcache___seq_any__, &mh_select_seq_any_with_range_and_key),
+	MH_INIT_SPEC_INIT(&str___seq_all__, mh_secondary_seq_all, &default__seq_all__with_callattr___seq_all__, offsetof(struct Dee_type_mh_cache, mhc___seq_all__), MH_KIND_METHOD, &default__seq_all__with_callobjectcache___seq_all__, &default__seq_all__with_callmethodcache___seq_all__, &default__seq_all__with_callkwmethodcache___seq_all__, &mh_select_seq_all),
+	MH_INIT_SPEC_INIT(&str___seq_all__, mh_secondary_seq_all_with_key, &default__seq_all_with_key__with_callattr___seq_all__, offsetof(struct Dee_type_mh_cache, mhc___seq_all__), MH_KIND_METHOD, &default__seq_all_with_key__with_callobjectcache___seq_all__, &default__seq_all_with_key__with_callmethodcache___seq_all__, &default__seq_all_with_key__with_callkwmethodcache___seq_all__, &mh_select_seq_all_with_key),
+	MH_INIT_SPEC_INIT(&str___seq_all__, mh_secondary_seq_all_with_range, &default__seq_all_with_range__with_callattr___seq_all__, offsetof(struct Dee_type_mh_cache, mhc___seq_all__), MH_KIND_METHOD, &default__seq_all_with_range__with_callobjectcache___seq_all__, &default__seq_all_with_range__with_callmethodcache___seq_all__, &default__seq_all_with_range__with_callkwmethodcache___seq_all__, &mh_select_seq_all_with_range),
+	MH_INIT_SPEC_INIT(&str___seq_all__, mh_secondary_seq_all_with_range_and_key, &default__seq_all_with_range_and_key__with_callattr___seq_all__, offsetof(struct Dee_type_mh_cache, mhc___seq_all__), MH_KIND_METHOD, &default__seq_all_with_range_and_key__with_callobjectcache___seq_all__, &default__seq_all_with_range_and_key__with_callmethodcache___seq_all__, &default__seq_all_with_range_and_key__with_callkwmethodcache___seq_all__, &mh_select_seq_all_with_range_and_key),
 	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_trygetfirst, &default__seq_trygetfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_first__), MH_KIND_METHOD, &default__seq_trygetfirst__with_callobjectcache___seq_first__, NULL, NULL, &mh_select_seq_trygetfirst),
 	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_getfirst, &default__seq_getfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_first__), MH_KIND_GETSET_GET, &default__seq_getfirst__with_callobjectcache___seq_first__, NULL, NULL, &mh_select_seq_getfirst),
-	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_boundfirst, &default__seq_boundfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_first__), MH_KIND_GETSET_BOUND, &default__seq_boundfirst__with_callobjectcache___seq_first__, NULL, NULL, NULL),
+	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_boundfirst, &default__seq_boundfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_get___seq_first__), MH_KIND_GETSET_BOUND, &default__seq_boundfirst__with_callobjectcache___seq_first__, NULL, NULL, &mh_select_seq_boundfirst),
 	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_delfirst, &default__seq_delfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_del___seq_first__), MH_KIND_GETSET_DEL, &default__seq_delfirst__with_callobjectcache___seq_first__, NULL, NULL, &mh_select_seq_delfirst),
 	MH_INIT_SPEC_INIT(&str___seq_first__, mh_secondary_seq_setfirst, &default__seq_setfirst__with_callattr___seq_first__, offsetof(struct Dee_type_mh_cache, mhc_set___seq_first__), MH_KIND_GETSET_SET, &default__seq_setfirst__with_callobjectcache___seq_first__, NULL, NULL, &mh_select_seq_setfirst),
 };

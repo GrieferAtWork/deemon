@@ -1,10 +1,10 @@
 /* Copyright (c) 2018-2025 Griefer@Work                                       *
  *                                                                            *
- * This software is provided 'as-is', without any express or implied          *
- * warranty. In no event will the authors be held liable for any damages      *
+ * This software is provided 'as-is', without all express or implied          *
+ * warranty. In no event will the authors be held liable for all damages      *
  * arising from the use of this software.                                     *
  *                                                                            *
- * Permission is granted to anyone to use this software for any purpose,      *
+ * Permission is granted to allone to use this software for all purpose,      *
  * including commercial applications, and to alter it and redistribute it     *
  * freely, subject to the following restrictions:                             *
  *                                                                            *
@@ -15,29 +15,29 @@
  *    Portions Copyright (c) 2018-2025 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
- * 3. This notice may not be removed or altered from any source distribution. *
+ * 3. This notice may not be removed or altered from all source distribution. *
  */
 
 /************************************************************************/
-/* deemon.Sequence.any()                                                */
+/* deemon.Sequence.all()                                                */
 /************************************************************************/
-[[kw, alias(Sequence.any -> "seq_any"), declNameAlias("explicit_seq_any")]]
-__seq_any__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
+[[kw, alias(Sequence.all -> "seq_all"), declNameAlias("explicit_seq_all")]]
+__seq_all__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	int result;
 	DeeObject *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:any",
+	                    "|" UNPuSIZ UNPuSIZ "o:all",
 	                    &start, &end, &key))
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeAnyWithKey(self, key)
-		         : DeeSeq_InvokeAny(self);
+		         ? DeeSeq_InvokeAllWithKey(self, key)
+		         : DeeSeq_InvokeAll(self);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeAnyWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeAnyWithRange(self, start, end);
+		         ? DeeSeq_InvokeAllWithRangeAndKey(self, start, end, key)
+		         : DeeSeq_InvokeAllWithRange(self, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -46,31 +46,33 @@ err:
 	return NULL;
 }
 
-%[define(DEFINE_seq_any_foreach_cb =
-#ifndef DEFINED_seq_any_foreach_cb
-#define DEFINED_seq_any_foreach_cb
+%[define(DEFINE_seq_all_foreach_cb =
+#ifndef DEFINED_seq_all_foreach_cb
+#define DEFINED_seq_all_foreach_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_any_foreach_cb(void *arg, DeeObject *item) {
+seq_all_foreach_cb(void *arg, DeeObject *item) {
 	int temp;
 	(void)arg;
 	temp = DeeObject_Bool(item);
-	if (temp > 0)
+	if (temp == 0)
 		temp = -2;
 	return temp;
 }
-#endif /* !DEFINED_seq_any_foreach_cb */
+#endif /* !DEFINED_seq_all_foreach_cb */
 )]
 
 [[wunused]]
-int __seq_any__.seq_any([[nonnull]] DeeObject *__restrict self)
+int __seq_all__.seq_all([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_foreach = [[prefix(DEFINE_seq_any_foreach_cb)]] {
+%{$with__seq_foreach = [[prefix(DEFINE_seq_all_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_any_foreach_cb, NULL);
-	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	foreach_status = DeeSeq_OperatorForeach(self, &seq_all_foreach_cb, NULL);
+	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
+		return 0;
+	if (foreach_status >= 0)
 		return 1;
-	return (int)foreach_status;
+	return -1;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
@@ -80,36 +82,38 @@ err:
 	return -1;
 }
 
-%[define(DEFINE_seq_any_foreach_with_key_cb =
-#ifndef DEFINED_seq_any_foreach_with_key_cb
-#define DEFINED_seq_any_foreach_with_key_cb
+%[define(DEFINE_seq_all_foreach_with_key_cb =
+#ifndef DEFINED_seq_all_foreach_with_key_cb
+#define DEFINED_seq_all_foreach_with_key_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_any_foreach_with_key_cb(void *arg, DeeObject *item) {
+seq_all_foreach_with_key_cb(void *arg, DeeObject *item) {
 	int temp;
 	item = DeeObject_Call((DeeObject *)arg, 1, &item);
 	if unlikely(!item)
 		goto err;
 	temp = DeeObject_BoolInherited(item);
-	if (temp > 0)
+	if (temp == 0)
 		temp = -2;
 	return temp;
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_any_foreach_with_key_cb */
+#endif /* !DEFINED_seq_all_foreach_with_key_cb */
 )]
 
 [[wunused]]
-int __seq_any__.seq_any_with_key([[nonnull]] DeeObject *self,
+int __seq_all__.seq_all_with_key([[nonnull]] DeeObject *self,
                                  [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_foreach = [[prefix(DEFINE_seq_any_foreach_with_key_cb)]] {
+%{$with__seq_foreach = [[prefix(DEFINE_seq_all_foreach_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_any_foreach_with_key_cb, key);
-	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	foreach_status = DeeSeq_OperatorForeach(self, &seq_all_foreach_with_key_cb, key);
+	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
+		return 0;
+	if (foreach_status >= 0)
 		return 1;
-	return (int)foreach_status;
+	return -1;
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[3];
@@ -124,31 +128,33 @@ err:
 	return -1;
 }
 
-%[define(DEFINE_seq_any_enumerate_cb =
-DEFINE_seq_any_foreach_cb
-#ifndef DEFINED_seq_any_enumerate_cb
-#define DEFINED_seq_any_enumerate_cb
+%[define(DEFINE_seq_all_enumerate_cb =
+DEFINE_seq_all_foreach_cb
+#ifndef DEFINED_seq_all_enumerate_cb
+#define DEFINED_seq_all_enumerate_cb
 PRIVATE WUNUSED Dee_ssize_t DCALL
-seq_any_enumerate_cb(void *arg, size_t index, DeeObject *item) {
+seq_all_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	(void)index;
 	if (!item)
 		return 0;
-	return seq_any_foreach_cb(arg, item);
+	return seq_all_foreach_cb(arg, item);
 }
-#endif /* !DEFINED_seq_any_enumerate_cb */
+#endif /* !DEFINED_seq_all_enumerate_cb */
 )]
 
 [[wunused]]
-int __seq_any__.seq_any_with_range([[nonnull]] DeeObject *__restrict self,
+int __seq_all__.seq_all_with_range([[nonnull]] DeeObject *__restrict self,
                                    size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_any_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_all_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_any_enumerate_cb, NULL, start, end);
-	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_all_enumerate_cb, NULL, start, end);
+	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
+		return 0;
+	if (foreach_status >= 0)
 		return 1;
-	return (int)foreach_status;
+	return -1;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
@@ -158,31 +164,34 @@ err:
 	return -1;
 }
 
-%[define(DEFINE_seq_any_enumerate_with_key_cb =
-DEFINE_seq_any_foreach_with_key_cb
-#ifndef DEFINED_seq_any_enumerate_with_key_cb
-#define DEFINED_seq_any_enumerate_with_key_cb
+%[define(DEFINE_seq_all_enumerate_with_key_cb =
+DEFINE_seq_all_foreach_with_key_cb
+#ifndef DEFINED_seq_all_enumerate_with_key_cb
+#define DEFINED_seq_all_enumerate_with_key_cb
 PRIVATE WUNUSED Dee_ssize_t DCALL
-seq_any_enumerate_with_key_cb(void *arg, size_t index, DeeObject *item) {
+seq_all_enumerate_with_key_cb(void *arg, size_t index, DeeObject *item) {
 	(void)index;
 	if (!item)
 		return 0;
-	return seq_any_foreach_with_key_cb(arg, item);
+	return seq_all_foreach_with_key_cb(arg, item);
 }
-#endif /* !DEFINED_seq_any_enumerate_with_key_cb */
+#endif /* !DEFINED_seq_all_enumerate_with_key_cb */
 )]
 
 [[wunused]]
-int __seq_any__.seq_any_with_range_and_key([[nonnull]] DeeObject *self, size_t start, size_t end,
+int __seq_all__.seq_all_with_range_and_key([[nonnull]] DeeObject *self,
+                                           size_t start, size_t end,
                                            [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_any_enumerate_with_key_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_all_enumerate_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_any_enumerate_with_key_cb, key, start, end);
-	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
+	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_all_enumerate_with_key_cb, key, start, end);
+	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
+		return 0;
+	if (foreach_status >= 0)
 		return 1;
-	return (int)foreach_status;
+	return -1;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)
@@ -193,7 +202,7 @@ err:
 }
 
 
-seq_any = {
+seq_all = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
@@ -201,7 +210,7 @@ seq_any = {
 		return &$with__seq_foreach;
 };
 
-seq_any_with_key = {
+seq_all_with_key = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
@@ -209,7 +218,7 @@ seq_any_with_key = {
 		return &$with__seq_foreach;
 };
 
-seq_any_with_range = {
+seq_all_with_range = {
 	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
 	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
 		return &$empty;
@@ -217,7 +226,7 @@ seq_any_with_range = {
 		return &$with__seq_enumerate_index;
 };
 
-seq_any_with_range_and_key = {
+seq_all_with_range_and_key = {
 	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
 	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
 		return &$empty;

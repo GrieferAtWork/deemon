@@ -238,6 +238,7 @@
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h" />
 		<ClInclude Include="..\src\deemon\method-hints\method-hints.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_all.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_any.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_first.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h" />
