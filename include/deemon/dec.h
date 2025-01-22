@@ -118,6 +118,7 @@ typedef struct ATTR_PACKED {
 
 typedef struct ATTR_PACKED {
 	uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
+#undef s_addr
 	uint16_t   s_addr;      /* Symbol address, or module import index, or getter symbol index. */
 	uint16_t   s_addr2;     /* [exists_if(s_flg & MODSYM_FEXTERN)] External module symbol index. */
 	uint8_t    s_nam[1];    /* Name of the symbol. - offsets into the string table (`e_stroff').

@@ -40,10 +40,16 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
+#undef token
+#undef tok
+#undef yield
+#undef yieldnb
+#undef yieldnbif
+#undef skip
+
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
-
 
 DECL_BEGIN
 

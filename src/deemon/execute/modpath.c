@@ -59,11 +59,16 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/string.h>
-#include <deemon/util/lock.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+
+#undef token
+#undef tok
+#undef yield
+#undef yieldnb
+#undef yieldnbif
+#undef skip
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
@@ -72,6 +77,13 @@
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
+
+#define token             TPPLexer_Global.l_token
+#define tok               TPPLexer_Global.l_token.t_id
+#define yield()           TPPLexer_Yield()
+#define yieldnb()         TPPLexer_YieldNB()
+#define yieldnbif(allow)  ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
+#define skip(expected_tok, ...) unlikely(likely(tok == (expected_tok)) ? (yield() < 0) : parser_skip(expected_tok, __VA_ARGS__))
 
 #ifndef PATH_MAX
 #ifdef PATHMAX

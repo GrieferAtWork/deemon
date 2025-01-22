@@ -41,6 +41,13 @@
 #include <deemon/dec.h>
 #endif /* !CONFIG_NO_DEC */
 
+#undef token
+#undef tok
+#undef yield
+#undef yieldnb
+#undef yieldnbif
+#undef skip
+
 #ifndef NDEBUG
 #ifndef CONFIG_HOST_WINDOWS
 #include <deemon/file.h>

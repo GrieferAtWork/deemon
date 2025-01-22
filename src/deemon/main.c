@@ -20,10 +20,19 @@
 #ifndef GUARD_MAIN_C
 #define GUARD_MAIN_C 1
 
+#include <deemon/api.h>
+
+#ifdef CONFIG_HOST_WINDOWS
+#include <Windows.h>
+#endif /* CONFIG_HOST_WINDOWS */
+
+#ifdef CONFIG_HAVE_CRTDBG_H
+#include <crtdbg.h>
+#endif /* CONFIG_HAVE_CRTDBG_H */
+
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/alloc.h>
-#include <deemon/api.h>
 #include <deemon/code.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/dec.h>
@@ -46,14 +55,6 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/byteorder.h>
-
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
-
-#ifdef CONFIG_HAVE_CRTDBG_H
-#include <crtdbg.h>
-#endif /* CONFIG_HAVE_CRTDBG_H */
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"

@@ -218,6 +218,13 @@ err:
 #define NO_INCLUDE_MALLOC_H   1
 #define NO_INCLUDE_ALLOCA_H   1
 
+#undef token
+#undef tok
+#undef yield
+#undef yieldnb
+#undef yieldnbif
+#undef skip
+
 #ifndef __INTELLISENSE__
 #include "../../tpp/src/tpp.c"
 #endif /* !__INTELLISENSE__ */
