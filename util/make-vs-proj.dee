@@ -37,7 +37,7 @@ function isDirOrSymlinkToDir(ent: dirent): bool {
 /* Make sure that .gitignore is being parsed correctly. */
 assert isFileGitIgnored("deemon.exe");
 
-global final SUPPORTED_PLATFORM_TOOLSETS = ["v141", "v142"];
+global final SUPPORTED_PLATFORM_TOOLSETS = ["v141", "v142", "v143"];
 global final DEEMON_GUID = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942";
 global final DEEMON_CORE_GUID = "86D226C5-EF62-4562-AC06-E6A753DFA7CF";
 global final ROOT_FOLDER_GUID = "2150E333-8FDC-42A3-9474-1A3956D46DE8";
@@ -46,6 +46,13 @@ global final DEX_NAMES = (
 		if (isDirOrSymlinkToDir(dt))
 			dt.d_name
 ).sorted().frozen;
+
+function encodeSpecificWindowsTargetPlatformVersion(PlatformToolset: string): string | none {
+	return {
+		"v141": "10.0.17763.0",
+		"v142": "10.0.17763.0",
+	}.get(PlatformToolset);
+}
 
 
 global _STRING_GUID_HASH_VALUES: {int: string} = Dict();
@@ -618,9 +625,12 @@ createVsFile(f"deemon-{PlatformToolset}.vcxproj", fp -> {
 
 	fp << '	<PropertyGroup Label="Globals">\r\n'
 		'		<ProjectGuid>{' << DEEMON_CORE_GUID << '}</ProjectGuid>\r\n'
-		'		<RootNamespace>deemon</RootNamespace>\r\n'
-		'		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>\r\n'
-		'		<ProjectName>deemon</ProjectName>\r\n'
+		'		<RootNamespace>deemon</RootNamespace>\r\n';
+	local WindowsTargetPlatformVersion = encodeSpecificWindowsTargetPlatformVersion(PlatformToolset);
+	if (WindowsTargetPlatformVersion !is none) {
+	fp << '		<WindowsTargetPlatformVersion>' << WindowsTargetPlatformVersion << '</WindowsTargetPlatformVersion>\r\n';
+	}
+	fp << '		<ProjectName>deemon</ProjectName>\r\n'
 		'	</PropertyGroup>\r\n'
 		'	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\r\n';
 
@@ -724,9 +734,12 @@ for (local dexName: DEX_NAMES) {
 		local dexGuid = dexProjectGuid(dexName);
 		fp << '	<PropertyGroup Label="Globals">\r\n'
 			'		<ProjectGuid>{' << dexGuid << '}</ProjectGuid>\r\n'
-			'		<RootNamespace>' << dexName << '</RootNamespace>\r\n'
-			'		<WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>\r\n'
-			'		<ProjectName>' << dexName << '</ProjectName>\r\n'
+			'		<RootNamespace>' << dexName << '</RootNamespace>\r\n';
+		local WindowsTargetPlatformVersion = encodeSpecificWindowsTargetPlatformVersion(PlatformToolset);
+		if (WindowsTargetPlatformVersion !is none) {
+		fp << '		<WindowsTargetPlatformVersion>' << WindowsTargetPlatformVersion << '</WindowsTargetPlatformVersion>\r\n';
+		}
+		fp << '		<ProjectName>' << dexName << '</ProjectName>\r\n'
 			'	</PropertyGroup>\r\n'
 			'	<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.Default.props" />\r\n';
 
