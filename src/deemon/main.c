@@ -38,6 +38,7 @@
 #include <deemon/compiler/dec.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
+#include <deemon/compiler/tpp.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
@@ -48,6 +49,7 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/notify.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* strend() */
 #include <deemon/system.h>
@@ -440,34 +442,34 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_f(char *arg) {
 	bool disable = false;
 	if (arg[0] == 'n' && arg[1] == 'o' && arg[2] == '-')
 		disable = true, arg += 3;
-	if (!strcmp(arg, "spc")) {
+	if (strcmp(arg, "spc") == 0) {
 		disable ? (TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTSPACE)
 		        : (TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTSPACE);
-	} else if (!strcmp(arg, "lf")) {
+	} else if (strcmp(arg, "lf") == 0) {
 		disable ? (TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF)
 		        : (TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF);
-	} else if (!strcmp(arg, "comments")) {
+	} else if (strcmp(arg, "comments") == 0) {
 		disable ? (TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTCOMMENTS)
 		        : (TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTCOMMENTS);
-	} else if (!strcmp(arg, "magiclf")) {
+	} else if (strcmp(arg, "magiclf") == 0) {
 		disable ? (emitpp_state &= ~EMITPP_FMAGICTOKENS)
 		        : (emitpp_state |= EMITPP_FMAGICTOKENS);
-	} else if (!strcmp(arg, "decode")) {
+	} else if (strcmp(arg, "decode") == 0) {
 		disable ? (emitpp_state |= EMITPP_FNODECODETOK)
 		        : (emitpp_state &= ~EMITPP_FNODECODETOK);
-	} else if (!strcmp(arg, "longstring")) {
+	} else if (strcmp(arg, "longstring") == 0) {
 		disable ? (TPPLexer_Current->l_flags |= TPPLEXER_FLAG_TERMINATE_STRING_LF)
 		        : (TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_TERMINATE_STRING_LF);
-	} else if (!strcmp(arg, "unify-pragma")) {
+	} else if (strcmp(arg, "unify-pragma") == 0) {
 		disable ? (TPPLexer_Current->l_callbacks.c_parse_pragma = NULL)
 		        : (TPPLexer_Current->l_callbacks.c_parse_pragma = &emitpp_reemit_pragma);
-	} else if (!strcmp(arg, "unknown-pragma")) {
+	} else if (strcmp(arg, "unknown-pragma") == 0) {
 		disable ? (TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA)
 		        : (TPPLexer_Current->l_flags |= TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA);
-	} else if (!strcmp(arg, "line")) {
+	} else if (strcmp(arg, "line") == 0) {
 		disable ? (emitpp_state |= EMITPP_FNOLINE)
 		        : (emitpp_state &= ~EMITPP_FNOLINE);
-	} else if (!strcmp(arg, "cppline")) {
+	} else if (strcmp(arg, "cppline") == 0) {
 		disable ? (emitpp_state |= EMITPP_FNOCXXLINE)
 		        : (emitpp_state &= ~EMITPP_FNOCXXLINE);
 	} else if (!TPPLexer_SetExtension(arg, !disable)) {
@@ -481,11 +483,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_f(char *arg) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_W(char *arg) {
 	wstate_t state = WSTATE_ERROR;
 	int error;
-	if (!strcmp(arg, "error")) {
+	if (strcmp(arg, "error") == 0) {
 		TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WERROR;
-	} else if (!strcmp(arg, "system-headers")) {
+	} else if (strcmp(arg, "system-headers") == 0) {
 		TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WSYSTEMHEADERS;
-	} else if (!strcmp(arg, "all")) {
+	} else if (strcmp(arg, "all") == 0) {
 		unsigned int i;
 		for (i = 0; i < W_COUNT; ++i) {
 			if (!TPPLexer_SetWarning(i, state))
@@ -640,7 +642,7 @@ PRIVATE WUNUSED int DCALL cmd_C(char *arg) {
 	if (arg[0] == 'n' && arg[1] == 'o' && arg[2] == '-')
 		disable = 1, arg += 3;
 	for (i = 0; i < COMPILER_LENOF(compiler_flags); ++i) {
-		if (strcmp(compiler_flags[i].name, arg))
+		if (strcmp(compiler_flags[i].name, arg) != 0)
 			continue;
 		/* Invert the logical meaning of the flag. */
 		disable ^= compiler_flags[i].inv;
@@ -1567,7 +1569,7 @@ PRIVATE size_t          emitpp_lasttoken_fpoff;
 PRIVATE char const     *emitpp_lastfilename;
 PRIVATE uint32_t        emitpp_orig_flags;
 
-LOCAL void DCALL emitpp_putline(void) {
+PRIVATE void DCALL emitpp_putline(void) {
 	size_t filename_size;
 	char const *filename_text;
 	struct TPPFile *f;
@@ -1642,7 +1644,7 @@ LOCAL void DCALL emitpp_putline(void) {
 	emitpp_state |= EMITPP_FATLINEFEED;
 }
 
-LOCAL size_t DCALL get_file_offset(char *p) {
+PRIVATE size_t DCALL get_file_offset(char *p) {
 	struct TPPFile *f = TPPLexer_Current->l_token.t_file;
 	size_t result     = p - f->f_begin;
 	if (f->f_kind == TPPFILE_KIND_TEXT) {
@@ -1651,7 +1653,7 @@ LOCAL size_t DCALL get_file_offset(char *p) {
 	return result;
 }
 
-LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) int DCALL
 count_linefeeds(char const *iter, char const *end) {
 	int result = 0;
 	while (iter < end) {

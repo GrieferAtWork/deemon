@@ -19,7 +19,7 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.operator bool()                                      */
+/* deemon.Sequence.first                                                */
 /************************************************************************/
 
 [[getset, alias(Sequence.first)]]
@@ -44,7 +44,7 @@ seq_default_getfirst_with_foreach_cb(void *arg, DeeObject *item) {
 [[wunused]] DREF DeeObject *
 __seq_first__.seq_trygetfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("first"))} %{$empty = ITER_DONE}
-%{$with__size_and_getitem_index_fast = {
+%{$with__size__and__getitem_index_fast = {
 	DREF DeeObject *result;
 	size_t size = (*Dee_TYPE(self)->tp_seq->tp_size)(self);
 	if unlikely(size == (size_t)-1)
@@ -158,12 +158,12 @@ seq_trygetfirst = {
 		if (THIS_TYPE->tp_seq &&
 		    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
 		    THIS_TYPE->tp_seq->tp_size)
-			return &$with__size_and_getitem_index_fast;
+			return &$with__size__and__getitem_index_fast;
 	}
 	seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 		return &$empty;
-	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_foreach)
+	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_foreach)
 		return &$with__seq_operator_foreach;
 	if (seq_operator_trygetitem_index)
 		return &$with__seq_operator_trygetitem_index;

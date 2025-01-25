@@ -27,7 +27,7 @@ __seq_any__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 	DeeObject *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:any",
+	                    "|" UNPuSIZ UNPuSIZ "o:__seq_any__",
 	                    &start, &end, &key))
 		goto err;
 	if (start == 0 && end == (size_t)-1) {

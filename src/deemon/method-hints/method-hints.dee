@@ -384,7 +384,7 @@ final class NativeMethod {
 	public printDefaultImplDecls() {
 		print(f"/* {name} */");
 		local methodHint = this.methodHint;
-		for (local attr: methodHint.allAttributes) {
+		for (local attr: methodHint.allAttributes.distinct()) {
 			if (callAttrImpl is none)
 				throw Error(f"Native method {repr name} is missing impl for callattr({repr attr})");
 			printIntdefDeclOrAlias(f"default__{name}__with_callattr_{attr}", callAttrImpl);
@@ -409,7 +409,7 @@ final class NativeMethod {
 	public printDefaultImpls() {
 		print(f"/* {name} */");
 		local methodHint = this.methodHint;
-		for (local attr: methodHint.allAttributes) {
+		for (local attr: methodHint.allAttributes.distinct()) {
 			if (callAttrImpl is none)
 				throw Error(f"Native method {repr name} is missing impl for callattr({repr attr})");
 			if (callAttrImpl.alias !is none)
@@ -531,6 +531,10 @@ final class NativeMethod {
 			"SEQ_CLASS": "DeeType_GetSeqClass(self)",
 			"REQUIRE": (mhName) ->
 				f"(DeeMH_{mhName}_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_{mhName})",
+			"REQUIRE_NODEFAULT": (mhName) ->
+				f"(DeeMH_{mhName}_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_{mhName})",
+			"REQUIRE_ANY": (mhName) ->
+				f"(DeeMH_{mhName}_t)DeeType_GetMethodHint(orig_type, Dee_TMH_{mhName})",
 			"Dee_type_seq_has_custom_tp_size":
 				(x) -> f"{x}->tp_size && !DeeType_IsDefaultSize({x}->tp_size)",
 			"Dee_type_seq_has_custom_tp_sizeob":
@@ -1211,7 +1215,7 @@ done:
 				}
 				local implBody = data[implStart:implEnd];
 				if (!implBody.startswith("{")) {
-					if (implBody.restartswith(r"return\b")) {
+					if (implBody.startswith("return")) {
 						implBody = f"\{\n\t{implBody.rstrip(";")};\n\}";
 					} else {
 						implBody = f"\{\n\treturn {implBody};\n\}";
@@ -1441,7 +1445,7 @@ done:
 					local methodHint: MethodHint = MethodHint(
 						name: returnType,
 						attr: attrib.attr ?? returnType,
-						doc: data[docStart:docEnd].strip().lsstrip("()"),
+						doc: data[docStart:docEnd].strip().lsstrip("()").rsstrip("?O"),
 						aliases: attrib.aliases,
 						kw: attrib.kw,
 						getset: attrib.getset,

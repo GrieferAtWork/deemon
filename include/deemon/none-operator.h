@@ -72,7 +72,6 @@ DFUNDEF size_t (DCALL _DeeNone_rets0_2)(void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_rets0_3)(void *, void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_rets0_4)(void *, void *, void *, void *);
 DFUNDEF size_t (DCALL _DeeNone_rets0_5)(void *, void *, void *, void *, void *);
-DFUNDEF int (DCALL _DeeNone_reti0_6)(void *, void *, void *, void *, void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti1_1)(void *);
 DFUNDEF int (DCALL _DeeNone_reti1_2)(void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti1_3)(void *, void *, void *);
@@ -90,6 +89,7 @@ DFUNDEF int (DCALL _DeeNone_reti0_3)(void *, void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti0_4)(void *, void *, void *, void *);
 DFUNDEF int (DCALL _DeeNone_reti0_5)(void *, void *, void *, void *, void *);
 #endif /* !DCALL_RETURN_COMMON && __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
+DFUNDEF int (DCALL _DeeNone_reti0_6)(void *, void *, void *, void *, void *, void *);
 #endif /* !DCALL_CALLER_CLEANUP */
 
 /* Default no-op constructor callbacks (these should be used by TP_FABSTRACT types) */

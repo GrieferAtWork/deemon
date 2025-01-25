@@ -56,6 +56,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "generic-proxy.h"
 #include "seq/default-api.h"
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
@@ -528,11 +529,7 @@ dict_verify(Dict *__restrict self) {
 #endif /* !DICT_NDEBUG */
 
 
-
-
-
-
-LOCAL WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 	DREF Dict *result;
 	size_t hmask, valloc;

@@ -5345,7 +5345,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareWithSizeAndTryGetItemIndex,
 		goto err_other_no_iter;
 	other_tp_foreach = tp_other->tp_seq->tp_foreach;
 	ASSERT(other_tp_foreach);
-	lhs_trygetitem_index = tp_self->tp_seq->tp_getitem_index;
+	lhs_trygetitem_index = tp_self->tp_seq->tp_trygetitem_index;
 	lhs_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
 	if unlikely(lhs_size == (size_t)-1)
 		goto err;
@@ -13093,6 +13093,7 @@ err:
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	size_t size;
 	LOAD_TP_SELF;
 	size = DeeType_INVOKE_SIZE(tp_self, self);
@@ -13108,7 +13109,6 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefa
 			}
 		}
 	}
-	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
 	if unlikely(!result)
 		goto err;

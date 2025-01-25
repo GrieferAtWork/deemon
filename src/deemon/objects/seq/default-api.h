@@ -188,6 +188,7 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 DeeType_HasPrivateSeqEnumerateIndexReverse(DeeTypeObject *orig_type, DeeTypeObject *self);
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* Extra `DeeType_Require*' operators. */
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_getfirst_t DCALL DeeType_RequireSeqGetFirst(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_boundfirst_t DCALL DeeType_RequireSeqBoundFirst(DeeTypeObject *__restrict self);
@@ -203,6 +204,7 @@ INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_keys_t DCALL De
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_values_t DCALL DeeType_RequireMapValues(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_iterkeys_t DCALL DeeType_RequireMapIterKeys(DeeTypeObject *__restrict self);
 INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_itervalues_t DCALL DeeType_RequireMapIterValues(DeeTypeObject *__restrict self);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 /*

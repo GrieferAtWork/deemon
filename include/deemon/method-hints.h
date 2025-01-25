@@ -90,6 +90,47 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_operator_iterkeys,
 	Dee_TMH_seq_operator_enumerate,
 	Dee_TMH_seq_operator_enumerate_index,
+	Dee_TMH_seq_operator_getitem,
+	Dee_TMH_seq_operator_getitem_index,
+	Dee_TMH_seq_operator_trygetitem_index,
+	Dee_TMH_seq_operator_trygetitem,
+	Dee_TMH_seq_operator_hasitem,
+	Dee_TMH_seq_operator_hasitem_index,
+	Dee_TMH_seq_operator_bounditem,
+	Dee_TMH_seq_operator_bounditem_index,
+	Dee_TMH_seq_operator_delitem,
+	Dee_TMH_seq_operator_delitem_index,
+	Dee_TMH_seq_operator_setitem,
+	Dee_TMH_seq_operator_setitem_index,
+	Dee_TMH_seq_operator_getrange,
+	Dee_TMH_seq_operator_getrange_index,
+	Dee_TMH_seq_operator_getrange_index_n,
+	Dee_TMH_seq_operator_delrange,
+	Dee_TMH_seq_operator_delrange_index,
+	Dee_TMH_seq_operator_delrange_index_n,
+	Dee_TMH_seq_operator_setrange,
+	Dee_TMH_seq_operator_setrange_index,
+	Dee_TMH_seq_operator_setrange_index_n,
+	Dee_TMH_seq_operator_hash,
+	Dee_TMH_seq_operator_compare,
+	Dee_TMH_seq_operator_compare_eq,
+	Dee_TMH_seq_operator_trycompare_eq,
+	Dee_TMH_seq_operator_eq,
+	Dee_TMH_seq_operator_ne,
+	Dee_TMH_seq_operator_lo,
+	Dee_TMH_seq_operator_le,
+	Dee_TMH_seq_operator_gr,
+	Dee_TMH_seq_operator_ge,
+	Dee_TMH_seq_trygetfirst,
+	Dee_TMH_seq_getfirst,
+	Dee_TMH_seq_boundfirst,
+	Dee_TMH_seq_delfirst,
+	Dee_TMH_seq_setfirst,
+	Dee_TMH_seq_trygetlast,
+	Dee_TMH_seq_getlast,
+	Dee_TMH_seq_boundlast,
+	Dee_TMH_seq_dellast,
+	Dee_TMH_seq_setlast,
 	Dee_TMH_seq_any,
 	Dee_TMH_seq_any_with_key,
 	Dee_TMH_seq_any_with_range,
@@ -98,53 +139,154 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_all_with_key,
 	Dee_TMH_seq_all_with_range,
 	Dee_TMH_seq_all_with_range_and_key,
-	Dee_TMH_seq_trygetfirst,
-	Dee_TMH_seq_getfirst,
-	Dee_TMH_seq_boundfirst,
-	Dee_TMH_seq_delfirst,
-	Dee_TMH_seq_setfirst,
+	Dee_TMH_seq_erase,
+	Dee_TMH_seq_insert,
+	Dee_TMH_seq_insertall,
+	Dee_TMH_seq_pushfront,
+	Dee_TMH_seq_append,
+	Dee_TMH_seq_extend,
+	Dee_TMH_seq_xchitem_index,
+	Dee_TMH_seq_clear,
+	Dee_TMH_seq_pop,
 	Dee_TMH_COUNT
 };
 /*[[[end]]]*/
 
 /*[[[deemon (printMHTypedefs from "...src.deemon.method-hints.method-hints")();]]]*/
 /* __seq_bool__ */
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_operator_bool_t)(DeeObject *self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_operator_bool_t)(DeeObject *__restrict self);
 
 /* __seq_size__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_sizeob_t)(DeeObject *self);
 typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeMH_seq_operator_size_t)(DeeObject *self);
 
 /* __seq_iter__ */
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_iter_t)(DeeObject *self);
-typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_t)(DeeObject *self, Dee_foreach_t proc, void *arg);
-typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_pair_t)(DeeObject *self, Dee_foreach_pair_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_iter_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_t)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_pair_t)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
 /* __seq_iterkeys__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_iterkeys_t)(DeeObject *self);
 
 /* __seq_enumerate__ */
-typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_enumerate_t)(DeeObject *self, Dee_enumerate_t proc, void *arg);
-typedef WUNUSED_T NONNULL_T((1, 2, 3, 4, 5)) Dee_ssize_t (DCALL *DeeMH_seq_operator_enumerate_index_t)(DeeObject *self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_enumerate_t)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4, 5)) Dee_ssize_t (DCALL *DeeMH_seq_operator_enumerate_index_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+
+/* __seq_getitem__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_getitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_getitem_index_t)(DeeObject *__restrict self, size_t index);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_trygetitem_index_t)(DeeObject *__restrict self, size_t index);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_trygetitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_hasitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_hasitem_index_t)(DeeObject *__restrict self, size_t index);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_bounditem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_bounditem_index_t)(DeeObject *__restrict self, size_t index);
+
+/* __seq_delitem__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_delitem_t)(DeeObject *self, DeeObject *index);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_delitem_index_t)(DeeObject *__restrict self, size_t index);
+
+/* __seq_setitem__ */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_operator_setitem_t)(DeeObject *self, DeeObject *index, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_operator_setitem_index_t)(DeeObject *self, size_t index, DeeObject *value);
+
+/* __seq_getrange__ */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_operator_getrange_t)(DeeObject *self, DeeObject *start, DeeObject *end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_operator_getrange_index_t)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_getrange_index_n_t)(DeeObject *self, Dee_ssize_t start);
+
+/* __seq_delrange__ */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_operator_delrange_t)(DeeObject *self, DeeObject *start, DeeObject *end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_operator_delrange_index_t)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_delrange_index_n_t)(DeeObject *self, Dee_ssize_t start);
+
+/* __seq_setrange__ */
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeMH_seq_operator_setrange_t)(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeMH_seq_operator_setrange_index_t)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_operator_setrange_index_n_t)(DeeObject *self, Dee_ssize_t start, DeeObject *values);
+
+/* __seq_hash__ */
+typedef WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *DeeMH_seq_operator_hash_t)(DeeObject *self);
+
+/* __seq_compare__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_compare_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_compare_eq__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_compare_eq_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_trycompare_eq__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_operator_trycompare_eq_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_eq__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_eq_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_ne__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_ne_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_lo__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_lo_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_le__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_le_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_gr__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_gr_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* __seq_ge__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_operator_ge_t)(DeeObject *lhs, DeeObject *rhs);
+
+/* Sequence_first, __seq_first__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_trygetfirst_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_getfirst_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_boundfirst_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_delfirst_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_setfirst_t)(DeeObject *self, DeeObject *value);
+
+/* Sequence_last, __seq_last__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_trygetlast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_getlast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_boundlast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_dellast_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_setlast_t)(DeeObject *self, DeeObject *value);
 
 /* Sequence_any, seq_any, __seq_any__, explicit_seq_any */
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_any_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_any_with_key_t)(DeeObject *self, DeeObject *key);
-typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_any_with_range_t)(DeeObject *self, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_any_with_range_t)(DeeObject *__restrict self, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeMH_seq_any_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *key);
 
 /* Sequence_all, seq_all, __seq_all__, explicit_seq_all */
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_all_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_all_with_key_t)(DeeObject *self, DeeObject *key);
-typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_all_with_range_t)(DeeObject *self, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_all_with_range_t)(DeeObject *__restrict self, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeMH_seq_all_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *key);
 
-/* Sequence_first, __seq_first__ */
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_trygetfirst_t)(DeeObject *self);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_getfirst_t)(DeeObject *self);
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_boundfirst_t)(DeeObject *self);
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_delfirst_t)(DeeObject *self);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_setfirst_t)(DeeObject *self, DeeObject *value);
+/* Sequence_erase, seq_erase, __seq_erase__, explicit_seq_erase */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_erase_t)(DeeObject *__restrict self, size_t index, size_t count);
+
+/* Sequence_insert, seq_insert, __seq_insert__, explicit_seq_insert */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_insert_t)(DeeObject *self, size_t index, DeeObject *item);
+
+/* Sequence_insertall, seq_insertall, __seq_insertall__, explicit_seq_insertall */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_insertall_t)(DeeObject *self, size_t index, DeeObject *items);
+
+/* Sequence_pushfront, seq_pushfront, __seq_pushfront__, explicit_seq_pushfront */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_pushfront_t)(DeeObject *self, DeeObject *item);
+
+/* Sequence_append, seq_append, Sequence_pushback, seq_pushback, __seq_append__, explicit_seq_append */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_append_t)(DeeObject *self, DeeObject *item);
+
+/* Sequence_extend, seq_extend, __seq_extend__, explicit_seq_extend */
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_extend_t)(DeeObject *self, DeeObject *items);
+
+/* Sequence_xchitem, seq_xchitem, __seq_xchitem__, explicit_seq_xchitem */
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_xchitem_index_t)(DeeObject *self, size_t index, DeeObject *item);
+
+/* Sequence_clear, seq_clear, Set_clear, Mapping_clear, __seq_clear__, explicit_seq_clear */
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_clear_t)(DeeObject *self);
+
+/* Sequence_pop, seq_pop, __seq_pop__, explicit_seq_pop */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_pop_t)(DeeObject *self, Dee_ssize_t index);
 /*[[[end]]]*/
 
 /*[[[deemon (printMethodAttributeDecls from "...src.deemon.method-hints.method-hints")();]]]*/
@@ -172,6 +314,86 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_iterkeys__(DeeObject *__r
 DDATDEF char const DeeMA___seq_enumerate___name[]; /* "__seq_enumerate__" */
 DDATDEF char const DeeMA___seq_enumerate___doc[];  /* "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N" */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_getitem___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_getitem___name[]; /* "__seq_getitem__" */
+DDATDEF char const DeeMA___seq_getitem___doc[];  /* "(index:?Dint)->" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_getitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_delitem___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_delitem___name[]; /* "__seq_delitem__" */
+DDATDEF char const DeeMA___seq_delitem___doc[];  /* "(index:?Dint)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_delitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_setitem___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_setitem___name[]; /* "__seq_setitem__" */
+DDATDEF char const DeeMA___seq_setitem___doc[];  /* "(index:?Dint,value)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_getrange___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_getrange___name[]; /* "__seq_getrange__" */
+DDATDEF char const DeeMA___seq_getrange___doc[];  /* "(start?:?X2?Dint?N,end?:?X2?Dint?N)->?S" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_getrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_delrange___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_delrange___name[]; /* "__seq_delrange__" */
+DDATDEF char const DeeMA___seq_delrange___doc[];  /* "(start?:?X2?Dint?N,end?:?X2?Dint?N)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_delrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_setrange___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_setrange___name[]; /* "__seq_setrange__" */
+DDATDEF char const DeeMA___seq_setrange___doc[];  /* "(start?:?X2?Dint?N,end?:?X2?Dint?N,values:?S?O)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_setrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_hash___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_hash___name[]; /* "__seq_hash__" */
+DDATDEF char const DeeMA___seq_hash___doc[];  /* "->?Dint" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_compare___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_compare___name[]; /* "__seq_compare__" */
+DDATDEF char const DeeMA___seq_compare___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_compare__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_compare_eq___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_compare_eq___name[]; /* "__seq_compare_eq__" */
+DDATDEF char const DeeMA___seq_compare_eq___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_trycompare_eq___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_trycompare_eq___name[]; /* "__seq_trycompare_eq__" */
+DDATDEF char const DeeMA___seq_trycompare_eq___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_trycompare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_eq___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_eq___name[]; /* "__seq_eq__" */
+DDATDEF char const DeeMA___seq_eq___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_ne___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_ne___name[]; /* "__seq_ne__" */
+DDATDEF char const DeeMA___seq_ne___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_lo___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_lo___name[]; /* "__seq_lo__" */
+DDATDEF char const DeeMA___seq_lo___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_le___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_le___name[]; /* "__seq_le__" */
+DDATDEF char const DeeMA___seq_le___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_gr___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_gr___name[]; /* "__seq_gr__" */
+DDATDEF char const DeeMA___seq_gr___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_ge___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_ge___name[]; /* "__seq_ge__" */
+DDATDEF char const DeeMA___seq_ge___doc[];  /* "(rhs:?S?O)->?Dbool" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 #define DeeMA___seq_any___flags Dee_TYPE_METHOD_FKWDS
 DDATDEF char const DeeMA___seq_any___name[]; /* "__seq_any__" */
@@ -206,6 +428,175 @@ DDATDEF char const DeeMA_Sequence_all_name[]; /* "all" */
 #define DeeMA_explicit_seq_all_name  DeeMA___seq_all___name
 #define DeeMA_explicit_seq_all_doc   DeeMA___seq_all___doc
 #define DeeMA_explicit_seq_all       DeeMA___seq_all__
+
+#define DeeMA___seq_erase___flags Dee_TYPE_METHOD_FKWDS
+DDATDEF char const DeeMA___seq_erase___name[]; /* "__seq_erase__" */
+DDATDEF char const DeeMA___seq_erase___doc[];  /* "(index:?Dint,count=!1)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_erase__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_erase_flags DeeMA___seq_erase___flags
+#define DeeMA_Sequence_erase_doc   DeeMA___seq_erase___doc
+#define DeeMA_Sequence_erase       DeeMA___seq_erase__
+DDATDEF char const DeeMA_Sequence_erase_name[]; /* "erase" */
+#define DeeMA_seq_erase_flags DeeMA_Sequence_erase_flags
+#define DeeMA_seq_erase_name  DeeMA_Sequence_erase_name
+#define DeeMA_seq_erase_doc   DeeMA_Sequence_erase_doc
+#define DeeMA_seq_erase       DeeMA_Sequence_erase
+#define DeeMA_explicit_seq_erase_flags DeeMA___seq_erase___flags
+#define DeeMA_explicit_seq_erase_name  DeeMA___seq_erase___name
+#define DeeMA_explicit_seq_erase_doc   DeeMA___seq_erase___doc
+#define DeeMA_explicit_seq_erase       DeeMA___seq_erase__
+
+#define DeeMA___seq_insert___flags Dee_TYPE_METHOD_FKWDS
+DDATDEF char const DeeMA___seq_insert___name[]; /* "__seq_insert__" */
+DDATDEF char const DeeMA___seq_insert___doc[];  /* "(index:?Dint,item)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_insert_flags DeeMA___seq_insert___flags
+#define DeeMA_Sequence_insert_doc   DeeMA___seq_insert___doc
+#define DeeMA_Sequence_insert       DeeMA___seq_insert__
+DDATDEF char const DeeMA_Sequence_insert_name[]; /* "insert" */
+#define DeeMA_seq_insert_flags DeeMA_Sequence_insert_flags
+#define DeeMA_seq_insert_name  DeeMA_Sequence_insert_name
+#define DeeMA_seq_insert_doc   DeeMA_Sequence_insert_doc
+#define DeeMA_seq_insert       DeeMA_Sequence_insert
+#define DeeMA_explicit_seq_insert_flags DeeMA___seq_insert___flags
+#define DeeMA_explicit_seq_insert_name  DeeMA___seq_insert___name
+#define DeeMA_explicit_seq_insert_doc   DeeMA___seq_insert___doc
+#define DeeMA_explicit_seq_insert       DeeMA___seq_insert__
+
+#define DeeMA___seq_insertall___flags Dee_TYPE_METHOD_FKWDS
+DDATDEF char const DeeMA___seq_insertall___name[]; /* "__seq_insertall__" */
+DDATDEF char const DeeMA___seq_insertall___doc[];  /* "(index:?Dint,items:?S?O)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_insertall__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_insertall_flags DeeMA___seq_insertall___flags
+#define DeeMA_Sequence_insertall_doc   DeeMA___seq_insertall___doc
+#define DeeMA_Sequence_insertall       DeeMA___seq_insertall__
+DDATDEF char const DeeMA_Sequence_insertall_name[]; /* "insertall" */
+#define DeeMA_seq_insertall_flags DeeMA_Sequence_insertall_flags
+#define DeeMA_seq_insertall_name  DeeMA_Sequence_insertall_name
+#define DeeMA_seq_insertall_doc   DeeMA_Sequence_insertall_doc
+#define DeeMA_seq_insertall       DeeMA_Sequence_insertall
+#define DeeMA_explicit_seq_insertall_flags DeeMA___seq_insertall___flags
+#define DeeMA_explicit_seq_insertall_name  DeeMA___seq_insertall___name
+#define DeeMA_explicit_seq_insertall_doc   DeeMA___seq_insertall___doc
+#define DeeMA_explicit_seq_insertall       DeeMA___seq_insertall__
+
+#define DeeMA___seq_pushfront___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_pushfront___name[]; /* "__seq_pushfront__" */
+DDATDEF char const DeeMA___seq_pushfront___doc[];  /* "(item)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_pushfront__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Sequence_pushfront_flags DeeMA___seq_pushfront___flags
+#define DeeMA_Sequence_pushfront_doc   DeeMA___seq_pushfront___doc
+#define DeeMA_Sequence_pushfront       DeeMA___seq_pushfront__
+DDATDEF char const DeeMA_Sequence_pushfront_name[]; /* "pushfront" */
+#define DeeMA_seq_pushfront_flags DeeMA_Sequence_pushfront_flags
+#define DeeMA_seq_pushfront_name  DeeMA_Sequence_pushfront_name
+#define DeeMA_seq_pushfront_doc   DeeMA_Sequence_pushfront_doc
+#define DeeMA_seq_pushfront       DeeMA_Sequence_pushfront
+#define DeeMA_explicit_seq_pushfront_flags DeeMA___seq_pushfront___flags
+#define DeeMA_explicit_seq_pushfront_name  DeeMA___seq_pushfront___name
+#define DeeMA_explicit_seq_pushfront_doc   DeeMA___seq_pushfront___doc
+#define DeeMA_explicit_seq_pushfront       DeeMA___seq_pushfront__
+
+#define DeeMA___seq_append___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_append___name[]; /* "__seq_append__" */
+DDATDEF char const DeeMA___seq_append___doc[];  /* "(item)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_append__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Sequence_append_flags DeeMA___seq_append___flags
+#define DeeMA_Sequence_append_doc   DeeMA___seq_append___doc
+#define DeeMA_Sequence_append       DeeMA___seq_append__
+DDATDEF char const DeeMA_Sequence_append_name[]; /* "append" */
+#define DeeMA_seq_append_flags DeeMA_Sequence_append_flags
+#define DeeMA_seq_append_name  DeeMA_Sequence_append_name
+#define DeeMA_seq_append_doc   DeeMA_Sequence_append_doc
+#define DeeMA_seq_append       DeeMA_Sequence_append
+#define DeeMA_Sequence_pushback_flags DeeMA___seq_append___flags
+#define DeeMA_Sequence_pushback_doc   DeeMA___seq_append___doc
+#define DeeMA_Sequence_pushback       DeeMA___seq_append__
+DDATDEF char const DeeMA_Sequence_pushback_name[]; /* "pushback" */
+#define DeeMA_seq_pushback_flags DeeMA_Sequence_pushback_flags
+#define DeeMA_seq_pushback_name  DeeMA_Sequence_pushback_name
+#define DeeMA_seq_pushback_doc   DeeMA_Sequence_pushback_doc
+#define DeeMA_seq_pushback       DeeMA_Sequence_pushback
+#define DeeMA_explicit_seq_append_flags DeeMA___seq_append___flags
+#define DeeMA_explicit_seq_append_name  DeeMA___seq_append___name
+#define DeeMA_explicit_seq_append_doc   DeeMA___seq_append___doc
+#define DeeMA_explicit_seq_append       DeeMA___seq_append__
+
+#define DeeMA___seq_extend___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_extend___name[]; /* "__seq_extend__" */
+DDATDEF char const DeeMA___seq_extend___doc[];  /* "(items:?S?O)" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_extend__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Sequence_extend_flags DeeMA___seq_extend___flags
+#define DeeMA_Sequence_extend_doc   DeeMA___seq_extend___doc
+#define DeeMA_Sequence_extend       DeeMA___seq_extend__
+DDATDEF char const DeeMA_Sequence_extend_name[]; /* "extend" */
+#define DeeMA_seq_extend_flags DeeMA_Sequence_extend_flags
+#define DeeMA_seq_extend_name  DeeMA_Sequence_extend_name
+#define DeeMA_seq_extend_doc   DeeMA_Sequence_extend_doc
+#define DeeMA_seq_extend       DeeMA_Sequence_extend
+#define DeeMA_explicit_seq_extend_flags DeeMA___seq_extend___flags
+#define DeeMA_explicit_seq_extend_name  DeeMA___seq_extend___name
+#define DeeMA_explicit_seq_extend_doc   DeeMA___seq_extend___doc
+#define DeeMA_explicit_seq_extend       DeeMA___seq_extend__
+
+#define DeeMA___seq_xchitem___flags Dee_TYPE_METHOD_FKWDS
+DDATDEF char const DeeMA___seq_xchitem___name[]; /* "__seq_xchitem__" */
+DDATDEF char const DeeMA___seq_xchitem___doc[];  /* "(index:?Dint,item)->" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_xchitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_xchitem_flags DeeMA___seq_xchitem___flags
+#define DeeMA_Sequence_xchitem_doc   DeeMA___seq_xchitem___doc
+#define DeeMA_Sequence_xchitem       DeeMA___seq_xchitem__
+DDATDEF char const DeeMA_Sequence_xchitem_name[]; /* "xchitem" */
+#define DeeMA_seq_xchitem_flags DeeMA_Sequence_xchitem_flags
+#define DeeMA_seq_xchitem_name  DeeMA_Sequence_xchitem_name
+#define DeeMA_seq_xchitem_doc   DeeMA_Sequence_xchitem_doc
+#define DeeMA_seq_xchitem       DeeMA_Sequence_xchitem
+#define DeeMA_explicit_seq_xchitem_flags DeeMA___seq_xchitem___flags
+#define DeeMA_explicit_seq_xchitem_name  DeeMA___seq_xchitem___name
+#define DeeMA_explicit_seq_xchitem_doc   DeeMA___seq_xchitem___doc
+#define DeeMA_explicit_seq_xchitem       DeeMA___seq_xchitem__
+
+#define DeeMA___seq_clear___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_clear___name[]; /* "__seq_clear__" */
+DDATDEF char const DeeMA___seq_clear___doc[];  /* "" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_clear__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Sequence_clear_flags DeeMA___seq_clear___flags
+#define DeeMA_Sequence_clear_doc   DeeMA___seq_clear___doc
+#define DeeMA_Sequence_clear       DeeMA___seq_clear__
+DDATDEF char const DeeMA_Sequence_clear_name[]; /* "clear" */
+#define DeeMA_seq_clear_flags DeeMA_Sequence_clear_flags
+#define DeeMA_seq_clear_name  DeeMA_Sequence_clear_name
+#define DeeMA_seq_clear_doc   DeeMA_Sequence_clear_doc
+#define DeeMA_seq_clear       DeeMA_Sequence_clear
+#define DeeMA_Set_clear_flags DeeMA___seq_clear___flags
+#define DeeMA_Set_clear_doc   DeeMA___seq_clear___doc
+#define DeeMA_Set_clear       DeeMA___seq_clear__
+DDATDEF char const DeeMA_Set_clear_name[]; /* "clear" */
+#define DeeMA_Mapping_clear_flags DeeMA___seq_clear___flags
+#define DeeMA_Mapping_clear_doc   DeeMA___seq_clear___doc
+#define DeeMA_Mapping_clear       DeeMA___seq_clear__
+DDATDEF char const DeeMA_Mapping_clear_name[]; /* "clear" */
+#define DeeMA_explicit_seq_clear_flags DeeMA___seq_clear___flags
+#define DeeMA_explicit_seq_clear_name  DeeMA___seq_clear___name
+#define DeeMA_explicit_seq_clear_doc   DeeMA___seq_clear___doc
+#define DeeMA_explicit_seq_clear       DeeMA___seq_clear__
+
+#define DeeMA___seq_pop___flags Dee_TYPE_METHOD_FKWDS
+DDATDEF char const DeeMA___seq_pop___name[]; /* "__seq_pop__" */
+DDATDEF char const DeeMA___seq_pop___doc[];  /* "(index=!-1)->" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_pop_flags DeeMA___seq_pop___flags
+#define DeeMA_Sequence_pop_doc   DeeMA___seq_pop___doc
+#define DeeMA_Sequence_pop       DeeMA___seq_pop__
+DDATDEF char const DeeMA_Sequence_pop_name[]; /* "pop" */
+#define DeeMA_seq_pop_flags DeeMA_Sequence_pop_flags
+#define DeeMA_seq_pop_name  DeeMA_Sequence_pop_name
+#define DeeMA_seq_pop_doc   DeeMA_Sequence_pop_doc
+#define DeeMA_seq_pop       DeeMA_Sequence_pop
+#define DeeMA_explicit_seq_pop_flags DeeMA___seq_pop___flags
+#define DeeMA_explicit_seq_pop_name  DeeMA___seq_pop___name
+#define DeeMA_explicit_seq_pop_doc   DeeMA___seq_pop___doc
+#define DeeMA_explicit_seq_pop       DeeMA___seq_pop__
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -232,6 +623,11 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
  * Note that this function doesn't return "%{unsupported}" implementations. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 (DCALL DeeType_GetPrivateMethodHint)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
+
+/* Same as `DeeType_GetPrivateMethodHint', but only check for attributes
+ * without doing any default substitutions. */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
+(DCALL DeeType_GetPrivateMethodHintNoDefault)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
 
 /* Returns a pointer to method hint's entry in `self->tp_method_hints' */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
@@ -288,7 +684,6 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 #define DeeType_RequireSeqOperatorBoundItem(self)               ((DeeMH_seq_operator_bounditem_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_bounditem))
 #define DeeType_RequireSeqOperatorHasItem(self)                 ((DeeMH_seq_operator_hasitem_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_hasitem))
 #define DeeType_RequireSeqOperatorSize(self)                    ((DeeMH_seq_operator_size_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_size))
-#define DeeType_RequireSeqOperatorSizeFast(self)                ((DeeMH_seq_operator_size_fast_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_size_fast))
 #define DeeType_RequireSeqOperatorGetItemIndex(self)            ((DeeMH_seq_operator_getitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_getitem_index))
 #define DeeType_RequireSeqOperatorDelItemIndex(self)            ((DeeMH_seq_operator_delitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_delitem_index))
 #define DeeType_RequireSeqOperatorSetItemIndex(self)            ((DeeMH_seq_operator_setitem_index_t)DeeType_GetMethodHint(self, Dee_TMH_seq_operator_setitem_index))
@@ -515,7 +910,6 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 #define DeeSeq_OperatorBoundItem(self, index)                      (*DeeType_RequireSeqOperatorBoundItem(Dee_TYPE(self)))(self, index)
 #define DeeSeq_OperatorHasItem(self, index)                        (*DeeType_RequireSeqOperatorHasItem(Dee_TYPE(self)))(self, index)
 #define DeeSeq_OperatorSize(self)                                  (*DeeType_RequireSeqOperatorSize(Dee_TYPE(self)))(self)
-#define DeeSeq_OperatorSizeFast(self)                              (*DeeType_RequireSeqOperatorSizeFast(Dee_TYPE(self)))(self)
 #define DeeSeq_OperatorGetItemIndex(self, index)                   (*DeeType_RequireSeqOperatorGetItemIndex(Dee_TYPE(self)))(self, index)
 #define DeeSeq_OperatorDelItemIndex(self, index)                   (*DeeType_RequireSeqOperatorDelItemIndex(Dee_TYPE(self)))(self, index)
 #define DeeSeq_OperatorSetItemIndex(self, index, value)            (*DeeType_RequireSeqOperatorSetItemIndex(Dee_TYPE(self)))(self, index, value)

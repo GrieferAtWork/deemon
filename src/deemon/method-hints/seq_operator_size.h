@@ -52,6 +52,9 @@ default_seq_size_with_foreach_cb(void *arg, DeeObject *elem);
 
 [[wunused]]
 size_t __seq_size__.seq_operator_size([[nonnull]] DeeObject *self)
+// NOTE: The "unsupported"-impl here is still needed so other hints can
+//       differentiate between "$unsupported" and "$with__seq_operator_sizeob"
+%{unsupported(auto("operator size"))}
 %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
 	return (size_t)DeeSeq_OperatorForeach(self, &default_seq_size_with_foreach_cb, NULL);
