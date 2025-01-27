@@ -2354,7 +2354,7 @@ err:
 /************************************************************************/
 struct seq_find_with_key_data {
 	union seq_find_data gsfwk_base; /* Base find data */
-	DeeObject                  *gsfwk_key;  /* Find element key */
+	DeeObject          *gsfwk_key;  /* Find element key */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL

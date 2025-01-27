@@ -88,6 +88,8 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_t DCALL mh_select_seq_all
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_with_key_t DCALL mh_select_seq_all_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_with_range_t DCALL mh_select_seq_all_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_all_with_range_and_key_t DCALL mh_select_seq_all_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_find_t DCALL mh_select_seq_find(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_find_with_key_t DCALL mh_select_seq_find_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_erase_t DCALL mh_select_seq_erase(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_insert_t DCALL mh_select_seq_insert(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_insertall_t DCALL mh_select_seq_insertall(DeeTypeObject *self, DeeTypeObject *orig_type);
@@ -97,6 +99,8 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_extend_t DCALL mh_select_seq_
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_xchitem_index_t DCALL mh_select_seq_xchitem_index(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_clear_t DCALL mh_select_seq_clear(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_pop_t DCALL mh_select_seq_pop(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_iter_t DCALL mh_select_set_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_foreach_t DCALL mh_select_set_operator_foreach(DeeTypeObject *self, DeeTypeObject *orig_type);
 /*[[[end]]]*/
 /* clang-format on */
 

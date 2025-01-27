@@ -29,6 +29,10 @@
 %[include("seq_operator_iterkeys.h")]
 %[include("seq_operator_enumerate.h")]
 
+///* Common utility functions... */
+//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_foreach_reverse, (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) /* [0..1] Not necessarily available! */
+//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_enumerate_index_reverse, (DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) /* [0..1] Not necessarily available! */
+
 %[include("seq_operator_getitem.h")]
 %[include("seq_operator_delitem.h")]
 %[include("seq_operator_setitem.h")]
@@ -49,10 +53,6 @@
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_inplace_mul, (DREF DeeObject **__restrict p_self, DeeObject *some_object))
 //Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__seq_inplace_mul__, "__seq_inplace_mul__", "(factor:?Dint)->?.")
 //
-//
-///* Common utility functions... */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_foreach_reverse, (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) /* [0..1] Not necessarily available! */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_enumerate_index_reverse, (DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) /* [0..1] Not necessarily available! */
 //
 ///* Operators for the purpose of constructing `DefaultEnumeration_With*' objects. */
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_makeenumeration, (DeeObject *self))
@@ -156,15 +156,12 @@
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_endswith_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 //Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_endswith, "endswith", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
 //Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_endswith__, "__seq_endswith__", seq_endswith)
-//
-//
+
+%[include("seq_find.h")]
+
 ///* @return: * :         Index of `item' in `self'
 // * @return: (size_t)-1: `item' could not be located in `self'
 // * @return: (size_t)Dee_COMPARE_ERR: Error */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_find, (DeeObject *self, DeeObject *item, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_find_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_find, "find", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_find__, "__seq_find__", seq_find)
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_rfind, (DeeObject *self, DeeObject *item, size_t start, size_t end))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_rfind_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
 //Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rfind, "rfind", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
@@ -239,16 +236,15 @@
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5, 6)), int, DCALL, seq_brange_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]))
 //Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_brange, "brange", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?Dint")
 //Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_brange__, "__seq_brange__", seq_brange)
-//
-//
-//
-///************************************************************************/
-///* For `deemon.Set'                                                     */
-///************************************************************************/
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, set_operator_iter, (DeeObject *__restrict self))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, set_operator_foreach, (DeeObject *__restrict self, Dee_foreach_t cb, void *arg))
-//Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__set_iter__, "__set_iter__", "->?DIterator")
-//
+
+
+
+
+/************************************************************************/
+/* For `deemon.Set'                                                     */
+/************************************************************************/
+%[include("set_operator_iter.h")]
+
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, set_operator_sizeob, (DeeObject *__restrict self))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), size_t, DCALL, set_operator_size, (DeeObject *__restrict self))
 //Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__set_size__, "__set_size__", "->?Dint")

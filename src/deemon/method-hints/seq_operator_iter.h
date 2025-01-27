@@ -39,7 +39,7 @@ __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
-                                  [[nonnull]] Dee_foreach_t proc,
+                                  [[nonnull]] Dee_foreach_t cb,
                                   void *arg)
 %{$empty = 0} %{$with__seq_operator_iter = {
 	Dee_ssize_t result;
@@ -47,7 +47,7 @@ __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
 	iter = DeeSeq_OperatorIter(self);
 	if unlikely(!iter)
 		goto err;
-	result = DeeIterator_Foreach(iter, proc, arg);
+	result = DeeIterator_Foreach(iter, cb, arg);
 	Dee_Decref_likely(iter);
 	return result;
 err:
@@ -56,7 +56,7 @@ err:
 
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
-                                       [[nonnull]] Dee_foreach_pair_t proc,
+                                       [[nonnull]] Dee_foreach_pair_t cb,
                                        void *arg)
 %{$empty = 0} %{$with__seq_operator_iter = {
 	Dee_ssize_t result;
@@ -64,7 +64,7 @@ __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
 	iter = DeeSeq_OperatorIter(self);
 	if unlikely(!iter)
 		goto err;
-	result = DeeIterator_ForeachPair(iter, proc, arg);
+	result = DeeIterator_ForeachPair(iter, cb, arg);
 	Dee_Decref_likely(iter);
 	return result;
 err:

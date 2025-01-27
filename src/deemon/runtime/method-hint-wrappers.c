@@ -377,6 +377,28 @@ err:
 	return NULL;
 }
 
+PUBLIC_CONST char const DeeMA___seq_find___name[] = "__seq_find__";
+PUBLIC_CONST char const DeeMA___seq_find___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint";
+PUBLIC_CONST char const DeeMA_Sequence_find_name[] = "find";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_find__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	int result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:__seq_find__",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? DeeSeq_InvokeFindWithKey(self, item, start, end, key)
+	         : DeeSeq_InvokeFind(self, item, start, end);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
 PUBLIC_CONST char const DeeMA___seq_erase___name[] = "__seq_erase__";
 PUBLIC_CONST char const DeeMA___seq_erase___doc[] = "(index:?Dint,count=!1)";
 PUBLIC_CONST char const DeeMA_Sequence_erase_name[] = "erase";
@@ -518,6 +540,17 @@ DeeMA___seq_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	                    "|" UNPdSIZ ":__seq_pop__", &index))
 		goto err;
 	return DeeSeq_InvokePop(self, index);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_iter___name[] = "__set_iter__";
+PUBLIC_CONST char const DeeMA___set_iter___doc[] = "->?DIterator";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	if (DeeArg_Unpack(argc, argv, ":__set_iter__"))
+		goto err;
+	return DeeSet_OperatorIter(self);
 err:
 	return NULL;
 }

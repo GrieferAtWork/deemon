@@ -295,6 +295,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self);
 #define Dee_SEQCLASS_SET     3 /* Type inherits from "Sequence" and "Set" */
 #define Dee_SEQCLASS_MAP     4 /* Type inherits from "Sequence" and "Mapping" */
 #define Dee_SEQCLASS_COUNT   5
+#define Dee_SEQCLASS_ISSETORMAP(x) ((x) >= Dee_SEQCLASS_SET)
 
 /* Sequence type classification
  * @return: * : One of `Dee_SEQCLASS_*' */

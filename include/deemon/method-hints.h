@@ -139,6 +139,8 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_all_with_key,
 	Dee_TMH_seq_all_with_range,
 	Dee_TMH_seq_all_with_range_and_key,
+	Dee_TMH_seq_find,
+	Dee_TMH_seq_find_with_key,
 	Dee_TMH_seq_erase,
 	Dee_TMH_seq_insert,
 	Dee_TMH_seq_insertall,
@@ -148,6 +150,8 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_xchitem_index,
 	Dee_TMH_seq_clear,
 	Dee_TMH_seq_pop,
+	Dee_TMH_set_operator_iter,
+	Dee_TMH_set_operator_foreach,
 	Dee_TMH_COUNT
 };
 /*[[[end]]]*/
@@ -162,8 +166,8 @@ typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeMH_seq_operator_size_t)(DeeOb
 
 /* __seq_iter__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_iter_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_t)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
-typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_pair_t)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_t)(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_seq_operator_foreach_pair_t)(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
 
 /* __seq_iterkeys__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_operator_iterkeys_t)(DeeObject *self);
@@ -261,6 +265,10 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_all_with_key_t)(DeeObj
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_all_with_range_t)(DeeObject *__restrict self, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeMH_seq_all_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *key);
 
+/* Sequence_find, seq_find, __seq_find__, explicit_seq_find */
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) size_t (DCALL *DeeMH_seq_find_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2, 3, 4, 5)) int (DCALL *DeeMH_seq_find_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+
 /* Sequence_erase, seq_erase, __seq_erase__, explicit_seq_erase */
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeMH_seq_erase_t)(DeeObject *__restrict self, size_t index, size_t count);
 
@@ -287,6 +295,10 @@ typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_seq_clear_t)(DeeObject *self)
 
 /* Sequence_pop, seq_pop, __seq_pop__, explicit_seq_pop */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_pop_t)(DeeObject *self, Dee_ssize_t index);
+
+/* __set_iter__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_operator_iter_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t (DCALL *DeeMH_set_operator_foreach_t)(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 /*[[[end]]]*/
 
 /*[[[deemon (printMethodAttributeDecls from "...src.deemon.method-hints.method-hints")();]]]*/
@@ -428,6 +440,23 @@ DDATDEF char const DeeMA_Sequence_all_name[]; /* "all" */
 #define DeeMA_explicit_seq_all_name  DeeMA___seq_all___name
 #define DeeMA_explicit_seq_all_doc   DeeMA___seq_all___doc
 #define DeeMA_explicit_seq_all       DeeMA___seq_all__
+
+#define DeeMA___seq_find___flags Dee_TYPE_METHOD_FKWDS
+DDATDEF char const DeeMA___seq_find___name[]; /* "__seq_find__" */
+DDATDEF char const DeeMA___seq_find___doc[];  /* "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_find__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define DeeMA_Sequence_find_flags DeeMA___seq_find___flags
+#define DeeMA_Sequence_find_doc   DeeMA___seq_find___doc
+#define DeeMA_Sequence_find       DeeMA___seq_find__
+DDATDEF char const DeeMA_Sequence_find_name[]; /* "find" */
+#define DeeMA_seq_find_flags DeeMA_Sequence_find_flags
+#define DeeMA_seq_find_name  DeeMA_Sequence_find_name
+#define DeeMA_seq_find_doc   DeeMA_Sequence_find_doc
+#define DeeMA_seq_find       DeeMA_Sequence_find
+#define DeeMA_explicit_seq_find_flags DeeMA___seq_find___flags
+#define DeeMA_explicit_seq_find_name  DeeMA___seq_find___name
+#define DeeMA_explicit_seq_find_doc   DeeMA___seq_find___doc
+#define DeeMA_explicit_seq_find       DeeMA___seq_find__
 
 #define DeeMA___seq_erase___flags Dee_TYPE_METHOD_FKWDS
 DDATDEF char const DeeMA___seq_erase___name[]; /* "__seq_erase__" */
@@ -597,6 +626,11 @@ DDATDEF char const DeeMA_Sequence_pop_name[]; /* "pop" */
 #define DeeMA_explicit_seq_pop_name  DeeMA___seq_pop___name
 #define DeeMA_explicit_seq_pop_doc   DeeMA___seq_pop___doc
 #define DeeMA_explicit_seq_pop       DeeMA___seq_pop__
+
+#define DeeMA___set_iter___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___set_iter___name[]; /* "__set_iter__" */
+DDATDEF char const DeeMA___set_iter___doc[];  /* "->?DIterator" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 /*[[[end]]]*/
 /* clang-format on */
 

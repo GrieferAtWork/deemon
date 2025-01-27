@@ -244,6 +244,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_clear.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_erase.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_extend.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_find.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_first.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_insert.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_insertall.h" />
@@ -267,6 +268,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_pop.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_pushfront.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h" />
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_iter.h" />
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-firstlast-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl" />

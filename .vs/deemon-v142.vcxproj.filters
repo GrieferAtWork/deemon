@@ -708,6 +708,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_extend.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_find.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_first.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -775,6 +778,9 @@
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_iter.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">

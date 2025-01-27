@@ -111,6 +111,8 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_all_with_key_t mh_seq_all_with_key;
 	DeeMH_seq_all_with_range_t mh_seq_all_with_range;
 	DeeMH_seq_all_with_range_and_key_t mh_seq_all_with_range_and_key;
+	DeeMH_seq_find_t mh_seq_find;
+	DeeMH_seq_find_with_key_t mh_seq_find_with_key;
 	DeeMH_seq_erase_t mh_seq_erase;
 	DeeMH_seq_insert_t mh_seq_insert;
 	DeeMH_seq_insertall_t mh_seq_insertall;
@@ -120,6 +122,8 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_xchitem_index_t mh_seq_xchitem_index;
 	DeeMH_seq_clear_t mh_seq_clear;
 	DeeMH_seq_pop_t mh_seq_pop;
+	DeeMH_set_operator_iter_t mh_set_operator_iter;
+	DeeMH_set_operator_foreach_t mh_set_operator_foreach;
 /*[[[end]]]*/
 	/* clang-format on */
 
@@ -128,7 +132,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 38
+#define MHC_COUNT 40
 #define MHC_FIRST mhc___seq_bool__
 	union mhc_slot mhc___seq_bool__;
 	union mhc_slot mhc___seq_size__;
@@ -159,6 +163,7 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc_set___seq_last__;
 	union mhc_slot mhc___seq_any__;
 	union mhc_slot mhc___seq_all__;
+	union mhc_slot mhc___seq_find__;
 	union mhc_slot mhc___seq_erase__;
 	union mhc_slot mhc___seq_insert__;
 	union mhc_slot mhc___seq_insertall__;
@@ -168,7 +173,8 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc___seq_xchitem__;
 	union mhc_slot mhc___seq_clear__;
 	union mhc_slot mhc___seq_pop__;
-#define MHC_LAST mhc___seq_pop__
+	union mhc_slot mhc___set_iter__;
+#define MHC_LAST mhc___set_iter__
 /*[[[end]]]*/
 	/* clang-format on */
 };

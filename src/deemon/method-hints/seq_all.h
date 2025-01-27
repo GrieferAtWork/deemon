@@ -64,7 +64,7 @@ seq_all_foreach_cb(void *arg, DeeObject *item) {
 [[wunused]]
 int __seq_all__.seq_all([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_foreach = [[prefix(DEFINE_seq_all_foreach_cb)]] {
+%{$with__seq_operator_foreach = [[prefix(DEFINE_seq_all_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = DeeSeq_OperatorForeach(self, &seq_all_foreach_cb, NULL);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
@@ -105,7 +105,7 @@ err:
 int __seq_all__.seq_all_with_key([[nonnull]] DeeObject *self,
                                  [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_foreach = [[prefix(DEFINE_seq_all_foreach_with_key_cb)]] {
+%{$with__seq_operator_foreach = [[prefix(DEFINE_seq_all_foreach_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = DeeSeq_OperatorForeach(self, &seq_all_foreach_with_key_cb, key);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
@@ -207,7 +207,7 @@ seq_all = {
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach)
-		return &$with__seq_foreach;
+		return &$with__seq_operator_foreach;
 };
 
 seq_all_with_key = {
@@ -215,7 +215,7 @@ seq_all_with_key = {
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach)
-		return &$with__seq_foreach;
+		return &$with__seq_operator_foreach;
 };
 
 seq_all_with_range = {
