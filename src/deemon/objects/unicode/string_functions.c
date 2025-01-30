@@ -11466,7 +11466,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_METHOD_END
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF String *DCALL
 string_cat(String *__restrict self, DeeObject *__restrict other) {
 	/* Simple case: `self' is an empty string, so just cast `other' into a string. */
 	if (DeeString_IsEmpty(self))

@@ -136,6 +136,17 @@ INTERN ATTR_COLD int
 
 
 PRIVATE struct dex_symbol symbols[] = {
+	/* TODO: user-code API for `Dee_accu'
+	 * >> class Accu {
+	 * >>     this(first?: Object);
+	 * >>
+	 * >>     function add(item: Object): Accu;
+	 * >>     function addall(items: {Object...}): Accu;
+	 * >>
+	 * >>     @@Reading the value uses `Dee_accu_pack' + `Dee_accu_init_with_first_inherited'
+	 * >>     property value: Object = { get(): Object; del(); set(v: Object); };
+	 * >> }; */
+
 	{ "Deque", (DeeObject *)&Deque_Type, MODSYM_FREADONLY },
 	{ "FixedList", (DeeObject *)&FixedList_Type, MODSYM_FREADONLY },
 	{ "UniqueDict", (DeeObject *)&UDict_Type, MODSYM_FREADONLY },

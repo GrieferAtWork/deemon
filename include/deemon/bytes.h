@@ -250,7 +250,13 @@ struct Dee_bytes_printer {
 #define Dee_bytes_printer_printbytes      bytes_printer_printbytes
 #define Dee_bytes_printer_printobject     bytes_printer_printobject
 #define Dee_bytes_printer_printobjectrepr bytes_printer_printobjectrepr
-#endif /* __INTELLISENSE__ */
+#else /* __INTELLISENSE__ */
+#define bytes_printer_printf          Dee_bytes_printer_printf
+#define bytes_printer_vprintf         Dee_bytes_printer_vprintf
+#define bytes_printer_printbytes      Dee_bytes_printer_printbytes
+#define bytes_printer_printobject     Dee_bytes_printer_printobject
+#define bytes_printer_printobjectrepr Dee_bytes_printer_printobjectrepr
+#endif /* !__INTELLISENSE__ */
 #endif /* DEE_SOURCE */
 
 /* _Always_ inherit all byte data (even upon error) saved in

@@ -557,66 +557,49 @@ done:
 /* Create a new tuple object from a sequence or iterator. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_FromSequence(DeeObject *__restrict self) {
-	DREF Tuple *result;
-	size_t i, seq_length;
-	ASSERT_OBJECT(self);
+	DeeTypeObject *tp_seq = Dee_TYPE(self);
 
 	/* Optimizations for specific types such as `Tuple' and `List' */
-	if (DeeTuple_CheckExact(self))
+	if (tp_seq == &DeeTuple_Type) {
 		return_reference_(self);
-	if (DeeList_CheckExact(self)) {
-		DeeListObject *me = (DeeListObject *)self;
-		seq_length = DeeList_SIZE_ATOMIC(me);
+	} else if (tp_seq == &DeeList_Type) {
+		DREF Tuple *result;
+		DeeListObject *seq = (DeeListObject *)self;
+		size_t seq_length = DeeList_SIZE_ATOMIC(seq);
 list_size_changed:
 		result = DeeTuple_NewUninitialized(seq_length);
 		if unlikely(!result)
 			goto err;
 		COMPILER_READ_BARRIER();
-		DeeList_LockRead(me);
-		if unlikely(seq_length != DeeList_SIZE(me)) {
-			seq_length = DeeList_SIZE(me);
-			DeeList_LockEndRead(me);
+		DeeList_LockRead(seq);
+		if unlikely(seq_length != DeeList_SIZE(seq)) {
+			seq_length = DeeList_SIZE(seq);
+			DeeList_LockEndRead(seq);
 			DeeTuple_FreeUninitialized(result);
 			goto list_size_changed;
 		}
 		Dee_Movrefv(DeeTuple_ELEM(result),
-		            DeeList_ELEM(me),
+		            DeeList_ELEM(seq),
 		            seq_length);
-		DeeList_LockEndRead(me);
-		goto done;
-	}
-
-	/* TODO: Use tp_asvector/DeeObject_Foreach(), with DeeObject_SizeFast() as hint. */
-
-	/* Optimization for fast-sequence compatible objects. */
-	seq_length = DeeFastSeq_GetSize_deprecated(self);
-	if (seq_length != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
-		DREF DeeObject *elem;
-		if (seq_length == 0)
-			return_empty_tuple;
-		result = DeeTuple_NewUninitialized(seq_length);
-		if unlikely(!result)
-			goto err;
-		for (i = 0; i < seq_length; ++i) {
-			elem = DeeFastSeq_GetItem_deprecated(self, i);
-			if unlikely(!elem)
-				goto err_r;
-			DeeTuple_SET(result, i, elem); /* Inherit reference. */
+		DeeList_LockEndRead(seq);
+		return (DREF DeeObject *)result;
+	} else {
+		/* Fallback: use the generic tuple builder */
+		struct Dee_tuple_builder builder;
+		size_t hint = DeeObject_SizeFast(self);
+		if (hint != (size_t)-1) {
+			Dee_tuple_builder_init_with_hint(&builder, hint);
+		} else {
+			Dee_tuple_builder_init(&builder);
 		}
-		goto done;
-	}
-
-	/* Use general-purpose iterators to create a new tuple. */
-	self = DeeObject_Iter(self);
-	if unlikely(!self)
+		if unlikely(Dee_tuple_builder_appenditems(&builder, self))
+			goto err_builder;
+		return Dee_tuple_builder_pack(&builder);
+err_builder:
+		Dee_tuple_builder_fini(&builder);
 		goto err;
-	result = (DREF Tuple *)DeeTuple_FromIterator(self);
-	Dee_Decref(self);
-done:
-	return (DREF DeeObject *)result;
-err_r:
-	Dee_Decrefv(DeeTuple_ELEM(result), i);
-	DeeTuple_FreeUninitialized(result);
+	}
+	__builtin_unreachable();
 err:
 	return NULL;
 }
@@ -1889,7 +1872,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL
 tuple_concat(Tuple *self, DeeObject *other) {
 	DREF Tuple *result;
 	size_t other_sizehint, total_size;
@@ -2727,6 +2710,172 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 	/* .tp_operators     = */ nullable_tuple_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(nullable_tuple_operators)
 };
+
+
+
+
+
+/************************************************************************/
+/* TUPLE_BUILDER                                                        */
+/************************************************************************/
+PUBLIC ATTR_RETNONNULL WUNUSED DREF /*Tuple*/DeeObject *DCALL
+Dee_tuple_builder_pack(struct Dee_tuple_builder *__restrict self) {
+	DeeTupleObject *result = self->tb_tuple;
+	if unlikely(!result) {
+		ASSERT(self->tb_size == 0);
+		return_empty_tuple;
+	}
+	return (DREF DeeObject *)DeeTuple_TruncateUninitialized(result, self->tb_size);
+}
+
+PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+Dee_tuple_builder_append(/*struct Dee_tuple_builder*/ void *self,
+                         DeeObject *item) {
+	struct Dee_tuple_builder *me = (struct Dee_tuple_builder *)self;
+	DeeObject **buf = Dee_tuple_builder_alloc1(me);
+	if unlikely(!buf)
+		goto err;
+	Dee_Incref(item);
+	*buf = item; /* Inherit reference */
+	Dee_tuple_builder_commit1(me);
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+Dee_tuple_builder_append_inherited(/*struct Dee_tuple_builder*/ void *self,
+                                   /*inherit(always)*/ DREF DeeObject *item) {
+	struct Dee_tuple_builder *me = (struct Dee_tuple_builder *)self;
+	DeeObject **buf = Dee_tuple_builder_alloc1(me);
+	if unlikely(!buf)
+		goto err;
+	*buf = item; /* Inherit reference */
+	Dee_tuple_builder_commit1(me);
+	return 0;
+err:
+	Dee_Decref(item);
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+Dee_tuple_builder_appenditems(/*struct Dee_tuple_builder*/ void *self, DeeObject *items) {
+	struct Dee_tuple_builder *me = (struct Dee_tuple_builder *)self;
+	size_t hint = DeeObject_SizeFast(items);
+	if (hint != (size_t)-1)
+		Dee_tuple_builder_reserve(me, hint);
+	/* TODO: Use tp_asvector. */
+	return DeeObject_Foreach(items, &Dee_tuple_builder_append, me);
+}
+
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+Dee_tuple_builder_extend(struct Dee_tuple_builder *self, size_t objc,
+                         DeeObject *const *__restrict objv) {
+	DeeObject **buf = Dee_tuple_builder_alloc(self, objc);
+	if unlikely(!buf)
+		goto err;
+	Dee_Movrefv(buf, objv, objc);
+	Dee_tuple_builder_commit(self, objc);
+	return 0;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+Dee_tuple_builder_extend_inherited(struct Dee_tuple_builder *self, size_t objc,
+                                   /*inherit(always)*/ DREF DeeObject *const *__restrict objv) {
+	DeeObject **buf = Dee_tuple_builder_alloc(self, objc);
+	if unlikely(!buf)
+		goto err;
+	memcpyp(buf, objv, objc); /* Inherit reference */
+	Dee_tuple_builder_commit(self, objc);
+	return 0;
+err:
+	return -1;
+}
+
+/* Ensure that space for at least `n' items is allocated, and return
+ * a pointer to a buffer where those `n' items can be written. Once
+ * written, commit the write using `Dee_tuple_builder_commit' */
+PUBLIC WUNUSED NONNULL((1)) DeeObject **DCALL
+Dee_tuple_builder_alloc(struct Dee_tuple_builder *__restrict self, size_t n) {
+	size_t sizeof_tuple;
+	do {
+		if likely(Dee_tuple_builder_reserve(self, n)) {
+			ASSERT(self->tb_tuple);
+			ASSERT(self->tb_tuple->t_size >= self->tb_size + n);
+			return self->tb_tuple->t_elem + self->tb_size;
+		}
+		if (OVERFLOW_UADD(self->tb_size, n, &sizeof_tuple))
+			sizeof_tuple = (size_t)-1;
+		if (OVERFLOW_UMUL(sizeof_tuple, sizeof(DREF DeeObject *), &sizeof_tuple))
+			sizeof_tuple = (size_t)-1;
+		if (OVERFLOW_UADD(sizeof_tuple, offsetof(DeeTupleObject, t_elem), &sizeof_tuple))
+			sizeof_tuple = (size_t)-1;
+	} while (Dee_CollectMemory(sizeof_tuple));
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DeeObject **DCALL
+Dee_tuple_builder_alloc1(struct Dee_tuple_builder *__restrict self) {
+	size_t sizeof_tuple;
+	DeeTupleObject *tuple = self->tb_tuple;
+	if likely(tuple) {
+		size_t avail = tuple->t_size;
+		ASSERT(self->tb_size <= avail);
+		if likely(self->tb_size < avail)
+			return tuple->t_elem + self->tb_size;
+	}
+	do {
+		if likely(Dee_tuple_builder_reserve(self, 1))
+			return self->tb_tuple->t_elem + self->tb_size;
+		sizeof_tuple = (self->tb_size + 1) * sizeof(DREF DeeObject *);
+		sizeof_tuple += offsetof(DeeTupleObject, t_elem);
+	} while (Dee_CollectMemory(sizeof_tuple));
+	return NULL;
+}
+
+/* Try to ensure that space for at least `n' extra items is available.
+ * Returns indicate of that much space now being pre-allocated. */
+PUBLIC NONNULL((1)) bool DCALL
+Dee_tuple_builder_reserve(struct Dee_tuple_builder *__restrict self, size_t n) {
+	size_t min_alloc;
+	size_t new_alloc;
+	DeeTupleObject *tuple;
+	if (OVERFLOW_UADD(self->tb_size, n, &min_alloc))
+		min_alloc = (size_t)-1;
+	tuple = self->tb_tuple;
+	if (tuple) {
+		size_t old_alloc = tuple->t_size;
+		if likely(old_alloc >= min_alloc)
+			return true;
+		new_alloc = tuple->t_size * 2;
+		if (new_alloc < 16)
+			new_alloc = 16;
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc;
+		tuple = DeeTuple_TryResizeUninitialized(tuple, new_alloc);
+		if unlikely(!tuple) {
+			new_alloc = min_alloc;
+			tuple = DeeTuple_TryResizeUninitialized(self->tb_tuple, new_alloc);
+		}
+	} else {
+		new_alloc = min_alloc * 2;
+		if (new_alloc < 16)
+			new_alloc = 16;
+		tuple = DeeTuple_TryNewUninitialized(new_alloc);
+		if unlikely(!tuple) {
+			new_alloc = min_alloc;
+			tuple = DeeTuple_TryNewUninitialized(new_alloc);
+		}
+	}
+	if unlikely(!tuple)
+		return false;
+	self->tb_tuple = tuple;
+	ASSERT(tuple->t_size >= self->tb_size + n);
+	return true;
+}
+
 
 DECL_END
 

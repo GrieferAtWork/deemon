@@ -187,6 +187,73 @@ DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
 #define DeeTuple_PackPairSymbolic(a, b)      DeeTuple_PackSymbolic(2, a, b)
 #define DeeTuple_TryPackPairSymbolic(a, b)   DeeTuple_TryPackSymbolic(2, a, b)
 
+
+struct Dee_tuple_builder {
+	size_t               tb_size;  /* Used size (allocated size is stored in `tb_tuple->t_size') */
+	DREF DeeTupleObject *tb_tuple; /* [0..1][owned] Result tuple (guarantied to not be shared) */
+};
+
+#define Dee_tuple_builder_init(self) \
+	(void)((self)->tb_size = 0, (self)->tb_tuple = NULL)
+#define Dee_tuple_builder_cinit(self)        \
+	(void)(Dee_ASSERT((self)->tb_size == 0), \
+	       Dee_ASSERT((self)->tb_tuple == NULL))
+#define Dee_tuple_builder_init_with_hint(self, hint) \
+	(void)((self)->tb_size  = 0,                     \
+	       (self)->tb_tuple = DeeTuple_TryNewUninitialized(hint))
+#define Dee_tuple_builder_cinit_with_hint(self, hint) \
+	(void)(Dee_ASSERT((self)->tb_size == 0),          \
+	       (self)->tb_tuple = DeeTuple_TryNewUninitialized(hint))
+#define Dee_tuple_builder_fini(self)                                \
+	(void)(!(self)->tb_tuple ||                                     \
+	       (Dee_Decrefv((self)->tb_tuple->t_elem, (self)->tb_size), \
+	        DeeTuple_FreeUninitialized((self)->tb_tuple), 0))
+DFUNDEF ATTR_RETNONNULL WUNUSED DREF /*Tuple*/DeeObject *DCALL
+Dee_tuple_builder_pack(struct Dee_tuple_builder *__restrict self);
+DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+Dee_tuple_builder_append(/*struct Dee_tuple_builder*/ void *self,
+                         DeeObject *item);
+DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+Dee_tuple_builder_append_inherited(/*struct Dee_tuple_builder*/ void *self,
+                                   /*inherit(always)*/ DREF DeeObject *item);
+DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+Dee_tuple_builder_appenditems(/*struct Dee_tuple_builder*/ void *self, DeeObject *items);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+Dee_tuple_builder_extend(struct Dee_tuple_builder *self, size_t objc,
+                         DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+Dee_tuple_builder_extend_inherited(struct Dee_tuple_builder *self, size_t objc,
+                                   /*inherit(always)*/ DREF DeeObject *const *__restrict objv);
+
+/* Ensure that space for at least `n' items is allocated, and return
+ * a pointer to a buffer where those `n' items can be written. Once
+ * written, commit the write using `Dee_tuple_builder_commit' */
+DFUNDEF WUNUSED NONNULL((1)) DeeObject **DCALL
+Dee_tuple_builder_alloc(struct Dee_tuple_builder *__restrict self, size_t n);
+DFUNDEF WUNUSED NONNULL((1)) DeeObject **DCALL
+Dee_tuple_builder_alloc1(struct Dee_tuple_builder *__restrict self);
+#define Dee_tuple_builder_commit(self, n) (void)((self)->tb_size += (n))
+#define Dee_tuple_builder_commit1(self)   Dee_tuple_builder_commit(self, 1)
+
+/* Try to ensure that space for at least `n' extra items is available.
+ * Returns indicate of that much space now being pre-allocated. */
+DFUNDEF NONNULL((1)) bool DCALL
+Dee_tuple_builder_reserve(struct Dee_tuple_builder *__restrict self, size_t n);
+
+
+/* Same as above, but produced tuple's items must either be incref'd,
+ * or the reference returned by `Dee_tuple_builder_pack_symbolic' must
+ * be decref'd by `DeeTuple_DecrefSymbolic' */
+#define Dee_tuple_builder_init_symbolic            Dee_tuple_builder_init
+#define Dee_tuple_builder_cinit_symbolic           Dee_tuple_builder_cinit
+#define Dee_tuple_builder_init_with_hint_symbolic  Dee_tuple_builder_init_with_hint
+#define Dee_tuple_builder_cinit_with_hint_symbolic Dee_tuple_builder_cinit_with_hint
+#define Dee_tuple_builder_fini_symbolic(self) \
+	(void)(!(self)->tb_tuple || DeeTuple_FreeUninitialized((self)->tb_tuple), 0)
+#define Dee_tuple_builder_pack_symbolic   Dee_tuple_builder_pack
+#define Dee_tuple_builder_append_symbolic Dee_tuple_builder_append_inherited
+#define Dee_tuple_builder_extend_symbolic Dee_tuple_builder_extend_inherited
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_TUPLE_H */

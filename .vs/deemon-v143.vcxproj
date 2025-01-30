@@ -40,6 +40,7 @@
 		<ClInclude Include="..\configure" />
 		<ClInclude Include="..\include\deemon\abi\ctypes.h" />
 		<ClInclude Include="..\include\deemon\abi\time.h" />
+		<ClInclude Include="..\include\deemon\accu.h" />
 		<ClInclude Include="..\include\deemon\alloc.h" />
 		<ClInclude Include="..\include\deemon\api.h" />
 		<ClInclude Include="..\include\deemon\arg.h" />
@@ -533,6 +534,7 @@
 		<ClCompile Include="..\src\deemon\objects\unicode\unicode.c" />
 		<ClCompile Include="..\src\deemon\objects\unicode\unicode_db.c" />
 		<ClCompile Include="..\src\deemon\objects\weakref.c" />
+		<ClCompile Include="..\src\deemon\runtime\accu.c" />
 		<ClCompile Include="..\src\deemon\runtime\attribute.c" />
 		<ClCompile Include="..\src\deemon\runtime\build_value.c" />
 		<ClCompile Include="..\src\deemon\runtime\builtin.c" />

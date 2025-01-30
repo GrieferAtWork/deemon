@@ -136,7 +136,7 @@ float_neg(Float *__restrict self) {
 	return (DREF Float *)DeeFloat_New(-self->f_value);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF Float *DCALL
 float_add(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;

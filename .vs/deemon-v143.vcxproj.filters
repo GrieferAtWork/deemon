@@ -96,6 +96,9 @@
 		<ClInclude Include="..\include\deemon\abi\time.h">
 			<Filter>include\abi</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\accu.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\alloc.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -1570,6 +1573,9 @@
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\weakref.c">
 			<Filter>src\objects</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\accu.c">
+			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\attribute.c">
 			<Filter>src\runtime</Filter>

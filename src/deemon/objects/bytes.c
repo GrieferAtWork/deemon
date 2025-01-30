@@ -1062,7 +1062,7 @@ DEFINE_BYTES_COMPARE(bytes_gr, >)
 DEFINE_BYTES_COMPARE(bytes_ge, >=)
 #undef DEFINE_BYTES_COMPARE
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
 bytes_add(Bytes *self, DeeObject *other) {
 	DREF Bytes *result;
 	DeeBuffer buffer;

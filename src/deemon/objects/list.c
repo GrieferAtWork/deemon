@@ -426,19 +426,19 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-DeeList_Copy(DeeObject *__restrict self) {
+INTERN WUNUSED DREF List *DCALL /* Used in "../runtime/accu.c" */
+DeeList_Copy(List *__restrict self) {
 	DREF List *result;
 	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
 	result = DeeGCObject_MALLOC(List);
 	if unlikely(!result)
 		goto err;
-	if unlikely(list_copy(result, (List *)self))
+	if unlikely(list_copy(result, self))
 		goto err_r;
 	DeeObject_Init(result, &DeeList_Type);
 	weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
-	return DeeGC_Track((DeeObject *)result);
+	return DeeGC_TRACK(List, result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -467,7 +467,7 @@ DeeList_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *seq
 	 * This doesn't even need to be complicated; we can just use the prealloc
 	 * mechanism and have `DeeList_Copy()' prealloc sufficient space for at least
 	 * `DeeObject_SizeFast(sequence)' trailing objects. */
-	result = DeeList_Copy(self);
+	result = (DREF DeeObject *)DeeList_Copy((List *)self);
 	Dee_Decref_unlikely(self);
 	if unlikely(!result)
 		goto err_self;
@@ -3758,10 +3758,10 @@ PRIVATE struct type_gc tpconst list_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&DeeList_Clear
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF List *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF List *DCALL
 list_add(List *me, DeeObject *other) {
 	DREF List *result;
-	result = (DREF List *)DeeList_Copy((DeeObject *)me);
+	result = DeeList_Copy(me);
 	if unlikely(!result)
 		goto err;
 	if unlikely(DeeList_AppendSequence((DeeObject *)result, other))
