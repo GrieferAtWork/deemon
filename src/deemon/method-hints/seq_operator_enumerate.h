@@ -23,21 +23,21 @@
 /************************************************************************/
 __seq_enumerate__(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N {
 	Dee_ssize_t foreach_status;
-	DeeObject *cb;
+	struct seq_enumerate_data data;
 	size_t start = 0;
 	size_t end = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":__seq_enumerate__", &cb, &start, &end))
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":__seq_enumerate__", &data.sed_cb, &start, &end))
 		goto err;
-	/* TODO */
 	if (start == 0 && end == (size_t)-1) {
-		foreach_status = DeeSeq_OperatorEnumerate();
+		foreach_status = DeeSeq_OperatorEnumerate(self, &seq_enumerate_cb, &data);
 	} else {
-		foreach_status = DeeSeq_OperatorEnumerateIndex();
+		foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_enumerate_index_cb, &data, start, end);
 	}
 	if unlikely(foreach_status == -1)
 		goto err;
-	/* TODO */
-	return 0;
+	if (foreach_status == -2)
+		return data.sed_result;
+	return_none;
 err:
 	return NULL;
 }
@@ -152,14 +152,12 @@ err:
 	return DeeSeq_OperatorForeach(self, &default_enumerate_with_counter_and_foreach_cb, &data);
 }} {
 	DREF DeeObject *result;
-	DREF DeeObject *cb_wrapper;
-	/* TODO: Invoke user-defined __seq_enumerate__ callback */
-	result = LOCAL_CALLATTR(self, 1, &cb_wrapper);
-	Dee_Decref_unlikely(cb_wrapper);
-	if unlikely(!result)
+	DREF EnumerateWrapper *wrapper;
+	wrapper = EnumerateWrapper_New(proc, arg);
+	if unlikely(!wrapper)
 		goto err;
-	Dee_Decref(result);
-	/* TODO */
+	result = LOCAL_CALLATTR(self, 1, (DeeObject *const *)&wrapper);
+	return EnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }
@@ -232,14 +230,12 @@ err:
 	return result;
 }} {
 	DREF DeeObject *result;
-	DREF DeeObject *cb_wrapper;
-	/* TODO: Invoke user-defined __seq_enumerate__ callback */
-	result = LOCAL_CALLATTR(self, 1, &cb_wrapper);
-	Dee_Decref_unlikely(cb_wrapper);
-	if unlikely(!result)
+	DREF EnumerateWrapper *wrapper;
+	wrapper = EnumerateIndexWrapper_New(proc, arg);
+	if unlikely(!wrapper)
 		goto err;
-	Dee_Decref(result);
-	/* TODO */
+	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, wrapper, start, end);
+	return EnumerateWrapper_Decref(wrapper, result);
 err:
 	return -1;
 }

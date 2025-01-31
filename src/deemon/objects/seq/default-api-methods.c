@@ -23,9 +23,9 @@
 #include "default-api.h"
 /**/
 
+#include <deemon/accu.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/accu.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
 #include <deemon/callable.h>
@@ -52,6 +52,7 @@
 #include "default-iterators.h"
 #include "default-map-proxy.h"
 #include "default-reversed.h"
+#include "enumerate-cb.h"
 #include "repeat.h"
 #include "sort.h"
 
@@ -490,57 +491,6 @@ err:
 /************************************************************************/
 /* enumerate()                                                          */
 /************************************************************************/
-/* Helpers for enumerating a sequence by invoking a given callback. */
-
-struct seq_enumerate_data {
-	DeeObject      *sed_cb;     /* [1..1] Enumeration callback */
-	DREF DeeObject *sed_result; /* [?..1][valid_if(return == -2)] Enumeration result */
-};
-
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
-	DREF DeeObject *result;
-	DeeObject *args[2];
-	struct seq_enumerate_data *data;
-	data    = (struct seq_enumerate_data *)arg;
-	args[0] = index;
-	args[1] = value;
-	result  = DeeObject_Call(data->sed_cb, value ? 2 : 1, args);
-	if unlikely(!result)
-		goto err;
-	if (DeeNone_Check(result)) {
-		Dee_DecrefNokill(Dee_None);
-		return 0;
-	}
-	data->sed_result = result;
-	return -2; /* Stop enumeration! */
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED Dee_ssize_t DCALL
-seq_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
-	DREF DeeObject *result;
-	DeeObject *args[2];
-	struct seq_enumerate_data *data;
-	data    = (struct seq_enumerate_data *)arg;
-	args[0] = DeeInt_NewSize(index);
-	if unlikely(!args[0])
-		goto err;
-	args[1] = value;
-	result  = DeeObject_Call(data->sed_cb, value ? 2 : 1, args);
-	Dee_Decref(args[0]);
-	if unlikely(!result)
-		goto err;
-	if (DeeNone_Check(result)) {
-		Dee_DecrefNokill(Dee_None);
-		return 0;
-	}
-	data->sed_result = result;
-	return -2; /* Stop enumeration! */
-err:
-	return -1;
-}
 
 INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeq_Enumerate(DeeObject *self, DeeObject *cb) {
@@ -1614,13 +1564,8 @@ err:
 /* contains()                                                           */
 /************************************************************************/
 
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_contains_foreach_cb(void *arg, DeeObject *item) {
-	int temp = DeeObject_TryCompareEq((DeeObject *)arg, item);
-	if unlikely(temp == Dee_COMPARE_ERR)
-		return -1;
-	return temp == 0 ? -2 : 0;
-}
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_contains_with_foreach_cb(void *arg, DeeObject *elem);
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 seq_contains_with_key_foreach_cb(void *arg, DeeObject *item) {
@@ -1638,7 +1583,7 @@ seq_contains_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	(void)index;
 	if (!item)
 		return 0;
-	return seq_contains_foreach_cb(arg, item);
+	return default_contains_with_foreach_cb(arg, item);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -1657,7 +1602,7 @@ DeeSeq_DefaultContainsWithSeqFind(DeeObject *self, DeeObject *item) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultContainsWithForeach(DeeObject *self, DeeObject *item) {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_contains_foreach_cb, item);
+	foreach_status = DeeSeq_OperatorForeach(self, &default_contains_with_foreach_cb, item);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if (foreach_status == -2)
 		foreach_status = 1;

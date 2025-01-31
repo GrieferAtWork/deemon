@@ -1085,13 +1085,12 @@ done:
 	}
 
 	public parseNativeMethodParam(): NativeMethodParam {
-		if (tok == "[[") {
-			next();
-			parseAttrib();
-			skip("]]");
-		}
+		resetContext();
+		parseAttribs();
 		requireSymbol();
 		local paramTypeStart = tokStart;
+		while (tok in _C_TYPENAME_TOKENS)
+			next();
 		do {
 			next();
 		} while (tok in _C_TYPENAME_TOKENS);

@@ -19,10 +19,10 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.operator size()                                      */
+/* deemon.Set.operator size()                                           */
 /************************************************************************/
-__seq_size__()->?Dint {
-	if (DeeArg_Unpack(argc, argv, ":__seq_size__"))
+__set_size__()->?Dint {
+	if (DeeArg_Unpack(argc, argv, ":__set_size__"))
 		goto err;
 	return DeeSeq_OperatorSizeOb(self);
 err:
@@ -30,67 +30,31 @@ err:
 }
 
 [[wunused]]
-DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *self)
-%{unsupported(auto("operator size"))}
-%{$empty = { return_reference_(DeeInt_Zero); }}
-%{$with__seq_operator_size = {
-	size_t seqsize = DeeSeq_OperatorSize(self);
-	if unlikely(seqsize == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(seqsize);
-err:
-	return NULL;
-}} {
-	return LOCAL_CALLATTR(self, 0, NULL);
-}
-
-
-%[define(DEFINE_default_seq_size_with_foreach_cb =
-INTDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-default_seq_size_with_foreach_cb(void *arg, DeeObject *elem);
-)]
-
-[[wunused]]
-size_t __seq_size__.seq_operator_size([[nonnull]] DeeObject *self)
-// NOTE: The "unsupported"-impl here is still needed so other hints can
-//       differentiate between "$unsupported" and "$with__seq_operator_sizeob"
+size_t __set_size__.set_operator_size([[nonnull]] DeeObject *self)
 %{unsupported(auto("operator size"))}
 %{$empty = 0}
-%{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
-	return (size_t)DeeSeq_OperatorForeach(self, &default_seq_size_with_foreach_cb, NULL);
-}} %{$with__seq_operator_sizeob = {
+%{$with__set_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
+	return (size_t)DeeSet_OperatorForeach(self, &default_seq_size_with_foreach_cb, NULL);
+}} {
 	DREF DeeObject *sizeob;
-	sizeob = DeeSeq_OperatorSizeOb(self);
+	sizeob = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!sizeob)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(sizeob);
 err:
 	return (size_t)-1;
-}} = $with__seq_operator_sizeob;
+}
 
 
-seq_operator_sizeob = {
-	DeeMH_seq_operator_size_t seq_operator_size;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS != Dee_SEQCLASS_NONE && DeeType_RequireSizeOb(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_sizeob;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_size = REQUIRE(seq_operator_size);
-	if (seq_operator_size == &default__seq_operator_size__empty)
-		return &$empty;
-	if (seq_operator_size)
-		return &$with__seq_operator_size;
-};
-
-seq_operator_size = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+set_operator_size = {
+	DeeMH_set_operator_foreach_t set_operator_foreach;
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (SEQ_CLASS != Dee_SEQCLASS_NONE && DeeType_RequireSize(THIS_TYPE))
 		return THIS_TYPE->tp_seq->tp_size;
 #endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	set_operator_foreach = REQUIRE(set_operator_foreach);
+	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &$empty;
-	if (seq_operator_foreach)
-		return $with__seq_operator_foreach;
+	if (set_operator_foreach)
+		return $with__set_operator_foreach;
 };

@@ -54,11 +54,27 @@ err:
 	return -1;
 }} = $with__seq_operator_iter;
 
+
+%[define(DEFINE_default_foreach_pair_with_foreach_cb =
+#ifndef DEFINED_default_foreach_pair_with_foreach_cb
+#define DEFINED_default_foreach_pair_with_foreach_cb
+struct default_foreach_pair_with_foreach_data {
+	Dee_foreach_pair_t dfpwf_proc; /* [1..1] Underlying callback. */
+	void              *dfpwf_arg;  /* Cookie for `dfpwf_proc' */
+};
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem);
+#endif /* !DEFINED_default_foreach_pair_with_foreach_cb */
+)]
+
+
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
                                        void *arg)
-%{$empty = 0} %{$with__seq_operator_iter = {
+%{$empty = 0}
+%{$with__seq_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
 	iter = DeeSeq_OperatorIter(self);
@@ -69,7 +85,13 @@ __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
 	return result;
 err:
 	return -1;
-}} = $with__seq_operator_iter;
+}}
+%{$with__seq_operator_foreach = [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
+	struct default_foreach_pair_with_foreach_data data;
+	data.dfpwf_proc = cb;
+	data.dfpwf_arg  = arg;
+	return DeeSeq_OperatorForeach(self, &default_foreach_pair_with_foreach_cb, &data);
+}} = $with__seq_operator_foreach;
 
 seq_operator_iter = {
 #ifndef LOCAL_FOR_OPTIMIZE
@@ -92,15 +114,17 @@ seq_operator_foreach = {
 };
 
 seq_operator_foreach_pair = {
-	DeeMH_seq_operator_iter_t seq_operator_iter;
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
 #ifndef LOCAL_FOR_OPTIMIZE
 	if (DeeType_RequireForeachPair(self))
 		return THIS_TYPE->tp_seq->tp_foreach_pair;
 #endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_iter = REQUIRE(seq_operator_iter);
-	if (seq_operator_iter == &default__seq_operator_iter__empty)
+	seq_operator_foreach = REQUIRE(seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
-	if (seq_operator_iter)
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
 		return &$with__seq_operator_iter;
+	if (seq_operator_foreach)
+		return &$with__seq_operator_foreach;
 };
 

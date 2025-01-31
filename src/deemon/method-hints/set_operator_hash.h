@@ -19,57 +19,48 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.operator hash()                                      */
+/* deemon.Set.operator hash()                                           */
 /************************************************************************/
-__seq_hash__()->?Dint {
+__set_hash__()->?Dint {
 	Dee_hash_t result;
-	if (DeeArg_Unpack(argc, argv, ":__seq_hash__"))
+	if (DeeArg_Unpack(argc, argv, ":__set_hash__"))
 		goto err;
-	result = DeeSeq_OperatorHash(self);
+	result = DeeSet_OperatorHash(self);
 	return DeeInt_NewHash(result);
 err:
 	return NULL;
 }
 
-%[define(DEFINE_default_seq_hash_with_foreach_cb =
-#ifndef DEFINED_default_seq_hash_with_foreach_cb
-#define DEFINED_default_seq_hash_with_foreach_cb
-struct default_seq_hash_with_foreach_data {
-	Dee_hash_t sqhwf_result;   /* Hash result (or DEE_HASHOF_EMPTY_SEQUENCE when sqhwf_nonempty=false) */
-	bool       sqhwf_nonempty; /* True after the first element */
-};
-
+%[define(DEFINE_default_set_hash_with_foreach_cb =
+#ifndef DEFINED_default_set_hash_with_foreach_cb
+#define DEFINED_default_set_hash_with_foreach_cb
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem);
-#endif /* !DEFINED_default_seq_hash_with_foreach_cb */
+default_set_hash_with_foreach_cb(void *arg, DeeObject *elem);
+#endif /* !DEFINED_default_set_hash_with_foreach_cb */
 )]
 
-%[define(DEFINE_DeeSeq_HandleHashError =
-#ifndef DEFINED_DeeSeq_HandleHashError
-#define DEFINED_DeeSeq_HandleHashError
-INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSeq_HandleHashError(DeeObject *self);
-#endif /* !DEFINED_DeeSeq_HandleHashError */
+%[define(DEFINE_DeeSet_HandleHashError =
+#ifndef DEFINED_DeeSet_HandleHashError
+#define DEFINED_DeeSet_HandleHashError
+INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSet_HandleHashError(DeeObject *self);
+#endif /* !DEFINED_DeeSet_HandleHashError */
 )]
 
 [[wunused]]
-Dee_hash_t __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *self)
-%{unsupported({
-	return DeeObject_HashGeneric(self);
-})}
+Dee_hash_t __set_hash__.set_operator_hash([[nonnull]] DeeObject *self)
+%{unsupported_alias("default__seq_operator_hash__unsupported")}
 %{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
-%{$with__seq_operator_foreach =
-[[prefix(DEFINE_default_seq_hash_with_foreach_cb)]]
-[[prefix(DEFINE_DeeSeq_HandleHashError)]] {
-	struct default_seq_hash_with_foreach_data data;
-	data.sqhwf_result   = DEE_HASHOF_EMPTY_SEQUENCE;
-	data.sqhwf_nonempty = false;
-	if unlikely(DeeSeq_OperatorForeach(self, &default_seq_hash_with_foreach_cb, &data))
+%{$with__set_operator_foreach =
+[[prefix(DEFINE_default_set_hash_with_foreach_cb)]]
+[[prefix(DEFINE_DeeSet_HandleHashError)]] {
+	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	if unlikely(DeeSet_OperatorForeach(self, &default_set_hash_with_foreach_cb, &result))
 		goto err;
-	return data.sqhwf_result;
+	return result;
 err:
-	return DeeSeq_HandleHashError(self);
+	return DeeSet_HandleHashError(self);
 }}
-[[prefix(DEFINE_DeeSeq_HandleHashError)]] {
+[[prefix(DEFINE_DeeSet_HandleHashError)]] {
 	int temp;
 	Dee_hash_t result;
 	DREF DeeObject *resultob;
@@ -82,18 +73,18 @@ err:
 		goto err;
 	return result;
 err:
-	return DeeSeq_HandleHashError(self);
+	return DeeSet_HandleHashError(self);
 }
 
-seq_operator_hash = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+set_operator_hash = {
+	DeeMH_set_operator_foreach_t set_operator_foreach;
 #ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireHash(THIS_TYPE))
+	if (Dee_SEQCLASS_ISSETORMAP(SEQ_CLASS) && DeeType_RequireHash(THIS_TYPE))
 		return THIS_TYPE->tp_cmp->tp_hash;
 #endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	set_operator_foreach = REQUIRE(set_operator_foreach);
+	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &$empty;
-	if (seq_operator_foreach)
-		return $with__seq_operator_foreach;
+	if (set_operator_foreach)
+		return $with__set_operator_foreach;
 };
