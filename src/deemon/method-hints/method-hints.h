@@ -40,16 +40,18 @@
 %[include("seq_operator_delrange.h")]
 %[include("seq_operator_setrange.h")]
 
+/* TODO: seq_operator_assign */
+
 %[include("seq_operator_hash.h")]
 %[include("seq_operator_compare.h")]
 %[include("seq_operator_compare_eq.h")]
 %[include("seq_operator_trycompare_eq.h")]
 %[include("seq_operator_cmp.h")]
 
-%[include("seq_operator_foreach_reverse.h")]
-
 %[include("seq_operator_inplace_add.h")]
 %[include("seq_operator_inplace_mul.h")]
+
+%[include("seq_operator_foreach_reverse.h")]
 
 %[include("seq_enumerate_items.h")]
 
@@ -61,40 +63,17 @@
 
 %[include("seq_any.h")]
 %[include("seq_all.h")]
+%[include("seq_parity.h")]
 
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_parity, (DeeObject *self))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_parity_with_key, (DeeObject *self, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, seq_parity_with_range, (DeeObject *self, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), int, DCALL, seq_parity_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_parity, "parity", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_parity__, "__seq_parity__", seq_parity)
-//
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_reduce, (DeeObject *self, DeeObject *combine))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_reduce_with_init, (DeeObject *self, DeeObject *combine, DeeObject *init))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_reduce_with_range, (DeeObject *self, DeeObject *combine, size_t start, size_t end))
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_reduce_with_range_and_init, (DeeObject *self, DeeObject *combine, size_t start, size_t end, DeeObject *init))
 //Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_reduce, "reduce", "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->")
 //Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_reduce__, "__seq_reduce__", seq_reduce)
-//
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_min, (DeeObject *self))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_min_with_key, (DeeObject *self, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_min_with_range, (DeeObject *self, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), DREF DeeObject *, DCALL, seq_min_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_min, "min", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_min__, "__seq_min__", seq_min)
-//
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_max, (DeeObject *self))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, seq_max_with_key, (DeeObject *self, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_max_with_range, (DeeObject *self, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 4)), DREF DeeObject *, DCALL, seq_max_with_range_and_key, (DeeObject *self, size_t start, size_t end, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_max, "max", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?O?N")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_max__, "__seq_max__", seq_max)
-//
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_sum, (DeeObject *self))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_sum_with_range, (DeeObject *self, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_sum, "sum", "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_sum__, "__seq_sum__", seq_sum)
 
+%[include("seq_minmax.h")]
+%[include("seq_sum.h")]
 %[include("seq_count.h")]
 %[include("seq_operator_contains.h")]
 
@@ -105,7 +84,7 @@
 //Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_locate__, "__seq_locate__", seq_locate)
 //
 ///* Returns the last element (within the given range) where `match(elem)' is true. */
-///*Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_rlocate, (DeeObject *self, DeeObject *match, DeeObject *def))*/ /* Wouldn't make sense: for reverse, you need indices */
+//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_rlocate, (DeeObject *self, DeeObject *match, DeeObject *def)) /* Tries to use "seq_foreach_reverse" */
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_rlocate_with_range, (DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def))
 //Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rlocate, "rlocate", "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]")
 //Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_rlocate__, "__seq_rlocate__", seq_rlocate)

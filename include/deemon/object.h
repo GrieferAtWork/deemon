@@ -4856,7 +4856,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallf(De
  * optimizations to re-use `args' as the varargs tuple in calls to
  * pure user-code varargs functions:
  * >> function foo(args...) {
- * >>     import object from deemon;
+ * >>     import Object from deemon;
  * >>     print Object.id(args);
  * >> }
  * // `my_tuple' will be re-used as `args',

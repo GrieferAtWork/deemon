@@ -89,13 +89,13 @@ DECL_BEGIN
  * ${TEMPDIR}/my_script.dee:
  * >> import foo; // This will load the module `bar' as a file-cached module `${LIBPATH}/bar.dee'
  * >> import bar; // This will upgrade the file-cached module `${LIBPATH}/bar.dee' to a global module `bar'.
- * >> import object from deemon;
+ * >> import Object from deemon;
  * >>
  * >> print foo.x.value; // `Exported string from bar'
  * >> print bar.value;   // `Exported string from bar'
  * >>
- * >> assert Object.id(foo.x) == Object.id(bar), "Must be the same object";
- * >> assert Object.id(foo.x.value) == Object.id(bar.value), "Must be the same object";
+ * >> assert Object.id(foo.x) == Object.id(bar), "Must be the same Object";
+ * >> assert Object.id(foo.x.value) == Object.id(bar.value), "Must be the same Object";
  */
 
 #ifdef DEE_SOURCE
@@ -975,7 +975,7 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
  *   - If the host's filesystem is case-insensitive, then module
  *     names may be case-insensitive as well. However if this is
  *     the case, the following must always be true for any module:
- *     >> import object from deemon;
+ *     >> import Object from deemon;
  *     >> import mymodule;
  *     >> import MyModule;
  *     >> assert mymodule === MyModule;

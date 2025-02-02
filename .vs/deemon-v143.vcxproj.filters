@@ -741,6 +741,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_last.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_minmax.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -801,10 +804,16 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_trycompare_eq.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_parity.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_pop.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_pushfront.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_sum.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h">

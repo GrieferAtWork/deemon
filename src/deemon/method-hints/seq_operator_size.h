@@ -88,6 +88,8 @@ seq_operator_size = {
 	if (SEQ_CLASS != Dee_SEQCLASS_NONE && DeeType_RequireSize(THIS_TYPE))
 		return THIS_TYPE->tp_seq->tp_size;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	if (REQUIRE_NODEFAULT(seq_operator_sizeob))
+		return &$with__seq_operator_sizeob;
 	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;

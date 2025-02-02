@@ -30,6 +30,9 @@
 #include <deemon/none.h>
 
 /**/
+#include "../objects/seq/enumerate-cb.h"
+
+/**/
 #include "kwlist.h"
 
 DECL_BEGIN
@@ -434,6 +437,107 @@ err:
 	return NULL;
 }
 
+PUBLIC_CONST char const DeeMA___seq_parity___name[] = "__seq_parity__";
+PUBLIC_CONST char const DeeMA___seq_parity___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool";
+PUBLIC_CONST char const DeeMA_Sequence_parity_name[] = "parity";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	int result;
+	DeeObject *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:__seq_parity__",
+	                    &start, &end, &key))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		result = !DeeNone_Check(key)
+		         ? DeeSeq_InvokeParityWithKey(self, key)
+		         : DeeSeq_InvokeParity(self);
+	} else {
+		result = !DeeNone_Check(key)
+		         ? DeeSeq_InvokeParityWithRangeAndKey(self, start, end, key)
+		         : DeeSeq_InvokeParityWithRange(self, start, end);
+	}
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_min___name[] = "__seq_min__";
+PUBLIC_CONST char const DeeMA___seq_min___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->";
+PUBLIC_CONST char const DeeMA_Sequence_min_name[] = "min";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_min__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DREF DeeObject *result;
+	DeeObject *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:__seq_min__",
+	                    &start, &end, &key))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		result = !DeeNone_Check(key)
+		         ? DeeSeq_InvokeMinWithKey(self, key)
+		         : DeeSeq_InvokeMin(self);
+	} else {
+		result = !DeeNone_Check(key)
+		         ? DeeSeq_InvokeMinWithRangeAndKey(self, start, end, key)
+		         : DeeSeq_InvokeMinWithRange(self, start, end);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_max___name[] = "__seq_max__";
+PUBLIC_CONST char const DeeMA___seq_max___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->";
+PUBLIC_CONST char const DeeMA_Sequence_max_name[] = "max";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_max__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DREF DeeObject *result;
+	DeeObject *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:__seq_max__",
+	                    &start, &end, &key))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		result = !DeeNone_Check(key)
+		         ? DeeSeq_InvokeMaxWithKey(self, key)
+		         : DeeSeq_InvokeMax(self);
+	} else {
+		result = !DeeNone_Check(key)
+		         ? DeeSeq_InvokeMaxWithRangeAndKey(self, start, end, key)
+		         : DeeSeq_InvokeMaxWithRange(self, start, end);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_sum___name[] = "__seq_sum__";
+PUBLIC_CONST char const DeeMA___seq_sum___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->";
+PUBLIC_CONST char const DeeMA_Sequence_sum_name[] = "sum";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_sum__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DREF DeeObject *result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|" UNPuSIZ UNPuSIZ ":__seq_sum__",
+	                    &start, &end))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		result = DeeSeq_InvokeSum(self);
+	} else {
+		result = DeeSeq_InvokeSumWithRange(self, start, end);
+	}
+	return result;
+err:
+	return NULL;
+}
+
 PUBLIC_CONST char const DeeMA___seq_count___name[] = "__seq_count__";
 PUBLIC_CONST char const DeeMA___seq_count___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint";
 PUBLIC_CONST char const DeeMA_Sequence_count_name[] = "count";
@@ -681,7 +785,7 @@ PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___set_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	if (DeeArg_Unpack(argc, argv, ":__set_size__"))
 		goto err;
-	return DeeSeq_OperatorSizeOb(self);
+	return DeeSet_OperatorSizeOb(self);
 err:
 	return NULL;
 }

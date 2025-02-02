@@ -93,10 +93,10 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_operator_le_t mh_seq_operator_le;
 	DeeMH_seq_operator_gr_t mh_seq_operator_gr;
 	DeeMH_seq_operator_ge_t mh_seq_operator_ge;
-	DeeMH_seq_foreach_reverse_t mh_seq_foreach_reverse;
-	DeeMH_seq_enumerate_index_reverse_t mh_seq_enumerate_index_reverse;
 	DeeMH_seq_operator_inplace_add_t mh_seq_operator_inplace_add;
 	DeeMH_seq_operator_inplace_mul_t mh_seq_operator_inplace_mul;
+	DeeMH_seq_foreach_reverse_t mh_seq_foreach_reverse;
+	DeeMH_seq_enumerate_index_reverse_t mh_seq_enumerate_index_reverse;
 	DeeMH_seq_makeenumeration_t mh_seq_makeenumeration;
 	DeeMH_seq_makeenumeration_with_int_range_t mh_seq_makeenumeration_with_int_range;
 	DeeMH_seq_makeenumeration_with_range_t mh_seq_makeenumeration_with_range;
@@ -118,6 +118,20 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_all_with_key_t mh_seq_all_with_key;
 	DeeMH_seq_all_with_range_t mh_seq_all_with_range;
 	DeeMH_seq_all_with_range_and_key_t mh_seq_all_with_range_and_key;
+	DeeMH_seq_parity_t mh_seq_parity;
+	DeeMH_seq_parity_with_key_t mh_seq_parity_with_key;
+	DeeMH_seq_parity_with_range_t mh_seq_parity_with_range;
+	DeeMH_seq_parity_with_range_and_key_t mh_seq_parity_with_range_and_key;
+	DeeMH_seq_min_t mh_seq_min;
+	DeeMH_seq_min_with_key_t mh_seq_min_with_key;
+	DeeMH_seq_min_with_range_t mh_seq_min_with_range;
+	DeeMH_seq_min_with_range_and_key_t mh_seq_min_with_range_and_key;
+	DeeMH_seq_max_t mh_seq_max;
+	DeeMH_seq_max_with_key_t mh_seq_max_with_key;
+	DeeMH_seq_max_with_range_t mh_seq_max_with_range;
+	DeeMH_seq_max_with_range_and_key_t mh_seq_max_with_range_and_key;
+	DeeMH_seq_sum_t mh_seq_sum;
+	DeeMH_seq_sum_with_range_t mh_seq_sum_with_range;
 	DeeMH_seq_count_t mh_seq_count;
 	DeeMH_seq_count_with_key_t mh_seq_count_with_key;
 	DeeMH_seq_count_with_range_t mh_seq_count_with_range;
@@ -141,6 +155,7 @@ struct Dee_type_mh_cache {
 	DeeMH_set_operator_iter_t mh_set_operator_iter;
 	DeeMH_set_operator_foreach_t mh_set_operator_foreach;
 	DeeMH_set_operator_foreach_pair_t mh_set_operator_foreach_pair;
+	DeeMH_set_operator_sizeob_t mh_set_operator_sizeob;
 	DeeMH_set_operator_size_t mh_set_operator_size;
 	DeeMH_set_operator_hash_t mh_set_operator_hash;
 	DeeMH_map_operator_getitem_t mh_map_operator_getitem;
@@ -170,7 +185,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 50
+#define MHC_COUNT 54
 #define MHC_FIRST mhc___seq_bool__
 	union mhc_slot mhc___seq_bool__;
 	union mhc_slot mhc___seq_size__;
@@ -204,6 +219,10 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc_set___seq_last__;
 	union mhc_slot mhc___seq_any__;
 	union mhc_slot mhc___seq_all__;
+	union mhc_slot mhc___seq_parity__;
+	union mhc_slot mhc___seq_min__;
+	union mhc_slot mhc___seq_max__;
+	union mhc_slot mhc___seq_sum__;
 	union mhc_slot mhc___seq_count__;
 	union mhc_slot mhc___seq_contains__;
 	union mhc_slot mhc___seq_find__;

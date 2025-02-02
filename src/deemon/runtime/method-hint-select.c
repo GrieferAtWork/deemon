@@ -102,6 +102,8 @@ mh_select_seq_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (DeeType_GetSeqClass(self) != Dee_SEQCLASS_NONE && DeeType_RequireSize(self))
 		return self->tp_seq->tp_size;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	if ((DeeMH_seq_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_sizeob))
+		return &default__seq_operator_size__with__seq_operator_sizeob;
 	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &default__seq_operator_size__empty;
@@ -800,6 +802,37 @@ mh_select_seq_operator_ge(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	return NULL;
 }
 
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_inplace_add_t DCALL
+mh_select_seq_operator_inplace_add(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_extend_t seq_extend;
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireInplaceAdd(self))
+		return self->tp_math->tp_inplace_add;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	seq_extend = (DeeMH_seq_extend_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_extend);
+	if (seq_extend)
+		return &default__seq_operator_inplace_add__with__seq_extend;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_inplace_mul_t DCALL
+mh_select_seq_operator_inplace_mul(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_extend_t seq_extend;
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireInplaceMul(self))
+		return self->tp_math->tp_inplace_mul;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	seq_extend = (DeeMH_seq_extend_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_extend);
+	if (seq_extend) {
+		DeeMH_seq_clear_t seq_clear = (DeeMH_seq_clear_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_clear);
+		if (seq_clear == &default__seq_clear__empty)
+			return &default__seq_operator_inplace_mul__empty;
+		if (seq_clear)
+			return &default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend;
+	}
+	return NULL;
+}
+
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_foreach_reverse_t DCALL
 mh_select_seq_foreach_reverse(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size);
@@ -871,37 +904,6 @@ mh_select_seq_enumerate_index_reverse(DeeTypeObject *self, DeeTypeObject *orig_t
 		return &default__seq_enumerate_index_reverse__with__seq_operator_size__and__seq_operator_trygetitem_index;
 	}
 nope:;
-	return NULL;
-}
-
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_inplace_add_t DCALL
-mh_select_seq_operator_inplace_add(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_extend_t seq_extend;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireInplaceAdd(self))
-		return self->tp_math->tp_inplace_add;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_extend = (DeeMH_seq_extend_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_extend);
-	if (seq_extend)
-		return &default__seq_operator_inplace_add__with__seq_extend;
-	return NULL;
-}
-
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_inplace_mul_t DCALL
-mh_select_seq_operator_inplace_mul(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_extend_t seq_extend;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ && DeeType_RequireInplaceMul(self))
-		return self->tp_math->tp_inplace_mul;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_extend = (DeeMH_seq_extend_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_extend);
-	if (seq_extend) {
-		DeeMH_seq_clear_t seq_clear = (DeeMH_seq_clear_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_clear);
-		if (seq_clear == &default__seq_clear__empty)
-			return &default__seq_operator_inplace_mul__empty;
-		if (seq_clear)
-			return &default__seq_operator_inplace_mul__with__seq_clear__and__seq_extend;
-	}
 	return NULL;
 }
 
@@ -1245,7 +1247,7 @@ mh_select_seq_any_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
 		return &default__seq_any_with_range__empty;
 	if (seq_operator_enumerate_index)
-		return &default__seq_any_with_range__with__seq_enumerate_index;
+		return &default__seq_any_with_range__with__seq_operator_enumerate_index;
 	return NULL;
 }
 
@@ -1255,7 +1257,7 @@ mh_select_seq_any_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_ty
 	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
 		return &default__seq_any_with_range_and_key__empty;
 	if (seq_operator_enumerate_index)
-		return &default__seq_any_with_range_and_key__with__seq_enumerate_index;
+		return &default__seq_any_with_range_and_key__with__seq_operator_enumerate_index;
 	return NULL;
 }
 
@@ -1285,7 +1287,7 @@ mh_select_seq_all_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
 		return &default__seq_all_with_range__empty;
 	if (seq_operator_enumerate_index)
-		return &default__seq_all_with_range__with__seq_enumerate_index;
+		return &default__seq_all_with_range__with__seq_operator_enumerate_index;
 	return NULL;
 }
 
@@ -1295,7 +1297,167 @@ mh_select_seq_all_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_ty
 	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
 		return &default__seq_all_with_range_and_key__empty;
 	if (seq_operator_enumerate_index)
-		return &default__seq_all_with_range_and_key__with__seq_enumerate_index;
+		return &default__seq_all_with_range_and_key__with__seq_operator_enumerate_index;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_parity_t DCALL
+mh_select_seq_parity(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if (Dee_SEQCLASS_ISSETORMAP(DeeType_GetSeqClass(self))) {
+		DeeMH_seq_count_t seq_count = (DeeMH_seq_count_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_count);
+		if (seq_count == &default__seq_count__empty)
+			return &default__seq_parity__empty;
+		if (seq_count == &default__seq_count__with__seq_operator_foreach)
+			return &default__seq_parity__with__seq_operator_foreach;
+		if (seq_count)
+			return &default__seq_parity__with__seq_count;
+	}
+	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_parity__empty;
+	if (seq_operator_foreach)
+		return &default__seq_parity__with__seq_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_parity_with_key_t DCALL
+mh_select_seq_parity_with_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_parity_with_key__empty;
+	if (seq_operator_foreach)
+		return &default__seq_parity_with_key__with__seq_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_parity_with_range_t DCALL
+mh_select_seq_parity_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index;
+	if (Dee_SEQCLASS_ISSETORMAP(DeeType_GetSeqClass(self))) {
+		DeeMH_seq_count_with_range_t seq_count_with_range = (DeeMH_seq_count_with_range_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_count_with_range);
+		if (seq_count_with_range == &default__seq_count_with_range__empty)
+			return &default__seq_parity_with_range__empty;
+		if (seq_count_with_range == &default__seq_count_with_range__with__seq_operator_enumerate_index)
+			return &default__seq_parity_with_range__with__seq_operator_enumerate_index;
+		if (seq_count_with_range)
+			return &default__seq_parity_with_range__with__seq_count_with_range;
+	}
+	seq_operator_enumerate_index = (DeeMH_seq_operator_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_enumerate_index);
+	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+		return &default__seq_parity_with_range__empty;
+	if (seq_operator_enumerate_index)
+		return &default__seq_parity_with_range__with__seq_operator_enumerate_index;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_parity_with_range_and_key_t DCALL
+mh_select_seq_parity_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = (DeeMH_seq_operator_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_enumerate_index);
+	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+		return &default__seq_parity_with_range_and_key__empty;
+	if (seq_operator_enumerate_index)
+		return &default__seq_parity_with_range_and_key__with__seq_operator_enumerate_index;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_min_t DCALL
+mh_select_seq_min(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_min__empty;
+	if (seq_operator_foreach)
+		return &default__seq_min__with__seq_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_min_with_key_t DCALL
+mh_select_seq_min_with_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_min_with_key__empty;
+	if (seq_operator_foreach)
+		return &default__seq_min_with_key__with__seq_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_min_with_range_t DCALL
+mh_select_seq_min_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = (DeeMH_seq_operator_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_enumerate_index);
+	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+		return &default__seq_min_with_range__empty;
+	if (seq_operator_enumerate_index)
+		return &default__seq_min_with_range__with__seq_operator_enumerate_index;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_min_with_range_and_key_t DCALL
+mh_select_seq_min_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = (DeeMH_seq_operator_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_enumerate_index);
+	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+		return &default__seq_min_with_range_and_key__empty;
+	if (seq_operator_enumerate_index)
+		return &default__seq_min_with_range_and_key__with__seq_operator_enumerate_index;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_max_t DCALL
+mh_select_seq_max(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_max__empty;
+	if (seq_operator_foreach)
+		return &default__seq_max__with__seq_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_max_with_key_t DCALL
+mh_select_seq_max_with_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_max_with_key__empty;
+	if (seq_operator_foreach)
+		return &default__seq_max_with_key__with__seq_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_max_with_range_t DCALL
+mh_select_seq_max_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = (DeeMH_seq_operator_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_enumerate_index);
+	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+		return &default__seq_max_with_range__empty;
+	if (seq_operator_enumerate_index)
+		return &default__seq_max_with_range__with__seq_operator_enumerate_index;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_max_with_range_and_key_t DCALL
+mh_select_seq_max_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = (DeeMH_seq_operator_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_enumerate_index);
+	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+		return &default__seq_max_with_range_and_key__empty;
+	if (seq_operator_enumerate_index)
+		return &default__seq_max_with_range_and_key__with__seq_operator_enumerate_index;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_t DCALL
+mh_select_seq_sum(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_sum__empty;
+	if (seq_operator_foreach)
+		return &default__seq_sum__with__seq_operator_foreach;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_with_range_t DCALL
+mh_select_seq_sum_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = (DeeMH_seq_operator_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_enumerate_index);
+	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+		return &default__seq_sum_with_range__empty;
+	if (seq_operator_enumerate_index)
+		return &default__seq_sum_with_range__with__seq_operator_enumerate_index;
 	return NULL;
 }
 
@@ -1646,13 +1808,30 @@ mh_select_set_operator_foreach_pair(DeeTypeObject *self, DeeTypeObject *orig_typ
 	return NULL;
 }
 
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_sizeob_t DCALL
+mh_select_set_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_set_operator_size_t set_operator_size;
+#ifndef LOCAL_FOR_OPTIMIZE
+	if (Dee_SEQCLASS_ISSETORMAP(DeeType_GetSeqClass(self)) && DeeType_RequireSizeOb(self))
+		return self->tp_seq->tp_sizeob;
+#endif /* !LOCAL_FOR_OPTIMIZE */
+	set_operator_size = (DeeMH_set_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_size);
+	if (set_operator_size == &default__set_operator_size__empty)
+		return &default__set_operator_sizeob__empty;
+	if (set_operator_size)
+		return &default__set_operator_sizeob__with__set_operator_size;
+	return NULL;
+}
+
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_size_t DCALL
 mh_select_set_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_set_operator_foreach_t set_operator_foreach;
 #ifndef LOCAL_FOR_OPTIMIZE
-	if (DeeType_GetSeqClass(self) != Dee_SEQCLASS_NONE && DeeType_RequireSize(self))
+	if (Dee_SEQCLASS_ISSETORMAP(DeeType_GetSeqClass(self)) && DeeType_RequireSize(self))
 		return self->tp_seq->tp_size;
 #endif /* !LOCAL_FOR_OPTIMIZE */
+	if ((DeeMH_set_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_sizeob))
+		return &default__set_operator_size__with__set_operator_sizeob;
 	set_operator_foreach = (DeeMH_set_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_set_operator_foreach);
 	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &default__set_operator_size__empty;

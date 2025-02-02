@@ -80,11 +80,11 @@ err:
 	return -1;
 }
 
-%[define(DEFINE_seq_any_foreach_with_key_cb =
-#ifndef DEFINED_seq_any_foreach_with_key_cb
-#define DEFINED_seq_any_foreach_with_key_cb
+%[define(DEFINE_seq_any_with_key_foreach_cb =
+#ifndef DEFINED_seq_any_with_key_foreach_cb
+#define DEFINED_seq_any_with_key_foreach_cb
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_any_foreach_with_key_cb(void *arg, DeeObject *item) {
+seq_any_with_key_foreach_cb(void *arg, DeeObject *item) {
 	int temp;
 	item = DeeObject_Call((DeeObject *)arg, 1, &item);
 	if unlikely(!item)
@@ -96,16 +96,16 @@ seq_any_foreach_with_key_cb(void *arg, DeeObject *item) {
 err:
 	return -1;
 }
-#endif /* !DEFINED_seq_any_foreach_with_key_cb */
+#endif /* !DEFINED_seq_any_with_key_foreach_cb */
 )]
 
 [[wunused]]
 int __seq_any__.seq_any_with_key([[nonnull]] DeeObject *self,
                                  [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_foreach = [[prefix(DEFINE_seq_any_foreach_with_key_cb)]] {
+%{$with__seq_operator_foreach = [[prefix(DEFINE_seq_any_with_key_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_any_foreach_with_key_cb, key);
+	foreach_status = DeeSeq_OperatorForeach(self, &seq_any_with_key_foreach_cb, key);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 1;
@@ -142,7 +142,7 @@ seq_any_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 int __seq_any__.seq_any_with_range([[nonnull]] DeeObject *__restrict self,
                                    size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_any_enumerate_cb)]] {
+%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_any_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_any_enumerate_cb, NULL, start, end);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
@@ -158,27 +158,27 @@ err:
 	return -1;
 }
 
-%[define(DEFINE_seq_any_enumerate_with_key_cb =
-DEFINE_seq_any_foreach_with_key_cb
-#ifndef DEFINED_seq_any_enumerate_with_key_cb
-#define DEFINED_seq_any_enumerate_with_key_cb
+%[define(DEFINE_seq_any_with_key_enumerate_cb =
+DEFINE_seq_any_with_key_foreach_cb
+#ifndef DEFINED_seq_any_with_key_enumerate_cb
+#define DEFINED_seq_any_with_key_enumerate_cb
 PRIVATE WUNUSED Dee_ssize_t DCALL
-seq_any_enumerate_with_key_cb(void *arg, size_t index, DeeObject *item) {
+seq_any_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	(void)index;
 	if (!item)
 		return 0;
-	return seq_any_foreach_with_key_cb(arg, item);
+	return seq_any_with_key_foreach_cb(arg, item);
 }
-#endif /* !DEFINED_seq_any_enumerate_with_key_cb */
+#endif /* !DEFINED_seq_any_with_key_enumerate_cb */
 )]
 
 [[wunused]]
 int __seq_any__.seq_any_with_range_and_key([[nonnull]] DeeObject *self, size_t start, size_t end,
                                            [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_any_enumerate_with_key_cb)]] {
+%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_any_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_any_enumerate_with_key_cb, key, start, end);
+	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_any_with_key_enumerate_cb, key, start, end);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 1;
@@ -214,7 +214,7 @@ seq_any_with_range = {
 	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
 		return &$empty;
 	if (seq_operator_enumerate_index)
-		return &$with__seq_enumerate_index;
+		return &$with__seq_operator_enumerate_index;
 };
 
 seq_any_with_range_and_key = {
@@ -222,6 +222,6 @@ seq_any_with_range_and_key = {
 	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
 		return &$empty;
 	if (seq_operator_enumerate_index)
-		return &$with__seq_enumerate_index;
+		return &$with__seq_operator_enumerate_index;
 };
 

@@ -255,6 +255,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_insert.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_insertall.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_last.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_minmax.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_cmp.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_compare.h" />
@@ -275,8 +276,10 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_setrange.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_size.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_trycompare_eq.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_parity.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_pop.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_pushfront.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_sum.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_hash.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_iter.h" />

@@ -2148,7 +2148,7 @@ err:
  *   - If the host's filesystem is case-insensitive, then module
  *     names may be case-insensitive as well. However if this is
  *     the case, the following must always be true for any module:
- *     >> import object from deemon;
+ *     >> import Object from deemon;
  *     >> import mymodule;
  *     >> import MyModule;
  *     >> assert mymodule === MyModule;
