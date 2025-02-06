@@ -25,13 +25,16 @@ __seq_delitem__(index:?Dint) {
 	DeeObject *index;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_delitem__", &index))
 		goto err;
-	if (DeeSeq_OperatorDelItem(self, index))
+	if (DeeType_InvokeMethodHint(self, seq_operator_delitem, index))
 		goto err;
 	return_none;
 err:
 	return NULL;
 }
 
+
+
+[[operator(Sequence.OPERATOR_DELITEM: tp_seq->tp_delitem)]]
 [[wunused]] int
 __seq_delitem__.seq_operator_delitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index)
@@ -41,7 +44,7 @@ __seq_delitem__.seq_operator_delitem([[nonnull]] DeeObject *self,
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
-	return DeeSeq_OperatorDelItemIndex(self, index_value);
+	return DeeType_InvokeMethodHint(self, seq_operator_delitem_index, index_value);
 err:
 	return -1;
 }} {
@@ -58,18 +61,19 @@ err:
 
 
 
+[[operator(Sequence.OPERATOR_DELITEM: tp_seq->tp_delitem_index)]]
 [[wunused]] int
 __seq_delitem__.seq_operator_delitem_index([[nonnull]] DeeObject *__restrict self,
                                            size_t index)
 %{unsupported(auto("operator del[]"))}
 %{$empty = err_index_out_of_bounds(self, index, 0)}
 %{$with__seq_operator_size__and__seq_erase = {
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if unlikely(index >= size)
 		goto err_oob;
-	return DeeSeq_InvokeErase(self, index, 1);
+	return DeeType_InvokeMethodHint(self, seq_erase, index, 1);
 err_oob:
 	err_index_out_of_bounds(self, index, size);
 err:
@@ -86,28 +90,20 @@ err:
 }
 
 seq_operator_delitem = {
-	DeeMH_seq_operator_delitem_index_t seq_operator_delitem_index;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireDelItem(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_delitem;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_delitem_index = REQUIRE(seq_operator_delitem_index);
+	DeeMH_seq_operator_delitem_index_t seq_operator_delitem_index = REQUIRE(seq_operator_delitem_index);
 	if (seq_operator_delitem_index == &default__seq_operator_delitem_index__empty)
 		return &$empty;
 	if (seq_operator_delitem_index)
 		return &$with__seq_operator_delitem_index;
+	/* TODO: DeeType_InvokeMethodHint(self, set_remove, DeeType_InvokeMethodHint(self, seq_operator_getitem, index)) */
 };
 
 seq_operator_delitem_index = {
-	DeeMH_seq_erase_t seq_erase;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireDelItemIndex(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_delitem_index;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_erase = REQUIRE_NODEFAULT(seq_erase);
+	DeeMH_seq_erase_t seq_erase = REQUIRE_NODEFAULT(seq_erase);
 	if (seq_erase == &default__seq_erase__empty)
 		return &$empty;
 	if (seq_erase && REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
 		return &$with__seq_operator_size__and__seq_erase;
+	/* TODO: DeeType_InvokeMethodHint(self, set_remove, DeeType_InvokeMethodHint(self, seq_operator_getitem_index, index)) */
 };
 

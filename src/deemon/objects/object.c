@@ -61,6 +61,7 @@
 #include <stdint.h>
 
 #include "../runtime/kwlist.h"
+#include "../runtime/method-hints.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/default-api.h"
@@ -3167,9 +3168,15 @@ type_fini(DeeTypeObject *__restrict self) {
 	        "Non heap-allocated type %s is being destroyed (This shouldn't happen)",
 	        self->tp_name);
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* Free the method hint cache */
+	if (self->tp_mhcache)
+		Dee_type_mh_cache_destroy(self->tp_mhcache);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* Free the sequence method cache (if it was allocated and belongs to this type) */
 	if (self->tp_seq && self->tp_seq->_tp_seqcache && (DeeType_GetSeqOrigin(self) == self))
 		Dee_type_seq_cache_destroy(self->tp_seq->_tp_seqcache);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Finalize class data if the type is actually a user-defined class. */
 	if (DeeType_IsClass(self))

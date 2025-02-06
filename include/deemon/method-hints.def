@@ -59,8 +59,8 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3, 4)), int, DCALL, seq_operator_setrange, (DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_operator_foreach, (DeeObject *__restrict self, Dee_foreach_t proc, void *arg))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_operator_foreach_pair, (DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_operator_enumerate, (DeeObject *__restrict self, Dee_enumerate_t proc, void *arg))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_operator_enumerate_index, (DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end))
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_operator_enumerate, (DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg))
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_operator_enumerate_index, (DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_operator_iterkeys, (DeeObject *__restrict self))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_bounditem, (DeeObject *self, DeeObject *index))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_operator_hasitem, (DeeObject *self, DeeObject *index))
@@ -95,7 +95,7 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_op
 
 /* Common utility functions... */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_foreach_reverse, (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) /* [0..1] Not necessarily available! */
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_enumerate_index_reverse, (DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end)) /* [0..1] Not necessarily available! */
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, seq_enumerate_index_reverse, (DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end)) /* [0..1] Not necessarily available! */
 
 /* Operators for the purpose of constructing `DefaultEnumeration_With*' objects. */
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, seq_makeenumeration, (DeeObject *self))
@@ -397,8 +397,8 @@ Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, 
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, map_operator_getitem, (DeeObject *self, DeeObject *index))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_delitem, (DeeObject *self, DeeObject *index))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, map_operator_setitem, (DeeObject *self, DeeObject *index, DeeObject *value))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, map_operator_enumerate, (DeeObject *__restrict self, Dee_enumerate_t proc, void *arg))
-Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, map_operator_enumerate_index, (DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end))
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, map_operator_enumerate, (DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg))
+Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), Dee_ssize_t, DCALL, map_operator_enumerate_index, (DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_bounditem, (DeeObject *self, DeeObject *index))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_hasitem, (DeeObject *self, DeeObject *index))
 Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, map_operator_getitem_index, (DeeObject *self, size_t index))

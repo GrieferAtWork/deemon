@@ -27,7 +27,7 @@ __seq_pushfront__(item) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_pushfront__", &item))
 		goto err;
-	if unlikely(DeeSeq_InvokePushFront(self, item))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_pushfront, item))
 		goto err;
 	return_none;
 err:
@@ -41,7 +41,7 @@ int __seq_pushfront__.seq_pushfront([[nonnull]] DeeObject *self,
 %{unsupported(auto)}
 %{$empty = "default__seq_pushfront__unsupported"}
 %{$with__seq_insert = {
-	return DeeSeq_InvokeInsert(self, 0, item);
+	return DeeType_InvokeMethodHint(self, seq_insert, 0, item);
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTR(self, 1, &item);

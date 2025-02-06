@@ -24,19 +24,19 @@
 __seq_iterkeys__()->?DIterator {
 	if (DeeArg_Unpack(argc, argv, ":__seq_iterkeys__"))
 		goto err;
-	return DeeSeq_OperatorIterKeys(self);
+	return DeeType_InvokeMethodHint0(self, seq_iterkeys);
 err:
 	return NULL;
 }
 
 [[wunused]] DREF DeeObject *
-__seq_iterkeys__.seq_operator_iterkeys([[nonnull]] DeeObject *self)
+__seq_iterkeys__.seq_iterkeys([[nonnull]] DeeObject *self)
 %{unsupported(auto)}
 %{$empty = "default__seq_operator_iter__empty"}
 %{$with__seq_size = {
 	size_t size;
 	DREF IntRangeIterator *result;
-	size = DeeSeq_OperatorSize(self);
+	size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	result = DeeObject_MALLOC(IntRangeIterator);
@@ -53,13 +53,8 @@ err:
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
-seq_operator_iterkeys = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireIterKeys(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_iterkeys;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_foreach = REQUIRE(seq_operator_foreach);
+seq_iterkeys = {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach)

@@ -32,12 +32,12 @@ __seq_parity__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeParityWithKey(self, key)
-		         : DeeSeq_InvokeParity(self);
+		         ? DeeType_InvokeMethodHint(self, seq_parity_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_parity);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeParityWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeParityWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_parity_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_parity_with_range, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -61,7 +61,7 @@ seq_parity_foreach_cb(void *arg, DeeObject *item) {
 int __seq_parity__.seq_parity([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_count = {
-	size_t count = DeeSeq_InvokeCount(self, Dee_True);
+	size_t count = DeeType_InvokeMethodHint(self, seq_count, Dee_True);
 	if unlikely(count == (size_t)-1)
 		goto err;
 	return count & 1;
@@ -70,7 +70,7 @@ err:
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_parity_foreach_cb, NULL);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_parity_foreach_cb, NULL);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -108,7 +108,7 @@ int __seq_parity__.seq_parity_with_key([[nonnull]] DeeObject *self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_parity_foreach_with_key_cb, key);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_parity_foreach_with_key_cb, key);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -148,16 +148,16 @@ int __seq_parity__.seq_parity_with_range([[nonnull]] DeeObject *__restrict self,
                                          size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_count_with_range = {
-	size_t count = DeeSeq_InvokeCountWithRange(self, Dee_True, start, end);
+	size_t count = DeeType_InvokeMethodHint(self, seq_count_with_range, Dee_True, start, end);
 	if unlikely(count == (size_t)-1)
 		goto err;
 	return count & 1;
 err:
 	return -1;
 }}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_parity_enumerate_cb, NULL, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_parity_enumerate_cb, NULL, start, end);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -192,9 +192,9 @@ int __seq_parity__.seq_parity_with_range_and_key([[nonnull]] DeeObject *self,
                                                  size_t start, size_t end,
                                                  [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_with_key_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_parity_enumerate_with_key_cb, key, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_parity_enumerate_with_key_cb, key, start, end);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -237,28 +237,28 @@ seq_parity_with_key = {
 };
 
 seq_parity_with_range = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index;
+	DeeMH_seq_enumerate_index_t seq_enumerate_index;
 	if (Dee_SEQCLASS_ISSETORMAP(SEQ_CLASS)) {
 		DeeMH_seq_count_with_range_t seq_count_with_range = REQUIRE(seq_count_with_range);
 		if (seq_count_with_range == &default__seq_count_with_range__empty)
 			return &$empty;
-		if (seq_count_with_range == &default__seq_count_with_range__with__seq_operator_enumerate_index)
-			return &$with__seq_operator_enumerate_index;
+		if (seq_count_with_range == &default__seq_count_with_range__with__seq_enumerate_index)
+			return &$with__seq_enumerate_index;
 		if (seq_count_with_range)
 			return &$with__seq_count_with_range;
 	}
-	seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 
 seq_parity_with_range_and_key = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 

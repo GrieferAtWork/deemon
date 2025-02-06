@@ -2475,7 +2475,7 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_enumerate_index(Dict *__restrict self, Dee_enumerate_index_t cb,
+dict_enumerate_index(Dict *__restrict self, Dee_seq_enumerate_index_t cb,
                      void *arg, size_t start, size_t end) {
 	Dee_hash_t hash;
 	Dee_ssize_t temp, result = 0;
@@ -3344,7 +3344,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_mh_seq_enumerate_index(Dict *__restrict self, Dee_enumerate_index_t cb,
+dict_mh_seq_enumerate_index(Dict *__restrict self, Dee_seq_enumerate_index_t cb,
                             void *arg, size_t start, size_t end) {
 	DREF DeeTupleObject *key_and_value;
 	Dee_ssize_t temp, result = 0;
@@ -3400,7 +3400,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_mh_seq_enumerate_index_reverse(Dict *__restrict self, Dee_enumerate_index_t cb,
+dict_mh_seq_enumerate_index_reverse(Dict *__restrict self, Dee_seq_enumerate_index_t cb,
                                     void *arg, size_t start, size_t end) {
 	DREF DeeTupleObject *key_and_value;
 	Dee_ssize_t temp, result = 0;
@@ -3486,7 +3486,7 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_mh_seq_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&dict_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&dict_enumerate_index,
 	/* .tp_iterkeys                   = */ &DeeMap_DefaultIterKeysWithIter,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_hasitem,
@@ -4094,7 +4094,9 @@ PRIVATE struct type_method_hint tpconst dict_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_operator_foreach_pair, &dict_foreach_pair, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_enumerate_index, &dict_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_size, &dict_size, METHOD_FNOREFESCAPE),
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD_HINT_F(seq_operator_size_fast, &dict_size_fast, METHOD_FNOREFESCAPE),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_operator_getitem_index, &dict_mh_seq_getitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_trygetitem_index, &dict_mh_seq_trygetitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_operator_delitem_index, &dict_mh_seq_delitem_index, METHOD_FNOREFESCAPE),

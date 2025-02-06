@@ -53,8 +53,8 @@ seq_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value);
 typedef struct {
 	OBJECT_HEAD
 	union {
-		Dee_enumerate_t       cb_enumerate;       /* For `EnumerateWrapper_Type' */
-		Dee_enumerate_index_t cb_enumerate_index; /* For `EnumerateIndexWrapper_Type' */
+		Dee_seq_enumerate_t       cb_enumerate;       /* For `EnumerateWrapper_Type' */
+		Dee_seq_enumerate_index_t cb_enumerate_index; /* For `EnumerateIndexWrapper_Type' */
 	}                  ew_cb;   /* [1..1][lock(ew_lock)] User-defined callback (unless deleted) */
 	void              *ew_arg;  /* [?..?][lock(ew_lock)] Cookie for `ew_cb' */
 	Dee_ssize_t        ew_res;  /* [lock(ew_lock)] Result status. */
@@ -83,9 +83,9 @@ EnumerateWrapper_Decref(/*inherit(always)*/ DREF EnumerateWrapper *self,
 
 /* Create new enumerate/enumerate_index wrapper objects. */
 INTDEF WUNUSED NONNULL((1)) DREF EnumerateWrapper *DCALL
-EnumerateWrapper_New(Dee_enumerate_t cb, void *arg);
+EnumerateWrapper_New(Dee_seq_enumerate_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1)) DREF EnumerateWrapper *DCALL
-EnumerateIndexWrapper_New(Dee_enumerate_index_t cb, void *arg);
+EnumerateIndexWrapper_New(Dee_seq_enumerate_index_t cb, void *arg);
 
 DECL_END
 

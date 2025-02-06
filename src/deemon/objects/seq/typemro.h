@@ -21,9 +21,7 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_TYPEMRO_H 1
 
 #include <deemon/api.h>
-#include <deemon/arg.h>
 #include <deemon/object.h>
-#include <deemon/seq.h>
 #include <deemon/util/lock.h>
 
 /**/

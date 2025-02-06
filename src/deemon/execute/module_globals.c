@@ -1017,7 +1017,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-modexports_enumerate(ModuleExports *self, Dee_enumerate_t proc, void *arg) {
+modexports_enumerate(ModuleExports *self, Dee_seq_enumerate_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	DeeModuleObject *mod = self->me_module;
 	Dee_hash_t i;
@@ -1069,7 +1069,7 @@ PRIVATE struct type_seq modexports_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&modexports_enumerate,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&modexports_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexports_bounditem,
@@ -1322,7 +1322,7 @@ modglobals_delitem_index(ModuleGlobals *self, size_t index) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 modglobals_enumerate_index(ModuleGlobals *__restrict self,
-                           Dee_enumerate_index_t proc,
+                           Dee_seq_enumerate_index_t proc,
                            void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *item;
@@ -1378,7 +1378,7 @@ PRIVATE struct type_seq modglobals_seq = {
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&modglobals_enumerate_index,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&modglobals_enumerate_index,
 	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,

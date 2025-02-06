@@ -29,7 +29,7 @@ __seq_xchitem__(index:?Dint,item)->?O {
 	                    UNPuSIZ "|" UNPuSIZ ":__seq_xchitem__",
 	                    &index, &item))
 		goto err;
-	return DeeSeq_InvokeXchItemIndex(self, index, item);
+	return DeeType_InvokeMethodHint(self, seq_xchitem_index, index, item);
 err:
 	return NULL;
 }
@@ -41,9 +41,9 @@ __seq_xchitem__.seq_xchitem_index([[nonnull]] DeeObject *self, size_t index,
 %{unsupported(auto)}
 %{$empty = "default__seq_xchitem_index__unsupported"}
 %{$with__seq_operator_getitem_index__and__seq_operator_setitem_index = {
-	DREF DeeObject *result = DeeSeq_OperatorGetItemIndex(self, index);
+	DREF DeeObject *result = DeeType_InvokeMethodHint(self, seq_operator_getitem_index, index);
 	if likely(result) {
-		if (DeeSeq_OperatorSetItemIndex(self, index, item))
+		if (DeeType_InvokeMethodHint(self, seq_operator_setitem_index, index, item))
 			goto err_r;
 	}
 	return result;

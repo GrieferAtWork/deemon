@@ -403,7 +403,7 @@ classes_foreach(SeqSimpleProxy *self, Dee_foreach_t proc, void *arg) {
 }
 
 struct proxy_enumerate_data {
-	Dee_enumerate_t ped_proc; /* [1..1] Underlying callback. */
+	Dee_seq_enumerate_t ped_proc; /* [1..1] Underlying callback. */
 	void           *ped_arg;  /* [?..?] Cookie for `ped_proc' */
 };
 
@@ -427,7 +427,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ids_enumerate(SeqSimpleProxy *self, Dee_enumerate_t proc, void *arg) {
+ids_enumerate(SeqSimpleProxy *self, Dee_seq_enumerate_t proc, void *arg) {
 	struct proxy_enumerate_data data;
 	data.ped_proc = proc;
 	data.ped_arg  = arg;
@@ -442,7 +442,7 @@ types_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-types_enumerate(SeqSimpleProxy *self, Dee_enumerate_t proc, void *arg) {
+types_enumerate(SeqSimpleProxy *self, Dee_seq_enumerate_t proc, void *arg) {
 	struct proxy_enumerate_data data;
 	data.ped_proc = proc;
 	data.ped_arg  = arg;
@@ -457,7 +457,7 @@ classes_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-classes_enumerate(SeqSimpleProxy *self, Dee_enumerate_t proc, void *arg) {
+classes_enumerate(SeqSimpleProxy *self, Dee_seq_enumerate_t proc, void *arg) {
 	struct proxy_enumerate_data data;
 	data.ped_proc = proc;
 	data.ped_arg  = arg;
@@ -466,7 +466,7 @@ classes_enumerate(SeqSimpleProxy *self, Dee_enumerate_t proc, void *arg) {
 
 
 struct proxy_enumerate_index_data {
-	Dee_enumerate_index_t peid_proc; /* [1..1] Underlying callback. */
+	Dee_seq_enumerate_index_t peid_proc; /* [1..1] Underlying callback. */
 	void                 *peid_arg;  /* [?..?] Cookie for `peid_proc' */
 };
 
@@ -490,7 +490,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ids_enumerate_index(SeqSimpleProxy *self, Dee_enumerate_index_t proc,
+ids_enumerate_index(SeqSimpleProxy *self, Dee_seq_enumerate_index_t proc,
                     void *arg, size_t start, size_t end) {
 	struct proxy_enumerate_index_data data;
 	data.peid_proc = proc;
@@ -506,7 +506,7 @@ types_enumerate_index_cb(void *arg, size_t key, DeeObject *value) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-types_enumerate_index(SeqSimpleProxy *self, Dee_enumerate_index_t proc,
+types_enumerate_index(SeqSimpleProxy *self, Dee_seq_enumerate_index_t proc,
                       void *arg, size_t start, size_t end) {
 	struct proxy_enumerate_index_data data;
 	data.peid_proc = proc;
@@ -522,7 +522,7 @@ classes_enumerate_index_cb(void *arg, size_t key, DeeObject *value) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-classes_enumerate_index(SeqSimpleProxy *self, Dee_enumerate_index_t proc,
+classes_enumerate_index(SeqSimpleProxy *self, Dee_seq_enumerate_index_t proc,
                         void *arg, size_t start, size_t end) {
 	struct proxy_enumerate_index_data data;
 	data.peid_proc = proc;
@@ -543,8 +543,8 @@ PRIVATE struct type_seq ids_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ids_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&ids_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&ids_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&ids_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ids_enumerate_index,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *))&proxy_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_hasitem,
@@ -590,8 +590,8 @@ PRIVATE struct type_seq types_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&types_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&types_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&types_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&types_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&types_enumerate_index,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *))&proxy_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_hasitem,
@@ -637,8 +637,8 @@ PRIVATE struct type_seq classes_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&classes_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&classes_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&classes_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&classes_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&classes_enumerate_index,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *))&proxy_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_hasitem,

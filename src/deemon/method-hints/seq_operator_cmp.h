@@ -19,13 +19,13 @@
  */
 
 /*[[[deemon
-for (local op, eq, Eq, isEq: {
-	("==", "eq", "Eq", true),
-	("!=", "ne", "Ne", true),
-	("<", "lo", "Lo", false),
-	("<=", "le", "Le", false),
-	(">", "gr", "Gr", false),
-	(">=", "ge", "Ge", false),
+for (local op, eq, Eq, EQ, isEq: {
+	("==", "eq", "Eq", "EQ", true),
+	("!=", "ne", "Ne", "NE", true),
+	("<", "lo", "Lo", "LO", false),
+	("<=", "le", "Le", "LE", false),
+	(">", "gr", "Gr", "GR", false),
+	(">=", "ge", "Ge", "GE", false),
 }) {
 	print('' '/************************************************************************' '/');
 	print('' '/* deemon.Sequence.operator ', op, ' ()                                       *' '/');
@@ -34,17 +34,18 @@ for (local op, eq, Eq, isEq: {
 	print('	DeeObject *rhs;');
 	print('	if (DeeArg_Unpack(argc, argv, "o:__seq_', eq, '__", &rhs))');
 	print('		goto err;');
-	print('	return DeeSeq_OperatorEq(self, rhs);');
+	print('	return DeeType_InvokeMethodHint(self, seq_operator_', eq, ', rhs);');
 	print('err:');
 	print('	return NULL;');
 	print('}');
 	print;
+	print("[[operator(Sequence.OPERATOR_", EQ, ": tp_cmp->tp_", eq, ")]]");
 	print('[[wunused]] DREF DeeObject *');
 	print('__seq_', eq, '__.seq_operator_', eq, '([[nonnull]] DeeObject *lhs,');
 	print('                           [[nonnull]] DeeObject *rhs)');
 	print('%{unsupported(auto("operator ', op, '"))}');
 	print('%{$with__seq_operator_compare', isEq ? '_eq' : '', ' = {');
-	print('	int result = DeeSeq_OperatorCompare', isEq ? 'Eq' : '', '(lhs, rhs);');
+	print('	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare', isEq ? '_eq' : '', ', rhs);');
 	print('	if unlikely(result == Dee_COMPARE_ERR)');
 	print('		goto err;');
 	print('	return_bool(result ', op, ' 0);');
@@ -55,10 +56,6 @@ for (local op, eq, Eq, isEq: {
 	print('}');
 	print('');
 	print('seq_operator_', eq, ' = {');
-	print('#ifndef LOCAL_FOR_OPTIMIZE');
-	print('	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireEq(THIS_TYPE))');
-	print('		return THIS_TYPE->tp_cmp->tp_', eq, ';');
-	print('#endif /' '* !LOCAL_FOR_OPTIMIZE *' '/');
 	print('	if (REQUIRE(seq_operator_compare', isEq ? '_eq' : '', '))');
 	print('		return &$with__seq_operator_compare', isEq ? '_eq' : '', ';');
 	print('};');
@@ -74,17 +71,18 @@ __seq_eq__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_eq__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_eq, rhs);
 err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_EQ: tp_cmp->tp_eq)]]
 [[wunused]] DREF DeeObject *
 __seq_eq__.seq_operator_eq([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator =="))}
 %{$with__seq_operator_compare_eq = {
-	int result = DeeSeq_OperatorCompareEq(lhs, rhs);
+	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare_eq, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result == 0);
@@ -95,10 +93,6 @@ err:
 }
 
 seq_operator_eq = {
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireEq(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_eq;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (REQUIRE(seq_operator_compare_eq))
 		return &$with__seq_operator_compare_eq;
 };
@@ -112,17 +106,18 @@ __seq_ne__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_ne__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_ne, rhs);
 err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_NE: tp_cmp->tp_ne)]]
 [[wunused]] DREF DeeObject *
 __seq_ne__.seq_operator_ne([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator !="))}
 %{$with__seq_operator_compare_eq = {
-	int result = DeeSeq_OperatorCompareEq(lhs, rhs);
+	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare_eq, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result != 0);
@@ -133,10 +128,6 @@ err:
 }
 
 seq_operator_ne = {
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireEq(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_ne;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (REQUIRE(seq_operator_compare_eq))
 		return &$with__seq_operator_compare_eq;
 };
@@ -150,17 +141,18 @@ __seq_lo__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_lo__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_lo, rhs);
 err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_LO: tp_cmp->tp_lo)]]
 [[wunused]] DREF DeeObject *
 __seq_lo__.seq_operator_lo([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator <"))}
 %{$with__seq_operator_compare = {
-	int result = DeeSeq_OperatorCompare(lhs, rhs);
+	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result < 0);
@@ -171,10 +163,6 @@ err:
 }
 
 seq_operator_lo = {
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireEq(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_lo;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (REQUIRE(seq_operator_compare))
 		return &$with__seq_operator_compare;
 };
@@ -188,17 +176,18 @@ __seq_le__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_le__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_le, rhs);
 err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_LE: tp_cmp->tp_le)]]
 [[wunused]] DREF DeeObject *
 __seq_le__.seq_operator_le([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator <="))}
 %{$with__seq_operator_compare = {
-	int result = DeeSeq_OperatorCompare(lhs, rhs);
+	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result <= 0);
@@ -209,10 +198,6 @@ err:
 }
 
 seq_operator_le = {
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireEq(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_le;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (REQUIRE(seq_operator_compare))
 		return &$with__seq_operator_compare;
 };
@@ -226,17 +211,18 @@ __seq_gr__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_gr__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_gr, rhs);
 err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_GR: tp_cmp->tp_gr)]]
 [[wunused]] DREF DeeObject *
 __seq_gr__.seq_operator_gr([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator >"))}
 %{$with__seq_operator_compare = {
-	int result = DeeSeq_OperatorCompare(lhs, rhs);
+	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result > 0);
@@ -247,10 +233,6 @@ err:
 }
 
 seq_operator_gr = {
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireEq(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_gr;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (REQUIRE(seq_operator_compare))
 		return &$with__seq_operator_compare;
 };
@@ -264,17 +246,18 @@ __seq_ge__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_ge__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_ge, rhs);
 err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_GE: tp_cmp->tp_ge)]]
 [[wunused]] DREF DeeObject *
 __seq_ge__.seq_operator_ge([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator >="))}
 %{$with__seq_operator_compare = {
-	int result = DeeSeq_OperatorCompare(lhs, rhs);
+	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result >= 0);
@@ -285,10 +268,6 @@ err:
 }
 
 seq_operator_ge = {
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireEq(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_ge;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (REQUIRE(seq_operator_compare))
 		return &$with__seq_operator_compare;
 };

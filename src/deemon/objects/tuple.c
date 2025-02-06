@@ -1358,7 +1358,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-tuple_enumerate_index(Tuple *self, Dee_enumerate_index_t proc,
+tuple_enumerate_index(Tuple *self, Dee_seq_enumerate_index_t proc,
                       void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
@@ -1412,7 +1412,7 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&tuple_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&tuple_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -1768,7 +1768,7 @@ err:
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* Needed by "seq/flat.c" */
 tuple_mh_foreach_reverse(DeeTupleObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* Needed by "seq/flat.c" */
-tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_enumerate_index_t proc,
+tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                  void *arg, size_t start, size_t end);
 
 
@@ -1791,7 +1791,7 @@ err_temp:
 
 #define nullable_tuple_mh_enumerate_index_reverse tuple_mh_enumerate_index_reverse
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_enumerate_index_t proc,
+tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                  void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	if (end > self->t_size)
@@ -2528,7 +2528,7 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&nullable_tuple_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&nullable_tuple_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,

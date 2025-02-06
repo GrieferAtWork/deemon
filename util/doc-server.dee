@@ -761,7 +761,7 @@ function getModuleRootSubPage(fp: File, path: {string...}) {
 	fp << "</ul></nav>\r\n<main>\r\n";
 	fp << "<h2><b>" << d.kind << "</b>: " << d.typename;
 	if (d.istype && d.object is bound) {
-		local base = Type.__base__(d.object);
+		local base = try Type.__base__(d.object) catch (...) none;
 		if (base !is none && base !== Object) {
 			base = Doc(base);
 			fp << " extends <b>";

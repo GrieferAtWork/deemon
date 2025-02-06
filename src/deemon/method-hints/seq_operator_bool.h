@@ -25,7 +25,7 @@ __seq_bool__()->?Dbool {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":__seq_bool__"))
 		goto err;
-	result = DeeSeq_OperatorBool(self);
+	result = DeeType_InvokeMethodHint0(self, seq_operator_bool);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -39,18 +39,19 @@ default_seq_bool_with_foreach_cb(void *arg, DeeObject *elem);
 )]
 
 [[wunused]]
+[[operator([Sequence, Set, Mapping].OPERATOR_BOOL: tp_cast.tp_bool)]]
 int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator bool"))} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_bool_with_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &default_seq_bool_with_foreach_cb, NULL);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_seq_bool_with_foreach_cb, NULL);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
 }}
 %{$with__seq_operator_size = {
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	return size != 0;
@@ -67,32 +68,9 @@ err:
 
 seq_operator_bool = {
 	DeeMH_seq_operator_size_t seq_operator_size;
-	if (SEQ_CLASS != Dee_SEQCLASS_NONE) {
-		struct type_seq *tp_seq;
-#ifndef LOCAL_FOR_OPTIMIZE
-		if (DeeType_RequireBool(THIS_TYPE))
-			return THIS_TYPE->tp_cast.tp_bool;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-		tp_seq = THIS_TYPE->tp_seq;
-		if (tp_seq) {
-			if (Dee_type_seq_has_custom_tp_size(tp_seq))
-				return &DeeSeq_DefaultBoolWithSize;
-			if (Dee_type_seq_has_custom_tp_sizeob(tp_seq))
-				return &DeeSeq_DefaultBoolWithSizeOb;
-			if (Dee_type_seq_has_custom_tp_foreach(tp_seq))
-				return &DeeSeq_DefaultBoolWithForeach;
-			if (THIS_TYPE->tp_cmp && THIS_TYPE->tp_cmp->tp_compare_eq &&
-			    !DeeType_IsDefaultCompareEq(THIS_TYPE->tp_cmp->tp_compare_eq) &&
-			    !DeeType_IsDefaultCompare(THIS_TYPE->tp_cmp->tp_compare_eq))
-				return &DeeSeq_DefaultBoolWithCompareEq;
-			if (THIS_TYPE->tp_cmp && THIS_TYPE->tp_cmp->tp_eq && !DeeType_IsDefaultEq(THIS_TYPE->tp_cmp->tp_eq))
-				return &DeeSeq_DefaultBoolWithEq;
-			if (THIS_TYPE->tp_cmp && THIS_TYPE->tp_cmp->tp_ne && !DeeType_IsDefaultNe(THIS_TYPE->tp_cmp->tp_ne))
-				return &DeeSeq_DefaultBoolWithNe;
-			if (tp_seq->tp_foreach || DeeType_InheritIter(THIS_TYPE))
-				return &DeeSeq_DefaultBoolWithForeachDefault;
-		}
-	}
+	/* TODO: $with__seq_operator_compare_eq */
+	/* TODO: $with__seq_operator_eq */
+	/* TODO: $with__seq_operator_ne */
 	seq_operator_size = REQUIRE(seq_operator_size);
 	if (seq_operator_size == &default__seq_operator_size__empty)
 		return &$empty;

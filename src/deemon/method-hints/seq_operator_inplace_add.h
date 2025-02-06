@@ -35,12 +35,15 @@ err:
 	return NULL;
 }
 
+
+
+[[operator(Sequence.OPERATOR_INPLACE_ADD: tp_math->tp_inplace_add)]]
 [[wunused]] int
 __seq_inplace_add__.seq_operator_inplace_add([[nonnull]] DREF DeeObject **__restrict p_self,
                                              [[nonnull]] DeeObject *rhs)
 %{unsupported_alias("default__seq_operator_inplace_add__with__DeeSeq_Concat")}
 %{$with__seq_extend = {
-	return DeeSeq_InvokeExtend(*p_self, rhs);
+	return DeeType_InvokeMethodHint(*p_self, seq_extend, rhs);
 }}
 %{$with__DeeSeq_Concat = {
 	DREF DeeObject *result = DeeSeq_Concat(*p_self, rhs);
@@ -64,12 +67,7 @@ err:
 }
 
 seq_operator_inplace_add = {
-	DeeMH_seq_extend_t seq_extend;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireInplaceAdd(THIS_TYPE))
-		return THIS_TYPE->tp_math->tp_inplace_add;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_extend = REQUIRE(seq_extend);
+	DeeMH_seq_extend_t seq_extend = REQUIRE(seq_extend);
 	if (seq_extend)
 		return &$with__seq_extend;
 };

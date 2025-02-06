@@ -691,7 +691,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-fl_enumerate_index(FixedList *self, Dee_enumerate_index_t proc,
+fl_enumerate_index(FixedList *self, Dee_seq_enumerate_index_t proc,
                    void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
@@ -1312,7 +1312,7 @@ PRIVATE struct type_seq fl_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&fl_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&fl_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,

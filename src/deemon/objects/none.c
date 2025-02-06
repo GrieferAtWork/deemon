@@ -314,8 +314,8 @@ DeeNone_OperatorUnpackEx(DeeObject *UNUSED(self), size_t dst_length_min,
 #define DeeNone_OperatorSetRange                (*(int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&_DeeNone_reti0_4)
 #define DeeNone_OperatorForeach                 (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&_DeeNone_rets0_3)
 #define DeeNone_OperatorForeachPair             (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&_DeeNone_rets0_3)
-#define DeeNone_OperatorEnumerate               (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&_DeeNone_rets0_3)
-#define DeeNone_OperatorEnumerateIndex          (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&_DeeNone_rets0_5)
+#define DeeNone_OperatorEnumerate               (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&_DeeNone_rets0_3)
+#define DeeNone_OperatorEnumerateIndex          (*(Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&_DeeNone_rets0_5)
 #define DeeNone_OperatorIterKeys                DeeNone_OperatorVarCopy
 #define DeeNone_OperatorBoundItem               (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
 #define DeeNone_OperatorHasItem                 (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)

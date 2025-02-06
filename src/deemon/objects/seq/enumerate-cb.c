@@ -329,7 +329,7 @@ EnumerateWrapper_Decref(/*inherit(always)*/ DREF EnumerateWrapper *self,
 
 /* Create new enumerate/enumerate_index wrapper objects. */
 INTERN WUNUSED NONNULL((1)) DREF EnumerateWrapper *DCALL
-EnumerateWrapper_New(Dee_enumerate_t cb, void *arg) {
+EnumerateWrapper_New(Dee_seq_enumerate_t cb, void *arg) {
 	DREF EnumerateWrapper *result;
 	result = DeeObject_MALLOC(EnumerateWrapper);
 	if unlikely(!result)
@@ -346,7 +346,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF EnumerateWrapper *DCALL
-EnumerateIndexWrapper_New(Dee_enumerate_index_t cb, void *arg) {
+EnumerateIndexWrapper_New(Dee_seq_enumerate_index_t cb, void *arg) {
 	DREF EnumerateWrapper *result;
 	result = DeeObject_MALLOC(EnumerateWrapper);
 	if unlikely(!result)

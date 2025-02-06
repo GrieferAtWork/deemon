@@ -46,7 +46,7 @@ DeeMA___seq_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":__seq_bool__"))
 		goto err;
-	result = DeeSeq_OperatorBool(self);
+	result = DeeType_InvokeMethodHint0(self, seq_operator_bool);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -60,7 +60,7 @@ PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	if (DeeArg_Unpack(argc, argv, ":__seq_size__"))
 		goto err;
-	return DeeSeq_OperatorSizeOb(self);
+	return DeeType_InvokeMethodHint0(self, seq_operator_sizeob);
 err:
 	return NULL;
 }
@@ -71,7 +71,7 @@ PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	if (DeeArg_Unpack(argc, argv, ":__seq_iter__"))
 		goto err;
-	return DeeSeq_OperatorIter(self);
+	return DeeType_InvokeMethodHint0(self, seq_operator_iter);
 err:
 	return NULL;
 }
@@ -82,31 +82,7 @@ PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_iterkeys__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	if (DeeArg_Unpack(argc, argv, ":__seq_iterkeys__"))
 		goto err;
-	return DeeSeq_OperatorIterKeys(self);
-err:
-	return NULL;
-}
-
-PUBLIC_CONST char const DeeMA___seq_enumerate___name[] = "__seq_enumerate__";
-PUBLIC_CONST char const DeeMA___seq_enumerate___doc[] = "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N";
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
-	Dee_ssize_t foreach_status;
-	struct seq_enumerate_data data;
-	size_t start = 0;
-	size_t end = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":__seq_enumerate__", &data.sed_cb, &start, &end))
-		goto err;
-	if (start == 0 && end == (size_t)-1) {
-		foreach_status = DeeSeq_OperatorEnumerate(self, &seq_enumerate_cb, &data);
-	} else {
-		foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_enumerate_index_cb, &data, start, end);
-	}
-	if unlikely(foreach_status == -1)
-		goto err;
-	if (foreach_status == -2)
-		return data.sed_result;
-	return_none;
+	return DeeType_InvokeMethodHint0(self, seq_iterkeys);
 err:
 	return NULL;
 }
@@ -118,7 +94,7 @@ DeeMA___seq_getitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	DeeObject *index;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_getitem__", &index))
 		goto err;
-	return DeeSeq_OperatorGetItem(self, index);
+	return DeeType_InvokeMethodHint(self, seq_operator_getitem, index);
 err:
 	return NULL;
 }
@@ -130,7 +106,7 @@ DeeMA___seq_delitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	DeeObject *index;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_delitem__", &index))
 		goto err;
-	if (DeeSeq_OperatorDelItem(self, index))
+	if (DeeType_InvokeMethodHint(self, seq_operator_delitem, index))
 		goto err;
 	return_none;
 err:
@@ -144,7 +120,7 @@ DeeMA___seq_setitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	DeeObject *index, *value;
 	if (DeeArg_Unpack(argc, argv, "oo:__seq_setitem__", &index, &value))
 		goto err;
-	if (DeeSeq_OperatorSetItem(self, index, value))
+	if (DeeType_InvokeMethodHint(self, seq_operator_setitem, index, value))
 		goto err;
 	return_none;
 err:
@@ -158,7 +134,7 @@ DeeMA___seq_getrange__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	DeeObject *start, *end;
 	if (DeeArg_Unpack(argc, argv, "oo:__seq_getrange__", &start, &end))
 		goto err;
-	return DeeSeq_OperatorGetRange(self, start, end);
+	return DeeType_InvokeMethodHint(self, seq_operator_getrange, start, end);
 err:
 	return NULL;
 }
@@ -170,7 +146,7 @@ DeeMA___seq_delrange__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	DeeObject *start, *end;
 	if (DeeArg_Unpack(argc, argv, "oo:__seq_delrange__", &start, &end))
 		goto err;
-	if (DeeSeq_OperatorDelRange(self, start, end))
+	if (DeeType_InvokeMethodHint(self, seq_operator_delrange, start, end))
 		goto err;
 	return_none;
 err:
@@ -184,7 +160,7 @@ DeeMA___seq_setrange__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	DeeObject *start, *end, *values;
 	if (DeeArg_Unpack(argc, argv, "ooo:__seq_setrange__", &start, &end, &values))
 		goto err;
-	if (DeeSeq_OperatorSetRange(self, start, end, values))
+	if (DeeType_InvokeMethodHint(self, seq_operator_setrange, start, end, values))
 		goto err;
 	return_none;
 err:
@@ -198,7 +174,7 @@ DeeMA___seq_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	Dee_hash_t result;
 	if (DeeArg_Unpack(argc, argv, ":__seq_hash__"))
 		goto err;
-	result = DeeSeq_OperatorHash(self);
+	result = DeeType_InvokeMethodHint0(self, seq_operator_hash);
 	return DeeInt_NewHash(result);
 err:
 	return NULL;
@@ -212,7 +188,7 @@ DeeMA___seq_compare__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_compare__", &rhs))
 		goto err;
-	result = DeeSeq_OperatorCompare(self, rhs);
+	result = DeeType_InvokeMethodHint(self, seq_operator_compare, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result == 0);
@@ -228,7 +204,7 @@ DeeMA___seq_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_compare_eq__", &rhs))
 		goto err;
-	result = DeeSeq_OperatorCompareEq(self, rhs);
+	result = DeeType_InvokeMethodHint(lhs, seq_operator_compare_eq, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result == 0);
@@ -244,7 +220,7 @@ DeeMA___seq_trycompare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_trycompare_eq__", &rhs))
 		goto err;
-	result = DeeSeq_OperatorTryCompareEq(self, rhs);
+	result = DeeType_InvokeMethodHint(self, seq_operator_trycompare_eq, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result == 0);
@@ -259,7 +235,7 @@ DeeMA___seq_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_eq__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_eq, rhs);
 err:
 	return NULL;
 }
@@ -271,7 +247,7 @@ DeeMA___seq_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_ne__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_ne, rhs);
 err:
 	return NULL;
 }
@@ -283,7 +259,7 @@ DeeMA___seq_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_lo__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_lo, rhs);
 err:
 	return NULL;
 }
@@ -295,7 +271,7 @@ DeeMA___seq_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_le__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_le, rhs);
 err:
 	return NULL;
 }
@@ -307,7 +283,7 @@ DeeMA___seq_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_gr__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_gr, rhs);
 err:
 	return NULL;
 }
@@ -319,7 +295,7 @@ DeeMA___seq_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_ge__", &rhs))
 		goto err;
-	return DeeSeq_OperatorEq(self, rhs);
+	return DeeType_InvokeMethodHint(self, seq_operator_ge, rhs);
 err:
 	return NULL;
 }
@@ -354,6 +330,30 @@ DeeMA___seq_inplace_mul__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	return self;
 err_self:
 	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_enumerate___name[] = "__seq_enumerate__";
+PUBLIC_CONST char const DeeMA___seq_enumerate___doc[] = "(cb:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?X2?O?N";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_data data;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":__seq_enumerate__", &data.sed_cb, &start, &end))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate, &seq_enumerate_cb, &data);
+	} else {
+		foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_enumerate_index_cb, &data, start, end);
+	}
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sed_result;
+	return_none;
 err:
 	return NULL;
 }
@@ -395,12 +395,12 @@ DeeMA___seq_any__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeAnyWithKey(self, key)
-		         : DeeSeq_InvokeAny(self);
+		         ? DeeType_InvokeMethodHint(self, seq_any_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_any);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeAnyWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeAnyWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_any_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_any_with_range, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -423,12 +423,12 @@ DeeMA___seq_all__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeAllWithKey(self, key)
-		         : DeeSeq_InvokeAll(self);
+		         ? DeeType_InvokeMethodHint(self, seq_all_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_all);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeAllWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeAllWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_all_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_all_with_range, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -451,12 +451,12 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeParityWithKey(self, key)
-		         : DeeSeq_InvokeParity(self);
+		         ? DeeType_InvokeMethodHint(self, seq_parity_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_parity);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeParityWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeParityWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_parity_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_parity_with_range, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -479,12 +479,12 @@ DeeMA___seq_min__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeMinWithKey(self, key)
-		         : DeeSeq_InvokeMin(self);
+		         ? DeeType_InvokeMethodHint(self, seq_min_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_min);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeMinWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeMinWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_min_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_min_with_range, start, end);
 	}
 	return result;
 err:
@@ -505,12 +505,12 @@ DeeMA___seq_max__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeMaxWithKey(self, key)
-		         : DeeSeq_InvokeMax(self);
+		         ? DeeType_InvokeMethodHint(self, seq_max_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_max);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeMaxWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeMaxWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_max_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_max_with_range, start, end);
 	}
 	return result;
 err:
@@ -529,9 +529,9 @@ DeeMA___seq_sum__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	                    &start, &end))
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
-		result = DeeSeq_InvokeSum(self);
+		result = DeeType_InvokeMethodHint0(self, seq_sum);
 	} else {
-		result = DeeSeq_InvokeSumWithRange(self, start, end);
+		result = DeeType_InvokeMethodHint(self, seq_sum_with_range, start, end);
 	}
 	return result;
 err:
@@ -547,20 +547,20 @@ DeeMA___seq_count__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:count",
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_count__",
 	                    &item, &start, &end, &key))
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		if (DeeNone_Check(key)) {
-			result = DeeSeq_InvokeCount(self, item);
+			result = DeeType_InvokeMethodHint(self, seq_count, item);
 		} else {
-			result = DeeSeq_InvokeCountWithKey(self, item, key);
+			result = DeeType_InvokeMethodHint(self, seq_count_with_key, item, key);
 		}
 	} else {
 		if (DeeNone_Check(key)) {
-			result = DeeSeq_InvokeCountWithRange(self, item, start, end);
+			result = DeeType_InvokeMethodHint(self, seq_count_with_range, item, start, end);
 		} else {
-			result = DeeSeq_InvokeCountWithRangeAndKey(self, item, start, end, key);
+			result = DeeType_InvokeMethodHint(self, seq_count_with_range_and_key, item, start, end, key);
 		}
 	}
 	if unlikely(result == (size_t)-1)
@@ -583,15 +583,115 @@ DeeMA___seq_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		if (DeeNone_Check(key)) {
-			result = DeeSeq_InvokeContains(self, item);
+			result = DeeType_InvokeMethodHint(self, seq_contains, item);
 		} else {
-			result = DeeSeq_InvokeContainsWithKey(self, item, key);
+			result = DeeType_InvokeMethodHint(self, seq_contains_with_key, item, key);
 		}
 	} else {
 		if (DeeNone_Check(key)) {
-			result = DeeSeq_InvokeContainsWithRange(self, item, start, end);
+			result = DeeType_InvokeMethodHint(self, seq_contains_with_range, item, start, end);
 		} else {
-			result = DeeSeq_InvokeContainsWithRangeAndKey(self, item, start, end, key);
+			result = DeeType_InvokeMethodHint(self, seq_contains_with_range_and_key, item, start, end, key);
+		}
+	}
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_locate___name[] = "__seq_locate__";
+PUBLIC_CONST char const DeeMA___seq_locate___doc[] = "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]";
+PUBLIC_CONST char const DeeMA_Sequence_locate_name[] = "locate";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_locate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *match, *def = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__match_start_end_def,
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_locate__",
+	                    &match, &start, &end, &def))
+		goto err;
+	if (start == 0 && end == (size_t)-1)
+		return DeeType_InvokeMethodHint(self, seq_locate, match, def);
+	return DeeType_InvokeMethodHint(self, seq_locate_with_range, match, start, end, def);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_rlocate___name[] = "__seq_rlocate__";
+PUBLIC_CONST char const DeeMA___seq_rlocate___doc[] = "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]";
+PUBLIC_CONST char const DeeMA_Sequence_rlocate_name[] = "rlocate";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_rlocate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *match, *def = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__match_start_end_def,
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_rlocate__",
+	                    &match, &start, &end, &def))
+		goto err;
+	if (start == 0 && end == (size_t)-1)
+		return DeeType_InvokeMethodHint(self, seq_rlocate, match, def);
+	return DeeType_InvokeMethodHint(self, seq_rlocate_with_range, match, start, end, def);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_startswith___name[] = "__seq_startswith__";
+PUBLIC_CONST char const DeeMA___seq_startswith___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool";
+PUBLIC_CONST char const DeeMA_Sequence_startswith_name[] = "startswith";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_startswith__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	int result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_startswith__",
+	                    &item, &start, &end, &key))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		if (DeeNone_Check(key)) {
+			result = DeeType_InvokeMethodHint(self, seq_startswith, item);
+		} else {
+			result = DeeType_InvokeMethodHint(self, seq_startswith_with_key, item, key);
+		}
+	} else {
+		if (DeeNone_Check(key)) {
+			result = DeeType_InvokeMethodHint(self, seq_startswith_with_range, item, start, end);
+		} else {
+			result = DeeType_InvokeMethodHint(self, seq_startswith_with_range_and_key, item, start, end, key);
+		}
+	}
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_endswith___name[] = "__seq_endswith__";
+PUBLIC_CONST char const DeeMA___seq_endswith___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool";
+PUBLIC_CONST char const DeeMA_Sequence_endswith_name[] = "endswith";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_endswith__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	int result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_endswith__",
+	                    &item, &start, &end, &key))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		if (DeeNone_Check(key)) {
+			result = DeeType_InvokeMethodHint(self, seq_endswith, item);
+		} else {
+			result = DeeType_InvokeMethodHint(self, seq_endswith_with_key, item, key);
+		}
+	} else {
+		if (DeeNone_Check(key)) {
+			result = DeeType_InvokeMethodHint(self, seq_endswith_with_range, item, start, end);
+		} else {
+			result = DeeType_InvokeMethodHint(self, seq_endswith_with_range_and_key, item, start, end, key);
 		}
 	}
 	if unlikely(result < 0)
@@ -606,19 +706,43 @@ PUBLIC_CONST char const DeeMA___seq_find___doc[] = "(item,start=!0,end:?Dint=!A!
 PUBLIC_CONST char const DeeMA_Sequence_find_name[] = "find";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_find__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
-	int result;
 	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
+	size_t result, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_find__",
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_find__",
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeSeq_InvokeFindWithKey(self, item, start, end, key)
-	         : DeeSeq_InvokeFind(self, item, start, end);
-	if unlikely(result < 0)
+	         ? DeeType_InvokeMethodHint(self, seq_find_with_key, item, start, end, key)
+	         : DeeType_InvokeMethodHint(self, seq_find, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	return_bool_(result);
+	if unlikely(result == (size_t)-1)
+		return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_rfind___name[] = "__seq_rfind__";
+PUBLIC_CONST char const DeeMA___seq_rfind___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint";
+PUBLIC_CONST char const DeeMA_Sequence_rfind_name[] = "rfind";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_rfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_rfind__",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? DeeType_InvokeMethodHint(self, seq_rfind_with_key, item, start, end, key)
+	         : DeeType_InvokeMethodHint(self, seq_rfind, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewSize(result);
 err:
 	return NULL;
 }
@@ -633,7 +757,7 @@ DeeMA___seq_erase__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	                    UNPuSIZ "|" UNPuSIZ ":__seq_erase__",
 	                    &index, &count))
 		goto err;
-	if unlikely(DeeSeq_InvokeErase(self, index, count))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_erase, index, count))
 		goto err;
 	return_none;
 err:
@@ -651,7 +775,7 @@ DeeMA___seq_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	                    UNPuSIZ "|" UNPuSIZ ":__seq_insert__",
 	                    &index, &item))
 		goto err;
-	if unlikely(DeeSeq_InvokeInsert(self, index, item))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_insert, index, item))
 		goto err;
 	return_none;
 err:
@@ -669,7 +793,7 @@ DeeMA___seq_insertall__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	                    UNPuSIZ "|" UNPuSIZ ":__seq_insertall__",
 	                    &index, &items))
 		goto err;
-	if unlikely(DeeSeq_InvokeInsertAll(self, index, items))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_insertall, index, items))
 		goto err;
 	return_none;
 err:
@@ -684,7 +808,7 @@ DeeMA___seq_pushfront__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_pushfront__", &item))
 		goto err;
-	if unlikely(DeeSeq_InvokePushFront(self, item))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_pushfront, item))
 		goto err;
 	return_none;
 err:
@@ -700,7 +824,7 @@ DeeMA___seq_append__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_append__", &item))
 		goto err;
-	if unlikely(DeeSeq_InvokeAppend(self, item))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_append, item))
 		goto err;
 	return_none;
 err:
@@ -715,7 +839,7 @@ DeeMA___seq_extend__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	DeeObject *items;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_extend__", &items))
 		goto err;
-	if unlikely(DeeSeq_InvokeExtend(self, items))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_extend, items))
 		goto err;
 	return_none;
 err:
@@ -733,7 +857,7 @@ DeeMA___seq_xchitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	                    UNPuSIZ "|" UNPuSIZ ":__seq_xchitem__",
 	                    &index, &item))
 		goto err;
-	return DeeSeq_InvokeXchItemIndex(self, index, item);
+	return DeeType_InvokeMethodHint(self, seq_xchitem_index, index, item);
 err:
 	return NULL;
 }
@@ -747,7 +871,7 @@ PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___seq_clear__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	if (DeeArg_Unpack(argc, argv, ":__seq_clear__"))
 		goto err;
-	if (DeeSeq_InvokeClear(self))
+	if (DeeType_InvokeMethodHint0(self, seq_clear))
 		goto err;
 	return_none;
 err:
@@ -763,7 +887,7 @@ DeeMA___seq_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
 	                    "|" UNPdSIZ ":__seq_pop__", &index))
 		goto err;
-	return DeeSeq_InvokePop(self, index);
+	return DeeType_InvokeMethodHint(self, seq_pop, index);
 err:
 	return NULL;
 }
@@ -774,7 +898,7 @@ PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___set_iter__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	if (DeeArg_Unpack(argc, argv, ":__set_iter__"))
 		goto err;
-	return DeeSet_OperatorIter(self);
+	return DeeType_InvokeMethodHint0(self, set_operator_iter);
 err:
 	return NULL;
 }
@@ -785,7 +909,7 @@ PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___set_size__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	if (DeeArg_Unpack(argc, argv, ":__set_size__"))
 		goto err;
-	return DeeSet_OperatorSizeOb(self);
+	return DeeType_InvokeMethodHint0(self, set_operator_sizeob);
 err:
 	return NULL;
 }
@@ -797,7 +921,7 @@ DeeMA___set_hash__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	Dee_hash_t result;
 	if (DeeArg_Unpack(argc, argv, ":__set_hash__"))
 		goto err;
-	result = DeeSet_OperatorHash(self);
+	result = DeeType_InvokeMethodHint0(self, set_operator_hash);
 	return DeeInt_NewHash(result);
 err:
 	return NULL;
@@ -810,7 +934,7 @@ DeeMA___map_getitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	DeeObject *key;
 	if (DeeArg_Unpack(argc, argv, "o:__map_getitem__", &key))
 		goto err;
-	return DeeMap_OperatorGetItem(self, key);
+	return DeeType_InvokeMethodHint(self, map_operator_getitem, key);
 err:
 	return NULL;
 }
@@ -822,25 +946,24 @@ DeeMA___map_contains__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	DeeObject *key;
 	if (DeeArg_Unpack(argc, argv, "o:__map_contains__", &key))
 		goto err;
-	return DeeMap_OperatorContains(self, key);
+	return DeeType_InvokeMethodHint(self, map_operator_contains, key);
 err:
 	return NULL;
 }
 
 PUBLIC_CONST char const DeeMA___map_enumerate___name[] = "__map_enumerate__";
-PUBLIC_CONST char const DeeMA___map_enumerate___doc[] = "(cb:?DCallable,startkey?:?Dint,endkey?:?Dint)->?X2?O?N";
+PUBLIC_CONST char const DeeMA___map_enumerate___doc[] = "(cb:?DCallable,startkey?,endkey?)->?X2?O?N";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___map_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
 	Dee_ssize_t foreach_status;
 	struct seq_enumerate_data data;
-	size_t startkey = 0;
-	size_t endkey = (size_t)-1;
-	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":__map_enumerate__", &data.sed_cb, &startkey, &endkey))
+	DeeObject *startkey, *endkey = NULL;
+	if (DeeArg_Unpack(argc, argv, "o|oo:__map_enumerate__", &data.sed_cb, &startkey, &endkey))
 		goto err;
-	if (startkey == 0 && endkey == (size_t)-1) {
-		foreach_status = DeeMap_OperatorEnumerate(self, &seq_enumerate_cb, &data);
+	if (endkey) {
+		foreach_status = DeeType_InvokeMethodHint(self, map_enumerate_range, &seq_enumerate_cb, &data);
 	} else {
-		foreach_status = DeeMap_OperatorEnumerateIndex(self, &seq_enumerate_index_cb, &data, startkey, endkey);
+		foreach_status = DeeType_InvokeMethodHint(self, map_enumerate, &seq_enumerate_cb, &data);
 	}
 	if unlikely(foreach_status == -1)
 		goto err;

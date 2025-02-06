@@ -98,7 +98,7 @@ DFUNDEF int (DCALL _DeeNone_reti0_6)(void *, void *, void *, void *, void *, voi
 
 /* Always returns ITER_DONE */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeNone_OperatorIterNext(DeeObject *__restrict self);
+DeeNone_OperatorIterNext(DeeObject *__restrict self); /* TODO: Rename to "_DeeNone_retsm1_1" */
 
 
 DECL_END

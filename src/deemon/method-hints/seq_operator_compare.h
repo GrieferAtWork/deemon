@@ -26,7 +26,7 @@ __seq_compare__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_compare__", &rhs))
 		goto err;
-	result = DeeSeq_OperatorCompare(self, rhs);
+	result = DeeType_InvokeMethodHint(self, seq_operator_compare, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result == 0);
@@ -34,12 +34,13 @@ err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_LO: tp_cmp->tp_compare)]]
 [[wunused]] int
 __seq_compare__.seq_operator_compare([[nonnull]] DeeObject *lhs,
                                      [[nonnull]] DeeObject *rhs)
 %{unsupported(auto)}
 %{$empty = {
-	int rhs_nonempty = DeeSeq_OperatorBool(rhs);
+	int rhs_nonempty = DeeType_InvokeMethodHint0(rhs, seq_operator_bool);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
 	return rhs_nonempty ? -1 : 0;
@@ -62,7 +63,7 @@ err:
 		data.scf_sgi_other          = rhs;
 		data.scf_sgi_oindex         = 0;
 		data.scf_sgi_ogetitem_index = tp_rhs->tp_seq->tp_getitem_index_fast;
-		result = DeeSeq_OperatorForeach(lhs, &seq_compare__lhs_foreach__rhs_size_and_getitem_index_fast__cb, &data);
+		result = DeeType_InvokeMethodHint(lhs, seq_operator_foreach, &seq_compare__lhs_foreach__rhs_size_and_getitem_index_fast__cb, &data);
 		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
 			result = SEQ_COMPARE_FOREACH_RESULT_LESS;
 	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
@@ -73,7 +74,7 @@ err:
 		data.scf_sgi_other          = rhs;
 		data.scf_sgi_oindex         = 0;
 		data.scf_sgi_ogetitem_index = tp_rhs->tp_seq->tp_trygetitem_index;
-		result = DeeSeq_OperatorForeach(lhs, &seq_compare__lhs_foreach__rhs_size_and_trygetitem_index__cb, &data);
+		result = DeeType_InvokeMethodHint(lhs, seq_operator_foreach, &seq_compare__lhs_foreach__rhs_size_and_trygetitem_index__cb, &data);
 		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
 			result = SEQ_COMPARE_FOREACH_RESULT_LESS;
 	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
@@ -85,7 +86,7 @@ err:
 		data.scf_sgi_other          = rhs;
 		data.scf_sgi_oindex         = 0;
 		data.scf_sgi_ogetitem_index = tp_rhs->tp_seq->tp_getitem_index;
-		result = DeeSeq_OperatorForeach(lhs, &seq_compare__lhs_foreach__rhs_size_and_getitem_index__cb, &data);
+		result = DeeType_InvokeMethodHint(lhs, seq_operator_foreach, &seq_compare__lhs_foreach__rhs_size_and_getitem_index__cb, &data);
 		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
 			result = SEQ_COMPARE_FOREACH_RESULT_LESS;
 	} else if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
@@ -99,7 +100,7 @@ err:
 		} else {
 			data.scf_sg_other    = rhs;
 			data.scf_sg_ogetitem = tp_rhs->tp_seq->tp_getitem;
-			result = DeeSeq_OperatorForeach(lhs, &seq_compare__lhs_foreach__rhs_sizeob_and_getitem__cb, &data);
+			result = DeeType_InvokeMethodHint(lhs, seq_operator_foreach, &seq_compare__lhs_foreach__rhs_sizeob_and_getitem__cb, &data);
 			if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
 				int temp = DeeObject_CmpLoAsBool(data.scf_sg_oindex, data.scf_sg_osize);
 				Dee_Decref(data.scf_sg_oindex);
@@ -118,7 +119,7 @@ err:
 		rhs_iter = (*tp_rhs->tp_seq->tp_iter)(rhs);
 		if unlikely(!rhs_iter)
 			goto err;
-		result = DeeSeq_OperatorForeach(lhs, &seq_compare__lhs_foreach__rhs_iter__cb, rhs_iter);
+		result = DeeType_InvokeMethodHint(lhs, seq_operator_foreach, &seq_compare__lhs_foreach__rhs_iter__cb, rhs_iter);
 		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
 			DREF DeeObject *next = DeeObject_IterNext(rhs_iter);
 			Dee_Decref(rhs_iter);
@@ -159,7 +160,7 @@ err:
 	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
 	ASSERT(rhs_tp_foreach);
 	lhs_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(lhs));
-	lhs_size = DeeSeq_OperatorSize(lhs);
+	lhs_size = DeeType_InvokeMethodHint0(lhs, seq_operator_size);
 	if unlikely(lhs_size == (size_t)-1)
 		goto err;
 	if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
@@ -227,7 +228,7 @@ err:
 	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
 	ASSERT(rhs_tp_foreach);
 	lhs_getitem_index = DeeType_RequireSeqOperatorGetItemIndex(Dee_TYPE(lhs));
-	lhs_size = DeeSeq_OperatorSize(lhs);
+	lhs_size = DeeType_InvokeMethodHint0(lhs, seq_operator_size);
 	if unlikely(lhs_size == (size_t)-1)
 		goto err;
 	if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
@@ -295,7 +296,7 @@ err:
 	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
 	ASSERT(rhs_tp_foreach);
 	lhs_getitem = DeeType_RequireSeqOperatorGetItem(Dee_TYPE(lhs));
-	lhs_sizeob = DeeSeq_OperatorSizeOb(lhs);
+	lhs_sizeob = DeeType_InvokeMethodHint0(lhs, seq_operator_sizeob);
 	if unlikely(!lhs_sizeob)
 		goto err;
 	if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
@@ -370,10 +371,6 @@ err:
 seq_operator_compare = {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireCompare(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_compare;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (THIS_TYPE->tp_seq &&
 	    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
 	    THIS_TYPE->tp_seq->tp_size)

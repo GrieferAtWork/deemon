@@ -29,7 +29,7 @@ __seq_insert__(index:?Dint,item) {
 	                    UNPuSIZ "|" UNPuSIZ ":__seq_insert__",
 	                    &index, &item))
 		goto err;
-	if unlikely(DeeSeq_InvokeInsert(self, index, item))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_insert, index, item))
 		goto err;
 	return_none;
 err:
@@ -49,7 +49,7 @@ int __seq_insert__.seq_insert([[nonnull]] DeeObject *self, size_t index,
 	if unlikely(!item_tuple)
 		goto err;
 	DeeTuple_SET(item_tuple, 0, item);
-	result = DeeSeq_InvokeInsertAll(self, index, (DeeObject *)item_tuple);
+	result = DeeType_InvokeMethodHint(self, seq_insertall, index, (DeeObject *)item_tuple);
 	DeeTuple_DecrefSymbolic((DeeObject *)item_tuple);
 	return result;
 err:

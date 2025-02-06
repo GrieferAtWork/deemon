@@ -253,7 +253,7 @@ err_temp:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_sgi_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
-                       Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+                       Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
@@ -309,7 +309,7 @@ err_temp:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_sgif_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
-                        Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+                        Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
@@ -360,7 +360,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_stgi_enumerate_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
-                        Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+                        Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (OVERFLOW_UADD(start, self->dssgi_start, &start))
@@ -907,7 +907,7 @@ PRIVATE struct type_seq ds_sgi_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sgi_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&ds_sgi_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_sgi_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -954,7 +954,7 @@ PRIVATE struct type_seq ds_sgif_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sgif_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&ds_sgif_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_sgif_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -1001,7 +1001,7 @@ PRIVATE struct type_seq ds_stgi_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_stgi_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&ds_stgi_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_stgi_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -1627,7 +1627,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_sg_enumerate(DefaultSequence_WithSizeAndGetItem *self, Dee_enumerate_t proc, void *arg) {
+ds_sg_enumerate(DefaultSequence_WithSizeAndGetItem *self, Dee_seq_enumerate_t proc, void *arg) {
 	DREF DeeObject *index;
 	Dee_ssize_t temp, result = 0;
 	int error;
@@ -1679,7 +1679,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_sg_enumerate_index(DefaultSequence_WithSizeAndGetItem *self,
-                      Dee_enumerate_index_t proc,
+                      Dee_seq_enumerate_index_t proc,
                       void *arg, size_t start, size_t end) {
 	DREF DeeObject *index, *endindex;
 	Dee_ssize_t temp, result = 0;
@@ -1808,7 +1808,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-ds_tsg_enumerate(DefaultSequence_WithTSizeAndGetItem *self, Dee_enumerate_t proc, void *arg) {
+ds_tsg_enumerate(DefaultSequence_WithTSizeAndGetItem *self, Dee_seq_enumerate_t proc, void *arg) {
 	DREF DeeObject *index;
 	Dee_ssize_t temp, result = 0;
 	int error;
@@ -1860,7 +1860,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_tsg_enumerate_index(DefaultSequence_WithTSizeAndGetItem *self,
-                       Dee_enumerate_index_t proc,
+                       Dee_seq_enumerate_index_t proc,
                        void *arg, size_t start, size_t end) {
 	DREF DeeObject *index, *endindex;
 	Dee_ssize_t temp, result = 0;
@@ -2033,8 +2033,8 @@ PRIVATE struct type_seq ds_sg_seq = {
 	/* .tp_setrange           = */ NULL,
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sg_foreach,
 	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_enumerate          = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&ds_sg_enumerate,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&ds_sg_enumerate_index,
+	/* .tp_enumerate          = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&ds_sg_enumerate,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_sg_enumerate_index,
 	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_sg_bounditem,
 	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_sg_hasitem,
@@ -2066,8 +2066,8 @@ PRIVATE struct type_seq ds_tsg_seq = {
 	/* .tp_setrange           = */ NULL,
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_tsg_foreach,
 	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_enumerate          = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&ds_tsg_enumerate,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&ds_tsg_enumerate_index,
+	/* .tp_enumerate          = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&ds_tsg_enumerate,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&ds_tsg_enumerate_index,
 	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_tsg_bounditem,
 	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_tsg_hasitem,

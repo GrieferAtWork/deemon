@@ -158,7 +158,7 @@ rs_gii_visit(DefaultReversed_WithGetItemIndex *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rs_gii_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
-                       Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+                       Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (end > self->drwgii_size)
@@ -189,7 +189,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rs_giif_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
-                        Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+                        Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (end > self->drwgii_size)
@@ -211,7 +211,7 @@ err_temp:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rs_tgii_enumerate_index(DefaultReversed_WithGetItemIndex *__restrict self,
-                        Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+                        Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (end > self->drwgii_size)
@@ -389,7 +389,7 @@ PRIVATE struct type_seq rs_gii_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&rs_gii_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&rs_gii_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -437,7 +437,7 @@ PRIVATE struct type_seq rs_giif_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&rs_giif_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&rs_giif_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -484,7 +484,7 @@ PRIVATE struct type_seq rs_tgii_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&rs_tgii_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&rs_tgii_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,

@@ -35,10 +35,10 @@
 DECL_BEGIN
 
 union mhc_slot {
-	DREF DeeObject   *c_object;
+	DREF DeeObject   *c_object;   /* [1..1][valid_if(...)] User-defined function operator (from class) */
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-	Dee_objmethod_t   c_method;
-	Dee_kwobjmethod_t c_kwmethod;
+	Dee_objmethod_t   c_method;   /* [1..1][valid_if(...)] Native (but not method-hint-based) objmethod callback. */
+	Dee_kwobjmethod_t c_kwmethod; /* [1..1][valid_if(...)] Native (but not method-hint-based) kw-objmethod callback. */
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 };
 
@@ -59,13 +59,11 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_operator_iter_t mh_seq_operator_iter;
 	DeeMH_seq_operator_foreach_t mh_seq_operator_foreach;
 	DeeMH_seq_operator_foreach_pair_t mh_seq_operator_foreach_pair;
-	DeeMH_seq_operator_iterkeys_t mh_seq_operator_iterkeys;
-	DeeMH_seq_operator_enumerate_t mh_seq_operator_enumerate;
-	DeeMH_seq_operator_enumerate_index_t mh_seq_operator_enumerate_index;
+	DeeMH_seq_iterkeys_t mh_seq_iterkeys;
 	DeeMH_seq_operator_getitem_t mh_seq_operator_getitem;
 	DeeMH_seq_operator_getitem_index_t mh_seq_operator_getitem_index;
-	DeeMH_seq_operator_trygetitem_index_t mh_seq_operator_trygetitem_index;
 	DeeMH_seq_operator_trygetitem_t mh_seq_operator_trygetitem;
+	DeeMH_seq_operator_trygetitem_index_t mh_seq_operator_trygetitem_index;
 	DeeMH_seq_operator_hasitem_t mh_seq_operator_hasitem;
 	DeeMH_seq_operator_hasitem_index_t mh_seq_operator_hasitem_index;
 	DeeMH_seq_operator_bounditem_t mh_seq_operator_bounditem;
@@ -95,11 +93,13 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_operator_ge_t mh_seq_operator_ge;
 	DeeMH_seq_operator_inplace_add_t mh_seq_operator_inplace_add;
 	DeeMH_seq_operator_inplace_mul_t mh_seq_operator_inplace_mul;
-	DeeMH_seq_foreach_reverse_t mh_seq_foreach_reverse;
-	DeeMH_seq_enumerate_index_reverse_t mh_seq_enumerate_index_reverse;
+	DeeMH_seq_enumerate_t mh_seq_enumerate;
+	DeeMH_seq_enumerate_index_t mh_seq_enumerate_index;
 	DeeMH_seq_makeenumeration_t mh_seq_makeenumeration;
 	DeeMH_seq_makeenumeration_with_int_range_t mh_seq_makeenumeration_with_int_range;
 	DeeMH_seq_makeenumeration_with_range_t mh_seq_makeenumeration_with_range;
+	DeeMH_seq_foreach_reverse_t mh_seq_foreach_reverse;
+	DeeMH_seq_enumerate_index_reverse_t mh_seq_enumerate_index_reverse;
 	DeeMH_seq_trygetfirst_t mh_seq_trygetfirst;
 	DeeMH_seq_getfirst_t mh_seq_getfirst;
 	DeeMH_seq_boundfirst_t mh_seq_boundfirst;
@@ -141,8 +141,22 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_contains_with_range_t mh_seq_contains_with_range;
 	DeeMH_seq_contains_with_range_and_key_t mh_seq_contains_with_range_and_key;
 	DeeMH_seq_operator_contains_t mh_seq_operator_contains;
+	DeeMH_seq_locate_t mh_seq_locate;
+	DeeMH_seq_locate_with_range_t mh_seq_locate_with_range;
+	DeeMH_seq_rlocate_t mh_seq_rlocate;
+	DeeMH_seq_rlocate_with_range_t mh_seq_rlocate_with_range;
+	DeeMH_seq_startswith_t mh_seq_startswith;
+	DeeMH_seq_startswith_with_key_t mh_seq_startswith_with_key;
+	DeeMH_seq_startswith_with_range_t mh_seq_startswith_with_range;
+	DeeMH_seq_startswith_with_range_and_key_t mh_seq_startswith_with_range_and_key;
+	DeeMH_seq_endswith_t mh_seq_endswith;
+	DeeMH_seq_endswith_with_key_t mh_seq_endswith_with_key;
+	DeeMH_seq_endswith_with_range_t mh_seq_endswith_with_range;
+	DeeMH_seq_endswith_with_range_and_key_t mh_seq_endswith_with_range_and_key;
 	DeeMH_seq_find_t mh_seq_find;
 	DeeMH_seq_find_with_key_t mh_seq_find_with_key;
+	DeeMH_seq_rfind_t mh_seq_rfind;
+	DeeMH_seq_rfind_with_key_t mh_seq_rfind_with_key;
 	DeeMH_seq_erase_t mh_seq_erase;
 	DeeMH_seq_insert_t mh_seq_insert;
 	DeeMH_seq_insertall_t mh_seq_insertall;
@@ -175,23 +189,30 @@ struct Dee_type_mh_cache {
 	DeeMH_map_operator_hasitem_string_hash_t mh_map_operator_hasitem_string_hash;
 	DeeMH_map_operator_hasitem_string_len_hash_t mh_map_operator_hasitem_string_len_hash;
 	DeeMH_map_operator_contains_t mh_map_operator_contains;
-	DeeMH_map_operator_enumerate_t mh_map_operator_enumerate;
-	DeeMH_map_operator_enumerate_index_t mh_map_operator_enumerate_index;
+	DeeMH_map_enumerate_t mh_map_enumerate;
 /*[[[end]]]*/
 	/* clang-format on */
 
 	/* Method hint attribute data caches.
-	 * All of these are [0..1][lock(WRITE_ONCE)] */
+	 * All of these are [0..1][lock(WRITE_ONCE)]
+	 *
+	 * The effectively valid variant is applicable only when specific
+	 * default impl are linked to operators above. For example:
+	 * >> mhc___seq_all__.c_object:
+	 * >> [valid_if(mh_seq_all == &default__seq_all__with_callobjectcache___seq_all__ ||
+	 * >>           mh_seq_all_with_key == &default__seq_all_with_key__with_callobjectcache___seq_all__ ||
+	 * >>           mh_seq_all_with_range == &default__seq_all_with_range__with_callobjectcache___seq_all__ ||
+	 * >>           mh_seq_all_with_range_and_key == &default__seq_all_with_range_and_key__with_callobjectcache___seq_all__)]
+	 */
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 54
+#define MHC_COUNT 59
 #define MHC_FIRST mhc___seq_bool__
 	union mhc_slot mhc___seq_bool__;
 	union mhc_slot mhc___seq_size__;
 	union mhc_slot mhc___seq_iter__;
 	union mhc_slot mhc___seq_iterkeys__;
-	union mhc_slot mhc___seq_enumerate__;
 	union mhc_slot mhc___seq_getitem__;
 	union mhc_slot mhc___seq_delitem__;
 	union mhc_slot mhc___seq_setitem__;
@@ -210,6 +231,7 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc___seq_ge__;
 	union mhc_slot mhc___seq_inplace_add__;
 	union mhc_slot mhc___seq_inplace_mul__;
+	union mhc_slot mhc___seq_enumerate__;
 	union mhc_slot mhc___seq_enumerate_items__;
 	union mhc_slot mhc_get___seq_first__;
 	union mhc_slot mhc_del___seq_first__;
@@ -225,7 +247,12 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc___seq_sum__;
 	union mhc_slot mhc___seq_count__;
 	union mhc_slot mhc___seq_contains__;
+	union mhc_slot mhc___seq_locate__;
+	union mhc_slot mhc___seq_rlocate__;
+	union mhc_slot mhc___seq_startswith__;
+	union mhc_slot mhc___seq_endswith__;
 	union mhc_slot mhc___seq_find__;
+	union mhc_slot mhc___seq_rfind__;
 	union mhc_slot mhc___seq_erase__;
 	union mhc_slot mhc___seq_insert__;
 	union mhc_slot mhc___seq_insertall__;

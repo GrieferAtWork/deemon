@@ -30,9 +30,9 @@ __seq_sum__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?O {
 	                    &start, &end))
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
-		result = DeeSeq_InvokeSum(self);
+		result = DeeType_InvokeMethodHint0(self, seq_sum);
 	} else {
-		result = DeeSeq_InvokeSumWithRange(self, start, end);
+		result = DeeType_InvokeMethodHint(self, seq_sum_with_range, start, end);
 	}
 	return result;
 err:
@@ -46,7 +46,7 @@ __seq_sum__.seq_sum([[nonnull]] DeeObject *__restrict self)
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
 	Dee_accu_init(&accu);
-	foreach_status = DeeSeq_OperatorForeach(self, &Dee_accu_add, &accu);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &Dee_accu_add, &accu);
 	if unlikely(foreach_status < 0)
 		goto err;
 	return Dee_accu_pack(&accu);
@@ -76,11 +76,11 @@ seq_sum_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 __seq_sum__.seq_sum_with_range([[nonnull]] DeeObject *__restrict self,
                                size_t start, size_t end)
 %{unsupported(auto)} %{$empty = return_none}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_sum_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_sum_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
 	Dee_accu_init(&accu);
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_sum_enumerate_cb, &accu, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_sum_enumerate_cb, &accu, start, end);
 	if unlikely(foreach_status < 0)
 		goto err;
 	return Dee_accu_pack(&accu);
@@ -100,10 +100,10 @@ seq_sum = {
 };
 
 seq_sum_with_range = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 

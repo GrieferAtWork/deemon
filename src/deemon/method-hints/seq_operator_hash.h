@@ -25,7 +25,7 @@ __seq_hash__()->?Dint {
 	Dee_hash_t result;
 	if (DeeArg_Unpack(argc, argv, ":__seq_hash__"))
 		goto err;
-	result = DeeSeq_OperatorHash(self);
+	result = DeeType_InvokeMethodHint0(self, seq_operator_hash);
 	return DeeInt_NewHash(result);
 err:
 	return NULL;
@@ -51,6 +51,8 @@ INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSeq_HandleHashError(DeeObject *self);
 #endif /* !DEFINED_DeeSeq_HandleHashError */
 )]
 
+
+[[operator(Sequence.OPERATOR_HASH: tp_cmp->tp_hash)]]
 [[wunused]]
 Dee_hash_t __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *self)
 %{unsupported({
@@ -63,7 +65,7 @@ Dee_hash_t __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *self)
 	struct default_seq_hash_with_foreach_data data;
 	data.sqhwf_result   = DEE_HASHOF_EMPTY_SEQUENCE;
 	data.sqhwf_nonempty = false;
-	if unlikely(DeeSeq_OperatorForeach(self, &default_seq_hash_with_foreach_cb, &data))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_seq_hash_with_foreach_cb, &data))
 		goto err;
 	return data.sqhwf_result;
 err:
@@ -86,12 +88,7 @@ err:
 }
 
 seq_operator_hash = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireHash(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_hash;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_foreach = REQUIRE(seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach)

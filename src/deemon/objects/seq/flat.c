@@ -55,7 +55,7 @@ DECL_BEGIN
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "../tuple.c" */
 tuple_mh_foreach_reverse(DeeTupleObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "../tuple.c" */
-tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_enumerate_index_t proc,
+tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                  void *arg, size_t start, size_t end);
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -78,7 +78,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeSeq_InvokeEnumerateIndexReverse(DeeObject *__restrict self,
-                                   Dee_enumerate_index_t cb, void *arg,
+                                   Dee_seq_enumerate_index_t cb, void *arg,
                                    size_t start, size_t end) {
 	Dee_ssize_t result;
 	DREF DeeTupleObject *astuple;
@@ -329,7 +329,7 @@ err:
 
 
 struct sf_enumerate_index_data {
-	Dee_enumerate_index_t sfeid_proc;   /* [1..1] Underlying proc */
+	Dee_seq_enumerate_index_t sfeid_proc;   /* [1..1] Underlying proc */
 	void                 *sfeid_arg;    /* [?..?] Cookie for `sfeid_proc' */
 	Dee_ssize_t           sfeid_result; /* Nested enumeration result */
 	size_t                sfeid_index;  /* Next index */
@@ -395,7 +395,7 @@ sf_enumerate_index_foreach_cb(void *arg, DeeObject *subseq) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-sf_enumerate_index(SeqFlat *__restrict self, Dee_enumerate_index_t proc,
+sf_enumerate_index(SeqFlat *__restrict self, Dee_seq_enumerate_index_t proc,
                    void *arg, size_t start, size_t end) {
 	Dee_ssize_t status;
 	struct sf_enumerate_index_data data;
@@ -413,7 +413,7 @@ sf_enumerate_index(SeqFlat *__restrict self, Dee_enumerate_index_t proc,
 }
 
 struct sf_enumerate_index_reverse_data {
-	Dee_enumerate_index_t sfeird_proc;   /* [1..1] Underlying proc */
+	Dee_seq_enumerate_index_t sfeird_proc;   /* [1..1] Underlying proc */
 	void                 *sfeird_arg;    /* [?..?] Cookie for `sfeird_proc' */
 	Dee_ssize_t           sfeird_result; /* Nested enumeration result */
 	size_t                sfeird_index;  /* Next index */
@@ -489,7 +489,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-sf_mh_enumerate_index_reverse(SeqFlat *__restrict self, Dee_enumerate_index_t proc,
+sf_mh_enumerate_index_reverse(SeqFlat *__restrict self, Dee_seq_enumerate_index_t proc,
                               void *arg, size_t start, size_t end) {
 	size_t fullsize;
 	Dee_ssize_t status;
@@ -662,7 +662,7 @@ PRIVATE struct type_seq sf_seq = {
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sf_foreach,
 	/* .tp_foreach_pair       = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&sf_foreach_pair,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&sf_enumerate_index,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&sf_enumerate_index,
 	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,

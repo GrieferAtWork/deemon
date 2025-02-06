@@ -576,6 +576,9 @@
 		<ClInclude Include="..\include\deemon\objmethod.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\operator-hints.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\property.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -690,16 +693,19 @@
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h">
 			<Filter>src\execute</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_contains.h">
+		<ClInclude Include="..\src\deemon\method-hints\map_enumerate.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_enumerate.h">
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_contains.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_getitem.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\method-hints.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_iter.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_all.h">
@@ -717,7 +723,16 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_count.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_endswith.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_enumerate.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_enumerate_items.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_enumerate_reverse.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_erase.h">
@@ -738,7 +753,13 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_insertall.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_iterkeys.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_last.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_locate.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_minmax.h">
@@ -765,12 +786,6 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_delrange.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_enumerate.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_foreach_reverse.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_getitem.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -787,9 +802,6 @@
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_iter.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_iterkeys.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_setitem.h">
@@ -811,6 +823,18 @@
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_pushfront.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_remove.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_rfind.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_rlocate.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_startswith.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_sum.h">

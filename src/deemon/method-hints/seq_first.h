@@ -59,7 +59,7 @@ err:
 	return NULL;
 }}
 %{$with__seq_operator_trygetitem_index = {
-	return DeeSeq_OperatorTryGetItemIndex(self, 0);
+	return DeeType_InvokeMethodHint(self, seq_operator_trygetitem_index, 0);
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_default_getfirst_with_foreach_cb)]] {
 	DREF DeeObject *result;
@@ -87,10 +87,10 @@ __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 	return NULL;
 }}
 %{$with__seq_operator_getitem_index = {
-	return DeeSeq_OperatorGetItemIndex(self, 0);
+	return DeeType_InvokeMethodHint(self, seq_operator_getitem_index, 0);
 }}
 %{$with__seq_trygetfirst = {
-	DREF DeeObject *result = DeeSeq_InvokeTryGetFirst(self);
+	DREF DeeObject *result = DeeType_InvokeMethodHint0(self, seq_trygetfirst);
 	if unlikely(result == ITER_DONE) {
 		err_unbound_attribute_string(Dee_TYPE(self), "first");
 		result = NULL;
@@ -106,10 +106,10 @@ __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 __seq_first__.seq_boundfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias($empty)} %{$empty = Dee_BOUND_MISSING}
 %{$with__seq_operator_bounditem_index = {
-	return DeeSeq_OperatorBoundItemIndex(self, 0);
+	return DeeType_InvokeMethodHint(self, seq_operator_bounditem_index, 0);
 }}
 %{$with__seq_trygetfirst = {
-	DREF DeeObject *result = DeeSeq_InvokeTryGetFirst(self);
+	DREF DeeObject *result = DeeType_InvokeMethodHint0(self, seq_trygetfirst);
 	if (result == ITER_DONE)
 		return Dee_BOUND_NO;
 	if unlikely(!result)
@@ -127,7 +127,7 @@ __seq_first__.seq_delfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del first"); })}
 %{$empty = 0}
 %{$with__seq_operator_delitem_index = {
-	int result = DeeSeq_OperatorDelItemIndex(self, 0);
+	int result = DeeType_InvokeMethodHint(self, seq_operator_delitem_index, 0);
 	if (result < 0 && DeeError_Catch(&DeeError_IndexError))
 		result = 0;
 	return result;
@@ -143,7 +143,7 @@ __seq_first__.seq_setfirst([[nonnull]] DeeObject *self,
 %{unsupported({ return err_seq_unsupportedf(self, "first = %r", value); })}
 %{$empty = { return err_empty_sequence(self); }}
 %{$with__seq_operator_setitem_index = {
-	return DeeSeq_OperatorSetItemIndex(self, 0, value);
+	return DeeType_InvokeMethodHint(self, seq_operator_setitem_index, 0, value);
 }} {
 	return LOCAL_SETATTR(self, value);
 }

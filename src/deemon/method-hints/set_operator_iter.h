@@ -24,12 +24,13 @@
 __set_iter__()->?DIterator {
 	if (DeeArg_Unpack(argc, argv, ":__set_iter__"))
 		goto err;
-	return DeeSet_OperatorIter(self);
+	return DeeType_InvokeMethodHint0(self, set_operator_iter);
 err:
 	return NULL;
 }
 
 
+[[operator([Set, Mapping].OPERATOR_ITER: tp_seq->tp_iter)]]
 [[wunused]] DREF DeeObject *
 __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
@@ -37,7 +38,7 @@ __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_operator_iter = {
 	DREF DeeObject *iter;
 	DREF DistinctIterator *result;
-	iter = DeeSeq_OperatorIter(self);
+	iter = DeeType_InvokeMethodHint0(self, seq_operator_iter);
 	if unlikely(!iter)
 		goto err;
 	result = DeeGCObject_MALLOC(DistinctIterator);
@@ -93,6 +94,7 @@ default_set_foreach_unique_cb(void *arg, DeeObject *item) {
 #endif /* !DEFINED_default_set_foreach_unique_cb */
 )]
 
+[[operator([Set, Mapping].OPERATOR_ITER: tp_seq->tp_foreach)]]
 [[wunused]] Dee_ssize_t
 __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,
@@ -104,14 +106,14 @@ __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
 	data.dsfud_cb.dsfucd_cb  = cb;
 	data.dsfud_cb.dsfucd_arg = arg;
 	Dee_simple_hashset_init(&data.dsfud_encountered);
-	result = DeeSeq_OperatorForeach(self, &default_set_foreach_unique_cb, &data);
+	result = DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_set_foreach_unique_cb, &data);
 	Dee_simple_hashset_fini(&data.dsfud_encountered);
 	return result;
 }}
 %{$with__set_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
-	iter = DeeSet_OperatorIter(self);
+	iter = DeeType_InvokeMethodHint0(self, set_operator_iter);
 	if unlikely(!iter)
 		goto err;
 	result = DeeIterator_Foreach(iter, cb, arg);
@@ -121,6 +123,8 @@ err:
 	return -1;
 }} = $with__set_operator_iter;
 
+
+[[operator([Set, Mapping].OPERATOR_ITER: tp_seq->tp_foreach_pair)]]
 [[wunused]] Dee_ssize_t
 __set_iter__.set_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
@@ -128,18 +132,13 @@ __set_iter__.set_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
 %{$empty = 0}
 %{$with__set_operator_foreach = [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
 	struct default_foreach_pair_with_foreach_data data;
-	data.dfpwf_proc = cb;
-	data.dfpwf_arg  = arg;
-	return DeeSet_OperatorForeach(self, &default_foreach_pair_with_foreach_cb, &data);
+	data.dfpwf_cb  = cb;
+	data.dfpwf_arg = arg;
+	return DeeType_InvokeMethodHint(self, set_operator_foreach, &default_foreach_pair_with_foreach_cb, &data);
 }} = $with__set_operator_foreach;
 
 set_operator_iter = {
-	DeeMH_seq_operator_iter_t seq_operator_iter;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (Dee_SEQCLASS_ISSETORMAP(SEQ_CLASS) && DeeType_RequireIter(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_iter;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_iter = REQUIRE(seq_operator_iter);
+	DeeMH_seq_operator_iter_t seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;
 	if (seq_operator_iter)
@@ -147,12 +146,7 @@ set_operator_iter = {
 };
 
 set_operator_foreach = {
-	DeeMH_set_operator_iter_t set_operator_iter;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (Dee_SEQCLASS_ISSETORMAP(SEQ_CLASS) && DeeType_RequireForeach(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_foreach;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	set_operator_iter = REQUIRE(set_operator_iter);
+	DeeMH_set_operator_iter_t set_operator_iter = REQUIRE(set_operator_iter);
 	if (set_operator_iter == &default__set_operator_iter__empty)
 		return &$empty;
 	if (set_operator_iter == &default__set_operator_iter__with__seq_operator_iter)
@@ -162,12 +156,7 @@ set_operator_foreach = {
 };
 
 set_operator_foreach_pair = {
-	DeeMH_set_operator_foreach_t set_operator_foreach;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (Dee_SEQCLASS_ISSETORMAP(SEQ_CLASS) && DeeType_RequireForeachPair(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_foreach_pair;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	set_operator_foreach = REQUIRE(set_operator_foreach);
+	DeeMH_set_operator_foreach_t set_operator_foreach = REQUIRE(set_operator_foreach);
 	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &$empty;
 	if (set_operator_foreach)

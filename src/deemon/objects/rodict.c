@@ -1290,7 +1290,7 @@ err_temp:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rodict_enumerate_index(RoDict *__restrict self, Dee_enumerate_index_t cb,
+rodict_enumerate_index(RoDict *__restrict self, Dee_seq_enumerate_index_t cb,
                        void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	Dee_hash_t hash;
@@ -1553,7 +1553,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rodict_mh_seq_enumerate_index(RoDict *__restrict self, Dee_enumerate_index_t cb,
+rodict_mh_seq_enumerate_index(RoDict *__restrict self, Dee_seq_enumerate_index_t cb,
                               void *arg, size_t start, size_t end) {
 	DREF DeeTupleObject *key_and_value;
 	Dee_ssize_t temp, result = 0;
@@ -1598,7 +1598,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rodict_mh_seq_enumerate_index_reverse(RoDict *__restrict self, Dee_enumerate_index_t cb,
+rodict_mh_seq_enumerate_index_reverse(RoDict *__restrict self, Dee_seq_enumerate_index_t cb,
                                       void *arg, size_t start, size_t end) {
 	DREF DeeTupleObject *key_and_value;
 	Dee_ssize_t temp, result = 0;
@@ -2020,7 +2020,7 @@ PRIVATE struct type_seq rodict_seq = {
 	/* .tp_foreach                      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rodict_mh_seq_foreach,
 	/* .tp_foreach_pair                 = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rodict_foreach_pair,
 	/* .tp_enumerate                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rodict_foreach_pair,
-	/* .tp_enumerate_index              = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&rodict_enumerate_index,
+	/* .tp_enumerate_index              = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&rodict_enumerate_index,
 	/* .tp_iterkeys                     = */ &DeeMap_DefaultIterKeysWithIter,
 	/* .tp_bounditem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodict_bounditem,
 	/* .tp_hasitem                      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodict_hasitem,

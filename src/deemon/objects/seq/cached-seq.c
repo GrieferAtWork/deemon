@@ -1425,7 +1425,7 @@ err_prev_index:
 #define cswsogi_enumerate cswgi_enumerate
 #define cswsgi_enumerate  cswgi_enumerate
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-cswgi_enumerate(CachedSeq_WithGetItem *self, Dee_enumerate_t cb, void *arg) {
+cswgi_enumerate(CachedSeq_WithGetItem *self, Dee_seq_enumerate_t cb, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	struct cachedseq_index prev_index;
 	cachedseq_index_init_index(&prev_index, 0);
@@ -1480,7 +1480,7 @@ err_prev_index:
 #define cswsogi_enumerate_index cswgi_enumerate_index
 #define cswsgi_enumerate_index  cswgi_enumerate_index
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-cswgi_enumerate_index(CachedSeq_WithGetItem *self, Dee_enumerate_index_t cb,
+cswgi_enumerate_index(CachedSeq_WithGetItem *self, Dee_seq_enumerate_index_t cb,
                       void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct cachedseq_index prev_index;
@@ -1690,8 +1690,8 @@ PRIVATE struct type_seq cswgi_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cswgi_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&cswgi_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&cswgi_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&cswgi_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&cswgi_enumerate_index,
 	/* .tp_iterkeys                   = */ &DeeSeq_DefaultIterKeysWithSizeOb,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&cswgi_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&cswgi_hasitem,

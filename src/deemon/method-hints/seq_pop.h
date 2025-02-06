@@ -27,7 +27,7 @@ __seq_pop__(index=!-1)->?O {
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index,
 	                    "|" UNPdSIZ ":__seq_pop__", &index))
 		goto err;
-	return DeeSeq_InvokePop(self, index);
+	return DeeType_InvokeMethodHint(self, seq_pop, index);
 err:
 	return NULL;
 }
@@ -42,14 +42,14 @@ __seq_pop__.seq_pop([[nonnull]] DeeObject *self, Dee_ssize_t index)
 	size_t used_index = (size_t)index;
 	DREF DeeObject *result;
 	if (index < 0) {
-		size_t size = DeeSeq_OperatorSize(self);
+		size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 		if unlikely(size == (size_t)-1)
 			goto err;
 		used_index = DeeSeqRange_Clamp_n(index, size);
 	}
-	result = DeeSeq_OperatorGetItemIndex(self, used_index);
+	result = DeeType_InvokeMethodHint(self, seq_operator_getitem_index, used_index);
 	if likely(result) {
-		if unlikely(DeeSeq_InvokeErase(self, index, 1))
+		if unlikely(DeeType_InvokeMethodHint(self, seq_erase, index, 1))
 			goto err_r;
 	}
 	return result;
@@ -62,14 +62,14 @@ err:
 	size_t used_index = (size_t)index;
 	DREF DeeObject *result;
 	if (index < 0) {
-		size_t size = DeeSeq_OperatorSize(self);
+		size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 		if unlikely(size == (size_t)-1)
 			goto err;
 		used_index = DeeSeqRange_Clamp_n(index, size);
 	}
-	result = DeeSeq_OperatorGetItemIndex(self, used_index);
+	result = DeeType_InvokeMethodHint(self, seq_operator_getitem_index, used_index);
 	if likely(result) {
-		if unlikely(DeeSeq_OperatorDelItemIndex(self, index))
+		if unlikely(DeeType_InvokeMethodHint(self, seq_operator_delitem_index, index))
 			goto err_r;
 	}
 	return result;

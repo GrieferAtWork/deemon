@@ -475,7 +475,7 @@ STATIC_ASSERT(offsetof(FunctionStatics, fs_func) == offsetof(ProxyObject, po_obj
 #define funcstatics_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-funcstatics_enumerate_index(FunctionStatics *self, Dee_enumerate_index_t proc,
+funcstatics_enumerate_index(FunctionStatics *self, Dee_seq_enumerate_index_t proc,
                             void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	DeeFunctionObject *func = self->fs_func;
@@ -523,7 +523,7 @@ PRIVATE struct type_seq funcstatics_seq = {
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&funcstatics_enumerate_index,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&funcstatics_enumerate_index,
 	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
@@ -1457,7 +1457,7 @@ PRIVATE struct type_seq funcsymbolsbyname_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&funcsymbolsbyname_enumerate,
+	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&funcsymbolsbyname_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_iterkeys,
 	/* .tp_bounditem                  = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_bounditem),
@@ -2549,7 +2549,7 @@ PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&yfuncsymbolsbyname_enumerate,
+	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&yfuncsymbolsbyname_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iterkeys,
 	/* .tp_bounditem                  = */ NULL_if_Os((int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_bounditem),
@@ -3069,7 +3069,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-framelocals_enumerate_index(FrameLocals *__restrict self, Dee_enumerate_index_t proc,
+framelocals_enumerate_index(FrameLocals *__restrict self, Dee_seq_enumerate_index_t proc,
                             void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct code_frame const *frame;
@@ -3166,7 +3166,7 @@ PRIVATE struct type_seq framelocals_seq = {
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&framelocals_enumerate_index,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&framelocals_enumerate_index,
 	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
@@ -3405,7 +3405,7 @@ STATIC_ASSERT(offsetof(FrameStack, fs_frame) == offsetof(ProxyObject, po_obj));
 #define framestack_visit generic_proxy_visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-framestack_enumerate_index(FrameStack *__restrict self, Dee_enumerate_index_t proc,
+framestack_enumerate_index(FrameStack *__restrict self, Dee_seq_enumerate_index_t proc,
                            void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct code_frame const *frame;
@@ -3580,7 +3580,7 @@ PRIVATE struct type_seq framestack_seq = {
 	/* .tp_foreach            = */ NULL,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&framestack_enumerate_index,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&framestack_enumerate_index,
 	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
@@ -5093,7 +5093,7 @@ PRIVATE struct type_seq framesymbolsbyname_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *, Dee_enumerate_t cb, void *arg))&framesymbolsbyname_enumerate,
+	/* .tp_enumerate                  = */ NULL, // TODO: (Dee_ssize_t (DCALL *)(DeeObject *, Dee_seq_enumerate_t cb, void *arg))&framesymbolsbyname_enumerate,
 	/* .tp_enumerate_index            = */ NULL,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_keysiter,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_bounditem,

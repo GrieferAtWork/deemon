@@ -24,11 +24,12 @@
 __seq_iter__()->?DIterator {
 	if (DeeArg_Unpack(argc, argv, ":__seq_iter__"))
 		goto err;
-	return DeeSeq_OperatorIter(self);
+	return DeeType_InvokeMethodHint0(self, seq_operator_iter);
 err:
 	return NULL;
 }
 
+[[operator([Sequence,Set,Mapping].OPERATOR_ITER: tp_seq->tp_iter)]]
 [[wunused]] DREF DeeObject *
 __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
@@ -37,6 +38,7 @@ __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
+[[operator([Sequence,Set,Mapping].OPERATOR_ITER: tp_seq->tp_foreach)]]
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,
@@ -44,7 +46,7 @@ __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
 %{$empty = 0} %{$with__seq_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
-	iter = DeeSeq_OperatorIter(self);
+	iter = DeeType_InvokeMethodHint0(self, seq_operator_iter);
 	if unlikely(!iter)
 		goto err;
 	result = DeeIterator_Foreach(iter, cb, arg);
@@ -55,20 +57,21 @@ err:
 }} = $with__seq_operator_iter;
 
 
-%[define(DEFINE_default_foreach_pair_with_foreach_cb =
-#ifndef DEFINED_default_foreach_pair_with_foreach_cb
-#define DEFINED_default_foreach_pair_with_foreach_cb
-struct default_foreach_pair_with_foreach_data {
-	Dee_foreach_pair_t dfpwf_proc; /* [1..1] Underlying callback. */
-	void              *dfpwf_arg;  /* Cookie for `dfpwf_proc' */
+%[define(DEFINE_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb =
+#ifndef DEFINED_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb
+#define DEFINED_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb
+struct default_seq_operator_foreach_pair__with__seq_operator_foreach_data {
+	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
+	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
 };
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem);
-#endif /* !DEFINED_default_foreach_pair_with_foreach_cb */
+default_seq_operator_foreach_pair__with__seq_operator_foreach_cb(void *arg, DeeObject *elem);
+#endif /* !DEFINED_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb */
 )]
 
 
+[[operator([Sequence,Set,Mapping].OPERATOR_ITER: tp_seq->tp_foreach_pair)]]
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
@@ -77,7 +80,7 @@ __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
 %{$with__seq_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
-	iter = DeeSeq_OperatorIter(self);
+	iter = DeeType_InvokeMethodHint0(self, seq_operator_iter);
 	if unlikely(!iter)
 		goto err;
 	result = DeeIterator_ForeachPair(iter, cb, arg);
@@ -86,27 +89,19 @@ __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
 err:
 	return -1;
 }}
-%{$with__seq_operator_foreach = [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
-	struct default_foreach_pair_with_foreach_data data;
-	data.dfpwf_proc = cb;
-	data.dfpwf_arg  = arg;
-	return DeeSeq_OperatorForeach(self, &default_foreach_pair_with_foreach_cb, &data);
+%{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb)]] {
+	struct default_seq_operator_foreach_pair__with__seq_operator_foreach_data data;
+	data.dfpwf_cb  = cb;
+	data.dfpwf_arg = arg;
+	return DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_seq_operator_foreach_pair__with__seq_operator_foreach_cb, &data);
 }} = $with__seq_operator_foreach;
 
-seq_operator_iter = {
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (DeeType_RequireIter(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_iter;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-};
+//seq_operator_iter = {
+//	// TODO: $with__seq_operator_getitem_index__and__seq_operator_size
+//};
 
 seq_operator_foreach = {
-	DeeMH_seq_operator_iter_t seq_operator_iter;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (DeeType_RequireForeach(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_foreach;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_iter = REQUIRE(seq_operator_iter);
+	DeeMH_seq_operator_iter_t seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;
 	if (seq_operator_iter)
@@ -114,12 +109,7 @@ seq_operator_foreach = {
 };
 
 seq_operator_foreach_pair = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (DeeType_RequireForeachPair(self))
-		return THIS_TYPE->tp_seq->tp_foreach_pair;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_foreach = REQUIRE(seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
@@ -127,4 +117,3 @@ seq_operator_foreach_pair = {
 	if (seq_operator_foreach)
 		return &$with__seq_operator_foreach;
 };
-

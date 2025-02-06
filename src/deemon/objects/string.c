@@ -1640,7 +1640,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-string_enumerate_index(String *self, Dee_enumerate_index_t cb,
+string_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
                        void *arg, size_t start, size_t end) {
 	union dcharptr ptr;
 	Dee_ssize_t temp, result = 0;
@@ -1715,7 +1715,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-string_enumerate_index_reverse(String *self, Dee_enumerate_index_t cb,
+string_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb,
                                void *arg, size_t start, size_t end) {
 	union dcharptr ptr;
 	Dee_ssize_t temp, result = 0;
@@ -1912,7 +1912,7 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&string_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&string_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&string_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ &DeeObject_DefaultHasItemWithHasItemIndex,

@@ -27,7 +27,7 @@ __seq_extend__(items:?S?O) {
 	DeeObject *items;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_extend__", &items))
 		goto err;
-	if unlikely(DeeSeq_InvokeExtend(self, items))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_extend, items))
 		goto err;
 	return_none;
 err:
@@ -59,18 +59,18 @@ int __seq_extend__.seq_extend([[nonnull]] DeeObject *self,
 %{unsupported(auto)}
 %{$empty = "default__seq_extend__unsupported"}
 %{$with__seq_operator_size__and__seq_operator_setrange_index = {
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	return DeeSeq_OperatorSetRangeIndex(self, size, size, items);
+	return DeeType_InvokeMethodHint(self, seq_operator_setrange_index, size, size, items);
 err:
 	return -1;
 }}
 %{$with__seq_operator_size__and__seq_insertall = {
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	return DeeSeq_InvokeInsertAll(self, size, items);
+	return DeeType_InvokeMethodHint(self, seq_insertall, size, items);
 err:
 	return -1;
 }}
@@ -78,7 +78,7 @@ err:
 	struct seq_extend_with_foreach_append_data data;
 	data.dsewfad_append = DeeType_RequireSeqAppend(Dee_TYPE(self));
 	data.dsewfad_self   = self;
-	return (int)DeeSeq_OperatorForeach(items, &seq_extend_with_foreach_append_cb, &data);
+	return (int)DeeType_InvokeMethodHint(items, seq_operator_foreach, &seq_extend_with_foreach_append_cb, &data);
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTR(self, 1, &items);

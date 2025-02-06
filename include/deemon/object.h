@@ -717,7 +717,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
  * WARNING: These helper macros are allowed to evaluate their arguments multiple times! */
 typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
 #define Dee_Visit(ob)  (*proc)((DeeObject *)Dee_REQUIRES_OBJECT(ob), arg)
-#define Dee_XVisit(ob) (!(ob) || (Dee_Visit(ob), 0))
+#define Dee_XVisit(ob) (void)(!(ob) || (Dee_Visit(ob), 0))
 #ifdef DEE_SOURCE
 typedef Dee_visit_t  dvisit_t;
 #endif /* DEE_SOURCE */
@@ -2033,8 +2033,11 @@ struct Dee_type_cmp {
 
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
 typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);
-typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
-typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
+
+#if !defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || 1
+typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_seq_enumerate_t)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
+typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_seq_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #if 0
 struct my_foreach_data {
@@ -2223,10 +2226,17 @@ struct Dee_type_seq {
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* These will go away and only be accessible via method hints.
+	 * Reason: Not perfectly equivalent to "tp_foreach", so user-impl must happen via attributes. */
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t  (DCALL *_deprecated_tp_enumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t  (DCALL *_deprecated_tp_enumerate_index)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *_deprecated_tp_iterkeys)(DeeObject *__restrict self);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* Alternate forms for `tp_foreach' (these are inherited by `DeeType_InheritIter()').
 	 * For enumerating available indices/keys, and their current values (which may be NULL if `this[index] !is bound') */
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
-	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_enumerate_index)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
 
 	/* Similar to "tp_iter", but create an iterator for enumerating the "keys" of this object.
 	 * The keys of an object are all of the values that exist as items (as per "tp_hasitem"),
@@ -2235,6 +2245,7 @@ struct Dee_type_seq {
 	 * any value assigned to it).
 	 * The keys enumerated by the returned iterator as the same as also yielded by `tp_enumerate' */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_iterkeys)(DeeObject *__restrict self);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
 	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
@@ -2348,6 +2359,13 @@ struct Dee_type_seq {
 	 *                         to hold at least "return" elements, and call this operator again. */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_asvector_nothrow)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* These will go away and only be accessible via method hints.
+	 * Reason: Not perfectly equivalent to "tp_foreach", so user-impl must happen via attributes. */
+	WUNUSED_T NONNULL_T((1)) int (DCALL *_deprecated_tp_unpack)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+	WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *_deprecated_tp_unpack_ex)(DeeObject *self, size_t dst_length_min, size_t dst_length_max, /*out*/ DREF DeeObject **dst);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *_deprecated_tp_unpack_ub)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* >> tp_unpack
 	 * Operator for `DeeObject_Unpack()', following
 	 * `DeeObject_Foreach()' semantics (unbound elements are skipped)
@@ -2382,6 +2400,7 @@ struct Dee_type_seq {
 	 * - tp_foreach
 	 * - tp_iter */
 	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_unpack_ub)(DeeObject *self, size_t dst_length, /*out*/ DREF DeeObject **dst);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* All of the following are *always* and *unconditionally* implemented
 	 * when the associated type has the "tp_features & TF_KW" flag set,
@@ -2500,7 +2519,7 @@ myob_foreach_pair(MyObject *__restrict self, Dee_foreach_pair_t proc, void *arg)
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-myob_enumerate(MyObject *__restrict self, Dee_enumerate_t proc, void *arg) {
+myob_enumerate(MyObject *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
 	(void)self;
 	(void)proc;
 	(void)arg;
@@ -2508,7 +2527,7 @@ myob_enumerate(MyObject *__restrict self, Dee_enumerate_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-myob_enumerate_index(MyObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+myob_enumerate_index(MyObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	(void)self;
 	(void)proc;
 	(void)arg;
@@ -2815,8 +2834,8 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&myob_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&myob_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&myob_foreach_pair,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&myob_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&myob_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&myob_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&myob_enumerate_index,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&myob_hasitem,
@@ -5317,7 +5336,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use t
  * @return: * : Sum of return values of `*proc'
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeObject_Enumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
+(DCALL DeeObject_Enumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
 
 /* Construct an iterator for the keys of "self". That is:
  * - everything for which `DeeObject_HasItem()' returns true
@@ -5333,7 +5352,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
  * @return: * : Sum of return values of `*proc'
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeObject_EnumerateIndex)(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+(DCALL DeeObject_EnumerateIndex)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                  void *arg, size_t start, size_t end);
 
 

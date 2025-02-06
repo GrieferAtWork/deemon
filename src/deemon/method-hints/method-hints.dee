@@ -18,6 +18,16 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+/* TODO: Detect aliases between default implementations:
+ *       When 2 functions share binary-compatible prototypes, and identical bodies,
+ *       those 2 functions can alias each other.
+ *       example: `default__seq_locate__empty' and `default__seq_rlocate__empty' */
+
+/* TODO: Don't define stuff `DeeMA_*_name' and `DeeMA_*_doc' as exports; just use
+ *       macros and trust the compiler to be smart enough to eliminate duplicate
+ *       strings. */
+
+
 import * from deemon;
 import posix;
 
@@ -35,7 +45,7 @@ global final CTYPE_FORMAT_REPR_CODES: {string: string} = {
 function getCTypeFormatReprCode(typ: string): string {
 	typ = typ.rereplace(r"\b(__restrict|const|volatile)\b", "");
 	typ = typ.rereplace(r"\s*\*\s*", "*");
-	typ = typ.rereplace(r"\b  +\b", "*");
+	typ = typ.rereplace(r"\b  +\b", " ");
 	return CTYPE_FORMAT_REPR_CODES[typ];
 }
 
@@ -50,11 +60,28 @@ final class NativeMethodParam {
 	public member name: string; /* "self" */
 	public member nonnull: bool = false;
 
+	public property typWithoutRestrict: string = {
+		get(): string {
+			return typ
+				.rereplace(r"\b__restrict\b", "")
+				.rereplace(r"\b  +\b", " ");
+		}
+	};
+
 	public property Cstr: string = {
 		get(): string {
 			if (typ.endswith("*"))
 				return typ + name;
 			return f"{typ} {name}";
+		}
+	};
+
+	public property CstrWithoutRestrict: string = {
+		get(): string {
+			local usedTyp = typWithoutRestrict;
+			if (usedTyp.endswith("*"))
+				return usedTyp + name;
+			return f"{usedTyp} {name}";
 		}
 	};
 };
@@ -84,6 +111,8 @@ function detectConstantReturnValue(body: string): int | none {
 			}
 			if (returnExpr == "NULL")
 				return 0;
+			if (returnExpr == "ITER_DONE")
+				return -1;
 			return try int(returnExpr) catch (...) none;
 		}	break;
 		default:
@@ -96,6 +125,7 @@ nope:
 }
 
 global NativeMethod;
+global NativeOperator;
 final class NativeMethodImpl {
 	this = default;
 	public member impl: string | none = none;   /* Implementation body */
@@ -104,7 +134,7 @@ final class NativeMethodImpl {
 
 	@@Try to detect "simple" impls when linked against
 	@@"method", and replace them with none-operators.
-	public optimize(method: NativeMethod) {
+	public optimize(method: NativeMethod | NativeOperator) {
 		if (impl is none)
 			return;
 		local constReturnVal: int = detectConstantReturnValue(impl);
@@ -116,7 +146,7 @@ final class NativeMethodImpl {
 		local returnType: string = method.returnType;
 		if (returnType in ["int", "unsigned int"]) {
 			returnsInt = true;
-		} else if (returnType in ["Dee_ssize_t"] || returnType.endswith("*")) {
+		} else if (returnType in ["Dee_ssize_t", "size_t"] || returnType.endswith("*")) {
 			returnsInt = false;
 		} else {
 			return none;
@@ -267,6 +297,19 @@ function printUserText(text: string, dollarName: string,
 	print text[flushStart:],;
 }
 
+final class OperatorSpec {
+	this = default;
+	@@Required base-class for this operator to be linkable
+	public member baseClass: string;
+	@@OPERATOR_ITER  (or "0" if not defined)
+	public member operatorName: string;
+	@@tp_seq (@none if part of the root DeeTypeObject)
+	public member operatorTable: string | none = none;
+	@@tp_iter
+	public member operatorField: string;
+}
+
+
 global MethodHint;
 final class NativeMethod {
 	this = default;
@@ -275,14 +318,48 @@ final class NativeMethod {
 	public member cc: string;         /* "DCALL" */
 	public member name: string;       /* "seq_any" */
 	public member params: {NativeMethodParam...} = [];
-	public member callAttrImpl: NativeMethodImpl | none;           /* Implementation for calling an attribute (if available) */
-	public member unsupportedImpl: NativeMethodImpl | none = none; /* Implementation used when this attribute isn't available */
-	public member selectImpl: string | none = none;                /* Implementation selection code (or "none" if only linkable against attributes) */
-	public member customImpls: {string: NativeMethodImpl} = Dict(); /* Extra custom impls by name */
-	public member getsetMember: string = ""; /* Which part of a getset this method implements ("get", "del", "set") */
+
+	@@Implementation for calling an attribute (if available)
+	public member callAttrImpl: NativeMethodImpl | none;
+
+	@@Implementation used when this attribute isn't available
+	public member unsupportedImpl: NativeMethodImpl | none = none;
+
+	@@Implementation selection code (or "none" if only linkable against attributes)
+	public member selectImpl: string | none = none;
+
+	@@Extra custom impls by name
+	public member customImpls: {string: NativeMethodImpl} = Dict();
+
+	@@Which part of a getset this method implements ("get", "del", "set")
+	public member getsetMember: string = "";
+
+	@@Descriptor for a location within "DeeTypeObject" where a binary-compatible
+	@@callback can be found that may be used to implement this native method, too.
+	public member operatorSpecs: {OperatorSpec...} = ();
 
 	public member _methodHint: WeakRef with MethodHint | none = none;
 	public property methodHint: MethodHint | none = { get() -> _methodHint.value; };
+
+	public getReturnAttrib(_T: string = ""): string {
+		local attributes: {string...} = [];
+		if (wunused)
+			attributes.append(f"WUNUSED{_T}");
+		local nonnullIndices = ", ".join(params.enumerate()
+			.filter(e -> e.last.nonnull)
+			.map(e -> e.first + 1));
+		if (nonnullIndices)
+			attributes.append(f"NONNULL{_T}(({nonnullIndices}))");
+		return " ".join(attributes);
+	}
+
+	public property Cparams: string = {
+		get(): string -> ", ".join(params.each.Cstr);
+	};
+
+	public property Cargs: string = {
+		get(): string -> ", ".join(params.each.name);
+	};
 
 	public normalizeSymbolName(name: string): string {
 		if (name.startswith("$"))
@@ -337,7 +414,7 @@ final class NativeMethod {
 		get() -> methodHint.allAttributes && callAttrImpl.alias is none;
 	};
 
-	public printIntdefDeclOrAlias(name: string, impl: NativeMethodImpl) {
+	public printIntdefDeclOrAlias(name: string, impl: NativeMethodImpl | none) {
 		if (impl.alias !is none) {
 			print(f"#define {name} (*("),;
 			printFunctionPointerType();
@@ -384,6 +461,8 @@ final class NativeMethod {
 	public printDefaultImplDecls() {
 		print(f"/* {name} */");
 		local methodHint = this.methodHint;
+		if (operatorSpecs)
+			printIntdefDeclOrAlias(f"default__{name}", none);
 		for (local attr: methodHint.allAttributes.distinct()) {
 			if (callAttrImpl is none)
 				throw Error(f"Native method {repr name} is missing impl for callattr({repr attr})");
@@ -409,6 +488,16 @@ final class NativeMethod {
 	public printDefaultImpls() {
 		print(f"/* {name} */");
 		local methodHint = this.methodHint;
+		if (operatorSpecs) {
+			local selfArg = params.first.name;
+			if (selfArg == "p_self")
+				selfArg = "*p_self";
+			printInternImpl(f"default__{name}", NativeMethodImpl(impl:
+				f"\{\n\treturn (*DeeType_RequireMethodHint(Dee_TYPE({
+					selfArg}), {name}))({", ".join(params.each.name)});\n\}"
+			));
+			print;
+		}
 		for (local attr: methodHint.allAttributes.distinct()) {
 			if (callAttrImpl is none)
 				throw Error(f"Native method {repr name} is missing impl for callattr({repr attr})");
@@ -546,42 +635,27 @@ final class NativeMethod {
 		print("}");
 		print;
 	}
+}
 
-	public getReturnAttrib(_T: string = ""): string {
-		local attributes: {string...} = [];
-		if (wunused)
-			attributes.append(f"WUNUSED{_T}");
-		local nonnullIndices = ", ".join(params.enumerate()
-			.filter(e -> e.last.nonnull)
-			.map(e -> e.first + 1));
-		if (nonnullIndices)
-			attributes.append(f"NONNULL{_T}(({nonnullIndices}))");
-		return " ".join(attributes);
-	}
-
-	public property Cparams: string = {
-		get(): string -> ", ".join(params.each.Cstr);
-	};
-
-	public property Cargs: string = {
-		get(): string -> ", ".join(params.each.name);
-	};
+global final PRETTY_BASE_CLASS_NAMES: {string: string} = {
+	"DeeSeq_Type": "Sequence",
+	"DeeSet_Type": "Set",
+	"DeeMapping_Type": "Mapping",
+	"DeeNumeric_Type": "Numeric",
 };
 
-global final KNOWN_BASE_CLASSES: {string: Type} = {
-	"Sequence": Sequence,
-	"Set": Set,
-	"Mapping": Mapping,
-	"Numeric": Numeric,
-};
+global final BASE_CLASS_ALIASES: {string: string} = Dict.Frozen(
+	for (local nativeName, prettyName: PRETTY_BASE_CLASS_NAMES)
+		(prettyName, nativeName));
 
 final class MethodHintAlias {
 	this = default;
-	public member baseClass: Type; /* Sequence */
-	public member attr: Type;      /* "any" */
+	public member baseClass: string; /* "DeeSeq_Type" */
+	public member attr: string;      /* "any" */
 	public member nameAliases: {string...} = ();
-	public property name: string = { get() -> f"{baseClass}_{attr}"; };
-};
+	public property name: string = { get() -> f"{
+		PRETTY_BASE_CLASS_NAMES.get(baseClass, baseClass)}_{attr}"; };
+}
 
 final class MethodHint: WeakRefAble {
 	this = default;
@@ -628,11 +702,11 @@ final class MethodHint: WeakRefAble {
 	};
 
 	public function guessSeqClass(): string | none {
-		if (aliases.some.baseClass == Sequence)
+		if (aliases.some.baseClass == "DeeSeq_Type")
 			return "seq";
-		if (aliases.some.baseClass == Set)
+		if (aliases.some.baseClass == "DeeSet_Type")
 			return "set";
-		if (aliases.some.baseClass == Mapping)
+		if (aliases.some.baseClass == "DeeMapping_Type")
 			return "map";
 		if (attr.startswith("__seq_"))
 			return "seq";
@@ -699,12 +773,243 @@ final class MethodHint: WeakRefAble {
 		print;
 		print;
 	}
-};
+}
+
+
+
+function simplifyNativeOperatorNamePart(part: string): string {
+	return part.lsstrip("tp_").replace(".", "_");
+}
+
+final class NativeOperatorName {
+	this = default;
+	public member table: string | none = none; /* tp_seq */
+	public member field: string;               /* tp_foreach */
+
+	public property name: string = {
+		get(): string {
+			if (table is none)
+				return simplifyNativeOperatorNamePart(field);
+			return f"{
+				simplifyNativeOperatorNamePart(table)
+			}_{
+				simplifyNativeOperatorNamePart(field)
+			}";
+		}
+	}
+
+	operator str(fp: File) {
+		if (table !is none)
+			fp << table << "->";
+		fp << field;
+	}
+}
+
+
+
+final class NativeOperatorImpl {
+	this = default;
+	@@Operators that must be provided for this one to function
+	public member dependencies: {NativeOperatorName...} = [];
+	public member impl: NativeMethodImpl;
+
+	public optimize(method: NativeOperator) {
+		impl.optimize(method);
+	}
+}
+
+final class NativeOperator {
+	this = default;
+	public member wunused: bool;                       /* true */
+	public member returnType: string;                  /* "int" */
+	public member cc: string;                          /* "DCALL" */
+	public member name: NativeOperatorName;            /* tp_seq->tp_foreach */
+	public member params: {NativeMethodParam...} = []; /* { ... } */
+	public member tpSelfExpr: string;                  /* "Dee_TYPE(self)" */
+	public member impls: {NativeOperatorImpl...} = []; /* { ... } */
+	public member usrtypeImpl: NativeMethodImpl | none = none;
+
+	public getReturnAttrib(_T: string = "", typed: bool = false): string {
+		local attributes: {string...} = [];
+		if (wunused)
+			attributes.append(f"WUNUSED{_T}");
+		local nonnullIndices = params.enumerate()
+			.filter(e -> e.last.nonnull)
+			.map(e -> e.first + 1);
+		if (typed) {
+			nonnullIndices = List(nonnullIndices.each + 1);
+			nonnullIndices.insert(0, 1);
+		}
+		nonnullIndices = nonnullIndices.cached;
+		if (nonnullIndices)
+			attributes.append(f"NONNULL{_T}(({", ".join(nonnullIndices)}))");
+		return " ".join(attributes);
+	}
+
+	public property Cparams: string = {
+		get(): string -> ", ".join(params.each.Cstr);
+	};
+
+	public property Cargs: string = {
+		get(): string -> ", ".join(params.each.name);
+	};
+
+	public optimize() {
+		for (local impl: impls)
+			impl.optimize(this);
+	}
+
+	public printDecl(name: string, lineFeedBeforeName: bool = false, typed: bool = false) {
+		local attrib = getReturnAttrib(typed: typed);
+		if (attrib)
+			print(attrib, " "),;
+		print returnType,;
+		if (lineFeedBeforeName) {
+			if (cc) {
+				if (!returnType.endswith("*"))
+					print " ",;
+				print cc,;
+			}
+			print;
+		} else {
+			if (!returnType.endswith("*"))
+				print " ",;
+			if (cc)
+				print(cc, " "),;
+		}
+		print(name, "("),;
+		if (typed) {
+			print("DeeTypeObject *tp_self"),;
+			for (local p: params) {
+				print(", ", p.CstrWithoutRestrict),;
+			}
+		} else {
+			print(", ".join(params.each.Cstr)),;
+		}
+		print(")"),;
+	}
+
+	public printFunctionPointerType(name: string = "", typed: bool = false) {
+		print returnType,;
+		if (!returnType.endswith("*"))
+			print " ",;
+		print("("),;
+		if (cc)
+			print(cc, " "),;
+		print("*", name, ")", "("),;
+		if (typed) {
+			print("DeeTypeObject *"),;
+			for (local p: params) {
+				print(", ", p.typWithoutRestrict),;
+			}
+		} else {
+			print(", ".join(params.each.typ)),;
+		}
+		print(")"),;
+	}
+
+	public printIntdefDeclOrAlias(name: string, impl: NativeMethodImpl | none, typed: bool = false) {
+		if (impl.alias !is none) {
+			print(f"#define {typed ? "t" : ""}{name} (*("),;
+			printFunctionPointerType(typed: typed);
+			print(f")&{typed ? "t" : ""}{impl.alias})");
+		} else {
+			print("INTDEF "),;
+			printDecl(name, typed: typed);
+			print(";");
+		}
+	}
+
+	function nativeSymbolNameForImpl(impl: NativeOperatorImpl): string {
+		return f"default__{name.name}__with__{
+			"__and__".join(impl.dependencies.each.name)
+		}";
+	}
+
+	function printNativeOperatorHintDecl() {
+		print("/* ", str name, " */");
+		local symbolNames: {string...} = [];
+		if (usrtypeImpl !is none) {
+			local symName = f"usrtype__{name.name}";
+			symbolNames.append(symName);
+			printIntdefDeclOrAlias(symName, usrtypeImpl);
+		}
+		for (local impl: impls) {
+			local symName = nativeSymbolNameForImpl(impl);
+			symbolNames.append(symName);
+			printIntdefDeclOrAlias(symName, impl.impl);
+		}
+		printIntdefDeclOrAlias(f"tdefault__{name.name}", none, typed: true);
+		if (usrtypeImpl !is none)
+			printIntdefDeclOrAlias(f"tusrtype__{name.name}", usrtypeImpl, typed: true);
+		for (local impl: impls)
+			printIntdefDeclOrAlias("t" + nativeSymbolNameForImpl(impl), impl.impl, typed: true);
+		print(f"#define default__{name.name}__check({name.field}) ({
+			" || ".join(
+				for (local impl: impls)
+					f"({name.field}) == &{nativeSymbolNameForImpl(impl)}"
+			)
+		})");
+		print(f"#define typed__{name.name}({name.field}) ({
+			(
+				for (local symbolName: symbolNames)
+					f"({name.field}) == &{symbolName} ? &t{symbolName} : "
+			) + ...
+		}&tdefault__{name.name})");
+		print;
+	}
+
+	@@@param functionMacros Custom callbacks for macro replacement.
+	public printInternImpl(name: string, impl: NativeMethodImpl,
+	                       formatMacros: {string: Callable} = none,
+	                       typed: bool = false) {
+		assert impl.alias is none;
+		if (!typed) {
+			for (local prefix: impl.implPrefix) {
+				printUserText(prefix, "$", formatMacros);
+				print;
+			}
+		}
+		print("INTERN "),;
+		printDecl(name, lineFeedBeforeName: true, typed: typed);
+		print(" "),;
+		printUserText(impl.impl, "$", formatMacros);
+		print;
+	}
+
+	function printNativeOperatorHintImpl() {
+		print("/* ", str name, " */");
+		if (usrtypeImpl !is none && usrtypeImpl.alias is none) {
+			printInternImpl(f"usrtype__{name.name}", usrtypeImpl);
+		}
+		for (local impl: impls) {
+			if (impl.impl.alias is none) {
+				printInternImpl(nativeSymbolNameForImpl(impl), impl.impl);
+			}
+		}
+		printInternImpl(f"tdefault__{name.name}", NativeMethodImpl(
+			f"\{\n\treturn (*tp_self->)();\n\}"
+		), typed: true);
+		if (usrtypeImpl !is none && usrtypeImpl.alias is none) {
+			printInternImpl(f"tusrtype__{name.name}", usrtypeImpl, typed: true);
+		}
+		for (local impl: impls) {
+			if (impl.impl.alias is none) {
+				printInternImpl("t" + nativeSymbolNameForImpl(impl), impl.impl, typed: true);
+			}
+		}
+		print;
+	}
+}
+
 
 @@All known method-hints
 global METHOD_HINTS: {string: MethodHint} = Dict();
 global NATIVE_METHOD_HINTS: {string: NativeMethod} = Dict();
 global ANONYMOUS_METHOD_HINTS: {string: NativeMethod} = Dict();
+
+@@Native (non-method-hint) operators
+global NATIVE_OPERATORS: {NativeOperatorName: NativeOperator} = Dict();
 
 
 function getAllMethodHintAttributes(): {string...} {
@@ -835,26 +1140,56 @@ function printMhInitSpecs() {
 	/* Start by printing secondary-attribute specs. */
 	for (local none, native: NATIVE_METHOD_HINTS) {
 		local methodHint: MethodHint | none = native.methodHint;
-		if (!methodHint.aliases)
-			continue;
-		print(f"PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_{
-				native.name}[{#methodHint.aliases + 1}] = \{");
-		for (local alias: methodHint.aliases) {
-			print("	{"),;
-			print("(DeeStringObject *)&str_", alias.attr, ", "),;
-			if (alias.baseClass == Sequence) {
-				print("NULL, Dee_SEQCLASS_SEQ, "),;
-			} else if (alias.baseClass == Set) {
-				print("NULL, Dee_SEQCLASS_SET, "),;
-			} else if (alias.baseClass == Mapping) {
-				print("NULL, Dee_SEQCLASS_MAP, "),;
-			} else {
-				print("&Dee", alias.baseClass, "_Type, 0, "),;
+		if (methodHint.aliases) {
+			print(f"PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_{
+					native.name}[{#methodHint.aliases + 1}] = \{");
+			for (local alias: methodHint.aliases) {
+				print("	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT("),;
+				print("&str_", alias.attr, ", "),;
+				if (alias.baseClass == "DeeSeq_Type") {
+					print("NULL, Dee_SEQCLASS_SEQ, "),;
+				} else if (alias.baseClass == "DeeSet_Type") {
+					print("NULL, Dee_SEQCLASS_SET, "),;
+				} else if (alias.baseClass == "DeeMapping_Type") {
+					print("NULL, Dee_SEQCLASS_MAP, "),;
+				} else {
+					print("&", alias.baseClass, ", 0, "),;
+				}
+				print(f"&default__{native.name}__with_callattr_{alias.attr}),",);
 			}
-			print(f"(Dee_funptr_t)&default__{native.name}__with_callattr_{alias.attr} \},",);
+			print("	MH_INIT_SPEC_SECONDARY_ATTRIB_END");
+			print(f"\};");
 		}
-		print("	{ NULL, NULL, 0, NULL }");
-		print(f"\};");
+		if (native.operatorSpecs) {
+			print(f"PRIVATE struct_mh_init_spec_operators({#native.operatorSpecs + 1
+				}) tpconst mh_operators_{native.name} = \{");
+			print("	/* .misos_default   = */ (Dee_funptr_t)&default__", native.name, ",");
+			print("	/* .misos_operators = */ {");
+			for (local spec: native.operatorSpecs) {
+				print("		MH_INIT_SPEC_OPERATOR_INIT("),;
+				local opName = NativeOperatorName(
+						table: spec.operatorTable,
+						field: spec.operatorField);
+				local op: NativeOperator | none = NATIVE_OPERATORS.get(opName);
+				local opNameStr: string = op !is none
+						? f"Dee_TNO_{op.name.name}"
+						: f"Dee_TNO_MISSING({opName})";
+				print(opNameStr, ", "),;
+				if (spec.baseClass == "DeeSeq_Type") {
+					print("NULL, Dee_SEQCLASS_SEQ, "),;
+				} else if (spec.baseClass == "DeeSet_Type") {
+					print("NULL, Dee_SEQCLASS_SET, "),;
+				} else if (spec.baseClass == "DeeMapping_Type") {
+					print("NULL, Dee_SEQCLASS_MAP, "),;
+				} else {
+					print("&", spec.baseClass, ", 0, "),;
+				}
+				print(spec.operatorName, "),");
+			}
+			print("		MH_INIT_SPEC_OPERATOR_END");
+			print("	}");
+			print("};");
+		}
 	}
 	print(f"INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[{#NATIVE_METHOD_HINTS}] = \{");
 	for (local none, native: NATIVE_METHOD_HINTS) {
@@ -862,6 +1197,7 @@ function printMhInitSpecs() {
 		print("	MH_INIT_SPEC_INIT("),;
 		print(methodHint is none ? "NULL" : f"&str_{methodHint.attr}"),;
 		print(", ", !methodHint.aliases ? "NULL" : f"mh_secondary_{native.name}"),;
+		print(", ", !native.operatorSpecs ? "NULL" : f"&mh_operators_{native.name}"),;
 		print(", ", methodHint is none ? "NULL" :
 			f"&default__{native.name}__with_callattr_{methodHint.attr}"),;
 		print(", ", methodHint is none ? "0" : f"offsetof(struct Dee_type_mh_cache, mhc_{
@@ -894,11 +1230,28 @@ function printMhUnsupportedArrayMembers() {
 	}
 }
 
+function printNativeOperatorIds() {
+	for (local none, method: NATIVE_OPERATORS) {
+		print("	Dee_TNO_", method.name.name, ",");
+	}
+}
+
+function printNativeOperatorHintDecls() {
+	for (local none, method: NATIVE_OPERATORS)
+		method.printNativeOperatorHintDecl();
+}
+
+function printNativeOperatorHintImpls() {
+	for (local none, method: NATIVE_OPERATORS)
+		method.printNativeOperatorHintImpl();
+}
+
 
 final class _SpecParserAttrib {
 	this = default;
 	public member kw: bool = false;
 	public member wunused: bool = false;
+	public member tpSelfExpr: string = "Dee_TYPE(self)";
 	public member nonnull: bool = false;
 	public member getset: bool = false;
 	public member getsetMember: string = "";
@@ -907,6 +1260,7 @@ final class _SpecParserAttrib {
 	public member aliases: {MethodHintAlias...} = [];
 	public member declNameAliases: {string...} = [];
 	public member prefix: {string...} = [];
+	public member operatorSpecs: {OperatorSpec...} = [];
 };
 
 global final _C_TYPENAME_TOKENS = HashSet.Frozen({
@@ -1056,19 +1410,15 @@ done:
 	}
 
 	public member attrib: _SpecParserAttrib = _SpecParserAttrib();
-
-	public parseMethodHintAliasBaseClass(): Type {
-		local name = requireSymbol();
-		local result = KNOWN_BASE_CLASSES.get(name);
-		if (result is none)
-			err(f"Unknown base class: {repr name}");
-		next();
-		return result;
+	
+	public parseTypename(): string {
+		local result = parseSymbol();
+		return BASE_CLASS_ALIASES.get(result, result);
 	}
 
 	public parseMethodHintAlias(): MethodHintAlias {
 		local result: MethodHintAlias = MethodHintAlias();
-		result.baseClass = parseMethodHintAliasBaseClass();
+		result.baseClass = parseTypename();
 		skip(".");
 		result.attr = parseSymbol();
 		if (tok == "->") {
@@ -1108,6 +1458,58 @@ done:
 			next();
 			parseAttrib();
 			skip("]]");
+		}
+	}
+
+	public parseFieldDesc(): string {
+		local result = parseSymbol();
+		for (;;) {
+			if (tok == ".") {
+				next();
+				result = f"{result}.{parseSymbol()}";
+				continue;
+			}
+			break;
+		}
+		return result;
+	}
+
+	public parseBaseClassList(): {string...} {
+		if (tok == "[") {
+			next();
+			for (;;) {
+				yield parseTypename();
+				if (tok != ",")
+					break;
+				next();
+			}
+			skip("]");
+		} else {
+			yield parseTypename();
+		}
+	}
+
+	public parseOperatorSpecs(): {OperatorSpec...} {
+		local result = OperatorSpec();
+		local baseClasses = parseBaseClassList().frozen;
+		if (tok == ".") {
+			next();
+			result.operatorName = parseSymbol();
+		} else {
+			result.operatorName = "0";
+		}
+		skip(":");
+		local field = parseFieldDesc();
+		if (tok == "->") {
+			next();
+			result.operatorTable = field;
+			result.operatorField = parseFieldDesc();
+		} else {
+			result.operatorField = field;
+		}
+		for (local baseClass: baseClasses) {
+			result.baseClass = baseClass;
+			yield copy result;
 		}
 	}
 
@@ -1152,6 +1554,26 @@ done:
 				attrib.prefix.append(data[prefixStart:prefixEnd].strip());
 				tokEnd = prefixEnd;
 				next();
+				skip(")");
+			}	break;
+
+			case "tp_self": {
+				next();
+				skip("(");
+				local prefixStart = tokStart;
+				local prefixEnd = data.findmatch("(", ")", prefixStart);
+				if (prefixEnd < 0)
+					err("Missing end-of-tp_self attribute body");
+				attrib.tpSelfExpr = data[prefixStart:prefixEnd].strip();
+				tokEnd = prefixEnd;
+				next();
+				skip(")");
+			}	break;
+
+			case "operator": {
+				next();
+				skip("(");
+				attrib.operatorSpecs.extend(parseOperatorSpecs());
 				skip(")");
 			}	break;
 
@@ -1325,6 +1747,7 @@ done:
 			next();
 		}
 	}
+
 	public parsePercentDirective() {
 		switch (tok) {
 
@@ -1372,12 +1795,173 @@ done:
 		}
 	}
 
+	public parseNativeOperatorName(): NativeOperatorName {
+		local result = NativeOperatorName();
+		local field = parseFieldDesc();
+		if (tok == "->") {
+			next();
+			result.table = field;
+			result.field = parseFieldDesc();
+		} else {
+			result.field = field;
+		}
+		return result;
+	}
+
+	public parseNativeOperatorNames(): {NativeOperatorName...} {
+		if (tok == "[") {
+			next();
+			do {
+				yield parseNativeOperatorName();
+				if (tok != ",")
+					break;
+				next();
+			} while (tok != "]");
+			skip("]");
+		} else {
+			yield parseNativeOperatorName();
+		}
+	}
+
+	@@Parses the `...` in contents in `%{...}` of a native operator definition
+	public parseNativeOperatorImplementation(method: NativeOperator) {
+		if (tok == "using") {
+			next();
+			local impl: NativeOperatorImpl = NativeOperatorImpl(
+					dependencies: parseNativeOperatorNames().frozen);
+			if (tok == ":") {
+				next();
+				resetContext();
+				parseAttribs();
+				require("{");
+				local implStart = tokStart;
+				local implEnd = data.findmatch("{", "}", implStart + 1);
+				if (implEnd < 0)
+					err(f"Missing '\}' to terminate implementation of {repr str method.name}");
+				++implEnd;
+				impl.impl = NativeMethodImpl(
+						data[implStart:implEnd].strip(),
+						implPrefix: attrib.prefix);
+				tokEnd = implEnd;
+				next();
+			} else if (tok == "=") {
+				next();
+				impl.impl = NativeMethodImpl(alias: parseSymbol());
+			} else {
+				err(f"Expected ':' or '=' after dependency in native operator implementation, but for {repr tok}");
+			}
+			method.impls.append(impl);
+		} else if (tok == "class") {
+			if (method.usrtypeImpl !is none)
+				err(f"User-type implementation already defined for {repr str method.name}");
+			next();
+			local impl: NativeMethodImpl;
+			if (tok == "=") {
+				next();
+				impl = NativeMethodImpl(alias: parseSymbol());
+			} else {
+				resetContext();
+				parseAttribs();
+				require("{");
+				local implStart = tokStart;
+				local implEnd = data.findmatch("{", "}", implStart + 1);
+				if (implEnd < 0)
+					err(f"Missing '\}' to terminate implementation of {repr str method.name}");
+				++implEnd;
+				impl = NativeMethodImpl(
+						data[implStart:implEnd].strip(),
+						implPrefix: attrib.prefix);
+				tokEnd = implEnd;
+				next();
+			}
+			method.usrtypeImpl = impl;
+		} else {
+			err(f"Expected 'using' or 'class' for native operator implementation, but got {repr tok}");
+		}
+	}
+
+	public parseNativeOperator() {
+		for (;;) {
+			switch (tok) {
+			case "":
+			case "}":
+				return;
+
+			case ";":
+				next();
+				resetContext();
+				break;
+
+			case "[[":
+				next();
+				parseAttrib();
+				skip("]]");
+				break;
+
+			case "%":
+				next();
+				skip("[");
+				parsePercentDirectives();
+				skip("]");
+				break;
+
+			default: {
+				if (!tok.issymbol())
+					err(f"Unexpected top-level token: {repr tok}");
+				local returnTypeStart = tokStart;
+				while (tok in _C_TYPENAME_TOKENS)
+					next();
+				do {
+					next();
+				} while (tok in _C_TYPENAME_TOKENS);
+				local returnTypeEnd = tokStart;
+				local returnType = data[returnTypeStart:returnTypeEnd].strip();
+				local operatorName: NativeOperatorName = parseNativeOperatorName();
+				local method: NativeOperator = NativeOperator(
+						returnType: returnType,
+						wunused: attrib.wunused,
+						cc: attrib.cc,
+						tpSelfExpr: attrib.tpSelfExpr,
+						name: operatorName);
+				if (!NATIVE_OPERATORS.setnew(operatorName, method))
+					err(f"Native operator {repr str operatorName} was already defined");
+				skip("(");
+				while (tok && tok != ")") {
+					method.params.append(parseNativeMethodParam());
+					if (tok != ",")
+						break;
+					next();
+				}
+				skip(")");
+				while (tok == "%") {
+					next();
+					skip("{");
+					parseNativeOperatorImplementation(method);
+					skip("}");
+				}
+				skip(";");
+				resetContext();
+			}	break;
+
+			}
+		}
+	}
+
 	public loadMethodHints() {
 		for (;;) {
 			switch (tok) {
 
 			case "":
 				return;
+
+			case "operator":
+				next();
+				skip("{");
+				do {
+					parseNativeOperator();
+				} while (tok !in ["", "}"]);
+				skip("}");
+				break;
 
 			case ";":
 				next();
@@ -1492,7 +2076,8 @@ done:
 						returnType: returnType,
 						wunused: attrib.wunused,
 						cc: attrib.cc,
-						getsetMember: attrib.getsetMember);
+						getsetMember: attrib.getsetMember,
+						operatorSpecs: attrib.operatorSpecs);
 				local name1 = parseSymbol();
 				if (tok == ".") {
 					local methodHint: MethodHint = METHOD_HINTS.get(name1);
@@ -1585,7 +2170,9 @@ function loadMethodHints() {
 	parser.next();
 	parser.loadMethodHints();
 
-	for (local native: NATIVE_METHOD_HINTS.values)
+	for (local none, native: NATIVE_METHOD_HINTS)
+		native.optimize();
+	for (local none, native: NATIVE_OPERATORS)
 		native.optimize();
 }
 

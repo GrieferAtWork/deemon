@@ -25,7 +25,7 @@ __set_hash__()->?Dint {
 	Dee_hash_t result;
 	if (DeeArg_Unpack(argc, argv, ":__set_hash__"))
 		goto err;
-	result = DeeSet_OperatorHash(self);
+	result = DeeType_InvokeMethodHint0(self, set_operator_hash);
 	return DeeInt_NewHash(result);
 err:
 	return NULL;
@@ -46,15 +46,16 @@ INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSet_HandleHashError(DeeObject *self);
 #endif /* !DEFINED_DeeSet_HandleHashError */
 )]
 
-[[wunused]]
-Dee_hash_t __set_hash__.set_operator_hash([[nonnull]] DeeObject *self)
+[[operator([Set, Mapping].OPERATOR_HASH: tp_cmp->tp_hash)]]
+[[wunused]] Dee_hash_t
+__set_hash__.set_operator_hash([[nonnull]] DeeObject *self)
 %{unsupported_alias("default__seq_operator_hash__unsupported")}
 %{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
 %{$with__set_operator_foreach =
 [[prefix(DEFINE_default_set_hash_with_foreach_cb)]]
 [[prefix(DEFINE_DeeSet_HandleHashError)]] {
 	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	if unlikely(DeeSet_OperatorForeach(self, &default_set_hash_with_foreach_cb, &result))
+	if unlikely(DeeType_InvokeMethodHint(self, set_operator_foreach, &default_set_hash_with_foreach_cb, &result))
 		goto err;
 	return result;
 err:
@@ -77,12 +78,7 @@ err:
 }
 
 set_operator_hash = {
-	DeeMH_set_operator_foreach_t set_operator_foreach;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (Dee_SEQCLASS_ISSETORMAP(SEQ_CLASS) && DeeType_RequireHash(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_hash;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	set_operator_foreach = REQUIRE(set_operator_foreach);
+	DeeMH_set_operator_foreach_t set_operator_foreach = REQUIRE(set_operator_foreach);
 	if (set_operator_foreach == &default__set_operator_foreach__empty)
 		return &$empty;
 	if (set_operator_foreach)

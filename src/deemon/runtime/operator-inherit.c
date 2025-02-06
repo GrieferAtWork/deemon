@@ -44,6 +44,31 @@
 /************************************************************************/
 
 
+/* TODO: Inheritance of (e.g.) "tp_size" must work like this:
+>> if (base_type->tp_seq->tp_size == &DeeSeq_OperatorSize ||
+>>     base_type->tp_seq->tp_size == &default__seq_operator_size__empty ||
+>>     base_type->tp_seq->tp_size == &default__seq_operator_size__with__seq_operator_foreach ||
+>>     base_type->tp_seq->tp_size == &default__seq_operator_size__with__... ||
+>>     base_type->tp_seq->tp_size == &DeeSet_OperatorSize ||
+>>     base_type->tp_seq->tp_size == &default__set_operator_size__empty ||
+>>     base_type->tp_seq->tp_size == &default__set_operator_size__with__seq_operator_foreach ||
+>>     base_type->tp_seq->tp_size == &default__set_operator_size__with__...) {
+>>     if (DeeType_GetSeqClass(this_type) == Dee_SEQCLASS_SEQ) {
+>>         // Initial assign to prevent recursion during mh_select_* call
+>>         // Can't just use the super-type's operator because that might
+>>         // imply certain semantics that won't apply to the sub-class.
+>>         if (atomic_cmpxch(&this_type->tp_seq->tp_size, NULL, &DeeSeq_OperatorSize))
+>>             this_type->tp_seq->tp_size = mh_select_seq_operator_size(this_type, this_type, Dee_TMH_seq_operator_size);
+>>     } else {
+>>         if (atomic_cmpxch(&this_type->tp_seq->tp_size, NULL, &DeeSet_OperatorSize))
+>>             this_type->tp_seq->tp_size = mh_select_seq_operator_size(this_type, this_type, Dee_TMH_set_operator_size);
+>>     }
+>> } else {
+>>     this_type->tp_seq->tp_size = base_type->tp_seq->tp_size;
+>> }
+*/
+
+
 /* Trace self-optimizing operator inheritance. */
 #if 1
 #define LOG_INHERIT(base, self, what)                        \
@@ -176,8 +201,8 @@ typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeType_tp_delrange_t)(DeeObj
 typedef WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *DeeType_tp_setrange_t)(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_foreach_t)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_foreach_pair_t)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
-typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_enumerate_t)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg);
-typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_enumerate_index_t)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_enumerate_t)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeType_tp_enumerate_index_t)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeType_tp_iterkeys_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_bounditem_t)(DeeObject *self, DeeObject *index);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_hasitem_t)(DeeObject *self, DeeObject *index);

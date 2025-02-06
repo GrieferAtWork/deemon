@@ -272,7 +272,7 @@ filter_foreach(Filter *self, Dee_foreach_t proc, void *arg) {
 
 struct filterau_enumerate_data {
 	DeeObject      *faued_fun;  /* [1..1] Function used for filtering. */
-	Dee_enumerate_t faued_proc; /* [1..1] Underlying callback. */
+	Dee_seq_enumerate_t faued_proc; /* [1..1] Underlying callback. */
 	void           *faued_arg;  /* [?..?] Cookie for `pfd_proc' */
 };
 
@@ -293,7 +293,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filterau_enumerate(Filter *self, Dee_enumerate_t proc, void *arg) {
+filterau_enumerate(Filter *self, Dee_seq_enumerate_t proc, void *arg) {
 	struct filterau_enumerate_data data;
 	data.faued_fun  = self->f_fun;
 	data.faued_proc = proc;
@@ -303,7 +303,7 @@ filterau_enumerate(Filter *self, Dee_enumerate_t proc, void *arg) {
 
 struct filterau_enumerate_index_data {
 	DeeObject            *faueid_fun;  /* [1..1] Function used for filtering. */
-	Dee_enumerate_index_t faueid_proc; /* [1..1] Underlying callback. */
+	Dee_seq_enumerate_index_t faueid_proc; /* [1..1] Underlying callback. */
 	void                 *faueid_arg;  /* [?..?] Cookie for `pfd_proc' */
 };
 
@@ -324,7 +324,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filterau_enumerate_index(Filter *self, Dee_enumerate_index_t proc,
+filterau_enumerate_index(Filter *self, Dee_seq_enumerate_index_t proc,
                                   void *arg, size_t start, size_t end) {
 	struct filterau_enumerate_index_data data;
 	data.faueid_fun  = self->f_fun;
@@ -337,7 +337,7 @@ filterau_enumerate_index(Filter *self, Dee_enumerate_index_t proc,
 	(__SSIZE_MIN__ + 99) /* Shhht. We don't talk about this one... */
 struct filter_enumerate_index_data {
 	DeeObject            *feid_fun;   /* [1..1] Function used for filtering. */
-	Dee_enumerate_index_t feid_proc;  /* [1..1] Underlying callback. */
+	Dee_seq_enumerate_index_t feid_proc;  /* [1..1] Underlying callback. */
 	void                 *feid_arg;   /* [?..?] Cookie for `pfd_proc' */
 	size_t                feid_index; /* Next index */
 	size_t                feid_start; /* Start index */
@@ -362,7 +362,7 @@ filter_enumerate_index_cb(void *arg, DeeObject *value) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-filter_enumerate_index(Filter *self, Dee_enumerate_index_t proc,
+filter_enumerate_index(Filter *self, Dee_seq_enumerate_index_t proc,
                        void *arg, size_t start, size_t end) {
 	Dee_ssize_t result;
 	struct filter_enumerate_index_data data;
@@ -832,7 +832,7 @@ PRIVATE struct type_seq filter_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&filter_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&filter_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&filter_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -858,8 +858,8 @@ PRIVATE struct type_seq filterau_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&filterau_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&filterau_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&filterau_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&filterau_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&filterau_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&filterau_enumerate_index,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *))&filterau_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&filterau_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&filterau_hasitem,

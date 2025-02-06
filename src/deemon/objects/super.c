@@ -613,12 +613,12 @@ super_foreach_pair(Super *me, Dee_foreach_pair_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-super_enumerate(Super *__restrict me, Dee_enumerate_t proc, void *arg) {
+super_enumerate(Super *__restrict me, Dee_seq_enumerate_t proc, void *arg) {
 	return DeeObject_TEnumerate(me->s_type, me->s_self, proc, arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-super_enumerate_index(Super *__restrict me, Dee_enumerate_index_t proc,
+super_enumerate_index(Super *__restrict me, Dee_seq_enumerate_index_t proc,
                       void *arg, size_t start, size_t end) {
 	return DeeObject_TEnumerateIndex(me->s_type, me->s_self, proc, arg, start, end);
 }
@@ -801,8 +801,8 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&super_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&super_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&super_foreach_pair,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&super_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&super_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&super_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&super_enumerate_index,
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iterkeys,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_hasitem,

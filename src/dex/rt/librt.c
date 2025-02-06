@@ -1911,7 +1911,7 @@ librt_get_SeqEnumWithIterAndUnpackAndFilter_Type_f(size_t UNUSED(argc), DeeObjec
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-my_custom_enumerate(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg) {
+my_custom_enumerate(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
 	(void)self;
 	(void)proc;
 	(void)arg;

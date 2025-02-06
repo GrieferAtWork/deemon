@@ -96,7 +96,7 @@ __seq_{m}__.seq_{m}([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_{m}_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_{m}_foreach_cb, &result);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_{m}_foreach_cb, &result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -165,7 +165,7 @@ __seq_{m}__.seq_{m}_with_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_{m}_with_key_foreach_cb, &data);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_{m}_with_key_foreach_cb, &data);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -210,10 +210,10 @@ seq_{m}_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 __seq_{m}__.seq_{m}_with_range([[nonnull]] DeeObject *__restrict self,
                                size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_{m}_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_{m}_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_{m}_enumerate_cb, &result, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_{m}_enumerate_cb, &result, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -245,13 +245,13 @@ __seq_{m}__.seq_{m}_with_range_and_key([[nonnull]] DeeObject *self,
                                        size_t start, size_t end,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_{m}_with_key_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_{m}_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_{m}_with_key_enumerate_cb, &data, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_{m}_with_key_enumerate_cb, &data, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -292,19 +292,19 @@ seq_{m}_with_key = {
 };
 
 seq_{m}_with_range = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 
 seq_{m}_with_range_and_key = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };');
 ]]]*/
 /************************************************************************/
@@ -321,12 +321,12 @@ __seq_min__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeMinWithKey(self, key)
-		         : DeeSeq_InvokeMin(self);
+		         ? DeeType_InvokeMethodHint(self, seq_min_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_min);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeMinWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeMinWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_min_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_min_with_range, start, end);
 	}
 	return result;
 err:
@@ -363,7 +363,7 @@ __seq_min__.seq_min([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_min_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_min_foreach_cb, &result);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_min_foreach_cb, &result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -432,7 +432,7 @@ __seq_min__.seq_min_with_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_min_with_key_foreach_cb, &data);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_min_with_key_foreach_cb, &data);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -477,10 +477,10 @@ seq_min_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 __seq_min__.seq_min_with_range([[nonnull]] DeeObject *__restrict self,
                                size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_min_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_min_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_min_enumerate_cb, &result, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_min_enumerate_cb, &result, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -512,13 +512,13 @@ __seq_min__.seq_min_with_range_and_key([[nonnull]] DeeObject *self,
                                        size_t start, size_t end,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_min_with_key_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_min_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_min_with_key_enumerate_cb, &data, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_min_with_key_enumerate_cb, &data, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -559,19 +559,19 @@ seq_min_with_key = {
 };
 
 seq_min_with_range = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 
 seq_min_with_range_and_key = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 
 
@@ -592,12 +592,12 @@ __seq_max__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeMaxWithKey(self, key)
-		         : DeeSeq_InvokeMax(self);
+		         ? DeeType_InvokeMethodHint(self, seq_max_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_max);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeMaxWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeMaxWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_max_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_max_with_range, start, end);
 	}
 	return result;
 err:
@@ -634,7 +634,7 @@ __seq_max__.seq_max([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_max_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_max_foreach_cb, &result);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_max_foreach_cb, &result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -703,7 +703,7 @@ __seq_max__.seq_max_with_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_max_with_key_foreach_cb, &data);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_max_with_key_foreach_cb, &data);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -748,10 +748,10 @@ seq_max_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 __seq_max__.seq_max_with_range([[nonnull]] DeeObject *__restrict self,
                                size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_max_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_max_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_max_enumerate_cb, &result, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_max_enumerate_cb, &result, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -783,13 +783,13 @@ __seq_max__.seq_max_with_range_and_key([[nonnull]] DeeObject *self,
                                        size_t start, size_t end,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_max_with_key_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_max_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_max_with_key_enumerate_cb, &data, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_max_with_key_enumerate_cb, &data, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -830,19 +830,19 @@ seq_max_with_key = {
 };
 
 seq_max_with_range = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 
 seq_max_with_range_and_key = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 /*[[[end]]]*/
 

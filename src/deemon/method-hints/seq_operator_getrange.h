@@ -25,11 +25,15 @@ __seq_getrange__(start?:?X2?Dint?N,end?:?X2?Dint?N)->?S?O {
 	DeeObject *start, *end;
 	if (DeeArg_Unpack(argc, argv, "oo:__seq_getrange__", &start, &end))
 		goto err;
-	return DeeSeq_OperatorGetRange(self, start, end);
+	return DeeType_InvokeMethodHint(self, seq_operator_getrange, start, end);
 err:
 	return NULL;
 }
 
+
+
+
+[[operator(Sequence.OPERATOR_GETRANGE: tp_seq->tp_getrange)]]
 [[wunused]] DREF DeeObject *
 __seq_getrange__.seq_operator_getrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *start,
@@ -41,10 +45,10 @@ __seq_getrange__.seq_operator_getrange([[nonnull]] DeeObject *self,
 	if (DeeObject_AsSSize(start, &start_index))
 		goto err;
 	if (DeeNone_Check(end))
-		return DeeSeq_OperatorGetRangeIndexN(self, start_index);
+		return DeeType_InvokeMethodHint(self, seq_operator_getrange_index_n, start_index);
 	if (DeeObject_AsSSize(end, &end_index))
 		goto err;
-	return DeeSeq_OperatorGetRangeIndex(self, start_index, end_index);
+	return DeeType_InvokeMethodHint(self, seq_operator_getrange_index, start_index, end_index);
 err:
 	return NULL;
 }} {
@@ -56,12 +60,7 @@ err:
 
 
 seq_operator_getrange = {
-	DeeMH_seq_operator_getrange_index_t seq_operator_getrange_index;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireGetRange(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_getrange;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_operator_getrange_index = REQUIRE(seq_operator_getrange_index);
+	DeeMH_seq_operator_getrange_index_t seq_operator_getrange_index = REQUIRE(seq_operator_getrange_index);
 	if (seq_operator_getrange_index == &default__seq_operator_getrange_index__empty)
 		return &$empty;
 	if (seq_operator_getrange_index && REQUIRE(seq_operator_getrange_index_n))
@@ -74,6 +73,7 @@ seq_operator_getrange = {
 
 
 
+[[operator(Sequence.OPERATOR_GETRANGE: tp_seq->tp_getrange_index)]]
 [[wunused]] DREF DeeObject *
 __seq_getrange__.seq_operator_getrange_index([[nonnull]] DeeObject *self,
                                              Dee_ssize_t start, Dee_ssize_t end)
@@ -87,7 +87,7 @@ __seq_getrange__.seq_operator_getrange_index([[nonnull]] DeeObject *self,
 	endob = DeeInt_NewSSize(end);
 	if unlikely(!endob)
 		goto err_startob;
-	result = DeeSeq_OperatorGetRange(self, startob, endob);
+	result = DeeType_InvokeMethodHint(self, seq_operator_getrange, startob, endob);
 	Dee_Decref(endob);
 	Dee_Decref(startob);
 	return result;
@@ -99,7 +99,7 @@ err:
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	struct Dee_seq_range range;
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, size);
@@ -119,7 +119,7 @@ err:
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	struct Dee_seq_range range;
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, size);
@@ -139,7 +139,7 @@ err:
 %{$with__seq_operator_size__and__seq_operator_getitem = {
 	DREF DefaultSequence_WithSizeAndGetItem *result;
 	struct Dee_seq_range range;
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, size);
@@ -171,7 +171,7 @@ err:
 		range.sr_start = (size_t)start;
 		range.sr_end   = (size_t)end;
 	} else {
-		size_t size = DeeSeq_OperatorSize(self);
+		size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 		if unlikely(size == (size_t)-1)
 			goto err;
 		DeeSeqRange_Clamp(&range, start, end, size);
@@ -196,10 +196,6 @@ err:
 
 seq_operator_getrange_index = {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireGetRangeIndex(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_getrange_index;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (THIS_TYPE->tp_seq &&
 	    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
 	    THIS_TYPE->tp_seq->tp_size &&
@@ -211,7 +207,7 @@ seq_operator_getrange_index = {
 	if (seq_operator_trygetitem_index) {
 		DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_ANY(seq_operator_size);
 		if (seq_operator_size != &default__seq_operator_size__unsupported) {
-			if (seq_operator_size != &default__seq_operator_size__empty)
+			if (seq_operator_size == &default__seq_operator_size__empty)
 				return $empty;
 			if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__with__seq_operator_foreach) {
 				if (REQUIRE(seq_operator_iter))
@@ -233,6 +229,7 @@ seq_operator_getrange_index = {
 
 
 
+[[operator(Sequence.OPERATOR_GETRANGE: tp_seq->tp_getrange_index_n)]]
 [[wunused]] DREF DeeObject *
 __seq_getrange__.seq_operator_getrange_index_n([[nonnull]] DeeObject *self,
                                                Dee_ssize_t start)
@@ -246,14 +243,14 @@ __seq_getrange__.seq_operator_getrange_index_n([[nonnull]] DeeObject *self,
 	startob = DeeInt_NewSSize(start);
 	if unlikely(!startob)
 		goto err;
-	result = DeeSeq_OperatorGetRange(self, startob, Dee_None);
+	result = DeeType_InvokeMethodHint(self, seq_operator_getrange, startob, Dee_None);
 	Dee_Decref(startob);
 	return result;
 err:
 	return NULL;
 }}
 %{$with__seq_operator_size__and__seq_operator_getrange_index = {
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
@@ -266,7 +263,7 @@ err:
 			}
 		}
 	}
-	return DeeSeq_OperatorGetRangeIndex(self, start, (Dee_ssize_t)size);
+	return DeeType_InvokeMethodHint(self, seq_operator_getrange_index, start, (Dee_ssize_t)size);
 empty_range:
 	return_empty_seq;
 err:
@@ -274,7 +271,7 @@ err:
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
@@ -304,7 +301,7 @@ err:
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
@@ -334,7 +331,7 @@ err:
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem = {
 	DREF DefaultSequence_WithSizeAndGetItem *result;
-	size_t size = DeeSeq_OperatorSize(self);
+	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
@@ -378,10 +375,6 @@ err:
 
 seq_operator_getrange_index_n = {
 	DeeMH_seq_operator_size_t seq_operator_size;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireGetRangeIndexN(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_getrange_index_n;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (THIS_TYPE->tp_seq &&
 	    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
 	    THIS_TYPE->tp_seq->tp_size &&
@@ -409,5 +402,3 @@ seq_operator_getrange_index_n = {
 			return $with__seq_operator_size__and__seq_operator_getrange_index;
 	}
 };
-
-

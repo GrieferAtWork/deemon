@@ -27,20 +27,20 @@ __seq_count__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Din
 	DeeObject *item, *key = Dee_None;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "o|" UNPuSIZ UNPuSIZ "o:count",
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_count__",
 	                    &item, &start, &end, &key))
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		if (DeeNone_Check(key)) {
-			result = DeeSeq_InvokeCount(self, item);
+			result = DeeType_InvokeMethodHint(self, seq_count, item);
 		} else {
-			result = DeeSeq_InvokeCountWithKey(self, item, key);
+			result = DeeType_InvokeMethodHint(self, seq_count_with_key, item, key);
 		}
 	} else {
 		if (DeeNone_Check(key)) {
-			result = DeeSeq_InvokeCountWithRange(self, item, start, end);
+			result = DeeType_InvokeMethodHint(self, seq_count_with_range, item, start, end);
 		} else {
-			result = DeeSeq_InvokeCountWithRangeAndKey(self, item, start, end, key);
+			result = DeeType_InvokeMethodHint(self, seq_count_with_range_and_key, item, start, end, key);
 		}
 	}
 	if unlikely(result == (size_t)-1)
@@ -75,7 +75,7 @@ __seq_count__.seq_count([[nonnull]] DeeObject *self,
  * types. This also optimizes the case when "self" is a Mapping, where
  * seq_operator_contains is implemented to use map_operator_trygetitem */
 %{$with__set_operator_contains = {
-	DREF DeeObject *contains = DeeSeq_OperatorContains(self, item);
+	DREF DeeObject *contains = DeeType_InvokeMethodHint(self, seq_operator_contains, item);
 	if unlikely(!contains)
 		goto err;
 	return (size_t)DeeObject_BoolInherited(contains);
@@ -83,7 +83,7 @@ err:
 	return (size_t)-1;
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_count_foreach_cb)]] {
-	return (size_t)DeeSeq_OperatorForeach(self, &seq_count_foreach_cb, item);
+	return (size_t)DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_count_foreach_cb, item);
 }}
 %{$with__seq_find = {
 	return default__seq_count_with_range__with__seq_find(self, item, 0, (size_t)-1);
@@ -139,7 +139,7 @@ __seq_count__.seq_count_with_key([[nonnull]] DeeObject *self,
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_count_with_key_foreach_cb, &data);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_count_with_key_foreach_cb, &data);
 	Dee_Decref(data.gscwk_kelem);
 	return (size_t)foreach_status;
 err:
@@ -188,8 +188,8 @@ __seq_count__.seq_count_with_range([[nonnull]] DeeObject *self,
                                    size_t start, size_t end)
 %{$empty = 0}
 %{unsupported(auto)}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_count_enumerate_cb)]] {
-	return (size_t)DeeSeq_OperatorEnumerateIndex(self, &seq_count_enumerate_cb, item, start, end);
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_count_enumerate_cb)]] {
+	return (size_t)DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_count_enumerate_cb, item, start, end);
 }}
 %{$with__seq_find = {
 	size_t result = 0;
@@ -245,14 +245,14 @@ __seq_count__.seq_count_with_range_and_key([[nonnull]] DeeObject *self,
                                            [[nonnull]] DeeObject *key)
 %{$empty = 0}
 %{unsupported(auto)}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_count_with_key_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_count_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_count_with_key_enumerate_cb, &data, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_count_with_key_enumerate_cb, &data, start, end);
 	Dee_Decref(data.gscwk_kelem);
 	return (size_t)foreach_status;
 err:
@@ -300,7 +300,7 @@ seq_count = {
 	seq_find = REQUIRE(seq_find);
 	if (seq_find == &default__seq_find__empty)
 		return &$empty;
-	if (seq_find == &default__seq_find__with__seq_operator_enumerate_index)
+	if (seq_find == &default__seq_find__with__seq_enumerate_index)
 		return &$with__seq_operator_foreach;
 	if (seq_find)
 		return &$with__seq_find;
@@ -311,7 +311,7 @@ seq_count_with_key = {
 	seq_find_with_key = REQUIRE(seq_find_with_key);
 	if (seq_find_with_key == &default__seq_find_with_key__empty)
 		return &$empty;
-	if (seq_find_with_key == &default__seq_find_with_key__with__seq_operator_enumerate_index)
+	if (seq_find_with_key == &default__seq_find_with_key__with__seq_enumerate_index)
 		return &$with__seq_operator_foreach;
 	if (seq_find_with_key)
 		return &$with__seq_find_with_key;
@@ -322,8 +322,8 @@ seq_count_with_range = {
 	seq_find = REQUIRE(seq_find);
 	if (seq_find == &default__seq_find__empty)
 		return &$empty;
-	if (seq_find == &default__seq_find__with__seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_find == &default__seq_find__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 	if (seq_find)
 		return &$with__seq_find;
 };
@@ -333,8 +333,8 @@ seq_count_with_range_and_key = {
 	seq_find_with_key = REQUIRE(seq_find_with_key);
 	if (seq_find_with_key == &default__seq_find_with_key__empty)
 		return &$empty;
-	if (seq_find_with_key == &default__seq_find_with_key__with__seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_find_with_key == &default__seq_find_with_key__with__seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 	if (seq_find_with_key)
 		return &$with__seq_find_with_key;
 };

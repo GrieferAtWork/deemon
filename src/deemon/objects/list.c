@@ -2370,7 +2370,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-list_enumerate_index(List *self, Dee_enumerate_index_t proc,
+list_enumerate_index(List *self, Dee_seq_enumerate_index_t proc,
                      void *arg, size_t start, size_t end) {
 	size_t i = start;
 	Dee_ssize_t temp, result = 0;
@@ -2419,7 +2419,7 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&list_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&list_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&list_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL, /* default */
 	/* .tp_hasitem                    = */ NULL, /* default */

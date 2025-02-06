@@ -303,7 +303,7 @@ err:
 /************************************************************************/
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                                                void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
@@ -332,7 +332,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndex(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+DeeSeq_DefaultEnumerateIndexReverseWithSizeAndGetItemIndex(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                                            void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
@@ -366,7 +366,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+DeeSeq_DefaultEnumerateIndexReverseWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                                               void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct type_seq *seq = Dee_TYPE(self)->tp_seq;
@@ -401,7 +401,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+DeeSeq_DefaultEnumerateIndexReverseWithSizeObAndGetItem(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                                         void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	struct type_seq *seq = Dee_TYPE(self)->tp_seq;

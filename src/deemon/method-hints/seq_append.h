@@ -28,7 +28,7 @@ __seq_append__(item) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_append__", &item))
 		goto err;
-	if unlikely(DeeSeq_InvokeAppend(self, item))
+	if unlikely(DeeType_InvokeMethodHint(self, seq_append, item))
 		goto err;
 	return_none;
 err:
@@ -48,7 +48,7 @@ int __seq_append__.seq_append([[nonnull]] DeeObject *self,
 	if unlikely(!item_tuple)
 		goto err;
 	DeeTuple_SET(item_tuple, 0, item);
-	result = DeeSeq_InvokeExtend(self, (DeeObject *)item_tuple);
+	result = DeeType_InvokeMethodHint(self, seq_extend, (DeeObject *)item_tuple);
 	DeeTuple_DecrefSymbolic((DeeObject *)item_tuple);
 	return result;
 err:

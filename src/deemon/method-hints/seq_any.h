@@ -32,12 +32,12 @@ __seq_any__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeAnyWithKey(self, key)
-		         : DeeSeq_InvokeAny(self);
+		         ? DeeType_InvokeMethodHint(self, seq_any_with_key, key)
+		         : DeeType_InvokeMethodHint0(self, seq_any);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_InvokeAnyWithRangeAndKey(self, start, end, key)
-		         : DeeSeq_InvokeAnyWithRange(self, start, end);
+		         ? DeeType_InvokeMethodHint(self, seq_any_with_range_and_key, start, end, key)
+		         : DeeType_InvokeMethodHint(self, seq_any_with_range, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -66,7 +66,7 @@ int __seq_any__.seq_any([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_any_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_any_foreach_cb, NULL);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_any_foreach_cb, NULL);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 1;
@@ -105,7 +105,7 @@ int __seq_any__.seq_any_with_key([[nonnull]] DeeObject *self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_any_with_key_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorForeach(self, &seq_any_with_key_foreach_cb, key);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_any_with_key_foreach_cb, key);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 1;
@@ -142,9 +142,9 @@ seq_any_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 int __seq_any__.seq_any_with_range([[nonnull]] DeeObject *__restrict self,
                                    size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_any_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_any_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_any_enumerate_cb, NULL, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_any_enumerate_cb, NULL, start, end);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 1;
@@ -176,9 +176,9 @@ seq_any_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 int __seq_any__.seq_any_with_range_and_key([[nonnull]] DeeObject *self, size_t start, size_t end,
                                            [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_any_with_key_enumerate_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_any_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_any_with_key_enumerate_cb, key, start, end);
+	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_any_with_key_enumerate_cb, key, start, end);
 	ASSERT(foreach_status == 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 1;
@@ -210,18 +210,18 @@ seq_any_with_key = {
 };
 
 seq_any_with_range = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 
 seq_any_with_range_and_key = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 

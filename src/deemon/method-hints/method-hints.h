@@ -20,8 +20,17 @@
 
 /* !!!!!!!!!!!!!!!!!!
  * After making changes to this file (or any of the files %[include]-ed below), you must run:
- * >> deemon -F include/deemon/method-hints.h src/deemon/runtime/method-hint-defaults.h src/deemon/runtime/method-hint-defaults.c src/deemon/runtime/method-hints.h src/deemon/runtime/method-hints.c src/deemon/runtime/method-hint-select.h src/deemon/runtime/method-hint-select.c src/deemon/runtime/method-hint-wrappers.c src/deemon/runtime/strings.h
+ * >> deemon -F include/deemon/method-hints.h include/deemon/operator-hints.h src/deemon/runtime/method-hint-defaults.h src/deemon/runtime/method-hint-defaults.c src/deemon/runtime/method-hints.h src/deemon/runtime/method-hints.c src/deemon/runtime/method-hint-select.h src/deemon/runtime/method-hint-select.c src/deemon/runtime/method-hint-wrappers.c src/deemon/runtime/operator-hint-defaults.c src/deemon/runtime/strings.h
  */
+
+/************************************************************************/
+/* For `deemon.Object'                                                  */
+/************************************************************************/
+%[include("object_operator_iter.h")]
+%[include("object_operator_misc.h")]
+//%[include("object_operator_str.h")]
+// TODO: All of the other operators
+
 
 /************************************************************************/
 /* For `deemon.Sequence'                                                */
@@ -29,8 +38,7 @@
 %[include("seq_operator_bool.h")]
 %[include("seq_operator_size.h")]
 %[include("seq_operator_iter.h")]
-%[include("seq_operator_iterkeys.h")]
-%[include("seq_operator_enumerate.h")]
+%[include("seq_iterkeys.h")]
 
 %[include("seq_operator_getitem.h")]
 %[include("seq_operator_delitem.h")]
@@ -51,9 +59,10 @@
 %[include("seq_operator_inplace_add.h")]
 %[include("seq_operator_inplace_mul.h")]
 
-%[include("seq_operator_foreach_reverse.h")]
-
+%[include("seq_enumerate.h")]
 %[include("seq_enumerate_items.h")]
+
+%[include("seq_enumerate_reverse.h")]
 
 %[include("seq_first.h")]
 %[include("seq_last.h")]
@@ -77,47 +86,14 @@
 %[include("seq_count.h")]
 %[include("seq_operator_contains.h")]
 
-///* Returns the first element (within the given range) where `match(elem)' is true. */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_locate, (DeeObject *self, DeeObject *match, DeeObject *def))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_locate_with_range, (DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_locate, "locate", "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_locate__, "__seq_locate__", seq_locate)
-//
-///* Returns the last element (within the given range) where `match(elem)' is true. */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), DREF DeeObject *, DCALL, seq_rlocate, (DeeObject *self, DeeObject *match, DeeObject *def)) /* Tries to use "seq_foreach_reverse" */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), DREF DeeObject *, DCALL, seq_rlocate_with_range, (DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rlocate, "rlocate", "(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_rlocate__, "__seq_rlocate__", seq_rlocate)
-//
-///* @return: 0 : Does not start with
-// * @return: 1 : Does start with
-// * @return: -1: Error */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_startswith, (DeeObject *self, DeeObject *item))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq_startswith_with_key, (DeeObject *self, DeeObject *item, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_startswith_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_startswith_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_startswith, "startswith", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_startswith__, "__seq_startswith__", seq_startswith)
-//
-///* @return: 0 : Does not end with
-// * @return: 1 : Does end with
-// * @return: -1: Error */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_endswith, (DeeObject *self, DeeObject *item))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, seq_endswith_with_key, (DeeObject *self, DeeObject *item, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, seq_endswith_with_range, (DeeObject *self, DeeObject *item, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, seq_endswith_with_range_and_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_endswith, "endswith", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_endswith__, "__seq_endswith__", seq_endswith)
+%[include("seq_locate.h")]
+%[include("seq_rlocate.h")]
+
+%[include("seq_startswith.h")]
+%[include("seq_endswith.h")]
 
 %[include("seq_find.h")]
-
-///* @return: * :         Index of `item' in `self'
-// * @return: (size_t)-1: `item' could not be located in `self'
-// * @return: (size_t)Dee_COMPARE_ERR: Error */
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), size_t, DCALL, seq_rfind, (DeeObject *self, DeeObject *item, size_t start, size_t end))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), size_t, DCALL, seq_rfind_with_key, (DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key))
-//Dee_DEFINE_TYPE_METHOD_HINT_KWMETHOD(seq_rfind, "rfind", "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint")
-//Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__seq_rfind__, "__seq_rfind__", seq_rfind)
+%[include("seq_rfind.h")]
 
 %[include("seq_erase.h")]
 %[include("seq_insert.h")]
@@ -312,7 +288,7 @@
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, map_operator_setitem_string_len_hash, (DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value))
 //Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__map_setitem__, "__map_setitem__", "(key,value)")
 
-%[include("map_operator_enumerate.h")]
+%[include("map_enumerate.h")]
 
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_compare_eq, (DeeObject *self, DeeObject *some_object))
 //Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__map_compare_eq__, "__map_compare_eq__", "(rhs:?X2?M?O?O?S?T2?O?O)->?Dbool")
@@ -441,4 +417,20 @@
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), DREF DeeObject *, DCALL, map_popitem, (DeeObject *self))
 //Dee_DEFINE_TYPE_METHOD_HINT_METHOD(map_popitem, "popitem", "->?X2?T2?O?O?N")
 //Dee_DEFINE_TYPE_METHOD_HINT_ALIAS(__map_popitem__, "__map_popitem__", map_popitem)
+
+
+
+/************************************************************************/
+/* For `deemon.Numeric'                                                 */
+/************************************************************************/
+/* TODO: __numeric_add__ (including the "operator + (rhs) { return this - (-rhs); }" alias) */
+/* TODO: __numeric_sub__ (including the "operator - (rhs) { return this + (-rhs); }" alias) */
+/* TODO: __numeric_mul__ */
+/* TODO: __numeric_...__ */
+/* TODO: __numeric_inplace_add__ (including the "operator += (rhs) { return this -= (-rhs); }" alias) */
+/* TODO: __numeric_inplace_sub__ (including the "operator -= (rhs) { return this += (-rhs); }" alias) */
+/* TODO: __numeric_inplace_mul__ */
+/* TODO: __numeric_inplace_...__ */
+/* TODO: __numeric_divmod__ */
+/* TODO: __numeric_...__ (Just look at the functions currently ) */
 

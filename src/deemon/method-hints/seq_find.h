@@ -19,23 +19,24 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.find()                                                */
+/* deemon.Sequence.find()                                               */
 /************************************************************************/
 [[kw, alias(Sequence.find -> "seq_find"), declNameAlias("explicit_seq_find")]]
 __seq_find__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint {
-	int result;
 	DeeObject *item, *key = Dee_None;
-	size_t start = 0, end = (size_t)-1;
+	size_t result, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
-	                    "|" UNPuSIZ UNPuSIZ "o:__seq_find__",
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_find__",
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeSeq_InvokeFindWithKey(self, item, start, end, key)
-	         : DeeSeq_InvokeFind(self, item, start, end);
-	if unlikely(result < 0)
+	         ? DeeType_InvokeMethodHint(self, seq_find_with_key, item, start, end, key)
+	         : DeeType_InvokeMethodHint(self, seq_find, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
-	return_bool_(result);
+	if unlikely(result == (size_t)-1)
+		return_reference_(DeeInt_MinusOne);
+	return DeeInt_NewSize(result);
 err:
 	return NULL;
 }
@@ -43,7 +44,6 @@ err:
 %[define(DEFINE_seq_find_cb =
 #ifndef DEFINED_seq_find_cb
 #define DEFINED_seq_find_cb
-#endif /* !DEFINED_seq_find_cb */
 union seq_find_data {
 	DeeObject *gsfd_elem;  /* [in][1..1] Element to search for */
 	size_t     gsfd_index; /* [out] Located index */
@@ -68,6 +68,7 @@ seq_find_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 err:
 	return -1;
 }
+#endif /* !DEFINED_seq_find_cb */
 )]
 
 
@@ -80,11 +81,11 @@ __seq_find__.seq_find([[nonnull]] DeeObject *self,
                       [[nonnull]] DeeObject *item,
                       size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_find_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_find_cb)]] {
 	Dee_ssize_t status;
 	union seq_find_data data;
 	data.gsfd_elem = item;
-	status = DeeSeq_OperatorEnumerateIndex(self, &seq_find_cb, &data, start, end);
+	status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_find_cb, &data, start, end);
 	if likely(status == -2) {
 		if unlikely(data.gsfd_index == (size_t)Dee_COMPARE_ERR)
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
@@ -147,20 +148,20 @@ err:
 /* @return: * :         Index of `item' in `self'
  * @return: (size_t)-1: `item' could not be located in `self'
  * @return: (size_t)Dee_COMPARE_ERR: Error */
-[[wunused]]
-int __seq_find__.seq_find_with_key([[nonnull]] DeeObject *self,
-                                   [[nonnull]] DeeObject *item,
-                                   size_t start, size_t end,
-                                   [[nonnull]] DeeObject *key)
+[[wunused]] size_t
+__seq_find__.seq_find_with_key([[nonnull]] DeeObject *self,
+                               [[nonnull]] DeeObject *item,
+                               size_t start, size_t end,
+                               [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
-%{$with__seq_operator_enumerate_index = [[prefix(DEFINE_seq_find_with_key_cb)]] {
+%{$with__seq_enumerate_index = [[prefix(DEFINE_seq_find_with_key_cb)]] {
 	Dee_ssize_t status;
 	struct seq_find_with_key_data data;
 	data.gsfwk_base.gsfd_elem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gsfwk_base.gsfd_elem)
 		goto err;
 	data.gsfwk_key = key;
-	status = DeeSeq_OperatorEnumerateIndex(self, &seq_find_with_key_cb, &data, start, end);
+	status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_find_with_key_cb, &data, start, end);
 	Dee_Decref(data.gsfwk_base.gsfd_elem);
 	if likely(status == -2) {
 		if unlikely(data.gsfwk_base.gsfd_index == (size_t)Dee_COMPARE_ERR)
@@ -191,17 +192,17 @@ err:
 }
 
 seq_find = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };
 
 seq_find_with_key = {
-	DeeMH_seq_operator_enumerate_index_t seq_operator_enumerate_index = REQUIRE(seq_operator_enumerate_index);
-	if (seq_operator_enumerate_index == &default__seq_operator_enumerate_index__empty)
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = REQUIRE(seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
 		return &$empty;
-	if (seq_operator_enumerate_index)
-		return &$with__seq_operator_enumerate_index;
+	if (seq_enumerate_index)
+		return &$with__seq_enumerate_index;
 };

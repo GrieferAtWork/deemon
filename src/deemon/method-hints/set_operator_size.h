@@ -24,17 +24,18 @@
 __set_size__()->?Dint {
 	if (DeeArg_Unpack(argc, argv, ":__set_size__"))
 		goto err;
-	return DeeSet_OperatorSizeOb(self);
+	return DeeType_InvokeMethodHint0(self, set_operator_sizeob);
 err:
 	return NULL;
 }
 
+[[operator([Set, Mapping].OPERATOR_SIZE: tp_seq->tp_sizeob)]]
 [[wunused]] DREF DeeObject *
 __set_size__.set_operator_sizeob([[nonnull]] DeeObject *self)
 %{unsupported(auto("operator size"))}
 %{$empty = { return_reference_(DeeInt_Zero); }}
 %{$with__set_operator_size = {
-	size_t setsize = DeeSet_OperatorSize(self);
+	size_t setsize = DeeType_InvokeMethodHint0(self, set_operator_size);
 	if unlikely(setsize == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(setsize);
@@ -45,16 +46,17 @@ err:
 }
 
 
-[[wunused]]
-size_t __set_size__.set_operator_size([[nonnull]] DeeObject *self)
+[[operator([Set, Mapping].OPERATOR_SIZE: tp_seq->tp_size)]]
+[[wunused]] size_t
+__set_size__.set_operator_size([[nonnull]] DeeObject *self)
 %{unsupported(auto("operator size"))}
 %{$empty = 0}
 %{$with__set_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
-	return (size_t)DeeSet_OperatorForeach(self, &default_seq_size_with_foreach_cb, NULL);
+	return (size_t)DeeType_InvokeMethodHint(self, set_operator_foreach, &default_seq_size_with_foreach_cb, NULL);
 }}
  %{$with__set_operator_sizeob = {
 	DREF DeeObject *sizeob;
-	sizeob = DeeSet_OperatorSizeOb(self);
+	sizeob = DeeType_InvokeMethodHint0(self, set_operator_sizeob);
 	if unlikely(!sizeob)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(sizeob);
@@ -64,12 +66,7 @@ err:
 
 
 set_operator_sizeob = {
-	DeeMH_set_operator_size_t set_operator_size;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (Dee_SEQCLASS_ISSETORMAP(SEQ_CLASS) && DeeType_RequireSizeOb(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_sizeob;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	set_operator_size = REQUIRE(set_operator_size);
+	DeeMH_set_operator_size_t set_operator_size = REQUIRE(set_operator_size);
 	if (set_operator_size == &default__set_operator_size__empty)
 		return &$empty;
 	if (set_operator_size)
@@ -78,10 +75,6 @@ set_operator_sizeob = {
 
 set_operator_size = {
 	DeeMH_set_operator_foreach_t set_operator_foreach;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (Dee_SEQCLASS_ISSETORMAP(SEQ_CLASS) && DeeType_RequireSize(THIS_TYPE))
-		return THIS_TYPE->tp_seq->tp_size;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (REQUIRE_NODEFAULT(set_operator_sizeob))
 		return &$with__set_operator_sizeob;
 	set_operator_foreach = REQUIRE(set_operator_foreach);

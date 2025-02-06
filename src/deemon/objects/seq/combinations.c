@@ -1185,7 +1185,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-scv_enumerate_index(SeqCombinationsView *__restrict self, Dee_enumerate_index_t proc,
+scv_enumerate_index(SeqCombinationsView *__restrict self, Dee_seq_enumerate_index_t proc,
                     void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
 	size_t i, *idx = SeqCombinationsView_GetIdx(self);
@@ -1227,7 +1227,7 @@ PRIVATE struct type_seq scv_seq = {
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&scv_foreach,
 	/* .tp_foreach_pair       = */ NULL,
 	/* .tp_enumerate          = */ NULL,
-	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&scv_enumerate_index,
+	/* .tp_enumerate_index    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&scv_enumerate_index,
 	/* .tp_iterkeys           = */ NULL,
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,

@@ -1609,3 +1609,5 @@
 #define LOCAL_seq_docompare__(x) seq_docompare__##x
 #define LOCAL_NONNULL
 #define LOCAL_MAYBE_PUBLIC
+
+#define struct_mh_init_spec_operators(n)struct{Dee_funptr_t misos_default;struct mh_init_spec_operator misos_operators[n];}

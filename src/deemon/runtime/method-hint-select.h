@@ -33,16 +33,13 @@ DECL_BEGIN
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_bool_t DCALL mh_select_seq_operator_bool(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_sizeob_t DCALL mh_select_seq_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_size_t DCALL mh_select_seq_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_iter_t DCALL mh_select_seq_operator_iter(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_foreach_t DCALL mh_select_seq_operator_foreach(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_foreach_pair_t DCALL mh_select_seq_operator_foreach_pair(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_iterkeys_t DCALL mh_select_seq_operator_iterkeys(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_enumerate_t DCALL mh_select_seq_operator_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_enumerate_index_t DCALL mh_select_seq_operator_enumerate_index(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_iterkeys_t DCALL mh_select_seq_iterkeys(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_getitem_t DCALL mh_select_seq_operator_getitem(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_getitem_index_t DCALL mh_select_seq_operator_getitem_index(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_trygetitem_index_t DCALL mh_select_seq_operator_trygetitem_index(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_trygetitem_t DCALL mh_select_seq_operator_trygetitem(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_trygetitem_index_t DCALL mh_select_seq_operator_trygetitem_index(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_hasitem_t DCALL mh_select_seq_operator_hasitem(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_hasitem_index_t DCALL mh_select_seq_operator_hasitem_index(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_bounditem_t DCALL mh_select_seq_operator_bounditem(DeeTypeObject *self, DeeTypeObject *orig_type);
@@ -72,11 +69,13 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_gr_t DCALL mh_select
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_ge_t DCALL mh_select_seq_operator_ge(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_inplace_add_t DCALL mh_select_seq_operator_inplace_add(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_inplace_mul_t DCALL mh_select_seq_operator_inplace_mul(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_foreach_reverse_t DCALL mh_select_seq_foreach_reverse(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_enumerate_index_reverse_t DCALL mh_select_seq_enumerate_index_reverse(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_enumerate_t DCALL mh_select_seq_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_enumerate_index_t DCALL mh_select_seq_enumerate_index(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_t DCALL mh_select_seq_makeenumeration(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_with_int_range_t DCALL mh_select_seq_makeenumeration_with_int_range(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_with_range_t DCALL mh_select_seq_makeenumeration_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_foreach_reverse_t DCALL mh_select_seq_foreach_reverse(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_enumerate_index_reverse_t DCALL mh_select_seq_enumerate_index_reverse(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_trygetfirst_t DCALL mh_select_seq_trygetfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_getfirst_t DCALL mh_select_seq_getfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_boundfirst_t DCALL mh_select_seq_boundfirst(DeeTypeObject *self, DeeTypeObject *orig_type);
@@ -118,8 +117,22 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_contains_with_key_t DCALL mh_
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_contains_with_range_t DCALL mh_select_seq_contains_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_contains_with_range_and_key_t DCALL mh_select_seq_contains_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_contains_t DCALL mh_select_seq_operator_contains(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_locate_t DCALL mh_select_seq_locate(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_locate_with_range_t DCALL mh_select_seq_locate_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_rlocate_t DCALL mh_select_seq_rlocate(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_rlocate_with_range_t DCALL mh_select_seq_rlocate_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_startswith_t DCALL mh_select_seq_startswith(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_startswith_with_key_t DCALL mh_select_seq_startswith_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_startswith_with_range_t DCALL mh_select_seq_startswith_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_startswith_with_range_and_key_t DCALL mh_select_seq_startswith_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_endswith_t DCALL mh_select_seq_endswith(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_endswith_with_key_t DCALL mh_select_seq_endswith_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_endswith_with_range_t DCALL mh_select_seq_endswith_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_endswith_with_range_and_key_t DCALL mh_select_seq_endswith_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_find_t DCALL mh_select_seq_find(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_find_with_key_t DCALL mh_select_seq_find_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_rfind_t DCALL mh_select_seq_rfind(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_rfind_with_key_t DCALL mh_select_seq_rfind_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_erase_t DCALL mh_select_seq_erase(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_insert_t DCALL mh_select_seq_insert(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_insertall_t DCALL mh_select_seq_insertall(DeeTypeObject *self, DeeTypeObject *orig_type);
@@ -152,8 +165,7 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hasitem_index_t DCAL
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hasitem_string_hash_t DCALL mh_select_map_operator_hasitem_string_hash(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hasitem_string_len_hash_t DCALL mh_select_map_operator_hasitem_string_len_hash(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_contains_t DCALL mh_select_map_operator_contains(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_enumerate_t DCALL mh_select_map_operator_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_enumerate_index_t DCALL mh_select_map_operator_enumerate_index(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_enumerate_t DCALL mh_select_map_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type);
 /*[[[end]]]*/
 /* clang-format on */
 

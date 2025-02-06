@@ -280,7 +280,7 @@ DeeSeq_DefaultOperatorForeachWithError(DeeObject *__restrict self,
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeSeq_DefaultOperatorEnumerateIndexWithEmpty(DeeObject *__restrict self,
-                                              Dee_enumerate_index_t proc,
+                                              Dee_seq_enumerate_index_t proc,
                                               void *arg, size_t start, size_t end) {
 	(void)self;
 	(void)proc;
@@ -292,7 +292,7 @@ DeeSeq_DefaultOperatorEnumerateIndexWithEmpty(DeeObject *__restrict self,
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeSeq_DefaultOperatorEnumerateIndexWithError(DeeObject *__restrict self,
-                                              Dee_enumerate_index_t proc, void *arg,
+                                              Dee_seq_enumerate_index_t proc, void *arg,
                                               size_t start, size_t end) {
 	(void)proc;
 	(void)arg;
@@ -915,12 +915,12 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeSeq_OperatorEnumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg) {
+(DCALL DeeSeq_OperatorEnumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
 	return DeeSeq_OperatorEnumerate(self, proc, arg);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeSeq_OperatorEnumerateIndex)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+(DCALL DeeSeq_OperatorEnumerateIndex)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	return DeeSeq_OperatorEnumerateIndex(self, proc, arg, start, end);
 }
 
@@ -1856,7 +1856,7 @@ DeeMap_DefaultOperatorSetItemWithError(DeeObject *self, DeeObject *index, DeeObj
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeMap_DefaultOperatorEnumerateWithError(DeeObject *__restrict self,
-                                         Dee_enumerate_t proc, void *arg) {
+                                         Dee_seq_enumerate_t proc, void *arg) {
 	(void)proc;
 	(void)arg;
 	return err_map_unsupportedf(self, "enumerate()");
@@ -1864,7 +1864,7 @@ DeeMap_DefaultOperatorEnumerateWithError(DeeObject *__restrict self,
 
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeMap_DefaultOperatorEnumerateIndexWithError(DeeObject *__restrict self, Dee_enumerate_index_t proc,
+DeeMap_DefaultOperatorEnumerateIndexWithError(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                               void *arg, size_t start, size_t end) {
 	(void)proc;
 	(void)arg;
@@ -2340,12 +2340,12 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeMap_OperatorEnumerate)(DeeObject *__restrict self, Dee_enumerate_t proc, void *arg) {
+(DCALL DeeMap_OperatorEnumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
 	return DeeMap_OperatorEnumerate(self, proc, arg);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
-(DCALL DeeMap_OperatorEnumerateIndex)(DeeObject *__restrict self, Dee_enumerate_index_t proc, void *arg, size_t start, size_t end) {
+(DCALL DeeMap_OperatorEnumerateIndex)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end) {
 	return DeeMap_OperatorEnumerateIndex(self, proc, arg, start, end);
 }
 

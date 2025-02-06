@@ -2512,7 +2512,7 @@ seo_foreach(SeqEachOperator *__restrict self, Dee_foreach_t proc, void *arg) {
 
 struct seo_enumerate_data {
 	SeqEachOperator *seoed_me;   /* [1..1] The related seq-each operator */
-	Dee_enumerate_t  seoed_proc; /* [1..1] User-defined callback */
+	Dee_seq_enumerate_t  seoed_proc; /* [1..1] User-defined callback */
 	void            *seoed_arg;  /* [?..?] User-defined cookie */
 };
 
@@ -2534,7 +2534,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seo_enumerate(SeqEachOperator *__restrict self, Dee_enumerate_t proc, void *arg) {
+seo_enumerate(SeqEachOperator *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
 	struct seo_enumerate_data data;
 	data.seoed_me   = self;
 	data.seoed_proc = proc;
@@ -2544,7 +2544,7 @@ seo_enumerate(SeqEachOperator *__restrict self, Dee_enumerate_t proc, void *arg)
 
 struct seo_enumerate_index_data {
 	SeqEachOperator      *seoeid_me;   /* [1..1] The related seq-each operator */
-	Dee_enumerate_index_t seoeid_proc; /* [1..1] User-defined callback */
+	Dee_seq_enumerate_index_t seoeid_proc; /* [1..1] User-defined callback */
 	void                 *seoeid_arg;  /* [?..?] User-defined cookie */
 };
 
@@ -2566,7 +2566,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seo_enumerate_index(SeqEachOperator *__restrict self, Dee_enumerate_index_t proc,
+seo_enumerate_index(SeqEachOperator *__restrict self, Dee_seq_enumerate_index_t proc,
                     void *arg, size_t start, size_t end) {
 	struct seo_enumerate_index_data data;
 	data.seoeid_me   = self;
@@ -3121,8 +3121,8 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
 	/* .tp_foreach_pair               = */ &DeeObject_DefaultForeachPairWithForeach,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&seo_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&seo_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&seo_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&seo_enumerate_index,
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iterkeys,
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */

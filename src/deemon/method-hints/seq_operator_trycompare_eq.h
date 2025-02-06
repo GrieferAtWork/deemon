@@ -26,7 +26,7 @@ __seq_trycompare_eq__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_trycompare_eq__", &rhs))
 		goto err;
-	result = DeeSeq_OperatorTryCompareEq(self, rhs);
+	result = DeeType_InvokeMethodHint(self, seq_operator_trycompare_eq, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result == 0);
@@ -34,6 +34,7 @@ err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_EQ: tp_cmp->tp_trycompare_eq)]]
 [[wunused]] int
 __seq_trycompare_eq__.seq_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
                                                  [[nonnull]] DeeObject *rhs)
@@ -76,7 +77,7 @@ err:
 	return default__seq_operator_compare_eq__with__seq_operator_sizeob__and__seq_operator_getitem(lhs, rhs);
 }}
 %{$with__seq_operator_compare_eq = {
-	int result = DeeSeq_OperatorCompareEq(lhs, rhs);
+	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare_eq, rhs);
 	if (result == Dee_COMPARE_ERR) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
 		    DeeError_Catch(&DeeError_TypeError) ||
@@ -100,14 +101,11 @@ err:
 
 seq_operator_trycompare_eq = {
 	DeeMH_seq_operator_compare_eq_t seq_operator_compare_eq;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireTryCompareEq(THIS_TYPE))
-		return THIS_TYPE->tp_cmp->tp_trycompare_eq;
-#endif /* !LOCAL_FOR_OPTIMIZE */
 	if (THIS_TYPE->tp_seq &&
 	    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
 	    THIS_TYPE->tp_seq->tp_size)
 		return &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast;
+
 	seq_operator_compare_eq = REQUIRE(seq_operator_compare_eq);
 	if (seq_operator_compare_eq == &default__seq_operator_compare_eq__empty)
 		return &$empty;

@@ -35,6 +35,7 @@ err:
 	return NULL;
 }
 
+[[operator(Sequence.OPERATOR_INPLACE_MUL: tp_math->tp_inplace_mul)]]
 [[wunused]] int
 __seq_inplace_mul__.seq_operator_inplace_mul([[nonnull]] DREF DeeObject **__restrict p_self,
                                              [[nonnull]] DeeObject *repeat)
@@ -47,13 +48,13 @@ __seq_inplace_mul__.seq_operator_inplace_mul([[nonnull]] DREF DeeObject **__rest
 	if (DeeObject_AsSize(repeat, &repeatval))
 		goto err;
 	if (repeatval == 0)
-		return DeeSeq_InvokeClear(*p_self);
+		return DeeType_InvokeMethodHint0(*p_self, seq_clear);
 	if (repeatval == 1)
 		return 0;
 	extend_with_this = DeeSeq_Repeat(*p_self, repeatval - 1);
 	if unlikely(!extend_with_this)
 		goto err;
-	result = DeeSeq_InvokeExtend(*p_self, extend_with_this);
+	result = DeeType_InvokeMethodHint(*p_self, seq_extend, extend_with_this);
 	Dee_Decref_likely(extend_with_this);
 	return result;
 err:
@@ -92,17 +93,12 @@ err:
 }
 
 seq_operator_inplace_mul = {
-	DeeMH_seq_extend_t seq_extend;
-#ifndef LOCAL_FOR_OPTIMIZE
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireInplaceMul(THIS_TYPE))
-		return THIS_TYPE->tp_math->tp_inplace_mul;
-#endif /* !LOCAL_FOR_OPTIMIZE */
-	seq_extend = REQUIRE(seq_extend);
+	DeeMH_seq_extend_t seq_extend = REQUIRE(seq_extend);
 	if (seq_extend) {
 		DeeMH_seq_clear_t seq_clear = REQUIRE_ANY(seq_clear);
 		if (seq_clear == &default__seq_clear__empty)
 			return &$empty;
-		if (seq_clear)
+		if (seq_clear != &default__seq_clear__unsupported)
 			return &$with__seq_clear__and__seq_extend;
 	}
 };

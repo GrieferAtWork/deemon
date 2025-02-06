@@ -340,7 +340,7 @@ mapped_foreach(SeqMapped *self, Dee_foreach_t proc, void *arg) {
 
 struct mapped_enumerate_data {
 	DeeObject      *ted_fun;  /* [1..1] Mapper function. */
-	Dee_enumerate_t ted_proc; /* [1..1] Inner callback. */
+	Dee_seq_enumerate_t ted_proc; /* [1..1] Inner callback. */
 	void           *ted_arg;  /* [?..?] Cookie for `ted_proc'. */
 };
 
@@ -362,7 +362,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-mapped_enumerate(SeqMapped *self, Dee_enumerate_t proc, void *arg) {
+mapped_enumerate(SeqMapped *self, Dee_seq_enumerate_t proc, void *arg) {
 	struct mapped_enumerate_data data;
 	data.ted_fun  = self->sm_mapper;
 	data.ted_proc = proc;
@@ -372,7 +372,7 @@ mapped_enumerate(SeqMapped *self, Dee_enumerate_t proc, void *arg) {
 
 struct mapped_enumerate_index_data {
 	DeeObject            *teid_fun;  /* [1..1] Mapper function. */
-	Dee_enumerate_index_t teid_proc; /* [1..1] Inner callback. */
+	Dee_seq_enumerate_index_t teid_proc; /* [1..1] Inner callback. */
 	void                 *teid_arg;  /* [?..?] Cookie for `teid_proc'. */
 };
 
@@ -394,7 +394,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-mapped_enumerate_index(SeqMapped *self, Dee_enumerate_index_t proc,
+mapped_enumerate_index(SeqMapped *self, Dee_seq_enumerate_index_t proc,
                       void *arg, size_t start, size_t end) {
 	struct mapped_enumerate_index_data data;
 	data.teid_fun  = self->sm_mapper;
@@ -519,8 +519,8 @@ PRIVATE struct type_seq mapped_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&mapped_foreach,
 	/* .tp_foreach_pair               = */ NULL,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_t, void *))&mapped_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_enumerate_index_t, void *, size_t, size_t))&mapped_enumerate_index,
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&mapped_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&mapped_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&mapped_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&mapped_hasitem,
