@@ -23,25 +23,24 @@ operator {
 /*[[[deemon
 import * from deemon;
 
+function unary(neg: string) {
+	local NEG = neg.upper();
+
+	print("[[wunused]] DREF DeeObject *");
+	print("tp_math->tp_", neg, "([[nonnull]] DeeObject *self)");
+	print("%{class {");
+	print("	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_", NEG, ", 0, NULL);");
+	print("}};");
+	print;
+}
+
 function binaryMath(add: string) {
 	local ADD = add.upper();
 
 	print("[[wunused]] DREF DeeObject *");
 	print("tp_math->tp_", add, "([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)");
 	print("%{class {");
-	print("#ifdef __OPTIMIZE_SIZE__");
-	print("	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_", ADD, ", 1, &rhs);");
-	print("#else /" "* __OPTIMIZE_SIZE__ *" "/");
-	print("	DREF DeeObject *cb, *result;");
-	print("	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_", ADD, ");");
-	print("	if unlikely(!cb)");
-	print("		goto err;");
-	print("	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);");
-	print("	Dee_Decref_unlikely(cb);");
-	print("	return result;");
-	print("err:");
-	print("	return NULL;");
-	print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
+	print("	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_", ADD, ", 1, &rhs);");
 	print("}};");
 	print;
 
@@ -50,18 +49,7 @@ function binaryMath(add: string) {
 	print("tp_math->tp_inplace_", add, "([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)");
 	print("%{class {");
 	print("	DREF DeeObject *result;");
-	print("#ifdef __OPTIMIZE_SIZE__");
-	print("	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_", ADD, ", 1, &rhs);");
-	print("#else /" "* __OPTIMIZE_SIZE__ *" "/");
-	print("	DREF DeeObject *cb;");
-	print("	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_", ADD, ");");
-	print("	if unlikely(!cb)");
-	print("		goto err;");
-	print("	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);");
-	print("	Dee_Decref_unlikely(cb);");
-	print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
-	print("	if unlikely(!result)");
-	print("		goto err;");
+	print("	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_", ADD, ", 1, &rhs);");
 	print("	Dee_Decref_unlikely(*p_lhs);");
 	print("	*p_lhs = result; /" "* Inherit reference *" "/");
 	print("	return 0;");
@@ -91,18 +79,7 @@ function inplaceUnary(prefix: string, inc: string) {
 	print("", prefix, "tp_", inc, "([[nonnull]] DeeObject **__restrict p_self)");
 	print("%{class {");
 	print("	DREF DeeObject *result;");
-	print("#ifdef __OPTIMIZE_SIZE__");
-	print("	result = DeeClass_CallOperator(THIS_TYPE, *p_self, OPERATOR_", INC, ", 0, NULL);");
-	print("#else /" "* __OPTIMIZE_SIZE__ *" "/");
-	print("	DREF DeeObject *cb;");
-	print("	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_", INC, ");");
-	print("	if unlikely(!cb)");
-	print("		goto err;");
-	print("	result = DeeObject_ThisCall(cb, *p_self, 0, NULL);");
-	print("	Dee_Decref_unlikely(cb);");
-	print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
-	print("	if unlikely(!result)");
-	print("		goto err;");
+	print("	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_self, OPERATOR_", INC, ", 0, NULL);");
 	print("	Dee_Decref_unlikely(*p_self);");
 	print("	*p_self = result; /" "* Inherit reference *" "/");
 	print("	return 0;");
@@ -134,16 +111,7 @@ function enterLeave(enter: string) {
 	print("tp_with->tp_", enter, "([[nonnull]] DeeObject *__restrict self)");
 	print("%{class {");
 	print("	DREF DeeObject *result;");
-	print("#ifdef __OPTIMIZE_SIZE__");
-	print("	result = DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_", ENTER, ", 0, NULL);");
-	print("#else /" "* __OPTIMIZE_SIZE__ *" "/");
-	print("	DREF DeeObject *cb;");
-	print("	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_", ENTER, ");");
-	print("	if unlikely(!cb)");
-	print("		goto err;");
-	print("	result = DeeObject_ThisCall(cb, self, 0, NULL);");
-	print("	Dee_Decref_unlikely(cb);");
-	print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
+	print("	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_", ENTER, ", 0, NULL);");
 	print("	if unlikely(!result)");
 	print("		goto err;");
 	print("	Dee_Decref_unlikely(result);");
@@ -157,6 +125,10 @@ function enterLeave(enter: string) {
 	print;
 }
 
+
+unary("inv");
+unary("pos");
+unary("neg");
 
 binaryMath("add");
 binaryMath("sub");
@@ -178,21 +150,27 @@ enterLeave("leave");
 
 ]]]*/
 [[wunused]] DREF DeeObject *
+tp_math->tp_inv([[nonnull]] DeeObject *self)
+%{class {
+	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_INV, 0, NULL);
+}};
+
+[[wunused]] DREF DeeObject *
+tp_math->tp_pos([[nonnull]] DeeObject *self)
+%{class {
+	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_POS, 0, NULL);
+}};
+
+[[wunused]] DREF DeeObject *
+tp_math->tp_neg([[nonnull]] DeeObject *self)
+%{class {
+	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_NEG, 0, NULL);
+}};
+
+[[wunused]] DREF DeeObject *
 tp_math->tp_add([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_ADD, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_ADD);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_ADD, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -200,18 +178,7 @@ err:
 tp_math->tp_inplace_add([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_ADD, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_ADD);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_ADD, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -232,19 +199,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_sub([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SUB, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_SUB);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SUB, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -252,18 +207,7 @@ err:
 tp_math->tp_inplace_sub([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SUB, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_SUB);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SUB, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -284,19 +228,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_mul([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MUL, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_MUL);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MUL, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -304,18 +236,7 @@ err:
 tp_math->tp_inplace_mul([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_MUL, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_MUL);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_MUL, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -336,19 +257,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_div([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_DIV, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_DIV);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_DIV, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -356,18 +265,7 @@ err:
 tp_math->tp_inplace_div([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_DIV, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_DIV);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_DIV, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -388,19 +286,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_mod([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MOD, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_MOD);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MOD, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -408,18 +294,7 @@ err:
 tp_math->tp_inplace_mod([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_MOD, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_MOD);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_MOD, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -440,19 +315,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_shl([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHL, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_SHL);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHL, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -460,18 +323,7 @@ err:
 tp_math->tp_inplace_shl([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SHL, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_SHL);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SHL, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -492,19 +344,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_shr([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHR, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_SHR);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHR, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -512,18 +352,7 @@ err:
 tp_math->tp_inplace_shr([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SHR, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_SHR);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SHR, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -544,19 +373,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_and([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_AND, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_AND);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_AND, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -564,18 +381,7 @@ err:
 tp_math->tp_inplace_and([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_AND, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_AND);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_AND, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -596,19 +402,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_or([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_OR, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_OR);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_OR, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -616,18 +410,7 @@ err:
 tp_math->tp_inplace_or([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_OR, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_OR);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_OR, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -648,19 +431,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_xor([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_XOR, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_XOR);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_XOR, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -668,18 +439,7 @@ err:
 tp_math->tp_inplace_xor([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_XOR, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_XOR);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_XOR, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -700,19 +460,7 @@ err:
 [[wunused]] DREF DeeObject *
 tp_math->tp_pow([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_POW, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb, *result;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_POW);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_POW, 1, &rhs);
 }};
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
@@ -720,18 +468,7 @@ err:
 tp_math->tp_inplace_pow([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_lhs, OPERATOR_INPLACE_POW, 1, &rhs);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INPLACE_POW);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_lhs, 1, &rhs);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_POW, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
 	*p_lhs = result; /* Inherit reference */
 	return 0;
@@ -754,18 +491,7 @@ err:
 tp_math->tp_inc([[nonnull]] DeeObject **__restrict p_self)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_self, OPERATOR_INC, 0, NULL);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_INC);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_self, 0, NULL);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_self, OPERATOR_INC, 0, NULL);
 	Dee_Decref_unlikely(*p_self);
 	*p_self = result; /* Inherit reference */
 	return 0;
@@ -791,18 +517,7 @@ err:
 tp_math->tp_dec([[nonnull]] DeeObject **__restrict p_self)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, *p_self, OPERATOR_DEC, 0, NULL);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_DEC);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, *p_self, 0, NULL);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(!result)
-		goto err;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_self, OPERATOR_DEC, 0, NULL);
 	Dee_Decref_unlikely(*p_self);
 	*p_self = result; /* Inherit reference */
 	return 0;
@@ -827,16 +542,7 @@ err:
 tp_with->tp_enter([[nonnull]] DeeObject *__restrict self)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_ENTER, 0, NULL);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_ENTER);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, self, 0, NULL);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_ENTER, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref_unlikely(result);
@@ -852,16 +558,7 @@ err:
 tp_with->tp_leave([[nonnull]] DeeObject *__restrict self)
 %{class {
 	DREF DeeObject *result;
-#ifdef __OPTIMIZE_SIZE__
-	result = DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_LEAVE, 0, NULL);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *cb;
-	cb = DeeClass_GetOperator(THIS_TYPE, OPERATOR_LEAVE);
-	if unlikely(!cb)
-		goto err;
-	result = DeeObject_ThisCall(cb, self, 0, NULL);
-	Dee_Decref_unlikely(cb);
-#endif /* !__OPTIMIZE_SIZE__ */
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_LEAVE, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref_unlikely(result);

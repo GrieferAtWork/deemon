@@ -76,17 +76,6 @@ err:
 	return NULL;
 }
 
-PUBLIC_CONST char const DeeMA___seq_iterkeys___name[] = "__seq_iterkeys__";
-PUBLIC_CONST char const DeeMA___seq_iterkeys___doc[] = "->?DIterator";
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___seq_iterkeys__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
-	if (DeeArg_Unpack(argc, argv, ":__seq_iterkeys__"))
-		goto err;
-	return DeeType_InvokeMethodHint0(self, seq_iterkeys);
-err:
-	return NULL;
-}
-
 PUBLIC_CONST char const DeeMA___seq_getitem___name[] = "__seq_getitem__";
 PUBLIC_CONST char const DeeMA___seq_getitem___doc[] = "(index:?Dint)->";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
@@ -330,6 +319,17 @@ DeeMA___seq_inplace_mul__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	return self;
 err_self:
 	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_iterkeys___name[] = "__seq_iterkeys__";
+PUBLIC_CONST char const DeeMA___seq_iterkeys___doc[] = "->?DIterator";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_iterkeys__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	if (DeeArg_Unpack(argc, argv, ":__seq_iterkeys__"))
+		goto err;
+	return DeeType_InvokeMethodHint0(self, seq_iterkeys);
 err:
 	return NULL;
 }

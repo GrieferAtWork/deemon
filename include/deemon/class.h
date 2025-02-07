@@ -1034,6 +1034,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_ge(DeeObje
 INTDEF struct type_cmp instance_builtin_cmp;
 
 /* Hooks for user-defined operators. */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tstr(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_str(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_trepr(DeeTypeObject *tp_self, DeeObject *__restrict self);
@@ -1116,6 +1117,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tixor(DeeTypeObject *tp_sel
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_ixor(DeeObject **__restrict p_self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tipow(DeeTypeObject *tp_self, DeeObject **__restrict p_self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_ipow(DeeObject **__restrict p_self, DeeObject *other);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL instance_thash(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL instance_hash(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_teq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
@@ -1130,8 +1132,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tgr(DeeTypeObje
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_gr(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tge(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_ge(DeeObject *self, DeeObject *other);
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_titer(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_iter(DeeObject *__restrict self);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tsize(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_size(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tcontains(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
@@ -1148,10 +1152,12 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL instance_tdelrange(DeeTypeObject 
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_delrange(DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL instance_tsetrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL instance_setrange(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value);
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tenter(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_enter(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tleave(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_leave(DeeObject *__restrict self);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tgetattr(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *name);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_getattr(DeeObject *self, /*String*/ DeeObject *name);
@@ -1556,6 +1562,7 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *t
 
 /*[[[begin:DEFAULT_OPERATORS]]]*/
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* Default wrappers for implementing tp_str/tp_repr <===> tp_print/tp_printrepr */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultStrWithPrint(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultReprWithPrintRepr(DeeObject *__restrict self);
@@ -1635,6 +1642,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoolWithCompareEq(DeeObject 
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoolWithEq(DeeObject *self); /* DEPRECATED */
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoolWithNe(DeeObject *self); /* DEPRECATED */
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DefaultBoolWithForeachDefault(DeeObject *self); /* DEPRECATED */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 /* tp_hash */
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL DeeSeq_DefaultHashWithSizeAndGetItemIndexFast(DeeObject *self); /* DEPRECATED */
@@ -1766,6 +1774,7 @@ INTDEF struct type_cmp DeeMap_DefaultCmpWithForeachPairDefault; /* DEPRECATED */
 
 
 /* Default wrappers for implementing iterator operators. */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF struct type_iterator DeeObject_DefaultIteratorWithIterNext;
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterNextWithIterNextPair(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultIterNextPairWithIterNext(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
@@ -1777,6 +1786,7 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultIterAdvanceWithIterNex
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultIterAdvanceWithIterNextPair(DeeObject *__restrict self, size_t step);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultIterAdvanceWithIterNextKey(DeeObject *__restrict self, size_t step);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultIterAdvanceWithIterNextValue(DeeObject *__restrict self, size_t step);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 /* Default wrappers for implementing sequence operators. */

@@ -20,16 +20,23 @@
 
 /* !!!!!!!!!!!!!!!!!!
  * After making changes to this file (or any of the files %[include]-ed below), you must run:
- * >> deemon -F include/deemon/method-hints.h include/deemon/operator-hints.h src/deemon/runtime/method-hint-defaults.h src/deemon/runtime/method-hint-defaults.c src/deemon/runtime/method-hints.h src/deemon/runtime/method-hints.c src/deemon/runtime/method-hint-select.h src/deemon/runtime/method-hint-select.c src/deemon/runtime/method-hint-wrappers.c src/deemon/runtime/operator-hint-defaults.c src/deemon/runtime/strings.h
+ * >> deemon -F include/deemon/method-hints.h include/deemon/operator-hints.h src/deemon/runtime/method-hint-defaults.h src/deemon/runtime/method-hint-defaults.c src/deemon/runtime/method-hints.h src/deemon/runtime/method-hints.c src/deemon/runtime/method-hint-select.h src/deemon/runtime/method-hint-select.c src/deemon/runtime/method-hint-wrappers.c src/deemon/runtime/operator-hints.c src/deemon/runtime/operator-hint-defaults.c src/deemon/runtime/strings.h
  */
 
 /************************************************************************/
 /* For `deemon.Object'                                                  */
 /************************************************************************/
-%[include("object_operator_iter.h")]
-%[include("object_operator_misc.h")]
-//%[include("object_operator_str.h")]
+%[include("object_operator_str.h")]
+%[include("object_operator_repr.h")]
+%[include("object_operator_bool.h")]
+%[include("object_operator_call.h")]
+%[include("object_operator_next.h")]
+%[include("object_operator_int.h")]
+%[include("object_operator_float.h")]
 // TODO: All of the other operators
+%[include("object_operator_iter.h")]
+// TODO: All of the other operators
+%[include("object_operator_misc.h")]
 
 
 /************************************************************************/
@@ -38,7 +45,6 @@
 %[include("seq_operator_bool.h")]
 %[include("seq_operator_size.h")]
 %[include("seq_operator_iter.h")]
-%[include("seq_iterkeys.h")]
 
 %[include("seq_operator_getitem.h")]
 %[include("seq_operator_delitem.h")]
@@ -59,6 +65,7 @@
 %[include("seq_operator_inplace_add.h")]
 %[include("seq_operator_inplace_mul.h")]
 
+%[include("seq_iterkeys.h")]
 %[include("seq_enumerate.h")]
 %[include("seq_enumerate_items.h")]
 

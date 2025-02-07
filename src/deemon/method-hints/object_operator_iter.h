@@ -53,23 +53,10 @@ err:
 )]
 
 
-[[tp_self(Dee_TYPE(self))]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
 %{class {
-#ifdef __OPTIMIZE_SIZE__
-	return DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_ITER, 0, NULL);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(THIS_TYPE, OPERATOR_ITER);
-	if unlikely(!func)
-		goto err;
-	result = DeeObject_ThisCall(func, self, 0, NULL);
-	Dee_Decref_unlikely(func);
-	return result;
-err:
-	return NULL;
-#endif /* !__OPTIMIZE_SIZE__ */
+	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_ITER, 0, NULL);
 }}
 %{using tp_seq->tp_foreach: {
 	/* TODO: Custom iterator type that uses "tp_foreach" */
@@ -89,7 +76,6 @@ err:
 
 
 
-[[tp_self(Dee_TYPE(self))]]
 [[wunused]] Dee_ssize_t
 tp_seq->tp_foreach([[nonnull]] DeeObject *__restrict self,
                    [[nonnull]] Dee_foreach_t cb, void *arg)
@@ -147,7 +133,6 @@ err:
 )]
 
 
-[[tp_self(Dee_TYPE(self))]]
 [[wunused]] Dee_ssize_t
 tp_seq->tp_foreach_pair([[nonnull]] DeeObject *__restrict self,
                         [[nonnull]] Dee_foreach_pair_t cb, void *arg)

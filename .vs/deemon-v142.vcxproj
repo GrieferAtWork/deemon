@@ -243,7 +243,15 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_contains.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_getitem.h" />
 		<ClInclude Include="..\src\deemon\method-hints\method-hints.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_bool.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_call.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_float.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_int.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_iter.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_misc.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_next.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_repr.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_str.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_all.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_any.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_append.h" />
@@ -578,6 +586,8 @@
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />
 		<ClCompile Include="..\src\deemon\runtime\notify.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-constcall.c" />
+		<ClCompile Include="..\src\deemon\runtime\operator-hint-defaults.c" />
+		<ClCompile Include="..\src\deemon\runtime\operator-hints.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-inherit.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator_info.c" />

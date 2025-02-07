@@ -437,55 +437,6 @@ default__seq_operator_foreach_pair__with__seq_operator_foreach(DeeObject *__rest
 }
 
 
-/* seq_iterkeys */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_iterkeys__with_callattr___seq_iterkeys__(DeeObject *self) {
-	return DeeObject_CallAttr(self, (DeeObject *)&str___seq_iterkeys__, 0, NULL);
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_iterkeys__with_callobjectcache___seq_iterkeys__(DeeObject *self) {
-	return DeeObject_ThisCall(Dee_TYPE(self)->tp_mhcache->mhc___seq_iterkeys__.c_object, self, 0, NULL);
-}
-
-#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_iterkeys__with_callmethodcache___seq_iterkeys__(DeeObject *self) {
-	return DeeObjMethod_CallFunc(Dee_TYPE(self)->tp_mhcache->mhc___seq_iterkeys__.c_method, self, 0, NULL);
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_iterkeys__with_callkwmethodcache___seq_iterkeys__(DeeObject *self) {
-	return DeeKwObjMethod_CallFunc(Dee_TYPE(self)->tp_mhcache->mhc___seq_iterkeys__.c_kwmethod, self, 0, NULL, NULL);
-}
-#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_iterkeys__unsupported(DeeObject *self) {
-	err_seq_unsupportedf(self, "__seq_iterkeys__()");
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_iterkeys__with__seq_size(DeeObject *self) {
-	size_t size;
-	DREF IntRangeIterator *result;
-	size = DeeType_InvokeMethodHint0(self, seq_operator_size);
-	if unlikely(size == (size_t)-1)
-		goto err;
-	result = DeeObject_MALLOC(IntRangeIterator);
-	if unlikely(!result)
-		goto err;
-	result->iri_index = 0;
-	result->iri_end   = (Dee_ssize_t)size; /* TODO: Need another range iterator type that uses unsigned indices */
-	result->iri_step  = 1;
-	DeeObject_Init(result, &SeqIntRangeIterator_Type);
-	return (DREF DeeObject *)result;
-err:
-	return NULL;
-}
-
-
 /* seq_operator_getitem */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__seq_operator_getitem(DeeObject *self, DeeObject *index) {
@@ -3436,6 +3387,55 @@ default__seq_operator_inplace_mul__with__DeeSeq_Repeat(DREF DeeObject **__restri
 	return 0;
 err:
 	return -1;
+}
+
+
+/* seq_iterkeys */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_iterkeys__with_callattr___seq_iterkeys__(DeeObject *self) {
+	return DeeObject_CallAttr(self, (DeeObject *)&str___seq_iterkeys__, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_iterkeys__with_callobjectcache___seq_iterkeys__(DeeObject *self) {
+	return DeeObject_ThisCall(Dee_TYPE(self)->tp_mhcache->mhc___seq_iterkeys__.c_object, self, 0, NULL);
+}
+
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_iterkeys__with_callmethodcache___seq_iterkeys__(DeeObject *self) {
+	return DeeObjMethod_CallFunc(Dee_TYPE(self)->tp_mhcache->mhc___seq_iterkeys__.c_method, self, 0, NULL);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_iterkeys__with_callkwmethodcache___seq_iterkeys__(DeeObject *self) {
+	return DeeKwObjMethod_CallFunc(Dee_TYPE(self)->tp_mhcache->mhc___seq_iterkeys__.c_kwmethod, self, 0, NULL, NULL);
+}
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_iterkeys__unsupported(DeeObject *self) {
+	err_seq_unsupportedf(self, "__seq_iterkeys__()");
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_iterkeys__with__seq_size(DeeObject *self) {
+	size_t size;
+	DREF IntRangeIterator *result;
+	size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(IntRangeIterator);
+	if unlikely(!result)
+		goto err;
+	result->iri_index = 0;
+	result->iri_end   = (Dee_ssize_t)size; /* TODO: Need another range iterator type that uses unsigned indices */
+	result->iri_step  = 1;
+	DeeObject_Init(result, &SeqIntRangeIterator_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
 }
 
 

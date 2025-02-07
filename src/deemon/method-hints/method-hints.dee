@@ -59,6 +59,7 @@ final class NativeMethodParam {
 	public member typ: string;  /* "DeeObject *__restrict" */
 	public member name: string; /* "self" */
 	public member nonnull: bool = false;
+	public member typAfter: string = "";  /* "[2]" */
 
 	public property typWithoutRestrict: string = {
 		get(): string {
@@ -68,20 +69,19 @@ final class NativeMethodParam {
 		}
 	};
 
+	public _withoutRestrict(): NativeMethodParam {
+		return NativeMethodParam(
+				typ: typWithoutRestrict,
+				name: name,
+				nonnull: nonnull,
+				typAfter: typAfter);
+	}
+
 	public property Cstr: string = {
 		get(): string {
 			if (typ.endswith("*"))
-				return typ + name;
-			return f"{typ} {name}";
-		}
-	};
-
-	public property CstrWithoutRestrict: string = {
-		get(): string {
-			local usedTyp = typWithoutRestrict;
-			if (usedTyp.endswith("*"))
-				return usedTyp + name;
-			return f"{usedTyp} {name}";
+				return typ + name + typAfter;
+			return f"{typ} {name}{typAfter}";
 		}
 	};
 };
@@ -128,15 +128,24 @@ global NativeMethod;
 global NativeOperator;
 final class NativeMethodImpl {
 	this = default;
-	public member impl: string | none = none;   /* Implementation body */
-	public member alias: string | none = none;  /* Name of a function to alias */
-	public member implPrefix: {string...} = (); /* Extra code to emit before the function body */
+	public member impl: string | none = none;     /* Implementation body */
+	public member alias: string | none = none;    /* Name of a function to alias */
+	public member implPrefix: {string...} = ();   /* Extra code to emit before the function body */
+	public member origImpl: string | none = none; /* Implementation body */
+
+	function _makeTyped(): NativeMethodImpl {
+		local result = copy this;
+		if (result.alias !is none)
+			result.alias = "t" + alias;
+		return result;
+	}
 
 	@@Try to detect "simple" impls when linked against
 	@@"method", and replace them with none-operators.
 	public optimize(method: NativeMethod | NativeOperator) {
 		if (impl is none)
 			return;
+		origImpl = impl;
 		local constReturnVal: int = detectConstantReturnValue(impl);
 		if (constReturnVal is none)
 			return;
@@ -778,7 +787,7 @@ final class MethodHint: WeakRefAble {
 
 
 function simplifyNativeOperatorNamePart(part: string): string {
-	return part.lsstrip("tp_").replace(".", "_");
+	return part[part.rfind(".") + 1:].lsstrip("tp_").replace(".", "_");
 }
 
 final class NativeOperatorName {
@@ -786,8 +795,17 @@ final class NativeOperatorName {
 	public member table: string | none = none; /* tp_seq */
 	public member field: string;               /* tp_foreach */
 
+	public property TNO_id: string = {
+		get(): string {
+			return f"Dee_TNO_{name}";
+		}
+	}
+
 	public property name: string = {
 		get(): string {
+#if 1
+			return simplifyNativeOperatorNamePart(field);
+#else
 			if (table is none)
 				return simplifyNativeOperatorNamePart(field);
 			return f"{
@@ -795,14 +813,19 @@ final class NativeOperatorName {
 			}_{
 				simplifyNativeOperatorNamePart(field)
 			}";
+#endif
 		}
 	}
 
-	operator str(fp: File) {
-		if (table !is none)
-			fp << table << "->";
-		fp << field;
+	public property locExpr: string = {
+		get(): string {
+			if (table !is none)
+				return f"{table}->{field}";
+			return field;
+		}
 	}
+
+	operator str() -> locExpr;
 }
 
 
@@ -816,6 +839,12 @@ final class NativeOperatorImpl {
 	public optimize(method: NativeOperator) {
 		impl.optimize(method);
 	}
+
+	public _makeTyped(): NativeOperatorImpl {
+		return NativeOperatorImpl(
+			dependencies: dependencies,
+			impl: impl._makeTyped());
+	}
 }
 
 final class NativeOperator {
@@ -827,19 +856,39 @@ final class NativeOperator {
 	public member params: {NativeMethodParam...} = []; /* { ... } */
 	public member tpSelfExpr: string;                  /* "Dee_TYPE(self)" */
 	public member impls: {NativeOperatorImpl...} = []; /* { ... } */
-	public member usrtypeImpl: NativeMethodImpl | none = none;
+	public member usrtypeImpls: {string: NativeMethodImpl} = Dict();
+	public member typed: NativeOperator | none = none;
+	public member namePrefix: string = "";
 
-	public getReturnAttrib(_T: string = "", typed: bool = false): string {
+	public _makeTyped() {
+		typed = NativeOperator(
+			wunused: wunused,
+			returnType: returnType,
+			cc: cc,
+			name: name,
+			params: (
+				NativeMethodParam(
+					typ: "DeeTypeObject *",
+					name: "tp_self",
+					nonnull: true),
+				params.each._withoutRestrict()...),
+			tpSelfExpr: "tp_self",
+			impls: Tuple(impls.each._makeTyped()),
+			usrtypeImpls: Dict(
+				for (local uImplName, impl: usrtypeImpls)
+					(uImplName, impl._makeTyped())
+			),
+			namePrefix: "t"
+		);
+	}
+
+	public getReturnAttrib(_T: string = ""): string {
 		local attributes: {string...} = [];
 		if (wunused)
 			attributes.append(f"WUNUSED{_T}");
 		local nonnullIndices = params.enumerate()
 			.filter(e -> e.last.nonnull)
 			.map(e -> e.first + 1);
-		if (typed) {
-			nonnullIndices = List(nonnullIndices.each + 1);
-			nonnullIndices.insert(0, 1);
-		}
 		nonnullIndices = nonnullIndices.cached;
 		if (nonnullIndices)
 			attributes.append(f"NONNULL{_T}(({", ".join(nonnullIndices)}))");
@@ -855,12 +904,15 @@ final class NativeOperator {
 	};
 
 	public optimize() {
+		if (!tpSelfExpr)
+			tpSelfExpr = f"Dee_TYPE({params.first.name})";
 		for (local impl: impls)
 			impl.optimize(this);
+		typed.optimize();
 	}
 
-	public printDecl(name: string, lineFeedBeforeName: bool = false, typed: bool = false) {
-		local attrib = getReturnAttrib(typed: typed);
+	public printDecl(name: string, lineFeedBeforeName: bool = false) {
+		local attrib = getReturnAttrib();
 		if (attrib)
 			print(attrib, " "),;
 		print returnType,;
@@ -877,128 +929,180 @@ final class NativeOperator {
 			if (cc)
 				print(cc, " "),;
 		}
-		print(name, "("),;
-		if (typed) {
-			print("DeeTypeObject *tp_self"),;
-			for (local p: params) {
-				print(", ", p.CstrWithoutRestrict),;
-			}
-		} else {
-			print(", ".join(params.each.Cstr)),;
-		}
-		print(")"),;
+		print(name, "(", ", ".join(params.each.Cstr), ")"),;
 	}
 
-	public printFunctionPointerType(name: string = "", typed: bool = false) {
+	public printFunctionPointerType(name: string = "") {
 		print returnType,;
 		if (!returnType.endswith("*"))
 			print " ",;
 		print("("),;
 		if (cc)
 			print(cc, " "),;
-		print("*", name, ")", "("),;
-		if (typed) {
-			print("DeeTypeObject *"),;
-			for (local p: params) {
-				print(", ", p.typWithoutRestrict),;
-			}
-		} else {
-			print(", ".join(params.each.typ)),;
-		}
-		print(")"),;
+		print("*", name, ")(", ", ".join(params.each.typ), ")"),;
 	}
 
-	public printIntdefDeclOrAlias(name: string, impl: NativeMethodImpl | none, typed: bool = false) {
+	public printIntdefDeclOrAlias(name: string, impl: NativeMethodImpl | none) {
 		if (impl.alias !is none) {
-			print(f"#define {typed ? "t" : ""}{name} (*("),;
-			printFunctionPointerType(typed: typed);
-			print(f")&{typed ? "t" : ""}{impl.alias})");
+			print(f"#define {name} (*("),;
+			printFunctionPointerType();
+			print(f")&{impl.alias})");
 		} else {
 			print("INTDEF "),;
-			printDecl(name, typed: typed);
+			printDecl(name);
 			print(";");
 		}
 	}
 
+	function nativeSymbolNameForUrstypeImpl(uImplName: string, impl: NativeMethodImpl): string {
+		return f"{namePrefix}usrtype__{name.name}{uImplName ? "__" : ""}{uImplName}";
+	}
+	
 	function nativeSymbolNameForImpl(impl: NativeOperatorImpl): string {
-		return f"default__{name.name}__with__{
+		return f"{namePrefix}default__{name.name}__with__{
 			"__and__".join(impl.dependencies.each.name)
 		}";
 	}
 
-	function printNativeOperatorHintDecl() {
-		print("/* ", str name, " */");
-		local symbolNames: {string...} = [];
-		if (usrtypeImpl !is none) {
-			local symName = f"usrtype__{name.name}";
-			symbolNames.append(symName);
-			printIntdefDeclOrAlias(symName, usrtypeImpl);
+	function enumerateNamesAndImpls(): {(string, NativeOperatorImpl)...} {
+		for (local uImplName, impl: usrtypeImpls) {
+			yield (
+				nativeSymbolNameForUrstypeImpl(uImplName, impl),
+				NativeOperatorImpl(impl: impl)
+			);
 		}
 		for (local impl: impls) {
-			local symName = nativeSymbolNameForImpl(impl);
-			symbolNames.append(symName);
-			printIntdefDeclOrAlias(symName, impl.impl);
+			yield (nativeSymbolNameForImpl(impl), impl);
 		}
-		printIntdefDeclOrAlias(f"tdefault__{name.name}", none, typed: true);
-		if (usrtypeImpl !is none)
-			printIntdefDeclOrAlias(f"tusrtype__{name.name}", usrtypeImpl, typed: true);
-		for (local impl: impls)
-			printIntdefDeclOrAlias("t" + nativeSymbolNameForImpl(impl), impl.impl, typed: true);
-		print(f"#define default__{name.name}__check({name.field}) ({
-			" || ".join(
-				for (local impl: impls)
-					f"({name.field}) == &{nativeSymbolNameForImpl(impl)}"
-			)
-		})");
-		print(f"#define typed__{name.name}({name.field}) ({
-			(
-				for (local symbolName: symbolNames)
-					f"({name.field}) == &{symbolName} ? &t{symbolName} : "
-			) + ...
-		}&tdefault__{name.name})");
+	}
+
+	@@Returns symbol names of impls that must appear in `maketyped__*`
+	function doPrintNativeOperatorHintDecl(): {string...} {
+		local result: {string...} = [];
+		for (local symName, impl: enumerateNamesAndImpls()) {
+			printIntdefDeclOrAlias(symName, impl.impl);
+			local coreImpl: NativeMethodImpl = impl.impl;
+			if (coreImpl.origImpl is none ||
+			    coreImpl.origImpl.recontains(r"\bCALL_DEPENDENCY\b")) {
+				result.append(symName);
+			}
+		}
+		return result;
+	}
+
+	function printNativeOperatorHintDecl() {
+		print("/* ", name.locExpr, " */");
+		local typedNames = typed.doPrintNativeOperatorHintDecl();
+		if (usrtypeImpls || impls)
+			printIntdefDeclOrAlias(f"{typed.namePrefix}default__{name.name}", none);
+		local normalNames = doPrintNativeOperatorHintDecl();
+		assert #normalNames == #typedNames;
+		local nameFieldBase = name.field;
+		local nameFieldBase = name.field[name.field.rfind(".") + 1:];
+		if (usrtypeImpls) {
+			print(f"#define isusrtype__{name.name}({nameFieldBase}) ({
+				" || ".join(
+					for (local uImplName, impl: usrtypeImpls)
+						f"({nameFieldBase}) == &{nativeSymbolNameForUrstypeImpl(uImplName, impl)}"
+				)
+			})");
+		}
+		if (impls) {
+			print(f"#define isdefault__{name.name}({nameFieldBase}) ({
+				" || ".join(
+					for (local impl: impls)
+						f"({nameFieldBase}) == &{nativeSymbolNameForImpl(impl)}"
+				)
+			})");
+		}
+		if (normalNames) {
+			print(f"#define maketyped__{name.name}({nameFieldBase}) ({
+				(
+					for (local i, symbolName: normalNames.enumerate())
+						f"({nameFieldBase}) == &{symbolName} ? &{typedNames[i]} : "
+				) + ...
+			}&tdefault__{name.name})");
+		}
 		print;
 	}
 
 	@@@param functionMacros Custom callbacks for macro replacement.
 	public printInternImpl(name: string, impl: NativeMethodImpl,
-	                       formatMacros: {string: Callable} = none,
-	                       typed: bool = false) {
+	                       formatMacros: {string: Callable} = none) {
 		assert impl.alias is none;
-		if (!typed) {
-			for (local prefix: impl.implPrefix) {
-				printUserText(prefix, "$", formatMacros);
-				print;
-			}
+		for (local prefix: impl.implPrefix) {
+			printUserText(prefix, "$", formatMacros);
+			print;
 		}
 		print("INTERN "),;
-		printDecl(name, lineFeedBeforeName: true, typed: typed);
+		printDecl(name, lineFeedBeforeName: true);
 		print(" "),;
 		printUserText(impl.impl, "$", formatMacros);
 		print;
+		print;
+	}
+
+	function enumerateNamesAndImplsForImpl(): {(string, NativeOperatorImpl)...} {
+		for (local name, impl: enumerateNamesAndImpls()) {
+			if (impl.impl.alias is none)
+				yield (name, impl);
+		}
+	}
+
+	function doPrintNativeOperatorHintImpl(
+			typelessSymNames: {string...} | none = none): {string...} {
+		local result = [];
+		for (local i, symNameAndImpl: enumerateNamesAndImplsForImpl().enumerate()) {
+			local symName, impl = symNameAndImpl...;
+			local typelessName: string | none = typelessSymNames[i];
+			local usedImpl: NativeMethodImpl = impl.impl;
+			if (typelessName !is none) {
+				usedImpl = copy usedImpl;
+				local baseImplRaw: string = usedImpl.impl.strip().strip("{}").strip();
+				usedImpl.impl = f"\{\n"
+					f"#ifdef __OPTIMIZE_SIZE__\n"
+					f"	return {typelessName}({tpSelfExpr}, {", ".join(params.each.name)});\n"
+					f"#else /* __OPTIMIZE_SIZE__ */\n"
+					f"{baseImplRaw.startswith("#") ? "" : "\t"}{baseImplRaw}\n"
+					f"#endif /* __OPTIMIZE_SIZE__ */\n"
+					f"\}";
+			}
+			printInternImpl(symName, usedImpl, {
+				"THIS_TYPE": tpSelfExpr,
+				"CALL_DEPENDENCY": (dep, args...) ->
+					// TODO: In a typed context, must map certain dependency default impls
+					//       to their typed variant. (e.g. usrtype__int -> tusrtype__int)
+					// NOTE: We don't have to map *all* impls (iow: maketyped__int would be
+					//       overkill), but right now I can't wrap my head around how to
+					//       define which typed variants need to be mapped.
+					// I think we have to: map every impl "i" of "dep", where "this" doesn't
+					// have another implementation the the same dependencies as "i".
+					f"(*{tpSelfExpr}->{dep})({", ".join(args)})",
+				"PRELOAD_DEPENDENCY": (dep) -> "", // TODO
+				"CALL_PRELOAD_DEPENDENCY": (dep, args...) -> // TODO
+					f"(*{tpSelfExpr}->{dep})({", ".join(args)})",
+				"IF_TYPED_ELSE": (ifTyped, ifNotTyped) ->
+					typelessName is none ? ifTyped : ifNotTyped
+			});
+			result.append(symName);
+		}
+		return result;
+	}
+
+	function printDefaultTypedCallforward(typelessParams: {NativeMethodParam...}) {
+		printInternImpl(f"{namePrefix}default__{name.name}", NativeMethodImpl(
+			f"\{\n\treturn (*{tpSelfExpr}->{name})({
+					", ".join(typelessParams.each.name)
+			});\n\}"
+		));
 	}
 
 	function printNativeOperatorHintImpl() {
-		print("/* ", str name, " */");
-		if (usrtypeImpl !is none && usrtypeImpl.alias is none) {
-			printInternImpl(f"usrtype__{name.name}", usrtypeImpl);
-		}
-		for (local impl: impls) {
-			if (impl.impl.alias is none) {
-				printInternImpl(nativeSymbolNameForImpl(impl), impl.impl);
-			}
-		}
-		printInternImpl(f"tdefault__{name.name}", NativeMethodImpl(
-			f"\{\n\treturn (*tp_self->)();\n\}"
-		), typed: true);
-		if (usrtypeImpl !is none && usrtypeImpl.alias is none) {
-			printInternImpl(f"tusrtype__{name.name}", usrtypeImpl, typed: true);
-		}
-		for (local impl: impls) {
-			if (impl.impl.alias is none) {
-				printInternImpl("t" + nativeSymbolNameForImpl(impl), impl.impl, typed: true);
-			}
-		}
-		print;
+		print("/* ", name.locExpr, " */");
+		local typedNames = typed.doPrintNativeOperatorHintImpl();
+		if (usrtypeImpls || impls)
+			typed.printDefaultTypedCallforward(params);
+		doPrintNativeOperatorHintImpl(typedNames);
 	}
 }
 
@@ -1172,7 +1276,7 @@ function printMhInitSpecs() {
 						field: spec.operatorField);
 				local op: NativeOperator | none = NATIVE_OPERATORS.get(opName);
 				local opNameStr: string = op !is none
-						? f"Dee_TNO_{op.name.name}"
+						? op.name.TNO_id
 						: f"Dee_TNO_MISSING({opName})";
 				print(opNameStr, ", "),;
 				if (spec.baseClass == "DeeSeq_Type") {
@@ -1232,7 +1336,7 @@ function printMhUnsupportedArrayMembers() {
 
 function printNativeOperatorIds() {
 	for (local none, method: NATIVE_OPERATORS) {
-		print("	Dee_TNO_", method.name.name, ",");
+		print("	", method.name.TNO_id, ",");
 	}
 }
 
@@ -1246,12 +1350,47 @@ function printNativeOperatorHintImpls() {
 		method.printNativeOperatorHintImpl();
 }
 
+function printNativeOperatorHintSpecs() {
+	for (local name, method: NATIVE_OPERATORS) {
+		if (method.impls) {
+			print(f"PRIVATE struct oh_init_spec_impl tpconst oh_impls_{
+					name.name}[{#method.impls + 1}] = \{");
+			for (local impl/*: NativeOperatorImpl*/: method.impls) {
+				local deps = Tuple(impl.dependencies.each.TNO_id);
+				local dep1 = #deps >= 1 ? deps[0] : "Dee_TNO_COUNT";
+				local dep2 = #deps >= 2 ? deps[1] : "Dee_TNO_COUNT";
+				local symName = method.nativeSymbolNameForImpl(impl);
+				if (#deps >= 3) {
+					throw Error(f"Max 2 dependencies are supported for default operators, but {
+							repr symName} has {#deps}");
+				}
+				print(f"	OH_INIT_SPEC_IMPL_INIT(&{symName}, {dep1}, {dep2}),");
+			}
+			print(f"	OH_INIT_SPEC_IMPL_END");
+			print(f"\};");
+		}
+	}
+	print("INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[", #NATIVE_OPERATORS, "] = {");
+	local longestNameLength = NATIVE_OPERATORS.keys.each.locExpr.length > ...;
+	for (local name, method: NATIVE_OPERATORS) {
+		print("	/* ", name.locExpr.ljust(longestNameLength), " */ OH_INIT_SPEC_INIT("),;
+		print(name.table is none ? "0" : f"offsetof(DeeTypeObject, {name.table})"),;
+		local subTableTypeName = name.table is none
+			? "DeeTypeObject"
+			: f"struct type_{name.table.lsstrip("tp_")}";
+		print(f", offsetof({subTableTypeName}, {name.field}), "),;
+		print(method.impls ? f"oh_impls_{name.name}" : "NULL"),;
+		print("),");
+	}
+	print("};");
+}
+
 
 final class _SpecParserAttrib {
 	this = default;
 	public member kw: bool = false;
 	public member wunused: bool = false;
-	public member tpSelfExpr: string = "Dee_TYPE(self)";
+	public member tpSelfExpr: string = "";
 	public member nonnull: bool = false;
 	public member getset: bool = false;
 	public member getsetMember: string = "";
@@ -1447,10 +1586,29 @@ done:
 		local paramTypeEnd = tokStart;
 		local paramType = data[paramTypeStart:paramTypeEnd].strip();
 		local paramName = parseSymbol();
+		local typAfter = "";
+		if (tok == "[") {
+			local typAfterStart = tokStart;
+			next();
+			local recursion = 0;
+			while (tok) {
+				if (tok == "]") {
+					if (!recursion)
+						break;
+					--recursion;
+				} else if (tok == "[") {
+					++recursion;
+				}
+				next();
+			}
+			typAfter = data[typAfterStart:tokEnd];
+			skip("]");
+		}
 		return NativeMethodParam(
 				typ: paramType,
 				name: paramName,
-				nonnull: attrib.nonnull);
+				nonnull: attrib.nonnull,
+				typAfter: typAfter);
 	}
 
 	public parseAttribs() {
@@ -1837,7 +1995,7 @@ done:
 				local implStart = tokStart;
 				local implEnd = data.findmatch("{", "}", implStart + 1);
 				if (implEnd < 0)
-					err(f"Missing '\}' to terminate implementation of {repr str method.name}");
+					err(f"Missing '\}' to terminate implementation of '{method.name.locExpr}'");
 				++implEnd;
 				impl.impl = NativeMethodImpl(
 						data[implStart:implEnd].strip(),
@@ -1852,9 +2010,16 @@ done:
 			}
 			method.impls.append(impl);
 		} else if (tok == "class") {
-			if (method.usrtypeImpl !is none)
-				err(f"User-type implementation already defined for {repr str method.name}");
+			local uImplName = "";
 			next();
+			if (tok != "{") {
+				uImplName = parseSymbol();
+				skip(":");
+			}
+			if (uImplName in method.usrtypeImpls) {
+				err(f"User-type implementation {repr uImplName
+					} already defined for '{method.name.locExpr}'");
+			}
 			local impl: NativeMethodImpl;
 			if (tok == "=") {
 				next();
@@ -1866,7 +2031,7 @@ done:
 				local implStart = tokStart;
 				local implEnd = data.findmatch("{", "}", implStart + 1);
 				if (implEnd < 0)
-					err(f"Missing '\}' to terminate implementation of {repr str method.name}");
+					err(f"Missing '\}' to terminate implementation of '{method.name.locExpr}'");
 				++implEnd;
 				impl = NativeMethodImpl(
 						data[implStart:implEnd].strip(),
@@ -1874,7 +2039,7 @@ done:
 				tokEnd = implEnd;
 				next();
 			}
-			method.usrtypeImpl = impl;
+			method.usrtypeImpls[uImplName] = impl;
 		} else {
 			err(f"Expected 'using' or 'class' for native operator implementation, but got {repr tok}");
 		}
@@ -1924,7 +2089,7 @@ done:
 						tpSelfExpr: attrib.tpSelfExpr,
 						name: operatorName);
 				if (!NATIVE_OPERATORS.setnew(operatorName, method))
-					err(f"Native operator {repr str operatorName} was already defined");
+					err(f"Native operator '{operatorName.locExpr}' was already defined");
 				skip("(");
 				while (tok && tok != ")") {
 					method.params.append(parseNativeMethodParam());
@@ -1940,6 +2105,7 @@ done:
 					skip("}");
 				}
 				skip(";");
+				method._makeTyped();
 				resetContext();
 			}	break;
 

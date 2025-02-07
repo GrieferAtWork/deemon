@@ -705,7 +705,31 @@
 		<ClInclude Include="..\src\deemon\method-hints\method-hints.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_bool.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_call.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_float.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_int.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_iter.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_misc.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_next.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_repr.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_str.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_all.h">
@@ -1704,6 +1728,12 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\operator-constcall.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\operator-hint-defaults.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\operator-hints.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\operator-inherit.c">

@@ -59,7 +59,6 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_operator_iter_t mh_seq_operator_iter;
 	DeeMH_seq_operator_foreach_t mh_seq_operator_foreach;
 	DeeMH_seq_operator_foreach_pair_t mh_seq_operator_foreach_pair;
-	DeeMH_seq_iterkeys_t mh_seq_iterkeys;
 	DeeMH_seq_operator_getitem_t mh_seq_operator_getitem;
 	DeeMH_seq_operator_getitem_index_t mh_seq_operator_getitem_index;
 	DeeMH_seq_operator_trygetitem_t mh_seq_operator_trygetitem;
@@ -93,6 +92,7 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_operator_ge_t mh_seq_operator_ge;
 	DeeMH_seq_operator_inplace_add_t mh_seq_operator_inplace_add;
 	DeeMH_seq_operator_inplace_mul_t mh_seq_operator_inplace_mul;
+	DeeMH_seq_iterkeys_t mh_seq_iterkeys;
 	DeeMH_seq_enumerate_t mh_seq_enumerate;
 	DeeMH_seq_enumerate_index_t mh_seq_enumerate_index;
 	DeeMH_seq_makeenumeration_t mh_seq_makeenumeration;
@@ -212,7 +212,6 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc___seq_bool__;
 	union mhc_slot mhc___seq_size__;
 	union mhc_slot mhc___seq_iter__;
-	union mhc_slot mhc___seq_iterkeys__;
 	union mhc_slot mhc___seq_getitem__;
 	union mhc_slot mhc___seq_delitem__;
 	union mhc_slot mhc___seq_setitem__;
@@ -231,6 +230,7 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc___seq_ge__;
 	union mhc_slot mhc___seq_inplace_add__;
 	union mhc_slot mhc___seq_inplace_mul__;
+	union mhc_slot mhc___seq_iterkeys__;
 	union mhc_slot mhc___seq_enumerate__;
 	union mhc_slot mhc___seq_enumerate_items__;
 	union mhc_slot mhc_get___seq_first__;
