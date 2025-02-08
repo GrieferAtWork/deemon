@@ -19,56 +19,39 @@
  */
 
 /************************************************************************/
-/* deemon.Object.operator call()                                        */
+/* deemon.Object.operator hash()                                        */
 /************************************************************************/
 
 operator {
 
-[[wunused]] DREF DeeObject *
-tp_call([[nonnull]] DeeObject *self,
-        size_t argc, DeeObject *const *argv)
-%{class {
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_CALL, argc, argv);
-}}
-%{using tp_call_kw: {
-	return CALL_DEPENDENCY(tp_call_kw, self, argc, argv, NULL);
-}} = OPERATOR_CALL;
-
-
-[[wunused]] DREF DeeObject *
-tp_call_kw([[nonnull]] DeeObject *self,
-           size_t argc, DeeObject *const *argv,
-           DeeObject *kw)
+[[custom_unsupported_impl_name(default__hash__unsupported)]]
+[[wunused]] Dee_hash_t
+tp_cmp->tp_hash([[nonnull]] DeeObject *__restrict self)
 %{class {
 	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(THIS_TYPE, OPERATOR_CALL);
+	dhash_t result_value;
+	int temp;
+	func = DeeClass_TryGetOperator(THIS_TYPE, OPERATOR_HASH);
 	if unlikely(!func)
-		goto err;
-	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	Dee_Decref_unlikely(func);
-	return result;
-err:
-	return NULL;
+		goto fallback;
+	result = DeeObject_ThisCall(func, self, 0, NULL);
+	Dee_Decref(func);
+	if unlikely(!result)
+		goto fallback_handled;
+	temp = DeeObject_AsUIntptr(result, &result_value);
+	Dee_Decref(result);
+	if unlikely(temp)
+		goto fallback_handled;
+	return result_value;
+fallback_handled:
+	DeeError_Print("Unhandled error in `operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+fallback:
+	return DeeObject_HashGeneric(self);
 }}
-%{using tp_call: {
-	if (kw) {
-		if (DeeKwds_Check(kw)) {
-			if (DeeKwds_SIZE(kw) != 0)
-				goto err_no_keywords;
-		} else {
-			size_t kw_length;
-			kw_length = DeeObject_Size(kw);
-			if unlikely(kw_length == (size_t)-1)
-				goto err;
-			if (kw_length != 0)
-				goto err_no_keywords;
-		}
-	}
-	return CALL_DEPENDENCY(tp_call, self, argc, argv);
-err_no_keywords:
-	err_keywords_not_accepted(THIS_TYPE, kw);
-err:
-	return NULL;
-}} = OPERATOR_CALL;
+/*%{using []: { // Not done here since that would break inheritance
+	return DeeObject_HashGeneric(self);
+}}*/
+= OPERATOR_HASH;
 
 } /* operator */

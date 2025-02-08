@@ -1041,17 +1041,27 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetUncachedMethodHint)(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
+#ifdef CONFIG_BUILDING_DEEMON
 /* Check if `self' specifically is able to supply the method hint `id'
  * in some form. If not, return `NULL' to indicate this lack of support.
  *
- * Note that this function doesn't return "%{unsupported}" implementations. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
+ * Note that this function doesn't return "%{unsupported}" implementations.
+ *
+ * WARNING: Only call this function for some given "self, orig_type" if
+ *          you've already called it with all preceding types "self" that
+ *          appear in "orig_type.__mro__". */
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 (DCALL DeeType_GetPrivateMethodHint)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
 
 /* Same as `DeeType_GetPrivateMethodHint', but only check for attributes
- * without doing any default substitutions. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
+ * without doing any default substitutions.
+ *
+ * WARNING: Only call this function for some given "self, orig_type" if
+ *          you've already called it with all preceding types "self" that
+ *          appear in "orig_type.__mro__". */
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 (DCALL DeeType_GetPrivateMethodHintNoDefault)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
+#endif /* CONFIG_BUILDING_DEEMON */
 
 /* Returns a pointer to method hint's entry in `self->tp_method_hints' */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t

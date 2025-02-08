@@ -30,7 +30,7 @@ function unary(neg: string) {
 	print("tp_math->tp_", neg, "([[nonnull]] DeeObject *self)");
 	print("%{class {");
 	print("	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_", NEG, ", 0, NULL);");
-	print("}};");
+	print("}} = OPERATOR_", NEG, ";");
 	print;
 }
 
@@ -41,7 +41,7 @@ function binaryMath(add: string) {
 	print("tp_math->tp_", add, "([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)");
 	print("%{class {");
 	print("	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_", ADD, ", 1, &rhs);");
-	print("}};");
+	print("}} = OPERATOR_", ADD, ";");
 	print;
 
 	print("[[tp_self(Dee_TYPE(*p_lhs))]]");
@@ -65,7 +65,7 @@ function binaryMath(add: string) {
 	print("	return 0;");
 	print("err:");
 	print("	return -1;");
-	print("}};");
+	print("}} = OPERATOR_INPLACE_", ADD, ";");
 	print;
 }
 
@@ -98,7 +98,7 @@ function inplaceUnary(prefix: string, inc: string) {
 	print("	return 0;");
 	print("err:");
 	print("	return -1;");
-	print("}};");
+	print("}} = OPERATOR_", INC, ";");
 	print;
 }
 
@@ -121,7 +121,7 @@ function enterLeave(enter: string) {
 	print("}}");
 	print("%{using tp_with->tp_", leave, ": {");
 	print("	return 0;");
-	print("}};");
+	print("}} = OPERATOR_", ENTER, ";");
 	print;
 }
 
@@ -153,25 +153,25 @@ enterLeave("leave");
 tp_math->tp_inv([[nonnull]] DeeObject *self)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_INV, 0, NULL);
-}};
+}} = OPERATOR_INV;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_pos([[nonnull]] DeeObject *self)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_POS, 0, NULL);
-}};
+}} = OPERATOR_POS;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_neg([[nonnull]] DeeObject *self)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_NEG, 0, NULL);
-}};
+}} = OPERATOR_NEG;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_add([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_ADD, 1, &rhs);
-}};
+}} = OPERATOR_ADD;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -194,13 +194,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_ADD;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_sub([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SUB, 1, &rhs);
-}};
+}} = OPERATOR_SUB;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -223,13 +223,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_SUB;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_mul([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MUL, 1, &rhs);
-}};
+}} = OPERATOR_MUL;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -252,13 +252,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_MUL;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_div([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_DIV, 1, &rhs);
-}};
+}} = OPERATOR_DIV;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -281,13 +281,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_DIV;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_mod([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MOD, 1, &rhs);
-}};
+}} = OPERATOR_MOD;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -310,13 +310,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_MOD;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_shl([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHL, 1, &rhs);
-}};
+}} = OPERATOR_SHL;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -339,13 +339,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_SHL;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_shr([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHR, 1, &rhs);
-}};
+}} = OPERATOR_SHR;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -368,13 +368,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_SHR;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_and([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_AND, 1, &rhs);
-}};
+}} = OPERATOR_AND;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -397,13 +397,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_AND;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_or([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_OR, 1, &rhs);
-}};
+}} = OPERATOR_OR;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -426,13 +426,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_OR;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_xor([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_XOR, 1, &rhs);
-}};
+}} = OPERATOR_XOR;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -455,13 +455,13 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_XOR;
 
 [[wunused]] DREF DeeObject *
 tp_math->tp_pow([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_POW, 1, &rhs);
-}};
+}} = OPERATOR_POW;
 
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
@@ -484,7 +484,7 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INPLACE_POW;
 
 [[tp_self(Dee_TYPE(*p_self))]]
 [[wunused]] int
@@ -510,7 +510,7 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_INC;
 
 [[tp_self(Dee_TYPE(*p_self))]]
 [[wunused]] int
@@ -536,7 +536,7 @@ err:
 	return 0;
 err:
 	return -1;
-}};
+}} = OPERATOR_DEC;
 
 [[wunused]] int
 tp_with->tp_enter([[nonnull]] DeeObject *__restrict self)
@@ -552,7 +552,7 @@ err:
 }}
 %{using tp_with->tp_leave: {
 	return 0;
-}};
+}} = OPERATOR_ENTER;
 
 [[wunused]] int
 tp_with->tp_leave([[nonnull]] DeeObject *__restrict self)
@@ -568,7 +568,7 @@ err:
 }}
 %{using tp_with->tp_enter: {
 	return 0;
-}};
+}} = OPERATOR_LEAVE;
 /*[[[end]]]*/
 
 

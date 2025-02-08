@@ -71,7 +71,7 @@ tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
 	(void)self;
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
-}};
+}} = OPERATOR_ITER;
 
 
 
@@ -95,7 +95,7 @@ err:
 	data.dfwfp_cb  = cb;
 	data.dfwfp_arg = arg;
 	return CALL_DEPENDENCY(tp_seq->tp_foreach_pair, self, &default_foreach_with_foreach_pair_cb, &data);
-}};
+}} = OPERATOR_ITER;
 
 
 
@@ -152,7 +152,7 @@ err:
 	data.dfpwf_cb  = cb;
 	data.dfpwf_arg = arg;
 	return CALL_DEPENDENCY(tp_seq->tp_foreach, self, &default_foreach_pair_with_foreach_cb, &data);
-}};
+}} = OPERATOR_ITER;
 
 
 } /* operator */

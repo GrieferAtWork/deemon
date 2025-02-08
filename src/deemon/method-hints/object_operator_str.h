@@ -82,7 +82,7 @@ err:
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
-}};
+}} = OPERATOR_STR;
 
 
 
@@ -167,7 +167,7 @@ err:
 	return result;
 err:
 	return -1;
-}};
+}} = OPERATOR_STR;
 
 
 } /* operator */

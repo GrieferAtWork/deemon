@@ -19,56 +19,46 @@
  */
 
 /************************************************************************/
-/* deemon.Object.operator call()                                        */
+/* deemon.Object.operator size()                                        */
 /************************************************************************/
 
 operator {
 
+
 [[wunused]] DREF DeeObject *
-tp_call([[nonnull]] DeeObject *self,
-        size_t argc, DeeObject *const *argv)
+tp_seq->tp_sizeob([[nonnull]] DeeObject *__restrict self)
 %{class {
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_CALL, argc, argv);
+	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_SIZE, 0, NULL);
 }}
-%{using tp_call_kw: {
-	return CALL_DEPENDENCY(tp_call_kw, self, argc, argv, NULL);
-}} = OPERATOR_CALL;
-
-
-[[wunused]] DREF DeeObject *
-tp_call_kw([[nonnull]] DeeObject *self,
-           size_t argc, DeeObject *const *argv,
-           DeeObject *kw)
-%{class {
-	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(THIS_TYPE, OPERATOR_CALL);
-	if unlikely(!func)
+%{using tp_seq->tp_size: {
+	size_t result = CALL_DEPENDENCY(tp_seq->tp_size, self);
+	if unlikely(result == (size_t)-1)
 		goto err;
-	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	Dee_Decref_unlikely(func);
-	return result;
+	return DeeInt_NewSize(result);
 err:
 	return NULL;
-}}
-%{using tp_call: {
-	if (kw) {
-		if (DeeKwds_Check(kw)) {
-			if (DeeKwds_SIZE(kw) != 0)
-				goto err_no_keywords;
-		} else {
-			size_t kw_length;
-			kw_length = DeeObject_Size(kw);
-			if unlikely(kw_length == (size_t)-1)
-				goto err;
-			if (kw_length != 0)
-				goto err_no_keywords;
-		}
-	}
-	return CALL_DEPENDENCY(tp_call, self, argc, argv);
-err_no_keywords:
-	err_keywords_not_accepted(THIS_TYPE, kw);
+}} = OPERATOR_SIZE;
+
+
+[[wunused]] size_t
+tp_seq->tp_size([[nonnull]] DeeObject *__restrict self)
+%{using tp_seq->tp_sizeob: {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_seq->tp_sizeob, self);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return NULL;
-}} = OPERATOR_CALL;
+	return (size_t)-1;
+}} = OPERATOR_SIZE;
+
+
+[[custom_unsupported_impl_name(default__size_fast__with__)]]
+[[wunused]] size_t
+tp_seq->tp_size_fast([[nonnull]] DeeObject *__restrict self)
+%{using []: {
+	return (size_t)-1; /* Not fast */
+}} = OPERATOR_SIZE;
+
+
 
 } /* operator */

@@ -20,7 +20,7 @@
 
 /* !!!!!!!!!!!!!!!!!!
  * After making changes to this file (or any of the files %[include]-ed below), you must run:
- * >> deemon -F include/deemon/method-hints.h include/deemon/operator-hints.h src/deemon/runtime/method-hint-defaults.h src/deemon/runtime/method-hint-defaults.c src/deemon/runtime/method-hints.h src/deemon/runtime/method-hints.c src/deemon/runtime/method-hint-select.h src/deemon/runtime/method-hint-select.c src/deemon/runtime/method-hint-wrappers.c src/deemon/runtime/operator-hints.c src/deemon/runtime/operator-hint-defaults.c src/deemon/runtime/strings.h
+ * >> deemon -F include/deemon/method-hints.h include/deemon/operator-hints.h src/deemon/runtime/method-hint-defaults.h src/deemon/runtime/method-hint-defaults.c src/deemon/runtime/method-hints.h src/deemon/runtime/method-hints.c src/deemon/runtime/method-hint-select.h src/deemon/runtime/method-hint-select.c src/deemon/runtime/method-hint-wrappers.c src/deemon/runtime/operator-hints.c src/deemon/runtime/operator-hint-defaults.c src/deemon/runtime/operator-hint-errors.h src/deemon/runtime/operator-hint-errors.c src/deemon/runtime/strings.h
  */
 
 /************************************************************************/
@@ -33,8 +33,17 @@
 %[include("object_operator_next.h")]
 %[include("object_operator_int.h")]
 %[include("object_operator_float.h")]
-// TODO: All of the other operators
+%[include("object_operator_hash.h")]
+%[include("object_operator_cmp.h")]
 %[include("object_operator_iter.h")]
+%[include("object_operator_size.h")]
+%[include("object_operator_contains.h")]
+%[include("object_operator_getitem.h")]
+%[include("object_operator_delitem.h")]
+%[include("object_operator_setitem.h")]
+%[include("object_operator_getrange.h")]
+%[include("object_operator_delrange.h")]
+%[include("object_operator_setrange.h")]
 // TODO: All of the other operators
 %[include("object_operator_misc.h")]
 

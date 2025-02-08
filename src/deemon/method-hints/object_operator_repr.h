@@ -58,7 +58,7 @@ err:
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
-}};
+}} = OPERATOR_REPR;
 
 
 
@@ -98,7 +98,7 @@ err:
 	return result;
 err:
 	return -1;
-}};
+}} = OPERATOR_REPR;
 
 
 } /* operator */

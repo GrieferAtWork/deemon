@@ -72,6 +72,6 @@ err:
 		*p_result = (double)intval;
 	}
 	return status;
-}};
+}} = OPERATOR_FLOAT;
 
 } /* operator */

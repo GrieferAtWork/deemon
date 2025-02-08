@@ -19,56 +19,16 @@
  */
 
 /************************************************************************/
-/* deemon.Object.operator call()                                        */
+/* deemon.Object.operator contains()                                    */
 /************************************************************************/
 
 operator {
 
 [[wunused]] DREF DeeObject *
-tp_call([[nonnull]] DeeObject *self,
-        size_t argc, DeeObject *const *argv)
+tp_seq->tp_contains([[nonnull]] DeeObject *self,
+                    [[nonnull]] DeeObject *item)
 %{class {
-	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_CALL, argc, argv);
-}}
-%{using tp_call_kw: {
-	return CALL_DEPENDENCY(tp_call_kw, self, argc, argv, NULL);
-}} = OPERATOR_CALL;
-
-
-[[wunused]] DREF DeeObject *
-tp_call_kw([[nonnull]] DeeObject *self,
-           size_t argc, DeeObject *const *argv,
-           DeeObject *kw)
-%{class {
-	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(THIS_TYPE, OPERATOR_CALL);
-	if unlikely(!func)
-		goto err;
-	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
-	Dee_Decref_unlikely(func);
-	return result;
-err:
-	return NULL;
-}}
-%{using tp_call: {
-	if (kw) {
-		if (DeeKwds_Check(kw)) {
-			if (DeeKwds_SIZE(kw) != 0)
-				goto err_no_keywords;
-		} else {
-			size_t kw_length;
-			kw_length = DeeObject_Size(kw);
-			if unlikely(kw_length == (size_t)-1)
-				goto err;
-			if (kw_length != 0)
-				goto err_no_keywords;
-		}
-	}
-	return CALL_DEPENDENCY(tp_call, self, argc, argv);
-err_no_keywords:
-	err_keywords_not_accepted(THIS_TYPE, kw);
-err:
-	return NULL;
-}} = OPERATOR_CALL;
+	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_CONTAINS, 1, &item);
+}} = OPERATOR_CONTAINS;
 
 } /* operator */

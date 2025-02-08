@@ -67,7 +67,7 @@ err:
 	return DeeInt_NewDouble(value);
 err:
 	return NULL;
-}};
+}} = OPERATOR_INT;
 
 
 
@@ -124,7 +124,7 @@ err_overflow:
 	err_integer_overflow(self, 32, value >= 0);
 err:
 	return -1;
-}};
+}} = OPERATOR_INT;
 
 
 
@@ -174,6 +174,6 @@ err_overflow:
 	err_integer_overflow(self, 64, value >= 0);
 err:
 	return -1;
-}};
+}} = OPERATOR_INT;
 
 } /* operator */

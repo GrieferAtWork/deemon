@@ -39,6 +39,6 @@ err_r:
 	Dee_Decref(result);
 err:
 	return -1;
-}};
+}} = OPERATOR_BOOL;
 
 } /* operator */
