@@ -46,13 +46,13 @@ err:
 }
 
 [[wunused]] DREF DeeObject *
-__seq_enumerate_items__.seq_makeenumeration([[nonnull]] DeeObject *self)
+__seq_enumerate_items__.seq_makeenumeration([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)} {
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
 [[wunused]] DREF DeeObject *
-__seq_enumerate_items__.seq_makeenumeration_with_int_range([[nonnull]] DeeObject *self,
+__seq_enumerate_items__.seq_makeenumeration_with_int_range([[nonnull]] DeeObject *__restrict self,
                                                            size_t start, size_t end)
 %{unsupported(auto)} {
 	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);

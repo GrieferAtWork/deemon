@@ -1968,7 +1968,9 @@ seq_operator_compare_eq = {
 [[wunused]] int
 __seq_trycompare_eq__.seq_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
                                                  [[nonnull]] DeeObject *rhs)
-%{unsupported(auto)}
+%{unsupported({
+	return 1;
+})}
 %{$empty = {
 	int rhs_nonempty;
 	DeeMH_seq_operator_bool_t rhs_seq_operator_bool = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_bool);

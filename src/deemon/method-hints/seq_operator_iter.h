@@ -468,6 +468,7 @@ err:
 
 
 seq_operator_iter = {
+	DeeMH_set_operator_iter_t set_operator_iter;
 	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_NODEFAULT(seq_operator_size);
 	if (seq_operator_size) {
 		if (seq_operator_size == &default__seq_operator_size__empty)
@@ -496,6 +497,11 @@ seq_operator_iter = {
 		if (REQUIRE_NODEFAULT(map_operator_getitem))
 			return &$with__map_iterkeys__and__map_operator_getitem;
 	}
+
+	/* If provided, can also use explicitly defined "Set.operator iter()" */
+	set_operator_iter = REQUIRE_NODEFAULT(set_operator_iter);
+	if (set_operator_iter)
+		return set_operator_iter;
 };
 
 
@@ -516,8 +522,14 @@ seq_operator_foreach = {
 		return &$with__seq_operator_sizeob__and__seq_operator_getitem;
 	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate)
 		return &$with__map_enumerate;
-	if (seq_operator_iter)
+	if (seq_operator_iter) {
+		if (seq_operator_iter == REQUIRE_NODEFAULT(set_operator_iter)) {
+			DeeMH_set_operator_foreach_t set_operator_foreach = REQUIRE_NODEFAULT(set_operator_foreach);
+			if (set_operator_foreach)
+				return set_operator_foreach;
+		}
 		return &$with__seq_operator_iter;
+	}
 };
 
 seq_operator_foreach_pair = {
@@ -528,6 +540,12 @@ seq_operator_foreach_pair = {
 		return &$with__seq_operator_iter;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__map_enumerate)
 		return &$with__map_enumerate;
-	if (seq_operator_foreach)
+	if (seq_operator_foreach) {
+		if (seq_operator_foreach == REQUIRE_NODEFAULT(set_operator_foreach)) {
+			DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair = REQUIRE_NODEFAULT(set_operator_foreach_pair);
+			if (set_operator_foreach_pair)
+				return set_operator_foreach_pair;
+		}
 		return &$with__seq_operator_foreach;
+	}
 };

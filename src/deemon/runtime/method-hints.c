@@ -166,6 +166,10 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	(Dee_funptr_t)&default__set_operator_sizeob__unsupported,
 	(Dee_funptr_t)&default__set_operator_size__unsupported,
 	(Dee_funptr_t)&default__set_operator_hash__unsupported,
+	(Dee_funptr_t)&default__set_operator_compare_eq__unsupported,
+	(Dee_funptr_t)&default__set_operator_trycompare_eq__unsupported,
+	(Dee_funptr_t)&default__set_operator_eq__unsupported,
+	(Dee_funptr_t)&default__set_operator_ne__unsupported,
 	(Dee_funptr_t)&default__map_operator_getitem__unsupported,
 	(Dee_funptr_t)&default__map_operator_trygetitem__unsupported,
 	(Dee_funptr_t)&default__map_operator_getitem_index__unsupported,
@@ -1007,6 +1011,38 @@ PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_hash 
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
+PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_compare_eq = {
+	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_compare_eq,
+	/* .misos_operators = */ {
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_compare_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_END
+	}
+};
+PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_trycompare_eq = {
+	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_trycompare_eq,
+	/* .misos_operators = */ {
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_END
+	}
+};
+PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_eq = {
+	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_eq,
+	/* .misos_operators = */ {
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_SET, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_eq, NULL, Dee_SEQCLASS_MAP, OPERATOR_EQ),
+		MH_INIT_SPEC_OPERATOR_END
+	}
+};
+PRIVATE struct_mh_init_spec_operators(3) tpconst mh_operators_set_operator_ne = {
+	/* .misos_default   = */ (Dee_funptr_t)&default__set_operator_ne,
+	/* .misos_operators = */ {
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_SET, OPERATOR_NE),
+		MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_ne, NULL, Dee_SEQCLASS_MAP, OPERATOR_NE),
+		MH_INIT_SPEC_OPERATOR_END
+	}
+};
 PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_operator_getitem = {
 	/* .misos_default   = */ (Dee_funptr_t)&default__map_operator_getitem,
 	/* .misos_operators = */ {
@@ -1189,7 +1225,7 @@ PRIVATE struct_mh_init_spec_operators(2) tpconst mh_operators_map_enumerate = {
 		MH_INIT_SPEC_OPERATOR_END
 	}
 };
-INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[147] = {
+INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[151] = {
 	MH_INIT_SPEC_INIT(&str___seq_bool__, NULL, &mh_operators_seq_operator_bool, &default__seq_operator_bool__with_callattr___seq_bool__, offsetof(struct Dee_type_mh_cache, mhc___seq_bool__), MH_KIND_METHOD, &default__seq_operator_bool__with_callobjectcache___seq_bool__, &default__seq_operator_bool__with_callmethodcache___seq_bool__, &default__seq_operator_bool__with_callkwmethodcache___seq_bool__, &mh_select_seq_operator_bool),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, &mh_operators_seq_operator_sizeob, &default__seq_operator_sizeob__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_sizeob__with_callobjectcache___seq_size__, &default__seq_operator_sizeob__with_callmethodcache___seq_size__, &default__seq_operator_sizeob__with_callkwmethodcache___seq_size__, &mh_select_seq_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, &mh_operators_seq_operator_size, &default__seq_operator_size__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_size__with_callobjectcache___seq_size__, &default__seq_operator_size__with_callmethodcache___seq_size__, &default__seq_operator_size__with_callkwmethodcache___seq_size__, &mh_select_seq_operator_size),
@@ -1217,7 +1253,7 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[147] = {
 	MH_INIT_SPEC_INIT(&str___seq_setrange__, NULL, &mh_operators_seq_operator_setrange, &default__seq_operator_setrange__with_callattr___seq_setrange__, offsetof(struct Dee_type_mh_cache, mhc___seq_setrange__), MH_KIND_METHOD, &default__seq_operator_setrange__with_callobjectcache___seq_setrange__, &default__seq_operator_setrange__with_callmethodcache___seq_setrange__, &default__seq_operator_setrange__with_callkwmethodcache___seq_setrange__, &mh_select_seq_operator_setrange),
 	MH_INIT_SPEC_INIT(&str___seq_setrange__, NULL, &mh_operators_seq_operator_setrange_index, &default__seq_operator_setrange_index__with_callattr___seq_setrange__, offsetof(struct Dee_type_mh_cache, mhc___seq_setrange__), MH_KIND_METHOD, &default__seq_operator_setrange_index__with_callobjectcache___seq_setrange__, &default__seq_operator_setrange_index__with_callmethodcache___seq_setrange__, &default__seq_operator_setrange_index__with_callkwmethodcache___seq_setrange__, &mh_select_seq_operator_setrange_index),
 	MH_INIT_SPEC_INIT(&str___seq_setrange__, NULL, &mh_operators_seq_operator_setrange_index_n, &default__seq_operator_setrange_index_n__with_callattr___seq_setrange__, offsetof(struct Dee_type_mh_cache, mhc___seq_setrange__), MH_KIND_METHOD, &default__seq_operator_setrange_index_n__with_callobjectcache___seq_setrange__, &default__seq_operator_setrange_index_n__with_callmethodcache___seq_setrange__, &default__seq_operator_setrange_index_n__with_callkwmethodcache___seq_setrange__, &mh_select_seq_operator_setrange_index_n),
-	MH_INIT_SPEC_INIT(&str___seq_bool__, NULL, &mh_operators_seq_operator_assign, &default__seq_operator_assign__with_callattr___seq_bool__, offsetof(struct Dee_type_mh_cache, mhc___seq_bool__), MH_KIND_METHOD, &default__seq_operator_assign__with_callobjectcache___seq_bool__, &default__seq_operator_assign__with_callmethodcache___seq_bool__, &default__seq_operator_assign__with_callkwmethodcache___seq_bool__, &mh_select_seq_operator_assign),
+	MH_INIT_SPEC_INIT(&str___seq_assign__, NULL, &mh_operators_seq_operator_assign, &default__seq_operator_assign__with_callattr___seq_assign__, offsetof(struct Dee_type_mh_cache, mhc___seq_assign__), MH_KIND_METHOD, &default__seq_operator_assign__with_callobjectcache___seq_assign__, &default__seq_operator_assign__with_callmethodcache___seq_assign__, &default__seq_operator_assign__with_callkwmethodcache___seq_assign__, &mh_select_seq_operator_assign),
 	MH_INIT_SPEC_INIT(&str___seq_hash__, NULL, &mh_operators_seq_operator_hash, &default__seq_operator_hash__with_callattr___seq_hash__, offsetof(struct Dee_type_mh_cache, mhc___seq_hash__), MH_KIND_METHOD, &default__seq_operator_hash__with_callobjectcache___seq_hash__, &default__seq_operator_hash__with_callmethodcache___seq_hash__, &default__seq_operator_hash__with_callkwmethodcache___seq_hash__, &mh_select_seq_operator_hash),
 	MH_INIT_SPEC_INIT(&str___seq_compare__, NULL, &mh_operators_seq_operator_compare, &default__seq_operator_compare__with_callattr___seq_compare__, offsetof(struct Dee_type_mh_cache, mhc___seq_compare__), MH_KIND_METHOD, &default__seq_operator_compare__with_callobjectcache___seq_compare__, &default__seq_operator_compare__with_callmethodcache___seq_compare__, &default__seq_operator_compare__with_callkwmethodcache___seq_compare__, &mh_select_seq_operator_compare),
 	MH_INIT_SPEC_INIT(&str___seq_compare_eq__, NULL, &mh_operators_seq_operator_compare_eq, &default__seq_operator_compare_eq__with_callattr___seq_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___seq_compare_eq__), MH_KIND_METHOD, &default__seq_operator_compare_eq__with_callobjectcache___seq_compare_eq__, &default__seq_operator_compare_eq__with_callmethodcache___seq_compare_eq__, &default__seq_operator_compare_eq__with_callkwmethodcache___seq_compare_eq__, &mh_select_seq_operator_compare_eq),
@@ -1309,6 +1345,10 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[147] = {
 	MH_INIT_SPEC_INIT(&str___set_size__, NULL, &mh_operators_set_operator_sizeob, &default__set_operator_sizeob__with_callattr___set_size__, offsetof(struct Dee_type_mh_cache, mhc___set_size__), MH_KIND_METHOD, &default__set_operator_sizeob__with_callobjectcache___set_size__, &default__set_operator_sizeob__with_callmethodcache___set_size__, &default__set_operator_sizeob__with_callkwmethodcache___set_size__, &mh_select_set_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___set_size__, NULL, &mh_operators_set_operator_size, &default__set_operator_size__with_callattr___set_size__, offsetof(struct Dee_type_mh_cache, mhc___set_size__), MH_KIND_METHOD, &default__set_operator_size__with_callobjectcache___set_size__, &default__set_operator_size__with_callmethodcache___set_size__, &default__set_operator_size__with_callkwmethodcache___set_size__, &mh_select_set_operator_size),
 	MH_INIT_SPEC_INIT(&str___set_hash__, NULL, &mh_operators_set_operator_hash, &default__set_operator_hash__with_callattr___set_hash__, offsetof(struct Dee_type_mh_cache, mhc___set_hash__), MH_KIND_METHOD, &default__set_operator_hash__with_callobjectcache___set_hash__, &default__set_operator_hash__with_callmethodcache___set_hash__, &default__set_operator_hash__with_callkwmethodcache___set_hash__, &mh_select_set_operator_hash),
+	MH_INIT_SPEC_INIT(&str___set_compare_eq__, NULL, &mh_operators_set_operator_compare_eq, &default__set_operator_compare_eq__with_callattr___set_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___set_compare_eq__), MH_KIND_METHOD, &default__set_operator_compare_eq__with_callobjectcache___set_compare_eq__, &default__set_operator_compare_eq__with_callmethodcache___set_compare_eq__, &default__set_operator_compare_eq__with_callkwmethodcache___set_compare_eq__, &mh_select_set_operator_compare_eq),
+	MH_INIT_SPEC_INIT(&str___set_compare_eq__, NULL, &mh_operators_set_operator_trycompare_eq, &default__set_operator_trycompare_eq__with_callattr___set_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___set_compare_eq__), MH_KIND_METHOD, &default__set_operator_trycompare_eq__with_callobjectcache___set_compare_eq__, &default__set_operator_trycompare_eq__with_callmethodcache___set_compare_eq__, &default__set_operator_trycompare_eq__with_callkwmethodcache___set_compare_eq__, &mh_select_set_operator_trycompare_eq),
+	MH_INIT_SPEC_INIT(&str___set_eq__, NULL, &mh_operators_set_operator_eq, &default__set_operator_eq__with_callattr___set_eq__, offsetof(struct Dee_type_mh_cache, mhc___set_eq__), MH_KIND_METHOD, &default__set_operator_eq__with_callobjectcache___set_eq__, &default__set_operator_eq__with_callmethodcache___set_eq__, &default__set_operator_eq__with_callkwmethodcache___set_eq__, &mh_select_set_operator_eq),
+	MH_INIT_SPEC_INIT(&str___set_ne__, NULL, &mh_operators_set_operator_ne, &default__set_operator_ne__with_callattr___set_ne__, offsetof(struct Dee_type_mh_cache, mhc___set_ne__), MH_KIND_METHOD, &default__set_operator_ne__with_callobjectcache___set_ne__, &default__set_operator_ne__with_callmethodcache___set_ne__, &default__set_operator_ne__with_callkwmethodcache___set_ne__, &mh_select_set_operator_ne),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, &mh_operators_map_operator_getitem, &default__map_operator_getitem__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem__with_callobjectcache___map_getitem__, &default__map_operator_getitem__with_callmethodcache___map_getitem__, &default__map_operator_getitem__with_callkwmethodcache___map_getitem__, &mh_select_map_operator_getitem),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, &mh_operators_map_operator_trygetitem, &default__map_operator_trygetitem__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_trygetitem__with_callobjectcache___map_getitem__, &default__map_operator_trygetitem__with_callmethodcache___map_getitem__, &default__map_operator_trygetitem__with_callkwmethodcache___map_getitem__, &mh_select_map_operator_trygetitem),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, &mh_operators_map_operator_getitem_index, &default__map_operator_getitem_index__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem_index__with_callobjectcache___map_getitem__, &default__map_operator_getitem_index__with_callmethodcache___map_getitem__, &default__map_operator_getitem_index__with_callkwmethodcache___map_getitem__, &mh_select_map_operator_getitem_index),

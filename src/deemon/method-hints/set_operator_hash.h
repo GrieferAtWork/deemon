@@ -48,7 +48,7 @@ INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSet_HandleHashError(DeeObject *self);
 
 [[operator([Set, Mapping].OPERATOR_HASH: tp_cmp->tp_hash)]]
 [[wunused]] Dee_hash_t
-__set_hash__.set_operator_hash([[nonnull]] DeeObject *self)
+__set_hash__.set_operator_hash([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias("default__seq_operator_hash__unsupported")}
 %{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
 %{$with__set_operator_foreach =

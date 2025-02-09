@@ -931,6 +931,47 @@ err:
 	return NULL;
 }
 
+PUBLIC_CONST char const DeeMA___set_compare_eq___name[] = "__set_compare_eq__";
+PUBLIC_CONST char const DeeMA___set_compare_eq___doc[] = "(rhs:?X2?DSet?S?O)->?X2?Dbool?Dint";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	int result;
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_compare_eq__", &rhs))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(lhs, rhs);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	/* We always return "bool" here, but user-code is also allowed to return "int" */
+	return_bool(result == 0);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_eq___name[] = "__set_eq__";
+PUBLIC_CONST char const DeeMA___set_eq___doc[] = "(rhs:?X2?DSet?S?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_eq__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_eq))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_ne___name[] = "__set_ne__";
+PUBLIC_CONST char const DeeMA___set_ne___doc[] = "(rhs:?X2?DSet?S?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_ne__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_ne))(self, rhs);
+err:
+	return NULL;
+}
+
 PUBLIC_CONST char const DeeMA___map_getitem___name[] = "__map_getitem__";
 PUBLIC_CONST char const DeeMA___map_getitem___doc[] = "(key)->";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL

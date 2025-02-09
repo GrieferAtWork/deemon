@@ -33,7 +33,7 @@ err:
 
 [[operator([Sequence, Set, Mapping].OPERATOR_SIZE: tp_seq->tp_sizeob)]]
 [[wunused]]
-DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *self)
+DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
 %{$empty = { return_reference_(DeeInt_Zero); }}
 %{$with__seq_operator_size = {
@@ -76,7 +76,7 @@ default_seq_size_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 
 [[operator([Sequence, Set, Mapping].OPERATOR_SIZE: tp_seq->tp_size)]]
 [[wunused]]
-size_t __seq_size__.seq_operator_size([[nonnull]] DeeObject *self)
+size_t __seq_size__.seq_operator_size([[nonnull]] DeeObject *__restrict self)
 // NOTE: The "unsupported"-impl here is still needed so other hints can
 //       differentiate between "$unsupported" and "$with__seq_operator_sizeob"
 %{unsupported(auto("operator size"))}

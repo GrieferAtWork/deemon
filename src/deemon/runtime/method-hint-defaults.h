@@ -47,33 +47,34 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__seq_oper
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__seq_operator_size(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__seq_operator_sizeob(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__seq_operator_compare_eq(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_operator_bool__with__set_operator_compare_eq(DeeObject *__restrict self);
 
 /* seq_operator_sizeob */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with_callattr___seq_size__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with_callobjectcache___seq_size__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with_callattr___seq_size__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with_callobjectcache___seq_size__(DeeObject *__restrict self);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with_callmethodcache___seq_size__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with_callkwmethodcache___seq_size__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with_callmethodcache___seq_size__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with_callkwmethodcache___seq_size__(DeeObject *__restrict self);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__unsupported(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__empty(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with__seq_operator_size(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__unsupported(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__empty(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_sizeob__with__seq_operator_size(DeeObject *__restrict self);
 
 /* seq_operator_size */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size(DeeObject *self);
-#define default__seq_operator_size__with_callattr___seq_size__ (*(size_t (DCALL *)(DeeObject *))&default__seq_operator_size__with__seq_operator_sizeob)
-#define default__seq_operator_size__with_callobjectcache___seq_size__ (*(size_t (DCALL *)(DeeObject *))&default__seq_operator_size__with__seq_operator_sizeob)
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size(DeeObject *__restrict self);
+#define default__seq_operator_size__with_callattr___seq_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_size__with__seq_operator_sizeob)
+#define default__seq_operator_size__with_callobjectcache___seq_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_size__with__seq_operator_sizeob)
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-#define default__seq_operator_size__with_callmethodcache___seq_size__ (*(size_t (DCALL *)(DeeObject *))&default__seq_operator_size__with__seq_operator_sizeob)
-#define default__seq_operator_size__with_callkwmethodcache___seq_size__ (*(size_t (DCALL *)(DeeObject *))&default__seq_operator_size__with__seq_operator_sizeob)
+#define default__seq_operator_size__with_callmethodcache___seq_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_size__with__seq_operator_sizeob)
+#define default__seq_operator_size__with_callkwmethodcache___seq_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_size__with__seq_operator_sizeob)
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__unsupported(DeeObject *self);
-#define default__seq_operator_size__empty (*(size_t (DCALL *)(DeeObject *))&_DeeNone_rets0_1)
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__with__seq_operator_foreach(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__with__seq_operator_foreach_pair(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__with__seq_operator_sizeob(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__with__map_enumerate(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__unsupported(DeeObject *__restrict self);
+#define default__seq_operator_size__empty (*(size_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__with__seq_operator_foreach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__with__seq_operator_foreach_pair(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__with__seq_operator_sizeob(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__seq_operator_size__with__map_enumerate(DeeObject *__restrict self);
 
 /* seq_operator_iter */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_operator_iter(DeeObject *__restrict self);
@@ -411,30 +412,30 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_operator_setrange_index_n_
 
 /* seq_operator_assign */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign(DeeObject *self, DeeObject *items);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with_callattr___seq_bool__(DeeObject *self, DeeObject *items);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with_callobjectcache___seq_bool__(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with_callattr___seq_assign__(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with_callobjectcache___seq_assign__(DeeObject *self, DeeObject *items);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with_callmethodcache___seq_bool__(DeeObject *self, DeeObject *items);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with_callkwmethodcache___seq_bool__(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with_callmethodcache___seq_assign__(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with_callkwmethodcache___seq_assign__(DeeObject *self, DeeObject *items);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__unsupported(DeeObject *self, DeeObject *items);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_assign__with__seq_operator_setrange(DeeObject *self, DeeObject *items);
 
 /* seq_operator_hash */
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with_callattr___seq_hash__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with_callobjectcache___seq_hash__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with_callattr___seq_hash__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with_callobjectcache___seq_hash__(DeeObject *__restrict self);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with_callmethodcache___seq_hash__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with_callkwmethodcache___seq_hash__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with_callmethodcache___seq_hash__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with_callkwmethodcache___seq_hash__(DeeObject *__restrict self);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__unsupported(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__empty(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_foreach(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__unsupported(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__empty(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_foreach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__seq_operator_hash__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *__restrict self);
 
 /* seq_operator_compare */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_compare(DeeObject *lhs, DeeObject *rhs);
@@ -490,7 +491,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_trycompare_eq__wi
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_trycompare_eq__with_callmethodcache___seq_trycompare_eq__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_trycompare_eq__with_callkwmethodcache___seq_trycompare_eq__(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_trycompare_eq__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_trycompare_eq__unsupported (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_trycompare_eq__empty(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_trycompare_eq__with__seq_operator_foreach(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__seq_operator_trycompare_eq__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *lhs, DeeObject *rhs);
@@ -508,6 +509,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_eq__w
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_eq__with_callkwmethodcache___seq_eq__(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_eq__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_eq__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_eq__with__seq_operator_compare_eq)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_eq__with__seq_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
 
 /* seq_operator_ne */
@@ -519,6 +521,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ne__w
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ne__with_callkwmethodcache___seq_ne__(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ne__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_ne__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_ne__with__seq_operator_compare_eq)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ne__with__seq_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
 
 /* seq_operator_lo */
@@ -530,6 +533,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_lo__w
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_lo__with_callkwmethodcache___seq_lo__(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_lo__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_lo__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_lo__with__seq_operator_compare)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_lo__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs);
 
 /* seq_operator_le */
@@ -541,6 +545,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_le__w
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_le__with_callkwmethodcache___seq_le__(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_le__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_le__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_le__with__seq_operator_compare)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_le__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs);
 
 /* seq_operator_gr */
@@ -552,6 +557,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_gr__w
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_gr__with_callkwmethodcache___seq_gr__(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_gr__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_gr__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_gr__with__seq_operator_compare)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_gr__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs);
 
 /* seq_operator_ge */
@@ -563,6 +569,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ge__w
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ge__with_callkwmethodcache___seq_ge__(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ge__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__seq_operator_ge__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_ge__with__seq_operator_compare)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__seq_operator_ge__with__seq_operator_compare(DeeObject *lhs, DeeObject *rhs);
 
 /* seq_operator_inplace_add */
@@ -618,22 +625,22 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_enumerate_index__w
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_enumerate_index__with__counter__and__seq_operator_foreach(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
 
 /* seq_makeenumeration */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__with_callattr___seq_enumerate_items__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__with_callobjectcache___seq_enumerate_items__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__with_callattr___seq_enumerate_items__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__with_callobjectcache___seq_enumerate_items__(DeeObject *__restrict self);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__with_callmethodcache___seq_enumerate_items__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__with_callkwmethodcache___seq_enumerate_items__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__with_callmethodcache___seq_enumerate_items__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__with_callkwmethodcache___seq_enumerate_items__(DeeObject *__restrict self);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__unsupported(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration__unsupported(DeeObject *__restrict self);
 
 /* seq_makeenumeration_with_int_range */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__with_callattr___seq_enumerate_items__(DeeObject *self, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__with_callobjectcache___seq_enumerate_items__(DeeObject *self, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__with_callattr___seq_enumerate_items__(DeeObject *__restrict self, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__with_callobjectcache___seq_enumerate_items__(DeeObject *__restrict self, size_t start, size_t end);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__with_callmethodcache___seq_enumerate_items__(DeeObject *self, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__with_callkwmethodcache___seq_enumerate_items__(DeeObject *self, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__with_callmethodcache___seq_enumerate_items__(DeeObject *__restrict self, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__with_callkwmethodcache___seq_enumerate_items__(DeeObject *__restrict self, size_t start, size_t end);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__unsupported(DeeObject *self, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_makeenumeration_with_int_range__unsupported(DeeObject *__restrict self, size_t start, size_t end);
 
 /* seq_makeenumeration_with_range */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__seq_makeenumeration_with_range__with_callattr___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end);
@@ -1413,18 +1420,18 @@ INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL default__seq_xchitem_index_
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL default__seq_xchitem_index__with__seq_operator_getitem_index__and__seq_operator_setitem_index(DeeObject *self, size_t index, DeeObject *item);
 
 /* seq_clear */
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callattr_clear(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callattr___seq_clear__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callobjectcache___seq_clear__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callattr_clear(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callattr___seq_clear__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callobjectcache___seq_clear__(DeeObject *__restrict self);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callmethodcache___seq_clear__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callkwmethodcache___seq_clear__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callmethodcache___seq_clear__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with_callkwmethodcache___seq_clear__(DeeObject *__restrict self);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__unsupported(DeeObject *self);
-#define default__seq_clear__empty (*(int (DCALL *)(DeeObject *))&_DeeNone_reti0_1)
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with__seq_operator_delrange(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with__seq_operator_delrange_index_n(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with__seq_erase(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__unsupported(DeeObject *__restrict self);
+#define default__seq_clear__empty (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with__seq_operator_delrange(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with__seq_operator_delrange_index_n(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL default__seq_clear__with__seq_erase(DeeObject *__restrict self);
 
 /* seq_pop */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_pop__with_callattr_pop(DeeObject *self, Dee_ssize_t index);
@@ -1477,41 +1484,91 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach_p
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__set_operator_foreach_pair__with__set_operator_foreach(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
 
 /* set_operator_sizeob */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callattr___set_size__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callobjectcache___set_size__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callattr___set_size__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callobjectcache___set_size__(DeeObject *__restrict self);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callmethodcache___set_size__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callkwmethodcache___set_size__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callmethodcache___set_size__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with_callkwmethodcache___set_size__(DeeObject *__restrict self);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__unsupported(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__empty(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with__set_operator_size(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__unsupported(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__empty(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__set_operator_sizeob__with__set_operator_size(DeeObject *__restrict self);
 
 /* set_operator_size */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size(DeeObject *self);
-#define default__set_operator_size__with_callattr___set_size__ (*(size_t (DCALL *)(DeeObject *))&default__set_operator_size__with__set_operator_sizeob)
-#define default__set_operator_size__with_callobjectcache___set_size__ (*(size_t (DCALL *)(DeeObject *))&default__set_operator_size__with__set_operator_sizeob)
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size(DeeObject *__restrict self);
+#define default__set_operator_size__with_callattr___set_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__set_operator_size__with__set_operator_sizeob)
+#define default__set_operator_size__with_callobjectcache___set_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__set_operator_size__with__set_operator_sizeob)
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-#define default__set_operator_size__with_callmethodcache___set_size__ (*(size_t (DCALL *)(DeeObject *))&default__set_operator_size__with__set_operator_sizeob)
-#define default__set_operator_size__with_callkwmethodcache___set_size__ (*(size_t (DCALL *)(DeeObject *))&default__set_operator_size__with__set_operator_sizeob)
+#define default__set_operator_size__with_callmethodcache___set_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__set_operator_size__with__set_operator_sizeob)
+#define default__set_operator_size__with_callkwmethodcache___set_size__ (*(size_t (DCALL *)(DeeObject *__restrict))&default__set_operator_size__with__set_operator_sizeob)
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__unsupported(DeeObject *self);
-#define default__set_operator_size__empty (*(size_t (DCALL *)(DeeObject *))&_DeeNone_rets0_1)
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__with__set_operator_foreach(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__with__set_operator_sizeob(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__unsupported(DeeObject *__restrict self);
+#define default__set_operator_size__empty (*(size_t (DCALL *)(DeeObject *__restrict))&_DeeNone_rets0_1)
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__with__set_operator_foreach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL default__set_operator_size__with__set_operator_sizeob(DeeObject *__restrict self);
 
 /* set_operator_hash */
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with_callattr___set_hash__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with_callobjectcache___set_hash__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with_callattr___set_hash__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with_callobjectcache___set_hash__(DeeObject *__restrict self);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with_callmethodcache___set_hash__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with_callkwmethodcache___set_hash__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with_callmethodcache___set_hash__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with_callkwmethodcache___set_hash__(DeeObject *__restrict self);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-#define default__set_operator_hash__unsupported (*(Dee_hash_t (DCALL *)(DeeObject *))&default__seq_operator_hash__unsupported)
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__empty(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with__set_operator_foreach(DeeObject *self);
+#define default__set_operator_hash__unsupported (*(Dee_hash_t (DCALL *)(DeeObject *__restrict))&default__seq_operator_hash__unsupported)
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__empty(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL default__set_operator_hash__with__set_operator_foreach(DeeObject *__restrict self);
+
+/* set_operator_compare_eq */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with_callattr___set_compare_eq__(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with_callobjectcache___set_compare_eq__(DeeObject *lhs, DeeObject *rhs);
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with_callmethodcache___set_compare_eq__(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with_callkwmethodcache___set_compare_eq__(DeeObject *lhs, DeeObject *rhs);
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__set_operator_compare_eq__empty (*(int (DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_compare_eq__empty)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with__set_operator_eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with__set_operator_ne(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_compare_eq__with__set_operator_foreach(DeeObject *lhs, DeeObject *rhs);
+
+/* set_operator_trycompare_eq */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
+#define default__set_operator_trycompare_eq__with_callattr___set_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__set_operator_trycompare_eq__with__set_operator_compare_eq)
+#define default__set_operator_trycompare_eq__with_callobjectcache___set_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__set_operator_trycompare_eq__with__set_operator_compare_eq)
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+#define default__set_operator_trycompare_eq__with_callmethodcache___set_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__set_operator_trycompare_eq__with__set_operator_compare_eq)
+#define default__set_operator_trycompare_eq__with_callkwmethodcache___set_compare_eq__ (*(int (DCALL *)(DeeObject *, DeeObject *))&default__set_operator_trycompare_eq__with__set_operator_compare_eq)
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+#define default__set_operator_trycompare_eq__unsupported (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti1_2)
+#define default__set_operator_trycompare_eq__empty (*(int (DCALL *)(DeeObject *, DeeObject *))&default__seq_operator_trycompare_eq__empty)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__set_operator_trycompare_eq__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
+
+/* set_operator_eq */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_eq__with_callattr___set_eq__(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_eq__with_callobjectcache___set_eq__(DeeObject *lhs, DeeObject *rhs);
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_eq__with_callmethodcache___set_eq__(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_eq__with_callkwmethodcache___set_eq__(DeeObject *lhs, DeeObject *rhs);
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_eq__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__set_operator_eq__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__set_operator_eq__with__set_operator_compare_eq)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_eq__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
+
+/* set_operator_ne */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_ne(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_ne__with_callattr___set_ne__(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_ne__with_callobjectcache___set_ne__(DeeObject *lhs, DeeObject *rhs);
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_ne__with_callmethodcache___set_ne__(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_ne__with_callkwmethodcache___set_ne__(DeeObject *lhs, DeeObject *rhs);
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_ne__unsupported(DeeObject *lhs, DeeObject *rhs);
+#define default__set_operator_ne__empty (*(DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&default__set_operator_ne__with__set_operator_compare_eq)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__set_operator_ne__with__set_operator_compare_eq(DeeObject *lhs, DeeObject *rhs);
 
 /* map_operator_getitem */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_getitem(DeeObject *self, DeeObject *key);
@@ -1839,16 +1896,16 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_conta
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__map_operator_contains__with__map_operator_bounditem(DeeObject *self, DeeObject *key);
 
 /* map_iterkeys */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with_callattr___map_iterkeys__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with_callobjectcache___map_iterkeys__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with_callattr___map_iterkeys__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with_callobjectcache___map_iterkeys__(DeeObject *__restrict self);
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with_callmethodcache___map_iterkeys__(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with_callkwmethodcache___map_iterkeys__(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with_callmethodcache___map_iterkeys__(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with_callkwmethodcache___map_iterkeys__(DeeObject *__restrict self);
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__unsupported(DeeObject *self);
-#define default__map_iterkeys__empty (*(DREF DeeObject *(DCALL *)(DeeObject *))&default__set_operator_iter__empty)
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with__map_enumerate(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with__set_operator_iter(DeeObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__unsupported(DeeObject *__restrict self);
+#define default__map_iterkeys__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__set_operator_iter__empty)
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with__map_enumerate(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_iterkeys__with__set_operator_iter(DeeObject *__restrict self);
 
 /* map_enumerate */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__map_enumerate(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg);

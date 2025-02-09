@@ -2104,7 +2104,7 @@ done:
 			parseAttribs();
 			local impl: NativeMethodImpl;
 			if (isstring) {
-				impl = NativeMethodImpl(alias: parseString());
+				impl = NativeMethodImpl(alias: method.normalizeSymbolName(parseString()));
 			} else {
 				local implStart = tokStart;
 				local implEnd;

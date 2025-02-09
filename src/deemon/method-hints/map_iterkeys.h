@@ -32,7 +32,7 @@ err:
 
 
 [[wunused]] DREF DeeObject *
-__map_iterkeys__.map_iterkeys([[nonnull]] DeeObject *self)
+__map_iterkeys__.map_iterkeys([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = "default__set_operator_iter__empty"}
 %{$with__map_enumerate = {

@@ -78,6 +78,14 @@ err:
 	return result == 0 ? 1 : 0;
 err:
 	return -1;
+}}
+%{$with__set_operator_compare_eq = {
+	int result = CALL_DEPENDENCY(set_operator_compare_eq, self, Dee_EmptySet);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return result == 0 ? 1 : 0;
+err:
+	return -1;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
@@ -89,7 +97,10 @@ err:
 
 seq_operator_bool = {
 	DeeMH_seq_operator_size_t seq_operator_size;
-	DeeMH_seq_operator_compare_eq_t seq_operator_compare_eq = REQUIRE(seq_operator_compare_eq);
+	DeeMH_seq_operator_compare_eq_t seq_operator_compare_eq;
+	DeeMH_set_operator_compare_eq_t set_operator_compare_eq;
+
+	seq_operator_compare_eq = REQUIRE(seq_operator_compare_eq);
 	if (seq_operator_compare_eq) {
 		if (seq_operator_compare_eq == &default__seq_operator_compare_eq__empty)
 			return &$empty;
@@ -103,6 +114,16 @@ seq_operator_bool = {
 			goto use_size; /* return &$with__seq_operator_sizeob; */
 		return &$with__seq_operator_compare_eq;
 	}
+
+	set_operator_compare_eq = REQUIRE(set_operator_compare_eq);
+	if (set_operator_compare_eq) {
+		if (set_operator_compare_eq == &default__set_operator_compare_eq__empty)
+			return &$empty;
+		if (set_operator_compare_eq == &default__set_operator_compare_eq__with__set_operator_foreach)
+			goto use_size; /* return &$with__seq_operator_foreach; */
+		return &$with__set_operator_compare_eq;
+	}
+
 use_size:
 	seq_operator_size = REQUIRE(seq_operator_size);
 	if (seq_operator_size == &default__seq_operator_size__empty)

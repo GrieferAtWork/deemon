@@ -321,6 +321,7 @@ err:
  * @return: -1: `lhs != rhs'
  * @return: 0:  `lhs == rhs'
  * @return: 1:  `lhs != rhs' */
+[[custom_unsupported_impl_name(default__trycompare_eq__unsupported)]]
 [[wunused]] int
 tp_cmp->tp_trycompare_eq([[nonnull]] DeeObject *lhs,
                          [[nonnull]] DeeObject *rhs)

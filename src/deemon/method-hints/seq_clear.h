@@ -37,7 +37,7 @@ err:
 
 
 [[wunused]] int
-__seq_clear__.seq_clear([[nonnull]] DeeObject *self)
+__seq_clear__.seq_clear([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = 0}
 %{$with__seq_operator_delrange = {

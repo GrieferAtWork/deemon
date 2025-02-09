@@ -31,7 +31,7 @@ err:
 
 [[operator([Set, Mapping].OPERATOR_SIZE: tp_seq->tp_sizeob)]]
 [[wunused]] DREF DeeObject *
-__set_size__.set_operator_sizeob([[nonnull]] DeeObject *self)
+__set_size__.set_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
 %{$empty = { return_reference_(DeeInt_Zero); }}
 %{$with__set_operator_size = {
@@ -48,7 +48,7 @@ err:
 
 [[operator([Set, Mapping].OPERATOR_SIZE: tp_seq->tp_size)]]
 [[wunused]] size_t
-__set_size__.set_operator_size([[nonnull]] DeeObject *self)
+__set_size__.set_operator_size([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
 %{$empty = 0}
 %{$with__set_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {

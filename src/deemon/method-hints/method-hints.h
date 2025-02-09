@@ -188,19 +188,8 @@
 %[include("set_operator_iter.h")]
 %[include("set_operator_size.h")]
 %[include("set_operator_hash.h")]
+%[include("set_operator_compare_eq.h")]
 
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_operator_compare_eq, (DeeObject *self, DeeObject *some_object))
-//Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__set_compare_eq__, "__set_compare_eq__", "(rhs:?S?O)->?Dbool")
-//
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, set_operator_trycompare_eq, (DeeObject *self, DeeObject *some_object))
-//Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__set_trycompare_eq__, "__set_trycompare_eq__", "(rhs:?S?O)->?Dbool")
-//
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, set_operator_eq, (DeeObject *self, DeeObject *some_object))
-//Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__set_eq__, "__set_eq__", "(rhs:?S?O)->?Dbool")
-//
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, set_operator_ne, (DeeObject *self, DeeObject *some_object))
-//Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__set_ne__, "__set_ne__", "(rhs:?S?O)->?Dbool")
-//
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), DREF DeeObject *, DCALL, set_operator_lo, (DeeObject *self, DeeObject *some_object))
 //Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__set_lo__, "__set_lo__", "(rhs:?S?O)->?Dbool")
 //

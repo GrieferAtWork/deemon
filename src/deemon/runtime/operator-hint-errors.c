@@ -26,6 +26,7 @@
 #include <deemon/operator-hints.h>
 
 /**/
+#include "method-hint-defaults.h"
 #include "operator-hint-errors.h"
 #include "runtime_error.h"
 
@@ -37,6 +38,9 @@ PRIVATE Dee_hash_t DCALL
 default__hash__unsupported(DeeObject *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
+
+#define default__trycompare_eq__unsupported \
+	default__seq_operator_trycompare_eq__unsupported
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintErrorImpls from "..method-hints.method-hints")(decls: false);]]]*/

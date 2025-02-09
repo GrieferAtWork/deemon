@@ -34,8 +34,8 @@ err:
 
 [[wunused]]
 [[operator([Sequence, Set, Mapping].OPERATOR_ASSIGN: tp_init.tp_assign)]]
-int __seq_bool__.seq_operator_assign([[nonnull]] DeeObject *self,
-                                     [[nonnull]] DeeObject *items)
+int __seq_assign__.seq_operator_assign([[nonnull]] DeeObject *self,
+                                       [[nonnull]] DeeObject *items)
 %{unsupported(auto("operator :="))}
 %{$with__seq_operator_setrange = {
 	return CALL_DEPENDENCY(seq_operator_setrange, self, Dee_None, Dee_None, items);

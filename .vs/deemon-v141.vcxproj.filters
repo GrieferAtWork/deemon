@@ -906,6 +906,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_compare_eq.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_hash.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>

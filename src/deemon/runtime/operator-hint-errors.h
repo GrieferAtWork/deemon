@@ -73,7 +73,6 @@ INTDEF int DCALL default__compare_eq__badalloc(void*, void*);
 #define default__compare__badalloc default__compare_eq__badalloc
 #define default__trycompare_eq__badalloc default__compare_eq__badalloc
 INTDEF int DCALL default__compare_eq__unsupported(DeeObject*, void*);
-#define default__trycompare_eq__unsupported default__compare_eq__unsupported
 INTDEF int DCALL default__compare__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__eq__badalloc(void*, void*);
 #define default__ne__badalloc default__eq__badalloc

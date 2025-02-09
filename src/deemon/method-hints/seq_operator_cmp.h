@@ -44,6 +44,7 @@ for (local op, eq, Eq, EQ, isEq: {
 	print('__seq_', eq, '__.seq_operator_', eq, '([[nonnull]] DeeObject *lhs,');
 	print('                           [[nonnull]] DeeObject *rhs)');
 	print('%{unsupported(auto("operator ', op, '"))}');
+	print('%{$empty = "$with__seq_operator_compare', isEq ? '_eq' : '', '"}');
 	print('%{$with__seq_operator_compare', isEq ? '_eq' : '', ' = {');
 	print('	int result = CALL_DEPENDENCY(seq_operator_compare', isEq ? '_eq' : '', ', lhs, rhs);');
 	print('	if unlikely(result == Dee_COMPARE_ERR)');
@@ -81,6 +82,7 @@ err:
 __seq_eq__.seq_operator_eq([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator =="))}
+%{$empty = "$with__seq_operator_compare_eq"}
 %{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -116,6 +118,7 @@ err:
 __seq_ne__.seq_operator_ne([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator !="))}
+%{$empty = "$with__seq_operator_compare_eq"}
 %{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -151,6 +154,7 @@ err:
 __seq_lo__.seq_operator_lo([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator <"))}
+%{$empty = "$with__seq_operator_compare"}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -186,6 +190,7 @@ err:
 __seq_le__.seq_operator_le([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator <="))}
+%{$empty = "$with__seq_operator_compare"}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -221,6 +226,7 @@ err:
 __seq_gr__.seq_operator_gr([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator >"))}
+%{$empty = "$with__seq_operator_compare"}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -256,6 +262,7 @@ err:
 __seq_ge__.seq_operator_ge([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator >="))}
+%{$empty = "$with__seq_operator_compare"}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
