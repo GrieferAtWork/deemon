@@ -25,7 +25,7 @@ __seq_delitem__(index:?Dint) {
 	DeeObject *index;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_delitem__", &index))
 		goto err;
-	if (DeeType_InvokeMethodHint(self, seq_operator_delitem, index))
+	if (CALL_DEPENDENCY(seq_operator_delitem, self, index))
 		goto err;
 	return_none;
 err:
@@ -44,7 +44,7 @@ __seq_delitem__.seq_operator_delitem([[nonnull]] DeeObject *self,
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_delitem_index, index_value);
+	return CALL_DEPENDENCY(seq_operator_delitem_index, self, index_value);
 err:
 	return -1;
 }} {
@@ -67,13 +67,16 @@ __seq_delitem__.seq_operator_delitem_index([[nonnull]] DeeObject *__restrict sel
                                            size_t index)
 %{unsupported(auto("operator del[]"))}
 %{$empty = err_index_out_of_bounds(self, index, 0)}
+%{$with__seq_operator_delrange_index = {
+	return CALL_DEPENDENCY(seq_operator_delrange_index, self, (Dee_ssize_t)index, (Dee_ssize_t)index + 1);
+}}
 %{$with__seq_operator_size__and__seq_erase = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if unlikely(index >= size)
 		goto err_oob;
-	return DeeType_InvokeMethodHint(self, seq_erase, index, 1);
+	return CALL_DEPENDENCY(seq_erase, self, index, 1);
 err_oob:
 	err_index_out_of_bounds(self, index, size);
 err:
@@ -95,15 +98,19 @@ seq_operator_delitem = {
 		return &$empty;
 	if (seq_operator_delitem_index)
 		return &$with__seq_operator_delitem_index;
-	/* TODO: DeeType_InvokeMethodHint(self, set_remove, DeeType_InvokeMethodHint(self, seq_operator_getitem, index)) */
+	/* TODO: CALL_DEPENDENCY(set_remove, self, CALL_DEPENDENCY(seq_operator_getitem, self, index)) */
 };
 
 seq_operator_delitem_index = {
-	DeeMH_seq_erase_t seq_erase = REQUIRE_NODEFAULT(seq_erase);
+	DeeMH_seq_erase_t seq_erase;
+	if (REQUIRE_NODEFAULT(seq_operator_delrange_index) ||
+	    REQUIRE_NODEFAULT(seq_operator_setrange_index))
+		return &$with__seq_operator_delrange_index;
+	seq_erase = REQUIRE_NODEFAULT(seq_erase);
 	if (seq_erase == &default__seq_erase__empty)
 		return &$empty;
 	if (seq_erase && REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
 		return &$with__seq_operator_size__and__seq_erase;
-	/* TODO: DeeType_InvokeMethodHint(self, set_remove, DeeType_InvokeMethodHint(self, seq_operator_getitem_index, index)) */
+	/* TODO: CALL_DEPENDENCY(set_remove, self, CALL_DEPENDENCY(seq_operator_getitem_index, self, index)) */
 };
 

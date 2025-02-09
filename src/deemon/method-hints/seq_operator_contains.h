@@ -34,15 +34,15 @@ __seq_contains__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		if (DeeNone_Check(key)) {
-			result = DeeType_InvokeMethodHint(self, seq_contains, item);
+			result = CALL_DEPENDENCY(seq_contains, self, item);
 		} else {
-			result = DeeType_InvokeMethodHint(self, seq_contains_with_key, item, key);
+			result = CALL_DEPENDENCY(seq_contains_with_key, self, item, key);
 		}
 	} else {
 		if (DeeNone_Check(key)) {
-			result = DeeType_InvokeMethodHint(self, seq_contains_with_range, item, start, end);
+			result = CALL_DEPENDENCY(seq_contains_with_range, self, item, start, end);
 		} else {
-			result = DeeType_InvokeMethodHint(self, seq_contains_with_range_and_key, item, start, end, key);
+			result = CALL_DEPENDENCY(seq_contains_with_range_and_key, self, item, start, end, key);
 		}
 	}
 	if unlikely(result < 0)
@@ -75,7 +75,7 @@ __seq_contains__.seq_contains([[nonnull]] DeeObject *self,
 %{unsupported(auto)}
 %{$empty = 0}
 %{$with__seq_operator_contains = {
-	DREF DeeObject *result = DeeType_InvokeMethodHint(self, seq_operator_contains, item);
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_contains, self, item);
 	if unlikely(!result)
 		goto err;
 	return DeeObject_BoolInherited(result);
@@ -88,7 +88,7 @@ err:
 	DREF DeeObject *key_and_value[2];
 	if (DeeObject_Unpack(item, 2, key_and_value))
 		goto err_trycatch;
-	real_value = DeeType_InvokeMethodHint(self, map_operator_trygetitem, key_and_value[0]);
+	real_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key_and_value[0]);
 	Dee_Decref(key_and_value[0]);
 	if unlikely(!real_value) {
 		Dee_Decref(key_and_value[1]);
@@ -107,7 +107,7 @@ err:
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_contains_with_foreach_cb)]] {
 	Dee_ssize_t status;
-	status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_contains_with_foreach_cb, item);
+	status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_contains_with_foreach_cb, item);
 	if unlikely(status == -1)
 		goto err;
 	return status /*== -2*/ ? 1 : 0;
@@ -192,7 +192,7 @@ __seq_contains__.seq_contains_with_key([[nonnull]] DeeObject *self,
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_contains_with_key_foreach_cb, &data);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_contains_with_key_foreach_cb, &data);
 	Dee_Decref(data.gscwk_kelem);
 	ASSERT(foreach_status == 0 ||
 	       foreach_status == -1 ||
@@ -263,14 +263,14 @@ __seq_contains__.seq_contains_with_range([[nonnull]] DeeObject *self,
 %{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_contains_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_contains_enumerate_cb, item, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_contains_enumerate_cb, item, start, end);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
 }}
 %{$with__seq_find = {
-	size_t match = DeeType_InvokeMethodHint(self, seq_find, item, start, end);
+	size_t match = CALL_DEPENDENCY(seq_find, self, item, start, end);
 	if unlikely(match == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	return match != (size_t)-1 ? 1 : 0;
@@ -334,7 +334,7 @@ __seq_contains__.seq_contains_with_range_and_key([[nonnull]] DeeObject *self,
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_contains_with_key_enumerate_cb, &data, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_contains_with_key_enumerate_cb, &data, start, end);
 	Dee_Decref(data.gscwk_kelem);
 	ASSERT(foreach_status == 0 ||
 	       foreach_status == -1 ||
@@ -346,7 +346,7 @@ err:
 	return -1;
 }}
 %{$with__seq_find_with_key = {
-	size_t match = DeeType_InvokeMethodHint(self, seq_find_with_key, item, start, end, key);
+	size_t match = CALL_DEPENDENCY(seq_find_with_key, self, item, start, end, key);
 	if unlikely(match == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	return match != (size_t)-1 ? 1 : 0;
@@ -388,7 +388,7 @@ __seq_contains__.seq_operator_contains([[nonnull]] DeeObject *self,
 %{unsupported(auto("operator contains"))}
 %{$empty = return_false}
 %{$with__seq_contains = {
-	int result = DeeType_InvokeMethodHint(self, seq_contains, item);
+	int result = CALL_DEPENDENCY(seq_contains, self, item);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);

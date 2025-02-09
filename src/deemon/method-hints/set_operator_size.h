@@ -24,7 +24,7 @@
 __set_size__()->?Dint {
 	if (DeeArg_Unpack(argc, argv, ":__set_size__"))
 		goto err;
-	return DeeType_InvokeMethodHint0(self, set_operator_sizeob);
+	return CALL_DEPENDENCY(set_operator_sizeob, self);
 err:
 	return NULL;
 }
@@ -35,7 +35,7 @@ __set_size__.set_operator_sizeob([[nonnull]] DeeObject *self)
 %{unsupported(auto("operator size"))}
 %{$empty = { return_reference_(DeeInt_Zero); }}
 %{$with__set_operator_size = {
-	size_t setsize = DeeType_InvokeMethodHint0(self, set_operator_size);
+	size_t setsize = CALL_DEPENDENCY(set_operator_size, self);
 	if unlikely(setsize == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(setsize);
@@ -52,11 +52,11 @@ __set_size__.set_operator_size([[nonnull]] DeeObject *self)
 %{unsupported(auto("operator size"))}
 %{$empty = 0}
 %{$with__set_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
-	return (size_t)DeeType_InvokeMethodHint(self, set_operator_foreach, &default_seq_size_with_foreach_cb, NULL);
+	return (size_t)CALL_DEPENDENCY(set_operator_foreach, self, &default_seq_size_with_foreach_cb, NULL);
 }}
  %{$with__set_operator_sizeob = {
 	DREF DeeObject *sizeob;
-	sizeob = DeeType_InvokeMethodHint0(self, set_operator_sizeob);
+	sizeob = CALL_DEPENDENCY(set_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(sizeob);

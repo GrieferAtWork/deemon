@@ -31,8 +31,8 @@ __seq_locate__(match,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,def=!N)->?X2?O?Q!Adef]
 	                    &match, &start, &end, &def))
 		goto err;
 	if (start == 0 && end == (size_t)-1)
-		return DeeType_InvokeMethodHint(self, seq_locate, match, def);
-	return DeeType_InvokeMethodHint(self, seq_locate_with_range, match, start, end, def);
+		return CALL_DEPENDENCY(seq_locate, self, match, def);
+	return CALL_DEPENDENCY(seq_locate_with_range, self, match, start, end, def);
 err:
 	return NULL;
 }
@@ -78,7 +78,7 @@ __seq_locate__.seq_locate([[nonnull]] DeeObject *self,
 %{$empty = return_reference_(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_locate_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_locate_foreach_cb, &match);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_locate_foreach_cb, &match);
 	if likely(foreach_status == -2)
 		return match;
 	return_reference_(def);
@@ -125,7 +125,7 @@ __seq_locate__.seq_locate_with_range([[nonnull]] DeeObject *self,
 %{$empty = return_reference_(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_locate_enumerate_index_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_locate_enumerate_index_cb, &match, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_locate_enumerate_index_cb, &match, start, end);
 	if likely(foreach_status == -2)
 		return match;
 	return_reference_(def);

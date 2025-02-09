@@ -33,15 +33,15 @@ __seq_endswith__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		if (DeeNone_Check(key)) {
-			result = DeeType_InvokeMethodHint(self, seq_endswith, item);
+			result = CALL_DEPENDENCY(seq_endswith, self, item);
 		} else {
-			result = DeeType_InvokeMethodHint(self, seq_endswith_with_key, item, key);
+			result = CALL_DEPENDENCY(seq_endswith_with_key, self, item, key);
 		}
 	} else {
 		if (DeeNone_Check(key)) {
-			result = DeeType_InvokeMethodHint(self, seq_endswith_with_range, item, start, end);
+			result = CALL_DEPENDENCY(seq_endswith_with_range, self, item, start, end);
 		} else {
-			result = DeeType_InvokeMethodHint(self, seq_endswith_with_range_and_key, item, start, end, key);
+			result = CALL_DEPENDENCY(seq_endswith_with_range_and_key, self, item, start, end, key);
 		}
 	}
 	if unlikely(result < 0)
@@ -65,7 +65,7 @@ __seq_endswith__.seq_endswith([[nonnull]] DeeObject *self,
 %{$empty = 0}
 %{$with__seq_trygetlast = {
 	int result;
-	DREF DeeObject *last = DeeType_InvokeMethodHint0(self, seq_trygetlast);
+	DREF DeeObject *last = CALL_DEPENDENCY(seq_trygetlast, self);
 	if (last == ITER_DONE)
 		return 0;
 	if unlikely(!last)
@@ -113,7 +113,7 @@ __seq_endswith__.seq_endswith_with_key([[nonnull]] DeeObject *self,
 %{$with__seq_trygetlast = {
 	int result;
 	DREF DeeObject *last;
-	last = DeeType_InvokeMethodHint0(self, seq_trygetlast);
+	last = CALL_DEPENDENCY(seq_trygetlast, self);
 	if unlikely(!last)
 		goto err;
 	if (last == ITER_DONE)
@@ -173,14 +173,14 @@ __seq_endswith__.seq_endswith_with_range([[nonnull]] DeeObject *self,
 %{$with__seq_operator_size__and__operator_trygetitem_index = {
 	int result;
 	DREF DeeObject *selfitem;
-	size_t selfsize = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t selfsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(selfsize == (size_t)-1)
 		goto err;
 	if (end > selfsize)
 		end = selfsize;
 	if (start >= end)
 		return 0;
-	selfitem = DeeType_InvokeMethodHint(self, seq_operator_trygetitem_index, end - 1);
+	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, end - 1);
 	if unlikely(!selfitem)
 		goto err;
 	if (selfitem == ITER_DONE)
@@ -233,14 +233,14 @@ __seq_endswith__.seq_endswith_with_range_and_key([[nonnull]] DeeObject *self,
 %{$with__seq_operator_size__and__operator_trygetitem_index = {
 	int result;
 	DREF DeeObject *selfitem;
-	size_t selfsize = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t selfsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(selfsize == (size_t)-1)
 		goto err;
 	if (end > selfsize)
 		end = selfsize;
 	if (start >= end)
 		return 0;
-	selfitem = DeeType_InvokeMethodHint(self, seq_operator_trygetitem_index, end - 1);
+	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, end - 1);
 	if unlikely(!selfitem)
 		goto err;
 	if (selfitem == ITER_DONE)

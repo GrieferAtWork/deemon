@@ -33,15 +33,15 @@ __seq_startswith__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)-
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		if (DeeNone_Check(key)) {
-			result = DeeType_InvokeMethodHint(self, seq_startswith, item);
+			result = CALL_DEPENDENCY(seq_startswith, self, item);
 		} else {
-			result = DeeType_InvokeMethodHint(self, seq_startswith_with_key, item, key);
+			result = CALL_DEPENDENCY(seq_startswith_with_key, self, item, key);
 		}
 	} else {
 		if (DeeNone_Check(key)) {
-			result = DeeType_InvokeMethodHint(self, seq_startswith_with_range, item, start, end);
+			result = CALL_DEPENDENCY(seq_startswith_with_range, self, item, start, end);
 		} else {
-			result = DeeType_InvokeMethodHint(self, seq_startswith_with_range_and_key, item, start, end, key);
+			result = CALL_DEPENDENCY(seq_startswith_with_range_and_key, self, item, start, end, key);
 		}
 	}
 	if unlikely(result < 0)
@@ -65,7 +65,7 @@ __seq_startswith__.seq_startswith([[nonnull]] DeeObject *self,
 %{$empty = 0}
 %{$with__seq_trygetfirst = {
 	int result;
-	DREF DeeObject *first = DeeType_InvokeMethodHint0(self, seq_trygetfirst);
+	DREF DeeObject *first = CALL_DEPENDENCY(seq_trygetfirst, self);
 	if (first == ITER_DONE)
 		return 0;
 	if unlikely(!first)
@@ -113,7 +113,7 @@ __seq_startswith__.seq_startswith_with_key([[nonnull]] DeeObject *self,
 %{$with__seq_trygetfirst = {
 	int result;
 	DREF DeeObject *first;
-	first = DeeType_InvokeMethodHint0(self, seq_trygetfirst);
+	first = CALL_DEPENDENCY(seq_trygetfirst, self);
 	if unlikely(!first)
 		goto err;
 	if (first == ITER_DONE)
@@ -175,7 +175,7 @@ __seq_startswith__.seq_startswith_with_range([[nonnull]] DeeObject *self,
 	DREF DeeObject *selfitem;
 	if (start >= end)
 		return 0;
-	selfitem = DeeType_InvokeMethodHint(self, seq_operator_trygetitem_index, start);
+	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, start);
 	if unlikely(!selfitem)
 		goto err;
 	if (selfitem == ITER_DONE)
@@ -225,7 +225,7 @@ __seq_startswith__.seq_startswith_with_range_and_key([[nonnull]] DeeObject *self
 	DREF DeeObject *selfitem;
 	if (start >= end)
 		return 0;
-	selfitem = DeeType_InvokeMethodHint(self, seq_operator_trygetitem_index, start);
+	selfitem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, start);
 	if unlikely(!selfitem)
 		goto err;
 	if (selfitem == ITER_DONE)

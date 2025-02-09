@@ -30,8 +30,8 @@ __seq_find__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeType_InvokeMethodHint(self, seq_find_with_key, item, start, end, key)
-	         : DeeType_InvokeMethodHint(self, seq_find, item, start, end);
+	         ? CALL_DEPENDENCY(seq_find_with_key, self, item, start, end, key)
+	         : CALL_DEPENDENCY(seq_find, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -85,7 +85,7 @@ __seq_find__.seq_find([[nonnull]] DeeObject *self,
 	Dee_ssize_t status;
 	union seq_find_data data;
 	data.gsfd_elem = item;
-	status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_find_cb, &data, start, end);
+	status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_find_cb, &data, start, end);
 	if likely(status == -2) {
 		if unlikely(data.gsfd_index == (size_t)Dee_COMPARE_ERR)
 			err_integer_overflow_i(sizeof(size_t) * 8, true);
@@ -161,7 +161,7 @@ __seq_find__.seq_find_with_key([[nonnull]] DeeObject *self,
 	if unlikely(!data.gsfwk_base.gsfd_elem)
 		goto err;
 	data.gsfwk_key = key;
-	status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_find_with_key_cb, &data, start, end);
+	status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_find_with_key_cb, &data, start, end);
 	Dee_Decref(data.gsfwk_base.gsfd_elem);
 	if likely(status == -2) {
 		if unlikely(data.gsfwk_base.gsfd_index == (size_t)Dee_COMPARE_ERR)

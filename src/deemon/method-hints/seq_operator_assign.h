@@ -19,44 +19,28 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.insert()                                             */
+/* deemon.Sequence.operator := ()                                       */
 /************************************************************************/
-[[kw, alias(Sequence.insert -> "seq_insert"), declNameAlias("explicit_seq_insert")]]
-__seq_insert__(index:?Dint,item) {
-	size_t index;
-	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "|" UNPuSIZ ":__seq_insert__",
-	                    &index, &item))
+__seq_assign__(items:?X2?DSequence?S?O) {
+	DeeObject *items;
+	if (DeeArg_Unpack(argc, argv, "o:__seq_assign__", &items))
 		goto err;
-	if unlikely(CALL_DEPENDENCY(seq_insert, self, index, item))
+	if unlikely(CALL_DEPENDENCY(seq_operator_assign, self, items))
 		goto err;
 	return_none;
 err:
 	return NULL;
 }
 
-
 [[wunused]]
-int __seq_insert__.seq_insert([[nonnull]] DeeObject *self, size_t index,
-                              [[nonnull]] DeeObject *item)
-%{unsupported(auto)}
-%{$empty = "default__seq_insert__unsupported"}
-%{$with__seq_insertall = {
-	int result;
-	DREF DeeTupleObject *item_tuple;
-	item_tuple = DeeTuple_NewUninitialized(1);
-	if unlikely(!item_tuple)
-		goto err;
-	DeeTuple_SET(item_tuple, 0, item);
-	result = CALL_DEPENDENCY(seq_insertall, self, index, (DeeObject *)item_tuple);
-	DeeTuple_DecrefSymbolic((DeeObject *)item_tuple);
-	return result;
-err:
-	return -1;
+[[operator([Sequence, Set, Mapping].OPERATOR_ASSIGN: tp_init.tp_assign)]]
+int __seq_bool__.seq_operator_assign([[nonnull]] DeeObject *self,
+                                     [[nonnull]] DeeObject *items)
+%{unsupported(auto("operator :="))}
+%{$with__seq_operator_setrange = {
+	return CALL_DEPENDENCY(seq_operator_setrange, self, Dee_None, Dee_None, items);
 }} {
-	DREF DeeObject *result;
-	result = LOCAL_CALLATTRF(self, PCKuSIZ "o", index, item);
+	DREF DeeObject *result = LOCAL_CALLATTR(self, 1, &items);
 	if unlikely(!result)
 		goto err;
 	Dee_Decref(result);
@@ -65,10 +49,9 @@ err:
 	return -1;
 }
 
-seq_insert = {
-	DeeMH_seq_insertall_t seq_insertall = REQUIRE(seq_insertall);
-	if (seq_insertall == &default__seq_insertall__empty)
-		return &$empty;
-	if (seq_insertall)
-		return &$with__seq_insertall;
+seq_operator_assign = {
+	DeeMH_seq_operator_setrange_t seq_operator_setrange;
+	seq_operator_setrange = REQUIRE(seq_operator_setrange);
+	if (seq_operator_setrange)
+		return &$with__seq_operator_setrange;
 };

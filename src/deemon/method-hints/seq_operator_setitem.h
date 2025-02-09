@@ -25,7 +25,7 @@ __seq_setitem__(index:?Dint,value) {
 	DeeObject *index, *value;
 	if (DeeArg_Unpack(argc, argv, "oo:__seq_setitem__", &index, &value))
 		goto err;
-	if (DeeType_InvokeMethodHint(self, seq_operator_setitem, index, value))
+	if (CALL_DEPENDENCY(seq_operator_setitem, self, index, value))
 		goto err;
 	return_none;
 err:
@@ -43,7 +43,7 @@ __seq_setitem__.seq_operator_setitem([[nonnull]] DeeObject *self,
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_setitem_index, index_value, value);
+	return CALL_DEPENDENCY(seq_operator_setitem_index, self, index_value, value);
 err:
 	return -1;
 }} {
@@ -69,7 +69,19 @@ __seq_setitem__.seq_operator_setitem_index([[nonnull]] DeeObject *self,
                                            size_t index,
                                            [[nonnull]] DeeObject *value)
 %{unsupported(auto("operator []="))}
-%{$empty = err_index_out_of_bounds(self, index, 0)} {
+%{$empty = err_index_out_of_bounds(self, index, 0)}
+%{$with__seq_operator_setrange_index = {
+	int result;
+	DREF DeeTupleObject *values = DeeTuple_NewUninitialized(1);
+	if unlikely(!values)
+		goto err;
+	values->t_elem[0] = value;
+	result = CALL_DEPENDENCY(seq_operator_setrange_index, self, (Dee_ssize_t)index, (Dee_ssize_t)index + 1, (DeeObject *)values);
+	DeeTuple_DecrefSymbolic((DeeObject *)values);
+	return result;
+err:
+	return -1;
+}} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, PCKuSIZ "o", index, value);
 	if unlikely(!result)
@@ -89,7 +101,10 @@ seq_operator_setitem = {
 };
 
 seq_operator_setitem_index = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
+	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	if (REQUIRE_NODEFAULT(seq_operator_setrange_index))
+		return &$with__seq_operator_setrange_index;
+	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 };

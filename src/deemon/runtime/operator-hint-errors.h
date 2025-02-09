@@ -28,6 +28,8 @@ DECL_BEGIN
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintErrorImpls from "..method-hints.method-hints")(decls: true);]]]*/
+INTDEF int DCALL default__assign__unsupported(DeeObject*, void*);
+INTDEF int DCALL default__move_assign__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__str__unsupported(DeeObject*);
 INTDEF void*DCALL default__print__unsupported(DeeObject*, Dee_formatprinter_t, void*);
 INTDEF void*DCALL default__repr__unsupported(DeeObject*);

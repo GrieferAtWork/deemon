@@ -25,7 +25,7 @@ __seq_bool__()->?Dbool {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":__seq_bool__"))
 		goto err;
-	result = DeeType_InvokeMethodHint0(self, seq_operator_bool);
+	result = CALL_DEPENDENCY(seq_operator_bool, self);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -44,17 +44,38 @@ int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator bool"))} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_bool_with_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_seq_bool_with_foreach_cb, NULL);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_bool_with_foreach_cb, NULL);
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
 }}
 %{$with__seq_operator_size = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	return size != 0;
+err:
+	return -1;
+}}
+%{$with__seq_operator_sizeob = {
+	int result;
+	DREF DeeObject *sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	if unlikely(!sizeob)
+		goto err;
+	if (DeeObject_AssertTypeExact(sizeob, &DeeInt_Type))
+		goto err;
+	result = DeeInt_IsZero(sizeob) ? 0 : 1;
+	Dee_Decref(sizeob);
+	return result;
+err:
+	return -1;
+}}
+%{$with__seq_operator_compare_eq = {
+	int result = CALL_DEPENDENCY(seq_operator_compare_eq, self, Dee_EmptySeq);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return result == 0 ? 1 : 0;
 err:
 	return -1;
 }} {
@@ -68,14 +89,28 @@ err:
 
 seq_operator_bool = {
 	DeeMH_seq_operator_size_t seq_operator_size;
-	/* TODO: $with__seq_operator_compare_eq */
-	/* TODO: $with__seq_operator_eq */
-	/* TODO: $with__seq_operator_ne */
+	DeeMH_seq_operator_compare_eq_t seq_operator_compare_eq = REQUIRE(seq_operator_compare_eq);
+	if (seq_operator_compare_eq) {
+		if (seq_operator_compare_eq == &default__seq_operator_compare_eq__empty)
+			return &$empty;
+		if (seq_operator_compare_eq == &default__seq_operator_compare_eq__with__seq_operator_foreach)
+			goto use_size; /* return &$with__seq_operator_foreach; */
+		if (seq_operator_compare_eq == &default__seq_operator_compare_eq__with__seq_operator_size__and__operator_getitem_index_fast ||
+		    seq_operator_compare_eq == &default__seq_operator_compare_eq__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+		    seq_operator_compare_eq == &default__seq_operator_compare_eq__with__seq_operator_size__and__seq_operator_getitem_index)
+			goto use_size; /* return &$with__seq_operator_size; */
+		if (seq_operator_compare_eq == &default__seq_operator_compare_eq__with__seq_operator_sizeob__and__seq_operator_getitem)
+			goto use_size; /* return &$with__seq_operator_sizeob; */
+		return &$with__seq_operator_compare_eq;
+	}
+use_size:
 	seq_operator_size = REQUIRE(seq_operator_size);
 	if (seq_operator_size == &default__seq_operator_size__empty)
 		return &$empty;
 	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach)
 		return &$with__seq_operator_foreach;
+	if (seq_operator_size == &default__seq_operator_size__with__seq_operator_sizeob)
+		return &$with__seq_operator_sizeob;
 	if (seq_operator_size)
 		return &$with__seq_operator_size;
 };

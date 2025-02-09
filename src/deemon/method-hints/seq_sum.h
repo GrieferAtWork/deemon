@@ -30,9 +30,9 @@ __seq_sum__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?O {
 	                    &start, &end))
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
-		result = DeeType_InvokeMethodHint0(self, seq_sum);
+		result = CALL_DEPENDENCY(seq_sum, self);
 	} else {
-		result = DeeType_InvokeMethodHint(self, seq_sum_with_range, start, end);
+		result = CALL_DEPENDENCY(seq_sum_with_range, self, start, end);
 	}
 	return result;
 err:
@@ -46,7 +46,7 @@ __seq_sum__.seq_sum([[nonnull]] DeeObject *__restrict self)
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
 	Dee_accu_init(&accu);
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &Dee_accu_add, &accu);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &Dee_accu_add, &accu);
 	if unlikely(foreach_status < 0)
 		goto err;
 	return Dee_accu_pack(&accu);
@@ -80,7 +80,7 @@ __seq_sum__.seq_sum_with_range([[nonnull]] DeeObject *__restrict self,
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
 	Dee_accu_init(&accu);
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_sum_enumerate_cb, &accu, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_sum_enumerate_cb, &accu, start, end);
 	if unlikely(foreach_status < 0)
 		goto err;
 	return Dee_accu_pack(&accu);

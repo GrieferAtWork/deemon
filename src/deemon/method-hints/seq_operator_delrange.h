@@ -25,7 +25,7 @@ __seq_delrange__(start?:?X2?Dint?N,end?:?X2?Dint?N) {
 	DeeObject *start, *end;
 	if (DeeArg_Unpack(argc, argv, "oo:__seq_delrange__", &start, &end))
 		goto err;
-	if (DeeType_InvokeMethodHint(self, seq_operator_delrange, start, end))
+	if (CALL_DEPENDENCY(seq_operator_delrange, self, start, end))
 		goto err;
 	return_none;
 err:
@@ -47,15 +47,15 @@ __seq_delrange__.seq_operator_delrange([[nonnull]] DeeObject *self,
 	if (DeeObject_AsSSize(start, &start_index))
 		goto err;
 	if (DeeNone_Check(end))
-		return DeeType_InvokeMethodHint(self, seq_operator_delrange_index_n, start_index);
+		return CALL_DEPENDENCY(seq_operator_delrange_index_n, self, start_index);
 	if (DeeObject_AsSSize(end, &end_index))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_delrange_index, start_index, end_index);
+	return CALL_DEPENDENCY(seq_operator_delrange_index, self, start_index, end_index);
 err:
 	return -1;
 }}
 %{$with__seq_operator_setrange = {
-	return DeeType_InvokeMethodHint(self, seq_operator_setrange, start, end, Dee_None);
+	return CALL_DEPENDENCY(seq_operator_setrange, self, start, end, Dee_None);
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[2];
@@ -103,7 +103,7 @@ __seq_delrange__.seq_operator_delrange_index([[nonnull]] DeeObject *self,
 	endob = DeeInt_NewSSize(end);
 	if unlikely(!endob)
 		goto err_startob;
-	result = DeeType_InvokeMethodHint(self, seq_operator_delrange, startob, endob);
+	result = CALL_DEPENDENCY(seq_operator_delrange, self, startob, endob);
 	Dee_Decref(endob);
 	Dee_Decref(startob);
 	return result;
@@ -113,7 +113,7 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_size__and__seq_erase = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
@@ -126,14 +126,14 @@ err:
 			}
 		}
 	}
-	return DeeType_InvokeMethodHint(self, seq_erase, (size_t)start, size - (size_t)start);
+	return CALL_DEPENDENCY(seq_erase, self, (size_t)start, size - (size_t)start);
 empty_range:
 	return 0;
 err:
 	return -1;
 }}
 %{$with__seq_operator_setrange_index = {
-	return DeeType_InvokeMethodHint(self, seq_operator_setrange_index, start, end, Dee_None);
+	return CALL_DEPENDENCY(seq_operator_setrange_index, self, start, end, Dee_None);
 }} = $with__seq_operator_delrange;
 
 seq_operator_delrange_index = {
@@ -161,7 +161,7 @@ __seq_delrange__.seq_operator_delrange_index_n([[nonnull]] DeeObject *self,
 })}
 %{$empty = 0}
 %{$with__seq_operator_delrange_index = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (start < 0) {
@@ -174,7 +174,7 @@ __seq_delrange__.seq_operator_delrange_index_n([[nonnull]] DeeObject *self,
 			}
 		}
 	}
-	return DeeType_InvokeMethodHint(self, seq_operator_delrange_index, start, (Dee_ssize_t)size);
+	return CALL_DEPENDENCY(seq_operator_delrange_index, self, start, (Dee_ssize_t)size);
 empty_range:
 	return 0;
 err:
@@ -186,14 +186,14 @@ err:
 	startob = DeeInt_NewSSize(start);
 	if unlikely(!startob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, seq_operator_delrange, startob, Dee_None);
+	result = CALL_DEPENDENCY(seq_operator_delrange, self, startob, Dee_None);
 	Dee_Decref(startob);
 	return result;
 err:
 	return -1;
 }}
 %{$with__seq_operator_setrange_index_n = {
-	return DeeType_InvokeMethodHint(self, seq_operator_setrange_index_n, start, Dee_None);
+	return CALL_DEPENDENCY(seq_operator_setrange_index_n, self, start, Dee_None);
 }} = $with__seq_operator_delrange;
 
 

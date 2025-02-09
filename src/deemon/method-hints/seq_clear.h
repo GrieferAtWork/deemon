@@ -28,7 +28,7 @@
 __seq_clear__() {
 	if (DeeArg_Unpack(argc, argv, ":__seq_clear__"))
 		goto err;
-	if (DeeType_InvokeMethodHint0(self, seq_clear))
+	if unlikely(CALL_DEPENDENCY(seq_clear, self))
 		goto err;
 	return_none;
 err:
@@ -41,13 +41,13 @@ __seq_clear__.seq_clear([[nonnull]] DeeObject *self)
 %{unsupported(auto)}
 %{$empty = 0}
 %{$with__seq_operator_delrange = {
-	return DeeType_InvokeMethodHint(self, seq_operator_delrange, DeeInt_Zero, Dee_None);
+	return CALL_DEPENDENCY(seq_operator_delrange, self, DeeInt_Zero, Dee_None);
 }}
 %{$with__seq_operator_delrange_index_n = {
-	return DeeType_InvokeMethodHint(self, seq_operator_delrange_index_n, 0);
+	return CALL_DEPENDENCY(seq_operator_delrange_index_n, self, 0);
 }}
 %{$with__seq_erase = {
-	return DeeType_InvokeMethodHint(self, seq_erase, 0, (size_t)-1);
+	return CALL_DEPENDENCY(seq_erase, self, 0, (size_t)-1);
 }}
 //TODO:%{$with__set_removeall = {
 //TODO:	Set.remove(this, Set.frozen(this));

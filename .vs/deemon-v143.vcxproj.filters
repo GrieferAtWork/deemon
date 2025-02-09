@@ -696,13 +696,25 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_enumerate.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_iterkeys.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_contains.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_delitem.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_getitem.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_setitem.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\method-hints.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_assign.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_bool.h">
@@ -742,6 +754,9 @@
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_misc.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_moveassign.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_next.h">
@@ -807,9 +822,6 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_insertall.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_iterkeys.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_last.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -819,6 +831,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_minmax.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_operator_assign.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -826,9 +841,6 @@
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_compare.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_compare_eq.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_contains.h">
@@ -865,9 +877,6 @@
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_operator_size.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_trycompare_eq.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_parity.h">

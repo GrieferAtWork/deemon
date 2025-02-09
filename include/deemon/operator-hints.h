@@ -38,6 +38,8 @@ DECL_BEGIN
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorTypes from "...src.deemon.method-hints.method-hints")();]]]*/
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_assign_t)(DeeObject *self, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_move_assign_t)(DeeObject *self, DeeObject *value);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_str_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeNO_print_t)(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_repr_t)(DeeObject *__restrict self);
@@ -141,6 +143,8 @@ typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_leave_t)(DeeObject *__restric
 enum Dee_tno_id {
 	/* clang-format off */
 /*[[[deemon (printNativeOperatorIds from "...src.deemon.method-hints.method-hints")();]]]*/
+	Dee_TNO_assign,
+	Dee_TNO_move_assign,
 	Dee_TNO_str,
 	Dee_TNO_print,
 	Dee_TNO_repr,
@@ -376,6 +380,23 @@ INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT]
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintDecls from "...src.deemon.method-hints.method-hints")();]]]*/
+/* tp_init.tp_assign */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__assign(DeeObject *self, DeeObject *value);
+#define isusrtype__assign(tp_assign) ((tp_assign) == &usrtype__assign)
+#define maketyped__assign(tp_assign) ((tp_assign) == &usrtype__assign ? &tusrtype__assign : &tdefault__assign)
+
+/* tp_init.tp_move_assign */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__move_assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__move_assign__with__assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__move_assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__move_assign(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__move_assign__with__assign(DeeObject *self, DeeObject *value);
+#define isusrtype__move_assign(tp_move_assign) ((tp_move_assign) == &usrtype__move_assign)
+#define isdefault__move_assign(tp_move_assign) ((tp_move_assign) == &default__move_assign__with__assign)
+#define maketyped__move_assign(tp_move_assign) ((tp_move_assign) == &usrtype__move_assign ? &tusrtype__move_assign : (tp_move_assign) == &default__move_assign__with__assign ? &tdefault__move_assign__with__assign : &tdefault__move_assign)
+
 /* tp_cast.tp_str */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__str(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__str__by_print(DeeTypeObject *tp_self, DeeObject *self);
@@ -497,6 +518,7 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL default__advance__with__nextvalue(DeeOb
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__advance__with__nextpair(DeeObject *__restrict self, size_t step);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__advance__with__iter_next(DeeObject *__restrict self, size_t step);
 #define isdefault__advance(tp_advance) ((tp_advance) == &default__advance__with__nextkey || (tp_advance) == &default__advance__with__nextvalue || (tp_advance) == &default__advance__with__nextpair || (tp_advance) == &default__advance__with__iter_next)
+#define maketyped__advance(tp_advance) ((tp_advance) == &default__advance__with__nextkey ? &tdefault__advance__with__nextkey : (tp_advance) == &default__advance__with__nextvalue ? &tdefault__advance__with__nextvalue : (tp_advance) == &default__advance__with__nextpair ? &tdefault__advance__with__nextpair : (tp_advance) == &default__advance__with__iter_next ? &tdefault__advance__with__iter_next : &tdefault__advance)
 
 /* tp_math->tp_int */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__int(DeeTypeObject *tp_self, DeeObject *self);
@@ -684,13 +706,13 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__foreach__with__foreach
 #define maketyped__foreach(tp_foreach) ((tp_foreach) == &default__foreach__with__iter ? &tdefault__foreach__with__iter : (tp_foreach) == &default__foreach__with__foreach_pair ? &tdefault__foreach__with__foreach_pair : &tdefault__foreach)
 
 /* tp_seq->tp_foreach_pair */
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__foreach_pair__with__iter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__foreach_pair__with__foreach(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t cb, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__foreach_pair__with__iter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__foreach_pair(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t cb, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__foreach_pair__with__iter(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__foreach_pair__with__foreach(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
-#define isdefault__foreach_pair(tp_foreach_pair) ((tp_foreach_pair) == &default__foreach_pair__with__iter || (tp_foreach_pair) == &default__foreach_pair__with__foreach)
-#define maketyped__foreach_pair(tp_foreach_pair) ((tp_foreach_pair) == &default__foreach_pair__with__iter ? &tdefault__foreach_pair__with__iter : (tp_foreach_pair) == &default__foreach_pair__with__foreach ? &tdefault__foreach_pair__with__foreach : &tdefault__foreach_pair)
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__foreach_pair__with__iter(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg);
+#define isdefault__foreach_pair(tp_foreach_pair) ((tp_foreach_pair) == &default__foreach_pair__with__foreach || (tp_foreach_pair) == &default__foreach_pair__with__iter)
+#define maketyped__foreach_pair(tp_foreach_pair) ((tp_foreach_pair) == &default__foreach_pair__with__foreach ? &tdefault__foreach_pair__with__foreach : (tp_foreach_pair) == &default__foreach_pair__with__iter ? &tdefault__foreach_pair__with__iter : &tdefault__foreach_pair)
 
 /* tp_seq->tp_sizeob */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__sizeob(DeeTypeObject *tp_self, DeeObject *self);
@@ -1028,22 +1050,18 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__getrange__with_
 #define maketyped__getrange(tp_getrange) ((tp_getrange) == &usrtype__getrange ? &tusrtype__getrange : (tp_getrange) == &default__getrange__with__getrange_index__and__getrange_index_n ? &tdefault__getrange__with__getrange_index__and__getrange_index_n : &tdefault__getrange)
 
 /* tp_seq->tp_getrange_index */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getrange_index__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getrange_index__with__getrange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getrange_index(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getrange_index__with__size__and__getitem_index_fast(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getrange_index__with__getrange(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
-#define isdefault__getrange_index(tp_getrange_index) ((tp_getrange_index) == &default__getrange_index__with__size__and__getitem_index_fast || (tp_getrange_index) == &default__getrange_index__with__getrange)
-#define maketyped__getrange_index(tp_getrange_index) ((tp_getrange_index) == &default__getrange_index__with__size__and__getitem_index_fast ? &tdefault__getrange_index__with__size__and__getitem_index_fast : (tp_getrange_index) == &default__getrange_index__with__getrange ? &tdefault__getrange_index__with__getrange : &tdefault__getrange_index)
+#define isdefault__getrange_index(tp_getrange_index) ((tp_getrange_index) == &default__getrange_index__with__getrange)
+#define maketyped__getrange_index(tp_getrange_index) ((tp_getrange_index) == &default__getrange_index__with__getrange ? &tdefault__getrange_index__with__getrange : &tdefault__getrange_index)
 
 /* tp_seq->tp_getrange_index_n */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getrange_index_n__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getrange_index_n__with__getrange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getrange_index_n(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getrange_index_n__with__size__and__getitem_index_fast(DeeObject *self, Dee_ssize_t start);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getrange_index_n__with__getrange(DeeObject *self, Dee_ssize_t start);
-#define isdefault__getrange_index_n(tp_getrange_index_n) ((tp_getrange_index_n) == &default__getrange_index_n__with__size__and__getitem_index_fast || (tp_getrange_index_n) == &default__getrange_index_n__with__getrange)
-#define maketyped__getrange_index_n(tp_getrange_index_n) ((tp_getrange_index_n) == &default__getrange_index_n__with__size__and__getitem_index_fast ? &tdefault__getrange_index_n__with__size__and__getitem_index_fast : (tp_getrange_index_n) == &default__getrange_index_n__with__getrange ? &tdefault__getrange_index_n__with__getrange : &tdefault__getrange_index_n)
+#define isdefault__getrange_index_n(tp_getrange_index_n) ((tp_getrange_index_n) == &default__getrange_index_n__with__getrange)
+#define maketyped__getrange_index_n(tp_getrange_index_n) ((tp_getrange_index_n) == &default__getrange_index_n__with__getrange ? &tdefault__getrange_index_n__with__getrange : &tdefault__getrange_index_n)
 
 /* tp_seq->tp_delrange */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tusrtype__delrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);

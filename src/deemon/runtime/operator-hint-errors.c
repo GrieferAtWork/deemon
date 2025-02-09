@@ -40,6 +40,12 @@ default__hash__unsupported(DeeObject *__restrict self) {
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintErrorImpls from "..method-hints.method-hints")(decls: false);]]]*/
+INTERN int DCALL default__assign__unsupported(DeeObject*self, void*) {
+	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ASSIGN);
+}
+INTERN int DCALL default__move_assign__unsupported(DeeObject*self, void*) {
+	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_MOVEASSIGN);
+}
 INTERN void*DCALL default__str__unsupported(DeeObject*self) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_STR);
 	return NULL;
@@ -380,6 +386,8 @@ INTERN_TPCONST Dee_funptr_t tpconst
 _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT] = {
 	/* clang-format off */
 /*[[[deemon (printNativeOperatorHintBadAllocTable from "..method-hints.method-hints")();]]]*/
+	/* assign                     */ NULL,
+	/* move_assign                */ NULL,
 	/* str                        */ NULL,
 	/* print                      */ NULL,
 	/* repr                       */ NULL,
@@ -487,6 +495,8 @@ INTERN_TPCONST Dee_funptr_t tpconst
 _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT] = {
 	/* clang-format off */
 /*[[[deemon (printNativeOperatorHintUnsupportedTable from "..method-hints.method-hints")();]]]*/
+	/* assign                     */ (Dee_funptr_t)&default__assign__unsupported,
+	/* move_assign                */ (Dee_funptr_t)&default__move_assign__unsupported,
 	/* str                        */ (Dee_funptr_t)&default__str__unsupported,
 	/* print                      */ (Dee_funptr_t)&default__print__unsupported,
 	/* repr                       */ (Dee_funptr_t)&default__repr__unsupported,

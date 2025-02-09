@@ -60,12 +60,12 @@ err:
 	return NULL;
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (!size)
 		return ITER_DONE;
-	return DeeType_InvokeMethodHint(self, seq_operator_trygetitem_index, size - 1);
+	return CALL_DEPENDENCY(seq_operator_trygetitem_index, self, size - 1);
 err:
 	return NULL;
 }}
@@ -98,17 +98,17 @@ __seq_last__.seq_getlast([[nonnull]] DeeObject *__restrict self)
 	return NULL;
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (!size)
 		return default__seq_getlast__empty(self);
-	return DeeType_InvokeMethodHint(self, seq_operator_getitem_index, 0);
+	return CALL_DEPENDENCY(seq_operator_getitem_index, self, 0);
 err:
 	return NULL;
 }}
 %{$with__seq_trygetlast = {
-	DREF DeeObject *result = DeeType_InvokeMethodHint0(self, seq_trygetlast);
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetlast, self);
 	if unlikely(result == ITER_DONE)
 		return default__seq_getlast__empty(self);
 	return result;
@@ -122,17 +122,17 @@ err:
 __seq_last__.seq_boundlast([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias($empty)} %{$empty = Dee_BOUND_MISSING}
 %{$with__seq_operator_size__and__seq_operator_bounditem_index = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (!size)
 		return Dee_BOUND_MISSING;
-	return DeeType_InvokeMethodHint(self, seq_operator_bounditem_index, size - 1);
+	return CALL_DEPENDENCY(seq_operator_bounditem_index, self, size - 1);
 err:
 	return -1;
 }}
 %{$with__seq_trygetlast = {
-	DREF DeeObject *result = DeeType_InvokeMethodHint0(self, seq_trygetlast);
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetlast, self);
 	if (result == ITER_DONE)
 		return Dee_BOUND_NO;
 	if unlikely(!result)
@@ -150,12 +150,12 @@ __seq_last__.seq_dellast([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del last"); })}
 %{$empty = 0}
 %{$with__seq_operator_size__and__seq_operator_delitem_index = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (!size)
 		return 0;
-	return DeeType_InvokeMethodHint(self, seq_operator_delitem_index, size - 1);
+	return CALL_DEPENDENCY(seq_operator_delitem_index, self, size - 1);
 err:
 	return -1;
 }} {
@@ -170,12 +170,12 @@ __seq_last__.seq_setlast([[nonnull]] DeeObject *self,
 %{unsupported({ return err_seq_unsupportedf(self, "last = %r", value); })}
 %{$empty = { return err_empty_sequence(self); }}
 %{$with__seq_operator_size__and__seq_operator_setitem_index = {
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (!size)
 		return err_empty_sequence(self);
-	return DeeType_InvokeMethodHint(self, seq_operator_setitem_index, size - 1, value);
+	return CALL_DEPENDENCY(seq_operator_setitem_index, self, size - 1, value);
 err:
 	return -1;
 }} {

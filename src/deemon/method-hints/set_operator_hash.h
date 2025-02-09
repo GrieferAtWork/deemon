@@ -25,7 +25,7 @@ __set_hash__()->?Dint {
 	Dee_hash_t result;
 	if (DeeArg_Unpack(argc, argv, ":__set_hash__"))
 		goto err;
-	result = DeeType_InvokeMethodHint0(self, set_operator_hash);
+	result = CALL_DEPENDENCY(set_operator_hash, self);
 	return DeeInt_NewHash(result);
 err:
 	return NULL;
@@ -55,7 +55,7 @@ __set_hash__.set_operator_hash([[nonnull]] DeeObject *self)
 [[prefix(DEFINE_default_set_hash_with_foreach_cb)]]
 [[prefix(DEFINE_DeeSet_HandleHashError)]] {
 	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	if unlikely(DeeType_InvokeMethodHint(self, set_operator_foreach, &default_set_hash_with_foreach_cb, &result))
+	if unlikely(CALL_DEPENDENCY(set_operator_foreach, self, &default_set_hash_with_foreach_cb, &result))
 		goto err;
 	return result;
 err:

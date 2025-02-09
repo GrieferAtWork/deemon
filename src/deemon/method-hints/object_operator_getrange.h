@@ -52,26 +52,6 @@ err:
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getrange_index([[nonnull]] DeeObject *self,
                           Dee_ssize_t start, Dee_ssize_t end)
-%{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
-	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
-	struct Dee_seq_range range;
-	size_t size = CALL_DEPENDENCY(tp_seq->tp_size, self);
-	if unlikely(size == (size_t)-1)
-		goto err;
-	DeeSeqRange_Clamp(&range, start, end, size);
-	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(self);
-	result->dssgi_seq              = self;
-	result->dssgi_tp_getitem_index = THIS_TYPE->tp_seq->tp_getitem_index_fast;
-	result->dssgi_start            = range.sr_start;
-	result->dssgi_end              = range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
-err:
-	return NULL;
-}}
 %{using tp_seq->tp_getrange: {
 	DREF DeeObject *result;
 	DREF DeeObject *startob, *endob;
@@ -97,36 +77,6 @@ err:
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getrange_index_n([[nonnull]] DeeObject *self,
                             Dee_ssize_t start)
-%{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
-	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
-	size_t size = CALL_DEPENDENCY(tp_seq->tp_size, self);
-	if unlikely(size == (size_t)-1)
-		goto err;
-	if (start < 0) {
-		if (start < 0) {
-			start += size;
-			if unlikely(start < 0) {
-				if unlikely(size == 0)
-					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
-			}
-		}
-	}
-	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(self);
-	result->dssgi_seq              = self;
-	result->dssgi_tp_getitem_index = THIS_TYPE->tp_seq->tp_getitem_index_fast;
-	result->dssgi_start            = (size_t)start;
-	result->dssgi_end              = size;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
-	return (DREF DeeObject *)result;
-empty_range:
-	return_empty_seq;
-err:
-	return NULL;
-}}
 %{using tp_seq->tp_getrange: {
 	DREF DeeObject *result;
 	DREF DeeObject *startob;
@@ -141,7 +91,6 @@ err_startob:
 err:
 	return NULL;
 }} = OPERATOR_GETRANGE;
-
 
 
 

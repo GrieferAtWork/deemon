@@ -177,7 +177,7 @@ err:
  * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE'
  * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index' right now. */
 [[wunused]] DREF DeeObject *
-tp_seq->tp_getitem_index_fast([[nonnull]] DeeObject *self, size_t index);
+tp_seq->tp_getitem_index_fast([[nonnull]] DeeObject *self, size_t index); /* !!! NOT INHERITABLE !!! */
 
 
 [[wunused]] DREF DeeObject *

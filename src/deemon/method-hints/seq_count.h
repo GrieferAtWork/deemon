@@ -32,15 +32,15 @@ __seq_count__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Din
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		if (DeeNone_Check(key)) {
-			result = DeeType_InvokeMethodHint(self, seq_count, item);
+			result = CALL_DEPENDENCY(seq_count, self, item);
 		} else {
-			result = DeeType_InvokeMethodHint(self, seq_count_with_key, item, key);
+			result = CALL_DEPENDENCY(seq_count_with_key, self, item, key);
 		}
 	} else {
 		if (DeeNone_Check(key)) {
-			result = DeeType_InvokeMethodHint(self, seq_count_with_range, item, start, end);
+			result = CALL_DEPENDENCY(seq_count_with_range, self, item, start, end);
 		} else {
-			result = DeeType_InvokeMethodHint(self, seq_count_with_range_and_key, item, start, end, key);
+			result = CALL_DEPENDENCY(seq_count_with_range_and_key, self, item, start, end, key);
 		}
 	}
 	if unlikely(result == (size_t)-1)
@@ -75,7 +75,7 @@ __seq_count__.seq_count([[nonnull]] DeeObject *self,
  * types. This also optimizes the case when "self" is a Mapping, where
  * seq_operator_contains is implemented to use map_operator_trygetitem */
 %{$with__set_operator_contains = {
-	DREF DeeObject *contains = DeeType_InvokeMethodHint(self, seq_operator_contains, item);
+	DREF DeeObject *contains = CALL_DEPENDENCY(seq_operator_contains, self, item);
 	if unlikely(!contains)
 		goto err;
 	return (size_t)DeeObject_BoolInherited(contains);
@@ -83,7 +83,7 @@ err:
 	return (size_t)-1;
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_count_foreach_cb)]] {
-	return (size_t)DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_count_foreach_cb, item);
+	return (size_t)CALL_DEPENDENCY(seq_operator_foreach, self, &seq_count_foreach_cb, item);
 }}
 %{$with__seq_find = {
 	return default__seq_count_with_range__with__seq_find(self, item, 0, (size_t)-1);
@@ -139,7 +139,7 @@ __seq_count__.seq_count_with_key([[nonnull]] DeeObject *self,
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_count_with_key_foreach_cb, &data);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_count_with_key_foreach_cb, &data);
 	Dee_Decref(data.gscwk_kelem);
 	return (size_t)foreach_status;
 err:
@@ -189,7 +189,7 @@ __seq_count__.seq_count_with_range([[nonnull]] DeeObject *self,
 %{$empty = 0}
 %{unsupported(auto)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_count_enumerate_cb)]] {
-	return (size_t)DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_count_enumerate_cb, item, start, end);
+	return (size_t)CALL_DEPENDENCY(seq_enumerate_index, self, &seq_count_enumerate_cb, item, start, end);
 }}
 %{$with__seq_find = {
 	size_t result = 0;
@@ -252,7 +252,7 @@ __seq_count__.seq_count_with_range_and_key([[nonnull]] DeeObject *self,
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_count_with_key_enumerate_cb, &data, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_count_with_key_enumerate_cb, &data, start, end);
 	Dee_Decref(data.gscwk_kelem);
 	return (size_t)foreach_status;
 err:

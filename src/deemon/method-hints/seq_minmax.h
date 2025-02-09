@@ -54,12 +54,12 @@ __seq_{m}__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_Invoke{M}WithKey(self, key)
-		         : DeeSeq_Invoke{M}(self);
+		         ? CALL_DEPENDENCY(seq_{m}_with_key, self, key)
+		         : CALL_DEPENDENCY(seq_{m}, self);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeSeq_Invoke{M}WithRangeAndKey(self, start, end, key)
-		         : DeeSeq_Invoke{M}WithRange(self, start, end);
+		         ? CALL_DEPENDENCY(seq_{m}_with_range_and_key, self, start, end, key)
+		         : CALL_DEPENDENCY(seq_{m}_with_range, self, start, end);
 	}
 	return result;
 err:
@@ -96,7 +96,7 @@ __seq_{m}__.seq_{m}([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_{m}_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_{m}_foreach_cb, &result);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_{m}_foreach_cb, &result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -165,7 +165,7 @@ __seq_{m}__.seq_{m}_with_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_{m}_with_key_foreach_cb, &data);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_{m}_with_key_foreach_cb, &data);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -213,7 +213,7 @@ __seq_{m}__.seq_{m}_with_range([[nonnull]] DeeObject *__restrict self,
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_{m}_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_{m}_enumerate_cb, &result, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_{m}_enumerate_cb, &result, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -251,7 +251,7 @@ __seq_{m}__.seq_{m}_with_range_and_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_{m}_with_key_enumerate_cb, &data, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_{m}_with_key_enumerate_cb, &data, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -321,12 +321,12 @@ __seq_min__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeType_InvokeMethodHint(self, seq_min_with_key, key)
-		         : DeeType_InvokeMethodHint0(self, seq_min);
+		         ? CALL_DEPENDENCY(seq_min_with_key, self, key)
+		         : CALL_DEPENDENCY(seq_min, self);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeType_InvokeMethodHint(self, seq_min_with_range_and_key, start, end, key)
-		         : DeeType_InvokeMethodHint(self, seq_min_with_range, start, end);
+		         ? CALL_DEPENDENCY(seq_min_with_range_and_key, self, start, end, key)
+		         : CALL_DEPENDENCY(seq_min_with_range, self, start, end);
 	}
 	return result;
 err:
@@ -363,7 +363,7 @@ __seq_min__.seq_min([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_min_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_min_foreach_cb, &result);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_min_foreach_cb, &result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -432,7 +432,7 @@ __seq_min__.seq_min_with_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_min_with_key_foreach_cb, &data);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_min_with_key_foreach_cb, &data);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -480,7 +480,7 @@ __seq_min__.seq_min_with_range([[nonnull]] DeeObject *__restrict self,
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_min_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_min_enumerate_cb, &result, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_min_enumerate_cb, &result, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -518,7 +518,7 @@ __seq_min__.seq_min_with_range_and_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_min_with_key_enumerate_cb, &data, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_min_with_key_enumerate_cb, &data, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -592,12 +592,12 @@ __seq_max__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?O {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeType_InvokeMethodHint(self, seq_max_with_key, key)
-		         : DeeType_InvokeMethodHint0(self, seq_max);
+		         ? CALL_DEPENDENCY(seq_max_with_key, self, key)
+		         : CALL_DEPENDENCY(seq_max, self);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeType_InvokeMethodHint(self, seq_max_with_range_and_key, start, end, key)
-		         : DeeType_InvokeMethodHint(self, seq_max_with_range, start, end);
+		         ? CALL_DEPENDENCY(seq_max_with_range_and_key, self, start, end, key)
+		         : CALL_DEPENDENCY(seq_max_with_range, self, start, end);
 	}
 	return result;
 err:
@@ -634,7 +634,7 @@ __seq_max__.seq_max([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_max_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_max_foreach_cb, &result);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_max_foreach_cb, &result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -703,7 +703,7 @@ __seq_max__.seq_max_with_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_max_with_key_foreach_cb, &data);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_max_with_key_foreach_cb, &data);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
@@ -751,7 +751,7 @@ __seq_max__.seq_max_with_range([[nonnull]] DeeObject *__restrict self,
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_max_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_max_enumerate_cb, &result, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_max_enumerate_cb, &result, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
@@ -789,7 +789,7 @@ __seq_max__.seq_max_with_range_and_key([[nonnull]] DeeObject *self,
 	data.gsmmwk_key     = key;
 	data.gsmmwk_result  = NULL;
 	data.gsmmwk_kresult = NULL;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_max_with_key_enumerate_cb, &data, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_max_with_key_enumerate_cb, &data, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {

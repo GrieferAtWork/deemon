@@ -26,6 +26,8 @@
 /************************************************************************/
 /* For `deemon.Object'                                                  */
 /************************************************************************/
+%[include("object_operator_assign.h")]
+%[include("object_operator_moveassign.h")]
 %[include("object_operator_str.h")]
 %[include("object_operator_repr.h")]
 %[include("object_operator_bool.h")]
@@ -44,7 +46,6 @@
 %[include("object_operator_getrange.h")]
 %[include("object_operator_delrange.h")]
 %[include("object_operator_setrange.h")]
-// TODO: All of the other operators
 %[include("object_operator_misc.h")]
 
 
@@ -63,18 +64,15 @@
 %[include("seq_operator_delrange.h")]
 %[include("seq_operator_setrange.h")]
 
-/* TODO: seq_operator_assign */
+%[include("seq_operator_assign.h")]
 
 %[include("seq_operator_hash.h")]
 %[include("seq_operator_compare.h")]
-%[include("seq_operator_compare_eq.h")]
-%[include("seq_operator_trycompare_eq.h")]
 %[include("seq_operator_cmp.h")]
 
 %[include("seq_operator_inplace_add.h")]
 %[include("seq_operator_inplace_mul.h")]
 
-%[include("seq_iterkeys.h")]
 %[include("seq_enumerate.h")]
 %[include("seq_enumerate_items.h")]
 
@@ -290,20 +288,11 @@
 /************************************************************************/
 
 %[include("map_operator_getitem.h")]
+%[include("map_operator_delitem.h")]
+%[include("map_operator_setitem.h")]
 %[include("map_operator_contains.h")]
 
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_delitem, (DeeObject *self, DeeObject *index))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1)), int, DCALL, map_operator_delitem_index, (DeeObject *self, size_t index))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_delitem_string_hash, (DeeObject *self, char const *key, Dee_hash_t hash))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_delitem_string_len_hash, (DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash))
-//Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__map_delitem__, "__map_delitem__", "(key)")
-
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 3)), int, DCALL, map_operator_setitem, (DeeObject *self, DeeObject *index, DeeObject *value))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 3)), int, DCALL, map_operator_setitem_index, (DeeObject *self, size_t index, DeeObject *value))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 4)), int, DCALL, map_operator_setitem_string_hash, (DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value))
-//Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2, 5)), int, DCALL, map_operator_setitem_string_len_hash, (DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value))
-//Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__map_setitem__, "__map_setitem__", "(key,value)")
-
+%[include("map_iterkeys.h")]
 %[include("map_enumerate.h")]
 
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_compare_eq, (DeeObject *self, DeeObject *some_object))

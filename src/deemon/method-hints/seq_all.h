@@ -32,12 +32,12 @@ __seq_all__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeType_InvokeMethodHint(self, seq_all_with_key, key)
-		         : DeeType_InvokeMethodHint0(self, seq_all);
+		         ? CALL_DEPENDENCY(seq_all_with_key, self, key)
+		         : CALL_DEPENDENCY(seq_all, self);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeType_InvokeMethodHint(self, seq_all_with_range_and_key, start, end, key)
-		         : DeeType_InvokeMethodHint(self, seq_all_with_range, start, end);
+		         ? CALL_DEPENDENCY(seq_all_with_range_and_key, self, start, end, key)
+		         : CALL_DEPENDENCY(seq_all_with_range, self, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -66,7 +66,7 @@ int __seq_all__.seq_all([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_all_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_all_foreach_cb, NULL);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_all_foreach_cb, NULL);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -107,7 +107,7 @@ int __seq_all__.seq_all_with_key([[nonnull]] DeeObject *self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_all_with_key_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_all_with_key_foreach_cb, key);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_all_with_key_foreach_cb, key);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -148,7 +148,7 @@ int __seq_all__.seq_all_with_range([[nonnull]] DeeObject *__restrict self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_all_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_all_enumerate_cb, NULL, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_all_enumerate_cb, NULL, start, end);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -185,7 +185,7 @@ int __seq_all__.seq_all_with_range_and_key([[nonnull]] DeeObject *self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_all_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_all_with_key_enumerate_cb, key, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_all_with_key_enumerate_cb, key, start, end);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;

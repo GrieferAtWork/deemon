@@ -24,7 +24,7 @@
 __seq_size__()->?Dint {
 	if (DeeArg_Unpack(argc, argv, ":__seq_size__"))
 		goto err;
-	return DeeType_InvokeMethodHint0(self, seq_operator_sizeob);
+	return CALL_DEPENDENCY(seq_operator_sizeob, self);
 err:
 	return NULL;
 }
@@ -37,7 +37,7 @@ DREF DeeObject *__seq_size__.seq_operator_sizeob([[nonnull]] DeeObject *self)
 %{unsupported(auto("operator size"))}
 %{$empty = { return_reference_(DeeInt_Zero); }}
 %{$with__seq_operator_size = {
-	size_t seqsize = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t seqsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(seqsize == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(seqsize);
@@ -49,8 +49,28 @@ err:
 
 
 %[define(DEFINE_default_seq_size_with_foreach_cb =
-INTDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-default_seq_size_with_foreach_cb(void *arg, DeeObject *elem);
+#ifndef DEFINED_default_seq_size_with_foreach_cb
+#define DEFINED_default_seq_size_with_foreach_cb
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_seq_size_with_foreach_cb(void *arg, DeeObject *elem) {
+	(void)arg;
+	(void)elem;
+	return 1;
+}
+#endif /* !DEFINED_default_seq_size_with_foreach_cb */
+)]
+
+%[define(DEFINE_default_seq_size_with_foreach_pair_cb =
+#ifndef DEFINED_default_seq_size_with_foreach_pair_cb
+#define DEFINED_default_seq_size_with_foreach_pair_cb
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_seq_size_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	(void)arg;
+	(void)key;
+	(void)value;
+	return 1;
+}
+#endif /* !DEFINED_default_seq_size_with_foreach_pair_cb */
 )]
 
 
@@ -62,15 +82,22 @@ size_t __seq_size__.seq_operator_size([[nonnull]] DeeObject *self)
 %{unsupported(auto("operator size"))}
 %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_size_with_foreach_cb)]] {
-	return (size_t)DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_seq_size_with_foreach_cb, NULL);
-}} %{$with__seq_operator_sizeob = {
+	return (size_t)CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_size_with_foreach_cb, NULL);
+}}
+%{$with__seq_operator_foreach_pair = [[prefix(DEFINE_default_seq_size_with_foreach_pair_cb)]] {
+	return (size_t)CALL_DEPENDENCY(seq_operator_foreach_pair, self, &default_seq_size_with_foreach_pair_cb, NULL);
+}}
+%{$with__seq_operator_sizeob = {
 	DREF DeeObject *sizeob;
-	sizeob = DeeType_InvokeMethodHint0(self, seq_operator_sizeob);
+	sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
 	return DeeObject_AsDirectSizeInherited(sizeob);
 err:
 	return (size_t)-1;
+}}
+%{$with__map_enumerate = [[prefix(DEFINE_default_seq_size_with_foreach_pair_cb)]] {
+	return (size_t)CALL_DEPENDENCY(map_enumerate, self, &default_seq_size_with_foreach_pair_cb, NULL);
 }} = $with__seq_operator_sizeob;
 
 
@@ -89,6 +116,10 @@ seq_operator_size = {
 	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_foreach_pair)
+		return &$with__seq_operator_foreach_pair;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__map_enumerate)
+		return &$with__map_enumerate;
 	if (seq_operator_foreach)
 		return $with__seq_operator_foreach;
 };

@@ -29,7 +29,7 @@ __seq_insertall__(index:?Dint,items:?S?O) {
 	                    UNPuSIZ "|" UNPuSIZ ":__seq_insertall__",
 	                    &index, &items))
 		goto err;
-	if unlikely(DeeType_InvokeMethodHint(self, seq_insertall, index, items))
+	if unlikely(CALL_DEPENDENCY(seq_insertall, self, index, items))
 		goto err;
 	return_none;
 err:
@@ -61,7 +61,7 @@ int __seq_insertall__.seq_insertall([[nonnull]] DeeObject *self, size_t index,
                                     [[nonnull]] DeeObject *items)
 %{unsupported(auto)}
 %{$empty = {
-	int items_empty = DeeType_InvokeMethodHint0(items, seq_operator_bool);
+	int items_empty = CALL_DEPENDENCY(seq_operator_bool, items);
 	if unlikely(items_empty < 0)
 		goto err;
 	if (items_empty)
@@ -71,14 +71,14 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_setrange_index = {
-	return DeeType_InvokeMethodHint(self, seq_operator_setrange_index, (Dee_ssize_t)index, (Dee_ssize_t)index, items);
+	return CALL_DEPENDENCY(seq_operator_setrange_index, self, (Dee_ssize_t)index, (Dee_ssize_t)index, items);
 }}
 %{$with__seq_insert = [[prefix(DEFINE_seq_insertall_with_foreach_insert_cb)]] {
 	struct seq_insertall_with_foreach_insert_data data;
 	data.dsiawfid_insert = DeeType_RequireSeqInsert(Dee_TYPE(self));
 	data.dsiawfid_self   = self;
 	data.dsiawfid_index  = index;
-	return (int)DeeType_InvokeMethodHint(items, seq_operator_foreach, &seq_insertall_with_foreach_insert_cb, &data);
+	return (int)CALL_DEPENDENCY(seq_operator_foreach, items, &seq_insertall_with_foreach_insert_cb, &data);
 }} {
 	DREF DeeObject *result;
 	result = LOCAL_CALLATTRF(self, PCKuSIZ "o", index, items);

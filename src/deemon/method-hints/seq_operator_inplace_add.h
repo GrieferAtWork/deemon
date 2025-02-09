@@ -43,7 +43,7 @@ __seq_inplace_add__.seq_operator_inplace_add([[nonnull]] DREF DeeObject **__rest
                                              [[nonnull]] DeeObject *rhs)
 %{unsupported_alias("default__seq_operator_inplace_add__with__DeeSeq_Concat")}
 %{$with__seq_extend = {
-	return DeeType_InvokeMethodHint(*p_self, seq_extend, rhs);
+	return CALL_DEPENDENCY(seq_extend, *p_self, rhs);
 }}
 %{$with__DeeSeq_Concat = {
 	DREF DeeObject *result = DeeSeq_Concat(*p_self, rhs);

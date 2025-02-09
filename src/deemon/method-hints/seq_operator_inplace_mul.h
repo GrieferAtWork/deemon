@@ -48,13 +48,13 @@ __seq_inplace_mul__.seq_operator_inplace_mul([[nonnull]] DREF DeeObject **__rest
 	if (DeeObject_AsSize(repeat, &repeatval))
 		goto err;
 	if (repeatval == 0)
-		return DeeType_InvokeMethodHint0(*p_self, seq_clear);
+		return CALL_DEPENDENCY(seq_clear, *p_self);
 	if (repeatval == 1)
 		return 0;
 	extend_with_this = DeeSeq_Repeat(*p_self, repeatval - 1);
 	if unlikely(!extend_with_this)
 		goto err;
-	result = DeeType_InvokeMethodHint(*p_self, seq_extend, extend_with_this);
+	result = CALL_DEPENDENCY(seq_extend, *p_self, extend_with_this);
 	Dee_Decref_likely(extend_with_this);
 	return result;
 err:

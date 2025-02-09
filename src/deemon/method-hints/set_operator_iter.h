@@ -24,7 +24,7 @@
 __set_iter__()->?DIterator {
 	if (DeeArg_Unpack(argc, argv, ":__set_iter__"))
 		goto err;
-	return DeeType_InvokeMethodHint0(self, set_operator_iter);
+	return CALL_DEPENDENCY(set_operator_iter, self);
 err:
 	return NULL;
 }
@@ -38,7 +38,7 @@ __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_operator_iter = {
 	DREF DeeObject *iter;
 	DREF DistinctIterator *result;
-	iter = DeeType_InvokeMethodHint0(self, seq_operator_iter);
+	iter = CALL_DEPENDENCY(seq_operator_iter, self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeGCObject_MALLOC(DistinctIterator);
@@ -106,14 +106,14 @@ __set_iter__.set_operator_foreach([[nonnull]] DeeObject *__restrict self,
 	data.dsfud_cb.dsfucd_cb  = cb;
 	data.dsfud_cb.dsfucd_arg = arg;
 	Dee_simple_hashset_init(&data.dsfud_encountered);
-	result = DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_set_foreach_unique_cb, &data);
+	result = CALL_DEPENDENCY(seq_operator_foreach, self, &default_set_foreach_unique_cb, &data);
 	Dee_simple_hashset_fini(&data.dsfud_encountered);
 	return result;
 }}
 %{$with__set_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
-	iter = DeeType_InvokeMethodHint0(self, set_operator_iter);
+	iter = CALL_DEPENDENCY(set_operator_iter, self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeIterator_Foreach(iter, cb, arg);
@@ -134,7 +134,7 @@ __set_iter__.set_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
 	struct default_foreach_pair_with_foreach_data data;
 	data.dfpwf_cb  = cb;
 	data.dfpwf_arg = arg;
-	return DeeType_InvokeMethodHint(self, set_operator_foreach, &default_foreach_pair_with_foreach_cb, &data);
+	return CALL_DEPENDENCY(set_operator_foreach, self, &default_foreach_pair_with_foreach_cb, &data);
 }} = $with__set_operator_foreach;
 
 set_operator_iter = {

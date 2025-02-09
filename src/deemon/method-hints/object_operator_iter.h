@@ -24,35 +24,6 @@
 
 operator {
 
-%[define(DEFINE_default_foreach_with_foreach_pair_cb =
-#ifndef DEFINED_default_foreach_with_foreach_pair_cb
-#define DEFINED_default_foreach_with_foreach_pair_cb
-struct default_foreach_with_foreach_pair_data {
-	Dee_foreach_t dfwfp_cb;  /* [1..1] Underlying callback. */
-	void         *dfwfp_arg; /* Cookie for `dfwfp_cb' */
-};
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
-default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
-	struct default_foreach_with_foreach_pair_data *data;
-	Dee_ssize_t result;
-	DREF DeeTupleObject *pair;
-	data = (struct default_foreach_with_foreach_pair_data *)arg;
-	pair = DeeTuple_NewUninitializedPair();
-	if unlikely(!pair)
-		goto err;
-	pair->t_elem[0] = key;   /* Symbolic reference */
-	pair->t_elem[1] = value; /* Symbolic reference */
-	result = (*data->dfwfp_cb)(data->dfwfp_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic((DREF DeeObject *)pair);
-	return result;
-err:
-	return -1;
-}
-#endif /* !DEFINED_default_foreach_with_foreach_pair_cb */
-)]
-
-
 [[wunused]] DREF DeeObject *
 tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
 %{class {
@@ -74,6 +45,45 @@ tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
 }} = OPERATOR_ITER;
 
 
+
+
+%[define(DECLARE_default_foreach_with_foreach_pair_cb =
+#ifndef DECLARED_default_foreach_with_foreach_pair_cb
+#define DECLARED_default_foreach_with_foreach_pair_cb
+struct default_foreach_with_foreach_pair_data {
+	Dee_foreach_t dfwfp_cb;  /* [1..1] Underlying callback. */
+	void         *dfwfp_arg; /* Cookie for `dfwfp_cb' */
+};
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+#endif /* !DECLARED_default_foreach_with_foreach_pair_cb */
+)]
+
+
+%[define(DEFINE_default_foreach_with_foreach_pair_cb =
+DECLARE_default_foreach_with_foreach_pair_cb
+#ifndef DEFINED_default_foreach_with_foreach_pair_cb
+#define DEFINED_default_foreach_with_foreach_pair_cb
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_foreach_with_foreach_pair_data *data;
+	Dee_ssize_t result;
+	DREF DeeTupleObject *pair;
+	data = (struct default_foreach_with_foreach_pair_data *)arg;
+	pair = DeeTuple_NewUninitializedPair();
+	if unlikely(!pair)
+		goto err;
+	pair->t_elem[0] = key;   /* Symbolic reference */
+	pair->t_elem[1] = value; /* Symbolic reference */
+	result = (*data->dfwfp_cb)(data->dfwfp_arg, (DeeObject *)pair);
+	DeeTuple_DecrefSymbolic((DREF DeeObject *)pair);
+	return result;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_foreach_with_foreach_pair_cb */
+)]
 
 
 [[wunused]] Dee_ssize_t
@@ -100,23 +110,34 @@ err:
 
 
 
-%[define(DEFINE_default_foreach_pair_with_foreach_cb =
-#ifndef DEFINED_default_foreach_pair_with_foreach_cb
-#define DEFINED_default_foreach_pair_with_foreach_cb
+
+%[define(DECLARE_default_foreach_pair_with_foreach_cb =
+#ifndef DECLARED_default_foreach_pair_with_foreach_cb
+#define DECLARED_default_foreach_pair_with_foreach_cb
 struct default_foreach_pair_with_foreach_data {
 	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
 	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem);
+#endif /* !DECLARED_default_foreach_pair_with_foreach_cb */
+)]
+
+
+%[define(DEFINE_default_foreach_pair_with_foreach_cb =
+DECLARE_default_foreach_pair_with_foreach_cb
+#ifndef DEFINED_default_foreach_pair_with_foreach_cb
+#define DEFINED_default_foreach_pair_with_foreach_cb
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
 	struct default_foreach_pair_with_foreach_data *data;
 	Dee_ssize_t result;
 	data = (struct default_foreach_pair_with_foreach_data *)arg;
 	if likely(DeeTuple_Check(elem) && DeeTuple_SIZE(elem) == 2) {
 		result = (*data->dfpwf_cb)(data->dfpwf_arg,
-		                             DeeTuple_GET(elem, 0),
-		                             DeeTuple_GET(elem, 1));
+		                           DeeTuple_GET(elem, 0),
+		                           DeeTuple_GET(elem, 1));
 	} else {
 		DREF DeeObject *pair[2];
 		if unlikely(DeeObject_Unpack(elem, 2, pair))
@@ -136,6 +157,12 @@ err:
 [[wunused]] Dee_ssize_t
 tp_seq->tp_foreach_pair([[nonnull]] DeeObject *__restrict self,
                         [[nonnull]] Dee_foreach_pair_t cb, void *arg)
+%{using tp_seq->tp_foreach: [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
+	struct default_foreach_pair_with_foreach_data data;
+	data.dfpwf_cb  = cb;
+	data.dfpwf_arg = arg;
+	return CALL_DEPENDENCY(tp_seq->tp_foreach, self, &default_foreach_pair_with_foreach_cb, &data);
+}}
 %{using tp_seq->tp_iter: {
 	Dee_ssize_t result;
 	DREF DeeObject *iter = CALL_DEPENDENCY(tp_seq->tp_iter, self);
@@ -146,12 +173,6 @@ tp_seq->tp_foreach_pair([[nonnull]] DeeObject *__restrict self,
 	return result;
 err:
 	return -1;
-}}
-%{using tp_seq->tp_foreach: [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
-	struct default_foreach_pair_with_foreach_data data;
-	data.dfpwf_cb  = cb;
-	data.dfpwf_arg = arg;
-	return CALL_DEPENDENCY(tp_seq->tp_foreach, self, &default_foreach_pair_with_foreach_cb, &data);
 }} = OPERATOR_ITER;
 
 

@@ -25,7 +25,7 @@ __seq_hash__()->?Dint {
 	Dee_hash_t result;
 	if (DeeArg_Unpack(argc, argv, ":__seq_hash__"))
 		goto err;
-	result = DeeType_InvokeMethodHint0(self, seq_operator_hash);
+	result = CALL_DEPENDENCY(seq_operator_hash, self);
 	return DeeInt_NewHash(result);
 err:
 	return NULL;
@@ -65,9 +65,176 @@ Dee_hash_t __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *self)
 	struct default_seq_hash_with_foreach_data data;
 	data.sqhwf_result   = DEE_HASHOF_EMPTY_SEQUENCE;
 	data.sqhwf_nonempty = false;
-	if unlikely(DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_seq_hash_with_foreach_cb, &data))
+	if unlikely(CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_hash_with_foreach_cb, &data))
 		goto err;
 	return data.sqhwf_result;
+err:
+	return DeeSeq_HandleHashError(self);
+}}
+%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
+	Dee_hash_t result;
+	DREF DeeObject *elem;
+	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size == 0)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	tp_getitem_index_fast = THIS_TYPE->tp_seq->tp_getitem_index_fast;
+	elem = (*tp_getitem_index_fast)(self, 0);
+	if unlikely(!elem) {
+		result = DEE_HASHOF_UNBOUND_ITEM;
+	} else {
+		result = DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	for (i = 1; i < size; ++i) {
+		Dee_hash_t elem_hash;
+		elem = (*tp_getitem_index_fast)(self, i);
+		if unlikely(!elem) {
+			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+		} else {
+			elem_hash = DeeObject_Hash(elem);
+			Dee_Decref(elem);
+		}
+		result = Dee_HashCombine(result, elem_hash);
+	}
+	return result;
+err:
+	return DeeSeq_HandleHashError(self);
+}}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	Dee_hash_t result;
+	DREF DeeObject *elem;
+	PRELOAD_DEPENDENCY(seq_operator_trygetitem_index)
+	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size == 0)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	elem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, 0);
+	if unlikely(!elem)
+		goto err;
+	if unlikely(elem == ITER_DONE) {
+		result = DEE_HASHOF_UNBOUND_ITEM;
+	} else {
+		result = DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	for (i = 1; i < size; ++i) {
+		Dee_hash_t elem_hash;
+		elem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, i);
+		if unlikely(!elem)
+			goto err;
+		if unlikely(elem == ITER_DONE) {
+			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+		} else {
+			elem_hash = DeeObject_Hash(elem);
+			Dee_Decref(elem);
+		}
+		result = Dee_HashCombine(result, elem_hash);
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err:
+	return DeeSeq_HandleHashError(self);
+}}
+%{$with__seq_operator_size__and__seq_operator_getitem_index = {
+	Dee_hash_t result;
+	DREF DeeObject *elem;
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
+	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size == 0)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	elem = CALL_DEPENDENCY(seq_operator_getitem_index, self, 0);
+	if unlikely(!elem) {
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err;
+		result = DEE_HASHOF_UNBOUND_ITEM;
+	} else {
+		result = DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	for (i = 1; i < size; ++i) {
+		Dee_hash_t elem_hash;
+		elem = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
+		if unlikely(!elem) {
+			if (!DeeError_Catch(&DeeError_UnboundItem))
+				goto err;
+			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+		} else {
+			elem_hash = DeeObject_Hash(elem);
+			Dee_Decref(elem);
+		}
+		result = Dee_HashCombine(result, elem_hash);
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err:
+	return DeeSeq_HandleHashError(self);
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_getitem = {
+	int temp;
+	Dee_hash_t result;
+	DREF DeeObject *indexob, *elem;
+	PRELOAD_DEPENDENCY(seq_operator_getitem)
+	DREF DeeObject *sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	if unlikely(!sizeob)
+		goto err;
+	indexob = DeeObject_NewDefault(Dee_TYPE(sizeob));
+	if unlikely(!indexob)
+		goto err_sizeob;
+	temp = DeeObject_CmpLoAsBool(indexob, sizeob);
+	if (temp <= 0) {
+		if unlikely(temp < 0)
+			goto err_sizeob_indexob;
+		Dee_Decref(indexob);
+		Dee_Decref(sizeob);
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	}
+	elem = CALL_DEPENDENCY(seq_operator_getitem, self, indexob);
+	if unlikely(!elem) {
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err_sizeob_indexob;
+		result = DEE_HASHOF_UNBOUND_ITEM;
+	} else {
+		result = DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	for (;;) {
+		Dee_hash_t elem_hash;
+		if (DeeObject_Inc(&indexob))
+			goto err_sizeob_indexob;
+		temp = DeeObject_CmpLoAsBool(indexob, sizeob);
+		if (temp <= 0) {
+			if unlikely(temp < 0)
+				goto err_sizeob_indexob;
+			break;
+		}
+		elem = CALL_DEPENDENCY(seq_operator_getitem, self, indexob);
+		if unlikely(!elem) {
+			if (!DeeError_Catch(&DeeError_UnboundItem))
+				goto err_sizeob_indexob;
+			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+		} else {
+			elem_hash = DeeObject_Hash(elem);
+			Dee_Decref(elem);
+		}
+		result = Dee_HashCombine(result, elem_hash);
+		if (DeeThread_CheckInterrupt())
+			goto err_sizeob_indexob;
+	}
+	Dee_Decref(indexob);
+	Dee_Decref(sizeob);
+	return result;
+err_sizeob_indexob:
+	Dee_Decref(indexob);
+err_sizeob:
+	Dee_Decref(sizeob);
 err:
 	return DeeSeq_HandleHashError(self);
 }}
@@ -87,10 +254,19 @@ err:
 	return DeeSeq_HandleHashError(self);
 }
 
+
 seq_operator_hash = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast)
+		return &$with__seq_operator_size__and__operator_getitem_index_fast;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index)
+		return &$with__seq_operator_size__and__seq_operator_getitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &$with__seq_operator_sizeob__and__seq_operator_getitem;
 	if (seq_operator_foreach)
 		return $with__seq_operator_foreach;
 };

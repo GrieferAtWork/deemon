@@ -24,7 +24,7 @@
 __seq_iter__()->?DIterator {
 	if (DeeArg_Unpack(argc, argv, ":__seq_iter__"))
 		goto err;
-	return DeeType_InvokeMethodHint0(self, seq_operator_iter);
+	return CALL_DEPENDENCY(seq_operator_iter, self);
 err:
 	return NULL;
 }
@@ -34,19 +34,364 @@ err:
 __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
 %{$empty = { return_empty_iterator; }}
-{
+%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(DefaultIterator_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->disgi_seq              = self;
+	result->disgi_tp_getitem_index = THIS_TYPE->tp_seq->tp_getitem_index_fast;
+	result->disgi_index            = 0;
+	result->disgi_end              = size;
+	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFast_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(DefaultIterator_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->disgi_seq              = self;
+	result->disgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_trygetitem_index);
+	result->disgi_index            = 0;
+	result->disgi_end              = size;
+	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}}
+%{$with__seq_operator_size__and__seq_operator_getitem_index = {
+	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(DefaultIterator_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->disgi_seq              = self;
+	result->disgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_getitem_index);
+	result->disgi_index            = 0;
+	result->disgi_end              = size;
+	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}}
+%{$with__seq_operator_getitem_index = {
+	DREF DefaultIterator_WithGetItemIndex *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->digi_seq              = self;
+	result->digi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_getitem_index);
+	result->digi_index            = 0;
+	DeeObject_Init(result, &DefaultIterator_WithGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_getitem = {
+	DREF DefaultIterator_WithSizeObAndGetItem *result;
+	DREF DeeObject *sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	if unlikely(!sizeob)
+		goto err;
+	result = DeeGCObject_MALLOC(DefaultIterator_WithSizeObAndGetItem);
+	if unlikely(!result)
+		goto err_size_ob;
+	result->disg_index = DeeObject_NewDefault(Dee_TYPE(sizeob));
+	if unlikely(!result->disg_index) {
+		DeeGCObject_FREE(result);
+		goto err_size_ob;
+	}
+	Dee_Incref(self);
+	result->disg_seq        = self; /* Inherit reference */
+	result->disg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
+	result->disg_end        = sizeob; /* Inherit reference */
+	Dee_atomic_lock_init(&result->disg_lock);
+	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
+	return DeeGC_Track((DREF DeeObject *)result);
+err_size_ob:
+	Dee_Decref(sizeob);
+err:
+	return NULL;
+}}
+%{$with__seq_operator_getitem = {
+	DREF DefaultIterator_WithGetItem *result;
+	result = DeeGCObject_MALLOC(DefaultIterator_WithGetItem);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(DeeInt_Zero);
+	result->dig_index = DeeInt_Zero;
+	Dee_Incref(self);
+	result->dig_seq        = self; /* Inherit reference */
+	result->dig_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
+	Dee_atomic_lock_init(&result->dig_lock);
+	DeeObject_Init(result, &DefaultIterator_WithGetItem_Type);
+	return DeeGC_Track((DREF DeeObject *)result);
+err:
+	return NULL;
+}}
+%{$with__map_enumerate = {
+	/* TODO: Custom iterator type that uses "tp_enumerate" */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}}
+%{$with__map_iterkeys__and__map_operator_trygetitem = {
+	/* Custom iterator type:
+	 * >> local it = self.operator iterkeys();
+	 * >> return (() -> {
+	 * >>     foreach (local key: it) {
+	 * >>         local value = self.trygetitem(key);
+	 * >>         if (value != ITER_DONE)
+	 * >>             yield (key, value);
+	 * >>     }
+	 * >> })().operator iter();
+	 */
+	DREF DefaultIterator_WithIterKeysAndGetItem *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
+	if unlikely(!result)
+		goto err;
+	result->diikgi_iter = CALL_DEPENDENCY(map_iterkeys, self);
+	if unlikely(!result->diikgi_iter)
+		goto err_r;
+	if unlikely(!Dee_TYPE(result->diikgi_iter)->tp_iter_next &&
+	            !DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
+		goto err_r_iter_no_iter_next;
+	Dee_Incref(self);
+	result->diikgi_seq        = self;
+	result->diikgi_tp_next    = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	result->diikgi_tp_getitem = REQUIRE_DEPENDENCY(map_operator_trygetitem);
+	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type);
+	return (DREF DeeObject *)result;
+err_r_iter_no_iter_next:
+	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
+/*err_r_iter:*/
+	Dee_Decref(result->diikgi_iter);
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}}
+%{$with__map_iterkeys__and__map_operator_getitem = {
+	/* Custom iterator type:
+	 * >> local it = self.operator iterkeys();
+	 * >> return (() -> {
+	 * >>     foreach (local key: it) {
+	 * >>         local value = self.trygetitem(key);
+	 * >>         if (value != ITER_DONE)
+	 * >>             yield (key, value);
+	 * >>     }
+	 * >> })().operator iter();
+	 */
+	DREF DefaultIterator_WithIterKeysAndGetItem *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
+	if unlikely(!result)
+		goto err;
+	result->diikgi_iter = CALL_DEPENDENCY(map_iterkeys, self);
+	if unlikely(!result->diikgi_iter)
+		goto err_r;
+	if unlikely(!Dee_TYPE(result->diikgi_iter)->tp_iter_next &&
+	            !DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
+		goto err_r_iter_no_iter_next;
+	Dee_Incref(self);
+	result->diikgi_seq        = self;
+	result->diikgi_tp_next    = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	result->diikgi_tp_getitem = REQUIRE_DEPENDENCY(map_operator_getitem);
+	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
+	return (DREF DeeObject *)result;
+err_r_iter_no_iter_next:
+	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
+/*err_r_iter:*/
+	Dee_Decref(result->diikgi_iter);
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}} {
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
+
+
+
+%[define(DEFINE_default_foreach_with_map_enumerate_cb =
+#ifndef DEFINED_default_foreach_with_map_enumerate_cb
+#define DEFINED_default_foreach_with_map_enumerate_cb
+struct default_foreach_with_map_enumerate_data {
+	Dee_foreach_t dfwme_cb;  /* [1..1] Underlying callback */
+	void         *dfwme_arg; /* [?..?] Cookie for `dfwme_cb' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_foreach_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	Dee_ssize_t result;
+	DREF DeeTupleObject *pair;
+	struct default_foreach_with_map_enumerate_data *data;
+	data = (struct default_foreach_with_map_enumerate_data *)arg;
+	if unlikely(!value)
+		return 0;
+	pair = DeeTuple_NewUninitializedPair();
+	if unlikely(!pair)
+		goto err;
+	pair->t_elem[0] = key;
+	pair->t_elem[1] = value;
+	result = (*data->dfwme_cb)(data->dfwme_arg, (DeeObject *)pair);
+	DeeTuple_DecrefSymbolic((DREF DeeObject *)pair);
+	return result;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_foreach_with_map_enumerate_cb */
+)]
 
 [[operator([Sequence,Set,Mapping].OPERATOR_ITER: tp_seq->tp_foreach)]]
 [[wunused]] Dee_ssize_t
 __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,
                                   void *arg)
-%{$empty = 0} %{$with__seq_operator_iter = {
+%{$empty = 0}
+%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
+	Dee_ssize_t temp, result = 0;
+	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	tp_getitem_index_fast = THIS_TYPE->tp_seq->tp_getitem_index_fast;
+	ASSERT(tp_getitem_index_fast);
+	for (i = 0; i < size; ++i) {
+		DREF DeeObject *elem;
+		elem = (*tp_getitem_index_fast)(self, i);
+		if unlikely(!elem)
+			continue;
+		temp = (*cb)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+err:
+	return -1;
+}}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	Dee_ssize_t temp, result = 0;
+	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
+	PRELOAD_DEPENDENCY(seq_operator_trygetitem_index)
+	if unlikely(size == (size_t)-1)
+		goto err;
+	for (i = 0; i < size; ++i) {
+		DREF DeeObject *elem;
+		elem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, i);
+		if unlikely(!ITER_ISOK(elem)) {
+			if (elem == ITER_DONE)
+				continue; /* Unbound item */
+			if (DeeError_Catch(&DeeError_IndexError))
+				break; /* In case the sequence's length got truncated since we checked above. */
+			goto err;
+		}
+		temp = (*cb)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+err:
+	return -1;
+}}
+%{$with__seq_operator_size__and__seq_operator_getitem_index = {
+	Dee_ssize_t temp, result = 0;
+	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
+	if unlikely(size == (size_t)-1)
+		goto err;
+	for (i = 0; i < size; ++i) {
+		DREF DeeObject *elem;
+		elem = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break; /* In case the sequence's length got truncated since we checked above. */
+			goto err;
+		}
+		temp = (*cb)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+err:
+	return -1;
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_getitem = {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *i, *size = CALL_DEPENDENCY(seq_operator_sizeob, self);
+	PRELOAD_DEPENDENCY(seq_operator_getitem)
+	if unlikely(!size)
+		goto err;
+	i = DeeObject_NewDefault(Dee_TYPE(size));
+	if unlikely(!i)
+		goto err_size;
+	for (;;) {
+		DREF DeeObject *elem;
+		int cmp_status;
+		cmp_status = DeeObject_CmpLoAsBool(i, size);
+		if unlikely(cmp_status < 0)
+			goto err_size_i;
+		if (!cmp_status)
+			break;
+		elem = CALL_DEPENDENCY(seq_operator_getitem, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break; /* In case the sequence's length got truncated since we checked above. */
+			goto err_size_i;
+		}
+		temp = (*cb)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0) {
+			result = temp;
+			break;
+		}
+		result += temp;
+		if (DeeObject_Inc(&i))
+			goto err_size_i;
+	}
+	Dee_Decref(i);
+	Dee_Decref(size);
+	return result;
+err_size_i:
+	Dee_Decref(i);
+err_size:
+	Dee_Decref(size);
+err:
+	return -1;
+}}
+%{$with__seq_operator_foreach_pair = [[prefix(DECLARE_default_foreach_with_foreach_pair_cb)]] {
+	struct default_foreach_with_foreach_pair_data data;
+	data.dfwfp_cb  = cb;
+	data.dfwfp_arg = arg;
+	return CALL_DEPENDENCY(seq_operator_foreach_pair, self, &default_foreach_with_foreach_pair_cb, &data);
+}}
+%{$with__seq_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
-	iter = DeeType_InvokeMethodHint0(self, seq_operator_iter);
+	iter = CALL_DEPENDENCY(seq_operator_iter, self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeIterator_Foreach(iter, cb, arg);
@@ -54,22 +399,39 @@ __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
 	return result;
 err:
 	return -1;
+}}
+%{$with__map_enumerate = [[prefix(DEFINE_default_foreach_with_map_enumerate_cb)]] {
+	struct default_foreach_with_map_enumerate_data data;
+	data.dfwme_cb  = cb;
+	data.dfwme_arg = arg;
+	return CALL_DEPENDENCY(map_enumerate, self, &default_foreach_with_map_enumerate_cb, &data);
 }} = $with__seq_operator_iter;
 
 
-%[define(DEFINE_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb =
-#ifndef DEFINED_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb
-#define DEFINED_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb
-struct default_seq_operator_foreach_pair__with__seq_operator_foreach_data {
-	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
-	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
+
+
+
+
+
+
+%[define(DEFINE_default_foreach_pair_with_map_enumerate_cb =
+#ifndef DEFINED_default_foreach_pair_with_map_enumerate_cb
+#define DEFINED_default_foreach_pair_with_map_enumerate_cb
+struct default_foreach_pair_with_map_enumerate_data {
+	Dee_foreach_pair_t dfpwme_cb;  /* [1..1] Underlying callback */
+	void              *dfpwme_arg; /* [?..?] Cookie for `dfpwme_cb' */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_seq_operator_foreach_pair__with__seq_operator_foreach_cb(void *arg, DeeObject *elem);
-#endif /* !DEFINED_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_foreach_pair_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_foreach_pair_with_map_enumerate_data *data;
+	data = (struct default_foreach_pair_with_map_enumerate_data *)arg;
+	if likely(value)
+		return (*data->dfpwme_cb)(data->dfpwme_arg, key, value);
+	return 0;
+}
+#endif /* !DEFINED_default_foreach_pair_with_map_enumerate_cb */
 )]
-
 
 [[operator([Sequence,Set,Mapping].OPERATOR_ITER: tp_seq->tp_foreach_pair)]]
 [[wunused]] Dee_ssize_t
@@ -77,10 +439,16 @@ __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
                                        void *arg)
 %{$empty = 0}
+%{$with__seq_operator_foreach = [[prefix(DECLARE_default_foreach_pair_with_foreach_cb)]] {
+	struct default_foreach_pair_with_foreach_data data;
+	data.dfpwf_cb  = cb;
+	data.dfpwf_arg = arg;
+	return CALL_DEPENDENCY(seq_operator_foreach, self, &default_foreach_pair_with_foreach_cb, &data);
+}}
 %{$with__seq_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
-	iter = DeeType_InvokeMethodHint0(self, seq_operator_iter);
+	iter = CALL_DEPENDENCY(seq_operator_iter, self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeIterator_ForeachPair(iter, cb, arg);
@@ -89,21 +457,65 @@ __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
 err:
 	return -1;
 }}
-%{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_operator_foreach_pair__with__seq_operator_foreach_cb)]] {
-	struct default_seq_operator_foreach_pair__with__seq_operator_foreach_data data;
-	data.dfpwf_cb  = cb;
-	data.dfpwf_arg = arg;
-	return DeeType_InvokeMethodHint(self, seq_operator_foreach, &default_seq_operator_foreach_pair__with__seq_operator_foreach_cb, &data);
+%{$with__map_enumerate = [[prefix(DEFINE_default_foreach_pair_with_map_enumerate_cb)]] {
+	struct default_foreach_pair_with_map_enumerate_data data;
+	data.dfpwme_cb  = cb;
+	data.dfpwme_arg = arg;
+	return CALL_DEPENDENCY(map_enumerate, self, &default_foreach_pair_with_map_enumerate_cb, &data);
 }} = $with__seq_operator_foreach;
 
-//seq_operator_iter = {
-//	// TODO: $with__seq_operator_getitem_index__and__seq_operator_size
-//};
+
+
+
+seq_operator_iter = {
+	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_NODEFAULT(seq_operator_size);
+	if (seq_operator_size) {
+		if (seq_operator_size == &default__seq_operator_size__empty)
+			return &$empty;
+		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast)
+			return &$with__seq_operator_size__and__operator_getitem_index_fast;
+		if (REQUIRE_NODEFAULT(seq_operator_trygetitem_index))
+			return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+		if (REQUIRE_NODEFAULT(seq_operator_getitem_index))
+			return &$with__seq_operator_size__and__seq_operator_getitem_index;
+		if (REQUIRE_NODEFAULT(seq_operator_getitem) || REQUIRE_NODEFAULT(seq_operator_trygetitem))
+			return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+	} else {
+		if (REQUIRE_NODEFAULT(seq_operator_getitem_index) ||
+		    REQUIRE_NODEFAULT(seq_operator_trygetitem_index))
+			return &$with__seq_operator_getitem_index;
+		if (REQUIRE_NODEFAULT(seq_operator_getitem) ||
+		    REQUIRE_NODEFAULT(seq_operator_trygetitem))
+			return &$with__seq_operator_getitem;
+	}
+	if (REQUIRE_NODEFAULT(map_enumerate))
+		return &$with__map_enumerate;
+	if (REQUIRE_NODEFAULT(map_iterkeys)) {
+		if (REQUIRE_NODEFAULT(map_operator_trygetitem))
+			return &$with__map_iterkeys__and__map_operator_trygetitem;
+		if (REQUIRE_NODEFAULT(map_operator_getitem))
+			return &$with__map_iterkeys__and__map_operator_getitem;
+	}
+};
+
 
 seq_operator_foreach = {
-	DeeMH_seq_operator_iter_t seq_operator_iter = REQUIRE(seq_operator_iter);
+	DeeMH_seq_operator_iter_t seq_operator_iter;
+	if (REQUIRE_NODEFAULT(seq_operator_foreach_pair))
+		return &$with__seq_operator_foreach_pair;
+	seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast)
+		return &$with__seq_operator_size__and__operator_getitem_index_fast;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_getitem_index)
+		return &$with__seq_operator_size__and__seq_operator_getitem_index;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate)
+		return &$with__map_enumerate;
 	if (seq_operator_iter)
 		return &$with__seq_operator_iter;
 };
@@ -114,6 +526,8 @@ seq_operator_foreach_pair = {
 		return &$empty;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_iter)
 		return &$with__seq_operator_iter;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__map_enumerate)
+		return &$with__map_enumerate;
 	if (seq_operator_foreach)
 		return &$with__seq_operator_foreach;
 };

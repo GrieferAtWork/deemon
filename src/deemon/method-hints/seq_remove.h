@@ -31,8 +31,8 @@ __seq_remove__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Db
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeType_InvokeMethodHint(self, seq_remove_with_key, item, start, end, key)
-	         : DeeType_InvokeMethodHint(self, seq_remove, item, start, end);
+	         ? CALL_DEPENDENCY(seq_remove_with_key, self, item, start, end, key)
+	         : CALL_DEPENDENCY(seq_remove, self, item, start, end);
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
@@ -53,7 +53,7 @@ __seq_remove__.seq_remove([[nonnull]] DeeObject *self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_removeall = {
 	size_t result;
-	result = DeeType_InvokeMethodHint(self, seq_removeall, item, start, end, 1);
+	result = CALL_DEPENDENCY(seq_removeall, self, item, start, end, 1);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return result ? 1 : 0;
@@ -64,12 +64,12 @@ err:
 	// TODO
 }}
 %{$with__seq_find__and__seq_operator_delitem_index = {
-	size_t index = DeeType_InvokeMethodHint(self, seq_find, item, start, end);
+	size_t index = CALL_DEPENDENCY(seq_find, self, item, start, end);
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if (index == (size_t)-1)
 		return 0;
-	if unlikely(DeeType_InvokeMethodHint(self, seq_operator_delitem_index, index))
+	if unlikely(CALL_DEPENDENCY(seq_operator_delitem_index, self, index))
 		goto err;
 	return 1;
 err:
@@ -98,7 +98,7 @@ __seq_remove__.seq_remove_with_key([[nonnull]] DeeObject *self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_removeall = {
 	size_t result;
-	result = DeeType_InvokeMethodHint(self, seq_removeall_with_key, item, start, end, 1, key);
+	result = CALL_DEPENDENCY(seq_removeall_with_key, self, item, start, end, 1, key);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return result ? 1 : 0;
@@ -109,12 +109,12 @@ err:
 	// TODO
 }}
 %{$with__seq_find_with_key__and__seq_operator_delitem_index = {
-	size_t index = DeeType_InvokeMethodHint(self, seq_find_with_key, item, start, end, key);
+	size_t index = CALL_DEPENDENCY(seq_find_with_key, self, item, start, end, key);
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if (index == (size_t)-1)
 		return 0;
-	if unlikely(DeeType_InvokeMethodHint(self, seq_operator_delitem_index, index))
+	if unlikely(CALL_DEPENDENCY(seq_operator_delitem_index, self, index))
 		goto err;
 	return 1;
 err:

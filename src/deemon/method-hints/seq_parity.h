@@ -32,12 +32,12 @@ __seq_parity__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool {
 		goto err;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? DeeType_InvokeMethodHint(self, seq_parity_with_key, key)
-		         : DeeType_InvokeMethodHint0(self, seq_parity);
+		         ? CALL_DEPENDENCY(seq_parity_with_key, self, key)
+		         : CALL_DEPENDENCY(seq_parity, self);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? DeeType_InvokeMethodHint(self, seq_parity_with_range_and_key, start, end, key)
-		         : DeeType_InvokeMethodHint(self, seq_parity_with_range, start, end);
+		         ? CALL_DEPENDENCY(seq_parity_with_range_and_key, self, start, end, key)
+		         : CALL_DEPENDENCY(seq_parity_with_range, self, start, end);
 	}
 	if unlikely(result < 0)
 		goto err;
@@ -61,7 +61,7 @@ seq_parity_foreach_cb(void *arg, DeeObject *item) {
 int __seq_parity__.seq_parity([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_count = {
-	size_t count = DeeType_InvokeMethodHint(self, seq_count, Dee_True);
+	size_t count = CALL_DEPENDENCY(seq_count, self, Dee_True);
 	if unlikely(count == (size_t)-1)
 		goto err;
 	return count & 1;
@@ -70,7 +70,7 @@ err:
 }}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_parity_foreach_cb, NULL);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_parity_foreach_cb, NULL);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -108,7 +108,7 @@ int __seq_parity__.seq_parity_with_key([[nonnull]] DeeObject *self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_operator_foreach, &seq_parity_foreach_with_key_cb, key);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_parity_foreach_with_key_cb, key);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -148,7 +148,7 @@ int __seq_parity__.seq_parity_with_range([[nonnull]] DeeObject *__restrict self,
                                          size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_count_with_range = {
-	size_t count = DeeType_InvokeMethodHint(self, seq_count_with_range, Dee_True, start, end);
+	size_t count = CALL_DEPENDENCY(seq_count_with_range, self, Dee_True, start, end);
 	if unlikely(count == (size_t)-1)
 		goto err;
 	return count & 1;
@@ -157,7 +157,7 @@ err:
 }}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_parity_enumerate_cb, NULL, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_parity_enumerate_cb, NULL, start, end);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;
@@ -194,7 +194,7 @@ int __seq_parity__.seq_parity_with_range_and_key([[nonnull]] DeeObject *self,
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
-	foreach_status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_parity_enumerate_with_key_cb, key, start, end);
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_parity_enumerate_with_key_cb, key, start, end);
 	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
 	if (foreach_status == -2)
 		return 0;

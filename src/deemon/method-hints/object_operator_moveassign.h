@@ -19,56 +19,24 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.insert()                                             */
+/* deemon.Object.operator move:=()                                      */
 /************************************************************************/
-[[kw, alias(Sequence.insert -> "seq_insert"), declNameAlias("explicit_seq_insert")]]
-__seq_insert__(index:?Dint,item) {
-	size_t index;
-	DeeObject *item;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "|" UNPuSIZ ":__seq_insert__",
-	                    &index, &item))
-		goto err;
-	if unlikely(CALL_DEPENDENCY(seq_insert, self, index, item))
-		goto err;
-	return_none;
-err:
-	return NULL;
-}
 
+operator {
 
-[[wunused]]
-int __seq_insert__.seq_insert([[nonnull]] DeeObject *self, size_t index,
-                              [[nonnull]] DeeObject *item)
-%{unsupported(auto)}
-%{$empty = "default__seq_insert__unsupported"}
-%{$with__seq_insertall = {
-	int result;
-	DREF DeeTupleObject *item_tuple;
-	item_tuple = DeeTuple_NewUninitialized(1);
-	if unlikely(!item_tuple)
-		goto err;
-	DeeTuple_SET(item_tuple, 0, item);
-	result = CALL_DEPENDENCY(seq_insertall, self, index, (DeeObject *)item_tuple);
-	DeeTuple_DecrefSymbolic((DeeObject *)item_tuple);
-	return result;
-err:
-	return -1;
-}} {
+[[wunused]] int
+tp_init.tp_move_assign([[nonnull]] DeeObject *self,
+                       [[nonnull]] DeeObject *value)
+%{class {
 	DREF DeeObject *result;
-	result = LOCAL_CALLATTRF(self, PCKuSIZ "o", index, item);
-	if unlikely(!result)
-		goto err;
-	Dee_Decref(result);
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_MOVEASSIGN, 1, &value);
+	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
 	return -1;
-}
+}}
+%{using tp_init.tp_assign: { /* TODO: Directly alias */
+	return CALL_DEPENDENCY(tp_init.tp_assign, self, value);
+}} = OPERATOR_MOVEASSIGN;
 
-seq_insert = {
-	DeeMH_seq_insertall_t seq_insertall = REQUIRE(seq_insertall);
-	if (seq_insertall == &default__seq_insertall__empty)
-		return &$empty;
-	if (seq_insertall)
-		return &$with__seq_insertall;
-};
+} /* operator */

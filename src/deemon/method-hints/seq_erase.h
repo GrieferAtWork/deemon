@@ -28,7 +28,7 @@ __seq_erase__(index:?Dint,count=!1) {
 	                    UNPuSIZ "|" UNPuSIZ ":__seq_erase__",
 	                    &index, &count))
 		goto err;
-	if unlikely(DeeType_InvokeMethodHint(self, seq_erase, index, count))
+	if unlikely(CALL_DEPENDENCY(seq_erase, self, index, count))
 		goto err;
 	return_none;
 err:
@@ -45,7 +45,7 @@ int __seq_erase__.seq_erase([[nonnull]] DeeObject *__restrict self,
 		goto err_overflow;
 	if unlikely(end_index > SSIZE_MAX)
 		goto err_overflow;
-	return DeeType_InvokeMethodHint(self, seq_operator_delrange_index, (Dee_ssize_t)index, (Dee_ssize_t)end_index);
+	return CALL_DEPENDENCY(seq_operator_delrange_index, self, (Dee_ssize_t)index, (Dee_ssize_t)end_index);
 err_overflow:
 	return err_integer_overflow_i((sizeof(size_t) * 8) - 1, true);
 }}

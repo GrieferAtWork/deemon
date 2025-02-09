@@ -520,7 +520,8 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 #define DeeInt_GetUlebMaxSize(self) \
 	((((size_t)((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size + 1) * DIGIT_BITS) / 7)
 
-#define DeeInt_IsNeg(self) (((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size < 0)
+#define DeeInt_IsNeg(self)  (((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size < 0)
+#define DeeInt_IsZero(self) (((DeeIntObject *)Dee_REQUIRES_OBJECT(self))->ob_size == 0)
 
 
 /* Return values for `DeeInt_TryAs*' */

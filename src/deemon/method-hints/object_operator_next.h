@@ -175,9 +175,9 @@ err:
 tp_iterator->tp_advance([[nonnull]] DeeObject *__restrict self, size_t step)
 %{using tp_iterator->tp_nextkey: {
 	size_t result = 0;
-	PRELOAD_DEPENDENCY(tp_iterator->tp_nextkey);
+	PRELOAD_DEPENDENCY(tp_iterator->tp_nextkey)
 	while (result < step) {
-		DREF DeeObject *elem = CALL_PRELOAD_DEPENDENCY(tp_iterator->tp_nextkey, self);
+		DREF DeeObject *elem = CALL_DEPENDENCY(tp_iterator->tp_nextkey, self);
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
 				goto err;
@@ -194,9 +194,9 @@ err:
 }}
 %{using tp_iterator->tp_nextvalue: {
 	size_t result = 0;
-	PRELOAD_DEPENDENCY(tp_iterator->tp_nextvalue);
+	PRELOAD_DEPENDENCY(tp_iterator->tp_nextvalue)
 	while (result < step) {
-		DREF DeeObject *elem = CALL_PRELOAD_DEPENDENCY(tp_iterator->tp_nextvalue, self);
+		DREF DeeObject *elem = CALL_DEPENDENCY(tp_iterator->tp_nextvalue, self);
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
 				goto err;
@@ -213,10 +213,10 @@ err:
 }}
 %{using tp_iterator->tp_nextpair: {
 	size_t result = 0;
-	PRELOAD_DEPENDENCY(tp_iterator->tp_nextpair);
+	PRELOAD_DEPENDENCY(tp_iterator->tp_nextpair)
 	while (result < step) {
 		DREF DeeObject *key_and_value[2];
-		int error = CALL_PRELOAD_DEPENDENCY(tp_iterator->tp_nextpair, self, key_and_value);
+		int error = CALL_DEPENDENCY(tp_iterator->tp_nextpair, self, key_and_value);
 		if unlikely(error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -234,9 +234,9 @@ err:
 }}
 %{using tp_iter_next: {
 	size_t result = 0;
-	PRELOAD_DEPENDENCY(tp_iter_next);
+	PRELOAD_DEPENDENCY(tp_iter_next)
 	while (result < step) {
-		DREF DeeObject *elem = CALL_PRELOAD_DEPENDENCY(tp_iter_next, self);
+		DREF DeeObject *elem = CALL_DEPENDENCY(tp_iter_next, self);
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
 				goto err;

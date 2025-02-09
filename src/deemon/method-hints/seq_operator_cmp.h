@@ -34,7 +34,7 @@ for (local op, eq, Eq, EQ, isEq: {
 	print('	DeeObject *rhs;');
 	print('	if (DeeArg_Unpack(argc, argv, "o:__seq_', eq, '__", &rhs))');
 	print('		goto err;');
-	print('	return DeeType_InvokeMethodHint(self, seq_operator_', eq, ', rhs);');
+	print('	return CALL_DEPENDENCY(seq_operator_', eq, ', self, rhs);');
 	print('err:');
 	print('	return NULL;');
 	print('}');
@@ -45,7 +45,7 @@ for (local op, eq, Eq, EQ, isEq: {
 	print('                           [[nonnull]] DeeObject *rhs)');
 	print('%{unsupported(auto("operator ', op, '"))}');
 	print('%{$with__seq_operator_compare', isEq ? '_eq' : '', ' = {');
-	print('	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare', isEq ? '_eq' : '', ', rhs);');
+	print('	int result = CALL_DEPENDENCY(seq_operator_compare', isEq ? '_eq' : '', ', lhs, rhs);');
 	print('	if unlikely(result == Dee_COMPARE_ERR)');
 	print('		goto err;');
 	print('	return_bool(result ', op, ' 0);');
@@ -71,7 +71,7 @@ __seq_eq__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_eq__", &rhs))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_eq, rhs);
+	return CALL_DEPENDENCY(seq_operator_eq, self, rhs);
 err:
 	return NULL;
 }
@@ -82,7 +82,7 @@ __seq_eq__.seq_operator_eq([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator =="))}
 %{$with__seq_operator_compare_eq = {
-	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare_eq, rhs);
+	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result == 0);
@@ -106,7 +106,7 @@ __seq_ne__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_ne__", &rhs))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_ne, rhs);
+	return CALL_DEPENDENCY(seq_operator_ne, self, rhs);
 err:
 	return NULL;
 }
@@ -117,7 +117,7 @@ __seq_ne__.seq_operator_ne([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator !="))}
 %{$with__seq_operator_compare_eq = {
-	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare_eq, rhs);
+	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result != 0);
@@ -141,7 +141,7 @@ __seq_lo__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_lo__", &rhs))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_lo, rhs);
+	return CALL_DEPENDENCY(seq_operator_lo, self, rhs);
 err:
 	return NULL;
 }
@@ -152,7 +152,7 @@ __seq_lo__.seq_operator_lo([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator <"))}
 %{$with__seq_operator_compare = {
-	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare, rhs);
+	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result < 0);
@@ -176,7 +176,7 @@ __seq_le__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_le__", &rhs))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_le, rhs);
+	return CALL_DEPENDENCY(seq_operator_le, self, rhs);
 err:
 	return NULL;
 }
@@ -187,7 +187,7 @@ __seq_le__.seq_operator_le([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator <="))}
 %{$with__seq_operator_compare = {
-	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare, rhs);
+	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result <= 0);
@@ -211,7 +211,7 @@ __seq_gr__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_gr__", &rhs))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_gr, rhs);
+	return CALL_DEPENDENCY(seq_operator_gr, self, rhs);
 err:
 	return NULL;
 }
@@ -222,7 +222,7 @@ __seq_gr__.seq_operator_gr([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator >"))}
 %{$with__seq_operator_compare = {
-	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare, rhs);
+	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result > 0);
@@ -246,7 +246,7 @@ __seq_ge__(rhs:?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_ge__", &rhs))
 		goto err;
-	return DeeType_InvokeMethodHint(self, seq_operator_ge, rhs);
+	return CALL_DEPENDENCY(seq_operator_ge, self, rhs);
 err:
 	return NULL;
 }
@@ -257,7 +257,7 @@ __seq_ge__.seq_operator_ge([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator >="))}
 %{$with__seq_operator_compare = {
-	int result = DeeType_InvokeMethodHint(lhs, seq_operator_compare, rhs);
+	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool(result >= 0);

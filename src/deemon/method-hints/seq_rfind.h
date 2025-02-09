@@ -30,8 +30,8 @@ __seq_rfind__(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Din
 	                    &item, &start, &end, &key))
 		goto err;
 	result = !DeeNone_Check(key)
-	         ? DeeType_InvokeMethodHint(self, seq_rfind_with_key, item, start, end, key)
-	         : DeeType_InvokeMethodHint(self, seq_rfind, item, start, end);
+	         ? CALL_DEPENDENCY(seq_rfind_with_key, self, item, start, end, key)
+	         : CALL_DEPENDENCY(seq_rfind, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
@@ -83,7 +83,7 @@ __seq_rfind__.seq_rfind([[nonnull]] DeeObject *self,
 	union seq_find_data data;
 	DeeMH_seq_enumerate_index_reverse_t renum;
 	data.gsfd_elem = item;
-	renum = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
+	renum = REQUIRE_DEPENDENCY(seq_enumerate_index_reverse);
 	ASSERT(renum);
 	status = (*renum)(self, &seq_find_cb, &data, start, end);
 	if likely(status == -2) {
@@ -102,7 +102,7 @@ err:
 	struct seq_rfind_data data;
 	data.gsrfd_elem   = item;
 	data.gsrfd_result = (size_t)-1;
-	status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_rfind_cb, &data, start, end);
+	status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_rfind_cb, &data, start, end);
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status == -1)
 		goto err;
@@ -175,7 +175,7 @@ __seq_rfind__.seq_rfind_with_key([[nonnull]] DeeObject *self,
 	if unlikely(!data.gsfwk_base.gsfd_elem)
 		goto err;
 	data.gsfwk_key = key;
-	renum = DeeType_TryRequireSeqEnumerateIndexReverse(Dee_TYPE(self));
+	renum = REQUIRE_DEPENDENCY(seq_enumerate_index_reverse);
 	ASSERT(renum);
 	status = (*renum)(self, &seq_find_with_key_cb, &data, start, end);
 	Dee_Decref(data.gsfwk_base.gsfd_elem);
@@ -197,7 +197,7 @@ err:
 	if unlikely(!data.gsrfwkd_kelem)
 		goto err;
 	data.gsrfwkd_result = (size_t)-1;
-	status = DeeType_InvokeMethodHint(self, seq_enumerate_index, &seq_rfind_with_key_cb, &data, start, end);
+	status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_rfind_with_key_cb, &data, start, end);
 	Dee_Decref(data.gsrfwkd_kelem);
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status == -1)

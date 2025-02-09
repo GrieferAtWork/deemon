@@ -19,44 +19,71 @@
  */
 
 /************************************************************************/
-/* deemon.Sequence.__iterkeys__()                                       */
+/* deemon.Mapping.__iterkeys__()                                       */
 /************************************************************************/
-__seq_iterkeys__()->?DIterator {
-	if (DeeArg_Unpack(argc, argv, ":__seq_iterkeys__"))
+__map_iterkeys__()->?DIterator {
+	if (DeeArg_Unpack(argc, argv, ":__map_iterkeys__"))
 		goto err;
-	return DeeType_InvokeMethodHint0(self, seq_iterkeys);
+	return CALL_DEPENDENCY(map_iterkeys, self);
 err:
 	return NULL;
 }
 
+
+
 [[wunused]] DREF DeeObject *
-__seq_iterkeys__.seq_iterkeys([[nonnull]] DeeObject *self)
+__map_iterkeys__.map_iterkeys([[nonnull]] DeeObject *self)
 %{unsupported(auto)}
-%{$empty = "default__seq_operator_iter__empty"}
-%{$with__seq_size = {
-	size_t size;
-	DREF IntRangeIterator *result;
-	size = DeeType_InvokeMethodHint0(self, seq_operator_size);
-	if unlikely(size == (size_t)-1)
-		goto err;
-	result = DeeObject_MALLOC(IntRangeIterator);
+%{$empty = "default__set_operator_iter__empty"}
+%{$with__map_enumerate = {
+	/* TODO: Custom iterator type that uses "tp_enumerate" */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}}
+%{$with__set_operator_iter = {
+	/* NOTE: This only works when the mapping can't have unbound keys! */
+	DeeTypeObject *itertyp;
+	DREF DefaultIterator_PairSubItem *result;
+	result = DeeObject_MALLOC(DefaultIterator_PairSubItem);
 	if unlikely(!result)
 		goto err;
-	result->iri_index = 0;
-	result->iri_end   = (Dee_ssize_t)size; /* TODO: Need another range iterator type that uses unsigned indices */
-	result->iri_step  = 1;
-	DeeObject_Init(result, &SeqIntRangeIterator_Type);
+	result->dipsi_iter = CALL_DEPENDENCY(set_operator_iter, self);
+	if unlikely(!result->dipsi_iter)
+		goto err_r;
+	itertyp = Dee_TYPE(result->dipsi_iter);
+	if unlikely((!itertyp->tp_iterator ||
+	             !itertyp->tp_iterator->tp_nextkey) &&
+	            !DeeType_InheritIterNext(itertyp))
+		goto err_r_iter_no_next;
+	ASSERT(itertyp->tp_iterator);
+	ASSERT(itertyp->tp_iterator->tp_nextkey);
+	result->dipsi_next = itertyp->tp_iterator->tp_nextkey;
+	DeeObject_Init(result, &DefaultIterator_WithNextKey);
 	return (DREF DeeObject *)result;
+err_r_iter_no_next:
+	Dee_Decref(result->dipsi_iter);
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+err_r:
+	DeeObject_FREE(result);
 err:
 	return NULL;
-}} {
+}}
+{
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
-seq_iterkeys = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+map_iterkeys = {
+	DeeMH_map_enumerate_t map_enumerate = REQUIRE(map_enumerate);
+	if (map_enumerate == &default__map_enumerate__empty)
 		return &$empty;
-	if (seq_operator_foreach)
-		return &$with__seq_size;
+	if (map_enumerate != REQUIRE(set_operator_foreach_pair)) {
+		DeeMH_set_operator_iter_t set_operator_iter = REQUIRE(set_operator_iter);
+		if (set_operator_iter == &default__set_operator_iter__empty)
+			return &$empty;
+		if (set_operator_iter)
+			return &$with__set_operator_iter;
+	}
+	if (map_enumerate)
+		return &$with__map_enumerate;
 };

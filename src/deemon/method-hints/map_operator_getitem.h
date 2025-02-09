@@ -25,7 +25,7 @@ __map_getitem__(key)->?O {
 	DeeObject *key;
 	if (DeeArg_Unpack(argc, argv, "o:__map_getitem__", &key))
 		goto err;
-	return DeeType_InvokeMethodHint(self, map_operator_getitem, key);
+	return CALL_DEPENDENCY(map_operator_getitem, self, key);
 err:
 	return NULL;
 }
@@ -53,11 +53,65 @@ __map_getitem__.map_operator_getitem([[nonnull]] DeeObject *self,
 	err_unknown_key(self, key);
 	return NULL;
 }}
+%{$with__map_operator_getitem_index__and__map_operator_getitem_string_len_hash = {
+	size_t key_value;
+	if (DeeString_Check(key)) {
+		return CALL_DEPENDENCY(map_operator_getitem_string_len_hash, self,
+		                       DeeString_STR(key),
+		                       DeeString_SIZE(key),
+		                       DeeString_Hash(key));
+	}
+	if (DeeObject_AsSize(key, &key_value))
+		goto err;
+	return CALL_DEPENDENCY(map_operator_getitem_index, self, key_value);
+err:
+	return NULL;
+}}
+%{$with__map_operator_getitem_index__and__map_operator_getitem_string_hash = {
+	size_t key_value;
+	if (DeeString_Check(key)) {
+		return CALL_DEPENDENCY(map_operator_getitem_string_hash, self,
+		                       DeeString_STR(key),
+		                       DeeString_Hash(key));
+	}
+	if (DeeObject_AsSize(key, &key_value))
+		goto err;
+	return CALL_DEPENDENCY(map_operator_getitem_index, self, key_value);
+err:
+	return NULL;
+}}
+%{$with__map_operator_getitem_string_len_hash = {
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
+		goto err;
+	return CALL_DEPENDENCY(map_operator_getitem_string_len_hash, self,
+	                       DeeString_STR(key),
+	                       DeeString_SIZE(key),
+	                       DeeString_Hash(key));
+err:
+	return NULL;
+}}
+%{$with__map_operator_getitem_string_hash = {
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
+		goto err;
+	return CALL_DEPENDENCY(map_operator_getitem_string_hash, self,
+	                       DeeString_STR(key),
+	                       DeeString_Hash(key));
+err:
+	return NULL;
+}}
+%{$with__map_operator_getitem_index = {
+	size_t key_value;
+	if (DeeObject_AsSize(key, &key_value))
+		goto err;
+	return CALL_DEPENDENCY(map_operator_getitem_index, self, key_value);
+err:
+	return NULL;
+}}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_with_enumerate_cb)]] {
 	struct default_map_getitem_with_enumerate_data data;
 	Dee_ssize_t status;
 	data.mgied_key = key;
-	status = DeeType_InvokeMethodHint(self, map_enumerate, &default_map_getitem_with_enumerate_cb, &data);
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_with_enumerate_cb, &data);
 	if likely(status == -2)
 		return data.mgied_result;
 	if unlikely(status == -3) {
@@ -76,7 +130,19 @@ err:
 
 
 map_operator_getitem = {
-	DeeMH_map_enumerate_t map_enumerate = REQUIRE(map_enumerate);
+	DeeMH_map_enumerate_t map_enumerate;
+	if (REQUIRE_NODEFAULT(map_operator_getitem_string_len_hash)) {
+		return REQUIRE_NODEFAULT(map_operator_getitem_index)
+		       ? &$with__map_operator_getitem_index__and__map_operator_getitem_string_len_hash
+		       : &$with__map_operator_getitem_string_len_hash;
+	} else if (REQUIRE_NODEFAULT(map_operator_getitem_string_hash)) {
+		return REQUIRE_NODEFAULT(map_operator_getitem_index)
+		       ? &$with__map_operator_getitem_index__and__map_operator_getitem_string_hash
+		       : &$with__map_operator_getitem_string_hash;
+	} else if (REQUIRE_NODEFAULT(map_operator_getitem_index)) {
+		return &$with__map_operator_getitem_index;
+	}
+	map_enumerate = REQUIRE(map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &$empty;
 	if (map_enumerate)
@@ -91,11 +157,65 @@ __map_getitem__.map_operator_trygetitem([[nonnull]] DeeObject *self,
                                         [[nonnull]] DeeObject *key)
 %{unsupported_alias("default__map_operator_getitem__unsupported")}
 %{$empty = ITER_DONE}
+%{$with__map_operator_trygetitem_index__and__map_operator_trygetitem_string_len_hash = {
+	size_t key_value;
+	if (DeeString_Check(key)) {
+		return CALL_DEPENDENCY(map_operator_trygetitem_string_len_hash, self,
+		                       DeeString_STR(key),
+		                       DeeString_SIZE(key),
+		                       DeeString_Hash(key));
+	}
+	if (DeeObject_AsSize(key, &key_value))
+		goto err;
+	return CALL_DEPENDENCY(map_operator_trygetitem_index, self, key_value);
+err:
+	return NULL;
+}}
+%{$with__map_operator_trygetitem_index__and__map_operator_trygetitem_string_hash = {
+	size_t key_value;
+	if (DeeString_Check(key)) {
+		return CALL_DEPENDENCY(map_operator_trygetitem_string_hash, self,
+		                       DeeString_STR(key),
+		                       DeeString_Hash(key));
+	}
+	if (DeeObject_AsSize(key, &key_value))
+		goto err;
+	return CALL_DEPENDENCY(map_operator_trygetitem_index, self, key_value);
+err:
+	if (DeeError_Catch(&DeeError_NotImplemented))
+		return ITER_DONE;
+	return NULL;
+}}
+%{$with__map_operator_trygetitem_string_len_hash = {
+	if (!DeeString_Check(key))
+		return ITER_DONE;
+	return CALL_DEPENDENCY(map_operator_trygetitem_string_len_hash, self,
+	                       DeeString_STR(key),
+	                       DeeString_SIZE(key),
+	                       DeeString_Hash(key));
+}}
+%{$with__map_operator_trygetitem_string_hash = {
+	if (!DeeString_Check(key))
+		return ITER_DONE;
+	return CALL_DEPENDENCY(map_operator_trygetitem_string_hash, self,
+	                       DeeString_STR(key),
+	                       DeeString_Hash(key));
+}}
+%{$with__map_operator_trygetitem_index = {
+	size_t key_value;
+	if (DeeObject_AsSize(key, &key_value))
+		goto err;
+	return CALL_DEPENDENCY(map_operator_trygetitem_index, self, key_value);
+err:
+	if (DeeError_Catch(&DeeError_NotImplemented))
+		return ITER_DONE;
+	return NULL;
+}}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_with_enumerate_cb)]] {
 	Dee_ssize_t status;
 	struct default_map_getitem_with_enumerate_data data;
 	data.mgied_key = key;
-	status = DeeType_InvokeMethodHint(self, map_enumerate, &default_map_getitem_with_enumerate_cb, &data);
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_with_enumerate_cb, &data);
 	if likely(status == -2)
 		return data.mgied_result;
 	if (status == -3 || status == 0)
@@ -105,7 +225,7 @@ __map_getitem__.map_operator_trygetitem([[nonnull]] DeeObject *self,
 }}
 %{$with__map_operator_getitem = {
 	DREF DeeObject *result;
-	result = DeeType_InvokeMethodHint(self, map_operator_getitem, key);
+	result = CALL_DEPENDENCY(map_operator_getitem, self, key);
 	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_IndexError) ||
 		    DeeError_Catch(&DeeError_KeyError) ||
@@ -116,11 +236,33 @@ __map_getitem__.map_operator_trygetitem([[nonnull]] DeeObject *self,
 }} = $with__map_operator_getitem;
 
 map_operator_trygetitem = {
-	DeeMH_map_operator_getitem_t map_operator_getitem = REQUIRE(map_operator_getitem);
+	DeeMH_map_operator_getitem_t map_operator_getitem;
+	if (REQUIRE_NODEFAULT(map_operator_trygetitem_string_len_hash)) {
+		return REQUIRE_NODEFAULT(map_operator_trygetitem_index)
+		       ? &$with__map_operator_trygetitem_index__and__map_operator_trygetitem_string_len_hash
+		       : &$with__map_operator_trygetitem_string_len_hash;
+	} else if (REQUIRE_NODEFAULT(map_operator_trygetitem_string_hash)) {
+		return REQUIRE_NODEFAULT(map_operator_trygetitem_index)
+		       ? &$with__map_operator_trygetitem_index__and__map_operator_trygetitem_string_hash
+		       : &$with__map_operator_trygetitem_string_hash;
+	} else if (REQUIRE_NODEFAULT(map_operator_trygetitem_index)) {
+		return &$with__map_operator_trygetitem_index;
+	}
+	map_operator_getitem = REQUIRE(map_operator_getitem);
 	if (map_operator_getitem == &default__map_operator_getitem__empty)
 		return &$empty;
 	if (map_operator_getitem == &default__map_operator_getitem__with__map_enumerate)
 		return &$with__map_enumerate;
+	if (map_operator_getitem == &default__map_operator_getitem__with__map_operator_getitem_index__and__map_operator_getitem_string_len_hash)
+		return &$with__map_operator_trygetitem_index__and__map_operator_trygetitem_string_len_hash;
+	if (map_operator_getitem == &default__map_operator_getitem__with__map_operator_getitem_index__and__map_operator_getitem_string_hash)
+		return &$with__map_operator_trygetitem_index__and__map_operator_trygetitem_string_hash;
+	if (map_operator_getitem == &default__map_operator_getitem__with__map_operator_getitem_string_len_hash)
+		return &$with__map_operator_trygetitem_string_len_hash;
+	if (map_operator_getitem == &default__map_operator_getitem__with__map_operator_getitem_string_hash)
+		return &$with__map_operator_trygetitem_string_hash;
+	if (map_operator_getitem == &default__map_operator_getitem__with__map_operator_getitem_index)
+		return &$with__map_operator_trygetitem_index;
 	if (map_operator_getitem)
 		return &$with__map_operator_getitem;
 };
@@ -140,7 +282,7 @@ __map_getitem__.map_operator_getitem_index([[nonnull]] DeeObject *self, size_t k
 	keyob = DeeInt_NewSize(key);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_getitem, keyob);
+	result = CALL_DEPENDENCY(map_operator_getitem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -169,7 +311,7 @@ __map_getitem__.map_operator_trygetitem_index([[nonnull]] DeeObject *self, size_
 	keyob = DeeInt_NewSize(key);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_trygetitem, keyob);
+	result = CALL_DEPENDENCY(map_operator_trygetitem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -219,7 +361,7 @@ __map_getitem__.map_operator_getitem_string_hash([[nonnull]] DeeObject *self,
 	Dee_ssize_t status;
 	data.mgished_key  = key;
 	data.mgished_hash = hash;
-	status = DeeType_InvokeMethodHint(self, map_enumerate, &default_map_getitem_string_hash_with_enumerate_cb, &data);
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_string_hash_with_enumerate_cb, &data);
 	if likely(status == -2)
 		return data.mgished_result;
 	if unlikely(status == -3) {
@@ -238,7 +380,7 @@ err:
 	keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_getitem, keyob);
+	result = CALL_DEPENDENCY(map_operator_getitem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -270,7 +412,7 @@ __map_getitem__.map_operator_trygetitem_string_hash([[nonnull]] DeeObject *self,
 	Dee_ssize_t status;
 	data.mgished_key  = key;
 	data.mgished_hash = hash;
-	status = DeeType_InvokeMethodHint(self, map_enumerate, &default_map_getitem_string_hash_with_enumerate_cb, &data);
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_string_hash_with_enumerate_cb, &data);
 	if likely(status == -2)
 		return data.mgished_result;
 	ASSERT(status == -1 || status == 0);
@@ -285,7 +427,7 @@ err:
 	keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_trygetitem, keyob);
+	result = CALL_DEPENDENCY(map_operator_trygetitem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -340,7 +482,7 @@ __map_getitem__.map_operator_getitem_string_len_hash([[nonnull]] DeeObject *self
 	data.mgislhed_key    = key;
 	data.mgislhed_keylen = keylen;
 	data.mgislhed_hash   = hash;
-	status = DeeType_InvokeMethodHint(self, map_enumerate, &default_map_getitem_string_len_hash_with_enumerate_cb, &data);
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_string_len_hash_with_enumerate_cb, &data);
 	if likely(status == -2)
 		return data.mgislhed_result;
 	if unlikely(status == -3) {
@@ -359,7 +501,7 @@ err:
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_getitem, keyob);
+	result = CALL_DEPENDENCY(map_operator_getitem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -393,7 +535,7 @@ __map_getitem__.map_operator_trygetitem_string_len_hash([[nonnull]] DeeObject *s
 	data.mgislhed_key    = key;
 	data.mgislhed_keylen = keylen;
 	data.mgislhed_hash   = hash;
-	status = DeeType_InvokeMethodHint(self, map_enumerate, &default_map_getitem_string_len_hash_with_enumerate_cb, &data);
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_getitem_string_len_hash_with_enumerate_cb, &data);
 	if likely(status == -2)
 		return data.mgislhed_result;
 	ASSERT(status == -1 || status == 0);
@@ -408,7 +550,7 @@ err:
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_trygetitem, keyob);
+	result = CALL_DEPENDENCY(map_operator_trygetitem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -452,7 +594,7 @@ __map_getitem__.map_operator_bounditem([[nonnull]] DeeObject *self,
 %{$empty = Dee_BOUND_MISSING}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_bounditem_with_enumerate_cb)]] {
 	Dee_ssize_t status;
-	status = DeeType_InvokeMethodHint(self, map_enumerate, &default_map_bounditem_with_enumerate_cb, key);
+	status = CALL_DEPENDENCY(map_enumerate, self, &default_map_bounditem_with_enumerate_cb, key);
 	ASSERT(status == -3 || status == -2 || status == -1 || status == 0);
 	if (status == -2) {
 		status = Dee_BOUND_YES;
@@ -470,7 +612,7 @@ __map_getitem__.map_operator_bounditem([[nonnull]] DeeObject *self,
 %{$with__map_operator_contains = {
 	int result_status;
 	DREF DeeObject *result;
-	result = DeeType_InvokeMethodHint(self, map_operator_contains, key);
+	result = CALL_DEPENDENCY(map_operator_contains, self, key);
 	if unlikely(!result)
 		goto err;
 	result_status = DeeObject_BoolInherited(result);
@@ -480,7 +622,7 @@ err:
 }}
 %{$with__map_operator_getitem = {
 	DREF DeeObject *value;
-	value = DeeType_InvokeMethodHint(self, map_operator_getitem, key);
+	value = CALL_DEPENDENCY(map_operator_getitem, self, key);
 	if (value) {
 		Dee_Decref(value);
 		return Dee_BOUND_YES;
@@ -527,7 +669,7 @@ __map_getitem__.map_operator_bounditem_index([[nonnull]] DeeObject *self, size_t
 	keyob = DeeInt_NewSize(key);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_bounditem, keyob);
+	result = CALL_DEPENDENCY(map_operator_bounditem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -535,7 +677,7 @@ err:
 }}
 %{$with__map_operator_getitem_index = {
 	DREF DeeObject *value;
-	value = DeeType_InvokeMethodHint(self, map_operator_getitem_index, key);
+	value = CALL_DEPENDENCY(map_operator_getitem_index, self, key);
 	if (value) {
 		Dee_Decref(value);
 		return Dee_BOUND_YES;
@@ -577,7 +719,7 @@ __map_getitem__.map_operator_bounditem_string_hash([[nonnull]] DeeObject *self,
 	keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_bounditem, keyob);
+	result = CALL_DEPENDENCY(map_operator_bounditem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -585,7 +727,7 @@ err:
 }}
 %{$with__map_operator_getitem_string_hash = {
 	DREF DeeObject *value;
-	value = DeeType_InvokeMethodHint(self, map_operator_getitem_string_hash, key, hash);
+	value = CALL_DEPENDENCY(map_operator_getitem_string_hash, self, key, hash);
 	if (value) {
 		Dee_Decref(value);
 		return Dee_BOUND_YES;
@@ -625,7 +767,7 @@ __map_getitem__.map_operator_bounditem_string_len_hash([[nonnull]] DeeObject *se
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
 		goto err;
-	result = DeeType_InvokeMethodHint(self, map_operator_bounditem, keyob);
+	result = CALL_DEPENDENCY(map_operator_bounditem, self, keyob);
 	Dee_Decref(keyob);
 	return result;
 err:
@@ -633,7 +775,7 @@ err:
 }}
 %{$with__map_operator_getitem_string_len_hash = {
 	DREF DeeObject *value;
-	value = DeeType_InvokeMethodHint(self, map_operator_getitem_string_len_hash, key, keylen, hash);
+	value = CALL_DEPENDENCY(map_operator_getitem_string_len_hash, self, key, keylen, hash);
 	if (value) {
 		Dee_Decref(value);
 		return Dee_BOUND_YES;
@@ -666,7 +808,7 @@ __map_getitem__.map_operator_hasitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
 %{$with__map_operator_bounditem = {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
-	int result = DeeType_InvokeMethodHint(self, map_operator_bounditem, key);
+	int result = CALL_DEPENDENCY(map_operator_bounditem, self, key);
 	return Dee_BOUND_ASHAS(result);
 }} = $with__map_operator_bounditem;
 
@@ -688,7 +830,7 @@ map_operator_hasitem = {
 __map_getitem__.map_operator_hasitem_index([[nonnull]] DeeObject *self, size_t key)
 %{$with__map_operator_bounditem_index = {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
-	int result = DeeType_InvokeMethodHint(self, map_operator_bounditem_index, key);
+	int result = CALL_DEPENDENCY(map_operator_bounditem_index, self, key);
 	return Dee_BOUND_ASHAS(result);
 }} = $with__map_operator_bounditem_index;
 
@@ -712,7 +854,7 @@ __map_getitem__.map_operator_hasitem_string_hash([[nonnull]] DeeObject *self,
                                                  Dee_hash_t hash)
 %{$with__map_operator_bounditem_string_hash = {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
-	int result = DeeType_InvokeMethodHint(self, map_operator_bounditem_string_hash, key, hash);
+	int result = CALL_DEPENDENCY(map_operator_bounditem_string_hash, self, key, hash);
 	return Dee_BOUND_ASHAS(result);
 }} = $with__map_operator_bounditem_string_hash;
 
@@ -736,7 +878,7 @@ __map_getitem__.map_operator_hasitem_string_len_hash([[nonnull]] DeeObject *self
                                                      Dee_hash_t hash)
 %{$with__map_operator_bounditem_string_len_hash = {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
-	int result = DeeType_InvokeMethodHint(self, map_operator_bounditem_string_len_hash, key, keylen, hash);
+	int result = CALL_DEPENDENCY(map_operator_bounditem_string_len_hash, self, key, keylen, hash);
 	return Dee_BOUND_ASHAS(result);
 }} = $with__map_operator_bounditem_string_len_hash;
 

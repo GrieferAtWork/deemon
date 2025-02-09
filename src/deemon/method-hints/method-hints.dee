@@ -362,6 +362,16 @@ final class NativeMethod {
 	public member _methodHint: WeakRef with MethodHint | none = none;
 	public property methodHint: MethodHint | none = { get() -> _methodHint.value; };
 
+	public property tpSelfExpr: string = {
+		get(): string {
+			local firstParam = params.first;
+			local n = firstParam.typ.count("*") - 1;
+			if (firstParam.typAfter)
+				++n;
+			return f"Dee_TYPE({"*" * n}{firstParam.name})";
+		}
+	};
+
 	public getReturnAttrib(_T: string = ""): string {
 		local attributes: {string...} = [];
 		if (wunused)
@@ -617,7 +627,26 @@ final class NativeMethod {
 		}
 		for (local name, impl: customImpls) {
 			if (impl.alias is none) {
-				printInternImpl(name, impl);
+				local preloadedDependencies: {string...} = HashSet();
+				printInternImpl(name, impl, {
+					"THIS_TYPE": tpSelfExpr,
+					"CALL_DEPENDENCY": (dep, args...) -> {
+						if (dep in preloadedDependencies)
+							return f"(*cached_{dep})({", ".join(args)})";
+						return f"(*DeeType_RequireMethodHint({
+							tpSelfExpr}, {dep}))({", ".join(args)})";
+					},
+					"REQUIRE_DEPENDENCY": (dep) -> {
+						if (dep in preloadedDependencies)
+							return f"cached_{dep}";
+						return f"DeeType_RequireMethodHint({tpSelfExpr}, {dep})";
+					},
+					"PRELOAD_DEPENDENCY": (dep) -> {
+						preloadedDependencies.insert(dep);
+						return f"DeeMH_{dep}_t cached_{dep} = DeeType_RequireMethodHint({
+								tpSelfExpr}, {dep});";
+					},
+				});
 				print;
 			}
 		}
@@ -790,7 +819,27 @@ final class MethodHint: WeakRefAble {
 			print(f"PUBLIC_CONST char const DeeMA_{alias.name}_name[] = {repr alias.attr};");
 		print("PUBLIC "),;
 		call2native.printDecl(f"DeeMA_{name}", lineFeedBeforeName: true);
-		printUserText(call2native.callAttrImpl.impl, "$");
+		local tpSelfExpr = call2native.tpSelfExpr;
+		local preloadedDependencies: {string...} = HashSet();
+		printUserText(call2native.callAttrImpl.impl, "$", {
+			"THIS_TYPE": tpSelfExpr,
+			"CALL_DEPENDENCY": (dep, args...) -> {
+				if (dep in preloadedDependencies)
+					return f"(*cached_{dep})({", ".join(args)})";
+				return f"(*DeeType_RequireMethodHint({
+					tpSelfExpr}, {dep}))({", ".join(args)})";
+			},
+			"REQUIRE_DEPENDENCY": (dep) -> {
+				if (dep in preloadedDependencies)
+					return f"cached_{dep}";
+				return f"DeeType_RequireMethodHint({tpSelfExpr}, {dep})";
+			},
+			"PRELOAD_DEPENDENCY": (dep) -> {
+				preloadedDependencies.insert(dep);
+				return f"DeeMH_{dep}_t cached_{dep} = DeeType_RequireMethodHint({
+						tpSelfExpr}, {dep});";
+			},
+		});
 		print;
 		print;
 	}
@@ -1149,7 +1198,6 @@ final class NativeOperator {
 				"THIS_TYPE": tpSelfExpr,
 				"CALL_DEPENDENCY": callDependency,
 				"PRELOAD_DEPENDENCY": (dep) -> "", // TODO
-				"CALL_PRELOAD_DEPENDENCY": callDependency, // TODO
 				"IF_TYPED_ELSE": (ifTyped, ifNotTyped) ->
 					typedName is none ? ifTyped : ifNotTyped
 			});
