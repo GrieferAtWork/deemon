@@ -806,6 +806,7 @@ map_operator_bounditem_string_len_hash = {
 [[wunused]] int
 __map_getitem__.map_operator_hasitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
+%{$empty = 0}
 %{$with__map_operator_bounditem = {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
 	int result = CALL_DEPENDENCY(map_operator_bounditem, self, key);
@@ -818,6 +819,8 @@ map_operator_hasitem = {
 #ifdef Dee_BOUND_MAYALIAS_HAS
 		return map_operator_bounditem;
 #else /* Dee_BOUND_MAYALIAS_HAS */
+		if (map_operator_bounditem == &default__map_operator_bounditem__empty)
+			return &$empty;
 		return &$with__map_operator_bounditem;
 #endif /* !Dee_BOUND_MAYALIAS_HAS */
 	}
@@ -828,6 +831,7 @@ map_operator_hasitem = {
 [[operator(Mapping.OPERATOR_GETITEM: tp_seq->tp_hasitem_index)]]
 [[wunused]] int
 __map_getitem__.map_operator_hasitem_index([[nonnull]] DeeObject *self, size_t key)
+%{$empty = 0}
 %{$with__map_operator_bounditem_index = {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
 	int result = CALL_DEPENDENCY(map_operator_bounditem_index, self, key);
@@ -840,6 +844,8 @@ map_operator_hasitem_index = {
 #ifdef Dee_BOUND_MAYALIAS_HAS
 		return map_operator_bounditem_index;
 #else /* Dee_BOUND_MAYALIAS_HAS */
+		if (map_operator_bounditem_index == &default__map_operator_bounditem_index__empty)
+			return &$empty;
 		return &$with__map_operator_bounditem_index;
 #endif /* !Dee_BOUND_MAYALIAS_HAS */
 	}
@@ -852,6 +858,7 @@ map_operator_hasitem_index = {
 __map_getitem__.map_operator_hasitem_string_hash([[nonnull]] DeeObject *self,
                                                  [[nonnull]] char const *key,
                                                  Dee_hash_t hash)
+%{$empty = 0}
 %{$with__map_operator_bounditem_string_hash = {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
 	int result = CALL_DEPENDENCY(map_operator_bounditem_string_hash, self, key, hash);
@@ -864,6 +871,8 @@ map_operator_hasitem_string_hash = {
 #ifdef Dee_BOUND_MAYALIAS_HAS
 		return map_operator_bounditem_string_hash;
 #else /* Dee_BOUND_MAYALIAS_HAS */
+		if (map_operator_bounditem_string_hash == &default__map_operator_bounditem_string_hash__empty)
+			return &$empty;
 		return &$with__map_operator_bounditem_string_hash;
 #endif /* !Dee_BOUND_MAYALIAS_HAS */
 	}
@@ -876,6 +885,7 @@ map_operator_hasitem_string_hash = {
 __map_getitem__.map_operator_hasitem_string_len_hash([[nonnull]] DeeObject *self,
                                                      char const *key, size_t keylen,
                                                      Dee_hash_t hash)
+%{$empty = 0}
 %{$with__map_operator_bounditem_string_len_hash = {
 	/* TODO: Only define when `#ifndef Dee_BOUND_MAYALIAS_HAS' */
 	int result = CALL_DEPENDENCY(map_operator_bounditem_string_len_hash, self, key, keylen, hash);
@@ -888,6 +898,8 @@ map_operator_hasitem_string_len_hash = {
 #ifdef Dee_BOUND_MAYALIAS_HAS
 		return map_operator_bounditem_string_len_hash;
 #else /* Dee_BOUND_MAYALIAS_HAS */
+		if (map_operator_bounditem_string_len_hash == &default__map_operator_bounditem_string_len_hash__empty)
+			return &$empty;
 		return &$with__map_operator_bounditem_string_len_hash;
 #endif /* !Dee_BOUND_MAYALIAS_HAS */
 	}

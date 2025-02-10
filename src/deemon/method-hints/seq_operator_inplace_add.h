@@ -45,6 +45,7 @@ __seq_inplace_add__.seq_operator_inplace_add([[nonnull]] DREF DeeObject **__rest
 %{$with__seq_extend = {
 	return CALL_DEPENDENCY(seq_extend, *p_self, rhs);
 }}
+%{$empty = "$with__DeeSeq_Concat"}
 %{$with__DeeSeq_Concat = {
 	DREF DeeObject *result = DeeSeq_Concat(*p_self, rhs);
 	if unlikely(!result)

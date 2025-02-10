@@ -1105,6 +1105,50 @@ err_new_index:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_gp_iter_next(DefaultIterator_WithGetItem *__restrict self) {
+	DeeObject *old_index;
+	DREF DeeObject *new_index, *result;
+again:
+	DefaultIterator_WithGetItem_LockAcquire(self);
+	old_index = self->dig_index;
+	Dee_Incref(old_index);
+	DefaultIterator_WithGetItem_LockRelease(self);
+	new_index = old_index; /* Inherit reference */
+	for (;;) {
+		result = (*self->dig_tp_getitem)(self->dig_seq, new_index);
+		if (result)
+			break;
+		if (DeeError_Catch(&DeeError_IndexError)) {
+			Dee_Decref(new_index);
+			return ITER_DONE;
+		}
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err_new_index;
+		if (DeeObject_Inc(&new_index))
+			goto err_new_index;
+	}
+	if (DeeObject_Inc(&new_index))
+		goto err_new_index_result;
+	DefaultIterator_WithGetItem_LockAcquire(self);
+	if unlikely(self->dig_index != old_index) {
+		DefaultIterator_WithGetItem_LockRelease(self);
+		Dee_Decref(new_index);
+		Dee_Decref(result);
+		goto again;
+	}
+	Dee_Incref(new_index);
+	self->dig_index = new_index; /* Inherit (x2) */
+	DefaultIterator_WithGetItem_LockRelease(self);
+	Dee_Decref(old_index);
+	return DeeTuple_Newf("OO", new_index, result);
+err_new_index_result:
+	Dee_Decref(result);
+err_new_index:
+	Dee_Decref(new_index);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_tg_iter_next(DefaultIterator_WithTGetItem *__restrict self) {
 	DeeObject *old_index;
 	DREF DeeObject *new_index, *result;
@@ -1206,6 +1250,52 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	/* .tp_cmp           = */ &di_g_cmp,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_g_iter_next,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ di_g_getsets,
+	/* .tp_members       = */ di_g_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ di_g_class_members
+};
+
+INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithGetItemPair",
+	/* .tp_doc      = */ DOC("(objWithGetItem,index)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FGC,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_g_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_g_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)&di_g_init,
+				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithGetItem)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_g_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &di_g_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_gp_iter_next,
 	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,

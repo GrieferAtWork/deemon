@@ -284,6 +284,11 @@
 %[include("map_iterkeys.h")]
 %[include("map_enumerate.h")]
 
+/* TODO: map_enumerate_items+map_enumerate_items_with_range.
+ *       Like seq_enumerate_items, but follows map semantics, and uses stuff
+ *       like "DefaultEnumerationWithFilter__with__set_operator_iter__and__unpack"
+ * NOTE: Obviously, there won't be a "map_enumerate_items_with_intrange"! */
+
 //Dee_DEFINE_TYPE_METHOD_HINT_FUNC(WUNUSED_T NONNULL_T((1, 2)), int, DCALL, map_operator_compare_eq, (DeeObject *self, DeeObject *some_object))
 //Dee_DEFINE_TYPE_METHOD_HINT_METHOD(__map_compare_eq__, "__map_compare_eq__", "(rhs:?X2?M?O?O?S?T2?O?O)->?Dbool")
 //
@@ -414,6 +419,22 @@
 
 
 
+
+
+/* TODO: Once everything has been migrated, write a unit test that asserts that the correct
+ *       default impls of method hints get linked for certain operators:
+ *       >> assert "default__seq_operator_getitem_index__with__seq_operator_foreach" == (
+ *       >>         class { __seq_iter__() -> []{ yield 10, 20; }.operator iter(); }
+ *       >> ).__method_hints__["seq_operator_getitem_index"];
+ * To get the names of symbols on...
+ * - ...windows: https://learn.microsoft.com/en-us/windows/win32/debug/retrieving-symbol-information-by-address
+ * - ...linux:   use `ipc.Process("addr2line -f")'
+ */
+
+
+
+
+
 /************************************************************************/
 /* For `deemon.Numeric'                                                 */
 /************************************************************************/
@@ -426,5 +447,5 @@
 /* TODO: __numeric_inplace_mul__ */
 /* TODO: __numeric_inplace_...__ */
 /* TODO: __numeric_divmod__ */
-/* TODO: __numeric_...__ (Just look at the functions currently ) */
-
+/* TODO: __numeric_isfloat__ */
+/* TODO: __numeric_...__ (Just look at the other functions currently defined by "Numeric") */

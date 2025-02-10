@@ -30,9 +30,6 @@
 #include "operator-require.h"
 
 /**/
-#include "../objects/seq/default-enumerate.h"
-
-/**/
 #include "method-hint-defaults.h"
 #include "method-hint-select.h"
 
@@ -86,18 +83,27 @@ use_size:
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_sizeob_t DCALL
 mh_select_seq_operator_sizeob(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_size);
-	if (seq_operator_size == &default__seq_operator_size__empty)
-		return &default__seq_operator_sizeob__empty;
-	if (seq_operator_size)
+	if (seq_operator_size) {
+		if (seq_operator_size == &default__seq_operator_size__empty)
+			return &default__seq_operator_sizeob__empty;
+		if (seq_operator_size == &default__seq_operator_size__with__set_operator_sizeob ||
+		    seq_operator_size == (DeeMH_set_operator_size_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_size))
+			return (DeeMH_set_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_sizeob);
 		return &default__seq_operator_sizeob__with__seq_operator_size;
+	}
 	return NULL;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_size_t DCALL
 mh_select_seq_operator_size(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	DeeMH_set_operator_size_t set_operator_size = (DeeMH_set_operator_size_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_size);
+	if (set_operator_size)
+		return set_operator_size;
 	if ((DeeMH_seq_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_operator_sizeob))
 		return &default__seq_operator_size__with__seq_operator_sizeob;
+	if ((DeeMH_set_operator_sizeob_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_set_operator_sizeob))
+		return &default__seq_operator_size__with__set_operator_sizeob;
 	seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &default__seq_operator_size__empty;
@@ -165,6 +171,10 @@ mh_select_seq_operator_foreach(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index;
 	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_sizeob__and__seq_operator_getitem)
 		return &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_getitem_index)
+		return &default__seq_operator_foreach__with__seq_operator_getitem_index;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_getitem)
+		return &default__seq_operator_foreach__with__seq_operator_getitem;
 	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate)
 		return &default__seq_operator_foreach__with__map_enumerate;
 	if (seq_operator_iter) {
@@ -502,6 +512,8 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_operator_assign_t DCALL
 mh_select_seq_operator_assign(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_setrange_t seq_operator_setrange;
 	seq_operator_setrange = (DeeMH_seq_operator_setrange_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_setrange);
+	if (seq_operator_setrange == &default__seq_operator_setrange__empty)
+		return &default__seq_operator_assign__empty;
 	if (seq_operator_setrange)
 		return &default__seq_operator_assign__with__seq_operator_setrange;
 	return NULL;
@@ -739,172 +751,72 @@ mh_select_seq_enumerate_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_t DCALL
 mh_select_seq_makeenumeration(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	/* TODO: All of this stuff shouldn't be using generic operators, but *specifically* sequence operators! */
-	/* TODO: Also: the implementation variants here should be defined by magic! */
-	if (DeeType_HasPrivateOperator(self, OPERATOR_ITER)) {
-		unsigned int seqclass;
-		if (self->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndGetItem) {
-			return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem;
-		} else if (self->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItem ||
-		           self->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItemDefault) {
-			return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
-		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndexFast) {
-			return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
-		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndex ||
-		           self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeDefaultAndGetItemIndexDefault) {
-			return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndTryGetItemIndex) {
-			return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeObAndGetItem) {
-			return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
-		} else if (self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithCounterAndForeach ||
-		           self->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithCounterAndIter) {
-			if (self->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndGetItem ||
-			    self->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndGetItem)
-				return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem;
-			if (self->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItem ||
-			    self->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault ||
-			    self->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItem ||
-			    self->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault)
-				return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
-			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
-			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndex)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
-			if (self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithGetItemIndex ||
-			    self->tp_seq->tp_iter == &DeeSeq_DefaultIterWithGetItem)
-				return &DeeSeq_DefaultMakeEnumerationWithGetItemIndex;
-			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
-		} else if (self->tp_seq->tp_enumerate == &DeeMap_DefaultEnumerateWithIter) {
-			return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
-		}
-		if (self->tp_seq->tp_iterkeys && !DeeType_IsDefaultIterKeys(self->tp_seq->tp_iterkeys)) {
-			if (self->tp_seq->tp_iterkeys == &DeeMap_DefaultIterKeysWithIter ||
-			    self->tp_seq->tp_iterkeys == &DeeMap_DefaultIterKeysWithIterDefault)
-				return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
-			if (self->tp_seq->tp_iterkeys == &DeeObject_DefaultIterKeysWithEnumerate ||
-			    self->tp_seq->tp_iterkeys == &DeeObject_DefaultIterKeysWithEnumerateIndex)
-				return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
-			if (self->tp_seq->tp_iterkeys == &DeeSeq_DefaultIterKeysWithSizeOb)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
-			if (self->tp_seq->tp_iterkeys == &DeeSeq_DefaultIterKeysWithSize ||
-			    self->tp_seq->tp_iterkeys == &DeeSeq_DefaultIterKeysWithSizeDefault) {
-				if (self->tp_seq->tp_trygetitem && (!DeeType_IsDefaultTryGetItem(self->tp_seq->tp_trygetitem) ||
-				                                    !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index)))
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-				if (self->tp_seq->tp_getitem && (!DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem) ||
-				                                 !DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index)))
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-				if (self->tp_seq->tp_trygetitem)
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-				if (self->tp_seq->tp_getitem)
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-			} else {
-				if (self->tp_seq->tp_trygetitem && !DeeType_IsDefaultTryGetItem(self->tp_seq->tp_trygetitem))
-					return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
-				if (self->tp_seq->tp_getitem && !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem))
-					return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem;
-				if (self->tp_seq->tp_trygetitem)
-					return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
-				if (self->tp_seq->tp_getitem)
-					return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem;
-			}
-		}
-		seqclass = DeeType_GetSeqClass(self);
-		if (seqclass == Dee_SEQCLASS_SEQ) {
-			if (DeeType_HasOperator(self, OPERATOR_SIZE)) {
-				if (self->tp_seq->tp_getitem_index_fast)
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
-				if (DeeType_HasOperator(self, OPERATOR_GETITEM)) {
-					if (!DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index))
-						return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-					if (!DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index))
-						return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-					if (!DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem))
-						return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
-				}
-			} else if (DeeType_HasOperator(self, OPERATOR_GETITEM)) {
-				if (!DeeType_IsDefaultGetItemIndex(self->tp_seq->tp_getitem_index) ||
-				    !DeeType_IsDefaultTryGetItemIndex(self->tp_seq->tp_trygetitem_index) ||
-				    !DeeType_IsDefaultGetItem(self->tp_seq->tp_getitem))
-					return &DeeSeq_DefaultMakeEnumerationWithGetItemIndex;
-			}
-			if (!DeeType_IsDefaultIter(self->tp_seq->tp_iter))
-				return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
-		}
-		if (self->tp_seq->tp_enumerate != NULL &&
-		    self->tp_seq->tp_enumerate != self->tp_seq->tp_foreach_pair &&
-		    !DeeType_IsDefaultEnumerate(self->tp_seq->tp_enumerate)) {
-			return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
-		} else if (self->tp_seq->tp_enumerate_index != NULL &&
-		           !DeeType_IsDefaultEnumerateIndex(self->tp_seq->tp_enumerate_index)) {
-			return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
-		}
-		if (seqclass == Dee_SEQCLASS_SEQ) {
-			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
-		} else if (seqclass == Dee_SEQCLASS_MAP) {
-			return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
-		} else if (seqclass == Dee_SEQCLASS_NONE) {
-			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
-		}
-	}
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_makeenumeration__empty;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast)
+		return &default__seq_makeenumeration__with__seq_operator_size__and__getitem_index_fast;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index)
+		return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem_index)
+		return &default__seq_makeenumeration__with__seq_operator_getitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem)
+		return &default__seq_makeenumeration__with__seq_operator_getitem;
+	if (seq_operator_foreach)
+		return &default__seq_makeenumeration__with__seq_operator_iter__and__counter;
 	return NULL;
 }
 
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_with_int_range_t DCALL
-mh_select_seq_makeenumeration_with_int_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	/* TODO: All of this stuff shouldn't be using generic operators, but *specifically* sequence operators! */
-	/* TODO: Also: the implementation variants here should be defined by magic! */
-	DeeMH_seq_makeenumeration_t seq_makeenumeration = (DeeMH_seq_makeenumeration_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_makeenumeration);
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndGetItemIndexFastAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndTryGetItemIndexAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndGetItemIndexAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeObAndGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithGetItemIndex)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithGetItemIndexAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndTryGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterAndCounter)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterAndCounterAndFilter;
-	if (seq_makeenumeration == &DeeMap_DefaultMakeEnumerationWithIterAndUnpack)
-		return &DeeMap_DefaultMakeEnumerationWithIntRangeWithIterAndUnpackAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithEnumerate)
-		return &DeeMap_DefaultMakeEnumerationWithIntRangeWithEnumerateIndex;
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_with_intrange_t DCALL
+mh_select_seq_makeenumeration_with_intrange(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_makeenumeration_t seq_makeenumeration;
+	if ((DeeMH_seq_makeenumeration_with_range_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_makeenumeration_with_range))
+		return &default__seq_makeenumeration_with_intrange__with__seq_makeenumeration_with_range;
+
+	seq_makeenumeration = (DeeMH_seq_makeenumeration_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_makeenumeration);
+	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
+		return &default__seq_makeenumeration_with_intrange__empty;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__getitem_index_fast)
+		return &default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__getitem_index_fast;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index)
+		return &default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__seq_operator_getitem_index;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &default__seq_makeenumeration_with_intrange__with__seq_makeenumeration_with_range;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem_index)
+		return &default__seq_makeenumeration_with_intrange__with__seq_operator_getitem_index;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem)
+		return &default__seq_makeenumeration_with_intrange__with__seq_makeenumeration_with_range;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_iter__and__counter)
+		return &default__seq_makeenumeration_with_intrange__with__seq_operator_iter__and__counter;
 	return NULL;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_with_range_t DCALL
 mh_select_seq_makeenumeration_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	/* TODO: All of this stuff shouldn't be using generic operators, but *specifically* sequence operators! */
-	/* TODO: Also: the implementation variants here should be defined by magic! */
-	DeeMH_seq_makeenumeration_t seq_makeenumeration = (DeeMH_seq_makeenumeration_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_makeenumeration);
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast ||
-	    seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex ||
-	    seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex ||
-	    seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithSizeObAndGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithGetItemIndex)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithIterKeysAndTryGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithIterKeysAndGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterAndCounter)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithIterAndCounterAndFilter;
-	if (seq_makeenumeration == &DeeMap_DefaultMakeEnumerationWithIterAndUnpack)
-		return &DeeMap_DefaultMakeEnumerationWithRangeWithIterAndUnpackAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithEnumerate)
-		return &DeeMap_DefaultMakeEnumerationWithRangeWithEnumerateAndFilter;
+	DeeMH_seq_makeenumeration_t seq_makeenumeration;
+	if ((DeeMH_seq_makeenumeration_with_intrange_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_makeenumeration_with_intrange))
+		return &default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange;
+
+	seq_makeenumeration = (DeeMH_seq_makeenumeration_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_makeenumeration);
+	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
+		return &default__seq_makeenumeration_with_range__empty;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__getitem_index_fast ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem_index)
+		return &default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &default__seq_makeenumeration_with_range__with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem)
+		return &default__seq_makeenumeration_with_range__with__seq_operator_getitem;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_iter__and__counter)
+		return &default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange;
 	return NULL;
 }
 
@@ -2118,6 +2030,8 @@ mh_select_map_operator_hasitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 #ifdef Dee_BOUND_MAYALIAS_HAS
 		return map_operator_bounditem;
 #else /* Dee_BOUND_MAYALIAS_HAS */
+		if (map_operator_bounditem == &default__map_operator_bounditem__empty)
+			return &default__map_operator_hasitem__empty;
 		return &default__map_operator_hasitem__with__map_operator_bounditem;
 #endif /* !Dee_BOUND_MAYALIAS_HAS */
 	}
@@ -2131,6 +2045,8 @@ mh_select_map_operator_hasitem_index(DeeTypeObject *self, DeeTypeObject *orig_ty
 #ifdef Dee_BOUND_MAYALIAS_HAS
 		return map_operator_bounditem_index;
 #else /* Dee_BOUND_MAYALIAS_HAS */
+		if (map_operator_bounditem_index == &default__map_operator_bounditem_index__empty)
+			return &default__map_operator_hasitem_index__empty;
 		return &default__map_operator_hasitem_index__with__map_operator_bounditem_index;
 #endif /* !Dee_BOUND_MAYALIAS_HAS */
 	}
@@ -2144,6 +2060,8 @@ mh_select_map_operator_hasitem_string_hash(DeeTypeObject *self, DeeTypeObject *o
 #ifdef Dee_BOUND_MAYALIAS_HAS
 		return map_operator_bounditem_string_hash;
 #else /* Dee_BOUND_MAYALIAS_HAS */
+		if (map_operator_bounditem_string_hash == &default__map_operator_bounditem_string_hash__empty)
+			return &default__map_operator_hasitem_string_hash__empty;
 		return &default__map_operator_hasitem_string_hash__with__map_operator_bounditem_string_hash;
 #endif /* !Dee_BOUND_MAYALIAS_HAS */
 	}
@@ -2157,6 +2075,8 @@ mh_select_map_operator_hasitem_string_len_hash(DeeTypeObject *self, DeeTypeObjec
 #ifdef Dee_BOUND_MAYALIAS_HAS
 		return map_operator_bounditem_string_len_hash;
 #else /* Dee_BOUND_MAYALIAS_HAS */
+		if (map_operator_bounditem_string_len_hash == &default__map_operator_bounditem_string_len_hash__empty)
+			return &default__map_operator_hasitem_string_len_hash__empty;
 		return &default__map_operator_hasitem_string_len_hash__with__map_operator_bounditem_string_len_hash;
 #endif /* !Dee_BOUND_MAYALIAS_HAS */
 	}

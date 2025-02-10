@@ -388,6 +388,64 @@ err:
 	data.dfwfp_arg = arg;
 	return CALL_DEPENDENCY(seq_operator_foreach_pair, self, &default_foreach_with_foreach_pair_cb, &data);
 }}
+%{$with__seq_operator_getitem_index = {
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	for (i = 0;; ++i) {
+		DREF DeeObject *elem;
+		elem = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break;
+			goto err;
+		}
+		temp = (*cb)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err:
+	return -1;
+}}
+%{$with__seq_operator_getitem = {
+	PRELOAD_DEPENDENCY(seq_operator_getitem)
+	Dee_ssize_t temp, result = 0;
+	DREF DeeIntObject *index = (DREF DeeIntObject *)DeeInt_Zero;
+	Dee_Incref(DeeInt_Zero);
+	for (;;) {
+		DREF DeeObject *elem;
+		elem = CALL_DEPENDENCY(seq_operator_getitem, self, (DeeObject *)index);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break;
+			goto err_index;
+		}
+		temp = (*cb)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err_index;
+		if (int_inc(&index))
+			goto err_index;
+	}
+	Dee_Decref(index);
+	return result;
+err_index:
+	Dee_Decref(index);
+/*err:*/
+	return -1;
+}}
 %{$with__seq_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
@@ -520,6 +578,10 @@ seq_operator_foreach = {
 		return &$with__seq_operator_size__and__seq_operator_getitem_index;
 	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_sizeob__and__seq_operator_getitem)
 		return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_getitem_index)
+		return &$with__seq_operator_getitem_index;
+	if (seq_operator_iter == &default__seq_operator_iter__with__seq_operator_getitem)
+		return &$with__seq_operator_getitem;
 	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate)
 		return &$with__map_enumerate;
 	if (seq_operator_iter) {

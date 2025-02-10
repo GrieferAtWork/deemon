@@ -1706,6 +1706,21 @@ function printNativeOperatorHintUnsupportedTable() {
 }
 
 
+@@Print the initializer of a "struct Dee_type_mh_cache" where all
+@@hints are implemented using their @("$" + impl) variant. Method
+@@hints that don't have such a variant are intialized to `NULL`
+function printSpecialTypeMhCacheBody(impl: string) {
+	local longestNameLength = NATIVE_METHOD_HINTS.keys.each.length > ...;
+	for (local name, nativeMethod /*: NativeMethod*/: NATIVE_METHOD_HINTS) {
+		local implName = nativeMethod.normalizeSymbolName(impl);
+		local customImpl: NativeMethodImpl | none = nativeMethod.customImpls.get(implName);
+		print(f"	/* .mh_{name.ljust(longestNameLength)} = */ ",
+			customImpl is none ? "NULL" : f"&{implName}",
+			",");
+	}
+}
+
+
 final class _SpecParserAttrib {
 	this = default;
 	public member kw: bool = false;

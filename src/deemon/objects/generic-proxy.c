@@ -158,6 +158,74 @@ generic_proxy2_fini(ProxyObject2 *__restrict self) {
 }
 
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy3_copy_alias123(ProxyObject3 *__restrict self,
+                             ProxyObject3 *__restrict other) {
+	Dee_Incref(other->po_obj1);
+	self->po_obj1 = other->po_obj1;
+	Dee_Incref(other->po_obj2);
+	self->po_obj2 = other->po_obj2;
+	Dee_Incref(other->po_obj3);
+	self->po_obj3 = other->po_obj3;
+	return 0;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_proxy3_deepcopy(ProxyObject3 *__restrict self,
+                        ProxyObject3 *__restrict other) {
+	self->po_obj1 = DeeObject_DeepCopy(other->po_obj1);
+	if unlikely(!self->po_obj1)
+		goto err;
+	self->po_obj2 = DeeObject_DeepCopy(other->po_obj2);
+	if unlikely(!self->po_obj2)
+		goto err_obj1;
+	self->po_obj3 = DeeObject_DeepCopy(other->po_obj3);
+	if unlikely(!self->po_obj3)
+		goto err_obj1_obj2;
+	return 0;
+err_obj1_obj2:
+	Dee_Decref(self->po_obj2);
+err_obj1:
+	Dee_Decref(self->po_obj1);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy3_init(ProxyObject3 *__restrict self,
+                    size_t argc, DeeObject *const *argv) {
+	char const *tp_name;
+	if likely(argc == 3) {
+		self->po_obj1 = argv[0];
+		self->po_obj2 = argv[1];
+		self->po_obj3 = argv[2];
+		Dee_Incref(self->po_obj1);
+		Dee_Incref(self->po_obj2);
+		Dee_Incref(self->po_obj3);
+		return 0;
+	}
+	tp_name = Dee_TYPE(self)->tp_name;
+	if unlikely(!tp_name)
+		tp_name = "<unnamed type>";
+	return err_invalid_argc(tp_name, argc, 3, 3);
+}
+
+INTERN NONNULL((1, 2)) void DCALL
+generic_proxy3_visit(ProxyObject3 *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->po_obj1);
+	Dee_Visit(self->po_obj2);
+	Dee_Visit(self->po_obj3);
+}
+
+INTERN NONNULL((1)) void DCALL
+generic_proxy3_fini(ProxyObject3 *__restrict self) {
+	Dee_Decref(self->po_obj1);
+	Dee_Decref(self->po_obj2);
+	Dee_Decref(self->po_obj3);
+}
+
+
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy_bool(ProxyObject *__restrict self) {
 	return DeeObject_Bool(self->po_obj);

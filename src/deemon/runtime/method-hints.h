@@ -96,7 +96,7 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_enumerate_t mh_seq_enumerate;
 	DeeMH_seq_enumerate_index_t mh_seq_enumerate_index;
 	DeeMH_seq_makeenumeration_t mh_seq_makeenumeration;
-	DeeMH_seq_makeenumeration_with_int_range_t mh_seq_makeenumeration_with_int_range;
+	DeeMH_seq_makeenumeration_with_intrange_t mh_seq_makeenumeration_with_intrange;
 	DeeMH_seq_makeenumeration_with_range_t mh_seq_makeenumeration_with_range;
 	DeeMH_seq_foreach_reverse_t mh_seq_foreach_reverse;
 	DeeMH_seq_enumerate_index_reverse_t mh_seq_enumerate_index_reverse;
@@ -305,6 +305,9 @@ Dee_type_mh_cache_of(DeeTypeObject *__restrict self);
 
 INTDEF Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT];
 #define DeeType_GetUnsupportedMethodHint(id) mh_unsupported_impls[id]
+
+/* Statically initialized method cache where all hints use their "$empty" impl (if defined) */
+INTDEF struct Dee_type_mh_cache mh_cache_empty;
 
 DECL_END
 #endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */

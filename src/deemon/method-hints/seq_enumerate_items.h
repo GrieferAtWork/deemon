@@ -47,14 +47,73 @@ err:
 
 [[wunused]] DREF DeeObject *
 __seq_enumerate_items__.seq_makeenumeration([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto)} {
+%{unsupported(auto)}
+%{$empty = {
+	return_empty_seq;
+}}
+%{$with__seq_operator_size__and__getitem_index_fast = {
+	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast, self);
+}}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_trygetitem_index, self);
+}}
+%{$with__seq_operator_size__and__seq_operator_getitem_index = {
+	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__seq_operator_getitem_index, self);
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_getitem = {
+	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_sizeob__and__seq_operator_getitem, self);
+}}
+%{$with__seq_operator_getitem_index = {
+	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem_index, self);
+}}
+%{$with__seq_operator_getitem = {
+	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_getitem, self);
+}}
+%{$with__seq_operator_iter__and__counter = {
+	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_iter__and__counter, self);
+}} {
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
 [[wunused]] DREF DeeObject *
-__seq_enumerate_items__.seq_makeenumeration_with_int_range([[nonnull]] DeeObject *__restrict self,
-                                                           size_t start, size_t end)
-%{unsupported(auto)} {
+__seq_enumerate_items__.seq_makeenumeration_with_intrange([[nonnull]] DeeObject *__restrict self,
+                                                          size_t start, size_t end)
+%{unsupported(auto)}
+%{$empty = {
+	return_empty_seq;
+}}
+%{$with__seq_makeenumeration_with_range = {
+	DREF DeeObject *result, *startob, *endob;
+	startob = DeeInt_NewSize(start);
+	if unlikely(!startob)
+		goto err;
+	endob = DeeInt_NewSize(end);
+	if unlikely(!endob)
+		goto err_startob;
+	result = CALL_DEPENDENCY(seq_makeenumeration_with_range, self, startob, endob);
+	Dee_Decref(endob);
+	Dee_Decref(startob);
+	return result;
+err_startob:
+	Dee_Decref(startob);
+err:
+	return NULL;
+}}
+%{$with__seq_operator_size__and__getitem_index_fast = {
+	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast, self, start, end);
+}}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index, self, start, end);
+}}
+%{$with__seq_operator_size__and__seq_operator_getitem_index = {
+	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index, self, start, end);
+}}
+%{$with__seq_operator_getitem_index = {
+	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index, self, start, end);
+}}
+%{$with__seq_operator_iter__and__counter = {
+	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter, self, start, end);
+}} {
 	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
 }
 
@@ -62,7 +121,26 @@ __seq_enumerate_items__.seq_makeenumeration_with_int_range([[nonnull]] DeeObject
 __seq_enumerate_items__.seq_makeenumeration_with_range([[nonnull]] DeeObject *self,
                                                        [[nonnull]] DeeObject *start,
                                                        [[nonnull]] DeeObject *end)
-%{unsupported(auto)} {
+%{unsupported(auto)}
+%{$empty = {
+	return_empty_seq;
+}}
+%{$with__seq_makeenumeration_with_intrange = {
+	size_t start_index, end_index;
+	if (DeeObject_AsSize(start, &start_index))
+		goto err;
+	if (DeeObject_AsSize(end, &end_index))
+		goto err;
+	return CALL_DEPENDENCY(seq_makeenumeration_with_intrange, self, start_index, end_index);
+err:
+	return NULL;
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_getitem = {
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end);
+}}
+%{$with__seq_operator_getitem = {
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end);
+}} {
 	DeeObject *args[2];
 	args[0] = start;
 	args[1] = end;
@@ -71,167 +149,67 @@ __seq_enumerate_items__.seq_makeenumeration_with_range([[nonnull]] DeeObject *se
 
 
 seq_makeenumeration = {
-	/* TODO: All of this stuff shouldn't be using generic operators, but *specifically* sequence operators! */
-	/* TODO: Also: the implementation variants here should be defined by magic! */
-	if (DeeType_HasPrivateOperator(THIS_TYPE, OPERATOR_ITER)) {
-		unsigned int seqclass;
-		if (THIS_TYPE->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndGetItem) {
-			return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem;
-		} else if (THIS_TYPE->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItem ||
-		           THIS_TYPE->tp_seq->tp_enumerate == &DeeObject_DefaultEnumerateWithIterKeysAndTryGetItemDefault) {
-			return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
-		} else if (THIS_TYPE->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndexFast) {
-			return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
-		} else if (THIS_TYPE->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndGetItemIndex ||
-		           THIS_TYPE->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeDefaultAndGetItemIndexDefault) {
-			return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-		} else if (THIS_TYPE->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeAndTryGetItemIndex) {
-			return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-		} else if (THIS_TYPE->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithSizeObAndGetItem) {
-			return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
-		} else if (THIS_TYPE->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithCounterAndForeach ||
-		           THIS_TYPE->tp_seq->tp_enumerate == &DeeSeq_DefaultEnumerateWithCounterAndIter) {
-			if (THIS_TYPE->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndGetItem ||
-			    THIS_TYPE->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndGetItem)
-				return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem;
-			if (THIS_TYPE->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItem ||
-			    THIS_TYPE->tp_seq->tp_iter == &DeeObject_DefaultIterWithIterKeysAndTryGetItemDefault ||
-			    THIS_TYPE->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItem ||
-			    THIS_TYPE->tp_seq->tp_iter == &DeeMap_DefaultIterWithIterKeysAndTryGetItemDefault)
-				return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
-			if (THIS_TYPE->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
-			if (THIS_TYPE->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndGetItemIndex)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-			if (THIS_TYPE->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-			if (THIS_TYPE->tp_seq->tp_iter == &DeeSeq_DefaultIterWithSizeObAndGetItem)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
-			if (THIS_TYPE->tp_seq->tp_iter == &DeeSeq_DefaultIterWithGetItemIndex ||
-			    THIS_TYPE->tp_seq->tp_iter == &DeeSeq_DefaultIterWithGetItem)
-				return &DeeSeq_DefaultMakeEnumerationWithGetItemIndex;
-			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
-		} else if (THIS_TYPE->tp_seq->tp_enumerate == &DeeMap_DefaultEnumerateWithIter) {
-			return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
-		}
-		if (THIS_TYPE->tp_seq->tp_iterkeys && !DeeType_IsDefaultIterKeys(THIS_TYPE->tp_seq->tp_iterkeys)) {
-			if (THIS_TYPE->tp_seq->tp_iterkeys == &DeeMap_DefaultIterKeysWithIter ||
-			    THIS_TYPE->tp_seq->tp_iterkeys == &DeeMap_DefaultIterKeysWithIterDefault)
-				return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
-			if (THIS_TYPE->tp_seq->tp_iterkeys == &DeeObject_DefaultIterKeysWithEnumerate ||
-			    THIS_TYPE->tp_seq->tp_iterkeys == &DeeObject_DefaultIterKeysWithEnumerateIndex)
-				return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
-			if (THIS_TYPE->tp_seq->tp_iterkeys == &DeeSeq_DefaultIterKeysWithSizeOb)
-				return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
-			if (THIS_TYPE->tp_seq->tp_iterkeys == &DeeSeq_DefaultIterKeysWithSize ||
-			    THIS_TYPE->tp_seq->tp_iterkeys == &DeeSeq_DefaultIterKeysWithSizeDefault) {
-				if (THIS_TYPE->tp_seq->tp_trygetitem && (!DeeType_IsDefaultTryGetItem(THIS_TYPE->tp_seq->tp_trygetitem) ||
-				                                    !DeeType_IsDefaultTryGetItemIndex(THIS_TYPE->tp_seq->tp_trygetitem_index)))
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-				if (THIS_TYPE->tp_seq->tp_getitem && (!DeeType_IsDefaultGetItem(THIS_TYPE->tp_seq->tp_getitem) ||
-				                                 !DeeType_IsDefaultGetItemIndex(THIS_TYPE->tp_seq->tp_getitem_index)))
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-				if (THIS_TYPE->tp_seq->tp_trygetitem)
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-				if (THIS_TYPE->tp_seq->tp_getitem)
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-			} else {
-				if (THIS_TYPE->tp_seq->tp_trygetitem && !DeeType_IsDefaultTryGetItem(THIS_TYPE->tp_seq->tp_trygetitem))
-					return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
-				if (THIS_TYPE->tp_seq->tp_getitem && !DeeType_IsDefaultGetItem(THIS_TYPE->tp_seq->tp_getitem))
-					return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem;
-				if (THIS_TYPE->tp_seq->tp_trygetitem)
-					return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem;
-				if (THIS_TYPE->tp_seq->tp_getitem)
-					return &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem;
-			}
-		}
-		seqclass = SEQ_CLASS;
-		if (seqclass == Dee_SEQCLASS_SEQ) {
-			if (DeeType_HasOperator(THIS_TYPE, OPERATOR_SIZE)) {
-				if (THIS_TYPE->tp_seq->tp_getitem_index_fast)
-					return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast;
-				if (DeeType_HasOperator(THIS_TYPE, OPERATOR_GETITEM)) {
-					if (!DeeType_IsDefaultGetItemIndex(THIS_TYPE->tp_seq->tp_getitem_index))
-						return &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex;
-					if (!DeeType_IsDefaultTryGetItemIndex(THIS_TYPE->tp_seq->tp_trygetitem_index))
-						return &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex;
-					if (!DeeType_IsDefaultGetItem(THIS_TYPE->tp_seq->tp_getitem))
-						return &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem;
-				}
-			} else if (DeeType_HasOperator(THIS_TYPE, OPERATOR_GETITEM)) {
-				if (!DeeType_IsDefaultGetItemIndex(THIS_TYPE->tp_seq->tp_getitem_index) ||
-				    !DeeType_IsDefaultTryGetItemIndex(THIS_TYPE->tp_seq->tp_trygetitem_index) ||
-				    !DeeType_IsDefaultGetItem(THIS_TYPE->tp_seq->tp_getitem))
-					return &DeeSeq_DefaultMakeEnumerationWithGetItemIndex;
-			}
-			if (!DeeType_IsDefaultIter(THIS_TYPE->tp_seq->tp_iter))
-				return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
-		}
-		if (THIS_TYPE->tp_seq->tp_enumerate != NULL &&
-		    THIS_TYPE->tp_seq->tp_enumerate != THIS_TYPE->tp_seq->tp_foreach_pair &&
-		    !DeeType_IsDefaultEnumerate(THIS_TYPE->tp_seq->tp_enumerate)) {
-			return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
-		} else if (THIS_TYPE->tp_seq->tp_enumerate_index != NULL &&
-		           !DeeType_IsDefaultEnumerateIndex(THIS_TYPE->tp_seq->tp_enumerate_index)) {
-			return &DeeSeq_DefaultMakeEnumerationWithEnumerate;
-		}
-		if (seqclass == Dee_SEQCLASS_SEQ) {
-			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
-		} else if (seqclass == Dee_SEQCLASS_MAP) {
-			return &DeeMap_DefaultMakeEnumerationWithIterAndUnpack;
-		} else if (seqclass == Dee_SEQCLASS_NONE) {
-			return &DeeSeq_DefaultMakeEnumerationWithIterAndCounter;
-		}
-	}
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &$empty;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast)
+		return &$with__seq_operator_size__and__getitem_index_fast;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index)
+		return &$with__seq_operator_size__and__seq_operator_getitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem_index)
+		return &$with__seq_operator_getitem_index;
+	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem)
+		return &$with__seq_operator_getitem;
+	if (seq_operator_foreach)
+		return &$with__seq_operator_iter__and__counter;
 };
 
-seq_makeenumeration_with_int_range = {
-	/* TODO: All of this stuff shouldn't be using generic operators, but *specifically* sequence operators! */
-	/* TODO: Also: the implementation variants here should be defined by magic! */
-	DeeMH_seq_makeenumeration_t seq_makeenumeration = REQUIRE(seq_makeenumeration);
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndGetItemIndexFastAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndTryGetItemIndexAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeAndGetItemIndexAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithSizeObAndGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithGetItemIndex)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithGetItemIndexAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndTryGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterKeysAndGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterAndCounter)
-		return &DeeSeq_DefaultMakeEnumerationWithIntRangeWithIterAndCounterAndFilter;
-	if (seq_makeenumeration == &DeeMap_DefaultMakeEnumerationWithIterAndUnpack)
-		return &DeeMap_DefaultMakeEnumerationWithIntRangeWithIterAndUnpackAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithEnumerate)
-		return &DeeMap_DefaultMakeEnumerationWithIntRangeWithEnumerateIndex;
+seq_makeenumeration_with_intrange = {
+	DeeMH_seq_makeenumeration_t seq_makeenumeration;
+	if (REQUIRE_NODEFAULT(seq_makeenumeration_with_range))
+		return &$with__seq_makeenumeration_with_range;
+
+	seq_makeenumeration = REQUIRE(seq_makeenumeration);
+	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
+		return &$empty;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__getitem_index_fast)
+		return &$with__seq_operator_size__and__getitem_index_fast;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index)
+		return &$with__seq_operator_size__and__seq_operator_getitem_index;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &$with__seq_makeenumeration_with_range;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem_index)
+		return &$with__seq_operator_getitem_index;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem)
+		return &$with__seq_makeenumeration_with_range;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_iter__and__counter)
+		return &$with__seq_operator_iter__and__counter;
 };
 
 seq_makeenumeration_with_range = {
-	/* TODO: All of this stuff shouldn't be using generic operators, but *specifically* sequence operators! */
-	/* TODO: Also: the implementation variants here should be defined by magic! */
-	DeeMH_seq_makeenumeration_t seq_makeenumeration = REQUIRE(seq_makeenumeration);
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndexFast ||
-	    seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndTryGetItemIndex ||
-	    seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeAndGetItemIndex ||
-	    seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithSizeObAndGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithSizeObAndGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithGetItemIndex)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndTryGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithIterKeysAndTryGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterKeysAndGetItem)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithIterKeysAndGetItemAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithIterAndCounter)
-		return &DeeSeq_DefaultMakeEnumerationWithRangeWithIterAndCounterAndFilter;
-	if (seq_makeenumeration == &DeeMap_DefaultMakeEnumerationWithIterAndUnpack)
-		return &DeeMap_DefaultMakeEnumerationWithRangeWithIterAndUnpackAndFilter;
-	if (seq_makeenumeration == &DeeSeq_DefaultMakeEnumerationWithEnumerate)
-		return &DeeMap_DefaultMakeEnumerationWithRangeWithEnumerateAndFilter;
+	DeeMH_seq_makeenumeration_t seq_makeenumeration;
+	if (REQUIRE_NODEFAULT(seq_makeenumeration_with_intrange))
+		return &$with__seq_makeenumeration_with_intrange;
+
+	seq_makeenumeration = REQUIRE(seq_makeenumeration);
+	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
+		return &$empty;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__getitem_index_fast ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem_index)
+		return &$with__seq_makeenumeration_with_intrange;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem)
+		return &$with__seq_operator_getitem;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_iter__and__counter)
+		return &$with__seq_makeenumeration_with_intrange;
 };
 

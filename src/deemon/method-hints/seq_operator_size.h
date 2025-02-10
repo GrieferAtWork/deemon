@@ -96,6 +96,15 @@ size_t __seq_size__.seq_operator_size([[nonnull]] DeeObject *__restrict self)
 err:
 	return (size_t)-1;
 }}
+%{$with__set_operator_sizeob = {
+	DREF DeeObject *sizeob;
+	sizeob = CALL_DEPENDENCY(set_operator_sizeob, self);
+	if unlikely(!sizeob)
+		goto err;
+	return DeeObject_AsDirectSizeInherited(sizeob);
+err:
+	return (size_t)-1;
+}}
 %{$with__map_enumerate = [[prefix(DEFINE_default_seq_size_with_foreach_pair_cb)]] {
 	return (size_t)CALL_DEPENDENCY(map_enumerate, self, &default_seq_size_with_foreach_pair_cb, NULL);
 }} = $with__seq_operator_sizeob;
@@ -103,16 +112,25 @@ err:
 
 seq_operator_sizeob = {
 	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE(seq_operator_size);
-	if (seq_operator_size == &default__seq_operator_size__empty)
-		return &$empty;
-	if (seq_operator_size)
+	if (seq_operator_size) {
+		if (seq_operator_size == &default__seq_operator_size__empty)
+			return &$empty;
+		if (seq_operator_size == &default__seq_operator_size__with__set_operator_sizeob ||
+		    seq_operator_size == REQUIRE_NODEFAULT(set_operator_size))
+			return REQUIRE_NODEFAULT(set_operator_sizeob);
 		return &$with__seq_operator_size;
+	}
 };
 
 seq_operator_size = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
+	DeeMH_set_operator_size_t set_operator_size = REQUIRE_NODEFAULT(set_operator_size);
+	if (set_operator_size)
+		return set_operator_size;
 	if (REQUIRE_NODEFAULT(seq_operator_sizeob))
 		return &$with__seq_operator_sizeob;
+	if (REQUIRE_NODEFAULT(set_operator_sizeob))
+		return &$with__set_operator_sizeob;
 	seq_operator_foreach = REQUIRE(seq_operator_foreach);
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;

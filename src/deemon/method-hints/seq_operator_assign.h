@@ -37,6 +37,16 @@ err:
 int __seq_assign__.seq_operator_assign([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *items)
 %{unsupported(auto("operator :="))}
+%{$empty = {
+	int items_empty = DeeType_InvokeMethodHint0(items, seq_operator_bool);
+	if unlikely(items_empty < 0)
+		goto err;
+	if (items_empty)
+		return 0;
+	return default__seq_operator_assign__unsupported(self, items);
+err:
+	return -1;
+}}
 %{$with__seq_operator_setrange = {
 	return CALL_DEPENDENCY(seq_operator_setrange, self, Dee_None, Dee_None, items);
 }} {
@@ -52,6 +62,8 @@ err:
 seq_operator_assign = {
 	DeeMH_seq_operator_setrange_t seq_operator_setrange;
 	seq_operator_setrange = REQUIRE(seq_operator_setrange);
+	if (seq_operator_setrange == &default__seq_operator_setrange__empty)
+		return &$empty;
 	if (seq_operator_setrange)
 		return &$with__seq_operator_setrange;
 };

@@ -40,7 +40,7 @@ __seq_setrange__.seq_operator_setrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *items)
 %{unsupported(auto("operator [:]="))}
 %{$empty = {
-	int items_empty = CALL_DEPENDENCY(seq_operator_bool, items);
+	int items_empty = DeeType_InvokeMethodHint0(items, seq_operator_bool);
 	if unlikely(items_empty < 0)
 		goto err;
 	if (items_empty)
@@ -97,7 +97,7 @@ __seq_setrange__.seq_operator_setrange_index([[nonnull]] DeeObject *self,
                                              [[nonnull]] DeeObject *items)
 %{unsupported(auto("operator [:]="))}
 %{$empty = {
-	int items_empty = CALL_DEPENDENCY(seq_operator_bool, items);
+	int items_empty = DeeType_InvokeMethodHint0(items, seq_operator_bool);
 	if unlikely(items_empty < 0)
 		goto err;
 	if (items_empty)
@@ -164,7 +164,7 @@ __seq_setrange__.seq_operator_setrange_index_n([[nonnull]] DeeObject *self,
 	return err_seq_unsupportedf(self, "operator [:]=(%" PCKdSIZ ", none, %r)", start, items);
 })}
 %{$empty = {
-	int items_empty = CALL_DEPENDENCY(seq_operator_bool, items);
+	int items_empty = DeeType_InvokeMethodHint0(items, seq_operator_bool);
 	if unlikely(items_empty < 0)
 		goto err;
 	if (items_empty)

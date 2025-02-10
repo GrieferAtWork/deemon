@@ -152,8 +152,9 @@ INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFastPair_Type; /* De
 INTDEF DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type;      /* DefaultIterator_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndexPair_Type;  /* DefaultIterator_WithSizeAndGetItemIndex */
 
-INTDEF DeeTypeObject DefaultIterator_WithGetItem_Type;  /* DefaultIterator_WithGetItem */
-INTDEF DeeTypeObject DefaultIterator_WithTGetItem_Type; /* DefaultIterator_WithTGetItem */
+INTDEF DeeTypeObject DefaultIterator_WithGetItem_Type;     /* DefaultIterator_WithGetItem */
+INTDEF DeeTypeObject DefaultIterator_WithGetItemPair_Type; /* DefaultIterator_WithGetItem -- TODO: Expose in librt */
+INTDEF DeeTypeObject DefaultIterator_WithTGetItem_Type;    /* DefaultIterator_WithTGetItem */
 
 INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type;     /* DefaultIterator_WithSizeObAndGetItem */
 INTDEF DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type; /* DefaultIterator_WithSizeObAndGetItem */
