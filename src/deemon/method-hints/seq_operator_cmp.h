@@ -19,13 +19,13 @@
  */
 
 /*[[[deemon
-for (local op, eq, Eq, EQ, isEq: {
-	("==", "eq", "Eq", "EQ", true),
-	("!=", "ne", "Ne", "NE", true),
-	("<", "lo", "Lo", "LO", false),
-	("<=", "le", "Le", "LE", false),
-	(">", "gr", "Gr", "GR", false),
-	(">=", "ge", "Ge", "GE", false),
+for (local op, eq, ne, Eq, EQ, isEq: {
+	("==", "eq", "ne", "Eq", "EQ", true),
+	("!=", "ne", "eq", "Ne", "NE", true),
+	("<",  "lo", "ge", "Lo", "LO", false),
+	("<=", "le", "gr", "Le", "LE", false),
+	(">",  "gr", "le", "Gr", "GR", false),
+	(">=", "ge", "lo", "Ge", "GE", false),
 }) {
 	print('' '/************************************************************************' '/');
 	print('' '/* deemon.Sequence.operator ', op, ' ()                                       *' '/');
@@ -45,6 +45,10 @@ for (local op, eq, Eq, EQ, isEq: {
 	print('                           [[nonnull]] DeeObject *rhs)');
 	print('%{unsupported(auto("operator ', op, '"))}');
 	print('%{$empty = "$with__seq_operator_compare', isEq ? '_eq' : '', '"}');
+	print('%{$with__seq_operator_', ne, ' = [[prefix(DEFINE_xinvoke_not)]] {');
+	print('	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_', ne, ', lhs, rhs);');
+	print('	return xinvoke_not(result);');
+	print('}}');
 	print('%{$with__seq_operator_compare', isEq ? '_eq' : '', ' = {');
 	print('	int result = CALL_DEPENDENCY(seq_operator_compare', isEq ? '_eq' : '', ', lhs, rhs);');
 	print('	if unlikely(result == Dee_COMPARE_ERR)');
@@ -57,6 +61,8 @@ for (local op, eq, Eq, EQ, isEq: {
 	print('}');
 	print('');
 	print('seq_operator_', eq, ' = {');
+	print('	if (REQUIRE_NODEFAULT(seq_operator_', ne, '))');
+	print('		return &$with__seq_operator_', ne, ';');
 	print('	if (REQUIRE(seq_operator_compare', isEq ? '_eq' : '', '))');
 	print('		return &$with__seq_operator_compare', isEq ? '_eq' : '', ';');
 	print('};');
@@ -83,6 +89,10 @@ __seq_eq__.seq_operator_eq([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator =="))}
 %{$empty = "$with__seq_operator_compare_eq"}
+%{$with__seq_operator_ne = [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_ne, lhs, rhs);
+	return xinvoke_not(result);
+}}
 %{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -95,6 +105,8 @@ err:
 }
 
 seq_operator_eq = {
+	if (REQUIRE_NODEFAULT(seq_operator_ne))
+		return &$with__seq_operator_ne;
 	if (REQUIRE(seq_operator_compare_eq))
 		return &$with__seq_operator_compare_eq;
 };
@@ -119,6 +131,10 @@ __seq_ne__.seq_operator_ne([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator !="))}
 %{$empty = "$with__seq_operator_compare_eq"}
+%{$with__seq_operator_eq = [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_eq, lhs, rhs);
+	return xinvoke_not(result);
+}}
 %{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -131,6 +147,8 @@ err:
 }
 
 seq_operator_ne = {
+	if (REQUIRE_NODEFAULT(seq_operator_eq))
+		return &$with__seq_operator_eq;
 	if (REQUIRE(seq_operator_compare_eq))
 		return &$with__seq_operator_compare_eq;
 };
@@ -155,6 +173,10 @@ __seq_lo__.seq_operator_lo([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator <"))}
 %{$empty = "$with__seq_operator_compare"}
+%{$with__seq_operator_ge = [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_ge, lhs, rhs);
+	return xinvoke_not(result);
+}}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -167,6 +189,8 @@ err:
 }
 
 seq_operator_lo = {
+	if (REQUIRE_NODEFAULT(seq_operator_ge))
+		return &$with__seq_operator_ge;
 	if (REQUIRE(seq_operator_compare))
 		return &$with__seq_operator_compare;
 };
@@ -191,6 +215,10 @@ __seq_le__.seq_operator_le([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator <="))}
 %{$empty = "$with__seq_operator_compare"}
+%{$with__seq_operator_gr = [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_gr, lhs, rhs);
+	return xinvoke_not(result);
+}}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -203,6 +231,8 @@ err:
 }
 
 seq_operator_le = {
+	if (REQUIRE_NODEFAULT(seq_operator_gr))
+		return &$with__seq_operator_gr;
 	if (REQUIRE(seq_operator_compare))
 		return &$with__seq_operator_compare;
 };
@@ -227,6 +257,10 @@ __seq_gr__.seq_operator_gr([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator >"))}
 %{$empty = "$with__seq_operator_compare"}
+%{$with__seq_operator_le = [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_le, lhs, rhs);
+	return xinvoke_not(result);
+}}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -239,6 +273,8 @@ err:
 }
 
 seq_operator_gr = {
+	if (REQUIRE_NODEFAULT(seq_operator_le))
+		return &$with__seq_operator_le;
 	if (REQUIRE(seq_operator_compare))
 		return &$with__seq_operator_compare;
 };
@@ -263,6 +299,10 @@ __seq_ge__.seq_operator_ge([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto("operator >="))}
 %{$empty = "$with__seq_operator_compare"}
+%{$with__seq_operator_lo = [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_lo, lhs, rhs);
+	return xinvoke_not(result);
+}}
 %{$with__seq_operator_compare = {
 	int result = CALL_DEPENDENCY(seq_operator_compare, lhs, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
@@ -275,6 +315,8 @@ err:
 }
 
 seq_operator_ge = {
+	if (REQUIRE_NODEFAULT(seq_operator_lo))
+		return &$with__seq_operator_lo;
 	if (REQUIRE(seq_operator_compare))
 		return &$with__seq_operator_compare;
 };

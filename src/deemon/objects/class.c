@@ -34,6 +34,7 @@
 #include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
+#include <deemon/operator-hints.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
@@ -4200,7 +4201,7 @@ INTERN struct type_cmp instance_builtin_cmp = {
 };
 
 
-
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instance_tcall(DeeTypeObject *tp_self, DeeObject *self,
                size_t argc, DeeObject *const *argv) {
@@ -4240,6 +4241,7 @@ instance_callkw(DeeObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	return instance_tcallkw(Dee_TYPE(self), self, argc, argv, kw);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 instance_enumattr(DeeTypeObject *tp_self,
@@ -4255,6 +4257,7 @@ instance_enumattr(DeeTypeObject *tp_self,
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #ifdef __OPTIMIZE_SIZE__
 #define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED DREF DeeObject *DCALL                                        \
@@ -4312,6 +4315,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instance_next(DeeObject *__restrict self) {
 	return instance_tnext(Dee_TYPE(self), self);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 #ifdef __OPTIMIZE_SIZE__
@@ -4347,6 +4351,7 @@ instance_next(DeeObject *__restrict self) {
 		return instance_txxx(Dee_TYPE(self), self, other);                       \
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tadd, instance_add, OPERATOR_ADD)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tsub, instance_sub, OPERATOR_SUB)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tmul, instance_mul, OPERATOR_MUL)
@@ -4366,8 +4371,10 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgr, instance_gr, OPERATOR_GR)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tge, instance_ge, OPERATOR_GE)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tcontains, instance_contains, OPERATOR_CONTAINS)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetitem, instance_getitem, OPERATOR_GETITEM)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetattr, instance_getattr, OPERATOR_GETATTR)
 #undef DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 
 #ifdef __OPTIMIZE_SIZE__
 #define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
@@ -4453,6 +4460,7 @@ DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetrange, instance_getrange, 
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tenter, instance_enter, OPERATOR_ENTER)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tleave, instance_leave, OPERATOR_LEAVE)
 #undef DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifdef __OPTIMIZE_SIZE__
 #define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
@@ -4493,9 +4501,11 @@ DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tleave, instance_leave, OPER
 		return instance_txxx(Dee_TYPE(self), self, other);                           \
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tassign, instance_assign, OPERATOR_ASSIGN)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tmoveassign, instance_moveassign, OPERATOR_MOVEASSIGN)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelitem, instance_delitem, OPERATOR_DELITEM)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelattr, instance_delattr, OPERATOR_DELATTR)
 #undef DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT
 
@@ -4546,11 +4556,14 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelattr, instance_delattr,
 		return instance_txxx(Dee_TYPE(self), self, other, other2);                    \
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetitem, instance_setitem, OPERATOR_SETITEM)
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelrange, instance_delrange, OPERATOR_DELRANGE)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetattr, instance_setattr, OPERATOR_SETATTR)
 #undef DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #ifdef __OPTIMIZE_SIZE__
 #define DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL                                 \
@@ -5061,6 +5074,7 @@ INTERN WUNUSED NONNULL((1)) dhash_t DCALL
 instance_hash(DeeObject *__restrict self) {
 	return instance_thash(Dee_TYPE(self), self);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 

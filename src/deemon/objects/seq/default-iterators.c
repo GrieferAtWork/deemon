@@ -26,6 +26,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
@@ -96,10 +97,9 @@ di_gi_init(DefaultIterator_WithGetItemIndex *__restrict self,
 	                  &self->digi_seq, &self->digi_index))
 		goto err;
 	seqtyp = Dee_TYPE(self->digi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index) &&
-	    !DeeType_InheritGetItem(seqtyp))
+	self->digi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, getitem_index);
+	if unlikely(!self->digi_tp_getitem_index)
 		goto err_no_getitem;
-	self->digi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -115,10 +115,9 @@ di_sgi_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disgi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index) &&
-	    !DeeType_InheritGetItem(seqtyp))
+	self->disgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, getitem_index);
+	if unlikely(!self->disgi_tp_getitem_index)
 		goto err_no_getitem;
-	self->disgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -134,9 +133,14 @@ di_sgif_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disgi_seq);
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	if (!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast)
+		goto err_no_getitem;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast) &&
 	    (!DeeType_InheritGetItem(seqtyp) || !seqtyp->tp_seq->tp_getitem_index_fast))
 		goto err_no_getitem;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	self->disgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
 	return 0;
 err_no_getitem:
@@ -153,10 +157,9 @@ di_stgi_init(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
 	                  &self->disgi_seq, &self->disgi_index, &self->disgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disgi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem_index) &&
-	    !DeeType_InheritGetItem(seqtyp))
+	self->disgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, trygetitem_index);
+	if unlikely(!self->disgi_tp_getitem_index)
 		goto err_no_getitem;
-	self->disgi_tp_getitem_index = seqtyp->tp_seq->tp_trygetitem_index;
 	return 0;
 err_no_getitem:
 	err_unimplemented_operator(seqtyp, OPERATOR_GETITEM);
@@ -857,14 +860,18 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndexPair_Type = {
 
 /************************************************************************/
 /* DefaultIterator_WithGetItem_Type                                     */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* DefaultIterator_WithTGetItem_Type                                    */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /************************************************************************/
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItem, dig_seq) == offsetof(DefaultIterator_WithTGetItem, ditg_seq));
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItem, dig_index) == offsetof(DefaultIterator_WithTGetItem, ditg_index));
 #ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItem, dig_lock) == offsetof(DefaultIterator_WithTGetItem, ditg_lock));
 #endif /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_g_init(DefaultIterator_WithGetItem *__restrict self,
@@ -874,10 +881,9 @@ di_g_init(DefaultIterator_WithGetItem *__restrict self,
 	                  &self->dig_seq, &self->dig_index))
 		goto err;
 	seqtyp = Dee_TYPE(self->dig_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) &&
-	    !DeeType_InheritGetItem(seqtyp))
+	self->dig_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
+	if unlikely(!self->dig_tp_getitem)
 		goto err_no_getitem;
-	self->dig_tp_getitem = seqtyp->tp_seq->tp_getitem;
 	Dee_Incref(self->dig_seq);
 	Dee_Incref(self->dig_index);
 	Dee_atomic_lock_init(&self->dig_lock);
@@ -888,6 +894,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 generic_tp_tgetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 
@@ -917,6 +924,7 @@ err_no_getitem:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_g_copy(DefaultIterator_WithGetItem *__restrict self,
@@ -966,6 +974,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_tg_copy(DefaultIterator_WithTGetItem *__restrict self,
            DefaultIterator_WithTGetItem *__restrict other) {
@@ -981,15 +990,20 @@ di_tg_deepcopy(DefaultIterator_WithTGetItem *__restrict self,
 	return di_g_deepcopy((DefaultIterator_WithGetItem *)self,
 	                     (DefaultIterator_WithGetItem *)other);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tg_fini di_g_fini
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE NONNULL((1)) void DCALL
 di_g_fini(DefaultIterator_WithGetItem *__restrict self) {
 	Dee_Decref(self->dig_seq);
 	Dee_Decref(self->dig_index);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tg_visit di_g_visit
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE NONNULL((1, 2)) void DCALL
 di_g_visit(DefaultIterator_WithGetItem *__restrict self,
            dvisit_t proc, void *arg) {
@@ -1148,6 +1162,7 @@ err_new_index:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_tg_iter_next(DefaultIterator_WithTGetItem *__restrict self) {
 	DeeObject *old_index;
@@ -1190,8 +1205,11 @@ err_new_index:
 	Dee_Decref(new_index);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tg_cmp di_g_cmp
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE struct type_cmp di_g_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_g_hash,
 	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
@@ -1199,22 +1217,28 @@ PRIVATE struct type_cmp di_g_cmp = {
 	/* .tp_trycompare_eq = */ NULL,
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tg_members di_g_members
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE struct type_member tpconst di_g_members[] = {
 	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItem, dig_seq)),
 	TYPE_MEMBER_END,
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tg_getsets di_g_getsets
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE struct type_getset tpconst di_g_getsets[] = {
 	TYPE_GETSET_NODOC("__index__", &di_g_getindex, NULL, &di_g_setindex),
 	TYPE_GETSET_END,
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE struct type_member tpconst di_g_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithTGetItem_Type),
 	TYPE_MEMBER_END,
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1259,7 +1283,11 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	/* .tp_members       = */ di_g_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_class_members = */ NULL
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_g_class_members
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
@@ -1305,9 +1333,14 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 	/* .tp_members       = */ di_g_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_class_members = */ NULL
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_g_class_members
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithTGetItem",
@@ -1353,6 +1386,7 @@ INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -1378,8 +1412,10 @@ INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
 
 
 /************************************************************************/
-/* DefaultIterator_WithSizeObAndGetItem_Type                              */
-/* DefaultIterator_WithSizeObAndTGetItem_Type                             */
+/* DefaultIterator_WithSizeObAndGetItem_Type                            */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+/* DefaultIterator_WithSizeObAndTGetItem_Type                           */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_seq) == offsetof(DefaultIterator_WithGetItem, dig_seq));
@@ -1387,12 +1423,14 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index) == offs
 #ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) == offsetof(DefaultIterator_WithGetItem, dig_lock));
 #endif /* !CONFIG_NO_THREADS */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_seq) == offsetof(DefaultIterator_WithSizeObAndTGetItem, distg_seq));
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index) == offsetof(DefaultIterator_WithSizeObAndTGetItem, distg_index));
 #ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) == offsetof(DefaultIterator_WithSizeObAndTGetItem, distg_lock));
 #endif /* !CONFIG_NO_THREADS */
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_end) == offsetof(DefaultIterator_WithSizeObAndTGetItem, distg_end));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_sg_copy(DefaultIterator_WithSizeObAndGetItem *__restrict self,
@@ -1426,10 +1464,9 @@ di_sg_init(DefaultIterator_WithSizeObAndGetItem *__restrict self,
 	                  &self->disg_seq, &self->disg_index, &self->disg_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->disg_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) &&
-	    !DeeType_InheritGetItem(seqtyp))
+	self->disg_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
+	if unlikely(!self->disg_tp_getitem)
 		goto err_no_getitem;
-	self->disg_tp_getitem = seqtyp->tp_seq->tp_getitem;
 	Dee_atomic_lock_init(&self->disg_lock);
 	Dee_Incref(self->disg_seq);
 	Dee_Incref(self->disg_index);
@@ -1441,6 +1478,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_tsg_init(DefaultIterator_WithSizeObAndTGetItem *__restrict self,
             size_t argc, DeeObject *const *argv) {
@@ -1469,6 +1507,7 @@ err_no_getitem:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_sg_deepcopy(DefaultIterator_WithSizeObAndGetItem *__restrict self,
@@ -1501,6 +1540,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_tsg_copy(DefaultIterator_WithSizeObAndTGetItem *__restrict self,
             DefaultIterator_WithSizeObAndTGetItem *__restrict other) {
@@ -1516,8 +1556,11 @@ di_tsg_deepcopy(DefaultIterator_WithSizeObAndTGetItem *__restrict self,
 	return di_sg_deepcopy((DefaultIterator_WithSizeObAndGetItem *)self,
 	                      (DefaultIterator_WithSizeObAndGetItem *)other);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tsg_fini di_sg_fini
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE NONNULL((1)) void DCALL
 di_sg_fini(DefaultIterator_WithSizeObAndGetItem *__restrict self) {
 	Dee_Decref(self->disg_seq);
@@ -1525,7 +1568,9 @@ di_sg_fini(DefaultIterator_WithSizeObAndGetItem *__restrict self) {
 	Dee_Decref(self->disg_end);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tsg_visit di_sg_visit
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE NONNULL((1, 2)) void DCALL
 di_sg_visit(DefaultIterator_WithSizeObAndGetItem *__restrict self,
             dvisit_t proc, void *arg) {
@@ -1536,8 +1581,10 @@ di_sg_visit(DefaultIterator_WithSizeObAndGetItem *__restrict self,
 	Dee_Visit(self->disg_end);
 }
 
-#define di_sg_compare  di_g_compare
+#define di_sg_compare di_g_compare
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tsg_compare di_g_compare
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_sg_iter_next(DefaultIterator_WithSizeObAndGetItem *__restrict self) {
@@ -1645,6 +1692,7 @@ err_new_index:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_tsg_iter_next(DefaultIterator_WithSizeObAndTGetItem *__restrict self) {
 	DeeObject *old_index;
@@ -1694,21 +1742,30 @@ err_new_index:
 	Dee_Decref(new_index);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
-#define di_sg_cmp  di_g_cmp
+#define di_sg_cmp di_g_cmp
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tsg_cmp di_g_cmp
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_sg_members  di_g_members
+#define di_sg_members di_g_members
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tsg_members di_g_members
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_sg_getsets  di_g_getsets
+#define di_sg_getsets di_g_getsets
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_tsg_getsets di_g_getsets
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE struct type_member tpconst di_sg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithSizeObAndTGetItem_Type),
 	TYPE_MEMBER_END
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1753,7 +1810,11 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 	/* .tp_members       = */ di_sg_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_class_members = */ NULL
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_sg_class_members
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
@@ -1802,6 +1863,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN DeeTypeObject DefaultIterator_WithSizeObAndTGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithSizeObAndTGetItem",
@@ -1847,6 +1909,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndTGetItem_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -1885,9 +1948,9 @@ di_nl_init(DefaultIterator_WithNextAndLimit *__restrict self,
 	                  &self->dinl_iter, &self->dinl_limit))
 		goto err;
 	itertyp = Dee_TYPE(self->dinl_iter);
-	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+	self->dinl_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->dinl_tp_next)
 		goto err_no_next;
-	self->dinl_tp_next = itertyp->tp_iter_next;
 	Dee_Incref(self->dinl_iter);
 	return 0;
 err_no_next:
@@ -2062,35 +2125,47 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 
 
 /************************************************************************/
-/* DefaultIterator_WithIterKeysAndGetItemSeq_Type                       */
 /* DefaultIterator_WithIterKeysAndTryGetItemSeq_Type                    */
-/* DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type                   */
-/* DefaultIterator_WithIterKeysAndGetItemMap_Type                       */
 /* DefaultIterator_WithIterKeysAndTryGetItemMap_Type                    */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+/* DefaultIterator_WithIterKeysAndGetItemSeq_Type                       */
+/* DefaultIterator_WithIterKeysAndGetItemMap_Type                       */
+/* DefaultIterator_WithIterKeysAndTTryGetItemSeq_Type                   */
 /* DefaultIterator_WithIterKeysAndTTryGetItemMap_Type                   */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /************************************************************************/
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_seq));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_iter));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_tp_next) == offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_tp_next));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_tp_getitem) == offsetof(DefaultIterator_WithIterKeysAndTGetItem, diiktgi_tp_tgetitem));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_ikgim_init di_ikgis_init
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_ikgis_init di_ikgim_init
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-di_ikgis_init(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
+di_ikgim_init(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp, *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndGetItemForSeq", /* And `_IterWithIterKeysAndGetItemForMap' */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndGetItemForMap",
 	                  &self->diikgi_seq, &self->diikgi_iter))
 		goto err;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndGetItemForMap", /* And `_IterWithIterKeysAndGetItemForSeq' */
+	                  &self->diikgi_seq, &self->diikgi_iter))
+		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	itertyp = Dee_TYPE(self->diikgi_iter);
-	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+	self->diikgi_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->diikgi_tp_next)
 		goto err_no_next;
 	seqtyp = Dee_TYPE(self->diikgi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) && !DeeType_InheritGetItem(seqtyp))
+	self->diikgi_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
+	if unlikely(!self->diikgi_tp_getitem)
 		goto err_no_getitem;
-	self->diikgi_tp_next    = itertyp->tp_iter_next;
-	self->diikgi_tp_getitem = seqtyp->tp_seq->tp_getitem;
 	Dee_Incref(self->diikgi_iter);
 	Dee_Incref(self->diikgi_seq);
 	return 0;
@@ -2102,6 +2177,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktgim_init di_iktgis_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_iktgis_init(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
@@ -2115,12 +2191,12 @@ di_iktgis_init(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
 	if (DeeObject_AssertTypeOrAbstract(self->diiktgi_seq, self->diiktgi_tp_seq))
 		goto err;
 	itertyp = Dee_TYPE(self->diiktgi_iter);
-	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+	self->diiktgi_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->diiktgi_tp_next)
 		goto err_no_next;
 	seqtyp = self->diiktgi_tp_seq;
 	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) && !DeeType_InheritGetItem(seqtyp))
 		goto err_no_getitem;
-	self->diiktgi_tp_next     = itertyp->tp_iter_next;
 	self->diiktgi_tp_tgetitem = DeeType_MapDefaultGetItem(seqtyp->tp_seq->tp_getitem, &,
 	                                                      seqtyp->tp_seq->tp_getitem == &instance_getitem
 	                                                      ? &instance_tgetitem
@@ -2135,23 +2211,32 @@ err_no_next:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_iktrgim_init di_iktrgis_init
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktrgis_init di_iktrgim_init
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-di_iktrgis_init(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
+di_iktrgim_init(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *itertyp, *seqtyp;
-	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndTryGetItemForSeq", /* And `_IterWithIterKeysAndTryGetItemForMap' */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndTryGetItemForMap",
 	                  &self->diikgi_seq, &self->diikgi_iter))
 		goto err;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	if (DeeArg_Unpack(argc, argv, "oo:_IterWithIterKeysAndTryGetItemForMap", /* And `_IterWithIterKeysAndTryGetItemForSeq' */
+	                  &self->diikgi_seq, &self->diikgi_iter))
+		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	itertyp = Dee_TYPE(self->diikgi_iter);
-	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+	self->diikgi_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->diikgi_tp_next)
 		goto err_no_next;
 	seqtyp = Dee_TYPE(self->diikgi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(seqtyp))
+	self->diikgi_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, trygetitem);
+	if unlikely(!self->diikgi_tp_getitem)
 		goto err_no_getitem;
-	self->diikgi_tp_next    = itertyp->tp_iter_next;
-	self->diikgi_tp_getitem = seqtyp->tp_seq->tp_trygetitem;
 	Dee_Incref(self->diikgi_iter);
 	Dee_Incref(self->diikgi_seq);
 	return 0;
@@ -2163,11 +2248,14 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 generic_tp_ttrygetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	return (*tp_self->tp_seq->tp_trygetitem)(self, index);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_ikttrgim_init di_ikttrgis_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_ikttrgis_init(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
@@ -2181,12 +2269,12 @@ di_ikttrgis_init(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
 	if (DeeObject_AssertTypeOrAbstract(self->diiktgi_seq, self->diiktgi_tp_seq))
 		goto err;
 	itertyp = Dee_TYPE(self->diiktgi_iter);
-	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+	self->diiktgi_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->diiktgi_tp_next)
 		goto err_no_next;
 	seqtyp = self->diiktgi_tp_seq;
 	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(seqtyp))
 		goto err_no_getitem;
-	self->diiktgi_tp_next     = itertyp->tp_iter_next;
 	self->diiktgi_tp_tgetitem = DeeType_MapDefaultTryGetItem(seqtyp->tp_seq->tp_trygetitem, &,
 	                                                         &generic_tp_ttrygetitem);
 	Dee_Incref(self->diiktgi_iter);
@@ -2199,13 +2287,16 @@ err_no_next:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
-#define di_iktrgis_copy di_ikgis_copy
-#define di_ikgim_copy   di_ikgis_copy
-#define di_iktrgim_copy di_ikgis_copy
+#define di_iktrgim_copy di_ikgim_copy
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktrgis_copy di_ikgim_copy
+#define di_ikgis_copy   di_ikgim_copy
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_ikgis_copy(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
+di_ikgim_copy(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
               DefaultIterator_WithIterKeysAndGetItem *__restrict other) {
 	self->diikgi_iter = DeeObject_Copy(other->diikgi_iter);
 	if unlikely(!self->diikgi_iter)
@@ -2219,6 +2310,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktgim_copy   di_ikttrgis_copy
 #define di_iktgis_copy   di_ikttrgis_copy
 #define di_ikttrgim_copy di_ikttrgis_copy
@@ -2237,12 +2329,15 @@ di_ikttrgis_copy(DefaultIterator_WithIterKeysAndTGetItem *__restrict self,
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_iktrgis_deepcopy di_ikgis_deepcopy
-#define di_iktrgim_deepcopy di_ikgis_deepcopy
-#define di_ikgim_deepcopy   di_ikgis_deepcopy
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktrgis_deepcopy di_ikgim_deepcopy
+#define di_ikgis_deepcopy   di_ikgim_deepcopy
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define di_iktrgim_deepcopy di_ikgim_deepcopy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_ikgis_deepcopy(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
+di_ikgim_deepcopy(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
                   DefaultIterator_WithIterKeysAndGetItem *__restrict other) {
 	self->diikgi_iter = DeeObject_DeepCopy(other->diikgi_iter);
 	if unlikely(!self->diikgi_iter)
@@ -2259,6 +2354,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktgis_deepcopy   di_ikttrgis_deepcopy
 #define di_iktgim_deepcopy   di_ikttrgis_deepcopy
 #define di_ikttrgim_deepcopy di_ikttrgis_deepcopy
@@ -2280,84 +2376,98 @@ err_iter:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_iktrgis_fini  di_ikgis_fini
-#define di_ikttrgis_fini di_ikgis_fini
-#define di_ikgim_fini    di_ikgis_fini
-#define di_iktrgim_fini  di_ikgis_fini
-#define di_ikttrgim_fini di_ikgis_fini
-#define di_iktgis_fini   di_ikgis_fini
-#define di_iktgim_fini   di_ikgis_fini
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj2));
-#define di_ikgis_fini generic_proxy2_fini
+#define di_ikgim_fini    generic_proxy2_fini
+#define di_iktrgim_fini  di_ikgim_fini
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktrgis_fini  di_ikgim_fini
+#define di_ikttrgis_fini di_ikgim_fini
+#define di_ikgis_fini    di_ikgim_fini
+#define di_ikttrgim_fini di_ikgim_fini
+#define di_iktgis_fini   di_ikgim_fini
+#define di_iktgim_fini   di_ikgim_fini
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_iktrgis_visit  di_ikgis_visit
-#define di_ikttrgis_visit di_ikgis_visit
-#define di_ikgim_visit    di_ikgis_visit
-#define di_iktrgim_visit  di_ikgis_visit
-#define di_ikttrgim_visit di_ikgis_visit
-#define di_iktgis_visit   di_ikgis_visit
-#define di_iktgim_visit   di_ikgis_visit
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj2));
-#define di_ikgis_visit generic_proxy2_visit
+#define di_ikgim_visit    generic_proxy2_visit
+#define di_iktrgim_visit  di_ikgim_visit
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktrgis_visit  di_ikgim_visit
+#define di_ikttrgis_visit di_ikgim_visit
+#define di_ikgis_visit    di_ikgim_visit
+#define di_ikttrgim_visit di_ikgim_visit
+#define di_iktgis_visit   di_ikgim_visit
+#define di_iktgim_visit   di_ikgim_visit
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
+#define di_ikgis_hash    generic_proxy_hash_recursive
+#define di_iktrgim_hash  di_ikgis_hash
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktrgis_hash  di_ikgis_hash
 #define di_ikttrgis_hash di_ikgis_hash
 #define di_ikgim_hash    di_ikgis_hash
-#define di_iktrgim_hash  di_ikgis_hash
 #define di_ikttrgim_hash di_ikgis_hash
 #define di_iktgis_hash   di_ikgis_hash
 #define di_iktgim_hash   di_ikgis_hash
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
-#define di_ikgis_hash generic_proxy_hash_recursive
-
-#define di_iktrgis_compare_eq  di_ikgis_compare_eq
-#define di_ikttrgis_compare_eq di_ikgis_compare_eq
-#define di_ikgim_compare_eq    di_ikgis_compare_eq
-#define di_iktrgim_compare_eq  di_ikgis_compare_eq
-#define di_ikttrgim_compare_eq di_ikgis_compare_eq
-#define di_iktgis_compare_eq   di_ikgis_compare_eq
-#define di_iktgim_compare_eq   di_ikgis_compare_eq
+#define di_ikgim_compare_eq    generic_proxy_compare_eq_recursive
+#define di_iktrgim_compare_eq  di_ikgim_compare_eq
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktrgis_compare_eq  di_ikgim_compare_eq
+#define di_ikttrgis_compare_eq di_ikgim_compare_eq
+#define di_ikgis_compare_eq    di_ikgim_compare_eq
+#define di_ikttrgim_compare_eq di_ikgim_compare_eq
+#define di_iktgis_compare_eq   di_ikgim_compare_eq
+#define di_iktgim_compare_eq   di_ikgim_compare_eq
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
-#define di_ikgis_compare_eq generic_proxy_compare_eq_recursive
+#define di_ikgim_compare    generic_proxy_compare_recursive
+#define di_iktrgim_compare  di_ikgim_compare
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktrgis_compare  di_ikgim_compare
+#define di_ikttrgis_compare di_ikgim_compare
+#define di_ikgis_compare    di_ikgim_compare
+#define di_ikttrgim_compare di_ikgim_compare
+#define di_iktgis_compare   di_ikgim_compare
+#define di_iktgim_compare   di_ikgim_compare
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_iktrgis_compare  di_ikgis_compare
-#define di_ikttrgis_compare di_ikgis_compare
-#define di_ikgim_compare    di_ikgis_compare
-#define di_iktrgim_compare  di_ikgis_compare
-#define di_ikttrgim_compare di_ikgis_compare
-#define di_iktgis_compare   di_ikgis_compare
-#define di_iktgim_compare   di_ikgis_compare
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
-#define di_ikgis_compare generic_proxy_compare_recursive
+#define di_ikgim_trycompare_eq    generic_proxy_trycompare_eq_recursive
+#define di_iktrgim_trycompare_eq  di_ikgim_trycompare_eq
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktrgis_trycompare_eq  di_ikgim_trycompare_eq
+#define di_ikttrgis_trycompare_eq di_ikgim_trycompare_eq
+#define di_ikgis_trycompare_eq    di_ikgim_trycompare_eq
+#define di_ikttrgim_trycompare_eq di_ikgim_trycompare_eq
+#define di_iktgis_trycompare_eq   di_ikgim_trycompare_eq
+#define di_iktgim_trycompare_eq   di_ikgim_trycompare_eq
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-#define di_iktrgis_trycompare_eq  di_ikgis_trycompare_eq
-#define di_ikttrgis_trycompare_eq di_ikgis_trycompare_eq
-#define di_ikgim_trycompare_eq    di_ikgis_trycompare_eq
-#define di_iktrgim_trycompare_eq  di_ikgis_trycompare_eq
-#define di_ikttrgim_trycompare_eq di_ikgis_trycompare_eq
-#define di_iktgis_trycompare_eq   di_ikgis_trycompare_eq
-#define di_iktgim_trycompare_eq   di_ikgis_trycompare_eq
-STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
-#define di_ikgis_trycompare_eq generic_proxy_trycompare_eq_recursive
 
-#define di_iktrgis_cmp  di_ikgis_cmp
-#define di_ikttrgis_cmp di_ikgis_cmp
-#define di_ikgim_cmp    di_ikgis_cmp
-#define di_iktrgim_cmp  di_ikgis_cmp
-#define di_ikttrgim_cmp di_ikgis_cmp
-#define di_iktgis_cmp   di_ikgis_cmp
-#define di_iktgim_cmp   di_ikgis_cmp
+#define di_iktrgim_cmp  di_ikgim_cmp
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define di_iktgim_cmp   di_ikgim_cmp
+#define di_ikttrgim_cmp di_ikgim_cmp
+#define di_iktrgis_cmp  di_ikgim_cmp
+#define di_ikttrgis_cmp di_ikgim_cmp
+#define di_ikgis_cmp    di_ikgim_cmp
+#define di_iktgis_cmp   di_ikgim_cmp
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #if 1
-#define di_ikgis_cmp generic_proxy_cmp_recursive
+#define di_ikgim_cmp generic_proxy_cmp_recursive
 #else
 PRIVATE struct type_cmp di_ikgis_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_ikgis_hash,
@@ -2367,6 +2477,14 @@ PRIVATE struct type_cmp di_ikgis_cmp = {
 };
 #endif
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE struct type_member tpconst di_ikgim_members[] = {
+#define di_iktrgim_members di_ikgim_members
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__iterkeys__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter), "->?DIterator"),
+	TYPE_MEMBER_END
+};
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define di_ikttrgim_members di_ikttrgis_members
 #define di_iktgis_members   di_ikttrgis_members
 #define di_iktgim_members   di_ikttrgis_members
@@ -2380,7 +2498,9 @@ PRIVATE struct type_member tpconst di_ikttrgis_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iterkeys__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_ikgis_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
 	DREF DeeObject *value;
@@ -2452,6 +2572,7 @@ nextkey:
 		goto nextkey;
 	return value;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 di_ikgim_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
@@ -2487,6 +2608,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 di_iktgim_iter_next(DefaultIterator_WithIterKeysAndTGetItem *__restrict self) {
 	DREF DeeTupleObject *result;
@@ -2520,6 +2642,7 @@ err_key_value:
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 di_iktrgim_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
@@ -2550,6 +2673,7 @@ err_key:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 di_ikttrgim_iter_next(DefaultIterator_WithIterKeysAndTGetItem *__restrict self) {
 	DREF DeeTupleObject *result;
@@ -2777,6 +2901,7 @@ PRIVATE struct type_member tpconst di_ikgim_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithIterKeysAndTGetItemMap_Type),
 	TYPE_MEMBER_END
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2822,9 +2947,14 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	/* .tp_members       = */ di_ikgim_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_class_members = */ NULL
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_ikgim_class_members
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTGetItemForMap",
@@ -2876,6 +3006,7 @@ PRIVATE struct type_member tpconst di_iktrgim_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultIterator_WithIterKeysAndTTryGetItemMap_Type),
 	TYPE_MEMBER_END
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2921,9 +3052,14 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	/* .tp_members       = */ di_iktrgim_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_class_members = */ NULL
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_class_members = */ di_iktrgim_class_members
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithIterKeysAndTTryGetItemForMap",
@@ -2970,6 +3106,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -3000,7 +3137,9 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTTryGetItemMap_Type = {
 /* DefaultIterator_WithEnumerateSeq_Type                                */
 /* DefaultIterator_WithEnumerateMap_Type                                */
 /* DefaultIterator_WithEnumerateIndexSeq_Type                           */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* DefaultIterator_WithEnumerateIndexMap_Type                           */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /************************************************************************/
 
 INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
@@ -3233,6 +3372,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_IterWithEnumerateIndexMap",
@@ -3278,6 +3418,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexMap_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -3327,9 +3468,9 @@ di_ncp_init(DefaultIterator_WithNextAndCounter *__restrict self,
 	                  &self->dinc_iter, &self->dinc_counter))
 		goto err;
 	itertyp = Dee_TYPE(self->dinc_iter);
-	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+	self->dinc_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->dinc_tp_next)
 		goto err_no_next;
-	self->dinc_tp_next = itertyp->tp_iter_next;
 	Dee_Incref(self->dinc_iter);
 	return 0;
 err_no_next:
@@ -3346,9 +3487,9 @@ di_ncpl_init(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
 	                  &self->dincl_iter, &self->dincl_counter, &self->dincl_limit))
 		goto err;
 	itertyp = Dee_TYPE(self->dincl_iter);
-	if (!itertyp->tp_iter_next && !DeeType_InheritIterNext(itertyp))
+	self->dincl_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->dincl_tp_next)
 		goto err_no_next;
-	self->dincl_tp_next = itertyp->tp_iter_next;
 	Dee_Incref(self->dincl_iter);
 	return 0;
 err_no_next:
@@ -3537,8 +3678,10 @@ di_nuf_copy(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
 	self->dinuf_iter = DeeObject_Copy(other->dinuf_iter);
 	if unlikely(!self->dinuf_iter)
 		goto err;
-	self->dinuf_tp_next     = other->dinuf_tp_next;
+	self->dinuf_tp_next = other->dinuf_tp_next;
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	self->dinuf_tp_iterator = other->dinuf_tp_iterator;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	Dee_Incref(other->dinuf_start);
 	self->dinuf_start = other->dinuf_start;
 	Dee_Incref(other->dinuf_end);
@@ -3554,8 +3697,10 @@ di_nuf_deepcopy(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
 	self->dinuf_iter = DeeObject_DeepCopy(other->dinuf_iter);
 	if unlikely(!self->dinuf_iter)
 		goto err;
-	self->dinuf_tp_next     = other->dinuf_tp_next;
+	self->dinuf_tp_next = other->dinuf_tp_next;
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	self->dinuf_tp_iterator = other->dinuf_tp_iterator;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	self->dinuf_start = DeeObject_DeepCopy(other->dinuf_start);
 	if unlikely(!self->dinuf_start)
 		goto err_iter;
@@ -3579,6 +3724,11 @@ di_nuf_init(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
 	                  &self->dinuf_iter, &self->dinuf_start, &self->dinuf_end))
 		goto err;
 	itertyp = Dee_TYPE(self->dinuf_iter);
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	self->dinuf_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->dinuf_tp_next)
+		goto err_no_next;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	if unlikely((!itertyp->tp_iter_next ||
 	             !itertyp->tp_iterator ||
 	             !itertyp->tp_iterator->tp_nextpair ||
@@ -3591,6 +3741,7 @@ di_nuf_init(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
 	ASSERT(itertyp->tp_iterator->tp_nextkey);
 	self->dinuf_tp_next     = itertyp->tp_iter_next;
 	self->dinuf_tp_iterator = itertyp->tp_iterator;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	Dee_Incref(self->dinuf_iter);
 	Dee_Incref(self->dinuf_start);
 	Dee_Incref(self->dinuf_end);
@@ -3653,7 +3804,17 @@ di_nuf_nextpair(DefaultIterator_WithNextAndUnpackFilter *self,
                 /*out*/ DREF DeeObject *key_and_value[2]) {
 	int result, temp;
 again:
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	{
+		DeeTypeObject *itertyp    = Dee_TYPE(self->dinuf_iter);
+		DeeNO_nextpair_t nextpair = DeeType_RequireSupportedNativeOperator(itertyp, nextpair);
+		ASSERTF(nextpair, "But we know that regular iter_next is "
+		                  "supported, and nextpair has an impl for it...");
+		result = (*nextpair)(self->dinuf_iter, key_and_value);
+	}
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	result = (*self->dinuf_tp_iterator->tp_nextpair)(self->dinuf_iter, key_and_value);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	if (result == 0) {
 		temp = DeeObject_CmpLeAsBool(self->dinuf_start, key_and_value[0]);
 		if unlikely(temp <= 0)
@@ -3681,7 +3842,17 @@ di_nuf_nextkey(DefaultIterator_WithNextAndUnpackFilter *self) {
 	int temp;
 	DREF DeeObject *result;
 again:
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	{
+		DeeTypeObject *itertyp    = Dee_TYPE(self->dinuf_iter);
+		DeeNO_nextkey_t nextkey = DeeType_RequireSupportedNativeOperator(itertyp, nextkey);
+		ASSERTF(nextkey, "But we know that regular iter_next is "
+		                  "supported, and nextkey has an impl for it...");
+		result = (*nextkey)(self->dinuf_iter);
+	}
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	result = (*self->dinuf_tp_iterator->tp_nextkey)(self->dinuf_iter);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	if (ITER_ISOK(result)) {
 		temp = DeeObject_CmpLeAsBool(self->dinuf_start, result);
 		if unlikely(temp <= 0)
@@ -3707,7 +3878,17 @@ di_nuf_nextvalue(DefaultIterator_WithNextAndUnpackFilter *self) {
 	DREF DeeObject *key_and_value[2];
 	int temp;
 again:
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	{
+		DeeTypeObject *itertyp    = Dee_TYPE(self->dinuf_iter);
+		DeeNO_nextpair_t nextpair = DeeType_RequireSupportedNativeOperator(itertyp, nextpair);
+		ASSERTF(nextpair, "But we know that regular iter_next is "
+		                  "supported, and nextpair has an impl for it...");
+		temp = (*nextpair)(self->dinuf_iter, key_and_value);
+	}
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	temp = (*self->dinuf_tp_iterator->tp_nextpair)(self->dinuf_iter, key_and_value);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	if (temp > 0)
 		return ITER_DONE;
 	if unlikely(temp < 0)
@@ -3837,21 +4018,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nk_init(DefaultIterator_PairSubItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	DeeTypeObject *tp_dipsi_iter;
+	DeeTypeObject *itertyp;
 	if (DeeArg_Unpack(argc, argv, "o:_IterWithNextKey", &self->dipsi_iter))
 		goto err;
-	tp_dipsi_iter = Dee_TYPE(self->dipsi_iter);
-	if unlikely((!tp_dipsi_iter->tp_iterator ||
-	             !tp_dipsi_iter->tp_iterator->tp_nextkey) &&
-	            !DeeType_InheritIterNext(tp_dipsi_iter))
+	itertyp          = Dee_TYPE(self->dipsi_iter);
+	self->dipsi_next = DeeType_RequireSupportedNativeOperator(itertyp, nextkey);
+	if unlikely(!self->dipsi_next)
 		goto err_no_next;
-	ASSERT(tp_dipsi_iter->tp_iterator);
-	ASSERT(tp_dipsi_iter->tp_iterator->tp_nextkey);
 	Dee_Incref(self->dipsi_iter);
-	self->dipsi_next = tp_dipsi_iter->tp_iterator->tp_nextkey;
 	return 0;
 err_no_next:
-	err_unimplemented_operator(tp_dipsi_iter, OPERATOR_ITERNEXT);
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
 err:
 	return -1;
 }
@@ -3859,21 +4036,17 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_nv_init(DefaultIterator_PairSubItem *__restrict self,
            size_t argc, DeeObject *const *argv) {
-	DeeTypeObject *tp_dipsi_iter;
+	DeeTypeObject *itertyp;
 	if (DeeArg_Unpack(argc, argv, "o:_IterWithNextValue", &self->dipsi_iter))
 		goto err;
-	tp_dipsi_iter = Dee_TYPE(self->dipsi_iter);
-	if unlikely((!tp_dipsi_iter->tp_iterator ||
-	             !tp_dipsi_iter->tp_iterator->tp_nextvalue) &&
-	            !DeeType_InheritIterNext(tp_dipsi_iter))
+	itertyp = Dee_TYPE(self->dipsi_iter);
+	self->dipsi_next = DeeType_RequireSupportedNativeOperator(itertyp, nextvalue);
+	if unlikely(!self->dipsi_next)
 		goto err_no_next;
-	ASSERT(tp_dipsi_iter->tp_iterator);
-	ASSERT(tp_dipsi_iter->tp_iterator->tp_nextvalue);
 	Dee_Incref(self->dipsi_iter);
-	self->dipsi_next = tp_dipsi_iter->tp_iterator->tp_nextvalue;
 	return 0;
 err_no_next:
-	err_unimplemented_operator(tp_dipsi_iter, OPERATOR_ITERNEXT);
+	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
 err:
 	return -1;
 }

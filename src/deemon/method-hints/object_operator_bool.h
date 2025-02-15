@@ -24,6 +24,7 @@
 
 operator {
 
+/*[[export("DeeObject_{|T}Bool")]]*/ /* Custom handling for likely "bool"-optimization */
 [[wunused]] int
 tp_cast.tp_bool([[nonnull]] DeeObject *__restrict self)
 %{class {

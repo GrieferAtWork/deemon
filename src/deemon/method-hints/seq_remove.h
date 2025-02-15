@@ -43,6 +43,37 @@ err:
 
 
 
+
+%[define(DEFINE_default_remove_with_enumerate_index_and_delitem_index_cb =
+#ifndef DEFINED_default_remove_with_enumerate_index_and_delitem_index_cb
+#define DEFINED_default_remove_with_enumerate_index_and_delitem_index_cb
+struct default_remove_with_enumerate_index_and_delitem_index_data {
+	DeeObject *drweiadiid_self; /* [1..1] The sequence from which to remove the object. */
+	DeeObject *drweiadiid_item; /* [1..1] The object to remove. */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_remove_with_enumerate_index_and_delitem_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	int equal;
+	struct default_remove_with_enumerate_index_and_delitem_index_data *data;
+	data = (struct default_remove_with_enumerate_index_and_delitem_index_data *)arg;
+	if (!value)
+		return 0;
+	equal = DeeObject_TryCompareEq(data->drweiadiid_item, value);
+	if unlikely(equal == Dee_COMPARE_ERR)
+		goto err;
+	if (equal != 0)
+		return 0;
+	if unlikely((*Dee_TYPE(data->drweiadiid_self)->tp_seq->tp_delitem_index)(data->drweiadiid_self, index))
+		goto err;
+	return -2;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_remove_with_enumerate_index_and_delitem_index_cb */
+)]
+
+
 /* @return: 0 : Item was not removed
  * @return: 1 : Item was removed
  * @return: -1: Error */
@@ -60,8 +91,22 @@ __seq_remove__.seq_remove([[nonnull]] DeeObject *self,
 err:
 	return -1;
 }}
-%{$with__seq_removeif = {
-	// TODO
+%{$with__seq_enumerate_index__and__seq_operator_delitem_index =
+[[prefix(DEFINE_default_remove_with_enumerate_index_and_delitem_index_cb)]] {
+	Dee_ssize_t foreach_status;
+	struct default_remove_with_enumerate_index_and_delitem_index_data data;
+	data.drweiadiid_self = self;
+	data.drweiadiid_item = item;
+	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &default_remove_with_enumerate_index_and_delitem_index_cb,
+	                                               &data, start, end);
+	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == 0)
+		return 0; /* Not found */
+	return 1;     /* Found and removed */
+err:
+	return -1;
 }}
 %{$with__seq_find__and__seq_operator_delitem_index = {
 	size_t index = CALL_DEPENDENCY(seq_find, self, item, start, end);
@@ -85,6 +130,35 @@ err:
 }
 
 
+%[define(DEFINE_default_remove_with_key_with_enumerate_index_and_delitem_index_cb =
+#ifndef DEFINED_default_remove_with_key_with_enumerate_index_and_delitem_index_cb
+#define DEFINED_default_remove_with_key_with_enumerate_index_and_delitem_index_cb
+struct default_remove_with_key_with_enumerate_index_and_delitem_index_data {
+	DeeObject *drwkweiadiid_self; /* [1..1] The sequence from which to remove the object. */
+	DeeObject *drwkweiadiid_item; /* [1..1] The object to remove (already keyed). */
+	DeeObject *drwkweiadiid_key;  /* [1..1] The key used for object compare. */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_remove_with_key_with_enumerate_index_and_delitem_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+	int equal;
+	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data *data;
+	data = (struct default_remove_with_key_with_enumerate_index_and_delitem_index_data *)arg;
+	if (!value)
+		return 0;
+	equal = DeeObject_TryCompareKeyEq(data->drwkweiadiid_item, value, data->drwkweiadiid_key);
+	if unlikely(equal == Dee_COMPARE_ERR)
+		goto err;
+	if (equal != 0)
+		return 0;
+	if unlikely((*Dee_TYPE(data->drwkweiadiid_self)->tp_seq->tp_delitem_index)(data->drwkweiadiid_self, index))
+		goto err;
+	return -2;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_remove_with_key_with_enumerate_index_and_delitem_index_cb */
+)]
 
 
 /* @return: 0 : Item was not removed
@@ -105,8 +179,27 @@ __seq_remove__.seq_remove_with_key([[nonnull]] DeeObject *self,
 err:
 	return -1;
 }}
-%{$with__seq_removeif = {
-	// TODO
+%{$with__seq_enumerate_index__and__seq_operator_delitem_index =
+[[prefix(DEFINE_default_remove_with_key_with_enumerate_index_and_delitem_index_cb)]] {
+	Dee_ssize_t foreach_status;
+	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data data;
+	data.drwkweiadiid_self = self;
+	data.drwkweiadiid_item = DeeObject_Call(key, 1, &item);
+	if unlikely(!data.drwkweiadiid_item)
+		goto err;
+	data.drwkweiadiid_key = key;
+	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self,
+	                                 &default_remove_with_key_with_enumerate_index_and_delitem_index_cb,
+	                                 &data, start, end);
+	Dee_Decref(data.drwkweiadiid_item);
+	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == 0)
+		return 0; /* Not found */
+	return 1;     /* Found and removed */
+err:
+	return -1;
 }}
 %{$with__seq_find_with_key__and__seq_operator_delitem_index = {
 	size_t index = CALL_DEPENDENCY(seq_find_with_key, self, item, start, end, key);
@@ -143,14 +236,19 @@ seq_remove = {
 	if (seq_removeif) {
 		if (seq_removeif == &default__seq_removeif__empty)
 			return &$empty;
-		return &$with__seq_removeif;
+		return &$with__seq_removeall;
 	}
 	seq_operator_delitem_index = REQUIRE_NODEFAULT(seq_operator_delitem_index);
 	if (seq_operator_delitem_index) {
+		DeeMH_seq_find_t seq_find;
 		if (seq_operator_delitem_index == &default__seq_operator_delitem_index__empty)
 			return &$empty;
-		if (REQUIRE_ANY(seq_find) != &default__seq_find__unsupported)
+		seq_find = REQUIRE_ANY(seq_find);
+		if (seq_find != &default__seq_find__unsupported) {
+			if (seq_find == &default__seq_find__with__seq_enumerate_index)
+				return &$with__seq_enumerate_index__and__seq_operator_delitem_index;
 			return &$with__seq_find__and__seq_operator_delitem_index;
+		}
 	}
 };
 
@@ -168,13 +266,18 @@ seq_remove_with_key = {
 	if (seq_removeif) {
 		if (seq_removeif == &default__seq_removeif__empty)
 			return &$empty;
-		return &$with__seq_removeif;
+		return &$with__seq_removeall;
 	}
 	seq_operator_delitem_index = REQUIRE_NODEFAULT(seq_operator_delitem_index);
 	if (seq_operator_delitem_index) {
+		DeeMH_seq_find_with_key_t seq_find_with_key;
 		if (seq_operator_delitem_index == &default__seq_operator_delitem_index__empty)
 			return &$empty;
-		if (REQUIRE_ANY(seq_find_with_key) != &default__seq_find_with_key__unsupported)
+		seq_find_with_key = REQUIRE_ANY(seq_find_with_key);
+		if (seq_find_with_key != &default__seq_find_with_key__unsupported) {
+			if (seq_find_with_key == &default__seq_find_with_key__with__seq_enumerate_index)
+				return &$with__seq_enumerate_index__and__seq_operator_delitem_index;
 			return &$with__seq_find_with_key__and__seq_operator_delitem_index;
+		}
 	}
 };

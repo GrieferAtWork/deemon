@@ -50,9 +50,9 @@ err:
 #ifndef DEFINED_default_seq_enumerate_with_counter__and__seq_foreach_cb
 #define DEFINED_default_seq_enumerate_with_counter__and__seq_foreach_cb
 struct default_seq_enumerate_with_counter__and__seq_foreach_data {
-	Dee_seq_enumerate_t dewcaf_proc;    /* [1..1] Wrapped callback */
-	void           *dewcaf_arg;     /* [?..?] Cookie for `dewcaf_proc' */
-	size_t          dewcaf_counter; /* Index of the next element that will be enumerated */
+	Dee_seq_enumerate_t dewcaf_cb;      /* [1..1] Wrapped callback */
+	void               *dewcaf_arg;     /* [?..?] Cookie for `dewcaf_cb' */
+	size_t              dewcaf_counter; /* Index of the next element that will be enumerated */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -65,7 +65,7 @@ default_seq_enumerate_with_counter__and__seq_foreach_cb(void *arg, DeeObject *el
 	if unlikely(!indexob)
 		goto err;
 	++data->dewcaf_counter;
-	result = (*data->dewcaf_proc)(data->dewcaf_arg, indexob, elem);
+	result = (*data->dewcaf_cb)(data->dewcaf_arg, indexob, elem);
 	Dee_Decref(indexob);
 	return result;
 err:
@@ -78,7 +78,7 @@ err:
 
 [[wunused]] Dee_ssize_t
 __seq_enumerate__.seq_enumerate([[nonnull]] DeeObject *__restrict self,
-                                [[nonnull]] Dee_seq_enumerate_t proc,
+                                [[nonnull]] Dee_seq_enumerate_t cb,
                                 void *arg)
 %{unsupported({ return err_seq_unsupportedf(self, "__seq_enumerate__(...)"); })}
 %{$empty = 0}
@@ -96,7 +96,7 @@ __seq_enumerate__.seq_enumerate([[nonnull]] DeeObject *__restrict self,
 		if unlikely(!indexob)
 			goto err;
 		index_value = (*tp_getitem_index_fast)(self, i);
-		temp = (*proc)(arg, indexob, index_value);
+		temp = (*cb)(arg, indexob, index_value);
 		Dee_XDecref(index_value);
 		Dee_Decref(indexob);
 		if unlikely(temp < 0)
@@ -110,6 +110,45 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *indexob, *index_value;
+	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	for (i = 0; i < size; ++i) {
+		indexob = DeeInt_NewSize(i);
+		if unlikely(!indexob)
+			goto err;
+		index_value = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
+		if unlikely(!index_value) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else {
+				if (DeeError_Catch(&DeeError_IndexError))
+					break;
+				goto err_indexob;
+			}
+		}
+		temp = (*cb)(arg, indexob, index_value);
+		Dee_XDecref(index_value);
+		Dee_Decref(indexob);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err_temp:
+	return temp;
+err_indexob:
+	Dee_Decref(indexob);
+err:
+	return -1;
+}}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	PRELOAD_DEPENDENCY(seq_operator_trygetitem_index)
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *indexob, *index_value;
 	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
@@ -123,9 +162,9 @@ err:
 		if unlikely(!index_value)
 			goto err_indexob;
 		if (index_value == ITER_DONE) {
-			temp = (*proc)(arg, indexob, NULL);
+			temp = (*cb)(arg, indexob, NULL);
 		} else {
-			temp = (*proc)(arg, indexob, index_value);
+			temp = (*cb)(arg, indexob, index_value);
 			Dee_Decref(index_value);
 		}
 		Dee_Decref(indexob);
@@ -144,6 +183,7 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_sizeob__and__seq_operator_getitem = {
+	PRELOAD_DEPENDENCY(seq_operator_getitem)
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *indexob, *index_value, *sizeob;
 	sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
@@ -161,16 +201,22 @@ err:
 		}
 		index_value = CALL_DEPENDENCY(seq_operator_getitem, self, indexob);
 		if unlikely(!index_value) {
-			if (!DeeError_Catch(&DeeError_IndexError) &&
-			    !DeeError_Catch(&DeeError_UnboundItem))
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else {
+				if (DeeError_Catch(&DeeError_IndexError))
+					break;
 				goto err_sizeob_indexob;
+			}
 		}
-		temp = (*proc)(arg, indexob, index_value);
+		temp = (*cb)(arg, indexob, index_value);
 		Dee_XDecref(index_value);
 		if unlikely(temp < 0)
 			goto err_temp_sizeob_indexob;
 		result += temp;
 		if (DeeThread_CheckInterrupt())
+			goto err_sizeob_indexob;
+		if unlikely(DeeObject_Inc(&indexob))
 			goto err_sizeob_indexob;
 	}
 	Dee_Decref(indexob);
@@ -187,17 +233,98 @@ err_sizeob:
 err:
 	return -1;
 }}
+%{$with__seq_operator_getitem_index = {
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *indexob, *index_value;
+	size_t i;
+	for (i = 0;; ++i) {
+		indexob = DeeInt_NewSize(i);
+		if unlikely(!indexob)
+			goto err;
+		index_value = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
+		if unlikely(!index_value) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else {
+				if (DeeError_Catch(&DeeError_IndexError))
+					break;
+				goto err_indexob;
+			}
+		}
+		temp = (*cb)(arg, indexob, index_value);
+		Dee_XDecref(index_value);
+		Dee_Decref(indexob);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err_temp:
+	return temp;
+err_indexob:
+	Dee_Decref(indexob);
+err:
+	return -1;
+}}
+%{$with__seq_operator_getitem = {
+	PRELOAD_DEPENDENCY(seq_operator_getitem)
+	Dee_ssize_t temp, result = 0;
+	DREF DeeIntObject *indexob;
+	Dee_Incref(DeeInt_Zero);
+	indexob = (DREF DeeIntObject *)DeeInt_Zero;
+	for (;;) {
+		DREF DeeObject *index_value;
+		index_value = CALL_DEPENDENCY(seq_operator_getitem, self, (DeeObject *)indexob);
+		if unlikely(!index_value) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else {
+				if (DeeError_Catch(&DeeError_IndexError))
+					break;
+				goto err_indexob;
+			}
+		}
+		temp = (*cb)(arg, (DeeObject *)indexob, index_value);
+		Dee_XDecref(index_value);
+		if unlikely(temp < 0)
+			goto err_temp_indexob;
+		result += temp;
+		if unlikely(DeeThread_CheckInterrupt())
+			goto err_indexob;
+		if unlikely(int_inc(&indexob))
+			goto err_indexob;
+	}
+	Dee_Decref(indexob);
+	return result;
+err_temp_indexob:
+	Dee_Decref(indexob);
+	return temp;
+err_indexob:
+	Dee_Decref(indexob);
+err:
+	return -1;
+}}
+%{$with__seq_enumerate_index = {
+	// TODO
+	(void)self;
+	(void)cb;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}}
 %{$with__counter__and__seq_operator_foreach =
 [[prefix(DEFINE_default_seq_enumerate_with_counter__and__seq_foreach_cb)]] {
 	struct default_seq_enumerate_with_counter__and__seq_foreach_data data;
-	data.dewcaf_proc    = proc;
+	data.dewcaf_cb      = cb;
 	data.dewcaf_arg     = arg;
 	data.dewcaf_counter = 0;
 	return CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_enumerate_with_counter__and__seq_foreach_cb, &data);
 }} {
 	DREF DeeObject *result;
 	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateWrapper_New(proc, arg);
+	wrapper = EnumerateWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = LOCAL_CALLATTR(self, 1, (DeeObject *const *)&wrapper);
@@ -217,8 +344,8 @@ err:
 	(__SSIZE_MIN__ + 99) /* Shhht. We don't talk about this one... */
 
 struct default_seq_enumerate_index_with_counter__and__seq_foreach_data {
-	Dee_seq_enumerate_index_t deiwcaf_proc;  /* [1..1] Wrapped callback */
-	void                     *deiwcaf_arg;   /* [?..?] Cookie for `deiwcaf_proc' */
+	Dee_seq_enumerate_index_t deiwcaf_cb;    /* [1..1] Wrapped callback */
+	void                     *deiwcaf_arg;   /* [?..?] Cookie for `deiwcaf_cb' */
 	size_t                    deiwcaf_index; /* Index of the next element that will be enumerate_indexd */
 	size_t                    deiwcaf_start; /* Enumeration start index */
 	size_t                    deiwcaf_end;   /* Enumeration end index */
@@ -234,14 +361,14 @@ default_seq_enumerate_index_with_counter__and__seq_foreach_cb(void *arg, DeeObje
 	index = data->deiwcaf_index++;
 	if (index < data->deiwcaf_start)
 		return 0; /* Skipped... */
-	return (*data->deiwcaf_proc)(data->deiwcaf_arg, index, elem);
+	return (*data->deiwcaf_cb)(data->deiwcaf_arg, index, elem);
 }
 #endif /* !DEFINED_default_seq_enumerate_index_with_counter__and__seq_foreach_cb */
 )]
 
 [[wunused]] Dee_ssize_t
 __seq_enumerate__.seq_enumerate_index([[nonnull]] DeeObject *__restrict self,
-                                      [[nonnull]] Dee_seq_enumerate_index_t proc,
+                                      [[nonnull]] Dee_seq_enumerate_index_t cb,
                                       void *arg, size_t start, size_t end)
 %{unsupported({ return err_seq_unsupportedf(self, "__seq_enumerate__(..., %" PRFuSIZ ", %" PRFuSIZ ")", start, end); })}
 %{$empty = 0}
@@ -258,7 +385,7 @@ __seq_enumerate__.seq_enumerate_index([[nonnull]] DeeObject *__restrict self,
 	for (i = start; i < end; ++i) {
 		DREF DeeObject *index_value;
 		index_value = (*tp_getitem_index_fast)(self, i);
-		temp = (*proc)(arg, i, index_value);
+		temp = (*cb)(arg, i, index_value);
 		Dee_XDecref(index_value);
 		if unlikely(temp < 0)
 			goto err_temp;
@@ -271,6 +398,7 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
 	Dee_ssize_t temp, result = 0;
 	size_t i, size;
 	size = CALL_DEPENDENCY(seq_operator_size, self);
@@ -282,15 +410,21 @@ err:
 		DREF DeeObject *index_value;
 		index_value = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
 		if unlikely(!index_value) {
-			if (!DeeError_Catch(&DeeError_IndexError) &&
-			    !DeeError_Catch(&DeeError_UnboundItem))
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else {
+				if (DeeError_Catch(&DeeError_IndexError))
+					break;
 				goto err;
+			}
 		}
-		temp = (*proc)(arg, i, index_value);
+		temp = (*cb)(arg, i, index_value);
 		Dee_XDecref(index_value);
 		if unlikely(temp < 0)
 			goto err_temp;
 		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
 	}
 	return result;
 err_temp:
@@ -298,11 +432,82 @@ err_temp:
 err:
 	return -1;
 }}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	PRELOAD_DEPENDENCY(seq_operator_trygetitem_index)
+	Dee_ssize_t temp, result = 0;
+	size_t i, size;
+	size = CALL_DEPENDENCY(seq_operator_size, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (end > size)
+		end = size;
+	for (i = start; i < end; ++i) {
+		DREF DeeObject *index_value;
+		index_value = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, i);
+		if unlikely(!index_value)
+			goto err;
+		if (index_value == ITER_DONE) {
+			temp = (*cb)(arg, i, NULL);
+		} else {
+			temp = (*cb)(arg, i, index_value);
+			Dee_Decref(index_value);
+		}
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}}
+%{$with__seq_operator_getitem_index = {
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	for (i = start; i < end; ++i) {
+		DREF DeeObject *index_value;
+		index_value = CALL_DEPENDENCY(seq_operator_getitem_index, self, i);
+		if unlikely(!index_value) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* Unbound... */
+			} else {
+				if (DeeError_Catch(&DeeError_IndexError))
+					break;
+				goto err;
+			}
+		}
+		temp = (*cb)(arg, i, index_value);
+		Dee_XDecref(index_value);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}}
+%{$with__seq_enumerate = {
+	// TODO
+	(void)self;
+	(void)cb;
+	(void)arg;
+	(void)start;
+	(void)end;
+	return DeeError_NOTIMPLEMENTED();
+}}
 %{$with__counter__and__seq_operator_foreach =
 [[prefix(DEFINE_default_seq_enumerate_index_with_counter__and__seq_foreach_cb)]] {
 	struct default_seq_enumerate_index_with_counter__and__seq_foreach_data data;
 	Dee_ssize_t result;
-	data.deiwcaf_proc  = proc;
+	data.deiwcaf_cb    = cb;
 	data.deiwcaf_arg   = arg;
 	data.deiwcaf_index = 0;
 	data.deiwcaf_start = start;
@@ -314,7 +519,7 @@ err:
 }} {
 	DREF DeeObject *result;
 	DREF EnumerateWrapper *wrapper;
-	wrapper = EnumerateIndexWrapper_New(proc, arg);
+	wrapper = EnumerateIndexWrapper_New(cb, arg);
 	if unlikely(!wrapper)
 		goto err;
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ, wrapper, start, end);
@@ -326,7 +531,10 @@ err:
 
 seq_enumerate = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_ANY(seq_operator_size);
+	DeeMH_seq_operator_size_t seq_operator_size;
+	if (REQUIRE_NODEFAULT(seq_enumerate_index))
+		return &$with__seq_enumerate_index;
+	seq_operator_size = REQUIRE_ANY(seq_operator_size);
 	if (seq_operator_size != &default__seq_operator_size__unsupported) {
 		DeeMH_seq_operator_getitem_t seq_operator_getitem;
 		if (seq_operator_size == &default__seq_operator_size__empty)
@@ -334,32 +542,57 @@ seq_enumerate = {
 		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast)
 			return &$with__seq_operator_size__and__operator_getitem_index_fast;
 		seq_operator_getitem = REQUIRE(seq_operator_getitem);
-		if (seq_operator_getitem == &default__seq_operator_getitem__with__seq_operator_getitem_index)
+		if (seq_operator_getitem == &default__seq_operator_getitem__with__seq_operator_getitem_index) {
+			DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
+			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach)
+				goto use_seq_operator_foreach;
+			if (seq_operator_size == &default__seq_operator_size__with__seq_operator_foreach_pair)
+				goto use_seq_operator_foreach;
+			seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
+			if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
+				goto use_seq_operator_foreach;
 			return &$with__seq_operator_size__and__seq_operator_getitem_index;
-		if (seq_operator_getitem)
+		} else if (seq_operator_getitem) {
 			return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+		}
 	}
+use_seq_operator_foreach:
 	seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
-		return &$empty;
-	if (seq_operator_foreach)
+	if (seq_operator_foreach) {
+		if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+			return &$empty;
+		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast)
+			return &$with__seq_operator_size__and__operator_getitem_index_fast;
+		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
+			return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index)
+			return &$with__seq_operator_size__and__seq_operator_getitem_index;
+		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem)
+			return &$with__seq_operator_sizeob__and__seq_operator_getitem;
+		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem_index)
+			return &$with__seq_operator_getitem_index;
+		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem)
+			return &$with__seq_operator_getitem;
 		return &$with__counter__and__seq_operator_foreach;
+	}
 };
 
 seq_enumerate_index = {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach;
-	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_ANY(seq_operator_size);
-	if (seq_operator_size != &default__seq_operator_size__unsupported) {
-		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast)
-			return &$with__seq_operator_size__and__operator_getitem_index_fast;
-		if (seq_operator_size == &default__seq_operator_size__empty)
-			return &$empty;
-		if (REQUIRE(seq_operator_getitem_index))
-			return &$with__seq_operator_size__and__seq_operator_getitem_index;
-	}
-	seq_operator_foreach = REQUIRE(seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	DeeMH_seq_enumerate_t seq_enumerate = REQUIRE(seq_enumerate);
+	if (seq_enumerate == &default__seq_enumerate__empty)
 		return &$empty;
-	if (seq_operator_foreach)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_size__and__operator_getitem_index_fast)
+		return &$with__seq_operator_size__and__operator_getitem_index_fast;
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_size__and__seq_operator_getitem_index ||
+	    seq_enumerate == &default__seq_enumerate__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &$with__seq_operator_size__and__seq_operator_getitem_index;
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_size__and__seq_operator_trygetitem_index)
+		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem_index ||
+	    seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem)
+		return &$with__seq_operator_getitem_index;
+	if (seq_enumerate == &default__seq_enumerate__with__counter__and__seq_operator_foreach)
 		return &$with__counter__and__seq_operator_foreach;
+	if (seq_enumerate)
+		return &$with__seq_enumerate;
 };

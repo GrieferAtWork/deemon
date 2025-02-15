@@ -32,15 +32,12 @@
 
 DECL_BEGIN
 
-/* Custom impl, as referenced by:
+/* Custom impls, as referenced by:
  * >> [[custom_unsupported_impl_name(default__hash__unsupported)]] */
-PRIVATE Dee_hash_t DCALL
+INTERN Dee_hash_t DCALL
 default__hash__unsupported(DeeObject *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
-
-#define default__trycompare_eq__unsupported \
-	default__seq_operator_trycompare_eq__unsupported
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintErrorImpls from "..method-hints.method-hints")(decls: false);]]]*/
@@ -378,7 +375,7 @@ INTERN int DCALL default__leave__unsupported(DeeObject*self) {
 /* Returns a special impl for "id" returned by:
  * - DeeType_GetNativeOperatorWithoutHints()
  * - DeeType_GetNativeOperatorWithoutInherit()
- * - DeeType_GetNativeOperator()
+ * - DeeType_GetNativeOperatorWithoutUnsupported()
  * when it failed to allocate a necessary operator table. These impls behave
  * similar to `DeeType_GetNativeOperatorUnsupported()', except that rather
  * than calling `err_unimplemented_operator()', these call:
@@ -423,7 +420,7 @@ _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT] = {
 	/* foreach_pair               */ (Dee_funptr_t)&default__foreach_pair__badalloc,
 	/* sizeob                     */ (Dee_funptr_t)&default__sizeob__badalloc,
 	/* size                       */ (Dee_funptr_t)&default__size__badalloc,
-	/* size_fast                  */ (Dee_funptr_t)&default__size_fast__badalloc,
+	/* size_fast                  */ (Dee_funptr_t)&default__size_fast__with__,
 	/* contains                   */ (Dee_funptr_t)&default__contains__badalloc,
 	/* getitem                    */ (Dee_funptr_t)&default__getitem__badalloc,
 	/* trygetitem                 */ (Dee_funptr_t)&default__trygetitem__badalloc,

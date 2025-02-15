@@ -30,6 +30,7 @@
 #include <hybrid/overflow.h>
 
 /**/
+#include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "default-api.h"

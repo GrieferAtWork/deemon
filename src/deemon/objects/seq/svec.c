@@ -20,14 +20,11 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_SVEC_C
 #define GUARD_DEEMON_OBJECTS_SEQ_SVEC_C 1
 
-#include "svec.h"
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
-#include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -40,7 +37,11 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
+/**/
+#include "svec.h"
+
 #undef SSIZE_MAX
+#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
 
 #ifdef __OPTIMIZE_SIZE__

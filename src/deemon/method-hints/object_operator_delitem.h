@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}DelItem")]]
 [[wunused]] int
 tp_seq->tp_delitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
@@ -92,6 +93,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}DelItemIndex")]]
 [[wunused]] int
 tp_seq->tp_delitem_index([[nonnull]] DeeObject *self, size_t index)
 %{using tp_seq->tp_delitem: {
@@ -108,6 +110,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}DelItemStringHash")]]
 [[wunused]] int
 tp_seq->tp_delitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash)
@@ -124,6 +127,7 @@ err:
 }} = OPERATOR_DELITEM;
 
 
+[[export("DeeObject_{|T}DelItemStringLenHash")]]
 [[wunused]] int
 tp_seq->tp_delitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
@@ -135,6 +139,14 @@ tp_seq->tp_delitem_string_len_hash([[nonnull]] DeeObject *self,
 		goto err;
 	result = CALL_DEPENDENCY(tp_seq->tp_delitem, self, keyob);
 	Dee_Decref_likely(keyob);
+	return result;
+err:
+	return -1;
+}}
+%{using tp_seq->tp_delitem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {
+	int result;
+	WITH_ZSTRING(err, zkey, key, keylen, return 0,
+	             result = CALL_DEPENDENCY(tp_seq->tp_delitem_string_hash, self, zkey, hash));
 	return result;
 err:
 	return -1;

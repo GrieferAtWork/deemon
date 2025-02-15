@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/gc.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/super.h>
@@ -57,17 +58,13 @@ uqi_copy(DistinctIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 uqi_init(DistinctIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp;
 	if (DeeArg_Unpack(argc, argv, "o:_DistinctIterator", &self->di_iter))
 		goto err;
-	self->di_tp_next = Dee_TYPE(self->di_iter)->tp_iter_next;
-	if unlikely(!self->di_tp_next) {
-		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(self->di_iter))) {
-			err_unimplemented_operator(Dee_TYPE(self->di_iter), OPERATOR_ITERNEXT);
-			goto err;
-		}
-		self->di_tp_next = Dee_TYPE(self->di_iter)->tp_iter_next;
-		ASSERT(self->di_tp_next);
-	}
+	itertyp = Dee_TYPE(self->di_iter);
+	self->di_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->di_tp_next)
+		return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
 	Dee_Incref(self->di_iter);
 	Dee_simple_hashset_with_lock_init(&self->di_encountered);
 	return 0;
@@ -225,18 +222,14 @@ uqiwk_copy(DistinctIteratorWithKey *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 uqiwk_init(DistinctIteratorWithKey *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeTypeObject *itertyp;
 	if (DeeArg_Unpack(argc, argv, "oo:_DistinctIteratorWithKey",
 	                  &self->diwk_iter, &self->diwk_key))
 		goto err;
-	self->diwk_tp_next = Dee_TYPE(self->diwk_iter)->tp_iter_next;
-	if unlikely(!self->diwk_tp_next) {
-		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(self->diwk_iter))) {
-			err_unimplemented_operator(Dee_TYPE(self->diwk_iter), OPERATOR_ITERNEXT);
-			goto err;
-		}
-		self->diwk_tp_next = Dee_TYPE(self->diwk_iter)->tp_iter_next;
-		ASSERT(self->diwk_tp_next);
-	}
+	itertyp = Dee_TYPE(self->diwk_iter);
+	self->diwk_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
+	if unlikely(!self->diwk_tp_next)
+		return err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
 	Dee_Incref(self->diwk_iter);
 	Dee_Incref(self->diwk_key);
 	Dee_simple_hashset_with_lock_init(&self->diwk_encountered);
@@ -388,6 +381,7 @@ STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, p
 
 PRIVATE WUNUSED NONNULL((1)) DREF DistinctIteratorWithKey *DCALL
 dswk_iter(DistinctSetWithKey *__restrict self) {
+	DeeTypeObject *itertyp;
 	DREF DistinctIteratorWithKey *result;
 	result = DeeGCObject_MALLOC(DistinctIteratorWithKey);
 	if unlikely(!result)
@@ -395,14 +389,11 @@ dswk_iter(DistinctSetWithKey *__restrict self) {
 	result->diwk_iter = DeeSeq_OperatorIter(self->dswk_seq);
 	if unlikely(!result->diwk_iter)
 		goto err_r;
-	result->diwk_tp_next = Dee_TYPE(result->diwk_iter)->tp_iter_next;
+	itertyp = Dee_TYPE(result->diwk_iter);
+	result->diwk_tp_next = DeeType_RequireSupportedNativeOperator(itertyp, iter_next);
 	if unlikely(!result->diwk_tp_next) {
-		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(result->diwk_iter))) {
-			err_unimplemented_operator(Dee_TYPE(result->diwk_iter), OPERATOR_ITERNEXT);
-			goto err_r_iter;
-		}
-		result->diwk_tp_next = Dee_TYPE(result->diwk_iter)->tp_iter_next;
-		ASSERT(result->diwk_tp_next);
+		err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
+		goto err_r_iter;
 	}
 	result->diwk_key = self->dswk_key;
 	Dee_Incref(self->dswk_key);

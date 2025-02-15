@@ -75,7 +75,7 @@ err:
 }}
 %{$with__seq_insert = [[prefix(DEFINE_seq_insertall_with_foreach_insert_cb)]] {
 	struct seq_insertall_with_foreach_insert_data data;
-	data.dsiawfid_insert = DeeType_RequireSeqInsert(Dee_TYPE(self));
+	data.dsiawfid_insert = REQUIRE_DEPENDENCY(seq_insert);
 	data.dsiawfid_self   = self;
 	data.dsiawfid_index  = index;
 	return (int)CALL_DEPENDENCY(seq_operator_foreach, items, &seq_insertall_with_foreach_insert_cb, &data);
@@ -91,8 +91,6 @@ err:
 }
 
 seq_insertall = {
-	if (SEQ_CLASS == Dee_SEQCLASS_SEQ && DeeType_RequireSetRangeIndex(THIS_TYPE))
-		return &$with__seq_operator_setrange_index;
 	if (REQUIRE_NODEFAULT(seq_operator_setrange_index))
 		return &$with__seq_operator_setrange_index;
 	if (REQUIRE_NODEFAULT(seq_insert))

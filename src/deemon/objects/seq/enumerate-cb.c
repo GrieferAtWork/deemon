@@ -26,6 +26,7 @@
 #include <deemon/callable.h>
 #include <deemon/error.h>
 #include <deemon/int.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
@@ -88,6 +89,99 @@ seq_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	return -2; /* Stop enumeration! */
 err:
 	return -1;
+}
+
+
+
+
+/* Helpers for enumerating a sequence by invoking a given callback. */
+INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_call_enumerate(DeeObject *self, DeeObject *cb) {
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_data data;
+	data.sed_cb    = cb;
+	foreach_status = DeeSeq_OperatorEnumerate(self, &seq_enumerate_cb, &data);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sed_result;
+	return_none;
+err:
+	return NULL;
+}
+
+INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_call_enumerate_with_intrange(DeeObject *self, DeeObject *cb,
+                                 size_t start, size_t end) {
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_data data;
+	data.sed_cb    = cb;
+	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_enumerate_index_cb, &data, start, end);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sed_result;
+	return_none;
+err:
+	return NULL;
+}
+
+struct seq_enumerate_with_filter_data {
+	DeeObject      *sedwf_cb;     /* [1..1] Enumeration callback */
+	DREF DeeObject *sedwf_result; /* [?..1][valid_if(return == -2)] Enumeration result */
+	DeeObject      *sedwf_start;  /* [1..1] Filter start */
+	DeeObject      *sedwf_end;    /* [1..1] Filter end */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+seq_enumerate_with_filter_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+	int temp;
+	DREF DeeObject *result;
+	DeeObject *args[2];
+	struct seq_enumerate_with_filter_data *data;
+	data = (struct seq_enumerate_with_filter_data *)arg;
+	/* if (data->sedwf_start <= index && data->sedwf_end > index) ... */
+	temp = DeeObject_CmpLeAsBool(data->sedwf_start, index);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 0;
+	temp = DeeObject_CmpGrAsBool(data->sedwf_end, index);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 0;
+	args[0] = index;
+	args[1] = value;
+	result  = DeeObject_Call(data->sedwf_cb, value ? 2 : 1, args);
+	if unlikely(!result)
+		goto err;
+	if (DeeNone_Check(result)) {
+		Dee_DecrefNokill(Dee_None);
+		return 0;
+	}
+	data->sedwf_result = result;
+	return -2; /* Stop enumeration! */
+err:
+	return -1;
+}
+
+INTERN NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+seq_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
+                              DeeObject *start, DeeObject *end) {
+	Dee_ssize_t foreach_status;
+	struct seq_enumerate_with_filter_data data;
+	data.sedwf_cb    = cb;
+	data.sedwf_start = start;
+	data.sedwf_end   = end;
+	foreach_status = DeeSeq_OperatorEnumerate(self, &seq_enumerate_with_filter_cb, &data);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if (foreach_status == -2)
+		return data.sedwf_result;
+	return_none;
+err:
+	return NULL;
 }
 
 

@@ -40,6 +40,7 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* How default API functions from "Sequence", "Set" and "Mapping" are implemented.
  *
  * This structure gets lazily calculated when it is first needed, based on features
@@ -59,24 +60,6 @@ DECL_BEGIN
  *   probably won't actually use them). "Generic" API function will often try to
  *   make use of other APIs (usually Default ones, or operators) for their impl.
  */
-
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_seq_getfirst_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_mh_seq_boundfirst_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_mh_seq_delfirst_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_mh_seq_setfirst_t)(DeeObject *self, DeeObject *value);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_seq_getlast_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_mh_seq_boundlast_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_mh_seq_dellast_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_mh_seq_setlast_t)(DeeObject *self, DeeObject *value);
-
-/* Returns an auto-caching variant of the sequence (s.a. "cached-seq.h") */
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_seq_cached_t)(DeeObject *__restrict self);
-
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_map_keys_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_map_values_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_map_iterkeys_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_mh_map_itervalues_t)(DeeObject *__restrict self);
-
 
 
 union Dee_tsc_uslot {
@@ -182,29 +165,11 @@ Dee_type_seq_cache_destroy(struct Dee_type_seq_cache *__restrict self);
 INTDEF WUNUSED NONNULL((1)) struct Dee_type_seq_cache *DCALL
 DeeType_TryRequireSeqCache(DeeTypeObject *__restrict self);
 
-/* Check if "self" (which must appear in the MRO of "orig_type")
- * enables use of `DeeType_TryRequireSeqEnumerateIndexReverse' */
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_HasPrivateSeqEnumerateIndexReverse(DeeTypeObject *orig_type, DeeTypeObject *self);
 
-
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-/* Extra `DeeType_Require*' operators. */
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_getfirst_t DCALL DeeType_RequireSeqGetFirst(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_boundfirst_t DCALL DeeType_RequireSeqBoundFirst(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_delfirst_t DCALL DeeType_RequireSeqDelFirst(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_setfirst_t DCALL DeeType_RequireSeqSetFirst(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_getlast_t DCALL DeeType_RequireSeqGetLast(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_boundlast_t DCALL DeeType_RequireSeqBoundLast(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_dellast_t DCALL DeeType_RequireSeqDelLast(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_setlast_t DCALL DeeType_RequireSeqSetLast(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_seq_cached_t DCALL DeeType_RequireSeqCached(DeeTypeObject *__restrict self);
-
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_keys_t DCALL DeeType_RequireMapKeys(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_values_t DCALL DeeType_RequireMapValues(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_iterkeys_t DCALL DeeType_RequireMapIterKeys(DeeTypeObject *__restrict self);
-INTDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_mh_map_itervalues_t DCALL DeeType_RequireMapIterValues(DeeTypeObject *__restrict self);
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+/* Helpers for enumerating a sequence by invoking a given callback. */
+INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL seq_call_enumerate(DeeObject *self, DeeObject *cb);
+INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL seq_call_enumerate_with_intrange(DeeObject *self, DeeObject *cb, size_t start, size_t end);
+INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL seq_call_enumerate_with_range(DeeObject *self, DeeObject *cb, DeeObject *start, DeeObject *end);
 
 
 /*
@@ -395,416 +360,6 @@ for (local seqClass, name: operatorNames) {
 #define DeeMap_VariantsFor_OperatorInplaceAnd(cb)              cb(DeeMap_OperatorInplaceAnd) cb(DeeMap_DefaultOperatorInplaceAndWithForeachAndMapRemoveKeys) cb(DeeMap_DefaultOperatorInplaceAndWithError)
 #define DeeMap_VariantsFor_OperatorInplaceXor(cb)              cb(DeeMap_OperatorInplaceXor) cb(DeeMap_DefaultOperatorInplaceXorWithForeachAndMapUpdatAndMapRemoveKeys) cb(DeeMap_DefaultOperatorInplaceXorWithError)
 /*[[[end]]]*/
-
-
-/* Helpers for constructing enumeration proxy objects. */
-#define DeeSeq_InvokeMakeEnumeration(self)                         (*DeeType_RequireSeqMakeEnumeration(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, end) (*DeeType_RequireSeqMakeEnumerationWithIntRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeMakeEnumerationWithRange(self, start, end)    (*DeeType_RequireSeqMakeEnumerationWithRange(Dee_TYPE(self)))(self, start, end)
-
-/* Helpers for enumerating a sequence by invoking a given callback. */
-INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Enumerate(DeeObject *self, DeeObject *cb);
-INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_EnumerateWithIntRange(DeeObject *self, DeeObject *cb, size_t start, size_t end);
-INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeSeq_EnumerateWithRange(DeeObject *self, DeeObject *cb, DeeObject *start, DeeObject *end);
-
-
-
-/* Generic sequence operators: treat "self" as a (possibly writable) indexable sequence.
- *
- * When "self" doesn't override any sequence operators, throw errors (unless
- * "self" explicitly uses operators from "Sequence", in which case it is treated
- * like an empty sequence).
- *
- * For this purpose, trust the return value of `DeeType_GetSeqClass()',
- * and wrap/modify operator invocation such that the object behaves as
- * though it was an indexable sequence. */
-#define DeeSeq_OperatorBool(self)                                  (*DeeType_RequireSeqOperatorBool(Dee_TYPE(self)))(self)
-#define DeeSeq_OperatorIter(self)                                  (*DeeType_RequireSeqOperatorIter(Dee_TYPE(self)))(self)
-#define DeeSeq_OperatorSizeOb(self)                                (*DeeType_RequireSeqOperatorSizeOb(Dee_TYPE(self)))(self)
-#define DeeSeq_OperatorContains(self, some_object)                 (*DeeType_RequireSeqOperatorContains(Dee_TYPE(self)))(self, some_object)
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorContainsAsBool)(DeeObject *self, DeeObject *some_object);
-#define DeeSeq_OperatorGetItem(self, index)                        (*DeeType_RequireSeqOperatorGetItem(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorDelItem(self, index)                        (*DeeType_RequireSeqOperatorDelItem(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorSetItem(self, index, value)                 (*DeeType_RequireSeqOperatorSetItem(Dee_TYPE(self)))(self, index, value)
-#define DeeSeq_OperatorGetRange(self, start, end)                  (*DeeType_RequireSeqOperatorGetRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_OperatorDelRange(self, start, end)                  (*DeeType_RequireSeqOperatorDelRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_OperatorSetRange(self, start, end, values)          (*DeeType_RequireSeqOperatorSetRange(Dee_TYPE(self)))(self, start, end, values)
-#define DeeSeq_OperatorForeach(self, proc, arg)                    (*DeeType_RequireSeqOperatorForeach(Dee_TYPE(self)))(self, proc, arg)
-#define DeeSeq_OperatorForeachPair(self, proc, arg)                (*DeeType_RequireSeqOperatorForeachPair(Dee_TYPE(self)))(self, proc, arg)
-#define DeeSeq_OperatorEnumerate(self, proc, arg)                  (*DeeType_RequireSeqOperatorEnumerate(Dee_TYPE(self)))(self, proc, arg)
-#define DeeSeq_OperatorEnumerateIndex(self, proc, arg, start, end) (*DeeType_RequireSeqOperatorEnumerateIndex(Dee_TYPE(self)))(self, proc, arg, start, end)
-#define DeeSeq_OperatorIterKeys(self)                              (*DeeType_RequireSeqOperatorIterKeys(Dee_TYPE(self)))(self)
-#define DeeSeq_OperatorBoundItem(self, index)                      (*DeeType_RequireSeqOperatorBoundItem(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorHasItem(self, index)                        (*DeeType_RequireSeqOperatorHasItem(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorSize(self)                                  (*DeeType_RequireSeqOperatorSize(Dee_TYPE(self)))(self)
-#define DeeSeq_OperatorSizeFast(self)                              (*DeeType_RequireSeqOperatorSizeFast(Dee_TYPE(self)))(self)
-#define DeeSeq_OperatorGetItemIndex(self, index)                   (*DeeType_RequireSeqOperatorGetItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorDelItemIndex(self, index)                   (*DeeType_RequireSeqOperatorDelItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorSetItemIndex(self, index, value)            (*DeeType_RequireSeqOperatorSetItemIndex(Dee_TYPE(self)))(self, index, value)
-#define DeeSeq_OperatorBoundItemIndex(self, index)                 (*DeeType_RequireSeqOperatorBoundItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorHasItemIndex(self, index)                   (*DeeType_RequireSeqOperatorHasItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorGetRangeIndex(self, start, end)             (*DeeType_RequireSeqOperatorGetRangeIndex(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_OperatorDelRangeIndex(self, start, end)             (*DeeType_RequireSeqOperatorDelRangeIndex(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_OperatorSetRangeIndex(self, start, end, values)     (*DeeType_RequireSeqOperatorSetRangeIndex(Dee_TYPE(self)))(self, start, end, values)
-#define DeeSeq_OperatorGetRangeIndexN(self, start)                 (*DeeType_RequireSeqOperatorGetRangeIndexN(Dee_TYPE(self)))(self, start)
-#define DeeSeq_OperatorDelRangeIndexN(self, start)                 (*DeeType_RequireSeqOperatorDelRangeIndexN(Dee_TYPE(self)))(self, start)
-#define DeeSeq_OperatorSetRangeIndexN(self, start, values)         (*DeeType_RequireSeqOperatorSetRangeIndexN(Dee_TYPE(self)))(self, start, values)
-#define DeeSeq_OperatorTryGetItem(self, index)                     (*DeeType_RequireSeqOperatorTryGetItem(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorTryGetItemIndex(self, index)                (*DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeSeq_OperatorHash(self)                                  (*DeeType_RequireSeqOperatorHash(Dee_TYPE(self)))(self)
-#define DeeSeq_OperatorCompareEq(self, some_object)                (*DeeType_RequireSeqOperatorCompareEq(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorCompare(self, some_object)                  (*DeeType_RequireSeqOperatorCompare(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorTryCompareEq(self, some_object)             (*DeeType_RequireSeqOperatorTryCompareEq(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorEq(self, some_object)                       (*DeeType_RequireSeqOperatorEq(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorNe(self, some_object)                       (*DeeType_RequireSeqOperatorNe(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorLo(self, some_object)                       (*DeeType_RequireSeqOperatorLo(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorLe(self, some_object)                       (*DeeType_RequireSeqOperatorLe(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorGr(self, some_object)                       (*DeeType_RequireSeqOperatorGr(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorGe(self, some_object)                       (*DeeType_RequireSeqOperatorGe(Dee_TYPE(self)))(self, some_object)
-#define DeeSeq_OperatorInplaceAdd(p_self, some_object)             (*DeeType_RequireSeqOperatorInplaceAdd(Dee_TYPE(*(p_self))))(p_self, some_object)
-#define DeeSeq_OperatorInplaceMul(p_self, some_object)             (*DeeType_RequireSeqOperatorInplaceMul(Dee_TYPE(*(p_self))))(p_self, some_object)
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeSeq_OperatorBool)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSeq_OperatorIter)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSeq_OperatorSizeOb)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorContains)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorGetItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorDelItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeSeq_OperatorSetItem)(DeeObject *self, DeeObject *index, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeSeq_OperatorGetRange)(DeeObject *self, DeeObject *start, DeeObject *end);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeSeq_OperatorDelRange)(DeeObject *self, DeeObject *start, DeeObject *end);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeSeq_OperatorSetRange)(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeSeq_OperatorForeach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeSeq_OperatorForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeSeq_OperatorEnumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeSeq_OperatorEnumerateIndex)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSeq_OperatorIterKeys)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorBoundItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorHasItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1)) size_t (DCALL DeeSeq_OperatorSize)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) size_t (DCALL DeeSeq_OperatorSizeFast)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSeq_OperatorGetItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeSeq_OperatorDelItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeSeq_OperatorSetItemIndex)(DeeObject *self, size_t index, DeeObject *value);
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeSeq_OperatorBoundItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeSeq_OperatorHasItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSeq_OperatorGetRangeIndex)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeSeq_OperatorDelRangeIndex)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
-INTDEF WUNUSED NONNULL((1, 4)) int (DCALL DeeSeq_OperatorSetRangeIndex)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSeq_OperatorGetRangeIndexN)(DeeObject *self, Dee_ssize_t start);
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeSeq_OperatorDelRangeIndexN)(DeeObject *self, Dee_ssize_t start);
-INTDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeSeq_OperatorSetRangeIndexN)(DeeObject *self, Dee_ssize_t start, DeeObject *values);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorTryGetItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSeq_OperatorTryGetItemIndex)(DeeObject *self, size_t index);
-INTDEF struct type_seq DeeSeq_OperatorSeq;
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t (DCALL DeeSeq_OperatorHash)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorCompareEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorCompare)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorTryCompareEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorNe)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorLo)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorLe)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorGr)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSeq_OperatorGe)(DeeObject *self, DeeObject *some_object);
-INTDEF struct type_cmp DeeSeq_OperatorCmp;
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSeq_OperatorInplaceMul)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-
-/* Generic set operators: treat "self" as a (possibly writable) set that can
- * be enumerated (via iter/foreach) to yield keys.
- *
- * When "self" doesn't override any sequence operators, throw errors (unless
- * "self" explicitly uses operators from "Set", in which case it is treated
- * like an empty set).
- *
- * For this purpose, trust the return value of `DeeType_GetSeqClass()',
- * and wrap/modify operator invocation such that the object behaves as
- * though it was an indexable sequence. */
-#define DeeSet_OperatorBool                            DeeSeq_OperatorBool
-#define DeeSet_OperatorContains                        DeeSeq_OperatorContains
-#define DeeSet_OperatorContainsAsBool                  DeeSeq_OperatorContainsAsBool
-#define DeeSet_OperatorIter(self)                      (*DeeType_RequireSetOperatorIter(Dee_TYPE(self)))(self)
-#define DeeSet_OperatorForeach(self, cb, arg)          (*DeeType_RequireSetOperatorForeach(Dee_TYPE(self)))(self, cb, arg)
-#define DeeSet_OperatorSize(self)                      (*DeeType_RequireSetOperatorSize(Dee_TYPE(self)))(self)
-#define DeeSet_OperatorSizeOb(self)                    (*DeeType_RequireSetOperatorSizeOb(Dee_TYPE(self)))(self)
-#define DeeSet_OperatorHash(self)                      (*DeeType_RequireSetOperatorHash(Dee_TYPE(self)))(self)
-#define DeeSet_OperatorCompareEq(self, some_object)    (*DeeType_RequireSetOperatorCompareEq(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorTryCompareEq(self, some_object) (*DeeType_RequireSetOperatorTryCompareEq(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorEq(self, some_object)           (*DeeType_RequireSetOperatorEq(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorNe(self, some_object)           (*DeeType_RequireSetOperatorNe(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorLo(self, some_object)           (*DeeType_RequireSetOperatorLo(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorLe(self, some_object)           (*DeeType_RequireSetOperatorLe(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorGr(self, some_object)           (*DeeType_RequireSetOperatorGr(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorGe(self, some_object)           (*DeeType_RequireSetOperatorGe(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorInv(self)                       (*DeeType_RequireSetOperatorInv(Dee_TYPE(self)))(self)
-#define DeeSet_OperatorAdd(self, some_object)          (*DeeType_RequireSetOperatorAdd(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorSub(self, some_object)          (*DeeType_RequireSetOperatorSub(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorAnd(self, some_object)          (*DeeType_RequireSetOperatorAnd(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorXor(self, some_object)          (*DeeType_RequireSetOperatorXor(Dee_TYPE(self)))(self, some_object)
-#define DeeSet_OperatorInplaceAdd(p_self, some_object) (*DeeType_RequireSetOperatorInplaceAdd(Dee_TYPE(*(p_self))))(p_self, some_object)
-#define DeeSet_OperatorInplaceSub(p_self, some_object) (*DeeType_RequireSetOperatorInplaceSub(Dee_TYPE(*(p_self))))(p_self, some_object)
-#define DeeSet_OperatorInplaceAnd(p_self, some_object) (*DeeType_RequireSetOperatorInplaceAnd(Dee_TYPE(*(p_self))))(p_self, some_object)
-#define DeeSet_OperatorInplaceXor(p_self, some_object) (*DeeType_RequireSetOperatorInplaceXor(Dee_TYPE(*(p_self))))(p_self, some_object)
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSet_OperatorIter)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeSet_OperatorForeach)(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
-INTDEF WUNUSED NONNULL((1)) size_t (DCALL DeeSet_OperatorSize)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSet_OperatorSizeOb)(DeeObject *__restrict self);
-INTDEF struct type_seq DeeSet_OperatorSeq;
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t (DCALL DeeSet_OperatorHash)(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorCompareEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorTryCompareEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorNe)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorLo)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorLe)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorGr)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorGe)(DeeObject *self, DeeObject *some_object);
-INTDEF struct type_cmp DeeSet_OperatorCmp;
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeSet_OperatorInv)(DeeObject *self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorAdd)(DeeObject *self, DeeObject *some_object); /* {"a"} + {"b"}         -> {"a","b"} */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorSub)(DeeObject *self, DeeObject *some_object); /* {"a","b"} - {"b"}     -> {"a"} */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorAnd)(DeeObject *self, DeeObject *some_object); /* {"a","b"} & {"a"}     -> {"a"} */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeSet_OperatorXor)(DeeObject *self, DeeObject *some_object); /* {"a","b"} ^ {"a","c"} -> {"b","c"} */
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorInplaceSub)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorInplaceAnd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeSet_OperatorInplaceXor)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF struct type_math DeeSet_OperatorMath;
-
-
-
-/* Generic map operators: treat "self" as a (possibly writable) map that
- * enumerates to yield (key, value) pairs.
- *
- * When "self" doesn't override any sequence operators, throw errors (unless
- * "self" explicitly uses operators from "Mapping", in which case it is treated
- * like an empty map).
- *
- * For this purpose, trust the return value of `DeeType_GetSeqClass()',
- * and wrap/modify operator invocation such that the object behaves as
- * though it was an indexable sequence. */
-#define DeeMap_OperatorBool                                                 DeeSeq_OperatorBool
-#define DeeMap_OperatorIter                                                 DeeSeq_OperatorIter
-#define DeeMap_OperatorSizeOb                                               DeeSeq_OperatorSizeOb
-#define DeeMap_OperatorSize                                                 DeeSeq_OperatorSize
-#define DeeMap_OperatorSizeFast                                             DeeSeq_OperatorSizeFast
-#define DeeMap_OperatorForeach                                              DeeSeq_OperatorForeach
-#define DeeMap_OperatorForeachPair                                          DeeSeq_OperatorForeachPair
-#define DeeMap_OperatorIterKeys                                             default_map_iterkeys
-#define DeeMap_OperatorContains(self, some_object)                          (*DeeType_RequireMapOperatorContains(Dee_TYPE(self)))(self, some_object)
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorContainsAsBool)(DeeObject *self, DeeObject *some_object);
-#define DeeMap_OperatorGetItem(self, index)                                 (*DeeType_RequireMapOperatorGetItem(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorDelItem(self, index)                                 (*DeeType_RequireMapOperatorDelItem(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorSetItem(self, index, value)                          (*DeeType_RequireMapOperatorSetItem(Dee_TYPE(self)))(self, index, value)
-#define DeeMap_OperatorEnumerate(self, proc, arg)                           (*DeeType_RequireMapOperatorEnumerate(Dee_TYPE(self)))(self, proc, arg)
-#define DeeMap_OperatorEnumerateIndex(self, proc, arg, start, end)          (*DeeType_RequireMapOperatorEnumerateIndex(Dee_TYPE(self)))(self, proc, arg, start, end)
-#define DeeMap_OperatorBoundItem(self, index)                               (*DeeType_RequireMapOperatorBoundItem(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorHasItem(self, index)                                 (*DeeType_RequireMapOperatorHasItem(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorGetItemIndex(self, index)                            (*DeeType_RequireMapOperatorGetItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorDelItemIndex(self, index)                            (*DeeType_RequireMapOperatorDelItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorSetItemIndex(self, index, value)                     (*DeeType_RequireMapOperatorSetItemIndex(Dee_TYPE(self)))(self, index, value)
-#define DeeMap_OperatorBoundItemIndex(self, index)                          (*DeeType_RequireMapOperatorBoundItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorHasItemIndex(self, index)                            (*DeeType_RequireMapOperatorHasItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorTryGetItem(self, index)                              (*DeeType_RequireMapOperatorTryGetItem(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorTryGetItemIndex(self, index)                         (*DeeType_RequireMapOperatorTryGetItemIndex(Dee_TYPE(self)))(self, index)
-#define DeeMap_OperatorTryGetItemStringHash(self, key, hash)                (*DeeType_RequireMapOperatorTryGetItemStringHash(Dee_TYPE(self)))(self, key, hash)
-#define DeeMap_OperatorGetItemStringHash(self, key, hash)                   (*DeeType_RequireMapOperatorGetItemStringHash(Dee_TYPE(self)))(self, key, hash)
-#define DeeMap_OperatorDelItemStringHash(self, key, hash)                   (*DeeType_RequireMapOperatorDelItemStringHash(Dee_TYPE(self)))(self, key, hash)
-#define DeeMap_OperatorSetItemStringHash(self, key, hash, value)            (*DeeType_RequireMapOperatorSetItemStringHash(Dee_TYPE(self)))(self, key, hash, value)
-#define DeeMap_OperatorBoundItemStringHash(self, key, hash)                 (*DeeType_RequireMapOperatorBoundItemStringHash(Dee_TYPE(self)))(self, key, hash)
-#define DeeMap_OperatorHasItemStringHash(self, key, hash)                   (*DeeType_RequireMapOperatorHasItemStringHash(Dee_TYPE(self)))(self, key, hash)
-#define DeeMap_OperatorTryGetItemStringLenHash(self, key, keylen, hash)     (*DeeType_RequireMapOperatorTryGetItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
-#define DeeMap_OperatorGetItemStringLenHash(self, key, keylen, hash)        (*DeeType_RequireMapOperatorGetItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
-#define DeeMap_OperatorDelItemStringLenHash(self, key, keylen, hash)        (*DeeType_RequireMapOperatorDelItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
-#define DeeMap_OperatorSetItemStringLenHash(self, key, keylen, hash, value) (*DeeType_RequireMapOperatorSetItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash, value)
-#define DeeMap_OperatorBoundItemStringLenHash(self, key, keylen, hash)      (*DeeType_RequireMapOperatorBoundItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
-#define DeeMap_OperatorHasItemStringLenHash(self, key, keylen, hash)        (*DeeType_RequireMapOperatorHasItemStringLenHash(Dee_TYPE(self)))(self, key, keylen, hash)
-#define DeeMap_OperatorHash                                                 DeeSet_OperatorHash
-#define DeeMap_OperatorCompareEq(self, some_object)                         (*DeeType_RequireMapOperatorCompareEq(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorTryCompareEq(self, some_object)                      (*DeeType_RequireMapOperatorTryCompareEq(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorEq(self, some_object)                                (*DeeType_RequireMapOperatorEq(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorNe(self, some_object)                                (*DeeType_RequireMapOperatorNe(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorLo(self, some_object)                                (*DeeType_RequireMapOperatorLo(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorLe(self, some_object)                                (*DeeType_RequireMapOperatorLe(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorGr(self, some_object)                                (*DeeType_RequireMapOperatorGr(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorGe(self, some_object)                                (*DeeType_RequireMapOperatorGe(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorAdd(self, some_object)                               (*DeeType_RequireMapOperatorAdd(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorSub(self, some_object)                               (*DeeType_RequireMapOperatorSub(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorAnd(self, some_object)                               (*DeeType_RequireMapOperatorAnd(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorXor(self, some_object)                               (*DeeType_RequireMapOperatorXor(Dee_TYPE(self)))(self, some_object)
-#define DeeMap_OperatorInplaceAdd(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceAdd(Dee_TYPE(*(p_self))))(p_self, some_object)
-#define DeeMap_OperatorInplaceSub(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceSub(Dee_TYPE(*(p_self))))(p_self, some_object)
-#define DeeMap_OperatorInplaceAnd(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceAnd(Dee_TYPE(*(p_self))))(p_self, some_object)
-#define DeeMap_OperatorInplaceXor(p_self, some_object)                      (*DeeType_RequireMapOperatorInplaceXor(Dee_TYPE(*(p_self))))(p_self, some_object)
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorContains)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorGetItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorDelItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeMap_OperatorSetItem)(DeeObject *self, DeeObject *index, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeMap_OperatorEnumerate)(DeeObject *__restrict self, Dee_seq_enumerate_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeMap_OperatorEnumerateIndex)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc, void *arg, size_t start, size_t end);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorBoundItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorHasItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeMap_OperatorGetItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeMap_OperatorDelItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeMap_OperatorSetItemIndex)(DeeObject *self, size_t index, DeeObject *value);
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeMap_OperatorBoundItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1)) int (DCALL DeeMap_OperatorHasItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorTryGetItem)(DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeMap_OperatorTryGetItemIndex)(DeeObject *self, size_t index);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorTryGetItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorGetItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorDelItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeMap_OperatorSetItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorBoundItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorHasItemStringHash)(DeeObject *self, char const *key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorTryGetItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorGetItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorDelItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeMap_OperatorSetItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorBoundItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorHasItemStringLenHash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
-INTDEF struct type_seq DeeMap_OperatorSeq;
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorCompareEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorTryCompareEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorEq)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorNe)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorLo)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorLe)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorGr)(DeeObject *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorGe)(DeeObject *self, DeeObject *some_object);
-INTDEF struct type_cmp DeeMap_OperatorCmp;
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorAdd)(DeeObject *self, DeeObject *some_object); /* {"a":1} + {"b":2}       -> {"a":1,"b":2} */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorSub)(DeeObject *self, DeeObject *some_object); /* {"a":1,"b":2} - {"a"}   -> {"b":2} */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorAnd)(DeeObject *self, DeeObject *some_object); /* {"a":1,"b":2} & {"a"}   -> {"a":1} */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeMap_OperatorXor)(DeeObject *self, DeeObject *some_object); /* {"a":1,"b":2} ^ {"a":3} -> {"b":2} */
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorInplaceAdd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorInplaceSub)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorInplaceAnd)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeMap_OperatorInplaceXor)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
-INTDEF struct type_math DeeMap_OperatorMath;
-
-
-
-
-
-
-/* Helpers to quickly invoke default sequence functions. */
-#define DeeSeq_InvokeTryGetFirst(self)                                        (*DeeType_RequireSeqTryGetFirst(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeGetFirst(self)                                           (*DeeType_RequireSeqGetFirst(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeBoundFirst(self)                                         (*DeeType_RequireSeqBoundFirst(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeDelFirst(self)                                           (*DeeType_RequireSeqDelFirst(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeSetFirst(self, v)                                        (*DeeType_RequireSeqSetFirst(Dee_TYPE(self)))(self, v)
-#define DeeSeq_InvokeTryGetLast(self)                                         (*DeeType_RequireSeqTryGetLast(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeGetLast(self)                                            (*DeeType_RequireSeqGetLast(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeBoundLast(self)                                          (*DeeType_RequireSeqBoundLast(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeDelLast(self)                                            (*DeeType_RequireSeqDelLast(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeSetLast(self, v)                                         (*DeeType_RequireSeqSetLast(Dee_TYPE(self)))(self, v)
-#define DeeSeq_InvokeCached(self)                                             (*DeeType_RequireSeqCached(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeAny(self)                                                (*DeeType_RequireSeqAny(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeAnyWithKey(self, key)                                    (*DeeType_RequireSeqAnyWithKey(Dee_TYPE(self)))(self, key)
-#define DeeSeq_InvokeAnyWithRange(self, start, end)                           (*DeeType_RequireSeqAnyWithRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeAnyWithRangeAndKey(self, start, end, key)                (*DeeType_RequireSeqAnyWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
-#define DeeSeq_InvokeAll(self)                                                (*DeeType_RequireSeqAll(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeAllWithKey(self, key)                                    (*DeeType_RequireSeqAllWithKey(Dee_TYPE(self)))(self, key)
-#define DeeSeq_InvokeAllWithRange(self, start, end)                           (*DeeType_RequireSeqAllWithRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeAllWithRangeAndKey(self, start, end, key)                (*DeeType_RequireSeqAllWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
-#define DeeSeq_InvokeParity(self)                                             (*DeeType_RequireSeqParity(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeParityWithKey(self, key)                                 (*DeeType_RequireSeqParityWithKey(Dee_TYPE(self)))(self, key)
-#define DeeSeq_InvokeParityWithRange(self, start, end)                        (*DeeType_RequireSeqParityWithRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeParityWithRangeAndKey(self, start, end, key)             (*DeeType_RequireSeqParityWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
-#define DeeSeq_InvokeReduce(self, combine)                                    (*DeeType_RequireSeqReduce(Dee_TYPE(self)))(self, combine)
-#define DeeSeq_InvokeReduceWithInit(self, combine, init)                      (*DeeType_RequireSeqReduceWithInit(Dee_TYPE(self)))(self, combine, init)
-#define DeeSeq_InvokeReduceWithRange(self, combine, start, end)               (*DeeType_RequireSeqReduceWithRange(Dee_TYPE(self)))(self, combine, start, end)
-#define DeeSeq_InvokeReduceWithRangeAndInit(self, combine, start, end, init)  (*DeeType_RequireSeqReduceWithRangeAndInit(Dee_TYPE(self)))(self, combine, start, end, init)
-#define DeeSeq_InvokeMin(self)                                                (*DeeType_RequireSeqMin(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeMinWithKey(self, key)                                    (*DeeType_RequireSeqMinWithKey(Dee_TYPE(self)))(self, key)
-#define DeeSeq_InvokeMinWithRange(self, start, end)                           (*DeeType_RequireSeqMinWithRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeMinWithRangeAndKey(self, start, end, key)                (*DeeType_RequireSeqMinWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
-#define DeeSeq_InvokeMax(self)                                                (*DeeType_RequireSeqMax(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeMaxWithKey(self, key)                                    (*DeeType_RequireSeqMaxWithKey(Dee_TYPE(self)))(self, key)
-#define DeeSeq_InvokeMaxWithRange(self, start, end)                           (*DeeType_RequireSeqMaxWithRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeMaxWithRangeAndKey(self, start, end, key)                (*DeeType_RequireSeqMaxWithRangeAndKey(Dee_TYPE(self)))(self, start, end, key)
-#define DeeSeq_InvokeSum(self)                                                (*DeeType_RequireSeqSum(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokeSumWithRange(self, start, end)                           (*DeeType_RequireSeqSumWithRange(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeCount(self, item)                                        (*DeeType_RequireSeqCount(Dee_TYPE(self)))(self, item)
-#define DeeSeq_InvokeCountWithKey(self, item, key)                            (*DeeType_RequireSeqCountWithKey(Dee_TYPE(self)))(self, item, key)
-#define DeeSeq_InvokeCountWithRange(self, item, start, end)                   (*DeeType_RequireSeqCountWithRange(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeCountWithRangeAndKey(self, item, start, end, key)        (*DeeType_RequireSeqCountWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeContains(self, item)                                     (*DeeType_RequireSeqContains(Dee_TYPE(self)))(self, item)
-#define DeeSeq_InvokeContainsWithKey(self, item, key)                         (*DeeType_RequireSeqContainsWithKey(Dee_TYPE(self)))(self, item, key)
-#define DeeSeq_InvokeContainsWithRange(self, item, start, end)                (*DeeType_RequireSeqContainsWithRange(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeContainsWithRangeAndKey(self, item, start, end, key)     (*DeeType_RequireSeqContainsWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeLocate(self, match, def)                                 (*DeeType_RequireSeqLocate(Dee_TYPE(self)))(self, match, def)
-#define DeeSeq_InvokeLocateWithRange(self, match, start, end, def)            (*DeeType_RequireSeqLocateWithRange(Dee_TYPE(self)))(self, match, start, end, def)
-#define DeeSeq_InvokeRLocateWithRange(self, match, start, end, def)           (*DeeType_RequireSeqRLocateWithRange(Dee_TYPE(self)))(self, match, start, end, def)
-#define DeeSeq_InvokeStartsWith(self, item)                                   (*DeeType_RequireSeqStartsWith(Dee_TYPE(self)))(self, item)
-#define DeeSeq_InvokeStartsWithWithKey(self, item, key)                       (*DeeType_RequireSeqStartsWithWithKey(Dee_TYPE(self)))(self, item, key)
-#define DeeSeq_InvokeStartsWithWithRange(self, item, start, end)              (*DeeType_RequireSeqStartsWithWithRange(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeStartsWithWithRangeAndKey(self, item, start, end, key)   (*DeeType_RequireSeqStartsWithWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeEndsWith(self, item)                                     (*DeeType_RequireSeqEndsWith(Dee_TYPE(self)))(self, item)
-#define DeeSeq_InvokeEndsWithWithKey(self, item, key)                         (*DeeType_RequireSeqEndsWithWithKey(Dee_TYPE(self)))(self, item, key)
-#define DeeSeq_InvokeEndsWithWithRange(self, item, start, end)                (*DeeType_RequireSeqEndsWithWithRange(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeEndsWithWithRangeAndKey(self, item, start, end, key)     (*DeeType_RequireSeqEndsWithWithRangeAndKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeFind(self, item, start, end)                             (*DeeType_RequireSeqFind(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeFindWithKey(self, item, start, end, key)                 (*DeeType_RequireSeqFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeRFind(self, item, start, end)                            (*DeeType_RequireSeqRFind(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeRFindWithKey(self, item, start, end, key)                (*DeeType_RequireSeqRFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeErase(self, index, count)                                (*DeeType_RequireSeqErase(Dee_TYPE(self)))(self, index, count)
-#define DeeSeq_InvokeInsert(self, index, item)                                (*DeeType_RequireSeqInsert(Dee_TYPE(self)))(self, index, item)
-#define DeeSeq_InvokeInsertAll(self, index, items)                            (*DeeType_RequireSeqInsertAll(Dee_TYPE(self)))(self, index, items)
-#define DeeSeq_InvokePushFront(self, item)                                    (*DeeType_RequireSeqPushFront(Dee_TYPE(self)))(self, item)
-#define DeeSeq_InvokeAppend(self, item)                                       (*DeeType_RequireSeqAppend(Dee_TYPE(self)))(self, item)
-#define DeeSeq_InvokeExtend(self, items)                                      (*DeeType_RequireSeqExtend(Dee_TYPE(self)))(self, items)
-#define DeeSeq_InvokeXchItemIndex(self, index, value)                         (*DeeType_RequireSeqXchItemIndex(Dee_TYPE(self)))(self, index, value)
-#define DeeSeq_InvokeClear(self)                                              (*DeeType_RequireSeqClear(Dee_TYPE(self)))(self)
-#define DeeSeq_InvokePop(self, index)                                         (*DeeType_RequireSeqPop(Dee_TYPE(self)))(self, index)
-#define DeeSeq_InvokeRemove(self, item, start, end)                           (*DeeType_RequireSeqRemove(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeRemoveWithKey(self, item, start, end, key)               (*DeeType_RequireSeqRemoveWithKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeRRemove(self, item, start, end)                          (*DeeType_RequireSeqRRemove(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeRRemoveWithKey(self, item, start, end, key)              (*DeeType_RequireSeqRRemoveWithKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeRemoveAll(self, item, start, end, max)                   (*DeeType_RequireSeqRemoveAll(Dee_TYPE(self)))(self, item, start, end, max)
-#define DeeSeq_InvokeRemoveAllWithKey(self, item, start, end, max, key)       (*DeeType_RequireSeqRemoveAllWithKey(Dee_TYPE(self)))(self, item, start, end, max, key)
-#define DeeSeq_InvokeRemoveIf(self, should, start, end, max)                  (*DeeType_RequireSeqRemoveIf(Dee_TYPE(self)))(self, should, start, end, max)
-#define DeeSeq_InvokeResize(self, newsize, filler)                            (*DeeType_RequireSeqResize(Dee_TYPE(self)))(self, newsize, filler)
-#define DeeSeq_InvokeFill(self, start, end, filler)                           (*DeeType_RequireSeqFill(Dee_TYPE(self)))(self, start, end, filler)
-#define DeeSeq_InvokeReverse(self, start, end)                                (*DeeType_RequireSeqReverse(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeReversed(self, start, end)                               (*DeeType_RequireSeqReversed(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeSort(self, start, end)                                   (*DeeType_RequireSeqSort(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeSortWithKey(self, start, end, key)                       (*DeeType_RequireSeqSortWithKey(Dee_TYPE(self)))(self, start, end, key)
-#define DeeSeq_InvokeSorted(self, start, end)                                 (*DeeType_RequireSeqSorted(Dee_TYPE(self)))(self, start, end)
-#define DeeSeq_InvokeSortedWithKey(self, start, end, key)                     (*DeeType_RequireSeqSortedWithKey(Dee_TYPE(self)))(self, start, end, key)
-#define DeeSeq_InvokeBFind(self, item, start, end)                            (*DeeType_RequireSeqBFind(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeBFindWithKey(self, item, start, end, key)                (*DeeType_RequireSeqBFindWithKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeBPosition(self, item, start, end)                        (*DeeType_RequireSeqBPosition(Dee_TYPE(self)))(self, item, start, end)
-#define DeeSeq_InvokeBPositionWithKey(self, item, start, end, key)            (*DeeType_RequireSeqBPositionWithKey(Dee_TYPE(self)))(self, item, start, end, key)
-#define DeeSeq_InvokeBRange(self, item, start, end, result_range)             (*DeeType_RequireSeqBRange(Dee_TYPE(self)))(self, item, start, end, result_range)
-#define DeeSeq_InvokeBRangeWithKey(self, item, start, end, key, result_range) (*DeeType_RequireSeqBRangeWithKey(Dee_TYPE(self)))(self, item, start, end, key, result_range)
-
-/* Set functions */
-#define DeeSet_InvokeInsert(self, key)              (*DeeType_RequireSetInsert(Dee_TYPE(self)))(self, key)
-#define DeeSet_InvokeRemove(self, key)              (*DeeType_RequireSetRemove(Dee_TYPE(self)))(self, key)
-#define DeeSet_InvokeUnify(self, key)               (*DeeType_RequireSetUnify(Dee_TYPE(self)))(self, key)
-#define DeeSet_InvokeInsertAll(self, keys)          (*DeeType_RequireSetInsertAll(Dee_TYPE(self)))(self, keys)
-#define DeeSet_InvokeRemoveAll(self, keys)          (*DeeType_RequireSetRemoveAll(Dee_TYPE(self)))(self, keys)
-#define DeeSet_InvokePop(self)                      (*DeeType_RequireSetPop(Dee_TYPE(self)))(self)
-#define DeeSet_InvokePopWithDefault(self, default_) (*DeeType_RequireSetPopWithDefault(Dee_TYPE(self)))(self, default_)
-
-/* Map functions */
-#define DeeMap_InvokeSetOld(self, key, value)            (*DeeType_RequireMapSetOld(Dee_TYPE(self)))(self, key, value)
-#define DeeMap_InvokeSetOldEx(self, key, value)          (*DeeType_RequireMapSetOldEx(Dee_TYPE(self)))(self, key, value)
-#define DeeMap_InvokeSetNew(self, key, value)            (*DeeType_RequireMapSetNew(Dee_TYPE(self)))(self, key, value)
-#define DeeMap_InvokeSetNewEx(self, key, value)          (*DeeType_RequireMapSetNewEx(Dee_TYPE(self)))(self, key, value)
-#define DeeMap_InvokeSetDefault(self, key, value)        (*DeeType_RequireMapSetDefault(Dee_TYPE(self)))(self, key, value)
-#define DeeMap_InvokeUpdate(self, items)                 (*DeeType_RequireMapUpdate(Dee_TYPE(self)))(self, items)
-#define DeeMap_InvokeRemove(self, key)                   (*DeeType_RequireMapRemove(Dee_TYPE(self)))(self, key)
-#define DeeMap_InvokeRemoveKeys(self, keys)              (*DeeType_RequireMapRemoveKeys(Dee_TYPE(self)))(self, keys)
-#define DeeMap_InvokePop(self, key)                      (*DeeType_RequireMapPop(Dee_TYPE(self)))(self, key)
-#define DeeMap_InvokePopWithDefault(self, key, default_) (*DeeType_RequireMapPopWithDefault(Dee_TYPE(self)))(self, key, default_)
-#define DeeMap_InvokePopItem(self)                       (*DeeType_RequireMapPopItem(Dee_TYPE(self)))(self)
-#define DeeMap_InvokeKeys(self)                          (*DeeType_RequireMapKeys(Dee_TYPE(self)))(self)
-#define DeeMap_InvokeValues(self)                        (*DeeType_RequireMapValues(Dee_TYPE(self)))(self)
-#define DeeMap_InvokeIterKeys(self)                      (*DeeType_RequireMapIterKeys(Dee_TYPE(self)))(self)
-#define DeeMap_InvokeIterValues(self)                    (*DeeType_RequireMapIterValues(Dee_TYPE(self)))(self)
 
 
 /* Possible implementations for sequence cache operators. */
@@ -1221,6 +776,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceAndWithErr
 #define DeeMap_DefaultOperatorInplaceXorWithEmpty DeeMap_DefaultOperatorInplaceXorWithError
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceXorWithForeachAndMapUpdatAndMapRemoveKeys(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceXorWithError(DREF DeeObject **__restrict p_self, DeeObject *some_object);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -1229,6 +785,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultOperatorInplaceXorWithErr
 
 
 /* Possible implementations for sequence cache functions. */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndexFast(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWithSizeAndGetItemIndex(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeSeq_DefaultForeachReverseWithSizeAndTryGetItemIndex(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
@@ -2343,8 +1900,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_sub__(De
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_and__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_xor__(DeeObject *self, size_t argc, DeeObject *const *argv);
 #define default_map___inplace_or__ default_map___inplace_add__
-
-
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DECL_END
 

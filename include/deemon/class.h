@@ -1589,6 +1589,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultInt32WithDouble(DeeObj
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultInt64WithDouble(DeeObject *__restrict self, int64_t *__restrict result);
 
 
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /* Default wrappers for implementing math operators using copy + their inplace variants. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_DefaultAddWithInplaceAdd(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_DefaultAddWithSub(DeeObject *self, DeeObject *other); /* DEPRECATED */
@@ -1605,6 +1606,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_DefaultAndWithInp
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_DefaultOrWithInplaceOr(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_DefaultXorWithInplaceXor(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_DefaultPowWithInplacePow(DeeObject *self, DeeObject *other);
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 
 /* Default wrappers for implementing inplace math operators using their non-inplace variants. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultInplaceAddWithAdd(DREF DeeObject **p_self, DeeObject *other);
@@ -1779,11 +1781,8 @@ INTDEF struct type_cmp DeeSeq_DefaultCmpWithSizeAndTryGetItemIndex; /* DEPRECATE
 INTDEF struct type_cmp DeeSeq_DefaultCmpWithSizeAndGetItemIndex; /* DEPRECATED */
 INTDEF struct type_cmp DeeSeq_DefaultCmpWithSizeObAndGetItem; /* DEPRECATED */
 INTDEF struct type_cmp DeeSeq_DefaultCmpWithForeachDefault; /* DEPRECATED */
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 INTDEF struct type_cmp DeeSet_DefaultCmpWithForeachDefault; /* DEPRECATED */
 INTDEF struct type_cmp DeeMap_DefaultCmpWithForeachPairDefault; /* DEPRECATED */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
-
 
 /* Default wrappers for implementing iterator operators. */
 INTDEF struct type_iterator DeeObject_DefaultIteratorWithIterNext;
@@ -5716,5 +5715,20 @@ DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
                       struct Dee_class_attribute const *__restrict attr);
 
 DECL_END
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#ifdef CONFIG_BUILDING_DEEMON
+/* Backwards-compatibility */
+#include "../../src/deemon/runtime/method-hint-defaults.h"
+#define DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast           default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast
+#define DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex            default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index
+#define DeeSeq_DefaultForeachWithSizeAndGetItemIndex               default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index
+#define DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index
+#define DeeSeq_DefaultForeachWithSizeObAndGetItem                  default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem
+#endif /* CONFIG_BUILDING_DEEMON */
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 
 #endif /* !GUARD_DEEMON_CLASS_H */

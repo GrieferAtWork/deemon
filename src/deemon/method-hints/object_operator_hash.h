@@ -24,6 +24,7 @@
 
 operator {
 
+/*[[export("DeeObject_{|T}Hash")]]*/ /* Requires custom handling for recursion */
 [[custom_unsupported_impl_name(default__hash__unsupported)]]
 [[wunused]] Dee_hash_t
 tp_cmp->tp_hash([[nonnull]] DeeObject *__restrict self)

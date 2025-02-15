@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}SetItem")]]
 [[wunused]] int
 tp_seq->tp_setitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index,
@@ -96,6 +97,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}SetItemIndex")]]
 [[wunused]] int
 tp_seq->tp_setitem_index([[nonnull]] DeeObject *self, size_t index,
                          [[nonnull]] DeeObject *value)
@@ -113,6 +115,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}SetItemStringHash")]]
 [[wunused]] int
 tp_seq->tp_setitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash,
@@ -130,6 +133,7 @@ err:
 }} = OPERATOR_SETITEM;
 
 
+[[export("DeeObject_{|T}SetItemStringLenHash")]]
 [[wunused]] int
 tp_seq->tp_setitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
@@ -142,6 +146,14 @@ tp_seq->tp_setitem_string_len_hash([[nonnull]] DeeObject *self,
 		goto err;
 	result = CALL_DEPENDENCY(tp_seq->tp_setitem, self, keyob, value);
 	Dee_Decref_likely(keyob);
+	return result;
+err:
+	return -1;
+}}
+%{using tp_seq->tp_setitem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {
+	int result;
+	WITH_ZSTRING(err, zkey, key, keylen, return 0,
+	             result = CALL_DEPENDENCY(tp_seq->tp_setitem_string_hash, self, zkey, hash, value));
 	return result;
 err:
 	return -1;

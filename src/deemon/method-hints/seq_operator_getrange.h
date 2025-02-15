@@ -21,9 +21,11 @@
 /************************************************************************/
 /* deemon.Sequence.operator [:]()                                       */
 /************************************************************************/
+[[kw]]
 __seq_getrange__(start?:?X2?Dint?N,end?:?X2?Dint?N)->?S?O {
-	DeeObject *start, *end;
-	if (DeeArg_Unpack(argc, argv, "oo:__seq_getrange__", &start, &end))
+	DeeObject *start = Dee_None, *end = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|oo:__seq_getrange__", &start, &end))
 		goto err;
 	return CALL_DEPENDENCY(seq_operator_getrange, self, start, end);
 err:
@@ -165,7 +167,7 @@ err:
 		goto err;
 	Dee_Incref(self);
 	result->dssgi_seq              = self;
-	result->dssgi_tp_getitem_index = DeeType_RequireSeqOperatorGetItemIndex(Dee_TYPE(self));
+	result->dssgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_getitem_index);
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
@@ -185,7 +187,7 @@ err:
 		goto err;
 	Dee_Incref(self);
 	result->dssgi_seq              = self;
-	result->dssgi_tp_getitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self));
+	result->dssgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_trygetitem_index);
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
@@ -211,7 +213,7 @@ err:
 		goto err_r_start;
 	Dee_Incref(self);
 	result->dssg_seq        = self;
-	result->dssg_tp_getitem = DeeType_RequireSeqOperatorGetItem(Dee_TYPE(self));
+	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
 	return (DREF DeeObject *)result;
 err_r_start:
@@ -242,7 +244,7 @@ err:
 	result->dsial_seq     = self;
 	result->dsial_start   = range.sr_start;
 	result->dsial_limit   = range.sr_end - range.sr_start;
-	result->dsial_tp_iter = DeeType_RequireSeqOperatorIter(Dee_TYPE(self));
+	result->dsial_tp_iter = REQUIRE_DEPENDENCY(seq_operator_iter);
 	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
 	return (DREF DeeObject *)result;
 empty_seq:
@@ -372,7 +374,7 @@ err:
 		goto err;
 	Dee_Incref(self);
 	result->dssgi_seq              = self;
-	result->dssgi_tp_getitem_index = DeeType_RequireSeqOperatorGetItemIndex(Dee_TYPE(self));
+	result->dssgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_getitem_index);
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
@@ -402,7 +404,7 @@ err:
 		goto err;
 	Dee_Incref(self);
 	result->dssgi_seq              = self;
-	result->dssgi_tp_getitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self));
+	result->dssgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_trygetitem_index);
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
@@ -438,7 +440,7 @@ err:
 		goto err_r_start;
 	Dee_Incref(self);
 	result->dssg_seq        = self;
-	result->dssg_tp_getitem = DeeType_RequireSeqOperatorGetItem(Dee_TYPE(self));
+	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
 	return (DREF DeeObject *)result;
 empty_range:

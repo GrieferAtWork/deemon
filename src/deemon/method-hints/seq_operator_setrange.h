@@ -21,9 +21,11 @@
 /************************************************************************/
 /* deemon.Sequence.operator [:]=()                                      */
 /************************************************************************/
+[[kw]]
 __seq_setrange__(start:?X2?Dint?N,end:?X2?Dint?N,items:?X2?DSequence?S?O) {
 	DeeObject *start, *end, *items;
-	if (DeeArg_Unpack(argc, argv, "ooo:__seq_setrange__", &start, &end, &items))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_values,
+	                    "ooo:__seq_setrange__", &start, &end, &items))
 		goto err;
 	if (CALL_DEPENDENCY(seq_operator_setrange, self, start, end, items))
 		goto err;
@@ -40,7 +42,7 @@ __seq_setrange__.seq_operator_setrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *items)
 %{unsupported(auto("operator [:]="))}
 %{$empty = {
-	int items_empty = DeeType_InvokeMethodHint0(items, seq_operator_bool);
+	int items_empty = DeeObject_InvokeMethodHint(seq_operator_bool, items);
 	if unlikely(items_empty < 0)
 		goto err;
 	if (items_empty)
@@ -97,7 +99,7 @@ __seq_setrange__.seq_operator_setrange_index([[nonnull]] DeeObject *self,
                                              [[nonnull]] DeeObject *items)
 %{unsupported(auto("operator [:]="))}
 %{$empty = {
-	int items_empty = DeeType_InvokeMethodHint0(items, seq_operator_bool);
+	int items_empty = DeeObject_InvokeMethodHint(seq_operator_bool, items);
 	if unlikely(items_empty < 0)
 		goto err;
 	if (items_empty)
@@ -164,7 +166,7 @@ __seq_setrange__.seq_operator_setrange_index_n([[nonnull]] DeeObject *self,
 	return err_seq_unsupportedf(self, "operator [:]=(%" PCKdSIZ ", none, %r)", start, items);
 })}
 %{$empty = {
-	int items_empty = DeeType_InvokeMethodHint0(items, seq_operator_bool);
+	int items_empty = DeeObject_InvokeMethodHint(seq_operator_bool, items);
 	if unlikely(items_empty < 0)
 		goto err;
 	if (items_empty)

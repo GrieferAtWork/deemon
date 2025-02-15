@@ -39,11 +39,16 @@ default_set_hash_with_foreach_cb(void *arg, DeeObject *elem);
 #endif /* !DEFINED_default_set_hash_with_foreach_cb */
 )]
 
-%[define(DEFINE_DeeSet_HandleHashError =
-#ifndef DEFINED_DeeSet_HandleHashError
-#define DEFINED_DeeSet_HandleHashError
-INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSet_HandleHashError(DeeObject *self);
-#endif /* !DEFINED_DeeSet_HandleHashError */
+%[define(DEFINE_set_handle_hash_error =
+#ifndef DEFINED_set_handle_hash_error
+#define DEFINED_set_handle_hash_error
+PRIVATE NONNULL((1)) Dee_hash_t DCALL
+set_handle_hash_error(DeeObject *self) {
+	DeeError_Print("Unhandled error in `Set.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+#endif /* !DEFINED_set_handle_hash_error */
 )]
 
 [[operator([Set, Mapping].OPERATOR_HASH: tp_cmp->tp_hash)]]
@@ -53,15 +58,15 @@ __set_hash__.set_operator_hash([[nonnull]] DeeObject *__restrict self)
 %{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
 %{$with__set_operator_foreach =
 [[prefix(DEFINE_default_set_hash_with_foreach_cb)]]
-[[prefix(DEFINE_DeeSet_HandleHashError)]] {
+[[prefix(DEFINE_set_handle_hash_error)]] {
 	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
 	if unlikely(CALL_DEPENDENCY(set_operator_foreach, self, &default_set_hash_with_foreach_cb, &result))
 		goto err;
 	return result;
 err:
-	return DeeSet_HandleHashError(self);
+	return set_handle_hash_error(self);
 }}
-[[prefix(DEFINE_DeeSet_HandleHashError)]] {
+[[prefix(DEFINE_set_handle_hash_error)]] {
 	int temp;
 	Dee_hash_t result;
 	DREF DeeObject *resultob;
@@ -74,7 +79,7 @@ err:
 		goto err;
 	return result;
 err:
-	return DeeSet_HandleHashError(self);
+	return set_handle_hash_error(self);
 }
 
 set_operator_hash = {

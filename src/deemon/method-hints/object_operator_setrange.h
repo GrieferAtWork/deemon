@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}SetRange")]]
 [[wunused]] int
 tp_seq->tp_setrange([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *start,
@@ -56,6 +57,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}SetRangeIndex")]]
 [[wunused]] int
 tp_seq->tp_setrange_index([[nonnull]] DeeObject *self,
                           Dee_ssize_t start, Dee_ssize_t end,
@@ -82,6 +84,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}SetRangeIndexN")]]
 [[wunused]] int
 tp_seq->tp_setrange_index_n([[nonnull]] DeeObject *self,
                             Dee_ssize_t start,

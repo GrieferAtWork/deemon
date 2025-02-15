@@ -24,7 +24,20 @@
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/object.h>
 
+/**/
+#include "method-hint-defaults.h"
+
 DECL_BEGIN
+
+/* Custom impls, as referenced by:
+ * >> [[custom_unsupported_impl_name(default__hash__unsupported)]] */
+INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
+#define default__trycompare_eq__unsupported \
+	default__seq_operator_trycompare_eq__unsupported
+
+/* TODO: Types should be able to "delete" operators by assigning the `default__*__unsupported'
+ *       implementation to the relevant slot, and the operator inheritance engine should just
+ *       notice those assignment and stop trying to find the operator in that sub-tree of types */
 
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintErrorImpls from "..method-hints.method-hints")(decls: true);]]]*/
@@ -89,7 +102,6 @@ INTDEF void*DCALL default__ge__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__iter__badalloc(void*);
 #define default__sizeob__badalloc default__iter__badalloc
 #define default__size__badalloc default__iter__badalloc
-#define default__size_fast__badalloc default__iter__badalloc
 INTDEF void*DCALL default__iter__unsupported(DeeObject*);
 INTDEF void*DCALL default__foreach__badalloc(void*, void*, void*);
 #define default__foreach_pair__badalloc default__foreach__badalloc

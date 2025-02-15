@@ -21,9 +21,11 @@
 /************************************************************************/
 /* deemon.Sequence.operator del[:]()                                    */
 /************************************************************************/
+[[kw]]
 __seq_delrange__(start?:?X2?Dint?N,end?:?X2?Dint?N) {
-	DeeObject *start, *end;
-	if (DeeArg_Unpack(argc, argv, "oo:__seq_delrange__", &start, &end))
+	DeeObject *start = Dee_None, *end = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|oo:__seq_delrange__", &start, &end))
 		goto err;
 	if (CALL_DEPENDENCY(seq_operator_delrange, self, start, end))
 		goto err;

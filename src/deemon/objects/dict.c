@@ -38,6 +38,7 @@
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/seq.h>
@@ -2474,6 +2475,7 @@ err_temp:
 	return temp;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dict_enumerate_index(Dict *__restrict self, Dee_seq_enumerate_index_t cb,
                      void *arg, size_t start, size_t end) {
@@ -2565,6 +2567,7 @@ err_temp:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3485,9 +3488,15 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_setrange                   = */ NULL,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_mh_seq_foreach,
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_enumerate                  = */ NULL,
+	/* .tp_enumerate_index            = */ NULL,
+	/* .tp_iterkeys                   = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach_pair,
 	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&dict_enumerate_index,
 	/* .tp_iterkeys                   = */ &DeeMap_DefaultIterKeysWithIter,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&dict_size,
@@ -3857,8 +3866,7 @@ dict_compare_eq_seq_foreach(void *arg, DeeObject *rhs_item) {
 	struct Dee_dict_item *lhs_item;
 	DREF DeeObject *lhs_key_and_value[2];
 	struct dict_compare_seq_foreach_data *data;
-	DeeTypeObject *tp_rhs_item = Dee_TYPE(rhs_item);
-	if ((!tp_rhs_item->tp_seq || !tp_rhs_item->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs_item))
+	if (!DeeType_RequireSupportedNativeOperator(Dee_TYPE(rhs_item), foreach))
 		return DICT_COMPARE_SEQ_FOREACH_NOTEQUAL;
 	data = (struct dict_compare_seq_foreach_data *)arg;
 	dict = data->dcsfd_lhs;
@@ -3931,8 +3939,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_mh_seq_trycompare_eq(Dict *lhs, DeeObject *rhs) {
-	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
-	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
+	if (!DeeType_RequireSupportedNativeOperator(Dee_TYPE(rhs), iter))
 		return 1;
 	return dict_mh_seq_compare_eq(lhs, rhs);
 }

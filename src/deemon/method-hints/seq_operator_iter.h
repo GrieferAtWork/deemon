@@ -160,6 +160,7 @@ err:
 	 * >>     }
 	 * >> })().operator iter();
 	 */
+	DeeTypeObject *itertyp;
 	DREF DefaultIterator_WithIterKeysAndGetItem *result;
 	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
 	if unlikely(!result)
@@ -167,19 +168,13 @@ err:
 	result->diikgi_iter = CALL_DEPENDENCY(map_iterkeys, self);
 	if unlikely(!result->diikgi_iter)
 		goto err_r;
-	if unlikely(!Dee_TYPE(result->diikgi_iter)->tp_iter_next &&
-	            !DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
-		goto err_r_iter_no_iter_next;
 	Dee_Incref(self);
 	result->diikgi_seq        = self;
-	result->diikgi_tp_next    = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	itertyp                   = Dee_TYPE(result->diikgi_iter);
+	result->diikgi_tp_next    = DeeType_RequireNativeOperator(itertyp, iter_next);
 	result->diikgi_tp_getitem = REQUIRE_DEPENDENCY(map_operator_trygetitem);
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type);
 	return (DREF DeeObject *)result;
-err_r_iter_no_iter_next:
-	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
-/*err_r_iter:*/
-	Dee_Decref(result->diikgi_iter);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -196,6 +191,7 @@ err:
 	 * >>     }
 	 * >> })().operator iter();
 	 */
+	DeeTypeObject *itertyp;
 	DREF DefaultIterator_WithIterKeysAndGetItem *result;
 	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
 	if unlikely(!result)
@@ -203,12 +199,10 @@ err:
 	result->diikgi_iter = CALL_DEPENDENCY(map_iterkeys, self);
 	if unlikely(!result->diikgi_iter)
 		goto err_r;
-	if unlikely(!Dee_TYPE(result->diikgi_iter)->tp_iter_next &&
-	            !DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
-		goto err_r_iter_no_iter_next;
 	Dee_Incref(self);
 	result->diikgi_seq        = self;
-	result->diikgi_tp_next    = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
+	itertyp                   = Dee_TYPE(result->diikgi_iter);
+	result->diikgi_tp_next    = DeeType_RequireNativeOperator(itertyp, iter_next);
 	result->diikgi_tp_getitem = REQUIRE_DEPENDENCY(map_operator_getitem);
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
 	return (DREF DeeObject *)result;

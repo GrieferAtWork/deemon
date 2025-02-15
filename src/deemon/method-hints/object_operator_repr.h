@@ -24,6 +24,7 @@
 
 operator {
 
+/*[[export("DeeObject_{|T}Repr")]]*/ /* Requires custom handling for recursion */
 [[wunused]] DREF DeeObject *
 tp_cast.tp_repr([[nonnull]] DeeObject *__restrict self)
 %{class {
@@ -63,6 +64,7 @@ err:
 
 
 
+/*[[export("DeeObject_{|T}PrintRepr")]]*/ /* Requires custom handling for recursion */
 [[wunused]] Dee_ssize_t
 tp_cast.tp_printrepr([[nonnull]] DeeObject *__restrict self,
                      [[nonnull]] Dee_formatprinter_t printer, void *arg)

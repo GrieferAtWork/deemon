@@ -25,7 +25,9 @@ import * from deemon;
 
 function unary(neg: string) {
 	local NEG = neg.upper();
+	local Neg = neg.capitalize();
 
+	print('[[export("DeeObject_{|T}', Neg, '")]]');
 	print("[[wunused]] DREF DeeObject *");
 	print("tp_math->tp_", neg, "([[nonnull]] DeeObject *self)");
 	print("%{class {");
@@ -36,14 +38,21 @@ function unary(neg: string) {
 
 function binaryMath(add: string) {
 	local ADD = add.upper();
+	local Add = add.capitalize();
 
+	print('[[export("DeeObject_{|T}', Add, '")]]');
 	print("[[wunused]] DREF DeeObject *");
 	print("tp_math->tp_", add, "([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)");
 	print("%{class {");
 	print("	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_", ADD, ", 1, &rhs);");
 	print("}} = OPERATOR_", ADD, ";");
 	print;
+	// TODO: "using [tp_init_copy, tp_", add, "]":
+	//       >> lhs = DeeObject_Copy(lhs);
+	//       >> DeeObject_InplaceAdd(&lhs, rhs);
+	//       >> return lhs;
 
+	print('[[export("DeeObject_{|T}Inplace', Add, '")]]');
 	print("[[tp_self(Dee_TYPE(*p_lhs))]]");
 	print("[[wunused]] int");
 	print("tp_math->tp_inplace_", add, "([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)");
@@ -71,9 +80,11 @@ function binaryMath(add: string) {
 
 function inplaceUnary(prefix: string, inc: string) {
 	local INC = inc.upper();
+	local Inc = inc.capitalize();
 	local add = { "inc": "add", "dec": "sub" }[inc];
 	local ADD = add.upper();
 
+	print('[[export("DeeObject_{|T}', Inc, '")]]');
 	print("[[tp_self(Dee_TYPE(*p_self))]]");
 	print("[[wunused]] int");
 	print("", prefix, "tp_", inc, "([[nonnull]] DeeObject **__restrict p_self)");
@@ -104,9 +115,11 @@ function inplaceUnary(prefix: string, inc: string) {
 
 function enterLeave(enter: string) {
 	local ENTER = enter.upper();
+	local Enter = enter.capitalize();
 	local leave = { "enter": "leave", "leave": "enter" }[enter];
 	local LEAVE = leave.upper();
 
+	print('[[export("DeeObject_{|T}', Enter, '")]]');
 	print("[[wunused]] int");
 	print("tp_with->tp_", enter, "([[nonnull]] DeeObject *__restrict self)");
 	print("%{class {");
@@ -149,30 +162,35 @@ enterLeave("enter");
 enterLeave("leave");
 
 ]]]*/
+[[export("DeeObject_{|T}Inv")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_inv([[nonnull]] DeeObject *self)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_INV, 0, NULL);
 }} = OPERATOR_INV;
 
+[[export("DeeObject_{|T}Pos")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_pos([[nonnull]] DeeObject *self)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_POS, 0, NULL);
 }} = OPERATOR_POS;
 
+[[export("DeeObject_{|T}Neg")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_neg([[nonnull]] DeeObject *self)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_NEG, 0, NULL);
 }} = OPERATOR_NEG;
 
+[[export("DeeObject_{|T}Add")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_add([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_ADD, 1, &rhs);
 }} = OPERATOR_ADD;
 
+[[export("DeeObject_{|T}InplaceAdd")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_add([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -196,12 +214,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_ADD;
 
+[[export("DeeObject_{|T}Sub")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_sub([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SUB, 1, &rhs);
 }} = OPERATOR_SUB;
 
+[[export("DeeObject_{|T}InplaceSub")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_sub([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -225,12 +245,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_SUB;
 
+[[export("DeeObject_{|T}Mul")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_mul([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MUL, 1, &rhs);
 }} = OPERATOR_MUL;
 
+[[export("DeeObject_{|T}InplaceMul")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_mul([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -254,12 +276,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_MUL;
 
+[[export("DeeObject_{|T}Div")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_div([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_DIV, 1, &rhs);
 }} = OPERATOR_DIV;
 
+[[export("DeeObject_{|T}InplaceDiv")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_div([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -283,12 +307,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_DIV;
 
+[[export("DeeObject_{|T}Mod")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_mod([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MOD, 1, &rhs);
 }} = OPERATOR_MOD;
 
+[[export("DeeObject_{|T}InplaceMod")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_mod([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -312,12 +338,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_MOD;
 
+[[export("DeeObject_{|T}Shl")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_shl([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHL, 1, &rhs);
 }} = OPERATOR_SHL;
 
+[[export("DeeObject_{|T}InplaceShl")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_shl([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -341,12 +369,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_SHL;
 
+[[export("DeeObject_{|T}Shr")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_shr([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHR, 1, &rhs);
 }} = OPERATOR_SHR;
 
+[[export("DeeObject_{|T}InplaceShr")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_shr([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -370,12 +400,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_SHR;
 
+[[export("DeeObject_{|T}And")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_and([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_AND, 1, &rhs);
 }} = OPERATOR_AND;
 
+[[export("DeeObject_{|T}InplaceAnd")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_and([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -399,12 +431,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_AND;
 
+[[export("DeeObject_{|T}Or")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_or([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_OR, 1, &rhs);
 }} = OPERATOR_OR;
 
+[[export("DeeObject_{|T}InplaceOr")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_or([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -428,12 +462,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_OR;
 
+[[export("DeeObject_{|T}Xor")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_xor([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_XOR, 1, &rhs);
 }} = OPERATOR_XOR;
 
+[[export("DeeObject_{|T}InplaceXor")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_xor([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -457,12 +493,14 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_XOR;
 
+[[export("DeeObject_{|T}Pow")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_pow([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_POW, 1, &rhs);
 }} = OPERATOR_POW;
 
+[[export("DeeObject_{|T}InplacePow")]]
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_pow([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
@@ -486,6 +524,7 @@ err:
 	return -1;
 }} = OPERATOR_INPLACE_POW;
 
+[[export("DeeObject_{|T}Inc")]]
 [[tp_self(Dee_TYPE(*p_self))]]
 [[wunused]] int
 tp_math->tp_inc([[nonnull]] DeeObject **__restrict p_self)
@@ -512,6 +551,7 @@ err:
 	return -1;
 }} = OPERATOR_INC;
 
+[[export("DeeObject_{|T}Dec")]]
 [[tp_self(Dee_TYPE(*p_self))]]
 [[wunused]] int
 tp_math->tp_dec([[nonnull]] DeeObject **__restrict p_self)
@@ -538,6 +578,7 @@ err:
 	return -1;
 }} = OPERATOR_DEC;
 
+[[export("DeeObject_{|T}Enter")]]
 [[wunused]] int
 tp_with->tp_enter([[nonnull]] DeeObject *__restrict self)
 %{class {
@@ -554,6 +595,7 @@ err:
 	return 0;
 }} = OPERATOR_ENTER;
 
+[[export("DeeObject_{|T}Leave")]]
 [[wunused]] int
 tp_with->tp_leave([[nonnull]] DeeObject *__restrict self)
 %{class {

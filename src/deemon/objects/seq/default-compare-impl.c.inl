@@ -24,6 +24,7 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/int.h>
+#include <deemon/error.h>
 #include <deemon/class.h>
 #include <deemon/thread.h>
 
@@ -662,11 +663,15 @@ INTERN WUNUSED NONNULL((1, 3)) int DCALL
 LOCAL_seq_docompare__(lhs_xvector)(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs) {
 	int result;
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	DeeMH_seq_operator_foreach_t rhs_tp_foreach = DeeType_RequireMethodHint(tp_rhs, seq_operator_foreach);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	Dee_ssize_t (DCALL *rhs_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
 		goto err_rhs_no_iter;
 	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
 	ASSERT(rhs_tp_foreach);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	if (rhs_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
 		size_t rhs_size = (*tp_rhs->tp_seq->tp_size)(rhs);
 		if unlikely(rhs_size == (size_t)-1)
@@ -728,8 +733,10 @@ LOCAL_seq_docompare__(lhs_xvector)(DeeObject *const *lhs_vector, size_t lhs_size
 #endif /* !DEFINE_compareeq */
 	}
 	return result;
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 err_rhs_no_iter:
 	err_unimplemented_operator(tp_rhs, OPERATOR_ITER);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -900,11 +907,15 @@ INTERN WUNUSED NONNULL((1, 3)) int DCALL
 LOCAL_seq_docompare__(lhs_vector)(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs) {
 	int result;
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	DeeMH_seq_operator_foreach_t rhs_tp_foreach = DeeType_RequireMethodHint(tp_rhs, seq_operator_foreach);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	Dee_ssize_t (DCALL *rhs_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	if ((!tp_rhs->tp_seq || !tp_rhs->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_rhs))
 		goto err_rhs_no_iter;
 	rhs_tp_foreach = tp_rhs->tp_seq->tp_foreach;
 	ASSERT(rhs_tp_foreach);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #ifdef DEFINE_compareeq
 	if (tp_rhs->tp_seq->tp_size_fast != NULL) {
 		size_t rhs_sizefast = (*tp_rhs->tp_seq->tp_size_fast)(rhs);
@@ -973,8 +984,10 @@ LOCAL_seq_docompare__(lhs_vector)(DeeObject *const *lhs_vector, size_t lhs_size,
 #endif /* !DEFINE_compareeq */
 	}
 	return result;
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 err_rhs_no_iter:
 	err_unimplemented_operator(tp_rhs, OPERATOR_ITER);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 err:
 	return Dee_COMPARE_ERR;
 }

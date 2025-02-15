@@ -25,6 +25,7 @@
 operator {
 
 
+[[export("DeeObject_{|T}SizeOb")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_sizeob([[nonnull]] DeeObject *__restrict self)
 %{class {
@@ -40,6 +41,7 @@ err:
 }} = OPERATOR_SIZE;
 
 
+[[export("DeeObject_{|T}Size")]]
 [[wunused]] size_t
 tp_seq->tp_size([[nonnull]] DeeObject *__restrict self)
 %{using tp_seq->tp_sizeob: {
@@ -52,7 +54,9 @@ err:
 }} = OPERATOR_SIZE;
 
 
+[[export("DeeObject_{|T}SizeFast")]]
 [[custom_unsupported_impl_name(default__size_fast__with__)]]
+[[custom_badalloc_impl_name(default__size_fast__with__)]]
 [[wunused]] size_t
 tp_seq->tp_size_fast([[nonnull]] DeeObject *__restrict self)
 %{using []: {

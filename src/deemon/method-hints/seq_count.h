@@ -192,10 +192,10 @@ __seq_count__.seq_count_with_range([[nonnull]] DeeObject *self,
 	return (size_t)CALL_DEPENDENCY(seq_enumerate_index, self, &seq_count_enumerate_cb, item, start, end);
 }}
 %{$with__seq_find = {
+	PRELOAD_DEPENDENCY(seq_find)
 	size_t result = 0;
-	DeeMH_seq_find_t seq_find = DeeType_RequireSeqFind(Dee_TYPE(self));
 	while (start < end) {
-		size_t match = (*seq_find)(self, item, start, end);
+		size_t match = CALL_DEPENDENCY(seq_find, self, item, start, end);
 		if unlikely(match == (size_t)Dee_COMPARE_ERR)
 			goto err;
 		if (match == (size_t)-1)
@@ -259,10 +259,10 @@ err:
 	return (size_t)-1;
 }}
 %{$with__seq_find_with_key = {
+	PRELOAD_DEPENDENCY(seq_find_with_key)
 	size_t result = 0;
-	DeeMH_seq_find_with_key_t seq_find_with_key = DeeType_RequireSeqFindWithKey(Dee_TYPE(self));
 	while (start < end) {
-		size_t match = (*seq_find_with_key)(self, item, start, end, key);
+		size_t match = CALL_DEPENDENCY(seq_find_with_key, self, item, start, end, key);
 		if unlikely(match == (size_t)Dee_COMPARE_ERR)
 			goto err;
 		if (match == (size_t)-1)

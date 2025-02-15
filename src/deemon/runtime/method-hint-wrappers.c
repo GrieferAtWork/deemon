@@ -28,6 +28,7 @@
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
+#include <deemon/tuple.h>
 
 /**/
 #include "../objects/seq/enumerate-cb.h"
@@ -119,9 +120,10 @@ err:
 PUBLIC_CONST char const DeeMA___seq_getrange___name[] = "__seq_getrange__";
 PUBLIC_CONST char const DeeMA___seq_getrange___doc[] = "(start?:?X2?Dint?N,end?:?X2?Dint?N)->?S";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___seq_getrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
-	DeeObject *start, *end;
-	if (DeeArg_Unpack(argc, argv, "oo:__seq_getrange__", &start, &end))
+DeeMA___seq_getrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *start = Dee_None, *end = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|oo:__seq_getrange__", &start, &end))
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getrange))(self, start, end);
 err:
@@ -131,9 +133,10 @@ err:
 PUBLIC_CONST char const DeeMA___seq_delrange___name[] = "__seq_delrange__";
 PUBLIC_CONST char const DeeMA___seq_delrange___doc[] = "(start?:?X2?Dint?N,end?:?X2?Dint?N)";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___seq_delrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
-	DeeObject *start, *end;
-	if (DeeArg_Unpack(argc, argv, "oo:__seq_delrange__", &start, &end))
+DeeMA___seq_delrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *start = Dee_None, *end = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|oo:__seq_delrange__", &start, &end))
 		goto err;
 	if ((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_delrange))(self, start, end))
 		goto err;
@@ -145,9 +148,10 @@ err:
 PUBLIC_CONST char const DeeMA___seq_setrange___name[] = "__seq_setrange__";
 PUBLIC_CONST char const DeeMA___seq_setrange___doc[] = "(start:?X2?Dint?N,end:?X2?Dint?N,items:?X2?DSequence?S?O)";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___seq_setrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+DeeMA___seq_setrange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
 	DeeObject *start, *end, *items;
-	if (DeeArg_Unpack(argc, argv, "ooo:__seq_setrange__", &start, &end, &items))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_values,
+	                    "ooo:__seq_setrange__", &start, &end, &items))
 		goto err;
 	if ((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setrange))(self, start, end, items))
 		goto err;
@@ -207,7 +211,7 @@ DeeMA___seq_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_compare_eq__", &rhs))
 		goto err;
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare_eq))(lhs, rhs);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_compare_eq))(self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
@@ -312,7 +316,7 @@ DeeMA___seq_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__seq_inplace_add__", &rhs))
 		goto err;
 	Dee_Incref(self);
-	if unlikely(DeeSeq_OperatorInplaceAdd(&self, rhs))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_inplace_add))(&self, rhs))
 		goto err_self;
 	return self;
 err_self:
@@ -329,7 +333,7 @@ DeeMA___seq_inplace_mul__(DeeObject *__restrict self, size_t argc, DeeObject *co
 	if (DeeArg_Unpack(argc, argv, "o:__seq_inplace_mul__", &repeat))
 		goto err;
 	Dee_Incref(self);
-	if unlikely(DeeSeq_OperatorInplaceMul(&self, repeat))
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_inplace_mul))(&self, repeat))
 		goto err_self;
 	return self;
 err_self:
@@ -465,6 +469,29 @@ DeeMA___seq_parity__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	if unlikely(result < 0)
 		goto err;
 	return_bool_(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_reduce___name[] = "__seq_reduce__";
+PUBLIC_CONST char const DeeMA___seq_reduce___doc[] = "(combine:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,init?)->";
+PUBLIC_CONST char const DeeMA_Sequence_reduce_name[] = "reduce";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_reduce__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *combine, *init = NULL;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__combine_start_end_init,
+	                    "o|" UNPuSIZ UNPuSIZ "o:reduce",
+	                    &combine, &start, &end, &init))
+		goto err;
+	if (start == 0 && end == (size_t)-1) {
+		if (init)
+			return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_reduce_with_init))(self, combine, init);
+		return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_reduce))(self, combine);
+	}
+	if (init)
+		return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_reduce_with_range_and_init))(self, combine, start, end, init);
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_reduce_with_range))(self, combine, start, end);
 err:
 	return NULL;
 }
@@ -896,6 +923,265 @@ err:
 	return NULL;
 }
 
+PUBLIC_CONST char const DeeMA___seq_remove___name[] = "__seq_remove__";
+PUBLIC_CONST char const DeeMA___seq_remove___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool";
+PUBLIC_CONST char const DeeMA_Sequence_remove_name[] = "remove";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	int result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:__seq_remove__",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_remove_with_key))(self, item, start, end, key)
+	         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_remove))(self, item, start, end);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_rremove___name[] = "__seq_rremove__";
+PUBLIC_CONST char const DeeMA___seq_rremove___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dbool";
+PUBLIC_CONST char const DeeMA_Sequence_rremove_name[] = "rremove";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_rremove__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	int result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:__seq_rremove__",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_rremove_with_key))(self, item, start, end, key)
+	         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_rremove))(self, item, start, end);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_removeall___name[] = "__seq_removeall__";
+PUBLIC_CONST char const DeeMA___seq_removeall___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint";
+PUBLIC_CONST char const DeeMA_Sequence_removeall_name[] = "removeall";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_removeall__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	size_t result;
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_max_key,
+	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ "o:removeall",
+	                    &item, &start, &end, &max, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall_with_key))(self, item, start, end, max, key)
+	         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeall))(self, item, start, end, max);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_removeif___name[] = "__seq_removeif__";
+PUBLIC_CONST char const DeeMA___seq_removeif___doc[] = "(should:?DCallable,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint";
+PUBLIC_CONST char const DeeMA_Sequence_removeif_name[] = "removeif";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_removeif__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	size_t result;
+	DeeObject *should;
+	size_t start = 0, end = (size_t)-1, max = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__should_start_end_max,
+	                    "o|" UNPuSIZ UNPuSIZ UNPuSIZ ":removeif",
+	                    &should, &start, &end, &max))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, should, start, end, max);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_resize___name[] = "__seq_resize__";
+PUBLIC_CONST char const DeeMA___seq_resize___doc[] = "(size:?Dint,filler=!N)";
+PUBLIC_CONST char const DeeMA_Sequence_resize_name[] = "resize";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_resize__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	size_t size;
+	DeeObject *filler = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__size_filler,
+	                    UNPuSIZ "|o:resize", &size, &filler))
+		goto err;
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_resize))(self, size, filler))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_fill___name[] = "__seq_fill__";
+PUBLIC_CONST char const DeeMA___seq_fill___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,filler=!N)";
+PUBLIC_CONST char const DeeMA_Sequence_fill_name[] = "fill";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_fill__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *filler = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_filler,
+	                    "|" UNPuSIZ UNPuSIZ "o:fill",
+	                    &start, &end, &filler))
+		goto err;
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_fill))(self, start, end, filler))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_reverse___name[] = "__seq_reverse__";
+PUBLIC_CONST char const DeeMA___seq_reverse___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)";
+PUBLIC_CONST char const DeeMA_Sequence_reverse_name[] = "reverse";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_reverse__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|" UNPuSIZ UNPuSIZ ":reverse",
+	                    &start, &end))
+		goto err;
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_reverse))(self, start, end))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_reversed___name[] = "__seq_reversed__";
+PUBLIC_CONST char const DeeMA___seq_reversed___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->?DSequence";
+PUBLIC_CONST char const DeeMA_Sequence_reversed_name[] = "reversed";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_reversed__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end,
+	                    "|" UNPuSIZ UNPuSIZ ":reversed",
+	                    &start, &end))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_reversed))(self, start, end);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_sort___name[] = "__seq_sort__";
+PUBLIC_CONST char const DeeMA___seq_sort___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)";
+PUBLIC_CONST char const DeeMA_Sequence_sort_name[] = "sort";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *key = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:sort",
+	                    &start, &end, &key))
+		goto err;
+	if unlikely(!DeeNone_Check(key)
+	            ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort_with_key))(self, start, end, key)
+	            : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort))(self, start, end))
+		goto err;
+	return_none;
+err:
+	return NULL;
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_sorted___name[] = "__seq_sorted__";
+PUBLIC_CONST char const DeeMA___seq_sorted___doc[] = "(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)";
+PUBLIC_CONST char const DeeMA_Sequence_sorted_name[] = "sorted";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_sorted__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *key = Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__start_end_key,
+	                    "|" UNPuSIZ UNPuSIZ "o:sorted",
+	                    &start, &end, &key))
+		goto err;
+	return !DeeNone_Check(key)
+	       ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted_with_key))(self, start, end, key)
+	       : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sorted))(self, start, end);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_bfind___name[] = "__seq_bfind__";
+PUBLIC_CONST char const DeeMA___seq_bfind___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?X2?Dint?N";
+PUBLIC_CONST char const DeeMA_Sequence_bfind_name[] = "bfind";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_bfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:__seq_bfind__",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_bfind_with_key))(self, item, start, end, key)
+	         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_bfind))(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		return_none;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_bposition___name[] = "__seq_bposition__";
+PUBLIC_CONST char const DeeMA___seq_bposition___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?Dint";
+PUBLIC_CONST char const DeeMA_Sequence_bposition_name[] = "bposition";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_bposition__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *item, *key = Dee_None;
+	size_t result, start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:bposition",
+	                    &item, &start, &end, &key))
+		goto err;
+	result = !DeeNone_Check(key)
+	         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_bposition_with_key))(self, item, start, end, key)
+	         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_bposition))(self, item, start, end);
+	if unlikely(result == (size_t)Dee_COMPARE_ERR)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_brange___name[] = "__seq_brange__";
+PUBLIC_CONST char const DeeMA___seq_brange___doc[] = "(item,start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N)->?T2?Dint?Dint";
+PUBLIC_CONST char const DeeMA_Sequence_brange_name[] = "brange";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_brange__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw){
+	DeeObject *item, *key = Dee_None;
+	size_t start = 0, end = (size_t)-1, result_range[2];
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__item_start_end_key,
+	                    "o|" UNPuSIZ UNPuSIZ "o:brange",
+	                    &item, &start, &end, &key))
+		goto err;
+	if (!DeeNone_Check(key)
+	    ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_brange_with_key))(self, item, start, end, key, result_range)
+	    : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_brange))(self, item, start, end, result_range))
+		goto err;
+	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, result_range[0], result_range[1]);
+err:
+	return NULL;
+}
+
 PUBLIC_CONST char const DeeMA___set_iter___name[] = "__set_iter__";
 PUBLIC_CONST char const DeeMA___set_iter___doc[] = "->?DIterator";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
@@ -939,7 +1225,7 @@ DeeMA___set_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *con
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_compare_eq__", &rhs))
 		goto err;
-	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(lhs, rhs);
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_compare_eq))(self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
@@ -955,7 +1241,7 @@ DeeMA___set_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_eq__", &rhs))
 		goto err;
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_eq))(self, rhs);
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_eq))(self, rhs);
 err:
 	return NULL;
 }
@@ -967,7 +1253,268 @@ DeeMA___set_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_ne__", &rhs))
 		goto err;
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_ne))(self, rhs);
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_ne))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_lo___name[] = "__set_lo__";
+PUBLIC_CONST char const DeeMA___set_lo___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_lo__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_lo))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_le___name[] = "__set_le__";
+PUBLIC_CONST char const DeeMA___set_le___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?Dbool";
+PUBLIC_CONST char const DeeMA_Set_issubset_name[] = "issubset";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_le__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_le))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_gr___name[] = "__set_gr__";
+PUBLIC_CONST char const DeeMA___set_gr___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_gr__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_gr))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_ge___name[] = "__set_ge__";
+PUBLIC_CONST char const DeeMA___set_ge___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?Dbool";
+PUBLIC_CONST char const DeeMA_Set_issuperset_name[] = "issuperset";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_ge__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_ge))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_inv___name[] = "__set_inv__";
+PUBLIC_CONST char const DeeMA___set_inv___doc[] = "->?DSet";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_inv__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	if (DeeArg_Unpack(argc, argv, ":__set_inv__"))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inv))(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_add___name[] = "__set_add__";
+PUBLIC_CONST char const DeeMA___set_add___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?DSet";
+PUBLIC_CONST char const DeeMA_Set_union_name[] = "union";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_add__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_add))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_sub___name[] = "__set_sub__";
+PUBLIC_CONST char const DeeMA___set_sub___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?DSet";
+PUBLIC_CONST char const DeeMA_Set_difference_name[] = "difference";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_sub__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_sub))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_and___name[] = "__set_and__";
+PUBLIC_CONST char const DeeMA___set_and___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?DSet";
+PUBLIC_CONST char const DeeMA_Set_intersection_name[] = "intersection";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_and__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_and))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_xor___name[] = "__set_xor__";
+PUBLIC_CONST char const DeeMA___set_xor___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?DSet";
+PUBLIC_CONST char const DeeMA_Set_symmetric_difference_name[] = "symmetric_difference";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_xor__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_xor))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_inplace_add___name[] = "__set_inplace_add__";
+PUBLIC_CONST char const DeeMA___set_inplace_add___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?.";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_add__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_add))(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_inplace_sub___name[] = "__set_inplace_sub__";
+PUBLIC_CONST char const DeeMA___set_inplace_sub___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?.";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_inplace_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_sub__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_sub))(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_inplace_and___name[] = "__set_inplace_and__";
+PUBLIC_CONST char const DeeMA___set_inplace_and___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?.";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_inplace_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_and__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_and))(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_inplace_xor___name[] = "__set_inplace_xor__";
+PUBLIC_CONST char const DeeMA___set_inplace_xor___doc[] = "(rhs:?X3?DSet?DSequence?S?O)->?.";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__set_inplace_xor__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_inplace_xor))(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_insert___name[] = "__set_insert__";
+PUBLIC_CONST char const DeeMA___set_insert___doc[] = "(key)->?Dbool";
+PUBLIC_CONST char const DeeMA_Set_insert_name[] = "insert";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	int result;
+	DeeObject *key;
+	if (DeeArg_Unpack(argc, argv, "o:__set_insert__", &key))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_insert))(self, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_insertall___name[] = "__set_insertall__";
+PUBLIC_CONST char const DeeMA___set_insertall___doc[] = "(keys:?X3?DSet?DSequence?S?O)->?Dbool";
+PUBLIC_CONST char const DeeMA_Set_insertall_name[] = "insertall";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_insertall__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	int result;
+	DeeObject *keys;
+	if (DeeArg_Unpack(argc, argv, "o:__set_insertall__", &keys))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_insertall))(self, keys);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_remove___name[] = "__set_remove__";
+PUBLIC_CONST char const DeeMA___set_remove___doc[] = "(key)->?Dbool";
+PUBLIC_CONST char const DeeMA_Set_remove_name[] = "remove";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	int result;
+	DeeObject *key;
+	if (DeeArg_Unpack(argc, argv, "o:__set_remove__", &key))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_remove))(self, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_removeall___name[] = "__set_removeall__";
+PUBLIC_CONST char const DeeMA___set_removeall___doc[] = "(keys:?X3?DSet?DSequence?S?O)";
+PUBLIC_CONST char const DeeMA_Set_removeall_name[] = "removeall";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_removeall__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *keys;
+	if (DeeArg_Unpack(argc, argv, "o:__set_removeall__", &keys))
+		goto err;
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_removeall))(self, keys))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___set_pop___name[] = "__set_pop__";
+PUBLIC_CONST char const DeeMA___set_pop___doc[] = "(def?)->";
+PUBLIC_CONST char const DeeMA_Set_pop_name[] = "pop";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *def = NULL;
+	if (DeeArg_Unpack(argc, argv, "|o:__set_pop__", &def))
+		goto err;
+	return def ? (*DeeType_RequireMethodHint(Dee_TYPE(self), set_pop_with_default))(self, def)
+	           : (*DeeType_RequireMethodHint(Dee_TYPE(self), set_pop))(self);
 err:
 	return NULL;
 }
@@ -1024,17 +1571,6 @@ err:
 	return NULL;
 }
 
-PUBLIC_CONST char const DeeMA___map_iterkeys___name[] = "__map_iterkeys__";
-PUBLIC_CONST char const DeeMA___map_iterkeys___doc[] = "->?DIterator";
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___map_iterkeys__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
-	if (DeeArg_Unpack(argc, argv, ":__map_iterkeys__"))
-		goto err;
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_iterkeys))(self);
-err:
-	return NULL;
-}
-
 PUBLIC_CONST char const DeeMA___map_enumerate___name[] = "__map_enumerate__";
 PUBLIC_CONST char const DeeMA___map_enumerate___doc[] = "(cb:?DCallable,startkey?,endkey?)->?X2?O?N";
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
@@ -1045,7 +1581,7 @@ DeeMA___map_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	if (DeeArg_Unpack(argc, argv, "o|oo:__map_enumerate__", &data.sed_cb, &startkey, &endkey))
 		goto err;
 	if (endkey) {
-		foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate_range))(self, &seq_enumerate_cb, &data);
+		foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate_range))(self, &seq_enumerate_cb, &data, startkey, endkey);
 	} else {
 		foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_enumerate))(self, &seq_enumerate_cb, &data);
 	}
@@ -1054,6 +1590,393 @@ DeeMA___map_enumerate__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	if (foreach_status == -2)
 		return data.sed_result;
 	return_none;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_compare_eq___name[] = "__map_compare_eq__";
+PUBLIC_CONST char const DeeMA___map_compare_eq___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?X2?Dbool?Dint";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_compare_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	int result;
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_compare_eq__", &rhs))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, rhs);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	/* We always return "bool" here, but user-code is also allowed to return "int" */
+	return_bool(result == 0);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_eq___name[] = "__map_eq__";
+PUBLIC_CONST char const DeeMA___map_eq___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_eq__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_eq__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_eq))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_ne___name[] = "__map_ne__";
+PUBLIC_CONST char const DeeMA___map_ne___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_ne__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_ne__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_ne))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_lo___name[] = "__map_lo__";
+PUBLIC_CONST char const DeeMA___map_lo___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_lo__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_lo__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_lo))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_le___name[] = "__map_le__";
+PUBLIC_CONST char const DeeMA___map_le___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_le__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_le__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_le))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_gr___name[] = "__map_gr__";
+PUBLIC_CONST char const DeeMA___map_gr___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_gr__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_gr__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_gr))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_ge___name[] = "__map_ge__";
+PUBLIC_CONST char const DeeMA___map_ge___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?Dbool";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_ge__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_ge__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_ge))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_add___name[] = "__map_add__";
+PUBLIC_CONST char const DeeMA___map_add___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?DMapping";
+PUBLIC_CONST char const DeeMA_Mapping_union_name[] = "union";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_add__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_add))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_sub___name[] = "__map_sub__";
+PUBLIC_CONST char const DeeMA___map_sub___doc[] = "(keys:?X2?DSet?S?O)->?DMapping";
+PUBLIC_CONST char const DeeMA_Mapping_difference_name[] = "difference";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *keys;
+	if (DeeArg_Unpack(argc, argv, "o:__map_sub__", &keys))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_sub))(self, keys);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_and___name[] = "__map_and__";
+PUBLIC_CONST char const DeeMA___map_and___doc[] = "(keys:?X2?DSet?S?O)->?DMapping";
+PUBLIC_CONST char const DeeMA_Mapping_intersection_name[] = "intersection";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *keys;
+	if (DeeArg_Unpack(argc, argv, "o:__map_and__", &keys))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_and))(self, keys);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_xor___name[] = "__map_xor__";
+PUBLIC_CONST char const DeeMA___map_xor___doc[] = "(rhs:?X2?M?O?O?S?T2?O?O)->?DMapping";
+PUBLIC_CONST char const DeeMA_Mapping_symmetric_difference_name[] = "symmetric_difference";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_xor__", &rhs))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_xor))(self, rhs);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_inplace_add___name[] = "__map_inplace_add__";
+PUBLIC_CONST char const DeeMA___map_inplace_add___doc[] = "(items:?X3?DMapping?M?O?O?S?T2?O?O)->?.";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_inplace_add__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *items;
+	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_add__", &items))
+		goto err;
+	Dee_Incref(self);
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_add))(&self, items))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_inplace_sub___name[] = "__map_inplace_sub__";
+PUBLIC_CONST char const DeeMA___map_inplace_sub___doc[] = "(keys:?X2?DSet?DSequence?S?O)->?.";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_inplace_sub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *keys;
+	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_sub__", &keys))
+		goto err;
+	Dee_Incref(self);
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_sub))(&self, keys))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_inplace_and___name[] = "__map_inplace_and__";
+PUBLIC_CONST char const DeeMA___map_inplace_and___doc[] = "(keys:?X2?DSet?DSequence?S?O)->?.";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_inplace_and__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *keys;
+	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_and__", &keys))
+		goto err;
+	Dee_Incref(self);
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_and))(&self, keys))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_inplace_xor___name[] = "__map_inplace_xor__";
+PUBLIC_CONST char const DeeMA___map_inplace_xor___doc[] = "(rhs:?X3?DMapping?M?O?O?S?T2?O?O)->?.";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:__map_inplace_xor__", &rhs))
+		goto err;
+	Dee_Incref(self);
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_inplace_xor))(&self, rhs))
+		goto err_self;
+	return self;
+err_self:
+	Dee_Decref_unlikely(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_setold___name[] = "__map_setold__";
+PUBLIC_CONST char const DeeMA___map_setold___doc[] = "(key,value)->?Dbool";
+PUBLIC_CONST char const DeeMA_Mapping_setold_name[] = "setold";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_setold__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	int result;
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:__map_setold__", &key, &value))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold))(self, key, value);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_setold_ex___name[] = "__map_setold_ex__";
+PUBLIC_CONST char const DeeMA___map_setold_ex___doc[] = "(key,value)->?T2?Dbool?X2?O?N";
+PUBLIC_CONST char const DeeMA_Mapping_setold_ex_name[] = "setold_ex";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_setold_ex__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
+	DeeObject *key, *value;
+	DREF DeeObject *old_value;
+	DREF DeeTupleObject *result;
+	if (DeeArg_Unpack(argc, argv, "oo:__map_setold_ex__", &key, &value))
+		goto err;
+	old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold_ex))(self, key, value);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value == ITER_DONE)
+		return_reference_((DeeObject *)&setold_failed_result);
+	result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
+		goto err_old_value;
+	Dee_Incref(Dee_True);
+	DeeTuple_SET(result, 0, Dee_True);
+	DeeTuple_SET(result, 1, old_value); /* Inherit reference */
+	return (DREF DeeObject *)result;
+err_old_value:
+	Dee_Decref(old_value);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_setnew___name[] = "__map_setnew__";
+PUBLIC_CONST char const DeeMA___map_setnew___doc[] = "(key,value)->?Dbool";
+PUBLIC_CONST char const DeeMA_Mapping_setnew_name[] = "setnew";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_setnew__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	int result;
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:__map_setnew__", &key, &value))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew))(self, key, value);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_setnew_ex___name[] = "__map_setnew_ex__";
+PUBLIC_CONST char const DeeMA___map_setnew_ex___doc[] = "(key,value)->?T2?Dbool?X2?O?N";
+PUBLIC_CONST char const DeeMA_Mapping_setnew_ex_name[] = "setnew_ex";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_setnew_ex__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
+	DeeObject *key, *value;
+	DREF DeeObject *old_value;
+	DREF DeeTupleObject *result;
+	if (DeeArg_Unpack(argc, argv, "oo:__map_setnew_ex__", &key, &value))
+		goto err;
+	old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew_ex))(self, key, value);
+	if unlikely(!old_value)
+		goto err;
+	if (old_value == ITER_DONE)
+		return_reference_((DeeObject *)&setnew_success_result);
+	result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
+		goto err_old_value;
+	Dee_Incref(Dee_False);
+	DeeTuple_SET(result, 0, Dee_False);
+	DeeTuple_SET(result, 1, old_value); /* Inherit reference */
+	return (DREF DeeObject *)result;
+err_old_value:
+	Dee_Decref(old_value);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_setdefault___name[] = "__map_setdefault__";
+PUBLIC_CONST char const DeeMA___map_setdefault___doc[] = "(key,value)->";
+PUBLIC_CONST char const DeeMA_Mapping_setdefault_name[] = "setdefault";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_setdefault__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *key, *value;
+	if (DeeArg_Unpack(argc, argv, "oo:__map_setdefault__", &key, &value))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setdefault))(self, key, value);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_update___name[] = "__map_update__";
+PUBLIC_CONST char const DeeMA___map_update___doc[] = "(items:?X3?DMapping?M?O?O?S?T2?O?O)";
+PUBLIC_CONST char const DeeMA_Mapping_update_name[] = "update";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_update__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *items;
+	if (DeeArg_Unpack(argc, argv, "o:__map_update__", &items))
+		goto err;
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_update))(self, items))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_remove___name[] = "__map_remove__";
+PUBLIC_CONST char const DeeMA___map_remove___doc[] = "(key)->?Dbool";
+PUBLIC_CONST char const DeeMA_Mapping_remove_name[] = "remove";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_remove__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	int result;
+	DeeObject *key;
+	if (DeeArg_Unpack(argc, argv, "o:__map_remove__", &key))
+		goto err;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_remove))(self, key);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_removekeys___name[] = "__map_removekeys__";
+PUBLIC_CONST char const DeeMA___map_removekeys___doc[] = "(keys:?X3?DSet?DSequence?S?O)";
+PUBLIC_CONST char const DeeMA_Mapping_removekeys_name[] = "removekeys";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_removekeys__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *keys;
+	if (DeeArg_Unpack(argc, argv, "o:__map_removekeys__", &keys))
+		goto err;
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_removekeys))(self, keys))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_pop___name[] = "__map_pop__";
+PUBLIC_CONST char const DeeMA___map_pop___doc[] = "(key,def?)->";
+PUBLIC_CONST char const DeeMA_Mapping_pop_name[] = "pop";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_pop__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *key, *def = NULL;
+	if (DeeArg_Unpack(argc, argv, "o|o:__map_pop__", &key, &def))
+		goto err;
+	return def ? (*DeeType_RequireMethodHint(Dee_TYPE(self), map_pop_with_default))(self, key, def)
+	           : (*DeeType_RequireMethodHint(Dee_TYPE(self), map_pop))(self, key);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___map_popitem___name[] = "__map_popitem__";
+PUBLIC_CONST char const DeeMA___map_popitem___doc[] = "->?X2?T2?O?O?N";
+PUBLIC_CONST char const DeeMA_Mapping_popitem_name[] = "popitem";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___map_popitem__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	if (DeeArg_Unpack(argc, argv, ":__map_popitem__"))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_popitem))(self);
 err:
 	return NULL;
 }

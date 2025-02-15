@@ -20,9 +20,11 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_C
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_C 1
 
+#include <deemon/api.h>
+
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #include "default-api.h"
 
-#include <deemon/api.h>
 #include <deemon/bytes.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
@@ -1350,5 +1352,6 @@ DECL_END
 #define DEFINE_DeeType_RequireMapIterValues
 #include "default-api-require-method-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_C */

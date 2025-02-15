@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/gc.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/thread.h>

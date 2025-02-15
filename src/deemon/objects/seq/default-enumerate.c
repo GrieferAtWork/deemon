@@ -29,6 +29,7 @@
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 
 /**/
@@ -528,7 +529,7 @@ de_sos_gif__iter(DefaultEnumeration *__restrict self) {
 	ASSERT(Dee_TYPE(self->de_seq)->tp_seq);
 	result->disgi_tp_getitem_index = Dee_TYPE(self->de_seq)->tp_seq->tp_getitem_index_fast;
 	result->disgi_index = 0;
-	result->disgi_end   = DeeType_InvokeMethodHint0(self->de_seq, seq_operator_size);
+	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->de_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
 		goto err;
 	ASSERT(result->disgi_tp_getitem_index || !result->disgi_end);
@@ -556,7 +557,7 @@ dewif_sos_gif__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	ASSERT(Dee_TYPE(self->dewif_seq)->tp_seq);
 	result->disgi_tp_getitem_index = Dee_TYPE(self->dewif_seq)->tp_seq->tp_getitem_index_fast;
 	result->disgi_index = self->dewif_start;
-	result->disgi_end   = DeeType_InvokeMethodHint0(self->dewif_seq, seq_operator_size);
+	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->dewif_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
 		goto err;
 	if (result->disgi_end > self->dewif_end)
@@ -585,7 +586,7 @@ de_sos_sotgi__iter(DefaultEnumeration *__restrict self) {
 	result->disgi_seq = self->de_seq;
 	result->disgi_tp_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self->de_seq), seq_operator_trygetitem_index);
 	result->disgi_index = 0;
-	result->disgi_end   = DeeType_InvokeMethodHint0(self->de_seq, seq_operator_size);
+	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->de_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
 		goto err;
 	Dee_Incref(self->de_seq);
@@ -611,7 +612,7 @@ dewif_sos_sotgi__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	result->disgi_seq = self->dewif_seq;
 	result->disgi_tp_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self->dewif_seq), seq_operator_trygetitem_index);
 	result->disgi_index = self->dewif_start;
-	result->disgi_end   = DeeType_InvokeMethodHint0(self->dewif_seq, seq_operator_size);
+	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->dewif_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
 		goto err;
 	if (result->disgi_end > self->dewif_end)
@@ -639,7 +640,7 @@ de_sos_sogi__iter(DefaultEnumeration *__restrict self) {
 	result->disgi_seq = self->de_seq;
 	result->disgi_tp_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self->de_seq), seq_operator_getitem_index);
 	result->disgi_index = 0;
-	result->disgi_end   = DeeType_InvokeMethodHint0(self->de_seq, seq_operator_size);
+	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->de_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
 		goto err;
 	Dee_Incref(self->de_seq);
@@ -665,7 +666,7 @@ dewif_sos_soii__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	result->disgi_seq = self->dewif_seq;
 	result->disgi_tp_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self->dewif_seq), seq_operator_getitem_index);
 	result->disgi_index = self->dewif_start;
-	result->disgi_end   = DeeType_InvokeMethodHint0(self->dewif_seq, seq_operator_size);
+	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->dewif_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
 		goto err;
 	if (result->disgi_end > self->dewif_end)
@@ -690,7 +691,7 @@ de_soso_sog__iter(DefaultEnumeration *__restrict self) {
 	result = DeeGCObject_MALLOC(DefaultIterator_WithSizeObAndGetItem);
 	if unlikely(!result)
 		goto err;
-	result->disg_end = DeeType_InvokeMethodHint0(self->de_seq, seq_operator_sizeob);
+	result->disg_end = DeeObject_InvokeMethodHint(seq_operator_sizeob, self->de_seq);
 	if unlikely(!result->disg_end)
 		goto err_r;
 	result->disg_index = DeeObject_NewDefault(Dee_TYPE(result->disg_end));
@@ -767,7 +768,7 @@ dewf_soso_sog__iter(DefaultEnumerationWithFilter *__restrict self) {
 	result = DeeGCObject_MALLOC(DefaultIterator_WithSizeObAndGetItem);
 	if unlikely(!result)
 		goto err;
-	result->disg_end = DeeType_InvokeMethodHint0(self->dewf_seq, seq_operator_sizeob);
+	result->disg_end = DeeObject_InvokeMethodHint(seq_operator_sizeob, self->dewf_seq);
 	if unlikely(!result->disg_end)
 		goto err_r;
 	temp = DeeObject_CmpLoAsBool(self->dewf_end, result->disg_end);
@@ -857,21 +858,13 @@ de_soi__iter(DefaultEnumeration *__restrict self) {
 	result = DeeObject_MALLOC(DefaultIterator_WithNextAndCounter);
 	if unlikely(!result)
 		goto err;
-	result->dinc_iter = DeeType_InvokeMethodHint0(self->de_seq, seq_operator_iter);
+	result->dinc_iter = DeeObject_InvokeMethodHint(seq_operator_iter, self->de_seq);
 	if unlikely(!result->dinc_iter)
 		goto err_r;
-	result->dinc_tp_next = Dee_TYPE(result->dinc_iter)->tp_iter_next;
-	if unlikely(!result->dinc_tp_next) {
-		if (!DeeType_InheritIterNext(Dee_TYPE(result->dinc_iter)))
-			goto err_r_iter_no_next;
-		result->dinc_tp_next = Dee_TYPE(result->dinc_iter)->tp_iter_next;
-	}
+	result->dinc_tp_next = DeeType_RequireNativeOperator(Dee_TYPE(result->dinc_iter), iter_next);
 	result->dinc_counter = 0;
 	DeeObject_Init(result, &DefaultIterator_WithNextAndCounterPair_Type);
 	return result;
-err_r_iter_no_next:
-	err_unimplemented_operator(Dee_TYPE(result->dinc_iter), OPERATOR_ITERNEXT);
-	Dee_Decref(result->dinc_iter);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -889,23 +882,16 @@ dewif_soi__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	result = DeeObject_MALLOC(DefaultIterator_WithNextAndCounterAndLimit);
 	if unlikely(!result)
 		goto err;
-	result->dincl_iter = DeeType_InvokeMethodHint0(self->dewif_seq, seq_operator_iter);
+	result->dincl_iter = DeeObject_InvokeMethodHint(seq_operator_iter, self->dewif_seq);
 	if unlikely(!result->dincl_iter)
 		goto err_r;
-	result->dincl_tp_next = Dee_TYPE(result->dincl_iter)->tp_iter_next;
-	if unlikely(!result->dincl_tp_next) {
-		if (!DeeType_InheritIterNext(Dee_TYPE(result->dincl_iter)))
-			goto err_r_iter_no_next;
-		result->dincl_tp_next = Dee_TYPE(result->dincl_iter)->tp_iter_next;
-	}
+	result->dincl_tp_next = DeeType_RequireNativeOperator(Dee_TYPE(result->dincl_iter), iter_next);
 	if (DeeObject_IterAdvance(result->dincl_iter, self->dewif_start) == (size_t)-1)
 		goto err_r_iter;
 	result->dincl_counter = self->dewif_start;
 	result->dincl_limit   = self->dewif_end;
 	DeeObject_Init(result, &DefaultIterator_WithNextAndCounterAndLimitPair_Type);
 	return result;
-err_r_iter_no_next:
-	err_unimplemented_operator(Dee_TYPE(result->dincl_iter), OPERATOR_ITERNEXT);
 err_r_iter:
 	Dee_Decref(result->dincl_iter);
 err_r:
@@ -928,38 +914,20 @@ err:
 #define dewf_toi__class_members Iterator__is__DefaultIterator_WithNextAndUnpackFilter_Type
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithNextAndUnpackFilter *DCALL
 dewf_toi__iter(DefaultEnumerationWithFilter *__restrict self) {
-	DeeTypeObject *itertyp;
 	DREF DefaultIterator_WithNextAndUnpackFilter *result;
 	result = DeeObject_MALLOC(DefaultIterator_WithNextAndUnpackFilter);
 	if unlikely(!result)
 		goto err;
-	result->dinuf_iter = DeeType_InvokeMethodHint0(self->dewf_seq, set_operator_iter);
+	result->dinuf_iter = DeeObject_InvokeMethodHint(set_operator_iter, self->dewf_seq);
 	if unlikely(!result->dinuf_iter)
 		goto err_r;
-	itertyp = Dee_TYPE(result->dinuf_iter);
-	if unlikely(!itertyp->tp_iter_next ||
-	            !itertyp->tp_iterator ||
-	            !itertyp->tp_iterator->tp_nextpair ||
-	            !itertyp->tp_iterator->tp_nextkey) {
-		if (!DeeType_InheritIterNext(itertyp))
-			goto err_r_iter_no_next;
-	}
-	ASSERT(itertyp->tp_iter_next);
-	ASSERT(itertyp->tp_iterator);
-	ASSERT(itertyp->tp_iterator->tp_nextpair);
-	ASSERT(itertyp->tp_iterator->tp_nextkey);
-	result->dinuf_tp_next     = itertyp->tp_iter_next;
-	result->dinuf_tp_iterator = itertyp->tp_iterator;
+	result->dinuf_tp_next = DeeType_RequireNativeOperator(Dee_TYPE(result->dinuf_iter), iter_next);
 	Dee_Incref(self->dewf_start);
 	result->dinuf_start = self->dewf_start;
 	Dee_Incref(self->dewf_end);
 	result->dinuf_end = self->dewf_end;
 	DeeObject_Init(result, &DefaultIterator_WithNextAndUnpackFilter_Type);
 	return result;
-err_r_iter_no_next:
-	err_unimplemented_operator(Dee_TYPE(result->dinuf_iter), OPERATOR_ITERNEXT);
-/*err_r_iter:*/
-	Dee_Decref(result->dinuf_iter);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -977,15 +945,10 @@ de_mik_mog__iter(DefaultEnumeration *__restrict self) {
 	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
 	if unlikely(!result)
 		goto err;
-	result->diikgi_iter = DeeType_InvokeMethodHint0(self->de_seq, map_iterkeys);
+	result->diikgi_iter = DeeObject_InvokeMethodHint(map_iterkeys, self->de_seq);
 	if unlikely(!result->diikgi_iter)
 		goto err_r;
-	result->diikgi_tp_next = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
-	if (!result->diikgi_tp_next) {
-		if (!DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
-			goto err_r_no_next;
-		result->diikgi_tp_next = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
-	}
+	result->diikgi_tp_next    = DeeType_RequireNativeOperator(Dee_TYPE(result->diikgi_iter), iter_next);
 	result->diikgi_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_getitem);
 	Dee_Incref(self->de_seq);
 	result->diikgi_seq = self->de_seq;
@@ -1019,23 +982,15 @@ de_mik_motg__iter(DefaultEnumeration *__restrict self) {
 	result = DeeObject_MALLOC(DefaultIterator_WithIterKeysAndGetItem);
 	if unlikely(!result)
 		goto err;
-	result->diikgi_iter = DeeType_InvokeMethodHint0(self->de_seq, map_iterkeys);
+	result->diikgi_iter = DeeObject_InvokeMethodHint(map_iterkeys, self->de_seq);
 	if unlikely(!result->diikgi_iter)
 		goto err_r;
-	result->diikgi_tp_next = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
-	if (!result->diikgi_tp_next) {
-		if (!DeeType_InheritIterNext(Dee_TYPE(result->diikgi_iter)))
-			goto err_r_no_next;
-		result->diikgi_tp_next = Dee_TYPE(result->diikgi_iter)->tp_iter_next;
-	}
+	result->diikgi_tp_next    = DeeType_RequireNativeOperator(Dee_TYPE(result->diikgi_iter), iter_next);
 	result->diikgi_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem);
 	Dee_Incref(self->de_seq);
 	result->diikgi_seq = self->de_seq;
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type);
 	return result;
-err_r_no_next:
-	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
-	Dee_Decref(result->diikgi_iter);
 err_r:
 	DeeObject_FREE(result);
 err:

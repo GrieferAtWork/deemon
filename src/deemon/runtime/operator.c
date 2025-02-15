@@ -1497,6 +1497,8 @@ err:
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_OPERATOR(int, Assign, (DeeObject *self, DeeObject *some_object)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(some_object);
@@ -1536,6 +1538,7 @@ do_assign:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 #ifdef DEFINE_TYPED_OPERATORS
@@ -1570,70 +1573,6 @@ STATIC_ASSERT(offsetof(struct trepr_frame, rf_obj) ==
 #else /* DEFINE_TYPED_OPERATORS */
 #define Xrepr_frame repr_frame
 #endif /* !DEFINE_TYPED_OPERATORS */
-
-DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultStrWithPrint, (DeeObject *RESTRICT_IF_NOTYPE self)) {
-	Dee_ssize_t print_error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	LOAD_TP_SELF;
-	ASSERT(tp_self->tp_cast.tp_print &&
-	       tp_self->tp_cast.tp_print != &DeeObject_DefaultPrintWithStr);
-	print_error = DeeType_INVOKE_PRINT_NODEFAULT(tp_self, self, &unicode_printer_print, &printer);
-	if unlikely(print_error < 0)
-		goto err;
-	return unicode_printer_pack(&printer);
-err:
-	unicode_printer_fini(&printer);
-	return NULL;
-}
-
-DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultReprWithPrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
-	Dee_ssize_t print_error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	LOAD_TP_SELF;
-	ASSERT(tp_self->tp_cast.tp_printrepr);
-	ASSERT(tp_self->tp_cast.tp_printrepr != &DeeObject_DefaultPrintReprWithRepr);
-	print_error = DeeType_INVOKE_PRINTREPR_NODEFAULT(tp_self, self, &unicode_printer_print, &printer);
-	if unlikely(print_error < 0)
-		goto err;
-	return unicode_printer_pack(&printer);
-err:
-	unicode_printer_fini(&printer);
-	return NULL;
-}
-
-DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultPrintWithStr, (DeeObject *RESTRICT_IF_NOTYPE self,
-                                                            dformatprinter printer, void *arg)) {
-	Dee_ssize_t result;
-	DREF DeeObject *str;
-	LOAD_TP_SELF;
-	ASSERT(tp_self->tp_cast.tp_str);
-	ASSERT(tp_self->tp_cast.tp_str != &DeeObject_DefaultStrWithPrint);
-	str = DeeType_INVOKE_STR_NODEFAULT(tp_self, self);
-	if unlikely(!str)
-		goto err;
-	result = DeeString_PrintUtf8(str, printer, arg);
-	Dee_Decref_likely(str);
-	return result;
-err:
-	return -1;
-}
-
-DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultPrintReprWithRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
-                                                                 dformatprinter printer, void *arg)) {
-	Dee_ssize_t result;
-	DREF DeeObject *str;
-	LOAD_TP_SELF;
-	ASSERT(tp_self->tp_cast.tp_repr);
-	ASSERT(tp_self->tp_cast.tp_repr != &DeeObject_DefaultReprWithPrintRepr);
-	str = DeeType_INVOKE_REPR_NODEFAULT(tp_self, self);
-	if unlikely(!str)
-		goto err;
-	result = DeeString_PrintUtf8(str, printer, arg);
-	Dee_Decref_likely(str);
-	return result;
-err:
-	return -1;
-}
 
 DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
@@ -1716,7 +1655,7 @@ recursion:
 }
 
 DEFINE_OPERATOR(Dee_ssize_t, Print, (DeeObject *RESTRICT_IF_NOTYPE self,
-                                  dformatprinter printer, void *arg)) {
+                                     Dee_formatprinter_t printer, void *arg)) {
 	Dee_ssize_t result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_print && !DeeType_InheritStr(tp_self))
@@ -1755,7 +1694,7 @@ recursion:
 }
 
 DEFINE_OPERATOR(Dee_ssize_t, PrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
-                                      dformatprinter printer, void *arg)) {
+                                         Dee_formatprinter_t printer, void *arg)) {
 	Dee_ssize_t result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_printrepr && !DeeType_InheritRepr(tp_self))
@@ -1844,6 +1783,7 @@ DEFINE_OPERATOR(int, BoolInherited, (/*inherit(always)*/ DREF DeeObject *RESTRIC
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_OPERATOR(DREF DeeObject *, Call,
                 (DeeObject *self, size_t argc, DeeObject *const *argv)) {
 	LOAD_TP_SELF;
@@ -1863,6 +1803,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallKw,
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
@@ -2330,6 +2271,72 @@ DEFINE_OPERATOR(void, PClear, (DeeObject *__restrict self, unsigned int gc_prior
 }
 
 
+
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultStrWithPrint, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	Dee_ssize_t print_error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	LOAD_TP_SELF;
+	ASSERT(tp_self->tp_cast.tp_print &&
+	       tp_self->tp_cast.tp_print != &DeeObject_DefaultPrintWithStr);
+	print_error = DeeType_INVOKE_PRINT_NODEFAULT(tp_self, self, &unicode_printer_print, &printer);
+	if unlikely(print_error < 0)
+		goto err;
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultReprWithPrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	Dee_ssize_t print_error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	LOAD_TP_SELF;
+	ASSERT(tp_self->tp_cast.tp_printrepr);
+	ASSERT(tp_self->tp_cast.tp_printrepr != &DeeObject_DefaultPrintReprWithRepr);
+	print_error = DeeType_INVOKE_PRINTREPR_NODEFAULT(tp_self, self, &unicode_printer_print, &printer);
+	if unlikely(print_error < 0)
+		goto err;
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultPrintWithStr, (DeeObject *RESTRICT_IF_NOTYPE self,
+                                                            Dee_formatprinter_t printer, void *arg)) {
+	Dee_ssize_t result;
+	DREF DeeObject *str;
+	LOAD_TP_SELF;
+	ASSERT(tp_self->tp_cast.tp_str);
+	ASSERT(tp_self->tp_cast.tp_str != &DeeObject_DefaultStrWithPrint);
+	str = DeeType_INVOKE_STR_NODEFAULT(tp_self, self);
+	if unlikely(!str)
+		goto err;
+	result = DeeString_PrintUtf8(str, printer, arg);
+	Dee_Decref_likely(str);
+	return result;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultPrintReprWithRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
+                                                                 Dee_formatprinter_t printer, void *arg)) {
+	Dee_ssize_t result;
+	DREF DeeObject *str;
+	LOAD_TP_SELF;
+	ASSERT(tp_self->tp_cast.tp_repr);
+	ASSERT(tp_self->tp_cast.tp_repr != &DeeObject_DefaultReprWithPrintRepr);
+	str = DeeType_INVOKE_REPR_NODEFAULT(tp_self, self);
+	if unlikely(!str)
+		goto err;
+	result = DeeString_PrintUtf8(str, printer, arg);
+	Dee_Decref_likely(str);
+	return result;
+err:
+	return -1;
+}
+
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultCallWithCallKw,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t argc, DeeObject *const *argv)) {
 	LOAD_TP_SELF;
@@ -2601,6 +2608,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Int, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	err_unimplemented_operator(tp_self, OPERATOR_INT);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *, IntInherited, (/*inherit(always)*/ DREF DeeObject *RESTRICT_IF_NOTYPE self)) {
@@ -3135,6 +3143,7 @@ err:
 #undef COPY_SELF
 
 /* Default wrappers for implementing inplace math operators using their non-inplace variants. */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(Name, NAME)       \
 	DEFINE_INTERNAL_OPERATOR(int, DefaultInplace##Name##With##Name,    \
 	                         (DeeObject **p_self, DeeObject *other)) { \
@@ -3161,6 +3170,7 @@ DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(Or, OR)
 DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(Xor, XOR)
 DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(Pow, POW)
 #undef DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultInplaceAddWithInplaceSub,
                          (DREF DeeObject **p_self, DeeObject *other)) {
@@ -3319,6 +3329,7 @@ xinvoke_not(/*[0..1],inherit(always)*/ DREF DeeObject *ob) {
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSeq_HandleHashError(DeeObject *self);
 INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSet_HandleHashError(DeeObject *self);
 INTDEF NONNULL((1)) Dee_hash_t DCALL DeeMap_HandleHashError(DeeObject *self);
@@ -6422,6 +6433,7 @@ err_iterkeys:
 err:
 	return -1;
 }
+
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithIterKeysAndTryGetItemDefault,
                          (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
 	Dee_ssize_t temp, result = 0;
@@ -13690,6 +13702,7 @@ empty_range:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -14465,7 +14478,7 @@ err:
 
 
 
-
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #ifndef DEFINE_TYPED_OPERATORS
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 default_map_contains_with_forach_cb(void *arg, DeeObject *key,
@@ -14860,6 +14873,7 @@ DEFINE_MATH_OPERATOR2(Or, or, OPERATOR_OR, DeeType_INVOKE_OR, DeeType_InheritOr)
 DEFINE_MATH_OPERATOR2(Xor, xor, OPERATOR_XOR, DeeType_INVOKE_XOR, DeeType_InheritXor)
 DEFINE_MATH_OPERATOR2(Pow, pow, OPERATOR_POW, DeeType_INVOKE_POW, DeeType_InheritPow)
 #undef DEFINE_MATH_OPERATOR2
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -15067,6 +15081,7 @@ err:
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_OPERATOR(int, Inc, (DREF DeeObject **__restrict p_self)) {
 	LOAD_TP_SELFP;
 	if likely(likely(tp_self->tp_math && tp_self->tp_math->tp_inc) ||
@@ -15123,6 +15138,7 @@ DEFINE_MATH_INPLACE_OPERATOR2(InplaceOr, or, OPERATOR_INPLACE_OR, DeeType_INVOKE
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceXor, xor, OPERATOR_INPLACE_XOR, DeeType_INVOKE_IXOR, DeeType_InheritXor)
 DEFINE_MATH_INPLACE_OPERATOR2(InplacePow, pow, OPERATOR_INPLACE_POW, DeeType_INVOKE_IPOW, DeeType_InheritPow)
 #undef DEFINE_MATH_INPLACE_OPERATOR2
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifndef DEFINE_TYPED_OPERATORS
 #define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX, reg, DeeInt_NewXXX, intX_t, operator_name) \
@@ -15156,6 +15172,7 @@ DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorUInt32, DeeObject_InplaceXo
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define DEFINE_OBJECT_COMPARE_OPERATOR(name, tp_xx, operator_name, invoke)             \
 	DEFINE_OPERATOR(DREF DeeObject *, name,                                            \
 	                (DeeObject *self, DeeObject *some_object)) {                       \
@@ -15174,6 +15191,7 @@ DEFINE_OBJECT_COMPARE_OPERATOR(CmpLe, tp_le, OPERATOR_LE, DeeType_INVOKE_LE)
 DEFINE_OBJECT_COMPARE_OPERATOR(CmpGr, tp_gr, OPERATOR_GR, DeeType_INVOKE_GR)
 DEFINE_OBJECT_COMPARE_OPERATOR(CmpGe, tp_ge, OPERATOR_GE, DeeType_INVOKE_GE)
 #undef DEFINE_OBJECT_COMPARE_OPERATOR
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -15224,6 +15242,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int /* DEPRECATED! */
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs > rhs'
@@ -15268,11 +15287,13 @@ DEFINE_OPERATOR(int, TryCompareEq, (DeeObject *self, DeeObject *rhs)) {
 		return DeeType_INVOKE_TRYCOMPAREEQ(tp_self, self, rhs);
 	return -1; /* Implicit "NotImplemented" caught (would also be allowed to return "1" instead) */
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* Default iterator operators. */
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterNextWithIterNextPair,
                          (DeeObject *RESTRICT_IF_NOTYPE self)) {
@@ -15559,6 +15580,7 @@ DEFINE_OPERATOR(size_t, Size, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 		return DeeType_INVOKE_SIZE(tp_self, self);
 	return (size_t)err_unimplemented_operator(tp_self, OPERATOR_SIZE);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -15574,6 +15596,7 @@ err:
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_OPERATOR(DREF DeeObject *, SizeOb,
                 (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
@@ -15631,6 +15654,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetRange,
 	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -15735,6 +15759,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndex,
                 (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
@@ -15754,6 +15779,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndexN,
 	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DEFINE_OPERATOR(int, DelRangeBeginIndex,
                 (DeeObject *self, Dee_ssize_t start, DeeObject *end)) {
@@ -15813,6 +15839,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_OPERATOR(int, DelRangeIndex,
                 (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
@@ -15830,6 +15857,7 @@ DEFINE_OPERATOR(int, DelRangeIndexN,
 		return DeeType_INVOKE_DELRANGEINDEXN(tp_self, self, start);
 	return err_unimplemented_operator(tp_self, OPERATOR_DELRANGE);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DEFINE_OPERATOR(int, SetRangeBeginIndex,
                 (DeeObject *self, Dee_ssize_t start, DeeObject *end, DeeObject *values)) {
@@ -15889,6 +15917,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_OPERATOR(int, SetRangeIndex,
                 (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values)) {
 	LOAD_TP_SELF;
@@ -16161,6 +16190,7 @@ DEFINE_OPERATOR(int, Leave,
 		return DeeType_INVOKE_LEAVE(tp_self, self);
 	return err_unimplemented_operator(tp_self, OPERATOR_LEAVE);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 DEFINE_OPERATOR(int, GetBuf, (DeeObject *RESTRICT_IF_NOTYPE self,
@@ -16211,6 +16241,7 @@ DEFINE_OPERATOR(void, PutBuf,
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_OPERATOR(Dee_ssize_t, Foreach,
                 (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
 	LOAD_TP_SELF;
@@ -16228,6 +16259,7 @@ DEFINE_OPERATOR(Dee_ssize_t, ForeachPair,
 		return DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg);
 	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 /* Enumerate valid keys/indices of "self", as well as their current value.
  * @return: * : Sum of return values of `*proc'

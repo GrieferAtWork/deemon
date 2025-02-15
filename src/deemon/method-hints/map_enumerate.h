@@ -34,7 +34,7 @@ __map_enumerate__(cb:?DCallable,startkey?,endkey?)->?X2?O?N {
 	if (DeeArg_Unpack(argc, argv, "o|oo:__map_enumerate__", &data.sed_cb, &startkey, &endkey))
 		goto err;
 	if (endkey) {
-		foreach_status = CALL_DEPENDENCY(map_enumerate_range, self, &seq_enumerate_cb, &data);
+		foreach_status = CALL_DEPENDENCY(map_enumerate_range, self, &seq_enumerate_cb, &data, startkey, endkey);
 	} else {
 		foreach_status = CALL_DEPENDENCY(map_enumerate, self, &seq_enumerate_cb, &data);
 	}

@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}AsDouble")]]
 [[wunused]] int
 tp_math->tp_double([[nonnull]] DeeObject *__restrict self,
                    [[nonnull]] double *__restrict p_result)

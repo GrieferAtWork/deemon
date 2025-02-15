@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}IterNext")]]
 [[wunused]] DREF DeeObject *
 tp_iter_next([[nonnull]] DeeObject *__restrict self)
 %{class {
@@ -75,6 +76,7 @@ err_key_and_value:
  * @return: 0 : Success
  * @return: 1 : Iterator has been exhausted
  * @return: -1: Error */
+[[export("DeeObject_{|T}IterNextPair")]]
 [[wunused]] int
 tp_iterator->tp_nextpair([[nonnull]] DeeObject *__restrict self,
                          [[nonnull]] DREF DeeObject *key_and_value[2])
@@ -97,6 +99,7 @@ err:
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
  * holding both values (as needs to be done by `tp_iter_next'). */
+[[export("DeeObject_{|T}IterNextKey")]]
 [[wunused]] DREF DeeObject *
 tp_iterator->tp_nextkey([[nonnull]] DeeObject *__restrict self)
 %{using tp_iter_next: {
@@ -133,6 +136,7 @@ err:
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
  * holding both values (as needs to be done by `tp_iter_next'). */
+[[export("DeeObject_{|T}IterNextValue")]]
 [[wunused]] DREF DeeObject *
 tp_iterator->tp_nextvalue([[nonnull]] DeeObject *__restrict self)
 %{using tp_iter_next: {
@@ -171,6 +175,7 @@ err:
  *                      was encountered. Return value is the # of successfully skipped
  *                      entries before "ITER_DONE" was encountered.
  * @return: (size_t)-1: Error. */
+[[export("DeeObject_{|T}IterAdvance")]]
 [[wunused]] size_t
 tp_iterator->tp_advance([[nonnull]] DeeObject *__restrict self, size_t step)
 %{using tp_iterator->tp_nextkey: {

@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}GetItem")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
@@ -99,6 +100,7 @@ err:
 /* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
  * `KeyError' or `IndexError' (or `UnboundItem', which is a given
  * since that one's a sub-class of `IndexError') */
+[[export("DeeObject_{|T}TryGetItem")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_trygetitem([[nonnull]] DeeObject *self,
                       [[nonnull]] DeeObject *index)
@@ -180,6 +182,7 @@ err:
 tp_seq->tp_getitem_index_fast([[nonnull]] DeeObject *self, size_t index); /* !!! NOT INHERITABLE !!! */
 
 
+[[export("DeeObject_{|T}GetItemIndex")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getitem_index([[nonnull]] DeeObject *self, size_t index)
 %{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
@@ -220,6 +223,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}TryGetItemIndex")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_trygetitem_index([[nonnull]] DeeObject *self, size_t index)
 %{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
@@ -260,6 +264,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}GetItemStringHash")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash)
@@ -284,6 +289,7 @@ err:
 }} = OPERATOR_GETITEM;
 
 
+[[export("DeeObject_{|T}TryGetItemStringHash")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_trygetitem_string_hash([[nonnull]] DeeObject *self,
                                   [[nonnull]] char const *key, Dee_hash_t hash)
@@ -311,6 +317,55 @@ err:
 
 
 
+%[define(DEFINE_WITH_ZSTRING =
+#ifndef WITH_ZSTRING
+#include <hybrid/host.h>
+#if defined(__ARCH_PAGESIZE) && !defined(__OPTIMIZE_SIZE__)
+#define is_nulterm_string(str, len)                              \
+	((len) > 0 &&                                                \
+	 (((uintptr_t)((str) + (len)-1) & ~(__ARCH_PAGESIZE - 1)) == \
+	  ((uintptr_t)((str) + (len)) & ~(__ARCH_PAGESIZE - 1))) &&  \
+	 (str)[len] == '\0')
+#define Z_WITH_ZSTRING(err_label, copy_varname, str, len, ...)              \
+	do {                                                                    \
+		char *copy_varname;                                                 \
+		if (is_nulterm_string(str, len)) {                                  \
+			copy_varname = (char *)(str);                                   \
+			__VA_ARGS__;                                                    \
+		} else {                                                            \
+			copy_varname = (char *)Dee_Mallocac((len + 1), sizeof(char));   \
+			if unlikely(!copy_varname)                                      \
+				goto err_label;                                             \
+			*(char *)mempcpyc(copy_varname, str, len, sizeof(char)) = '\0'; \
+			__VA_ARGS__;                                                    \
+			Dee_Freea(copy_varname);                                        \
+		}                                                                   \
+	}	__WHILE0
+#else /* __ARCH_PAGESIZE && !__OPTIMIZE_SIZE__ */
+#define Z_WITH_ZSTRING(err_label, copy_varname, str, len, ...)          \
+	do {                                                                \
+		char *copy_varname;                                             \
+		copy_varname = (char *)Dee_Mallocac((len + 1), sizeof(char));   \
+		if unlikely(!copy_varname)                                      \
+			goto err_label;                                             \
+		*(char *)mempcpyc(copy_varname, str, len, sizeof(char)) = '\0'; \
+		__VA_ARGS__;                                                    \
+		Dee_Freea(copy_varname);                                        \
+	}	__WHILE0
+#endif /* !__ARCH_PAGESIZE || __OPTIMIZE_SIZE__ */
+#define WITH_ZSTRING(err_label, copy_varname, str, len, with_embedded_nuls, ...) \
+	do {                                                                         \
+		if (memchr(str, '\0', len) != NULL) {                                    \
+			with_embedded_nuls;                                                  \
+		} else                                                                   \
+			Z_WITH_ZSTRING(err_label, copy_varname, str, len, __VA_ARGS__);      \
+	}	__WHILE0
+#endif /* !WITH_ZSTRING */
+)]
+
+
+
+[[export("DeeObject_{|T}GetItemStringLenHash")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
@@ -333,9 +388,20 @@ tp_seq->tp_getitem_string_len_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return NULL;
+}}
+%{using tp_seq->tp_getitem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {
+	DREF DeeObject *result;
+	WITH_ZSTRING(err, zkey, key, keylen, goto err_unknown,
+	             result = CALL_DEPENDENCY(tp_seq->tp_getitem_string_hash, self, zkey, hash));
+	return result;
+err_unknown:
+	err_unknown_key_str_len(self, key, keylen);
+err:
+	return NULL;
 }} = OPERATOR_GETITEM;
 
 
+[[export("DeeObject_{|T}TryGetItemStringLenHash")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_trygetitem_string_len_hash([[nonnull]] DeeObject *self,
                                       [[nonnull]] char const *key,
@@ -360,10 +426,19 @@ tp_seq->tp_trygetitem_string_len_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return NULL;
+}}
+%{using tp_seq->tp_trygetitem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {
+	DREF DeeObject *result;
+	WITH_ZSTRING(err, zkey, key, keylen, return ITER_DONE,
+	             result = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self, zkey, hash));
+	return result;
+err:
+	return NULL;
 }} = OPERATOR_GETITEM;
 
 
 
+[[export("DeeObject_{|T}BoundItem")]]
 [[wunused]] int
 tp_seq->tp_bounditem([[nonnull]] DeeObject *self,
                      [[nonnull]] DeeObject *index)
@@ -472,6 +547,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}BoundItemIndex")]]
 [[wunused]] int
 tp_seq->tp_bounditem_index([[nonnull]] DeeObject *self, size_t index)
 %{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
@@ -541,6 +617,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}BoundItemStringHash")]]
 [[wunused]] int
 tp_seq->tp_bounditem_string_hash([[nonnull]] DeeObject *self,
                                  [[nonnull]] char const *key, Dee_hash_t hash)
@@ -596,6 +673,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}BoundItemStringLenHash")]]
 [[wunused]] int
 tp_seq->tp_bounditem_string_len_hash([[nonnull]] DeeObject *self,
                                      [[nonnull]] char const *key,
@@ -648,6 +726,14 @@ err:
 	return Dee_BOUND_YES;
 err:
 	return Dee_BOUND_ERR;
+}}
+%{using tp_seq->tp_bounditem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {
+	int result;
+	WITH_ZSTRING(err, zkey, key, keylen, return Dee_BOUND_MISSING,
+	             result = CALL_DEPENDENCY(tp_seq->tp_bounditem_string_hash, self, zkey, hash));
+	return result;
+err:
+	return Dee_BOUND_ERR;
 }} = OPERATOR_GETITEM;
 
 
@@ -656,6 +742,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}HasItem")]]
 [[wunused]] int
 tp_seq->tp_hasitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
@@ -742,6 +829,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}HasItemIndex")]]
 [[wunused]] int
 tp_seq->tp_hasitem_index([[nonnull]] DeeObject *self, size_t index)
 %{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
@@ -783,6 +871,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}HasItemStringHash")]]
 [[wunused]] int
 tp_seq->tp_hasitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash)
@@ -815,6 +904,7 @@ err:
 }} = OPERATOR_GETITEM;
 
 
+[[export("DeeObject_{|T}HasItemStringLenHash")]]
 [[wunused]] int
 tp_seq->tp_hasitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
@@ -842,6 +932,14 @@ err:
 		goto err;
 	result = CALL_DEPENDENCY(tp_seq->tp_hasitem, self, keyob);
 	Dee_Decref_likely(keyob);
+	return result;
+err:
+	return -1;
+}}
+%{using tp_seq->tp_hasitem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {
+	int result;
+	WITH_ZSTRING(err, zkey, key, keylen, return 0,
+	             result = CALL_DEPENDENCY(tp_seq->tp_hasitem_string_hash, self, zkey, hash));
 	return result;
 err:
 	return -1;

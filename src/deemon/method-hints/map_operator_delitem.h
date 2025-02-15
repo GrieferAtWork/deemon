@@ -38,6 +38,12 @@ __map_delitem__.map_operator_delitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
 %{unsupported(auto("operator del[]"))}
 %{$empty = 0}
+%{$with__map_remove = {
+	// TODO
+}}
+%{$with__map_removekeys = {
+	// TODO
+}}
 %{$with__map_operator_delitem_index__and__map_operator_delitem_string_len_hash = {
 	size_t key_value;
 	if (DeeString_Check(key)) {
@@ -105,6 +111,10 @@ err:
 
 map_operator_delitem = {
 	DeeMH_map_enumerate_t map_enumerate;
+	if (REQUIRE_NODEFAULT(map_remove))
+		return &$with__map_remove;
+	if (REQUIRE_NODEFAULT(map_removekeys))
+		return &$with__map_removekeys;
 	if (REQUIRE_NODEFAULT(map_operator_delitem_string_len_hash)) {
 		return REQUIRE_NODEFAULT(map_operator_delitem_index)
 		       ? &$with__map_operator_delitem_index__and__map_operator_delitem_string_len_hash

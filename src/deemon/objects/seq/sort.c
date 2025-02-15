@@ -20,13 +20,6 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_SORT_C
 #define GUARD_DEEMON_OBJECTS_SEQ_SORT_C 1
 
-#include <deemon/alloc.h>
-#include <deemon/api.h>
-#include <deemon/error.h>
-#include <deemon/object.h>
-#include <deemon/system-features.h> /* memcpyc */
-/**/
-
 #include "sort.h"
 
 #ifndef __INTELLISENSE__

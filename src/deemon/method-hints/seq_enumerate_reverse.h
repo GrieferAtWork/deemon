@@ -28,7 +28,7 @@ seq_foreach_reverse([[nonnull]] DeeObject *__restrict self,
 %{$with__seq_operator_size__and__getitem_index_fast = {
 	DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
 	Dee_ssize_t temp, result = 0;
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	tp_getitem_index_fast = Dee_TYPE(self)->tp_seq->tp_getitem_index_fast;
@@ -54,16 +54,15 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
-	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
+	PRELOAD_DEPENDENCY(seq_operator_trygetitem_index)
 	Dee_ssize_t temp, result = 0;
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	seq_operator_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self));
 	while (size) {
 		DREF DeeObject *item;
 		--size;
-		item = (*seq_operator_trygetitem_index)(self, size);
+		item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, size);
 		if unlikely(!item)
 			goto err;
 		if likely(item != ITER_DONE) {
@@ -83,16 +82,15 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
-	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
 	Dee_ssize_t temp, result = 0;
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
-	seq_operator_getitem_index = DeeType_RequireSeqOperatorGetItemIndex(Dee_TYPE(self));
 	while (size) {
 		DREF DeeObject *item;
 		--size;
-		item = (*seq_operator_getitem_index)(self, size);
+		item = CALL_DEPENDENCY(seq_operator_getitem_index, self, size);
 		if likely(item) {
 			temp = (*cb)(arg, item);
 			Dee_Decref(item);
@@ -114,12 +112,11 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_sizeob__and__seq_operator_getitem = {
-	DeeMH_seq_operator_getitem_t seq_operator_getitem;
+	PRELOAD_DEPENDENCY(seq_operator_getitem)
 	Dee_ssize_t temp, result = 0;
-	DREF DeeObject *sizeob = DeeType_InvokeMethodHint0(self, seq_operator_sizeob);
+	DREF DeeObject *sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
-	seq_operator_getitem = DeeType_RequireSeqOperatorGetItem(Dee_TYPE(self));
 	for (;;) {
 		DREF DeeObject *item;
 		int size_is_nonzero = DeeObject_Bool(sizeob);
@@ -129,7 +126,7 @@ err:
 			break;
 		if (DeeObject_Dec(&sizeob))
 			goto err_sizeob;
-		item = (*seq_operator_getitem)(self, sizeob);
+		item = CALL_DEPENDENCY(seq_operator_getitem, self, sizeob);
 		if likely(item) {
 			temp = (*cb)(arg, item);
 			Dee_Decref(item);
@@ -164,7 +161,7 @@ seq_enumerate_index_reverse([[nonnull]] DeeObject *__restrict self,
 %{$with__seq_operator_size__and__getitem_index_fast = {
 	DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
 	Dee_ssize_t temp, result = 0;
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size > end)
@@ -190,18 +187,17 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
-	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
+	PRELOAD_DEPENDENCY(seq_operator_trygetitem_index)
 	Dee_ssize_t temp, result = 0;
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size > end)
 		size = end;
-	seq_operator_trygetitem_index = DeeType_RequireSeqOperatorTryGetItemIndex(Dee_TYPE(self));
 	while (size > start) {
 		DREF DeeObject *item;
 		--size;
-		item = (*seq_operator_trygetitem_index)(self, size);
+		item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, size);
 		if unlikely(!item)
 			goto err;
 		if likely(item != ITER_DONE) {
@@ -223,18 +219,17 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
-	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
+	PRELOAD_DEPENDENCY(seq_operator_getitem_index)
 	Dee_ssize_t temp, result = 0;
-	size_t size = DeeType_InvokeMethodHint0(self, seq_operator_size);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size > end)
 		size = end;
-	seq_operator_getitem_index = DeeType_RequireSeqOperatorGetItemIndex(Dee_TYPE(self));
 	while (size > start) {
 		DREF DeeObject *item;
 		--size;
-		item = (*seq_operator_getitem_index)(self, size);
+		item = CALL_DEPENDENCY(seq_operator_getitem_index, self, size);
 		if unlikely(!item) {
 			if (!DeeError_Catch(&DeeError_IndexError) &&
 			    !DeeError_Catch(&DeeError_UnboundItem))
@@ -255,10 +250,10 @@ err:
 	return -1;
 }}
 %{$with__seq_operator_sizeob__and__seq_operator_getitem = {
-	DeeMH_seq_operator_getitem_t seq_operator_getitem;
+	PRELOAD_DEPENDENCY(seq_operator_getitem)
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *startob = NULL;
-	DREF DeeObject *sizeob = DeeType_InvokeMethodHint0(self, seq_operator_sizeob);
+	DREF DeeObject *sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
 	if unlikely(!sizeob)
 		goto err;
 	if (end != (size_t)-1) {
@@ -284,7 +279,6 @@ err:
 		if unlikely(!startob)
 			goto err_sizeob;
 	}
-	seq_operator_getitem = DeeType_RequireSeqOperatorGetItem(Dee_TYPE(self));
 	for (;;) {
 		size_t index_value;
 		DREF DeeObject *item;
@@ -300,7 +294,7 @@ err:
 			break;
 		if (DeeObject_Dec(&sizeob))
 			goto err_sizeob_startob;
-		item = (*seq_operator_getitem)(self, sizeob);
+		item = CALL_DEPENDENCY(seq_operator_getitem, self, sizeob);
 		if unlikely(!item) {
 			if (!DeeError_Catch(&DeeError_IndexError) &&
 			    !DeeError_Catch(&DeeError_UnboundItem))

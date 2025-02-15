@@ -43,7 +43,7 @@ __seq_compare_eq__(rhs:?S?O)->?X2?Dbool?Dint {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__seq_compare_eq__", &rhs))
 		goto err;
-	result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
+	result = CALL_DEPENDENCY(seq_operator_compare_eq, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */

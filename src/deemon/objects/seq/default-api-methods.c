@@ -20,11 +20,10 @@
 #ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_METHODS_C
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_METHODS_C 1
 
-#include "default-api.h"
-/**/
-
-#include <deemon/accu.h>
 #include <deemon/api.h>
+
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#include <deemon/accu.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
@@ -48,11 +47,14 @@
 #include <hybrid/overflow.h>
 
 /**/
+#include "default-api.h"
+
+/**/
 #include "cached-seq.h"
 #include "default-iterators.h"
 #include "default-map-proxy.h"
 #include "default-reversed.h"
-#include "enumerate-cb.h"
+#include "removeif-cb.h"
 #include "repeat.h"
 #include "sort.h"
 
@@ -487,103 +489,6 @@ err:
 
 
 
-
-/************************************************************************/
-/* enumerate()                                                          */
-/************************************************************************/
-
-INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_Enumerate(DeeObject *self, DeeObject *cb) {
-	Dee_ssize_t foreach_status;
-	struct seq_enumerate_data data;
-	data.sed_cb    = cb;
-	foreach_status = DeeSeq_OperatorEnumerate(self, &seq_enumerate_cb, &data);
-	if unlikely(foreach_status == -1)
-		goto err;
-	if (foreach_status == -2)
-		return data.sed_result;
-	return_none;
-err:
-	return NULL;
-}
-
-INTERN NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_EnumerateWithIntRange(DeeObject *self, DeeObject *cb, size_t start, size_t end) {
-	Dee_ssize_t foreach_status;
-	struct seq_enumerate_data data;
-	data.sed_cb    = cb;
-	foreach_status = DeeSeq_OperatorEnumerateIndex(self, &seq_enumerate_index_cb, &data, start, end);
-	if unlikely(foreach_status == -1)
-		goto err;
-	if (foreach_status == -2)
-		return data.sed_result;
-	return_none;
-err:
-	return NULL;
-}
-
-struct seq_enumerate_with_filter_data {
-	DeeObject      *sedwf_cb;     /* [1..1] Enumeration callback */
-	DREF DeeObject *sedwf_result; /* [?..1][valid_if(return == -2)] Enumeration result */
-	DeeObject      *sedwf_start;  /* [1..1] Filter start */
-	DeeObject      *sedwf_end;    /* [1..1] Filter end */
-};
-
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-seq_enumerate_with_filter_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
-	int temp;
-	DREF DeeObject *result;
-	DeeObject *args[2];
-	struct seq_enumerate_with_filter_data *data;
-	data = (struct seq_enumerate_with_filter_data *)arg;
-	/* if (data->sedwf_start <= index && data->sedwf_end > index) ... */
-	temp = DeeObject_CmpLeAsBool(data->sedwf_start, index);
-	if unlikely(temp < 0)
-		goto err;
-	if (!temp)
-		return 0;
-	temp = DeeObject_CmpGrAsBool(data->sedwf_end, index);
-	if unlikely(temp < 0)
-		goto err;
-	if (!temp)
-		return 0;
-	args[0] = index;
-	args[1] = value;
-	result  = DeeObject_Call(data->sedwf_cb, value ? 2 : 1, args);
-	if unlikely(!result)
-		goto err;
-	if (DeeNone_Check(result)) {
-		Dee_DecrefNokill(Dee_None);
-		return 0;
-	}
-	data->sedwf_result = result;
-	return -2; /* Stop enumeration! */
-err:
-	return -1;
-}
-
-INTERN NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
-DeeSeq_EnumerateWithRange(DeeObject *self, DeeObject *cb, DeeObject *start, DeeObject *end) {
-	Dee_ssize_t foreach_status;
-	struct seq_enumerate_with_filter_data data;
-	data.sedwf_cb    = cb;
-	data.sedwf_start = start;
-	data.sedwf_end   = end;
-	foreach_status = DeeSeq_OperatorEnumerate(self, &seq_enumerate_with_filter_cb, &data);
-	if unlikely(foreach_status == -1)
-		goto err;
-	if (foreach_status == -2)
-		return data.sedwf_result;
-	return_none;
-err:
-	return NULL;
-}
-
-
-
-
-
-/* Functions that need additional variants for sequence sub-types that don't have indices (sets, maps) */
 
 /************************************************************************/
 /* any()                                                                */
@@ -2684,190 +2589,6 @@ err:
 	return -1;
 }
 
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *srwrip_item; /* [1..1][const] Item to remove */
-} SeqRemoveWithRemoveIfPredicate;
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *srwripwk_item; /* [1..1][const] Keyed item to remove */
-	DREF DeeObject *srwripwk_key;  /* [1..1][const] Key to use during compare */
-} SeqRemoveWithRemoveIfPredicateWithKey;
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-srwrip_init(SeqRemoveWithRemoveIfPredicate *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicate", &self->srwrip_item))
-		goto err;
-	Dee_Incref(self->srwrip_item);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-srwripwk_init(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oo:_SeqRemoveWithRemoveIfPredicateWithKey",
-	                  &self->srwripwk_item, &self->srwripwk_key))
-		goto err;
-	Dee_Incref(self->srwripwk_item);
-	Dee_Incref(self->srwripwk_key);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1)) void DCALL
-srwrip_fini(SeqRemoveWithRemoveIfPredicate *__restrict self) {
-	Dee_Decref(self->srwrip_item);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-srwrip_visit(SeqRemoveWithRemoveIfPredicate *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->srwrip_item);
-}
-
-PRIVATE NONNULL((1)) void DCALL
-srwripwk_fini(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self) {
-	Dee_Decref(self->srwripwk_item);
-	Dee_Decref(self->srwripwk_key);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-srwripwk_visit(SeqRemoveWithRemoveIfPredicateWithKey *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->srwripwk_item);
-	Dee_Visit(self->srwripwk_key);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-srwrip_call(SeqRemoveWithRemoveIfPredicate *self, size_t argc, DeeObject *const *argv) {
-	int equals;
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicate", &item))
-		goto err;
-	equals = DeeObject_TryCompareEq(self->srwrip_item, item);
-	if unlikely(equals == Dee_COMPARE_ERR)
-		goto err;
-	return_bool_(equals == 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-srwripwk_call(SeqRemoveWithRemoveIfPredicateWithKey *self, size_t argc, DeeObject *const *argv) {
-	int equals;
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveWithRemoveIfPredicateWithKey", &item))
-		goto err;
-	equals = DeeObject_TryCompareKeyEq(self->srwripwk_item, item, self->srwripwk_key);
-	if unlikely(equals == Dee_COMPARE_ERR)
-		goto err;
-	return_bool_(equals == 0);
-err:
-	return NULL;
-}
-
-STATIC_ASSERT(offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_item) ==
-              offsetof(SeqRemoveWithRemoveIfPredicate, srwrip_item));
-#define srwrip_members (srwripwk_members + 1)
-PRIVATE struct type_member tpconst srwripwk_members[] = {
-	TYPE_MEMBER_FIELD("__item__", STRUCT_OBJECT, offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_item)),
-	TYPE_MEMBER_FIELD("__key__", STRUCT_OBJECT, offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_key)),
-	TYPE_MEMBER_END
-};
-
-PRIVATE DeeTypeObject SeqRemoveWithRemoveIfPredicate_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqRemoveWithRemoveIfPredicate",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeCallable_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&srwrip_init,
-				TYPE_FIXED_ALLOCATOR(SeqRemoveWithRemoveIfPredicate)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srwrip_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
-	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&srwrip_call,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&srwrip_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ srwrip_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-};
-
-PRIVATE DeeTypeObject SeqRemoveWithRemoveIfPredicateWithKey_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqRemoveWithRemoveIfPredicateWithKey",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeCallable_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&srwripwk_init,
-				TYPE_FIXED_ALLOCATOR(SeqRemoveWithRemoveIfPredicateWithKey)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&srwripwk_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
-	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&srwripwk_call,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&srwripwk_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ srwripwk_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-};
-
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSeq_DefaultRemoveWithSeqRemoveIf(DeeObject *self, DeeObject *item,
                                     size_t start, size_t end) {
@@ -3461,159 +3182,6 @@ DeeSeq_DefaultRemoveAllWithKeyWithError(DeeObject *self, DeeObject *item,
 /************************************************************************/
 /* removeif()                                                           */
 /************************************************************************/
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-seq_removeif_with_removeall_item_compare_eq(DeeObject *self, DeeObject *should_result) {
-	int result;
-	(void)self;
-	result = DeeObject_Bool(should_result);
-	if unlikely(result < 0)
-		goto err;
-	return result ? 0 : 1;
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-seq_removeif_with_removeall_item_eq(DeeObject *self, DeeObject *should_result) {
-	(void)self;
-	return_reference_(should_result);
-}
-
-PRIVATE struct type_cmp seq_removeif_with_removeall_item_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ &seq_removeif_with_removeall_item_compare_eq,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ &seq_removeif_with_removeall_item_compare_eq,
-	/* .tp_eq            = */ &seq_removeif_with_removeall_item_eq,
-};
-
-PRIVATE DeeTypeObject SeqRemoveIfWithRemoveAllItem_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqRemoveIfWithRemoveAllItem",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeObject_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				TYPE_FIXED_ALLOCATOR(DeeObject)
-			}
-		},
-		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &seq_removeif_with_removeall_item_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-};
-
-PRIVATE DeeObject SeqRemoveIfWithRemoveAllItem_DummyInstance = {
-	OBJECT_HEAD_INIT(&SeqRemoveIfWithRemoveAllItem_Type)
-};
-
-typedef struct {
-	PROXY_OBJECT_HEAD(sriwrak_should) /* [1..1] Predicate to determine if an element should be removed. */
-} SeqRemoveIfWithRemoveAllKey;
-
-STATIC_ASSERT(offsetof(SeqRemoveIfWithRemoveAllKey, sriwrak_should) == offsetof(ProxyObject, po_obj));
-#define seq_removeif_with_removeall_key_init  generic_proxy_init
-#define seq_removeif_with_removeall_key_fini  generic_proxy_fini
-#define seq_removeif_with_removeall_key_visit generic_proxy_visit
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seq_removeif_with_removeall_key_printrepr(SeqRemoveIfWithRemoveAllKey *__restrict self,
-                                          Dee_formatprinter_t printer, void *arg) {
-	return DeeFormat_Printf(printer, arg, "rt.SeqRemoveIfWithRemoveAllKey(%r)", self->sriwrak_should);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_removeif_with_removeall_key_call(SeqRemoveIfWithRemoveAllKey *__restrict self,
-                                     size_t argc, DeeObject *const *argv) {
-	DeeObject *item;
-	if (DeeArg_Unpack(argc, argv, "o:_SeqRemoveIfWithRemoveAllKey", &item))
-		goto err;
-	if (item == &SeqRemoveIfWithRemoveAllItem_DummyInstance)
-		return_reference_(item);
-	return DeeObject_Call(self->sriwrak_should, argc, argv);
-err:
-	return NULL;
-}
-
-PRIVATE DeeTypeObject SeqRemoveIfWithRemoveAllKey_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqRemoveIfWithRemoveAllKey",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeCallable_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&seq_removeif_with_removeall_key_init,
-				TYPE_FIXED_ALLOCATOR(DeeObject)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *))&seq_removeif_with_removeall_key_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str       = */ NULL,
-		/* .tp_repr      = */ NULL,
-		/* .tp_bool      = */ NULL,
-		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *, Dee_formatprinter_t, void *))&seq_removeif_with_removeall_key_printrepr,
-	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&seq_removeif_with_removeall_key_call,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *, dvisit_t, void *))&seq_removeif_with_removeall_key_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ NULL,
-	/* .tp_iterator      = */ NULL,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-};
-
-
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_DefaultRemoveIfWithSeqRemoveAllWithKey(DeeObject *self, DeeObject *should,
@@ -6160,27 +5728,27 @@ handle_with_cb:
 				if (startob != ITER_DONE) {
 					if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
-						result = DeeSeq_EnumerateWithIntRange(self, cb, start, end);
+						result = seq_call_enumerate_with_intrange(self, cb, start, end);
 					} else {
-						result = DeeSeq_EnumerateWithRange(self, cb, startob, endob);
+						result = seq_call_enumerate_with_range(self, cb, startob, endob);
 					}
 				} else if (DeeInt_Check(endob) && DeeInt_TryAsSize(endob, &end)) {
-					result = DeeSeq_EnumerateWithIntRange(self, cb, 0, end);
+					result = seq_call_enumerate_with_intrange(self, cb, 0, end);
 				} else {
 					startob = DeeObject_NewDefault(Dee_TYPE(endob));
 					if unlikely(!startob)
 						goto err;
-					result = DeeSeq_EnumerateWithRange(self, cb, startob, endob);
+					result = seq_call_enumerate_with_range(self, cb, startob, endob);
 					Dee_Decref(startob);
 				}
 			} else if (startob == ITER_DONE) {
-				result = DeeSeq_Enumerate(self, cb);
+				result = seq_call_enumerate(self, cb);
 			} else {
 				ASSERT(startob != ITER_DONE);
 				ASSERT(endob == ITER_DONE);
 				if (DeeObject_AsSize(startob, &start))
 					goto err;
-				result = DeeSeq_EnumerateWithIntRange(self, cb, start, (size_t)-1);
+				result = seq_call_enumerate_with_intrange(self, cb, start, (size_t)-1);
 			}
 		} else {
 			if (endob != ITER_DONE) {
@@ -6260,9 +5828,9 @@ handle_with_cb:
 		endob   = argv[2];
 		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
 		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
-			result = DeeSeq_EnumerateWithIntRange(self, cb, start, end);
+			result = seq_call_enumerate_with_intrange(self, cb, start, end);
 		} else {
-			result = DeeSeq_EnumerateWithRange(self, cb, startob, endob);
+			result = seq_call_enumerate_with_range(self, cb, startob, endob);
 		}
 	}	break;
 
@@ -6290,18 +5858,18 @@ DeeMH_seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObj
 		return DeeSeq_InvokeMakeEnumeration(self);
 	if (DeeCallable_Check(argv[0])) {
 		if (argc == 1)
-			return DeeSeq_Enumerate(self, argv[0]);
+			return seq_call_enumerate(self, argv[0]);
 		if unlikely(argc == 2) {
 			if (DeeObject_AsSize(argv[1], &start))
 				goto err;
-			return DeeSeq_EnumerateWithIntRange(self, argv[0], start, (size_t)-1);
+			return seq_call_enumerate_with_intrange(self, argv[0], start, (size_t)-1);
 		}
 		if (argc != 3)
 			goto err_bad_args;
 		if ((DeeInt_Check(argv[1]) && DeeInt_Check(argv[2])) &&
 		    (DeeInt_TryAsSize(argv[1], &start) && DeeInt_TryAsSize(argv[2], &end)))
-			return DeeSeq_EnumerateWithIntRange(self, argv[0], start, end);
-		return DeeSeq_EnumerateWithRange(self, argv[0], argv[1], argv[2]);
+			return seq_call_enumerate_with_intrange(self, argv[0], start, end);
+		return seq_call_enumerate_with_range(self, argv[0], argv[1], argv[2]);
 	} else {
 		if unlikely(argc == 1) {
 			if (DeeObject_AsSize(argv[0], &start))
@@ -7482,5 +7050,6 @@ DECL_END
 #include "default-api-operators.c.inl"
 #include "default-api-operator-methods.c.inl"
 #endif /* !__INTELLISENSE__ */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_METHODS_C */

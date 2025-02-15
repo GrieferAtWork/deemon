@@ -4443,6 +4443,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
  *
  * s.a. `DeeType_InheritOperator()' */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self); /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritStr(DeeTypeObject *__restrict self);          /* tp_str, tp_print */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritRepr(DeeTypeObject *__restrict self);         /* tp_repr, tp_printrepr */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritBool(DeeTypeObject *__restrict self);         /* tp_bool */
@@ -4473,9 +4474,11 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);     /* tp_delrange, tp_delrange_index, tp_delrange_index_n */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);     /* tp_setrange, tp_setrange_index, tp_setrange_index_n */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);         /* tp_enter, tp_leave */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);       /* tp_getbuf, tp_putbuf, tp_buffer_flags */
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeType_InheritConstructors(self) DeeType_InheritOperator(self, OPERATOR_CONSTRUCTOR)
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define DeeType_InheritStr(self)          DeeType_InheritOperator(self, OPERATOR_STR)
 #define DeeType_InheritRepr(self)         DeeType_InheritOperator(self, OPERATOR_REPR)
 #define DeeType_InheritBool(self)         DeeType_InheritOperator(self, OPERATOR_BOOL)
@@ -4506,6 +4509,7 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict s
 #define DeeType_InheritDelRange(self)     DeeType_InheritOperator(self, OPERATOR_DELRANGE)
 #define DeeType_InheritSetRange(self)     DeeType_InheritOperator(self, OPERATOR_SETRANGE)
 #define DeeType_InheritWith(self)         DeeType_InheritOperator(self, OPERATOR_ENTER)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define DeeType_InheritBuffer(self)       DeeType_InheritOperator(self, OPERATOR_GETBUF)
 #endif /* !CONFIG_BUILDING_DEEMON */
 
@@ -4731,7 +4735,7 @@ DFUNDEF ATTR_COLD NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TypeAssertFailed3)(
 
 
 /* Object typeof(). */
-#define Dee_TYPE(self) ((self)->ob_type)
+#define Dee_TYPE(self) (self)->ob_type
 
 /* Returns the class of `self', automatically
  * dereferencing super-objects and other wrappers.

@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}Contains")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_contains([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *item)

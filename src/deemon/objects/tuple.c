@@ -1878,7 +1878,7 @@ tuple_concat(Tuple *self, DeeObject *other) {
 	size_t other_sizehint, total_size;
 	DeeTypeObject *tp_other = Dee_TYPE(other);
 	if unlikely(!(likely(tp_other->tp_seq && tp_other->tp_seq->tp_foreach) ||
-	              unlikely(DeeType_InheritIter(tp_other)))) {
+	              unlikely(!DeeType_InheritIter(tp_other)))) {
 		err_unimplemented_operator(tp_other, OPERATOR_ITER);
 		goto err;
 	}
@@ -1970,7 +1970,7 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 
 	tp_sequence = Dee_TYPE(sequence);
 	if unlikely(!(likely(tp_sequence->tp_seq && tp_sequence->tp_seq->tp_foreach) ||
-	              unlikely(DeeType_InheritIter(tp_sequence)))) {
+	              unlikely(!DeeType_InheritIter(tp_sequence)))) {
 		err_unimplemented_operator(tp_sequence, OPERATOR_ITER);
 		goto err_me;
 	}

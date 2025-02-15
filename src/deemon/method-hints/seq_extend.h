@@ -76,7 +76,7 @@ err:
 }}
 %{$with__seq_append = [[prefix(DEFINE_seq_extend_with_foreach_append_cb)]] {
 	struct seq_extend_with_foreach_append_data data;
-	data.dsewfad_append = DeeType_RequireSeqAppend(Dee_TYPE(self));
+	data.dsewfad_append = REQUIRE_DEPENDENCY(seq_append);
 	data.dsewfad_self   = self;
 	return (int)CALL_DEPENDENCY(seq_operator_foreach, items, &seq_extend_with_foreach_append_cb, &data);
 }} {

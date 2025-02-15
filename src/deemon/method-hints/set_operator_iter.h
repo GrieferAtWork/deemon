@@ -37,6 +37,7 @@ __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{$empty = "default__seq_operator_iter__empty"}
 %{$with__seq_operator_iter = {
 	DREF DeeObject *iter;
+	DeeTypeObject *itertyp;
 	DREF DistinctIterator *result;
 	iter = CALL_DEPENDENCY(seq_operator_iter, self);
 	if unlikely(!iter)
@@ -44,21 +45,12 @@ __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 	result = DeeGCObject_MALLOC(DistinctIterator);
 	if unlikely(!result)
 		goto err_iter;
-	result->di_tp_next = Dee_TYPE(iter)->tp_iter_next;
-	if unlikely(!result->di_tp_next) {
-		if unlikely(!DeeType_InheritIterNext(Dee_TYPE(iter))) {
-			err_unimplemented_operator(Dee_TYPE(iter), OPERATOR_ITERNEXT);
-			goto err_iter_result;
-		}
-		result->di_tp_next = Dee_TYPE(iter)->tp_iter_next;
-		ASSERT(result->di_tp_next);
-	}
-	result->di_iter = iter; /* Inherit reference */
+	itertyp            = Dee_TYPE(iter);
+	result->di_tp_next = DeeType_RequireNativeOperator(itertyp, iter_next);
+	result->di_iter    = iter; /* Inherit reference */
 	Dee_simple_hashset_with_lock_init(&result->di_encountered);
 	DeeObject_Init(result, &DistinctIterator_Type);
 	return DeeGC_Track((DREF DeeObject *)result);
-err_iter_result:
-	DeeGCObject_FREE(result);
 err_iter:
 	Dee_Decref(iter);
 err:

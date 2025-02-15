@@ -74,12 +74,12 @@ err:
 
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 ds_mk_iter(DefaultSequence_MapProxy *__restrict self) {
-	return DeeMap_InvokeIterKeys(self->dsmp_map);
+	return DeeObject_InvokeMethodHint(map_iterkeys, self->dsmp_map);
 }
 
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 ds_mv_iter(DefaultSequence_MapProxy *__restrict self) {
-	return DeeMap_InvokeIterValues(self->dsmp_map);
+	return DeeObject_InvokeMethodHint(map_itervalues, self->dsmp_map);
 }
 
 PRIVATE struct type_seq ds_mk_seq = {

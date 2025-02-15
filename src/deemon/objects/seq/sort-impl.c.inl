@@ -36,6 +36,13 @@
 #error "Must #define exactly one of these macros"
 #endif /* DEFINE_DeeSeq_Sort... */
 
+#include <deemon/alloc.h>
+#include <deemon/api.h>
+#include <deemon/error.h>
+#include <deemon/object.h>
+#include <deemon/system-features.h> /* memcpyc */
+/**/
+
 DECL_BEGIN
 
 #ifdef DEFINE_DeeSeq_SortVector

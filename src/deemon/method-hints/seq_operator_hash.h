@@ -44,11 +44,16 @@ default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem);
 #endif /* !DEFINED_default_seq_hash_with_foreach_cb */
 )]
 
-%[define(DEFINE_DeeSeq_HandleHashError =
-#ifndef DEFINED_DeeSeq_HandleHashError
-#define DEFINED_DeeSeq_HandleHashError
-INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSeq_HandleHashError(DeeObject *self);
-#endif /* !DEFINED_DeeSeq_HandleHashError */
+%[define(DEFINE_seq_handle_hash_error =
+#ifndef DEFINED_seq_handle_hash_error
+#define DEFINED_seq_handle_hash_error
+PRIVATE NONNULL((1)) Dee_hash_t DCALL
+seq_handle_hash_error(DeeObject *self) {
+	DeeError_Print("Unhandled error in `Sequence.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+#endif /* !DEFINED_seq_handle_hash_error */
 )]
 
 
@@ -61,7 +66,7 @@ Dee_hash_t __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *__restrict self
 %{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
 %{$with__seq_operator_foreach =
 [[prefix(DEFINE_default_seq_hash_with_foreach_cb)]]
-[[prefix(DEFINE_DeeSeq_HandleHashError)]] {
+[[prefix(DEFINE_seq_handle_hash_error)]] {
 	struct default_seq_hash_with_foreach_data data;
 	data.sqhwf_result   = DEE_HASHOF_EMPTY_SEQUENCE;
 	data.sqhwf_nonempty = false;
@@ -69,7 +74,7 @@ Dee_hash_t __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *__restrict self
 		goto err;
 	return data.sqhwf_result;
 err:
-	return DeeSeq_HandleHashError(self);
+	return seq_handle_hash_error(self);
 }}
 %{$with__seq_operator_size__and__operator_getitem_index_fast = {
 	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
@@ -101,7 +106,7 @@ err:
 	}
 	return result;
 err:
-	return DeeSeq_HandleHashError(self);
+	return seq_handle_hash_error(self);
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
 	Dee_hash_t result;
@@ -138,7 +143,7 @@ err:
 	}
 	return result;
 err:
-	return DeeSeq_HandleHashError(self);
+	return seq_handle_hash_error(self);
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
 	Dee_hash_t result;
@@ -175,7 +180,7 @@ err:
 	}
 	return result;
 err:
-	return DeeSeq_HandleHashError(self);
+	return seq_handle_hash_error(self);
 }}
 %{$with__seq_operator_sizeob__and__seq_operator_getitem = {
 	int temp;
@@ -236,9 +241,9 @@ err_sizeob_indexob:
 err_sizeob:
 	Dee_Decref(sizeob);
 err:
-	return DeeSeq_HandleHashError(self);
+	return seq_handle_hash_error(self);
 }}
-[[prefix(DEFINE_DeeSeq_HandleHashError)]] {
+[[prefix(DEFINE_seq_handle_hash_error)]] {
 	int temp;
 	Dee_hash_t result;
 	DREF DeeObject *resultob;
@@ -251,7 +256,7 @@ err:
 		goto err;
 	return result;
 err:
-	return DeeSeq_HandleHashError(self);
+	return seq_handle_hash_error(self);
 }
 
 

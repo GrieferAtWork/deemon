@@ -32,6 +32,7 @@
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
@@ -1888,7 +1889,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 			error = DeeObject_CmpEqAsBool(temp, DeeInt_Zero);
 			Dee_Decref(temp);
 			if likely(error >= 0)
-				error = !error;
+				error = error ? 0 : 1;
 			return error;
 		}
 		error = has_generic_attribute(tp_self, self, (DeeObject *)&str_prev);
@@ -1920,7 +1921,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 			error = DeeObject_CmpEqAsBool(self, temp);
 			Dee_Decref(temp);
 			if likely(error >= 0)
-				error = !error;
+				error = error ? 0 : 1;
 			return error;
 		}
 		temp = get_generic_attribute(tp_self, self, (DeeObject *)&str_seq);
@@ -1934,7 +1935,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 			error = DeeObject_CmpEqAsBool(self, temp2);
 			Dee_Decref(temp2);
 			if likely(error >= 0)
-				error = !error;
+				error = error ? 0 : 1;
 			return error;
 		}
 		if ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) == NULL)
@@ -2939,13 +2940,16 @@ INTERN DeeTypeObject IteratorPending_Type = {
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeIterator_Foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
-	Dee_ssize_t temp, result;
+	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *elem;
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	DeeNO_iter_next_t tp_iter_next = DeeType_RequireNativeOperator(Dee_TYPE(self), iter_next);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	DREF DeeObject *(DCALL *tp_iter_next)(DeeObject *__restrict self);
-	result = 0;
 	if unlikely(!Dee_TYPE(self)->tp_iter_next && !DeeType_InheritIterNext(Dee_TYPE(self)))
 		goto err_no_iternext;
 	tp_iter_next = Dee_TYPE(self)->tp_iter_next;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	while (ITER_ISOK(elem = (*tp_iter_next)(self))) {
 		temp = (*cb)(arg, elem);
 		Dee_Decref(elem);
@@ -2961,23 +2965,28 @@ DeeIterator_Foreach(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
 	return result;
 err_temp:
 	return temp;
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 err_no_iternext:
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 err:
 	return -1;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
-	Dee_ssize_t temp, result;
-	DREF DeeObject *pair[2];
-	int (DCALL *tp_nextpair)(DeeObject *__restrict self, DREF DeeObject *pair[2]);
 	int status;
-	result = 0;
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *pair[2];
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	DeeNO_nextpair_t tp_nextpair = DeeType_RequireNativeOperator(Dee_TYPE(self), nextpair);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	int (DCALL *tp_nextpair)(DeeObject *__restrict self, DREF DeeObject *pair[2]);
 	if unlikely((!Dee_TYPE(self)->tp_iterator || !Dee_TYPE(self)->tp_iterator->tp_nextpair) &&
 	            !DeeType_InheritIterNext(Dee_TYPE(self)))
 		goto err_no_iternext;
 	tp_nextpair = Dee_TYPE(self)->tp_iterator->tp_nextpair;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	while ((status = (*tp_nextpair)(self, pair)) == 0) {
 		temp = (*cb)(arg, pair[0], pair[1]);
 		Dee_Decref(pair[1]);
@@ -2994,8 +3003,10 @@ DeeIterator_ForeachPair(DeeObject *__restrict self, Dee_foreach_pair_t cb, void 
 	return result;
 err_temp:
 	return temp;
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 err_no_iternext:
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 err:
 	return -1;
 }

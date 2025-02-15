@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}Iter")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
 %{class {
@@ -86,6 +87,7 @@ err:
 )]
 
 
+[[export("DeeObject_{|T}Foreach")]]
 [[wunused]] Dee_ssize_t
 tp_seq->tp_foreach([[nonnull]] DeeObject *__restrict self,
                    [[nonnull]] Dee_foreach_t cb, void *arg)
@@ -154,6 +156,7 @@ err:
 )]
 
 
+[[export("DeeObject_{|T}ForeachPair")]]
 [[wunused]] Dee_ssize_t
 tp_seq->tp_foreach_pair([[nonnull]] DeeObject *__restrict self,
                         [[nonnull]] Dee_foreach_pair_t cb, void *arg)

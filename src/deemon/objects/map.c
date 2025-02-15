@@ -30,6 +30,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
+#include <deemon/method-hints.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -42,6 +43,8 @@
 #include <deemon/tuple.h>
 
 #include "../runtime/kwlist.h"
+#include "../runtime/method-hint-defaults.h"
+#include "../runtime/method-hints.h"
 #include "../runtime/operator-require.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -151,6 +154,7 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	TYPE_METHOD("__enumerate__", &default_map___enumerate__,
 	            "(cb)->\n"
 	            "Alias for ${(this as Mapping).enumerate(cb)}"),
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_KWMETHOD("__enumerate_index__", &default_map___enumerate_index__,
 	              "(cb,start=!0,end:?Dint=!A!Dint!PSIZE_MAX)->\n"
 	              "Alias for ${Mapping.enumerate(this, cb, start, end)}"),
@@ -205,12 +209,15 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	TYPE_METHOD("__hash__", &default_map___hash__,
 	            "->?Dint\n"
 	            "Alias for ${(this as Mapping).operator hash()}"),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__compare_eq__", &default_map___compare_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Mapping).operator == (rhs)}"),
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD("__trycompare_eq__", &default_map___trycompare_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${deemon.equals(this as Mapping, rhs)}"),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__eq__", &default_map___eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Mapping) == (rhs)}"),
@@ -256,10 +263,10 @@ PRIVATE struct type_method tpconst map_methods[] = {
 	            "Alias for ${(this as Mapping) ^= rhs}"),
 	TYPE_METHOD("__or__", &default_map___or__,
 	            "(rhs:?S?O)->?DMapping\n"
-	            "Alias for ?#__and__"),
+	            "Alias for ?#__add__"),
 	TYPE_METHOD("__inplace_or__", &default_map___inplace_or__,
 	            "(rhs:?S?O)->?DMapping\n"
-	            "Alias for ?#__inplace_and__"),
+	            "Alias for ?#__inplace_add__"),
 
 	/* Old function names. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
@@ -298,7 +305,11 @@ PRIVATE struct type_method_hint tpconst map_method_hints[] = {
 
 	/* Mappings to "seq_all", all sequence-like map items are "true",
 	 * so "Mapping.any()" is true if the map is non-empty. */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINT_F(seq_any, &default__seq_operator_bool, METHOD_FNOREFESCAPE),
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_any, &DeeMap_OperatorBool, METHOD_FNOREFESCAPE),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_F(seq_any_with_key, &DeeSeq_DefaultAnyWithKeyWithSeqForeach, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_range, &map_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &DeeSeq_DefaultAnyWithRangeAndKeyWithSeqEnumerateIndex, METHOD_FNOREFESCAPE),
@@ -309,10 +320,10 @@ PRIVATE struct type_method_hint tpconst map_method_hints[] = {
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 map_printrepr(DeeObject *__restrict self,
               dformatprinter printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	DREF DeeObject *iterator;
 	DREF DeeObject *elem;
 	bool is_first = true;
@@ -371,7 +382,11 @@ err_m1:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_items(DeeObject *self) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	return DeeSuper_New(&DeeSet_Type, self);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	return DeeSuper_New(&DeeSeq_Type, self);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
 PRIVATE struct type_getset tpconst map_getsets[] = {
@@ -381,19 +396,31 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	TYPE_GETTER("values", &default_map_values,
 	            "->?#Values\n"
 	            "Returns a ?DSequence that can be enumerated to view only the values of @this ?."),
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_GETTER("items", &map_items,
+	            "->?S?T2?O?O\n"
+	            "Returns a ?DSet that can be enumerated to view the key-item "
+	            /**/ "pairs as 2-element sequences, the same way they could be viewed "
+	            /**/ "if @this ?. itself was being iterated\n"
+	            "Same as ${this as Sequence}"),
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETTER("items", &map_items,
 	            "->?S?T2?O?O\n"
 	            "Returns a ?DSequence that can be enumerated to view the key-item "
 	            /**/ "pairs as 2-element sequences, the same way they could be viewed "
 	            /**/ "if @this ?. itself was being iterated\n"
 	            "Same as ${this as Sequence}"),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETTER("iterkeys", &default_map_iterkeys,
 	            "->?#IterKeys\n"
 	            "Returns an iterator for ?#{keys}. Same as ${this.keys.operator iter()}"),
 	TYPE_GETTER("itervalues", &default_map_itervalues,
 	            "->?#IterValues\n"
 	            "Returns an iterator for ?#{values}. Same as ${this.values.operator iter()}"),
-	TYPE_GETTER("iteritems", &DeeObject_Iter,
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define default__set_operator_iter DeeObject_Iter
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	TYPE_GETTER("iteritems", &default__set_operator_iter,
 	            "->?#Iterator\n"
 	            "Returns an iterator for ?#{items}. Same as ${this.operator iter()}"),
 	TYPE_GETTER("byattr", &MapByAttr_New,
@@ -404,7 +431,10 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	            "Note that the returned object doesn't implement the ?DSequence- or ?. "
 	            /**/ "interfaces, but instead simply behaves like a completely generic object.\n"
 	            "This attribute only makes sense if @this mapping behaves like ${{string: Object}}."),
-	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence,
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define default__map_frozen DeeRoDict_FromSequence
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	TYPE_GETTER(STR_frozen, &default__map_frozen,
 	            "->?#Frozen\n"
 	            "Returns a read-only (frozen) copy of @this ?."),
 	/* TODO: KeyType->?DType
@@ -420,6 +450,65 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 
 
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_Frozen_get(DeeTypeObject *__restrict self) {
+	DeeTypeObject *result = &DeeSeq_Type;
+	DeeMH_map_frozen_t map_frozen = DeeType_RequireMethodHint(self, map_frozen);
+	if (map_frozen == &DeeObject_NewRef) {
+		result = self;
+	} else if (map_frozen == &DeeRoDict_FromSequence) {
+		result = &DeeRoDict_Type;
+	}
+	return_reference_(result);
+}
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+set_Iterator_get(DeeTypeObject *__restrict self);
+#define map_Iterator_get set_Iterator_get
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_Keys_get(DeeTypeObject *__restrict self) {
+	DeeTypeObject *result = &DeeSet_Type;
+	DeeMH_map_keys_t map_keys = DeeType_RequireMethodHint(self, map_keys);
+	if (map_keys == &default__map_keys__with__map_iterkeys) {
+		result = &DefaultSequence_MapKeys_Type;
+	}
+	return_reference_(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_Values_get(DeeTypeObject *__restrict self) {
+	DeeTypeObject *result = &DeeSeq_Type;
+	DeeMH_map_values_t map_values = DeeType_RequireMethodHint(self, map_values);
+	if (map_values == &default__map_values__with__map_itervalues) {
+		result = &DefaultSequence_MapValues_Type;
+	}
+	return_reference_(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_IterKeys_get(DeeTypeObject *__restrict self) {
+	DeeTypeObject *result = &DeeIterator_Type;
+	DeeMH_map_iterkeys_t map_iterkeys = DeeType_RequireMethodHint(self, map_iterkeys);
+	if (map_iterkeys == &default__map_iterkeys__with__map_enumerate) {
+		/* TODO: Custom iterator type that uses "tp_enumerate" */
+	} else if (map_iterkeys == &default__map_iterkeys__with__set_operator_iter) {
+		result = &DefaultIterator_WithNextKey;
+	}
+	return_reference_(result);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+map_IterValues_get(DeeTypeObject *__restrict self) {
+	DeeTypeObject *result = &DeeIterator_Type;
+	DeeMH_map_itervalues_t map_itervalues = DeeType_RequireMethodHint(self, map_itervalues);
+	if (map_itervalues == &default__map_itervalues__with__set_operator_iter) {
+		result = &DefaultIterator_WithNextValue;
+	}
+	return_reference_(result);
+}
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_Iterator_get(DeeTypeObject *__restrict self) {
 	if (self == &DeeMapping_Type)
@@ -476,8 +565,6 @@ map_IterValues_get(DeeTypeObject *__restrict self) {
 	return_reference_(result);
 }
 
-
-
 /*[[[deemon
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("Frozen");
@@ -523,6 +610,7 @@ map_Frozen_get(DeeTypeObject *__restrict self) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 PRIVATE struct type_getset tpconst map_class_getsets[] = {
@@ -560,6 +648,106 @@ PRIVATE struct type_operator const map_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL),
 };
+
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE struct type_math map_math = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ NULL,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ &default__map_operator_add,
+	/* .tp_sub         = */ &default__map_operator_sub,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL,
+	/* .tp_shr         = */ NULL,
+	/* .tp_and         = */ &default__map_operator_and,
+	/* .tp_or          = */ &default__map_operator_add,
+	/* .tp_xor         = */ &default__map_operator_xor,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ &default__map_operator_inplace_add,
+	/* .tp_inplace_sub = */ &default__map_operator_inplace_sub,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL,
+	/* .tp_inplace_shr = */ NULL,
+	/* .tp_inplace_and = */ &default__map_operator_inplace_and,
+	/* .tp_inplace_or  = */ &default__map_operator_inplace_add,
+	/* .tp_inplace_xor = */ &default__map_operator_inplace_xor,
+	/* .tp_inplace_pow = */ NULL,
+};
+
+PRIVATE struct type_cmp map_cmp = {
+	/* .tp_hash          = */ &default__set_operator_hash,
+	/* .tp_compare_eq    = */ &default__map_operator_compare_eq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ &default__map_operator_trycompare_eq,
+	/* .tp_eq            = */ &default__map_operator_eq,
+	/* .tp_ne            = */ &default__map_operator_ne,
+	/* .tp_lo            = */ &default__map_operator_lo,
+	/* .tp_le            = */ &default__map_operator_le,
+	/* .tp_gr            = */ &default__map_operator_gr,
+	/* .tp_ge            = */ &default__map_operator_ge,
+};
+
+PRIVATE struct type_seq map_seq = {
+	/* .tp_iter                       = */ &default__set_operator_iter,
+	/* .tp_sizeob                     = */ &default__set_operator_sizeob,
+	/* .tp_contains                   = */ &default__seq_operator_contains,
+	/* .tp_getitem                    = */ &default__map_operator_getitem,
+	/* .tp_delitem                    = */ &default__map_operator_delitem,
+	/* .tp_setitem                    = */ &default__map_operator_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_foreach                    = */ &default__set_operator_foreach,
+	/* .tp_foreach_pair               = */ &default__set_operator_foreach_pair,
+	/* ._deprecated_tp_enumerate      = */ NULL,
+	/* ._deprecated_tp_enumerate_index= */ NULL,
+	/* ._deprecated_tp_iterkeys       = */ NULL,
+	/* .tp_bounditem                  = */ &default__map_operator_bounditem,
+	/* .tp_hasitem                    = */ &default__map_operator_hasitem,
+	/* .tp_size                       = */ &default__set_operator_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ &default__map_operator_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ &default__map_operator_delitem_index,
+	/* .tp_setitem_index              = */ &default__map_operator_setitem_index,
+	/* .tp_bounditem_index            = */ &default__map_operator_bounditem_index,
+	/* .tp_hasitem_index              = */ &default__map_operator_hasitem_index,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ &default__map_operator_trygetitem,
+	/* .tp_trygetitem_index           = */ &default__map_operator_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ &default__map_operator_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ &default__map_operator_getitem_string_hash,
+	/* .tp_delitem_string_hash        = */ &default__map_operator_delitem_string_hash,
+	/* .tp_setitem_string_hash        = */ &default__map_operator_setitem_string_hash,
+	/* .tp_bounditem_string_hash      = */ &default__map_operator_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ &default__map_operator_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash = */ &default__map_operator_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ &default__map_operator_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ &default__map_operator_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ &default__map_operator_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ &default__map_operator_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ &default__map_operator_hasitem_string_len_hash,
+	/* .tp_asvector                   = */ NULL,
+	/* .tp_asvector_nothrow           = */ NULL,
+};
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 
 /* `Mapping from deemon' */
 PUBLIC DeeTypeObject DeeMapping_Type = {
@@ -606,12 +794,44 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ &default__seq_operator_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&map_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ &map_math,
+	/* .tp_cmp           = */ &map_cmp,
+	/* .tp_seq           = */ &map_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ map_methods,
+	/* .tp_getsets       = */ map_getsets,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ map_class_getsets,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ map_method_hints,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ map_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(map_operators),
+	/* .tp_mhcache       = */ &mh_cache_empty
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ &DeeMap_OperatorBool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&map_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&map_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -635,6 +855,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ map_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(map_operators)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 

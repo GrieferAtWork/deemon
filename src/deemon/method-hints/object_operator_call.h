@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}Call")]]
 [[wunused]] DREF DeeObject *
 tp_call([[nonnull]] DeeObject *self,
         size_t argc, DeeObject *const *argv)
@@ -35,6 +36,7 @@ tp_call([[nonnull]] DeeObject *self,
 }} = OPERATOR_CALL;
 
 
+[[export("DeeObject_{|T}CallKw")]]
 [[wunused]] DREF DeeObject *
 tp_call_kw([[nonnull]] DeeObject *self,
            size_t argc, DeeObject *const *argv,

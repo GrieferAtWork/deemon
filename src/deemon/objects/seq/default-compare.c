@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_COMPARE_C 1
 
 #include <deemon/api.h>
-#include <deemon/error.h>
 #include <deemon/object.h>
 /**/
 

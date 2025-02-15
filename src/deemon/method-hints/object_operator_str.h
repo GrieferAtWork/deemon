@@ -48,6 +48,7 @@ err:
 #endif /* !DEFINED_instance_call_with_file_writer */
 )]
 
+/*[[export("DeeObject_{|T}Str")]]*/ /* Requires custom handling for recursion */
 [[wunused]] DREF DeeObject *
 tp_cast.tp_str([[nonnull]] DeeObject *__restrict self)
 %{class {
@@ -132,6 +133,7 @@ err:
 )]
 
 
+/*[[export("DeeObject_{|T}Print")]]*/ /* Requires custom handling for recursion */
 [[wunused]] Dee_ssize_t
 tp_cast.tp_print([[nonnull]] DeeObject *__restrict self,
                  [[nonnull]] Dee_formatprinter_t printer, void *arg)

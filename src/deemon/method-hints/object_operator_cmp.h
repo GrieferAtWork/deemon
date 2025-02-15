@@ -30,6 +30,7 @@ operator {
  * @return: -1: `lhs != rhs'
  * @return: 0:  `lhs == rhs'
  * @return: 1:  `lhs != rhs' */
+[[export("DeeObject_{|T}CompareEq")]]
 [[wunused]] int
 tp_cmp->tp_compare_eq([[nonnull]] DeeObject *lhs,
                       [[nonnull]] DeeObject *rhs)
@@ -112,6 +113,7 @@ err:
  * @return: -1: `lhs < rhs'
  * @return: 0:  `lhs == rhs'
  * @return: 1:  `lhs > rhs' */
+[[export("DeeObject_{|T}Compare")]]
 [[wunused]] int
 tp_cmp->tp_compare([[nonnull]] DeeObject *lhs,
                    [[nonnull]] DeeObject *rhs)
@@ -321,6 +323,7 @@ err:
  * @return: -1: `lhs != rhs'
  * @return: 0:  `lhs == rhs'
  * @return: 1:  `lhs != rhs' */
+[[export("DeeObject_{|T}TryCompareEq")]]
 [[custom_unsupported_impl_name(default__trycompare_eq__unsupported)]]
 [[wunused]] int
 tp_cmp->tp_trycompare_eq([[nonnull]] DeeObject *lhs,
@@ -337,17 +340,41 @@ tp_cmp->tp_trycompare_eq([[nonnull]] DeeObject *lhs,
 }} = OPERATOR_EQ;
 
 
+%[define(DEFINE_xinvoke_not =
+#ifndef DEFINED_xinvoke_not
+#define DEFINED_xinvoke_not
+PRIVATE WUNUSED DREF DeeObject *DCALL
+xinvoke_not(/*[0..1],inherit(always)*/ DREF DeeObject *ob) {
+	if (ob) {
+		int temp = DeeObject_BoolInherited(ob);
+		if likely(temp >= 0) {
+			ob = DeeBool_For(!temp);
+			Dee_Incref(ob);
+		} else {
+			ob = NULL;
+		}
+	}
+	return ob;
+}
+#endif /* !DEFINED_xinvoke_not */
+)]
 
 /*[[[deemon
 import * from deemon;
-function gen(eq: string, cmp: string, iseq: bool) {
+function gen(eq: string, ne: string, cmp: string, iseq: bool) {
+	local Eq = eq.capitalize();
 	local EQ = eq.upper();
 	local _eq = iseq ? "_eq" : "";
+	print('[[export("DeeObject_{|T}Cmp', Eq, '")]]');
 	print("[[wunused]] DREF DeeObject *");
 	print("tp_cmp->tp_", eq, "([[nonnull]] DeeObject *lhs,");
 	print("              [[nonnull]] DeeObject *rhs)");
 	print("%{class {");
 	print("	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_", EQ, ", 1, &rhs);");
+	print("}}");
+	print("%{using tp_cmp->tp_", ne, ": [[prefix(DEFINE_xinvoke_not)]] {");
+	print("	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_", ne, ", lhs, rhs);");
+	print("	return xinvoke_not(result);");
 	print("}}");
 	print("%{using tp_cmp->tp_compare", _eq, ": {");
 	print("	int result = CALL_DEPENDENCY(tp_cmp->tp_compare", _eq, ", lhs, rhs);");
@@ -361,18 +388,23 @@ function gen(eq: string, cmp: string, iseq: bool) {
 	print;
 	print;
 }
-gen("eq", "==", true);
-gen("ne", "!=", true);
-gen("lo", "<", false);
-gen("le", "<=", false);
-gen("gr", ">", false);
-gen("ge", ">=", false);
+gen("eq", "ne", "==", true);
+gen("ne", "eq", "!=", true);
+gen("lo", "ge", "<", false);
+gen("le", "gr", "<=", false);
+gen("gr", "le", ">", false);
+gen("ge", "lo", ">=", false);
 ]]]*/
+[[export("DeeObject_{|T}CmpEq")]]
 [[wunused]] DREF DeeObject *
 tp_cmp->tp_eq([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_EQ, 1, &rhs);
+}}
+%{using tp_cmp->tp_ne: [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_ne, lhs, rhs);
+	return xinvoke_not(result);
 }}
 %{using tp_cmp->tp_compare_eq: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare_eq, lhs, rhs);
@@ -385,11 +417,16 @@ err:
 
 
 
+[[export("DeeObject_{|T}CmpNe")]]
 [[wunused]] DREF DeeObject *
 tp_cmp->tp_ne([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_NE, 1, &rhs);
+}}
+%{using tp_cmp->tp_eq: [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_eq, lhs, rhs);
+	return xinvoke_not(result);
 }}
 %{using tp_cmp->tp_compare_eq: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare_eq, lhs, rhs);
@@ -402,11 +439,16 @@ err:
 
 
 
+[[export("DeeObject_{|T}CmpLo")]]
 [[wunused]] DREF DeeObject *
 tp_cmp->tp_lo([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_LO, 1, &rhs);
+}}
+%{using tp_cmp->tp_ge: [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_ge, lhs, rhs);
+	return xinvoke_not(result);
 }}
 %{using tp_cmp->tp_compare: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare, lhs, rhs);
@@ -419,11 +461,16 @@ err:
 
 
 
+[[export("DeeObject_{|T}CmpLe")]]
 [[wunused]] DREF DeeObject *
 tp_cmp->tp_le([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_LE, 1, &rhs);
+}}
+%{using tp_cmp->tp_gr: [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_gr, lhs, rhs);
+	return xinvoke_not(result);
 }}
 %{using tp_cmp->tp_compare: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare, lhs, rhs);
@@ -436,11 +483,16 @@ err:
 
 
 
+[[export("DeeObject_{|T}CmpGr")]]
 [[wunused]] DREF DeeObject *
 tp_cmp->tp_gr([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_GR, 1, &rhs);
+}}
+%{using tp_cmp->tp_le: [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_le, lhs, rhs);
+	return xinvoke_not(result);
 }}
 %{using tp_cmp->tp_compare: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare, lhs, rhs);
@@ -453,11 +505,16 @@ err:
 
 
 
+[[export("DeeObject_{|T}CmpGe")]]
 [[wunused]] DREF DeeObject *
 tp_cmp->tp_ge([[nonnull]] DeeObject *lhs,
               [[nonnull]] DeeObject *rhs)
 %{class {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_GE, 1, &rhs);
+}}
+%{using tp_cmp->tp_lo: [[prefix(DEFINE_xinvoke_not)]] {
+	DREF DeeObject *result = CALL_DEPENDENCY(tp_cmp->tp_lo, lhs, rhs);
+	return xinvoke_not(result);
 }}
 %{using tp_cmp->tp_compare: {
 	int result = CALL_DEPENDENCY(tp_cmp->tp_compare, lhs, rhs);

@@ -61,9 +61,9 @@ Dee_GetEnv(DeeObject *__restrict name) {
 	return result;
 err_tryhandle:
 	if (DeeError_Catch(&DeeError_ValueError) ||     /* Super-error that includes `KeyError' (thrown when a key (env_name) wasn't found) */
-	    DeeError_Catch(&DeeError_AttributeError) || /* Attribute-error (thrown when `fs' doesn't export a symbol `environ') */
-	    DeeError_Catch(&DeeError_UnsupportedAPI) || /* Unsupported-API (thrown when `fs' only provides a stub implementation for `environ') */
-	    DeeError_Catch(&DeeError_NotImplemented))   /* Not-implemented error (thrown if `fs.environ' doesn't support lookup) */
+	    DeeError_Catch(&DeeError_AttributeError) || /* Attribute-error (thrown when `posix' doesn't export a symbol `environ') */
+	    DeeError_Catch(&DeeError_UnsupportedAPI) || /* Unsupported-API (thrown when `posix' only provides a stub implementation for `environ') */
+	    DeeError_Catch(&DeeError_NotImplemented))   /* Not-implemented error (thrown if `posix.environ' doesn't support lookup) */
 		return ITER_DONE;
 	return NULL;
 err_r:

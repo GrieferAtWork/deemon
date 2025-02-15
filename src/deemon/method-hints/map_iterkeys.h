@@ -19,22 +19,27 @@
  */
 
 /************************************************************************/
-/* deemon.Mapping.__iterkeys__()                                       */
+/* deemon.Mapping.iterkeys                                              */
 /************************************************************************/
-__map_iterkeys__()->?DIterator {
-	if (DeeArg_Unpack(argc, argv, ":__map_iterkeys__"))
-		goto err;
-	return CALL_DEPENDENCY(map_iterkeys, self);
-err:
-	return NULL;
-}
+[[getset, alias(Mapping.iterkeys)]]
+__map_iterkeys__->?DIterator;
 
 
 
-[[wunused]] DREF DeeObject *
+[[wunused, getset_member("get")]] DREF DeeObject *
 __map_iterkeys__.map_iterkeys([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = "default__set_operator_iter__empty"}
+%{$with__map_keys = {
+	DREF DeeObject *result, *keys = CALL_DEPENDENCY(map_keys, self);
+	if unlikely(!keys)
+		goto err;
+	result = DeeObject_Iter(keys);
+	Dee_Decref_unlikely(keys); /* *_unlikely because it's probably referenced by the iterator */
+	return result;
+err:
+	return NULL;
+}}
 %{$with__map_enumerate = {
 	/* TODO: Custom iterator type that uses "tp_enumerate" */
 	(void)self;
@@ -51,30 +56,23 @@ __map_iterkeys__.map_iterkeys([[nonnull]] DeeObject *__restrict self)
 	result->dipsi_iter = CALL_DEPENDENCY(set_operator_iter, self);
 	if unlikely(!result->dipsi_iter)
 		goto err_r;
-	itertyp = Dee_TYPE(result->dipsi_iter);
-	if unlikely((!itertyp->tp_iterator ||
-	             !itertyp->tp_iterator->tp_nextkey) &&
-	            !DeeType_InheritIterNext(itertyp))
-		goto err_r_iter_no_next;
-	ASSERT(itertyp->tp_iterator);
-	ASSERT(itertyp->tp_iterator->tp_nextkey);
-	result->dipsi_next = itertyp->tp_iterator->tp_nextkey;
+	itertyp            = Dee_TYPE(result->dipsi_iter);
+	result->dipsi_next = DeeType_RequireNativeOperator(itertyp, nextkey);
 	DeeObject_Init(result, &DefaultIterator_WithNextKey);
 	return (DREF DeeObject *)result;
-err_r_iter_no_next:
-	Dee_Decref(result->dipsi_iter);
-	err_unimplemented_operator(itertyp, OPERATOR_ITERNEXT);
 err_r:
 	DeeObject_FREE(result);
 err:
 	return NULL;
-}}
-{
-	return LOCAL_CALLATTR(self, 0, NULL);
+}} {
+	return LOCAL_GETATTR(self);
 }
 
 map_iterkeys = {
-	DeeMH_map_enumerate_t map_enumerate = REQUIRE(map_enumerate);
+	DeeMH_map_enumerate_t map_enumerate;
+	if (REQUIRE_NODEFAULT(map_keys))
+		return &$with__map_keys;
+	map_enumerate = REQUIRE(map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &$empty;
 	if (map_enumerate != REQUIRE(set_operator_foreach_pair)) {

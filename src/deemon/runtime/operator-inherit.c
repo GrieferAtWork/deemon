@@ -21,15 +21,17 @@
 #define GUARD_DEEMON_RUNTIME_OPERATOR_INHERIT_C 1
 
 #include <deemon/api.h>
+
+#include <deemon/object.h>
+#include <hybrid/typecore.h>
+
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #include <deemon/class.h>
 #include <deemon/mro.h>
 #include <deemon/none-operator.h>
-#include <deemon/object.h>
 #include <deemon/seq.h>
 
 #include <hybrid/align.h>
-#include <hybrid/typecore.h>
-
 #include "../objects/seq/default-api.h"
 #include "operator-require.h"
 #include "strings.h"
@@ -38,35 +40,11 @@
 #define CHAR_BIT __CHAR_BIT__
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 /************************************************************************/
 /* Operator inheritance.                                                */
 /************************************************************************/
-
-
-/* TODO: Inheritance of (e.g.) "tp_size" must work like this:
->> if (base_type->tp_seq->tp_size == &DeeSeq_OperatorSize ||
->>     base_type->tp_seq->tp_size == &default__seq_operator_size__empty ||
->>     base_type->tp_seq->tp_size == &default__seq_operator_size__with__seq_operator_foreach ||
->>     base_type->tp_seq->tp_size == &default__seq_operator_size__with__... ||
->>     base_type->tp_seq->tp_size == &DeeSet_OperatorSize ||
->>     base_type->tp_seq->tp_size == &default__set_operator_size__empty ||
->>     base_type->tp_seq->tp_size == &default__set_operator_size__with__seq_operator_foreach ||
->>     base_type->tp_seq->tp_size == &default__set_operator_size__with__...) {
->>     if (DeeType_GetSeqClass(this_type) == Dee_SEQCLASS_SEQ) {
->>         // Initial assign to prevent recursion during mh_select_* call
->>         // Can't just use the super-type's operator because that might
->>         // imply certain semantics that won't apply to the sub-class.
->>         if (atomic_cmpxch(&this_type->tp_seq->tp_size, NULL, &DeeSeq_OperatorSize))
->>             this_type->tp_seq->tp_size = mh_select_seq_operator_size(this_type, this_type, Dee_TMH_seq_operator_size);
->>     } else {
->>         if (atomic_cmpxch(&this_type->tp_seq->tp_size, NULL, &DeeSet_OperatorSize))
->>             this_type->tp_seq->tp_size = mh_select_seq_operator_size(this_type, this_type, Dee_TMH_set_operator_size);
->>     }
->> } else {
->>     this_type->tp_seq->tp_size = base_type->tp_seq->tp_size;
->> }
-*/
 
 
 /* Trace self-optimizing operator inheritance. */
@@ -80,6 +58,7 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_type_seq_has_custom_tp_size(struct type_seq const *__restrict self) {
 	return (self->tp_size != NULL) &&
@@ -1155,6 +1134,7 @@ DeeType_GetOpClassOrigin(DeeTypeObject *__restrict self, uint16_t oi_class) {
 #define DeeType_GetSeqOrigin(self)    DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_seq))
 #define DeeType_GetWithOrigin(self)   DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_with))
 #define DeeType_GetBufferOrigin(self) DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_buffer))
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 INTERN NONNULL((1)) bool DCALL
@@ -1206,6 +1186,7 @@ DeeType_InheritConstructors(DeeTypeObject *__restrict self) {
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN NONNULL((1)) bool DCALL
 DeeType_InheritStr(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base;
@@ -4613,6 +4594,7 @@ DeeType_InheritWith(DeeTypeObject *__restrict self) {
 	}
 	return false;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 INTERN NONNULL((1)) bool DCALL

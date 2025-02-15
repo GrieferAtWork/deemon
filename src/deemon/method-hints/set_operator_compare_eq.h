@@ -26,7 +26,7 @@ __set_compare_eq__(rhs:?X2?DSet?S?O)->?X2?Dbool?Dint {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_compare_eq__", &rhs))
 		goto err;
-	result = CALL_DEPENDENCY(set_operator_compare_eq, lhs, rhs);
+	result = CALL_DEPENDENCY(set_operator_compare_eq, self, rhs);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	/* We always return "bool" here, but user-code is also allowed to return "int" */
@@ -169,7 +169,7 @@ __set_eq__(rhs:?X2?DSet?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_eq__", &rhs))
 		goto err;
-	return CALL_DEPENDENCY(set_eq, self, rhs);
+	return CALL_DEPENDENCY(set_operator_eq, self, rhs);
 err:
 	return NULL;
 }
@@ -205,7 +205,7 @@ __set_ne__(rhs:?X2?DSet?S?O)->?Dbool {
 	DeeObject *rhs;
 	if (DeeArg_Unpack(argc, argv, "o:__set_ne__", &rhs))
 		goto err;
-	return CALL_DEPENDENCY(set_ne, self, rhs);
+	return CALL_DEPENDENCY(set_operator_ne, self, rhs);
 err:
 	return NULL;
 }

@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}GetRange")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getrange([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *start,
@@ -49,6 +50,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}GetRangeIndex")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getrange_index([[nonnull]] DeeObject *self,
                           Dee_ssize_t start, Dee_ssize_t end)
@@ -74,6 +76,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}GetRangeIndexN")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getrange_index_n([[nonnull]] DeeObject *self,
                             Dee_ssize_t start)

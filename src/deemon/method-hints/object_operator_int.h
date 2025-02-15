@@ -24,6 +24,7 @@
 
 operator {
 
+[[export("DeeObject_{|T}Int")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_int([[nonnull]] DeeObject *__restrict self)
 %{class {
@@ -72,6 +73,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}Get32Bit")]]
 [[wunused]] int
 tp_math->tp_int32([[nonnull]] DeeObject *__restrict self,
                   [[nonnull]] int32_t *__restrict p_result)
@@ -129,6 +131,7 @@ err:
 
 
 
+[[export("DeeObject_{|T}Get64Bit")]]
 [[wunused]] int
 tp_math->tp_int64([[nonnull]] DeeObject *__restrict self,
                   [[nonnull]] int64_t *__restrict p_result)

@@ -50,14 +50,13 @@ err_overflow:
 	return err_integer_overflow_i((sizeof(size_t) * 8) - 1, true);
 }}
 %{$with__seq_pop = {
+	PRELOAD_DEPENDENCY(seq_pop)
 	size_t end_index;
-	DeeMH_seq_pop_t seq_pop;
 	if unlikely(OVERFLOW_UADD(index, count, &end_index))
 		goto err_overflow;
-	seq_pop = DeeType_RequireSeqPop(Dee_TYPE(self));
 	while (end_index > index) {
 		--end_index;
-		if unlikely((*seq_pop)(self, (Dee_ssize_t)end_index))
+		if unlikely(CALL_DEPENDENCY(seq_pop, self, (Dee_ssize_t)end_index))
 			goto err;
 		if (DeeThread_CheckInterrupt())
 			goto err;

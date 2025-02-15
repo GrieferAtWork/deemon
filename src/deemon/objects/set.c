@@ -38,6 +38,7 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 
+#include "../runtime/method-hints.h"
 #include "../runtime/operator-require.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -46,6 +47,21 @@
 
 DECL_BEGIN
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	int result;
+	DeeObject *rhs;
+	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &rhs))
+		goto err;
+	result = SetIntersection_NonEmpty(self, rhs);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(!result);
+err:
+	return NULL;
+}
+
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
@@ -88,20 +104,6 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	int result;
-	DeeObject *rhs;
-	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &rhs))
-		goto err;
-	result = SetIntersection_NonEmpty(self, rhs);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(!result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_issubset(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:issubset", &other))
@@ -120,30 +122,53 @@ set_issuperset(DeeObject *self, size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE struct type_method tpconst set_methods[] = {
-	TYPE_METHOD("difference", &set_difference,
-	            "(to:?.)->?.\n"
-	            "Same as ${(this as Set) - to}"),
-	TYPE_METHOD("intersection", &set_intersection,
-	            "(with_:?.)->?.\n"
-	            "Same as ${(this as Set) & with_}"),
 	TYPE_METHOD("isdisjoint", &set_isdisjoint,
 	            "(with_:?.)->?Dbool\n"
 	            "Returns ?t if ${!((this as Set) & with_)}\n"
 	            "In other words: If @this and @with_ have no items in common"),
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD(DeeMA_set_union_name, &DeeMA_set_union,
+	            "(with_:?.)->?.\n"
+	            "Same as ${(this as Set) | with_}"),
+	TYPE_METHOD(DeeMA_set_symmetric_difference_name, &DeeMA_set_symmetric_difference,
+	            "(with_:?.)->?.\n"
+	            "Same as ${(this as Set) ^ with_}"),
+	TYPE_METHOD(DeeMA_set_difference_name, &DeeMA_set_difference,
+	            "(to:?.)->?.\n"
+	            "Same as ${(this as Set) - to}"),
+	TYPE_METHOD(DeeMA_set_intersection_name, &DeeMA_set_intersection,
+	            "(with_:?.)->?.\n"
+	            "Same as ${(this as Set) & with_}"),
+	TYPE_METHOD(DeeMA_set_issubset_name, &DeeMA_set_issubset,
+	            "(of:?.)->?Dbool\n"
+	            "Same as ${(this as Set) <= of}"),
+	TYPE_METHOD(DeeMA_set_issuperset_name, &DeeMA_set_issuperset,
+	            "(of:?.)->?Dbool\n"
+	            "Same as ${(this as Set) >= of}"),
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("union", &set_union,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) | with_}"),
 	TYPE_METHOD("symmetric_difference", &set_symmetric_difference,
 	            "(with_:?.)->?.\n"
 	            "Same as ${(this as Set) ^ with_}"),
+	TYPE_METHOD("difference", &set_difference,
+	            "(to:?.)->?.\n"
+	            "Same as ${(this as Set) - to}"),
+	TYPE_METHOD("intersection", &set_intersection,
+	            "(with_:?.)->?.\n"
+	            "Same as ${(this as Set) & with_}"),
 	TYPE_METHOD("issubset", &set_issubset,
 	            "(of:?.)->?Dbool\n"
 	            "Same as ${(this as Set) <= of}"),
 	TYPE_METHOD("issuperset", &set_issuperset,
 	            "(of:?.)->?Dbool\n"
 	            "Same as ${(this as Set) >= of}"),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Default functions for mutable sets */
 	TYPE_METHOD(STR_insert, &DeeMH_set_insert,
@@ -158,10 +183,12 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD(STR_removeall, &DeeMH_set_removeall,
 	            "(keys:?S?O)\n"
 	            "Remove all elements from @keys from @this set"),
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD(STR_unify, &DeeMH_set_unify,
 	            "(key)->\n"
 	            "Insert @key into @this set if it wasn't contained already, and "
 	            /**/ "return the (potential) copy of @key that is part of the set"),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD(STR_pop, &DeeMH_set_pop,
 	            "(def?)->\n"
 	            "#tValueError{Set is empty and no @def was given}\n"
@@ -174,6 +201,7 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	TYPE_METHOD("__size__", &default_set___size__,
 	            "->?Dint\n"
 	            "Alias for ${#(this as Set)}"),
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD("__foreach__", &default_set___foreach__,
 	            "(cb)->\n"
 	            "Alias for:\n"
@@ -184,15 +212,18 @@ PRIVATE struct type_method tpconst set_methods[] = {
 	            /**/ "		return res;\n"
 	            /**/ "}"
 	            "}"),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__hash__", &default_set___hash__,
 	            "->?Dint\n"
 	            "Alias for ${(this as Set).operator hash()}"),
 	TYPE_METHOD("__compare_eq__", &default_set___compare_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set).operator == (rhs)}"),
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_METHOD("__trycompare_eq__", &default_set___trycompare_eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${deemon.equals(this as Set, rhs)}"),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD("__eq__", &default_set___eq__,
 	            "(rhs:?S?O)->?Dbool\n"
 	            "Alias for ${(this as Set) == rhs}"),
@@ -250,7 +281,10 @@ PRIVATE struct type_method tpconst set_methods[] = {
 
 INTDEF struct type_getset tpconst set_getsets[];
 INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
-	TYPE_GETTER(STR_frozen, &DeeRoSet_FromSequence,
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define default__set_frozen DeeRoSet_FromSequence
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	TYPE_GETTER(STR_frozen, &default__set_frozen,
 	            "->?#Frozen\n"
 	            "Returns a copy of @this ?., with all of its current elements frozen in place, "
 	            /**/ "constructing a snapshot of the set's current elements. - The actual type of "
@@ -261,6 +295,31 @@ INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
 };
 
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+set_Frozen_get(DeeTypeObject *__restrict self) {
+	DeeTypeObject *result = &DeeSet_Type;
+	DeeMH_set_frozen_t set_frozen = DeeType_RequireMethodHint(self, set_frozen);
+	if (set_frozen == &DeeObject_NewRef) {
+		result = self;
+	} else if (set_frozen == &DeeRoSet_FromSequence) {
+		result = &DeeRoSet_Type;
+	}
+	return_reference_(result);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL /* INTERN because re-used as "map_Iterator_get" */
+set_Iterator_get(DeeTypeObject *__restrict self) {
+	DeeTypeObject *result = &DeeSet_Type;
+	DeeMH_set_frozen_t set_frozen = DeeType_RequireMethodHint(self, set_frozen);
+	if (set_frozen == &DeeObject_NewRef) {
+		result = self;
+	} else if (set_frozen == &DeeRoSet_FromSequence) {
+		result = &DeeRoSet_Type;
+	}
+	return_reference_(result);
+}
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /*[[[deemon
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("Frozen");
@@ -269,7 +328,7 @@ print define_Dee_HashStr("Frozen");
 /*[[[end]]]*/
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-set_frozen_get(DeeTypeObject *__restrict self) {
+set_Frozen_get(DeeTypeObject *__restrict self) {
 	int error;
 	DREF DeeTypeObject *result;
 	struct attribute_info info;
@@ -306,12 +365,19 @@ set_frozen_get(DeeTypeObject *__restrict self) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
 
 
 PRIVATE struct type_getset tpconst set_class_getsets[] = {
-	TYPE_GETTER("Frozen", &set_frozen_get,
+	TYPE_GETTER("Frozen", &set_Frozen_get,
 	            "->?DType\n"
-	            "Returns the type of sequence returned by the ?#frozen property"),
+	            "Returns the type of ?DSet returned by the ?#frozen property"),
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_GETTER(STR_Iterator, &set_Iterator_get,
+	            "->?DType\n"
+	            "Returns the type of ?DIterator returned by the ?#{op:iter}"),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_GETSET_END
 };
 
@@ -337,6 +403,105 @@ PRIVATE struct type_operator const set_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),  /* Deleted */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE), /* Deleted */
 };
+
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE struct type_math set_math = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ &default__set_operator_inv,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ &default__set_operator_add,
+	/* .tp_sub         = */ &default__set_operator_sub,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL,
+	/* .tp_shr         = */ NULL,
+	/* .tp_and         = */ &default__set_operator_and,
+	/* .tp_or          = */ &default__set_operator_add,
+	/* .tp_xor         = */ &default__set_operator_xor,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ &default__set_operator_inplace_add,
+	/* .tp_inplace_sub = */ &default__set_operator_inplace_sub,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL,
+	/* .tp_inplace_shr = */ NULL,
+	/* .tp_inplace_and = */ &default__set_operator_inplace_and,
+	/* .tp_inplace_or  = */ &default__set_operator_inplace_add,
+	/* .tp_inplace_xor = */ &default__set_operator_inplace_xor,
+	/* .tp_inplace_pow = */ NULL,
+};
+
+PRIVATE struct type_cmp set_cmp = {
+	/* .tp_hash          = */ &default__set_operator_hash,
+	/* .tp_compare_eq    = */ &default__set_operator_compare_eq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ &default__set_operator_trycompare_eq,
+	/* .tp_eq            = */ &default__set_operator_eq,
+	/* .tp_ne            = */ &default__set_operator_ne,
+	/* .tp_lo            = */ &default__set_operator_lo,
+	/* .tp_le            = */ &default__set_operator_le,
+	/* .tp_gr            = */ &default__set_operator_gr,
+	/* .tp_ge            = */ &default__set_operator_ge,
+};
+
+PRIVATE struct type_seq set_seq = {
+	/* .tp_iter                       = */ &default__set_operator_iter,
+	/* .tp_sizeob                     = */ &default__set_operator_sizeob,
+	/* .tp_contains                   = */ &default__seq_operator_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_foreach                    = */ &default__set_operator_foreach,
+	/* .tp_foreach_pair               = */ &default__set_operator_foreach_pair,
+	/* ._deprecated_tp_enumerate      = */ NULL,
+	/* ._deprecated_tp_enumerate_index= */ NULL,
+	/* ._deprecated_tp_iterkeys       = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ &default__set_operator_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+	/* .tp_asvector                   = */ NULL,
+	/* .tp_asvector_nothrow           = */ NULL,
+};
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 /* `Set from deemon' */
 PUBLIC DeeTypeObject DeeSet_Type = {
@@ -448,6 +613,38 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ &default__seq_operator_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ &default_set_printrepr,
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ &set_math,
+	/* .tp_cmp           = */ &set_cmp,
+	/* .tp_seq           = */ &set_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ set_methods,
+	/* .tp_getsets       = */ set_getsets,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ set_class_getsets,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ set_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(set_operators),
+	/* .tp_mhcache       = */ &mh_cache_empty
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
 		/* .tp_repr      = */ NULL,
@@ -477,6 +674,7 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ set_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(set_operators)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 };
 
 PUBLIC DeeObject DeeSet_EmptyInstance = {

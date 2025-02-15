@@ -696,7 +696,28 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_enumerate.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_frozen.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_iterkeys.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_itervalues.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_keys.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_add.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_and.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_cmp.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_compare_eq.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_contains.h">
@@ -708,7 +729,58 @@
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_getitem.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_add.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_and.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_sub.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_xor.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_operator_setitem.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_sub.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_operator_xor.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_pop.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_popitem.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_remove.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_removekeys.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_setdefault.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_setnew.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_setnew_ex.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_setold.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_setold_ex.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_update.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\map_values.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\method-hints.h">
@@ -786,6 +858,12 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_append.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_bsearch.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_cached.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_clear.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -810,10 +888,16 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_extend.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_fill.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_find.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_first.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_frozen.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_insert.h">
@@ -888,7 +972,25 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_pushfront.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_reduce.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_remove.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_removeall.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_removeif.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_resize.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_reverse.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_reversed.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_rfind.h">
@@ -897,13 +999,43 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_rlocate.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_rremove.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_sort.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_sorted.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_startswith.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_sum.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\seq_unpack.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_frozen.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_insert.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_insertall.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_add.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_and.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_cmp.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_compare_eq.h">
@@ -912,10 +1044,40 @@
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_hash.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_add.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_and.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_sub.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_xor.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_inv.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_iter.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\set_operator_size.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_sub.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_operator_xor.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_pop.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_remove.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_removeall.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">
@@ -1060,6 +1222,9 @@
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\range.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\removeif-cb.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\repeat.h">
@@ -1643,6 +1808,9 @@
 		<ClCompile Include="..\src\deemon\objects\seq\range.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\removeif-cb.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\repeat.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
@@ -1779,6 +1947,9 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\operator-hint-errors.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\operator-hint-invoke.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\operator-hints.c">

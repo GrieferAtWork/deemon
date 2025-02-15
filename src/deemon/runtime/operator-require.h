@@ -20,6 +20,9 @@
 #ifndef GUARD_DEEMON_RUNTIME_OPERATOR_REQUIRE_H
 #define GUARD_DEEMON_RUNTIME_OPERATOR_REQUIRE_H 1
 
+#include <deemon/api.h>
+
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #include <deemon/object.h>
 
 DECL_BEGIN
@@ -83,5 +86,6 @@ DECL_BEGIN
 #define DeeType_RequireInplaceMul(tp_self)              (((tp_self)->tp_math && (tp_self)->tp_math->tp_inplace_mul) || DeeType_InheritMul(tp_self))
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_RUNTIME_OPERATOR_REQUIRE_H */

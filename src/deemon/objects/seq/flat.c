@@ -27,6 +27,7 @@
 #include <deemon/gc.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
@@ -36,6 +37,7 @@
 #include <hybrid/overflow.h>
 
 /**/
+#include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -605,7 +607,6 @@ err:
 }
 
 
-#define sf_setitem_index_cb DeeSeq_OperatorSetItemIndex
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_delitem_index_cb(DeeObject *__restrict subseq, size_t index,
                     DeeObject *UNUSED(cookie)) {
@@ -616,6 +617,12 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_delitem_index(SeqFlat *__restrict self, size_t index) {
 	return sf_interact_withitem(self, index, &sf_delitem_index_cb, NULL);
 }
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define sf_setitem_index_cb default__seq_operator_setitem_index
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define sf_setitem_index_cb DeeSeq_OperatorSetItemIndex
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 sf_setitem_index(SeqFlat *__restrict self, size_t index, DeeObject *value) {
@@ -668,7 +675,11 @@ PRIVATE struct type_seq sf_seq = {
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&sf_size,
 	/* .tp_size_fast          = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_getitem_index      = */ &default__getitem_index__with__trygetitem_index,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getitem_index      = */ &DeeObject_DefaultGetItemIndexWithTryGetItemIndex,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&sf_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&sf_setitem_index,

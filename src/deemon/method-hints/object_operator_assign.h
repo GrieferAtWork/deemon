@@ -24,6 +24,8 @@
 
 operator {
 
+/* TODO: This operator can only be inherited into types with the "TP_FINHERITCTOR" flag set! */
+[[export("DeeObject_{|T}Assign")]]
 [[wunused]] int
 tp_init.tp_assign([[nonnull]] DeeObject *self,
                   [[nonnull]] DeeObject *value)

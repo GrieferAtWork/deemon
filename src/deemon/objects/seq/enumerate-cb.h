@@ -42,6 +42,17 @@ seq_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value);
 INTDEF WUNUSED Dee_ssize_t DCALL
 seq_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value);
 
+/* Helpers for enumerating a sequence by invoking a given callback. */
+INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_call_enumerate(DeeObject *self, DeeObject *cb);
+INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_call_enumerate_with_intrange(DeeObject *self, DeeObject *cb,
+                                 size_t start, size_t end);
+INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+seq_call_enumerate_with_range(DeeObject *self, DeeObject *cb,
+                              DeeObject *start, DeeObject *end);
+
+
 
 
 

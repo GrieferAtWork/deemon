@@ -353,7 +353,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_hasitem_index(CachedSeq_WithIter *__restrict self, size_t index) {
 	int result = cswi_ensure_loaded(self, index);
 	if likely(result >= 0)
-		result = !result;
+		result = result ? 0 : 1;
 	return result;
 }
 
