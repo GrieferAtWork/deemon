@@ -83,8 +83,7 @@ __seq_remove__.seq_remove([[nonnull]] DeeObject *self,
                           size_t start, size_t end)
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_removeall = {
-	size_t result;
-	result = CALL_DEPENDENCY(seq_removeall, self, item, start, end, 1);
+	size_t result = CALL_DEPENDENCY(seq_removeall, self, item, start, end, 1);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return result ? 1 : 0;
@@ -164,15 +163,14 @@ err:
 /* @return: 0 : Item was not removed
  * @return: 1 : Item was removed
  * @return: -1: Error */
-[[wunused]] size_t
+[[wunused]] int
 __seq_remove__.seq_remove_with_key([[nonnull]] DeeObject *self,
                                    [[nonnull]] DeeObject *item,
                                    size_t start, size_t end,
                                    [[nonnull]] DeeObject *key)
 %{unsupported(auto)} %{$empty = 0}
 %{$with__seq_removeall = {
-	size_t result;
-	result = CALL_DEPENDENCY(seq_removeall_with_key, self, item, start, end, 1, key);
+	size_t result = CALL_DEPENDENCY(seq_removeall_with_key, self, item, start, end, 1, key);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return result ? 1 : 0;

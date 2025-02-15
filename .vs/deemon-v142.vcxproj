@@ -368,6 +368,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\set_pop.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_remove.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_removeall.h" />
+		<ClInclude Include="..\src\deemon\method-hints\set_unify.h" />
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-firstlast-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl" />

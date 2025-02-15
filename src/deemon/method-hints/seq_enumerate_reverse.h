@@ -25,7 +25,8 @@
 seq_foreach_reverse([[nonnull]] DeeObject *__restrict self,
                     [[nonnull]] Dee_foreach_t cb, void *arg)
 %{$empty = 0}
-%{$with__seq_operator_size__and__getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
 	Dee_ssize_t temp, result = 0;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
@@ -158,7 +159,8 @@ seq_enumerate_index_reverse([[nonnull]] DeeObject *__restrict self,
                             [[nonnull]] Dee_seq_enumerate_index_t cb, void *arg,
                             size_t start, size_t end)
 %{$empty = 0}
-%{$with__seq_operator_size__and__getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
 	Dee_ssize_t temp, result = 0;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
@@ -337,7 +339,7 @@ seq_foreach_reverse = {
 		if (seq_operator_size == &default__seq_operator_size__empty)
 			return &$empty;
 		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast)
-			return &$with__seq_operator_size__and__getitem_index_fast;
+			return &$with__seq_operator_size__and__operator_getitem_index_fast;
 		seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
 		if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 			return &$empty;
@@ -372,7 +374,7 @@ seq_enumerate_index_reverse = {
 		if (seq_operator_size == &default__seq_operator_size__empty)
 			return &$empty;
 		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast)
-			return &$with__seq_operator_size__and__getitem_index_fast;
+			return &$with__seq_operator_size__and__operator_getitem_index_fast;
 		seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
 		if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)
 			return &$empty;

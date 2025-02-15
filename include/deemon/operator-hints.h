@@ -1659,9 +1659,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__leave(DeeObject *__restrict self)
 #define DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_1(self, tp_field, require) \
 	((self)->tp_field ? (self)->tp_field : require(self) ? (self)->tp_field : NULL)
 
-#define _DeeType_RequireSupportedNativeOperator__iter(self)             DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_iter, DeeType_InheritGetItem)
-#define _DeeType_RequireSupportedNativeOperator__foreach(self)          DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_foreach, DeeType_InheritGetItem)
-#define _DeeType_RequireSupportedNativeOperator__foreach_pair(self)     DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_foreach_pair, DeeType_InheritGetItem)
+#define _DeeType_RequireSupportedNativeOperator__int(self)              DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_math, tp_int, DeeType_InheritInt)
+#define _DeeType_RequireSupportedNativeOperator__iter(self)             DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_iter, DeeType_InheritIter)
+#define _DeeType_RequireSupportedNativeOperator__foreach(self)          DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_foreach, DeeType_InheritIter)
+#define _DeeType_RequireSupportedNativeOperator__foreach_pair(self)     DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_foreach_pair, DeeType_InheritIter)
 #define _DeeType_RequireSupportedNativeOperator__getitem(self)          DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_getitem, DeeType_InheritGetItem)
 #define _DeeType_RequireSupportedNativeOperator__getitem_index(self)    DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_getitem_index, DeeType_InheritGetItem)
 #define _DeeType_RequireSupportedNativeOperator__trygetitem(self)       DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_trygetitem, DeeType_InheritGetItem)

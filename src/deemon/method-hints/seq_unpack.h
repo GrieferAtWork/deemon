@@ -95,7 +95,8 @@ int __seq_unpack__.seq_unpack([[nonnull]] DeeObject *__restrict self, size_t cou
 		Dee_Decrefv(dst, real_count);
 	return -1;
 }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	/* TODO: Only when __seq_getitem_always_bound__ is defined */
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
@@ -124,7 +125,8 @@ size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,
 %{$with__tp_asvector = {
 	/* TODO */
 }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	/* TODO: Only when __seq_getitem_always_bound__ is defined */
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {

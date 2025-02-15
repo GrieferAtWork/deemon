@@ -95,7 +95,7 @@ err:
 /* @return: 0 : Item was not removed
  * @return: 1 : Item was removed
  * @return: -1: Error */
-[[wunused]] size_t
+[[wunused]] int
 __seq_rremove__.seq_rremove_with_key([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *item,
                                      size_t start, size_t end,

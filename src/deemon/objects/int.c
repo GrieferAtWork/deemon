@@ -40,6 +40,7 @@
 #include <deemon/none.h>
 #include <deemon/numeric.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
@@ -3853,19 +3854,21 @@ err:
 PUBLIC WUNUSED NONNULL((2)) int DCALL
 DeeInt_SSize_TryCompareEq(Dee_ssize_t lhs, DeeObject *rhs) {
 	int result;
-	DeeTypeObject *tp_other = Dee_TYPE(rhs);
-	if likely(tp_other == &DeeInt_Type) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if likely(tp_rhs == &DeeInt_Type) {
 		result = Dee_ssize_compare_int_eq(lhs, (DeeIntObject *)rhs);
-	} else if likely((tp_other->tp_math && tp_other->tp_math->tp_int) ||
-	                 DeeType_InheritInt(tp_other)) {
-		DREF DeeIntObject *rhs_int;
-		rhs_int = (DREF DeeIntObject *)(*tp_other->tp_math->tp_int)(rhs);
-		if unlikely(!rhs_int)
-			goto err;
-		result = Dee_ssize_compare_int_eq(lhs, rhs_int);
-		Dee_Decref(rhs_int);
 	} else {
-		return 1; /* Implicit `NotImplemented' caught */
+		DeeNO_int_t asint = DeeType_RequireSupportedNativeOperator(tp_rhs, int);
+		if likely(asint) {
+			DREF DeeIntObject *rhs_int;
+			rhs_int = (DREF DeeIntObject *)(*asint)(rhs);
+			if unlikely (!rhs_int)
+				goto err;
+			result = Dee_ssize_compare_int_eq(lhs, rhs_int);
+			Dee_Decref(rhs_int);
+		} else {
+			return 1; /* Implicit `NotImplemented' caught */
+		}
 	}
 	return result;
 err:
@@ -3908,19 +3911,21 @@ err:
 PUBLIC WUNUSED NONNULL((2)) int DCALL
 DeeInt_Size_TryCompareEq(size_t lhs, DeeObject *rhs) {
 	int result;
-	DeeTypeObject *tp_other = Dee_TYPE(rhs);
-	if likely(tp_other == &DeeInt_Type) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
+	if likely(tp_rhs == &DeeInt_Type) {
 		result = Dee_size_compare_int_eq(lhs, (DeeIntObject *)rhs);
-	} else if likely((tp_other->tp_math && tp_other->tp_math->tp_int) ||
-	                 DeeType_InheritInt(tp_other)) {
-		DREF DeeIntObject *rhs_int;
-		rhs_int = (DREF DeeIntObject *)(*tp_other->tp_math->tp_int)(rhs);
-		if unlikely(!rhs_int)
-			goto err;
-		result = Dee_size_compare_int_eq(lhs, rhs_int);
-		Dee_Decref(rhs_int);
 	} else {
-		return 1; /* Implicit `NotImplemented' caught */
+		DeeNO_int_t asint = DeeType_RequireSupportedNativeOperator(tp_rhs, int);
+		if likely(asint) {
+			DREF DeeIntObject *rhs_int;
+			rhs_int = (DREF DeeIntObject *)(*asint)(rhs);
+			if unlikely (!rhs_int)
+				goto err;
+			result = Dee_size_compare_int_eq(lhs, rhs_int);
+			Dee_Decref(rhs_int);
+		} else {
+			return 1; /* Implicit `NotImplemented' caught */
+		}
 	}
 	return result;
 err:
@@ -4029,19 +4034,21 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 int_trycompare_eq(DeeIntObject *self, DeeObject *some_object) {
 	Dee_ssize_t compare_value;
-	DeeTypeObject *tp_other = Dee_TYPE(some_object);
-	if likely(tp_other == &DeeInt_Type) {
+	DeeTypeObject *tp_rhs = Dee_TYPE(some_object);
+	if likely(tp_rhs == &DeeInt_Type) {
 		compare_value = int_compareint(self, (DeeIntObject *)some_object);
-	} else if likely((tp_other->tp_math && tp_other->tp_math->tp_int) ||
-	                 DeeType_InheritInt(tp_other)) {
-		DREF DeeIntObject *rhs;
-		rhs = (DREF DeeIntObject *)(*tp_other->tp_math->tp_int)(some_object);
-		if unlikely(!rhs)
-			goto err;
-		compare_value = int_compareint(self, rhs);
-		Dee_Decref(rhs);
 	} else {
-		return 1; /* Implicit `NotImplemented' caught */
+		DeeNO_int_t asint = DeeType_RequireSupportedNativeOperator(tp_rhs, int);
+		if likely(asint) {
+			DREF DeeIntObject *rhs;
+			rhs = (DREF DeeIntObject *)(*asint)(some_object);
+			if unlikely (!rhs)
+				goto err;
+			compare_value = int_compareint(self, rhs);
+			Dee_Decref(rhs);
+		} else {
+			return 1; /* Implicit `NotImplemented' caught */
+		}
 	}
 	return Dee_CompareEqFromDiff(compare_value);
 err:

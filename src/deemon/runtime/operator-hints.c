@@ -32,6 +32,9 @@
 /**/
 #include <hybrid/typecore.h>
 
+/**/
+#include "method-hint-defaults.h"
+
 #undef byte_t
 #define byte_t __BYTE_TYPE__
 
@@ -50,6 +53,17 @@ struct oh_init_spec_impl {
 		/* .ohisi_dep2 = */ ohisi_dep2                             \
 	}
 
+struct oh_init_inherit_as {
+	Dee_funptr_t ohia_optr; /* [1..1] Map this function pointer... */
+	Dee_funptr_t ohia_nptr; /* [1..1] ... into this one */
+};
+#define OH_INIT_INHERIT_AS_END { NULL, NULL }
+#define OH_INIT_INHERIT_AS_INIT(ohia_optr, ohia_nptr) \
+	{                                                 \
+		/* .ohia_optr = */ (Dee_funptr_t)(ohia_optr), \
+		/* .ohia_nptr = */ (Dee_funptr_t)(ohia_nptr)  \
+	}
+
 struct oh_init_spec_mhint {
 	enum Dee_tmh_id ohismh_id;         /* ID of the method hint usable to implement this operator. */
 	DeeTypeObject  *ohismh_implements; /* [0..1] Type that must be implemented for this hint to be usable. */
@@ -65,17 +79,20 @@ struct oh_init_spec_mhint {
 	}
 
 struct oh_init_spec {
-	__UINTPTR_HALF_TYPE__            ohis_table;  /* Offset into `DeeTypeObject' for the sub-table containing this operator, or `0' when part of the primary table. */
-	__UINTPTR_HALF_TYPE__            ohis_field;  /* Offset into the sub-table (or root) where the operator's function pointer is located. */
-	struct oh_init_spec_impl  const *ohis_impls;  /* [0..n] Default impls of this operator (terminated by `ohisi_impl == NULL') */
-	struct oh_init_spec_mhint const *ohis_mhints; /* [0..n] Method hints that can be loaded into this operator (terminated by `ohismh_id >= Dee_TMH_COUNT') */
+	__UINTPTR_HALF_TYPE__            ohis_table;   /* Offset into `DeeTypeObject' for the sub-table containing this operator, or `0' when part of the primary table. */
+	__UINTPTR_HALF_TYPE__            ohis_field;   /* Offset into the sub-table (or root) where the operator's function pointer is located. */
+	struct oh_init_spec_impl  const *ohis_impls;   /* [0..n] Default impls of this operator (terminated by `ohisi_impl == NULL') */
+	struct oh_init_spec_mhint const *ohis_mhints;  /* [0..n] Method hints that can be loaded into this operator (terminated by `ohismh_id >= Dee_TMH_COUNT') */
+	struct oh_init_inherit_as const *ohis_inherit; /* [0..n] Rules for transforming special operator impls during inherit (terminated by `ohia_optr == NULL') */
 };
-#define OH_INIT_SPEC_INIT(ohis_table, ohis_field, ohis_impls, ohis_mhints) \
-	{                                                                      \
-		/* .ohis_table  = */ ohis_table,                                   \
-		/* .ohis_field  = */ ohis_field,                                   \
-		/* .ohis_impls  = */ ohis_impls,                                   \
-		/* .ohis_mhints = */ ohis_mhints                                   \
+#define OH_INIT_SPEC_INIT(ohis_table, ohis_field, ohis_impls, \
+                          ohis_mhints, ohis_inherit)          \
+	{                                                         \
+		/* .ohis_table   = */ ohis_table,                     \
+		/* .ohis_field   = */ ohis_field,                     \
+		/* .ohis_impls   = */ ohis_impls,                     \
+		/* .ohis_mhints  = */ ohis_mhints,                    \
+		/* .ohis_inherit = */ ohis_inherit                    \
 	}
 
 
@@ -178,6 +195,10 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_hash[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_hash, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
+PRIVATE struct oh_init_inherit_as tpconst oh_inherit_hash[2] = {
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_END
+};
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_compare_eq[6] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__compare_eq__with__compare, Dee_TNO_compare, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__compare_eq__with__eq, Dee_TNO_eq, Dee_TNO_COUNT),
@@ -192,6 +213,10 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_compare_eq[5] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_compare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_compare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
+};
+PRIVATE struct oh_init_inherit_as tpconst oh_inherit_compare_eq[2] = {
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_compare_eq__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_compare_eq__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_compare[11] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__compare__with__eq__and__lo, Dee_TNO_eq, Dee_TNO_lo),
@@ -210,6 +235,10 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_compare[2] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_compare, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_END
 };
+PRIVATE struct oh_init_inherit_as tpconst oh_inherit_compare[2] = {
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_compare__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_compare__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_END
+};
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_trycompare_eq[2] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__trycompare_eq__with__compare_eq, Dee_TNO_compare_eq, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
@@ -220,6 +249,10 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_trycompare_eq[5] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_trycompare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_map_operator_trycompare_eq, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
+};
+PRIVATE struct oh_init_inherit_as tpconst oh_inherit_trycompare_eq[2] = {
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_trycompare_eq__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_trycompare_eq__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_eq[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__eq__with__ne, Dee_TNO_ne, Dee_TNO_COUNT),
@@ -302,6 +335,12 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_iter[6] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_iter, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
 };
+PRIVATE struct oh_init_inherit_as tpconst oh_inherit_iter[4] = {
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_END
+};
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_foreach[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__foreach__with__iter, Dee_TNO_iter, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_INIT(&default__foreach__with__foreach_pair, Dee_TNO_foreach_pair, Dee_TNO_COUNT),
@@ -314,6 +353,12 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_foreach[6] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_foreach, NULL, Dee_SEQCLASS_SET),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_foreach, NULL, Dee_SEQCLASS_MAP),
 	OH_INIT_SPEC_MHINT_END
+};
+PRIVATE struct oh_init_inherit_as tpconst oh_inherit_foreach[4] = {
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_foreach_pair[3] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__foreach_pair__with__foreach, Dee_TNO_foreach, Dee_TNO_COUNT),
@@ -646,6 +691,10 @@ PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_getrange_index[2] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_getrange_index, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_END
 };
+PRIVATE struct oh_init_inherit_as tpconst oh_inherit_getrange_index[2] = {
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_getrange_index__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_END
+};
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_getrange_index_n[2] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__getrange_index_n__with__getrange, Dee_TNO_getrange, Dee_TNO_COUNT),
 	OH_INIT_SPEC_IMPL_END
@@ -653,6 +702,10 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_getrange_index_n[2] = {
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_getrange_index_n[2] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_getrange_index_n, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_END
+};
+PRIVATE struct oh_init_inherit_as tpconst oh_inherit_getrange_index_n[2] = {
+	OH_INIT_INHERIT_AS_INIT(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__operator_getitem_index_fast, &default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	OH_INIT_INHERIT_AS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_delrange[2] = {
 	OH_INIT_SPEC_IMPL_INIT(&default__delrange__with__delrange_index__and__delrange_index_n, Dee_TNO_delrange_index, Dee_TNO_delrange_index_n),
@@ -814,104 +867,104 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_leave[2] = {
 	OH_INIT_SPEC_IMPL_END
 };
 INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[98] = {
-	/* tp_init.tp_assign                     */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_init.tp_assign), NULL, oh_mhints_assign),
-	/* tp_init.tp_move_assign                */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_init.tp_move_assign), oh_impls_move_assign, NULL),
-	/* tp_cast.tp_str                        */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_str), oh_impls_str, NULL),
-	/* tp_cast.tp_print                      */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_print), oh_impls_print, NULL),
-	/* tp_cast.tp_repr                       */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_repr), oh_impls_repr, NULL),
-	/* tp_cast.tp_printrepr                  */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_printrepr), oh_impls_printrepr, NULL),
-	/* tp_cast.tp_bool                       */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_bool), NULL, oh_mhints_bool),
-	/* tp_call                               */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_call), oh_impls_call, NULL),
-	/* tp_call_kw                            */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_call_kw), oh_impls_call_kw, NULL),
-	/* tp_iter_next                          */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_iter_next), oh_impls_iter_next, NULL),
-	/* tp_iterator->tp_nextpair              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_nextpair), oh_impls_nextpair, NULL),
-	/* tp_iterator->tp_nextkey               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_nextkey), oh_impls_nextkey, NULL),
-	/* tp_iterator->tp_nextvalue             */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_nextvalue), oh_impls_nextvalue, NULL),
-	/* tp_iterator->tp_advance               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_advance), oh_impls_advance, NULL),
-	/* tp_math->tp_int                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_int), oh_impls_int, NULL),
-	/* tp_math->tp_int32                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_int32), oh_impls_int32, NULL),
-	/* tp_math->tp_int64                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_int64), oh_impls_int64, NULL),
-	/* tp_math->tp_double                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_double), oh_impls_double, NULL),
-	/* tp_cmp->tp_hash                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_hash), NULL, oh_mhints_hash),
-	/* tp_cmp->tp_compare_eq                 */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_compare_eq), oh_impls_compare_eq, oh_mhints_compare_eq),
-	/* tp_cmp->tp_compare                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_compare), oh_impls_compare, oh_mhints_compare),
-	/* tp_cmp->tp_trycompare_eq              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_trycompare_eq), oh_impls_trycompare_eq, oh_mhints_trycompare_eq),
-	/* tp_cmp->tp_eq                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_eq), oh_impls_eq, oh_mhints_eq),
-	/* tp_cmp->tp_ne                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_ne), oh_impls_ne, oh_mhints_ne),
-	/* tp_cmp->tp_lo                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_lo), oh_impls_lo, oh_mhints_lo),
-	/* tp_cmp->tp_le                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_le), oh_impls_le, oh_mhints_le),
-	/* tp_cmp->tp_gr                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_gr), oh_impls_gr, oh_mhints_gr),
-	/* tp_cmp->tp_ge                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_ge), oh_impls_ge, oh_mhints_ge),
-	/* tp_seq->tp_iter                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_iter), oh_impls_iter, oh_mhints_iter),
-	/* tp_seq->tp_foreach                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_foreach), oh_impls_foreach, oh_mhints_foreach),
-	/* tp_seq->tp_foreach_pair               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_foreach_pair), oh_impls_foreach_pair, oh_mhints_foreach_pair),
-	/* tp_seq->tp_sizeob                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_sizeob), oh_impls_sizeob, oh_mhints_sizeob),
-	/* tp_seq->tp_size                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_size), oh_impls_size, oh_mhints_size),
-	/* tp_seq->tp_size_fast                  */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_size_fast), oh_impls_size_fast, NULL),
-	/* tp_seq->tp_contains                   */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_contains), NULL, oh_mhints_contains),
-	/* tp_seq->tp_getitem                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem), oh_impls_getitem, oh_mhints_getitem),
-	/* tp_seq->tp_trygetitem                 */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_trygetitem), oh_impls_trygetitem, oh_mhints_trygetitem),
-	/* tp_seq->tp_getitem_index_fast         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem_index_fast), NULL, NULL),
-	/* tp_seq->tp_getitem_index              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem_index), oh_impls_getitem_index, oh_mhints_getitem_index),
-	/* tp_seq->tp_trygetitem_index           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_trygetitem_index), oh_impls_trygetitem_index, oh_mhints_trygetitem_index),
-	/* tp_seq->tp_getitem_string_hash        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem_string_hash), oh_impls_getitem_string_hash, oh_mhints_getitem_string_hash),
-	/* tp_seq->tp_trygetitem_string_hash     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_trygetitem_string_hash), oh_impls_trygetitem_string_hash, oh_mhints_trygetitem_string_hash),
-	/* tp_seq->tp_getitem_string_len_hash    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem_string_len_hash), oh_impls_getitem_string_len_hash, oh_mhints_getitem_string_len_hash),
-	/* tp_seq->tp_trygetitem_string_len_hash */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_trygetitem_string_len_hash), oh_impls_trygetitem_string_len_hash, oh_mhints_trygetitem_string_len_hash),
-	/* tp_seq->tp_bounditem                  */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_bounditem), oh_impls_bounditem, oh_mhints_bounditem),
-	/* tp_seq->tp_bounditem_index            */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_bounditem_index), oh_impls_bounditem_index, oh_mhints_bounditem_index),
-	/* tp_seq->tp_bounditem_string_hash      */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_bounditem_string_hash), oh_impls_bounditem_string_hash, oh_mhints_bounditem_string_hash),
-	/* tp_seq->tp_bounditem_string_len_hash  */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_bounditem_string_len_hash), oh_impls_bounditem_string_len_hash, oh_mhints_bounditem_string_len_hash),
-	/* tp_seq->tp_hasitem                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_hasitem), oh_impls_hasitem, oh_mhints_hasitem),
-	/* tp_seq->tp_hasitem_index              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_hasitem_index), oh_impls_hasitem_index, oh_mhints_hasitem_index),
-	/* tp_seq->tp_hasitem_string_hash        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_hasitem_string_hash), oh_impls_hasitem_string_hash, oh_mhints_hasitem_string_hash),
-	/* tp_seq->tp_hasitem_string_len_hash    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_hasitem_string_len_hash), oh_impls_hasitem_string_len_hash, oh_mhints_hasitem_string_len_hash),
-	/* tp_seq->tp_delitem                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delitem), oh_impls_delitem, oh_mhints_delitem),
-	/* tp_seq->tp_delitem_index              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delitem_index), oh_impls_delitem_index, oh_mhints_delitem_index),
-	/* tp_seq->tp_delitem_string_hash        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delitem_string_hash), oh_impls_delitem_string_hash, oh_mhints_delitem_string_hash),
-	/* tp_seq->tp_delitem_string_len_hash    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delitem_string_len_hash), oh_impls_delitem_string_len_hash, oh_mhints_delitem_string_len_hash),
-	/* tp_seq->tp_setitem                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setitem), oh_impls_setitem, oh_mhints_setitem),
-	/* tp_seq->tp_setitem_index              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setitem_index), oh_impls_setitem_index, oh_mhints_setitem_index),
-	/* tp_seq->tp_setitem_string_hash        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setitem_string_hash), oh_impls_setitem_string_hash, oh_mhints_setitem_string_hash),
-	/* tp_seq->tp_setitem_string_len_hash    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setitem_string_len_hash), oh_impls_setitem_string_len_hash, oh_mhints_setitem_string_len_hash),
-	/* tp_seq->tp_getrange                   */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getrange), oh_impls_getrange, oh_mhints_getrange),
-	/* tp_seq->tp_getrange_index             */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getrange_index), oh_impls_getrange_index, oh_mhints_getrange_index),
-	/* tp_seq->tp_getrange_index_n           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getrange_index_n), oh_impls_getrange_index_n, oh_mhints_getrange_index_n),
-	/* tp_seq->tp_delrange                   */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delrange), oh_impls_delrange, oh_mhints_delrange),
-	/* tp_seq->tp_delrange_index             */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delrange_index), oh_impls_delrange_index, oh_mhints_delrange_index),
-	/* tp_seq->tp_delrange_index_n           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delrange_index_n), oh_impls_delrange_index_n, oh_mhints_delrange_index_n),
-	/* tp_seq->tp_setrange                   */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setrange), oh_impls_setrange, oh_mhints_setrange),
-	/* tp_seq->tp_setrange_index             */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setrange_index), oh_impls_setrange_index, oh_mhints_setrange_index),
-	/* tp_seq->tp_setrange_index_n           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setrange_index_n), oh_impls_setrange_index_n, oh_mhints_setrange_index_n),
-	/* tp_math->tp_inv                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inv), NULL, oh_mhints_inv),
-	/* tp_math->tp_pos                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_pos), NULL, NULL),
-	/* tp_math->tp_neg                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_neg), NULL, NULL),
-	/* tp_math->tp_add                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_add), NULL, oh_mhints_add),
-	/* tp_math->tp_inplace_add               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_add), oh_impls_inplace_add, oh_mhints_inplace_add),
-	/* tp_math->tp_sub                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_sub), NULL, oh_mhints_sub),
-	/* tp_math->tp_inplace_sub               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_sub), oh_impls_inplace_sub, oh_mhints_inplace_sub),
-	/* tp_math->tp_mul                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_mul), NULL, NULL),
-	/* tp_math->tp_inplace_mul               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_mul), oh_impls_inplace_mul, oh_mhints_inplace_mul),
-	/* tp_math->tp_div                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_div), NULL, NULL),
-	/* tp_math->tp_inplace_div               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_div), oh_impls_inplace_div, NULL),
-	/* tp_math->tp_mod                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_mod), NULL, NULL),
-	/* tp_math->tp_inplace_mod               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_mod), oh_impls_inplace_mod, NULL),
-	/* tp_math->tp_shl                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_shl), NULL, NULL),
-	/* tp_math->tp_inplace_shl               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_shl), oh_impls_inplace_shl, NULL),
-	/* tp_math->tp_shr                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_shr), NULL, NULL),
-	/* tp_math->tp_inplace_shr               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_shr), oh_impls_inplace_shr, NULL),
-	/* tp_math->tp_and                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_and), NULL, oh_mhints_and),
-	/* tp_math->tp_inplace_and               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_and), oh_impls_inplace_and, oh_mhints_inplace_and),
-	/* tp_math->tp_or                        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_or), NULL, NULL),
-	/* tp_math->tp_inplace_or                */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_or), oh_impls_inplace_or, NULL),
-	/* tp_math->tp_xor                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_xor), NULL, oh_mhints_xor),
-	/* tp_math->tp_inplace_xor               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_xor), oh_impls_inplace_xor, oh_mhints_inplace_xor),
-	/* tp_math->tp_pow                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_pow), NULL, NULL),
-	/* tp_math->tp_inplace_pow               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_pow), oh_impls_inplace_pow, NULL),
-	/* tp_math->tp_inc                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inc), oh_impls_inc, NULL),
-	/* tp_math->tp_dec                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_dec), oh_impls_dec, NULL),
-	/* tp_with->tp_enter                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_with), offsetof(struct type_with, tp_enter), oh_impls_enter, NULL),
-	/* tp_with->tp_leave                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_with), offsetof(struct type_with, tp_leave), oh_impls_leave, NULL),
+	/* tp_init.tp_assign                     */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_init.tp_assign), NULL, oh_mhints_assign, NULL),
+	/* tp_init.tp_move_assign                */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_init.tp_move_assign), oh_impls_move_assign, NULL, NULL),
+	/* tp_cast.tp_str                        */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_str), oh_impls_str, NULL, NULL),
+	/* tp_cast.tp_print                      */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_print), oh_impls_print, NULL, NULL),
+	/* tp_cast.tp_repr                       */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_repr), oh_impls_repr, NULL, NULL),
+	/* tp_cast.tp_printrepr                  */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_printrepr), oh_impls_printrepr, NULL, NULL),
+	/* tp_cast.tp_bool                       */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_cast.tp_bool), NULL, oh_mhints_bool, NULL),
+	/* tp_call                               */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_call), oh_impls_call, NULL, NULL),
+	/* tp_call_kw                            */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_call_kw), oh_impls_call_kw, NULL, NULL),
+	/* tp_iter_next                          */ OH_INIT_SPEC_INIT(0, offsetof(DeeTypeObject, tp_iter_next), oh_impls_iter_next, NULL, NULL),
+	/* tp_iterator->tp_nextpair              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_nextpair), oh_impls_nextpair, NULL, NULL),
+	/* tp_iterator->tp_nextkey               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_nextkey), oh_impls_nextkey, NULL, NULL),
+	/* tp_iterator->tp_nextvalue             */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_nextvalue), oh_impls_nextvalue, NULL, NULL),
+	/* tp_iterator->tp_advance               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_iterator), offsetof(struct type_iterator, tp_advance), oh_impls_advance, NULL, NULL),
+	/* tp_math->tp_int                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_int), oh_impls_int, NULL, NULL),
+	/* tp_math->tp_int32                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_int32), oh_impls_int32, NULL, NULL),
+	/* tp_math->tp_int64                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_int64), oh_impls_int64, NULL, NULL),
+	/* tp_math->tp_double                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_double), oh_impls_double, NULL, NULL),
+	/* tp_cmp->tp_hash                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_hash), NULL, oh_mhints_hash, oh_inherit_hash),
+	/* tp_cmp->tp_compare_eq                 */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_compare_eq), oh_impls_compare_eq, oh_mhints_compare_eq, oh_inherit_compare_eq),
+	/* tp_cmp->tp_compare                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_compare), oh_impls_compare, oh_mhints_compare, oh_inherit_compare),
+	/* tp_cmp->tp_trycompare_eq              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_trycompare_eq), oh_impls_trycompare_eq, oh_mhints_trycompare_eq, oh_inherit_trycompare_eq),
+	/* tp_cmp->tp_eq                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_eq), oh_impls_eq, oh_mhints_eq, NULL),
+	/* tp_cmp->tp_ne                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_ne), oh_impls_ne, oh_mhints_ne, NULL),
+	/* tp_cmp->tp_lo                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_lo), oh_impls_lo, oh_mhints_lo, NULL),
+	/* tp_cmp->tp_le                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_le), oh_impls_le, oh_mhints_le, NULL),
+	/* tp_cmp->tp_gr                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_gr), oh_impls_gr, oh_mhints_gr, NULL),
+	/* tp_cmp->tp_ge                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_ge), oh_impls_ge, oh_mhints_ge, NULL),
+	/* tp_seq->tp_iter                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_iter), oh_impls_iter, oh_mhints_iter, oh_inherit_iter),
+	/* tp_seq->tp_foreach                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_foreach), oh_impls_foreach, oh_mhints_foreach, oh_inherit_foreach),
+	/* tp_seq->tp_foreach_pair               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_foreach_pair), oh_impls_foreach_pair, oh_mhints_foreach_pair, NULL),
+	/* tp_seq->tp_sizeob                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_sizeob), oh_impls_sizeob, oh_mhints_sizeob, NULL),
+	/* tp_seq->tp_size                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_size), oh_impls_size, oh_mhints_size, NULL),
+	/* tp_seq->tp_size_fast                  */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_size_fast), oh_impls_size_fast, NULL, NULL),
+	/* tp_seq->tp_contains                   */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_contains), NULL, oh_mhints_contains, NULL),
+	/* tp_seq->tp_getitem                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem), oh_impls_getitem, oh_mhints_getitem, NULL),
+	/* tp_seq->tp_trygetitem                 */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_trygetitem), oh_impls_trygetitem, oh_mhints_trygetitem, NULL),
+	/* tp_seq->tp_getitem_index_fast         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem_index_fast), NULL, NULL, NULL),
+	/* tp_seq->tp_getitem_index              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem_index), oh_impls_getitem_index, oh_mhints_getitem_index, NULL),
+	/* tp_seq->tp_trygetitem_index           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_trygetitem_index), oh_impls_trygetitem_index, oh_mhints_trygetitem_index, NULL),
+	/* tp_seq->tp_getitem_string_hash        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem_string_hash), oh_impls_getitem_string_hash, oh_mhints_getitem_string_hash, NULL),
+	/* tp_seq->tp_trygetitem_string_hash     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_trygetitem_string_hash), oh_impls_trygetitem_string_hash, oh_mhints_trygetitem_string_hash, NULL),
+	/* tp_seq->tp_getitem_string_len_hash    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getitem_string_len_hash), oh_impls_getitem_string_len_hash, oh_mhints_getitem_string_len_hash, NULL),
+	/* tp_seq->tp_trygetitem_string_len_hash */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_trygetitem_string_len_hash), oh_impls_trygetitem_string_len_hash, oh_mhints_trygetitem_string_len_hash, NULL),
+	/* tp_seq->tp_bounditem                  */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_bounditem), oh_impls_bounditem, oh_mhints_bounditem, NULL),
+	/* tp_seq->tp_bounditem_index            */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_bounditem_index), oh_impls_bounditem_index, oh_mhints_bounditem_index, NULL),
+	/* tp_seq->tp_bounditem_string_hash      */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_bounditem_string_hash), oh_impls_bounditem_string_hash, oh_mhints_bounditem_string_hash, NULL),
+	/* tp_seq->tp_bounditem_string_len_hash  */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_bounditem_string_len_hash), oh_impls_bounditem_string_len_hash, oh_mhints_bounditem_string_len_hash, NULL),
+	/* tp_seq->tp_hasitem                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_hasitem), oh_impls_hasitem, oh_mhints_hasitem, NULL),
+	/* tp_seq->tp_hasitem_index              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_hasitem_index), oh_impls_hasitem_index, oh_mhints_hasitem_index, NULL),
+	/* tp_seq->tp_hasitem_string_hash        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_hasitem_string_hash), oh_impls_hasitem_string_hash, oh_mhints_hasitem_string_hash, NULL),
+	/* tp_seq->tp_hasitem_string_len_hash    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_hasitem_string_len_hash), oh_impls_hasitem_string_len_hash, oh_mhints_hasitem_string_len_hash, NULL),
+	/* tp_seq->tp_delitem                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delitem), oh_impls_delitem, oh_mhints_delitem, NULL),
+	/* tp_seq->tp_delitem_index              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delitem_index), oh_impls_delitem_index, oh_mhints_delitem_index, NULL),
+	/* tp_seq->tp_delitem_string_hash        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delitem_string_hash), oh_impls_delitem_string_hash, oh_mhints_delitem_string_hash, NULL),
+	/* tp_seq->tp_delitem_string_len_hash    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delitem_string_len_hash), oh_impls_delitem_string_len_hash, oh_mhints_delitem_string_len_hash, NULL),
+	/* tp_seq->tp_setitem                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setitem), oh_impls_setitem, oh_mhints_setitem, NULL),
+	/* tp_seq->tp_setitem_index              */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setitem_index), oh_impls_setitem_index, oh_mhints_setitem_index, NULL),
+	/* tp_seq->tp_setitem_string_hash        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setitem_string_hash), oh_impls_setitem_string_hash, oh_mhints_setitem_string_hash, NULL),
+	/* tp_seq->tp_setitem_string_len_hash    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setitem_string_len_hash), oh_impls_setitem_string_len_hash, oh_mhints_setitem_string_len_hash, NULL),
+	/* tp_seq->tp_getrange                   */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getrange), oh_impls_getrange, oh_mhints_getrange, NULL),
+	/* tp_seq->tp_getrange_index             */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getrange_index), oh_impls_getrange_index, oh_mhints_getrange_index, oh_inherit_getrange_index),
+	/* tp_seq->tp_getrange_index_n           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_getrange_index_n), oh_impls_getrange_index_n, oh_mhints_getrange_index_n, oh_inherit_getrange_index_n),
+	/* tp_seq->tp_delrange                   */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delrange), oh_impls_delrange, oh_mhints_delrange, NULL),
+	/* tp_seq->tp_delrange_index             */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delrange_index), oh_impls_delrange_index, oh_mhints_delrange_index, NULL),
+	/* tp_seq->tp_delrange_index_n           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_delrange_index_n), oh_impls_delrange_index_n, oh_mhints_delrange_index_n, NULL),
+	/* tp_seq->tp_setrange                   */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setrange), oh_impls_setrange, oh_mhints_setrange, NULL),
+	/* tp_seq->tp_setrange_index             */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setrange_index), oh_impls_setrange_index, oh_mhints_setrange_index, NULL),
+	/* tp_seq->tp_setrange_index_n           */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_setrange_index_n), oh_impls_setrange_index_n, oh_mhints_setrange_index_n, NULL),
+	/* tp_math->tp_inv                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inv), NULL, oh_mhints_inv, NULL),
+	/* tp_math->tp_pos                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_pos), NULL, NULL, NULL),
+	/* tp_math->tp_neg                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_neg), NULL, NULL, NULL),
+	/* tp_math->tp_add                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_add), NULL, oh_mhints_add, NULL),
+	/* tp_math->tp_inplace_add               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_add), oh_impls_inplace_add, oh_mhints_inplace_add, NULL),
+	/* tp_math->tp_sub                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_sub), NULL, oh_mhints_sub, NULL),
+	/* tp_math->tp_inplace_sub               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_sub), oh_impls_inplace_sub, oh_mhints_inplace_sub, NULL),
+	/* tp_math->tp_mul                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_mul), NULL, NULL, NULL),
+	/* tp_math->tp_inplace_mul               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_mul), oh_impls_inplace_mul, oh_mhints_inplace_mul, NULL),
+	/* tp_math->tp_div                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_div), NULL, NULL, NULL),
+	/* tp_math->tp_inplace_div               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_div), oh_impls_inplace_div, NULL, NULL),
+	/* tp_math->tp_mod                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_mod), NULL, NULL, NULL),
+	/* tp_math->tp_inplace_mod               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_mod), oh_impls_inplace_mod, NULL, NULL),
+	/* tp_math->tp_shl                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_shl), NULL, NULL, NULL),
+	/* tp_math->tp_inplace_shl               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_shl), oh_impls_inplace_shl, NULL, NULL),
+	/* tp_math->tp_shr                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_shr), NULL, NULL, NULL),
+	/* tp_math->tp_inplace_shr               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_shr), oh_impls_inplace_shr, NULL, NULL),
+	/* tp_math->tp_and                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_and), NULL, oh_mhints_and, NULL),
+	/* tp_math->tp_inplace_and               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_and), oh_impls_inplace_and, oh_mhints_inplace_and, NULL),
+	/* tp_math->tp_or                        */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_or), NULL, NULL, NULL),
+	/* tp_math->tp_inplace_or                */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_or), oh_impls_inplace_or, NULL, NULL),
+	/* tp_math->tp_xor                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_xor), NULL, oh_mhints_xor, NULL),
+	/* tp_math->tp_inplace_xor               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_xor), oh_impls_inplace_xor, oh_mhints_inplace_xor, NULL),
+	/* tp_math->tp_pow                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_pow), NULL, NULL, NULL),
+	/* tp_math->tp_inplace_pow               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inplace_pow), oh_impls_inplace_pow, NULL, NULL),
+	/* tp_math->tp_inc                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_inc), oh_impls_inc, NULL, NULL),
+	/* tp_math->tp_dec                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_math), offsetof(struct type_math, tp_dec), oh_impls_dec, NULL, NULL),
+	/* tp_with->tp_enter                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_with), offsetof(struct type_with, tp_enter), oh_impls_enter, NULL, NULL),
+	/* tp_with->tp_leave                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_with), offsetof(struct type_with, tp_leave), oh_impls_leave, NULL, NULL),
 };
 /*[[[end]]]*/
 /* clang-format on */
@@ -1240,6 +1293,22 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 	return result;
 }
 
+/* Check if "value" is a method-hint implementation that needs to be transformed when inherited.
+ * If so, return the transformed function pointer, but if not: re-return "value" as-is. */
+PRIVATE ATTR_CONST ATTR_RETNONNULL Dee_funptr_t DCALL
+DeeType_MapTMHInTNOForInherit(enum Dee_tno_id id, Dee_funptr_t value) {
+	struct oh_init_spec const *specs = &oh_init_specs[id];
+	struct oh_init_inherit_as const *inherit = specs->ohis_inherit;
+	if (inherit) {
+		for (; inherit->ohia_optr; ++inherit) {
+			if (value == inherit->ohia_optr)
+				return inherit->ohia_nptr;
+		}
+	}
+	return value;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_InheritOperator)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
 	DeeTypeMRO mro;
@@ -1247,8 +1316,20 @@ PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t
 	while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL) {
 		Dee_funptr_t result = DeeType_GetNativeOperatorWithoutUnsupported(iter, id);
 		if (result) {
-			/* Inherit this operator (even if it's a method hint). */
-			/* XXX: Shouldn't we re-evaluate method hints here if encountered? */
+			/* Inherit this operator (even if it's a method hint).
+			 *
+			 * The reason we can do this is because our caller previously tried to
+			 * make use of `DeeType_GetNativeOperatorWithoutInherit', which already
+			 * attempted to load a method hint into the operator. As such, we know
+			 * that no method-hint implementation of the operator is available for
+			 * this type in particular, meaning that if we happen to inherit a hint
+			 * impl from a base-type, then that impl would *always* be the correct
+			 * impl for "self", too.
+			 *
+			 * However, if "result" is a method, and has a "[[inherit_as(...)]]"
+			 * annotation, then we must inherit the referenced implementation! */
+			result = DeeType_MapTMHInTNOForInherit(id, result);
+
 			if unlikely(!DeeType_InheritOperatorWithoutHints(iter, self, id, result))
 				return NULL;
 			return result;

@@ -45,14 +45,15 @@ seq_default_getlast_with_foreach_cb(void *arg, DeeObject *item) {
 [[wunused]] DREF DeeObject *
 __seq_last__.seq_trygetlast([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("last"))} %{$empty = ITER_DONE}
-%{$with__size__and__getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DeeObject *result;
-	size_t size = (*Dee_TYPE(self)->tp_seq->tp_size)(self);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (!size)
 		return ITER_DONE;
-	result = (*Dee_TYPE(self)->tp_seq->tp_getitem_index_fast)(self, size - 1);
+	result = (*THIS_TYPE->tp_seq->tp_getitem_index_fast)(self, size - 1);
 	if (!result)
 		result = ITER_DONE;
 	return result;
@@ -74,7 +75,7 @@ err:
 	Dee_ssize_t foreach_status;
 	Dee_Incref(Dee_None);
 	result = Dee_None;
-	foreach_status = (*Dee_TYPE(self)->tp_seq->tp_foreach)(self, &seq_default_getlast_with_foreach_cb, &result);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_default_getlast_with_foreach_cb, &result);
 	if likely(foreach_status > 0)
 		return result;
 	Dee_Decref_unlikely(result);
@@ -94,7 +95,7 @@ err:
 __seq_last__.seq_getlast([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias(default__seq_trygetlast__unsupported)}
 %{$empty = {
-	err_unbound_attribute_string(Dee_TYPE(self), "last");
+	err_unbound_attribute_string(THIS_TYPE, "last");
 	return NULL;
 }}
 %{$with__seq_operator_size__and__seq_operator_getitem_index = {
@@ -192,7 +193,7 @@ seq_trygetlast = {
 		if (THIS_TYPE->tp_seq &&
 		    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
 		    THIS_TYPE->tp_seq->tp_size)
-			return &$with__size__and__getitem_index_fast;
+			return &$with__seq_operator_size__and__operator_getitem_index_fast;
 	}
 	seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)

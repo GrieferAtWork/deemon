@@ -30,6 +30,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
@@ -1358,8 +1359,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-tuple_enumerate_index(Tuple *self, Dee_seq_enumerate_index_t proc,
-                      void *arg, size_t start, size_t end) {
+tuple_mh_enumerate_index(Tuple *self, Dee_seq_enumerate_index_t proc,
+                         void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
 	if (end > self->t_size)
@@ -1412,7 +1413,7 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&tuple_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&tuple_mh_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -1817,6 +1818,7 @@ PRIVATE struct type_method tpconst tuple_methods[] = {
 
 PRIVATE struct type_method_hint tpconst tuple_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_foreach_reverse, &tuple_mh_foreach_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &tuple_mh_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &tuple_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_find, &tuple_mh_find, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_find_with_key, &tuple_mh_find_with_key, METHOD_FNOREFESCAPE),
@@ -1877,14 +1879,19 @@ tuple_concat(Tuple *self, DeeObject *other) {
 	DREF Tuple *result;
 	size_t other_sizehint, total_size;
 	DeeTypeObject *tp_other = Dee_TYPE(other);
-	if unlikely(!(likely(tp_other->tp_seq && tp_other->tp_seq->tp_foreach) ||
-	              unlikely(!DeeType_InheritIter(tp_other)))) {
+	DeeNO_foreach_t tp_other_foreach;
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	tp_other_foreach = DeeType_RequireNativeOperator(tp_other, foreach);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	tp_other_foreach = DeeType_RequireSupportedNativeOperator(tp_other, foreach);
+	if unlikely(!tp_other_foreach) {
 		err_unimplemented_operator(tp_other, OPERATOR_ITER);
 		goto err;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Try to get an idea of how large the final sequence will be. */
-	if (tp_other->tp_seq->tp_size_fast) {
+	if (tp_other->tp_seq && tp_other->tp_seq->tp_size_fast) {
 		other_sizehint = (*tp_other->tp_seq->tp_size_fast)(other);
 		if unlikely(other_sizehint == (size_t)-1)
 			other_sizehint = 8;
@@ -1905,7 +1912,7 @@ tuple_concat(Tuple *self, DeeObject *other) {
 	}
 
 	/* Check if the type supports the "tp_asvector" extension. */
-	if (tp_other->tp_seq->tp_asvector) {
+	if (tp_other->tp_seq && tp_other->tp_seq->tp_asvector) {
 		size_t other_size;
 		for (;;) {
 			DREF Tuple *new_result;
@@ -1929,10 +1936,9 @@ tuple_concat(Tuple *self, DeeObject *other) {
 	} else {
 		Dee_ssize_t fe_status;
 		struct tuple_concat_fe_data data;
-		ASSERT(tp_other->tp_seq->tp_foreach);
 		data.tcfed_result = result;
 		data.tcfed_offset = self->t_size;
-		fe_status = (*tp_other->tp_seq->tp_foreach)(other, &tuple_concat_fe_cb, &data);
+		fe_status = (*tp_other_foreach)(other, &tuple_concat_fe_cb, &data);
 		ASSERT(data.tcfed_offset >= self->t_size);
 		result = data.tcfed_result;
 		ASSERT(fe_status <= 0);
@@ -1962,6 +1968,7 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 	DREF Tuple *result;
 	size_t lhs_size, other_sizehint, total_size;
 	DeeTypeObject *tp_sequence;
+	DeeNO_foreach_t tp_sequence_foreach;
 	if unlikely(DeeObject_IsShared(me)) {
 		result = tuple_concat(me, sequence);
 		Dee_Decref_unlikely(me);
@@ -1969,14 +1976,18 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 	}
 
 	tp_sequence = Dee_TYPE(sequence);
-	if unlikely(!(likely(tp_sequence->tp_seq && tp_sequence->tp_seq->tp_foreach) ||
-	              unlikely(!DeeType_InheritIter(tp_sequence)))) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	tp_sequence_foreach = DeeType_RequireNativeOperator(tp_sequence, foreach);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	tp_sequence_foreach = DeeType_RequireSupportedNativeOperator(tp_sequence, foreach);
+	if unlikely(!tp_sequence_foreach) {
 		err_unimplemented_operator(tp_sequence, OPERATOR_ITER);
 		goto err_me;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 	/* Try to get an idea of how large the final sequence will be. */
-	if (tp_sequence->tp_seq->tp_size_fast) {
+	if (tp_sequence->tp_seq && tp_sequence->tp_seq->tp_size_fast) {
 		other_sizehint = (*tp_sequence->tp_seq->tp_size_fast)(sequence);
 		if unlikely(other_sizehint == (size_t)-1)
 			other_sizehint = 8;
@@ -1998,7 +2009,7 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 	}
 
 	/* Check if the type supports the "tp_asvector" extension. */
-	if (tp_sequence->tp_seq->tp_asvector) {
+	if (tp_sequence->tp_seq && tp_sequence->tp_seq->tp_asvector) {
 		size_t other_size;
 		for (;;) {
 			DREF Tuple *new_result;
@@ -2024,10 +2035,9 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 	} else {
 		Dee_ssize_t fe_status;
 		struct tuple_concat_fe_data data;
-		ASSERT(tp_sequence->tp_seq->tp_foreach);
 		data.tcfed_result = result;
 		data.tcfed_offset = lhs_size;
-		fe_status = (*tp_sequence->tp_seq->tp_foreach)(sequence, &tuple_concat_fe_cb, &data);
+		fe_status = (*tp_sequence_foreach)(sequence, &tuple_concat_fe_cb, &data);
 		ASSERTF(data.tcfed_offset >= lhs_size, "%Iu >= %Iu", data.tcfed_offset, lhs_size);
 		result = data.tcfed_result;
 		ASSERT(fe_status <= 0);
@@ -2165,8 +2175,7 @@ tuple_compare_eq(Tuple *self, DeeObject *other) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 tuple_trycompare_eq(Tuple *self, DeeObject *other) {
-	DeeTypeObject *tp_other = Dee_TYPE(other);
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+	if (!DeeType_RequireSupportedNativeOperator(Dee_TYPE(other), foreach))
 		return 1;
 	return tuple_compare_eq(self, other);
 }
@@ -2470,8 +2479,8 @@ err:
 	return NULL;
 }
 
-#define nullable_tuple_enumerate_index \
-	tuple_enumerate_index /* Actually works the same! */
+#define nullable_tuple_mh_enumerate_index \
+	tuple_mh_enumerate_index /* Actually works the same! */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nullable_tuple_getitem_index(Tuple *__restrict self, size_t index) {
@@ -2528,7 +2537,7 @@ PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&nullable_tuple_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&nullable_tuple_mh_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
@@ -2588,6 +2597,7 @@ err_temp:
 
 PRIVATE struct type_method_hint tpconst nullable_tuple_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_foreach_reverse, &nullable_tuple_mh_foreach_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &nullable_tuple_mh_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &nullable_tuple_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };
@@ -2624,8 +2634,7 @@ nullable_tuple_compare_eq(Tuple *self, DeeObject *other) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 nullable_tuple_trycompare_eq(Tuple *self, DeeObject *other) {
-	DeeTypeObject *tp_other = Dee_TYPE(other);
-	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+	if (!DeeType_RequireSupportedNativeOperator(Dee_TYPE(other), foreach))
 		return 1;
 	return nullable_tuple_compare_eq(self, other);
 }

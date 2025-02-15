@@ -44,14 +44,15 @@ seq_default_getfirst_with_foreach_cb(void *arg, DeeObject *item) {
 [[wunused]] DREF DeeObject *
 __seq_first__.seq_trygetfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("first"))} %{$empty = ITER_DONE}
-%{$with__size__and__getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_trygetitem_index)]] {
 	DREF DeeObject *result;
-	size_t size = (*Dee_TYPE(self)->tp_seq->tp_size)(self);
+	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (!size)
 		return ITER_DONE;
-	result = (*Dee_TYPE(self)->tp_seq->tp_getitem_index_fast)(self, 0);
+	result = (*THIS_TYPE->tp_seq->tp_getitem_index_fast)(self, 0);
 	if (!result)
 		result = ITER_DONE;
 	return result;
@@ -64,7 +65,7 @@ err:
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_default_getfirst_with_foreach_cb)]] {
 	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
-	foreach_status = (*Dee_TYPE(self)->tp_seq->tp_foreach)(self, &seq_default_getfirst_with_foreach_cb, &result);
+	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_default_getfirst_with_foreach_cb, &result);
 	if likely(foreach_status == -2)
 		return result;
 	if (foreach_status == 0)
@@ -83,7 +84,7 @@ err:
 __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias(default__seq_trygetfirst__unsupported)}
 %{$empty = {
-	err_unbound_attribute_string(Dee_TYPE(self), "first");
+	err_unbound_attribute_string(THIS_TYPE, "first");
 	return NULL;
 }}
 %{$with__seq_operator_getitem_index = {
@@ -92,7 +93,7 @@ __seq_first__.seq_getfirst([[nonnull]] DeeObject *__restrict self)
 %{$with__seq_trygetfirst = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_trygetfirst, self);
 	if unlikely(result == ITER_DONE) {
-		err_unbound_attribute_string(Dee_TYPE(self), "first");
+		err_unbound_attribute_string(THIS_TYPE, "first");
 		result = NULL;
 	}
 	return result;
@@ -155,10 +156,9 @@ __seq_first__.seq_setfirst([[nonnull]] DeeObject *self,
 seq_trygetfirst = {
 	DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 	if (SEQ_CLASS == Dee_SEQCLASS_SEQ) {
-		if (THIS_TYPE->tp_seq &&
-		    THIS_TYPE->tp_seq->tp_getitem_index_fast &&
-		    THIS_TYPE->tp_seq->tp_size)
-			return &$with__size__and__getitem_index_fast;
+		if (THIS_TYPE->tp_seq && THIS_TYPE->tp_seq->tp_getitem_index_fast &&
+		    REQUIRE_ANY(seq_operator_size) != &default__seq_operator_size__unsupported)
+			return &$with__seq_operator_size__and__operator_getitem_index_fast;
 	}
 	seq_operator_trygetitem_index = REQUIRE(seq_operator_trygetitem_index);
 	if (seq_operator_trygetitem_index == &default__seq_operator_trygetitem_index__empty)

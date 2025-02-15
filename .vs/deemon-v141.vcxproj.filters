@@ -1080,6 +1080,9 @@
 		<ClInclude Include="..\src\deemon\method-hints\set_removeall.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\set_unify.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>

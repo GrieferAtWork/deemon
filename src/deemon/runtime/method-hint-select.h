@@ -189,6 +189,7 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_inplace_sub_t DCALL 
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_inplace_and_t DCALL mh_select_set_operator_inplace_and(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_operator_inplace_xor_t DCALL mh_select_set_operator_inplace_xor(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_frozen_t DCALL mh_select_set_frozen(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_unify_t DCALL mh_select_set_unify(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_insert_t DCALL mh_select_set_insert(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_insertall_t DCALL mh_select_set_insertall(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_set_remove_t DCALL mh_select_set_remove(DeeTypeObject *self, DeeTypeObject *orig_type);

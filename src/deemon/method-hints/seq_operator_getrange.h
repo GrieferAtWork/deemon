@@ -135,7 +135,8 @@ err_startob:
 err:
 	return NULL;
 }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	struct Dee_seq_range range;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
@@ -304,7 +305,8 @@ __seq_getrange__.seq_operator_getrange_index_n([[nonnull]] DeeObject *self,
 err:
 	return NULL;
 }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)

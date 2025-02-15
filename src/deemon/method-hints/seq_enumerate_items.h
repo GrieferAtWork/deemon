@@ -51,7 +51,8 @@ __seq_enumerate_items__.seq_makeenumeration([[nonnull]] DeeObject *__restrict se
 %{$empty = {
 	return_empty_seq;
 }}
-%{$with__seq_operator_size__and__getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_size__and__getitem_index_fast, self);
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
@@ -99,7 +100,8 @@ err_startob:
 err:
 	return NULL;
 }}
-%{$with__seq_operator_size__and__getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast, self, start, end);
 }}
 %{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
@@ -153,7 +155,7 @@ seq_makeenumeration = {
 	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
 		return &$empty;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast)
-		return &$with__seq_operator_size__and__getitem_index_fast;
+		return &$with__seq_operator_size__and__operator_getitem_index_fast;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
 	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index)
@@ -177,7 +179,7 @@ seq_makeenumeration_with_intrange = {
 	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
 		return &$empty;
 	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__getitem_index_fast)
-		return &$with__seq_operator_size__and__getitem_index_fast;
+		return &$with__seq_operator_size__and__operator_getitem_index_fast;
 	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
 	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index)

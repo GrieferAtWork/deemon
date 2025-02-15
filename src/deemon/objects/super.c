@@ -1283,6 +1283,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ NULL,
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&super_call_kw,
+	/* TODO: Method hint integration? */
 };
 
 

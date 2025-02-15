@@ -149,10 +149,11 @@ global NativeMethod;
 global NativeOperator;
 final class NativeMethodImpl {
 	this = default;
-	public member impl: string | none = none;     /* Implementation body */
-	public member alias: string | none = none;    /* Name of a function to alias */
-	public member implPrefix: {string...} = ();   /* Extra code to emit before the function body */
-	public member origImpl: string | none = none; /* Implementation body */
+	public member impl: string | none = none;      /* Implementation body */
+	public member alias: string | none = none;     /* Name of a function to alias */
+	public member implPrefix: {string...} = ();    /* Extra code to emit before the function body */
+	public member origImpl: string | none = none;  /* Implementation body */
+	public member inheritAs: string | none = none; /* Impl name that must be used when inherited as a native operator */
 
 	function _makeTyped(): NativeMethodImpl {
 		local result = copy this;
@@ -164,6 +165,8 @@ final class NativeMethodImpl {
 	@@Try to detect "simple" impls when linked against
 	@@"method", and replace them with none-operators.
 	public optimize(method: NativeMethod | NativeOperator) {
+		if (inheritAs !is none && inheritAs.startswith("$"))
+			inheritAs = method.normalizeSymbolName(inheritAs);
 		if (impl is none)
 			return;
 		origImpl = impl;
@@ -1543,6 +1546,21 @@ function printNativeOperatorHintSpecs() {
 			impls.append((operatorSpec, nativeMethod));
 		}
 	}
+	function getInheritAsMappings(name: NativeOperatorName): {(string, string)...} {
+		local methods: {(OperatorSpec, NativeMethod)...} | none =
+			nativeMethodsByOperatorName.get(name);
+		if (methods !is none) {
+			for (local none, method /*: NativeMethod*/: methods) {
+				for (local customImplName, customImpl /*: NativeMethodImpl*/: method.customImpls) {
+					local customImplInheritAs: string | none = customImpl.inheritAs;
+					if (customImplInheritAs !is none)
+						yield (customImplName, customImplInheritAs);
+				}
+			}
+		}
+	}
+
+
 	for (local name, method: NATIVE_OPERATORS) {
 		if (method.impls) {
 			print(f"PRIVATE struct oh_init_spec_impl tpconst oh_impls_{
@@ -1581,6 +1599,16 @@ function printNativeOperatorHintSpecs() {
 			}
 			print("	OH_INIT_SPEC_MHINT_END");
 			print("};");
+			local inheritAsMappings: {(string, string)...} = getInheritAsMappings(name).cached;
+			if (inheritAsMappings) {
+				print(f"PRIVATE struct oh_init_inherit_as tpconst oh_inherit_{
+						name.name}[{#inheritAsMappings + 1}] = \{");
+				for (local optr, nptr: inheritAsMappings) {
+					print("	OH_INIT_INHERIT_AS_INIT(&", optr, ", &", nptr, "),");
+				}
+				print("	OH_INIT_INHERIT_AS_END");
+				print("};");
+			}
 		}
 	}
 	print("INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[", #NATIVE_OPERATORS, "] = {");
@@ -1595,7 +1623,8 @@ function printNativeOperatorHintSpecs() {
 			: f"struct type_{name.table.lsstrip("tp_")}";
 		print(f", offsetof({subTableTypeName}, {name.field}), "),;
 		print(method.impls ? f"oh_impls_{name.name}" : "NULL", ", "),;
-		print(nativeMethods ? f"oh_mhints_{name.name}" : "NULL"),;
+		print(nativeMethods ? f"oh_mhints_{name.name}" : "NULL", ", "),;
+		print(getInheritAsMappings(name) ? f"oh_inherit_{name.name}" : "NULL"),;
 		print("),");
 	}
 	print("};");
@@ -1872,6 +1901,7 @@ final class _SpecParserAttrib {
 	public member customUnsupportedImplName: string = "";
 	public member customBadAllocImplName: string = "";
 	public member operatorExportNames: (string, string) | none = none;
+	public member inheritAs: string | none = none;
 };
 
 global final _C_TYPENAME_TOKENS = HashSet.Frozen({
@@ -2250,6 +2280,13 @@ done:
 				skip(")");
 			}	break;
 
+			case "inherit_as": {
+				next();
+				skip("(");
+				attrib.inheritAs = parseSymbol();
+				skip(")");
+			}	break;
+
 			case "declNameAlias": {
 				next();
 				skip("(");
@@ -2320,6 +2357,7 @@ done:
 				next();
 			}
 			impl.implPrefix = attrib.prefix;
+			impl.inheritAs = attrib.inheritAs;
 			tag = method.normalizeSymbolName(tag);
 			if (!method.customImpls.setnew(tag, impl))
 				err(f"Custom impl {repr tag} defined multiple times");
@@ -2514,7 +2552,8 @@ done:
 				++implEnd;
 				impl.impl = NativeMethodImpl(
 						data[implStart:implEnd].strip(),
-						implPrefix: attrib.prefix);
+						implPrefix: attrib.prefix,
+						inheritAs: attrib.inheritAs);
 				tokEnd = implEnd;
 				next();
 			} else if (tok == "=") {
@@ -2550,7 +2589,8 @@ done:
 				++implEnd;
 				impl = NativeMethodImpl(
 						data[implStart:implEnd].strip(),
-						implPrefix: attrib.prefix);
+						implPrefix: attrib.prefix,
+						inheritAs: attrib.inheritAs);
 				tokEnd = implEnd;
 				next();
 			}
@@ -2818,7 +2858,8 @@ done:
 						err(f"Callattr implementation of {repr method.name} defined multiple times");
 					method.callAttrImpl = NativeMethodImpl(
 							alias: method.normalizeSymbolName(parseSymbol()),
-							implPrefix: attrib.prefix);
+							implPrefix: attrib.prefix,
+							inheritAs: attrib.inheritAs);
 					if (method.unsupportedImpl is none)
 						method.unsupportedImpl = method.callAttrImpl;
 					skip(";");
@@ -2832,7 +2873,8 @@ done:
 					++implEnd;
 					method.callAttrImpl = NativeMethodImpl(
 							data[implStart:implEnd].strip(),
-							implPrefix: attrib.prefix);
+							implPrefix: attrib.prefix,
+							inheritAs: attrib.inheritAs);
 					tokEnd = implEnd;
 					next();
 				} else {

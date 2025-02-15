@@ -258,6 +258,7 @@ enum Dee_tmh_id {
 	Dee_TMH_set_operator_inplace_and,
 	Dee_TMH_set_operator_inplace_xor,
 	Dee_TMH_set_frozen,
+	Dee_TMH_set_unify,
 	Dee_TMH_set_insert,
 	Dee_TMH_set_insertall,
 	Dee_TMH_set_remove,
@@ -551,11 +552,11 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_pop_t)(DeeObj
 
 /* Sequence_remove, seq_remove, __seq_remove__, explicit_seq_remove */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_remove_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
-typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *DeeMH_seq_remove_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *DeeMH_seq_remove_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
 /* Sequence_rremove, seq_rremove, __seq_rremove__, explicit_seq_rremove */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_seq_rremove_t)(DeeObject *self, DeeObject *item, size_t start, size_t end);
-typedef WUNUSED_T NONNULL_T((1, 2, 5)) size_t (DCALL *DeeMH_seq_rremove_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *DeeMH_seq_rremove_with_key_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key);
 
 /* Sequence_removeall, seq_removeall, __seq_removeall__, explicit_seq_removeall */
 typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *DeeMH_seq_removeall_t)(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t max);
@@ -657,6 +658,9 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_set_operator_inplace_xor_t
 
 /* Set_frozen, __set_frozen__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_set_frozen_t)(DeeObject *__restrict self);
+
+/* Set_unify, set_unify, __set_unify__ */
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_set_unify_t)(DeeObject *self, DeeObject *key);
 
 /* Set_insert, set_insert, __set_insert__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_set_insert_t)(DeeObject *self, DeeObject *key);
@@ -1705,6 +1709,19 @@ DDATDEF char const DeeMA___set_inplace_xor___name[]; /* "__set_inplace_xor__" */
 DDATDEF char const DeeMA___set_inplace_xor___doc[];  /* "(rhs:?X3?DSet?DSequence?S?O)->?." */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_inplace_xor__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
+#define DeeMA___set_unify___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___set_unify___name[]; /* "__set_unify__" */
+DDATDEF char const DeeMA___set_unify___doc[];  /* "(key)->" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___set_unify__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Set_unify_flags DeeMA___set_unify___flags
+#define DeeMA_Set_unify_doc   DeeMA___set_unify___doc
+#define DeeMA_Set_unify       DeeMA___set_unify__
+DDATDEF char const DeeMA_Set_unify_name[]; /* "unify" */
+#define DeeMA_set_unify_flags DeeMA_Set_unify_flags
+#define DeeMA_set_unify_name  DeeMA_Set_unify_name
+#define DeeMA_set_unify_doc   DeeMA_Set_unify_doc
+#define DeeMA_set_unify       DeeMA_Set_unify
+
 #define DeeMA___set_insert___flags Dee_TYPE_METHOD_FNORMAL
 DDATDEF char const DeeMA___set_insert___name[]; /* "__set_insert__" */
 DDATDEF char const DeeMA___set_insert___doc[];  /* "(key)->?Dbool" */
@@ -2747,9 +2764,10 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 
 
 /* For backwards-compat !!! DEPRECATED !!! */
-#define Dee_mh_seq_operator_foreach_t        DeeMH_seq_operator_foreach_t
-#define Dee_mh_seq_enumerate_index_reverse_t DeeMH_seq_enumerate_index_reverse_t
-#define Dee_mh_seq_foreach_reverse_t         DeeMH_seq_foreach_reverse_t
+#define Dee_mh_seq_operator_foreach_t          DeeMH_seq_operator_foreach_t
+#define Dee_mh_seq_enumerate_index_reverse_t   DeeMH_seq_enumerate_index_reverse_t
+#define Dee_mh_seq_foreach_reverse_t           DeeMH_seq_foreach_reverse_t
+#define Dee_mh_seq_operator_trygetitem_index_t DeeMH_seq_operator_trygetitem_index_t
 
 
 /* For backwards-compat !!! DEPRECATED !!! */
@@ -4113,6 +4131,12 @@ DeeType_GetMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 #define _Dee_PRIVATE_UNIFIED_TMH_map_values                              DeeType_RequireMapValues
 #define _Dee_PRIVATE_UNIFIED_TMH_map_iterkeys                            DeeType_RequireMapIterKeys
 #define _Dee_PRIVATE_UNIFIED_TMH_map_itervalues                          DeeType_RequireMapIterValues
+
+
+
+/* Forward-compatibility */
+#define Dee_TMH_seq_enumerate_index   Dee_TMH_seq_operator_enumerate_index
+#define Dee_mh_seq_enumerate_index_t  Dee_mh_seq_operator_enumerate_index_t
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 

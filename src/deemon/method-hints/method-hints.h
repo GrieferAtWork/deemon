@@ -186,6 +186,7 @@
 %[include("set_frozen.h")]
 // TODO: set_cached
 
+%[include("set_unify.h")]
 %[include("set_insert.h")]
 %[include("set_insertall.h")]
 

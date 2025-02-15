@@ -517,7 +517,7 @@ PRIVATE struct type_member tpconst Iterator__is__DefaultIterator_WithIterKeysAnd
 
 
 
-/* $with__seq_operator_size__and__getitem_index_fast */
+/* $with__seq_operator_size__and__operator_getitem_index_fast */
 #define de_sos_gif__class_members Iterator__is__DefaultIterator_WithSizeAndGetItemIndexFastPair_Type
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeAndGetItemIndex *DCALL
 de_sos_gif__iter(DefaultEnumeration *__restrict self) {
@@ -545,7 +545,7 @@ err:
 
 
 
-/* WithIntFilter: $with__seq_operator_size__and__getitem_index_fast */
+/* WithIntFilter: $with__seq_operator_size__and__operator_getitem_index_fast */
 #define dewif_sos_gif__class_members Iterator__is__DefaultIterator_WithSizeAndGetItemIndexFastPair_Type
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeAndGetItemIndex *DCALL
 dewif_sos_gif__iter(DefaultEnumerationWithIntFilter *__restrict self) {

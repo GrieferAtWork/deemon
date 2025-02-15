@@ -1134,7 +1134,11 @@ DeeType_GetOpClassOrigin(DeeTypeObject *__restrict self, uint16_t oi_class) {
 #define DeeType_GetSeqOrigin(self)    DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_seq))
 #define DeeType_GetWithOrigin(self)   DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_with))
 #define DeeType_GetBufferOrigin(self) DeeType_GetOpClassOrigin(self, offsetof(DeeTypeObject, tp_buffer))
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define DeeType_Optimize_tp_deepload(self, tp_deepload)       tp_deepload
+#define DeeType_Optimize_tp_assign(self, tp_assign)           tp_assign
+#define DeeType_Optimize_tp_move_assign(self, tp_move_assign) tp_move_assign
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 INTERN NONNULL((1)) bool DCALL

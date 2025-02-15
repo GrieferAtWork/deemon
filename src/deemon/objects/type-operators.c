@@ -33,6 +33,7 @@
 #include <deemon/kwds.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>

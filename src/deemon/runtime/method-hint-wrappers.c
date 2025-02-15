@@ -1439,6 +1439,19 @@ err:
 	return NULL;
 }
 
+PUBLIC_CONST char const DeeMA___set_unify___name[] = "__set_unify__";
+PUBLIC_CONST char const DeeMA___set_unify___doc[] = "(key)->";
+PUBLIC_CONST char const DeeMA_Set_unify_name[] = "unify";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___set_unify__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DeeObject *key;
+	if (DeeArg_Unpack(argc, argv, "o:__set_unify__", &key))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_unify))(self, key);
+err:
+	return NULL;
+}
+
 PUBLIC_CONST char const DeeMA___set_insert___name[] = "__set_insert__";
 PUBLIC_CONST char const DeeMA___set_insert___doc[] = "(key)->?Dbool";
 PUBLIC_CONST char const DeeMA_Set_insert_name[] = "insert";

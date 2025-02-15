@@ -318,6 +318,7 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	(Dee_funptr_t)&default__set_operator_inplace_and__unsupported,
 	(Dee_funptr_t)&default__set_operator_inplace_xor__unsupported,
 	(Dee_funptr_t)&default__set_frozen__unsupported,
+	(Dee_funptr_t)&default__set_unify__unsupported,
 	(Dee_funptr_t)&default__set_insert__unsupported,
 	(Dee_funptr_t)&default__set_insertall__unsupported,
 	(Dee_funptr_t)&default__set_remove__unsupported,
@@ -1361,6 +1362,10 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_frozen[2] 
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_frozen, NULL, Dee_SEQCLASS_SET, &default__set_frozen__with_callattr_frozen),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_unify[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_unify, NULL, Dee_SEQCLASS_SET, &default__set_unify__with_callattr_unify),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_set_insert[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_insert, NULL, Dee_SEQCLASS_SET, &default__set_insert__with_callattr_insert),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
@@ -1759,7 +1764,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_popitem[2]
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_popitem, NULL, Dee_SEQCLASS_MAP, &default__map_popitem__with_callattr_popitem),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[229] = {
+INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[230] = {
 	MH_INIT_SPEC_INIT(&str___seq_bool__, NULL, &mh_operators_seq_operator_bool, &default__seq_operator_bool__with_callattr___seq_bool__, offsetof(struct Dee_type_mh_cache, mhc___seq_bool__), MH_KIND_METHOD, &default__seq_operator_bool__with_callobjectcache___seq_bool__, &default__seq_operator_bool__with_callmethodcache___seq_bool__, &default__seq_operator_bool__with_callkwmethodcache___seq_bool__, &mh_select_seq_operator_bool),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, &mh_operators_seq_operator_sizeob, &default__seq_operator_sizeob__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_sizeob__with_callobjectcache___seq_size__, &default__seq_operator_sizeob__with_callmethodcache___seq_size__, &default__seq_operator_sizeob__with_callkwmethodcache___seq_size__, &mh_select_seq_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, &mh_operators_seq_operator_size, &default__seq_operator_size__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_size__with_callobjectcache___seq_size__, &default__seq_operator_size__with_callmethodcache___seq_size__, &default__seq_operator_size__with_callkwmethodcache___seq_size__, &mh_select_seq_operator_size),
@@ -1924,6 +1929,7 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[229] = {
 	MH_INIT_SPEC_INIT(&str___set_inplace_and__, NULL, &mh_operators_set_operator_inplace_and, &default__set_operator_inplace_and__with_callattr___set_inplace_and__, offsetof(struct Dee_type_mh_cache, mhc___set_inplace_and__), MH_KIND_METHOD, &default__set_operator_inplace_and__with_callobjectcache___set_inplace_and__, &default__set_operator_inplace_and__with_callmethodcache___set_inplace_and__, &default__set_operator_inplace_and__with_callkwmethodcache___set_inplace_and__, &mh_select_set_operator_inplace_and),
 	MH_INIT_SPEC_INIT(&str___set_inplace_xor__, NULL, &mh_operators_set_operator_inplace_xor, &default__set_operator_inplace_xor__with_callattr___set_inplace_xor__, offsetof(struct Dee_type_mh_cache, mhc___set_inplace_xor__), MH_KIND_METHOD, &default__set_operator_inplace_xor__with_callobjectcache___set_inplace_xor__, &default__set_operator_inplace_xor__with_callmethodcache___set_inplace_xor__, &default__set_operator_inplace_xor__with_callkwmethodcache___set_inplace_xor__, &mh_select_set_operator_inplace_xor),
 	MH_INIT_SPEC_INIT(&str___set_frozen__, mh_secondary_set_frozen, NULL, &default__set_frozen__with_callattr___set_frozen__, offsetof(struct Dee_type_mh_cache, mhc_get___set_frozen__), MH_KIND_GETSET_GET, &default__set_frozen__with_callobjectcache___set_frozen__, NULL, NULL, &mh_select_set_frozen),
+	MH_INIT_SPEC_INIT(&str___set_unify__, mh_secondary_set_unify, NULL, &default__set_unify__with_callattr___set_unify__, offsetof(struct Dee_type_mh_cache, mhc___set_unify__), MH_KIND_METHOD, &default__set_unify__with_callobjectcache___set_unify__, &default__set_unify__with_callmethodcache___set_unify__, &default__set_unify__with_callkwmethodcache___set_unify__, &mh_select_set_unify),
 	MH_INIT_SPEC_INIT(&str___set_insert__, mh_secondary_set_insert, NULL, &default__set_insert__with_callattr___set_insert__, offsetof(struct Dee_type_mh_cache, mhc___set_insert__), MH_KIND_METHOD, &default__set_insert__with_callobjectcache___set_insert__, &default__set_insert__with_callmethodcache___set_insert__, &default__set_insert__with_callkwmethodcache___set_insert__, &mh_select_set_insert),
 	MH_INIT_SPEC_INIT(&str___set_insertall__, mh_secondary_set_insertall, NULL, &default__set_insertall__with_callattr___set_insertall__, offsetof(struct Dee_type_mh_cache, mhc___set_insertall__), MH_KIND_METHOD, &default__set_insertall__with_callobjectcache___set_insertall__, &default__set_insertall__with_callmethodcache___set_insertall__, &default__set_insertall__with_callkwmethodcache___set_insertall__, &mh_select_set_insertall),
 	MH_INIT_SPEC_INIT(&str___set_remove__, mh_secondary_set_remove, NULL, &default__set_remove__with_callattr___set_remove__, offsetof(struct Dee_type_mh_cache, mhc___set_remove__), MH_KIND_METHOD, &default__set_remove__with_callobjectcache___set_remove__, &default__set_remove__with_callmethodcache___set_remove__, &default__set_remove__with_callkwmethodcache___set_remove__, &mh_select_set_remove),
@@ -2385,6 +2391,7 @@ INTERN struct Dee_type_mh_cache mh_cache_empty = {
 	/* .mh_set_operator_inplace_and                = */ &default__set_operator_inplace_and__empty,
 	/* .mh_set_operator_inplace_xor                = */ &default__set_operator_inplace_xor__empty,
 	/* .mh_set_frozen                              = */ &default__set_frozen__empty,
+	/* .mh_set_unify                               = */ &default__set_unify__empty,
 	/* .mh_set_insert                              = */ &default__set_insert__empty,
 	/* .mh_set_insertall                           = */ &default__set_insertall__empty,
 	/* .mh_set_remove                              = */ &default__set_remove__empty,

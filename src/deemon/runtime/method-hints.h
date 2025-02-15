@@ -217,6 +217,7 @@ struct Dee_type_mh_cache {
 	DeeMH_set_operator_inplace_and_t mh_set_operator_inplace_and;
 	DeeMH_set_operator_inplace_xor_t mh_set_operator_inplace_xor;
 	DeeMH_set_frozen_t mh_set_frozen;
+	DeeMH_set_unify_t mh_set_unify;
 	DeeMH_set_insert_t mh_set_insert;
 	DeeMH_set_insertall_t mh_set_insertall;
 	DeeMH_set_remove_t mh_set_remove;
@@ -299,7 +300,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 129
+#define MHC_COUNT 130
 #define MHC_FIRST mhc___seq_bool__
 	union mhc_slot mhc___seq_bool__;
 	union mhc_slot mhc___seq_size__;
@@ -390,6 +391,7 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc___set_inplace_and__;
 	union mhc_slot mhc___set_inplace_xor__;
 	union mhc_slot mhc_get___set_frozen__;
+	union mhc_slot mhc___set_unify__;
 	union mhc_slot mhc___set_insert__;
 	union mhc_slot mhc___set_insertall__;
 	union mhc_slot mhc___set_remove__;

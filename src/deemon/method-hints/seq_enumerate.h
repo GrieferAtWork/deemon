@@ -82,7 +82,8 @@ __seq_enumerate__.seq_enumerate([[nonnull]] DeeObject *__restrict self,
                                 void *arg)
 %{unsupported({ return err_seq_unsupportedf(self, "__seq_enumerate__(...)"); })}
 %{$empty = 0}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
 	Dee_ssize_t temp, result = 0;
 	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
@@ -372,7 +373,8 @@ __seq_enumerate__.seq_enumerate_index([[nonnull]] DeeObject *__restrict self,
                                       void *arg, size_t start, size_t end)
 %{unsupported({ return err_seq_unsupportedf(self, "__seq_enumerate__(..., %" PRFuSIZ ", %" PRFuSIZ ")", start, end); })}
 %{$empty = 0}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
 	Dee_ssize_t temp, result = 0;
 	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);

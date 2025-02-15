@@ -470,7 +470,8 @@ if (isEq) {
 
 
 	// With "seq_operator_size" and "tp_getitem_index_fast"
-	print('%{$with__seq_operator_size__and__operator_getitem_index_fast = {');
+	print('%{$with__seq_operator_size__and__operator_getitem_index_fast =');
+	print('[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {');
 	print('	int result;');
 	print('	DeeNO_getitem_index_fast_t lhs_getitem_index_fast = THIS_TYPE->tp_seq->tp_getitem_index_fast;');
 	print('	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);');
@@ -1136,7 +1137,8 @@ err:
 err:
 	return Dee_COMPARE_ERR;
 }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	int result;
 	DeeNO_getitem_index_fast_t lhs_getitem_index_fast = THIS_TYPE->tp_seq->tp_getitem_index_fast;
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
@@ -1590,7 +1592,8 @@ err:
 err:
 	return Dee_COMPARE_ERR;
 }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	int result;
 	DeeNO_getitem_index_fast_t lhs_getitem_index_fast = THIS_TYPE->tp_seq->tp_getitem_index_fast;
 	DeeTypeObject *tp_rhs = Dee_TYPE(rhs);
@@ -1989,7 +1992,8 @@ err:
 		return 1;
 	return default__seq_operator_compare_eq__with__seq_operator_foreach(lhs, rhs);
 }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DeeMH_seq_operator_foreach_t rhs_seq_operator_foreach = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_foreach);
 	if (rhs_seq_operator_foreach == &default__seq_operator_foreach__unsupported)
 		return 1;

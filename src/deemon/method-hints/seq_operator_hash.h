@@ -76,7 +76,8 @@ Dee_hash_t __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *__restrict self
 err:
 	return seq_handle_hash_error(self);
 }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
 	Dee_hash_t result;
 	DREF DeeObject *elem;

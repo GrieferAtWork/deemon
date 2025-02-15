@@ -117,7 +117,8 @@ __seq_reversed__.seq_reversed([[nonnull]] DeeObject *self,
                               size_t start, size_t end)
 %{unsupported(auto)}
 %{$empty = 0}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DefaultReversed_WithGetItemIndex *result;
 	size_t selfsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(selfsize == (size_t)-1)

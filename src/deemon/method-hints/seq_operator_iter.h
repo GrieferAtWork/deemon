@@ -34,7 +34,8 @@ err:
 __seq_iter__.seq_operator_iter([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator iter"))}
 %{$empty = { return_empty_iterator; }}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
@@ -256,7 +257,8 @@ __seq_iter__.seq_operator_foreach([[nonnull]] DeeObject *__restrict self,
                                   [[nonnull]] Dee_foreach_t cb,
                                   void *arg)
 %{$empty = 0}
-%{$with__seq_operator_size__and__operator_getitem_index_fast = {
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
 	DeeNO_getitem_index_fast_t tp_getitem_index_fast;
 	Dee_ssize_t temp, result = 0;
 	size_t i, size = CALL_DEPENDENCY(seq_operator_size, self);
