@@ -1118,7 +1118,7 @@ blmi_nextpair(DeeBlackListKwIterator *__restrict self,
 	int result;
 again:
 	result = DeeObject_IterNextPair(self->mi_iter, key_and_value);
-	if (ITER_ISOK(result)) {
+	if (result == 0) {
 		if (DeeString_Check(key_and_value[0]) &&
 		    DeeBlackListKw_IsBlackListed(self->mi_map, key_and_value[0])) {
 			Dee_Decref(key_and_value[0]);
@@ -1136,7 +1136,7 @@ again:
 	result = DeeObject_IterNextKey(self->mi_iter);
 	if (ITER_ISOK(result)) {
 		if (DeeString_Check(result) &&
-			DeeBlackListKw_IsBlackListed(self->mi_map, result)) {
+		    DeeBlackListKw_IsBlackListed(self->mi_map, result)) {
 			Dee_Decref(result);
 			goto again;
 		}
