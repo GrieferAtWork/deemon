@@ -1665,17 +1665,25 @@ function printNativeOperatorHintSpecs() {
 }
 
 
-function getCTypeSuperSimplified(typ: string, after: string = ""): string {
+function getCTypeMediumSimplified(typ: string, after: string = ""): string {
 	local result = getCTypeSimplified(typ, after);
 	if (result.endswith("*"))
 		return "void*";
 	return {
 		"Dee_foreach_t": "void*",
 		"Dee_foreach_pair_t": "void*",
-		"Dee_hash_t": "void*",
-		"size_t": "void*",
-		"Dee_ssize_t": "void*",
+		"Dee_hash_t": "Dee_ssize_t",
+		"size_t": "Dee_ssize_t",
 		"unsigned int": "int",
+	}.get(result, result);
+}
+
+function getCTypeSuperSimplified(typ: string, after: string = ""): string {
+	local result = getCTypeMediumSimplified(typ, after);
+	return {
+		"Dee_foreach_t": "void*",
+		"Dee_foreach_pair_t": "void*",
+		"Dee_ssize_t": "void*",
 	}.get(result, result);
 }
 
@@ -1757,7 +1765,7 @@ function printNativeOperatorHintErrorImpls(decls: bool) {
 	for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
 		function makeKey(includeTpSelfExpr: bool): ErrorMethodKey {
 			return ErrorMethodKey(
-					returnType: getCTypeSuperSimplified(nativeOperator.returnType),
+					returnType: getCTypeMediumSimplified(nativeOperator.returnType),
 					cc: nativeOperator.cc,
 					paramTypes: includeTpSelfExpr ? Tuple({
 						nativeOperator.params.first.cTypeSimplified,

@@ -44,9 +44,9 @@ INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
 INTDEF int DCALL default__assign__unsupported(DeeObject*, void*);
 INTDEF int DCALL default__move_assign__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__str__unsupported(DeeObject*);
-INTDEF void*DCALL default__print__unsupported(DeeObject*, Dee_formatprinter_t, void*);
+INTDEF Dee_ssize_t DCALL default__print__unsupported(DeeObject*, Dee_formatprinter_t, void*);
 INTDEF void*DCALL default__repr__unsupported(DeeObject*);
-INTDEF void*DCALL default__printrepr__unsupported(DeeObject*, Dee_formatprinter_t, void*);
+INTDEF Dee_ssize_t DCALL default__printrepr__unsupported(DeeObject*, Dee_formatprinter_t, void*);
 INTDEF int DCALL default__bool__unsupported(DeeObject*);
 INTDEF void*DCALL default__call__unsupported(DeeObject*, void*, void*);
 INTDEF void*DCALL default__call_kw__unsupported(DeeObject*, void*, void*, void*);
@@ -57,8 +57,8 @@ INTDEF int DCALL default__nextpair__badalloc(void*, void*);
 INTDEF int DCALL default__nextpair__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__nextkey__badalloc(void*);
 #define default__nextvalue__badalloc default__nextkey__badalloc
-INTDEF void*DCALL default__advance__badalloc(void*, void*);
-INTDEF void*DCALL default__advance__unsupported(DeeObject*, void*);
+INTDEF Dee_ssize_t DCALL default__advance__badalloc(void*, void*);
+INTDEF Dee_ssize_t DCALL default__advance__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__int__badalloc(void*);
 #define default__inv__badalloc default__int__badalloc
 #define default__pos__badalloc default__int__badalloc
@@ -81,7 +81,7 @@ INTDEF int DCALL default__int32__badalloc(void*, void*);
 INTDEF int DCALL default__int32__unsupported(DeeObject*, void*);
 #define default__int64__unsupported default__int32__unsupported
 INTDEF int DCALL default__double__unsupported(DeeObject*, void*);
-INTDEF void*DCALL default__hash__badalloc(void*);
+INTDEF Dee_ssize_t DCALL default__hash__badalloc(void*);
 INTDEF int DCALL default__compare_eq__badalloc(void*, void*);
 #define default__compare__badalloc default__compare_eq__badalloc
 #define default__trycompare_eq__badalloc default__compare_eq__badalloc
@@ -101,18 +101,14 @@ INTDEF void*DCALL default__gr__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__ge__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__iter__badalloc(void*);
 #define default__sizeob__badalloc default__iter__badalloc
-#define default__size__badalloc default__iter__badalloc
 INTDEF void*DCALL default__iter__unsupported(DeeObject*);
-INTDEF void*DCALL default__foreach__badalloc(void*, void*, void*);
+INTDEF Dee_ssize_t DCALL default__foreach__badalloc(void*, void*, void*);
 #define default__foreach_pair__badalloc default__foreach__badalloc
-#define default__getitem_string_hash__badalloc default__foreach__badalloc
-#define default__trygetitem_string_hash__badalloc default__foreach__badalloc
-#define default__getrange__badalloc default__foreach__badalloc
-#define default__getrange_index__badalloc default__foreach__badalloc
-INTDEF void*DCALL default__foreach__unsupported(DeeObject*, void*, void*);
+INTDEF Dee_ssize_t DCALL default__foreach__unsupported(DeeObject*, void*, void*);
 #define default__foreach_pair__unsupported default__foreach__unsupported
 INTDEF void*DCALL default__sizeob__unsupported(DeeObject*);
-#define default__size__unsupported default__sizeob__unsupported
+INTDEF Dee_ssize_t DCALL default__size__badalloc(void*);
+INTDEF Dee_ssize_t DCALL default__size__unsupported(DeeObject*);
 INTDEF void*DCALL default__contains__badalloc(void*, void*);
 #define default__getitem__badalloc default__contains__badalloc
 #define default__trygetitem__badalloc default__contains__badalloc
@@ -125,6 +121,10 @@ INTDEF void*DCALL default__getitem__unsupported(DeeObject*, void*);
 #define default__trygetitem__unsupported default__getitem__unsupported
 #define default__getitem_index__unsupported default__getitem__unsupported
 #define default__trygetitem_index__unsupported default__getitem__unsupported
+INTDEF void*DCALL default__getitem_string_hash__badalloc(void*, void*, void*);
+#define default__trygetitem_string_hash__badalloc default__getitem_string_hash__badalloc
+#define default__getrange__badalloc default__getitem_string_hash__badalloc
+#define default__getrange_index__badalloc default__getitem_string_hash__badalloc
 INTDEF void*DCALL default__getitem_string_hash__unsupported(DeeObject*, void*, void*);
 #define default__trygetitem_string_hash__unsupported default__getitem_string_hash__unsupported
 INTDEF void*DCALL default__getitem_string_len_hash__badalloc(void*, void*, void*, void*);
