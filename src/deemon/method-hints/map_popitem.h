@@ -94,7 +94,7 @@ map_popitem = {
 		if (seq_trygetfirst) {
 			if (seq_trygetfirst == &default__seq_trygetfirst__empty)
 				return &$empty;
-			if (seq_trygetfirst == &default__seq_trygetfirst__with__size__and__getitem_index_fast)
+			if (seq_trygetfirst == &default__seq_trygetfirst__with__seq_operator_size__and__operator_getitem_index_fast)
 				return &$with__seq_trygetlast__and__map_operator_delitem;
 			return &$with__seq_trygetfirst__and__map_operator_delitem;
 		}

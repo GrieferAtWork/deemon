@@ -77,8 +77,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(RefVectorIterator, rvi_vector) == offsetof(ProxyObject, po_obj));
-#define rveciter_fini  generic_proxy_fini
-#define rveciter_visit generic_proxy_visit
+#define rveciter_fini  generic_proxy__fini
+#define rveciter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rveciter_next(RefVectorIterator *__restrict self) {
@@ -240,8 +240,8 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
 
 
 STATIC_ASSERT(offsetof(RefVector, rv_owner) == offsetof(ProxyObject, po_obj));
-#define rvec_fini  generic_proxy_fini
-#define rvec_visit generic_proxy_visit
+#define rvec_fini  generic_proxy__fini
+#define rvec_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_bool(RefVector *__restrict self) {
@@ -778,8 +778,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(SharedVectorIterator, si_seq) == offsetof(ProxyObject, po_obj));
-#define sveciter_fini  generic_proxy_fini
-#define sveciter_visit generic_proxy_visit
+#define sveciter_fini  generic_proxy__fini
+#define sveciter_visit generic_proxy__visit
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sveciter_next(SharedVectorIterator *__restrict self) {

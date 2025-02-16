@@ -140,8 +140,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(BytesSplitIterator, bsi_split) == offsetof(ProxyObject, po_obj));
-#define bsi_fini  generic_proxy_fini
-#define bsi_visit generic_proxy_visit
+#define bsi_fini  generic_proxy__fini
+#define bsi_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsi_bool(BytesSplitIterator *__restrict self) {
@@ -810,8 +810,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(BytesLineSplitIterator, blsi_bytes) == offsetof(ProxyObject, po_obj));
-#define blsi_fini  generic_proxy_fini
-#define blsi_visit generic_proxy_visit
+#define blsi_fini  generic_proxy__fini
+#define blsi_visit generic_proxy__visit
 
 #define blsi_bool bsi_bool
 #define blsi_cmp  bsi_cmp
@@ -972,8 +972,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(BytesLineSplit, bls_bytes) == offsetof(ProxyObject, po_obj));
-#define bls_fini  generic_proxy_fini
-#define bls_visit generic_proxy_visit
+#define bls_fini  generic_proxy__fini
+#define bls_visit generic_proxy__visit
 
 STATIC_ASSERT(offsetof(BytesSplit, bs_bytes) == offsetof(BytesLineSplit, bls_bytes));
 #define bls_bool bs_bool

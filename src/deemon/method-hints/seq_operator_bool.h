@@ -34,8 +34,15 @@ err:
 }
 
 %[define(DEFINE_default_seq_bool_with_foreach_cb =
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_seq_bool_with_foreach_cb(void *arg, DeeObject *elem);
+#ifndef DEFINED_default_seq_bool_with_foreach_cb
+#define DEFINED_default_seq_bool_with_foreach_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_bool_with_foreach_cb(void *arg, DeeObject *elem) {
+	(void)arg;
+	(void)elem;
+	return -2;
+}
+#endif /* !DEFINED_default_seq_bool_with_foreach_cb */
 )]
 
 [[wunused]]

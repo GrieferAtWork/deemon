@@ -62,38 +62,38 @@ typedef struct {
 #define PROXY_OBJECT_HEAD3(po_obj1, po_obj2, po_obj3) \
 	PROXY_OBJECT_HEAD3_EX(DeeObject, po_obj1, DeeObject, po_obj2, DeeObject, po_obj3)
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_copy_alias(ProxyObject *__restrict self, ProxyObject *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_copy_recursive(ProxyObject *__restrict self, ProxyObject *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_deepcopy(ProxyObject *__restrict self, ProxyObject *__restrict other);
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_init(ProxyObject *__restrict self, size_t argc, DeeObject *const *argv); /* (obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__copy_alias(ProxyObject *__restrict self, ProxyObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__copy_recursive(ProxyObject *__restrict self, ProxyObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__deepcopy(ProxyObject *__restrict self, ProxyObject *__restrict other);
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__init(ProxyObject *__restrict self, size_t argc, DeeObject *const *argv); /* (obj) */
 
-INTDEF NONNULL((1, 2)) void DCALL generic_proxy_visit(ProxyObject *__restrict self, dvisit_t proc, void *arg);
-INTDEF NONNULL((1)) void DCALL generic_proxy_fini(ProxyObject *__restrict self);
-#define generic_proxy_fini_likely   generic_proxy_fini
-#define generic_proxy_fini_unlikely generic_proxy_fini
+INTDEF NONNULL((1, 2)) void DCALL generic_proxy__visit(ProxyObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL generic_proxy__fini(ProxyObject *__restrict self);
+#define generic_proxy__fini_likely   generic_proxy__fini
+#define generic_proxy__fini_unlikely generic_proxy__fini
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_copy_alias12(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_copy_recursive1_alias2(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_deepcopy(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy2_init(ProxyObject2 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_alias12(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_recursive1_alias2(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__deepcopy(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy2__init(ProxyObject2 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2) */
 
-INTDEF NONNULL((1, 2)) void DCALL generic_proxy2_visit(ProxyObject2 *__restrict self, dvisit_t proc, void *arg);
-INTDEF NONNULL((1)) void DCALL generic_proxy2_fini(ProxyObject2 *__restrict self);
-#define generic_proxy2_fini_normal_likely     generic_proxy2_fini
-#define generic_proxy2_fini_normal_unlikely   generic_proxy2_fini
-#define generic_proxy2_fini_likely_normal     generic_proxy2_fini
-#define generic_proxy2_fini_likely_likely     generic_proxy2_fini
-#define generic_proxy2_fini_likely_unlikely   generic_proxy2_fini
-#define generic_proxy2_fini_unlikely_normal   generic_proxy2_fini
-#define generic_proxy2_fini_unlikely_likely   generic_proxy2_fini
-#define generic_proxy2_fini_unlikely_unlikely generic_proxy2_fini
+INTDEF NONNULL((1, 2)) void DCALL generic_proxy2__visit(ProxyObject2 *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL generic_proxy2__fini(ProxyObject2 *__restrict self);
+#define generic_proxy2__fini_normal_likely     generic_proxy2__fini
+#define generic_proxy2__fini_normal_unlikely   generic_proxy2__fini
+#define generic_proxy2__fini_likely_normal     generic_proxy2__fini
+#define generic_proxy2__fini_likely_likely     generic_proxy2__fini
+#define generic_proxy2__fini_likely_unlikely   generic_proxy2__fini
+#define generic_proxy2__fini_unlikely_normal   generic_proxy2__fini
+#define generic_proxy2__fini_unlikely_likely   generic_proxy2__fini
+#define generic_proxy2__fini_unlikely_unlikely generic_proxy2__fini
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3_copy_alias123(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3_deepcopy(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy3_init(ProxyObject3 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2,obj3) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__copy_alias123(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__deepcopy(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy3__init(ProxyObject3 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2,obj3) */
 
-INTDEF NONNULL((1, 2)) void DCALL generic_proxy3_visit(ProxyObject3 *__restrict self, dvisit_t proc, void *arg);
-INTDEF NONNULL((1)) void DCALL generic_proxy3_fini(ProxyObject3 *__restrict self);
+INTDEF NONNULL((1, 2)) void DCALL generic_proxy3__visit(ProxyObject3 *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL generic_proxy3__fini(ProxyObject3 *__restrict self);
 
 
 
@@ -101,58 +101,128 @@ STATIC_ASSERT_MSG(offsetof(ProxyObject2, po_obj1) == offsetof(ProxyObject, po_ob
                   "You're allowed to use everything below with `ProxyObject2', "
                   /**/ "and have the runtime only make use of `po_obj1'");
 
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_bool(ProxyObject *__restrict self);                         /* DeeObject_Bool(self->po_obj) */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy_iter_advance(ProxyObject *__restrict self, size_t step); /* DeeObject_IterAdvance(self->po_obj, step) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__bool(ProxyObject *__restrict self);                         /* DeeObject_Bool(self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__iter_advance(ProxyObject *__restrict self, size_t step); /* DeeObject_IterAdvance(self->po_obj, step) */
 
-INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy_size(ProxyObject *self);                                                  /* DeeObject_Size(self->po_obj) */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy_size_fast(ProxyObject *self);                                             /* DeeObject_SizeFast(self->po_obj) */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy_sizeob(ProxyObject *self);                                       /* DeeObject_SizeOb(self->po_obj) */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy_iterkeys(ProxyObject *self);                                     /* DeeObject_IterKeys(self->po_obj) */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy_getitem(ProxyObject *self, DeeObject *key_or_index);          /* DeeObject_GetItem(self->po_obj, key_or_index) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_delitem(ProxyObject *self, DeeObject *key_or_index);                      /* DeeObject_DelItem(self->po_obj, key_or_index) */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy_setitem(ProxyObject *self, DeeObject *key_or_index, DeeObject *value); /* DeeObject_SetItem(self->po_obj, key_or_index, value) */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy_delrange(ProxyObject *self, DeeObject *start, DeeObject *end);         /* DeeObject_DelRange(self->po_obj, start, end) */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL generic_proxy_setrange(ProxyObject *self, DeeObject *start, DeeObject *end, DeeObject *values); /* DeeObject_SetRange(self->po_obj, start, end, values) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_hasitem(ProxyObject *self, DeeObject *key_or_index);                      /* DeeObject_HasItem(self->po_obj, key_or_index) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_bounditem(ProxyObject *self, DeeObject *key_or_index);                    /* DeeObject_BoundItem(self->po_obj, key_or_index) */
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_delitem_index(ProxyObject *__restrict self, size_t index);                   /* DeeObject_DelItemIndex(self->po_obj, index) */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL generic_proxy_setitem_index(ProxyObject *__restrict self, size_t index, DeeObject *value); /* DeeObject_SetItemIndex(self->po_obj, index, value) */
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_delrange_index(ProxyObject *self, Dee_ssize_t start, Dee_ssize_t end);       /* DeeObject_DelRangeIndex(self->po_obj, start, end) */
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_delrange_index_n(ProxyObject *self, Dee_ssize_t start);                      /* DeeObject_DelRangeIndexN(self->po_obj, start) */
-INTDEF WUNUSED NONNULL((1, 4)) int DCALL generic_proxy_setrange_index(ProxyObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values); /* DeeObject_SetRangeIndex(self->po_obj, start, end, values) */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL generic_proxy_setrange_index_n(ProxyObject *self, Dee_ssize_t start, DeeObject *values); /* DeeObject_SetRangeIndexN(self->po_obj, start, values) */
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_hasitem_index(ProxyObject *__restrict self, size_t index);                   /* DeeObject_HasItemIndex(self->po_obj, index) */
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_bounditem_index(ProxyObject *__restrict self, size_t index);                 /* DeeObject_BoundItemIndex(self->po_obj, index) */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy_contains(ProxyObject *self, DeeObject *item);                 /* DeeObject_Contains(self->po_obj, item) */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL generic_proxy_getrange(ProxyObject *self, DeeObject *start, DeeObject *end); /* DeeObject_GetRange(self->po_obj, start, end) */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__size_fast(ProxyObject *self);                                             /* DeeObject_SizeFast(self->po_obj) */
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy_getitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                             /* DeeObject_GetItemStringHash(self->po_obj, key, hash) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_delitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                                         /* DeeObject_DelItemStringHash(self->po_obj, key, hash) */
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL generic_proxy_setitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash, DeeObject *value);                    /* DeeObject_SetItemStringHash(self->po_obj, key, hash, value) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_hasitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                                         /* DeeObject_HasItemStringHash(self->po_obj, key, hash) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_bounditem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                                       /* DeeObject_BoundItemStringHash(self->po_obj, key, hash) */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy_getitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);          /* DeeObject_GetItemStringLenHash(self->po_obj, key, keylen, hash) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_delitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);                      /* DeeObject_DelItemStringLenHash(self->po_obj, key, keylen, hash) */
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL generic_proxy_setitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value); /* DeeObject_SetItemStringHash(Lenself->po_obj, key, hash, keylen, value) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_hasitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);                      /* DeeObject_HasItemStringLenHash(self->po_obj, key, keylen, hash) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_bounditem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);                    /* DeeObject_BoundItemStringLenHash(self->po_obj, key, keylen, hash) */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__size(ProxyObject *self);                                                 /* DeeObject_Size(self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__sizeob(ProxyObject *self);                                       /* DeeObject_SizeOb(self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__iterkeys(ProxyObject *self);                                     /* DeeObject_IterKeys(self->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__getitem(ProxyObject *self, DeeObject *key_or_index);          /* DeeObject_GetItem(self->po_obj, key_or_index) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__delitem(ProxyObject *self, DeeObject *key_or_index);                      /* DeeObject_DelItem(self->po_obj, key_or_index) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy__setitem(ProxyObject *self, DeeObject *key_or_index, DeeObject *value); /* DeeObject_SetItem(self->po_obj, key_or_index, value) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy__delrange(ProxyObject *self, DeeObject *start, DeeObject *end);         /* DeeObject_DelRange(self->po_obj, start, end) */
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL generic_proxy__setrange(ProxyObject *self, DeeObject *start, DeeObject *end, DeeObject *values); /* DeeObject_SetRange(self->po_obj, start, end, values) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__hasitem(ProxyObject *self, DeeObject *key_or_index);                      /* DeeObject_HasItem(self->po_obj, key_or_index) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__bounditem(ProxyObject *self, DeeObject *key_or_index);                    /* DeeObject_BoundItem(self->po_obj, key_or_index) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__delitem_index(ProxyObject *__restrict self, size_t index);                   /* DeeObject_DelItemIndex(self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL generic_proxy__setitem_index(ProxyObject *__restrict self, size_t index, DeeObject *value); /* DeeObject_SetItemIndex(self->po_obj, index, value) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__delrange_index(ProxyObject *self, Dee_ssize_t start, Dee_ssize_t end);       /* DeeObject_DelRangeIndex(self->po_obj, start, end) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__delrange_index_n(ProxyObject *self, Dee_ssize_t start);                      /* DeeObject_DelRangeIndexN(self->po_obj, start) */
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL generic_proxy__setrange_index(ProxyObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values); /* DeeObject_SetRangeIndex(self->po_obj, start, end, values) */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL generic_proxy__setrange_index_n(ProxyObject *self, Dee_ssize_t start, DeeObject *values); /* DeeObject_SetRangeIndexN(self->po_obj, start, values) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__hasitem_index(ProxyObject *__restrict self, size_t index);                   /* DeeObject_HasItemIndex(self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__bounditem_index(ProxyObject *__restrict self, size_t index);                 /* DeeObject_BoundItemIndex(self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__contains(ProxyObject *self, DeeObject *item);                 /* DeeObject_Contains(self->po_obj, item) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL generic_proxy__getrange(ProxyObject *self, DeeObject *start, DeeObject *end); /* DeeObject_GetRange(self->po_obj, start, end) */
 
-INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy_seq_bool(ProxyObject *__restrict self); /* DeeSeq_OperatorBool(self->po_obj) */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy_seq_size(ProxyObject *__restrict self); /* DeeSeq_OperatorSize(self->po_obj) */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy_seq_sizeob(ProxyObject *__restrict self); /* DeeSeq_OperatorSizeOb(self->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__getitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                             /* DeeObject_GetItemStringHash(self->po_obj, key, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__delitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                                         /* DeeObject_DelItemStringHash(self->po_obj, key, hash) */
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL generic_proxy__setitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash, DeeObject *value);                    /* DeeObject_SetItemStringHash(self->po_obj, key, hash, value) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__hasitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                                         /* DeeObject_HasItemStringHash(self->po_obj, key, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__bounditem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash);                                       /* DeeObject_BoundItemStringHash(self->po_obj, key, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__getitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);          /* DeeObject_GetItemStringLenHash(self->po_obj, key, keylen, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__delitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);                      /* DeeObject_DelItemStringLenHash(self->po_obj, key, keylen, hash) */
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL generic_proxy__setitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value); /* DeeObject_SetItemStringHash(Lenself->po_obj, key, hash, keylen, value) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__hasitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);                      /* DeeObject_HasItemStringLenHash(self->po_obj, key, keylen, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__bounditem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash);                    /* DeeObject_BoundItemStringLenHash(self->po_obj, key, keylen, hash) */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
-/*INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy_hash_id(ProxyObject *self);*/
+/*[[[deemon
+import printProxyObjectMethodHintWrapper from "..method-hints.method-hints";
+printProxyObjectMethodHintWrapper("seq_operator_bool");
+printProxyObjectMethodHintWrapper("seq_operator_size");
+printProxyObjectMethodHintWrapper("seq_operator_sizeob");
+printProxyObjectMethodHintWrapper("seq_operator_bounditem");
+printProxyObjectMethodHintWrapper("seq_operator_bounditem_index");
+printProxyObjectMethodHintWrapper("seq_operator_hasitem");
+printProxyObjectMethodHintWrapper("seq_operator_hasitem_index");
+printProxyObjectMethodHintWrapper("seq_operator_delitem");
+printProxyObjectMethodHintWrapper("seq_operator_delrange");
+printProxyObjectMethodHintWrapper("seq_operator_delitem_index");
+printProxyObjectMethodHintWrapper("seq_operator_delrange_index");
+printProxyObjectMethodHintWrapper("seq_operator_delrange_index_n");
+printProxyObjectMethodHintWrapper("seq_operator_setitem");
+printProxyObjectMethodHintWrapper("seq_operator_setitem_index");
+printProxyObjectMethodHintWrapper("seq_operator_setrange");
+printProxyObjectMethodHintWrapper("seq_operator_setrange_index");
+printProxyObjectMethodHintWrapper("seq_operator_setrange_index_n");
+printProxyObjectMethodHintWrapper("seq_operator_contains");
+printProxyObjectMethodHintWrapper("map_operator_getitem");
+printProxyObjectMethodHintWrapper("map_operator_delitem");
+printProxyObjectMethodHintWrapper("map_operator_setitem");
+printProxyObjectMethodHintWrapper("map_operator_hasitem");
+printProxyObjectMethodHintWrapper("map_operator_bounditem");
+printProxyObjectMethodHintWrapper("map_operator_getitem_string_hash");
+printProxyObjectMethodHintWrapper("map_operator_delitem_string_hash");
+printProxyObjectMethodHintWrapper("map_operator_setitem_string_hash");
+printProxyObjectMethodHintWrapper("map_operator_hasitem_string_hash");
+printProxyObjectMethodHintWrapper("map_operator_bounditem_string_hash");
+printProxyObjectMethodHintWrapper("map_operator_getitem_string_len_hash");
+printProxyObjectMethodHintWrapper("map_operator_delitem_string_len_hash");
+printProxyObjectMethodHintWrapper("map_operator_setitem_string_len_hash");
+printProxyObjectMethodHintWrapper("map_operator_hasitem_string_len_hash");
+printProxyObjectMethodHintWrapper("map_operator_bounditem_string_len_hash");
+]]]*/
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_operator_bool(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_operator_bool, self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL generic_proxy__seq_operator_size(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_operator_size, self->po_obj) */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__seq_operator_sizeob(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(seq_operator_sizeob, self->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__seq_operator_bounditem(ProxyObject *self, DeeObject *index); /* DeeObject_InvokeMethodHint(seq_operator_bounditem, self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_operator_bounditem_index(ProxyObject *__restrict self, size_t index); /* DeeObject_InvokeMethodHint(seq_operator_bounditem_index, self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__seq_operator_hasitem(ProxyObject *self, DeeObject *index); /* DeeObject_InvokeMethodHint(seq_operator_hasitem, self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_operator_hasitem_index(ProxyObject *__restrict self, size_t index); /* DeeObject_InvokeMethodHint(seq_operator_hasitem_index, self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__seq_operator_delitem(ProxyObject *self, DeeObject *index); /* DeeObject_InvokeMethodHint(seq_operator_delitem, self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy__seq_operator_delrange(ProxyObject *self, DeeObject *start, DeeObject *end); /* DeeObject_InvokeMethodHint(seq_operator_delrange, self->po_obj, start, end) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_operator_delitem_index(ProxyObject *__restrict self, size_t index); /* DeeObject_InvokeMethodHint(seq_operator_delitem_index, self->po_obj, index) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_operator_delrange_index(ProxyObject *self, Dee_ssize_t start, Dee_ssize_t end); /* DeeObject_InvokeMethodHint(seq_operator_delrange_index, self->po_obj, start, end) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_operator_delrange_index_n(ProxyObject *self, Dee_ssize_t start); /* DeeObject_InvokeMethodHint(seq_operator_delrange_index_n, self->po_obj, start) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy__seq_operator_setitem(ProxyObject *self, DeeObject *index, DeeObject *value); /* DeeObject_InvokeMethodHint(seq_operator_setitem, self->po_obj, index, value) */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL generic_proxy__seq_operator_setitem_index(ProxyObject *self, size_t index, DeeObject *value); /* DeeObject_InvokeMethodHint(seq_operator_setitem_index, self->po_obj, index, value) */
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL generic_proxy__seq_operator_setrange(ProxyObject *self, DeeObject *start, DeeObject *end, DeeObject *items); /* DeeObject_InvokeMethodHint(seq_operator_setrange, self->po_obj, start, end, items) */
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL generic_proxy__seq_operator_setrange_index(ProxyObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *items); /* DeeObject_InvokeMethodHint(seq_operator_setrange_index, self->po_obj, start, end, items) */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL generic_proxy__seq_operator_setrange_index_n(ProxyObject *self, Dee_ssize_t start, DeeObject *items); /* DeeObject_InvokeMethodHint(seq_operator_setrange_index_n, self->po_obj, start, items) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__seq_operator_contains(ProxyObject *self, DeeObject *item); /* DeeObject_InvokeMethodHint(seq_operator_contains, self->po_obj, item) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_getitem(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(map_operator_getitem, self->po_obj, key) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_delitem(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(map_operator_delitem, self->po_obj, key) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL generic_proxy__map_operator_setitem(ProxyObject *self, DeeObject *key, DeeObject *value); /* DeeObject_InvokeMethodHint(map_operator_setitem, self->po_obj, key, value) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_hasitem(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(map_operator_hasitem, self->po_obj, key) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_bounditem(ProxyObject *self, DeeObject *key); /* DeeObject_InvokeMethodHint(map_operator_bounditem, self->po_obj, key) */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_proxy__map_operator_getitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash); /* DeeObject_InvokeMethodHint(map_operator_getitem_string_hash, self->po_obj, key, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_delitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash); /* DeeObject_InvokeMethodHint(map_operator_delitem_string_hash, self->po_obj, key, hash) */
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL generic_proxy__map_operator_setitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash, DeeObject *value); /* DeeObject_InvokeMethodHint(map_operator_setitem_string_hash, self->po_obj, key, hash, value) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_hasitem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash); /* DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash, self->po_obj, key, hash) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__map_operator_bounditem_string_hash(ProxyObject *self, char const *key, Dee_hash_t hash); /* DeeObject_InvokeMethodHint(map_operator_bounditem_string_hash, self->po_obj, key, hash) */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__map_operator_getitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash); /* DeeObject_InvokeMethodHint(map_operator_getitem_string_len_hash, self->po_obj, key, keylen, hash) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__map_operator_delitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash); /* DeeObject_InvokeMethodHint(map_operator_delitem_string_len_hash, self->po_obj, key, keylen, hash) */
+INTDEF WUNUSED NONNULL((1, 5)) int DCALL generic_proxy__map_operator_setitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value); /* DeeObject_InvokeMethodHint(map_operator_setitem_string_len_hash, self->po_obj, key, keylen, hash, value) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__map_operator_hasitem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash); /* DeeObject_InvokeMethodHint(map_operator_hasitem_string_len_hash, self->po_obj, key, keylen, hash) */
+INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__map_operator_bounditem_string_len_hash(ProxyObject *self, char const *key, size_t keylen, Dee_hash_t hash); /* DeeObject_InvokeMethodHint(map_operator_bounditem_string_len_hash, self->po_obj, key, keylen, hash) */
+/*[[[end]]]*/
 
-INTDEF struct type_cmp generic_proxy_cmp_recursive;
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy_hash_recursive(ProxyObject *__restrict self);               /* DeeObject_Hash(self->po_obj) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_trycompare_eq_recursive(ProxyObject *self, ProxyObject *other); /* DeeObject_TryCompareEq(self->po_obj, other->po_obj) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_compare_eq_recursive(ProxyObject *self, ProxyObject *other);    /* DeeObject_CompareEq(self->po_obj, other->po_obj) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy_compare_recursive(ProxyObject *self, ProxyObject *other);       /* DeeObject_Compare(self->po_obj, other->po_obj) */
+/*INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy__hash_id(ProxyObject *self);*/
 
-INTDEF struct type_cmp generic_proxy2_cmp_recursive_ordered;
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy2_hash_recursive_ordered(ProxyObject2 *__restrict self);      /* Dee_HashCombine(DeeObject_Hash(po_obj1), DeeObject_Hash(po_obj2)) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_trycompare_eq_recursive(ProxyObject2 *self, ProxyObject2 *other); /* DeeObject_TryCompareEq(self->po_obj1, other->po_obj1) ?: DeeObject_TryCompareEq(self->po_obj2, other->po_obj2) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2_compare_eq_recursive(ProxyObject2 *self, ProxyObject2 *other);    /* DeeObject_CompareEq(self->po_obj1, other->po_obj1) ?: DeeObject_CompareEq(self->po_obj2, other->po_obj2) */
+INTDEF struct type_cmp generic_proxy__cmp_recursive;
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy__hash_recursive(ProxyObject *__restrict self);               /* DeeObject_Hash(self->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__trycompare_eq_recursive(ProxyObject *self, ProxyObject *other); /* DeeObject_TryCompareEq(self->po_obj, other->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__compare_eq_recursive(ProxyObject *self, ProxyObject *other);    /* DeeObject_CompareEq(self->po_obj, other->po_obj) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__compare_recursive(ProxyObject *self, ProxyObject *other);       /* DeeObject_Compare(self->po_obj, other->po_obj) */
+
+INTDEF struct type_cmp generic_proxy2__cmp_recursive_ordered;
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_proxy2__hash_recursive_ordered(ProxyObject2 *__restrict self);      /* Dee_HashCombine(DeeObject_Hash(po_obj1), DeeObject_Hash(po_obj2)) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__trycompare_eq_recursive(ProxyObject2 *self, ProxyObject2 *other); /* DeeObject_TryCompareEq(self->po_obj1, other->po_obj1) ?: DeeObject_TryCompareEq(self->po_obj2, other->po_obj2) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__compare_eq_recursive(ProxyObject2 *self, ProxyObject2 *other);    /* DeeObject_CompareEq(self->po_obj1, other->po_obj1) ?: DeeObject_CompareEq(self->po_obj2, other->po_obj2) */
 
 DECL_END
 

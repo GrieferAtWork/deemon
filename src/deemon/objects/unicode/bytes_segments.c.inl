@@ -118,8 +118,8 @@ bsegiter_next(BytesSegmentsIterator *__restrict self) {
 }
 
 STATIC_ASSERT(offsetof(BytesSegmentsIterator, b_str) == offsetof(ProxyObject, po_obj));
-#define bsegiter_fini  generic_proxy_fini
-#define bsegiter_visit generic_proxy_visit
+#define bsegiter_fini  generic_proxy__fini
+#define bsegiter_visit generic_proxy__visit
 
 STATIC_ASSERT(offsetof(StringSegmentsIterator, s_str) == offsetof(BytesSegmentsIterator, b_str));
 STATIC_ASSERT(offsetof(StringSegmentsIterator, s_siz) == offsetof(BytesSegmentsIterator, b_siz));
@@ -216,8 +216,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(BytesSegments, b_str) == offsetof(ProxyObject, po_obj));
-#define bseg_fini  generic_proxy_fini
-#define bseg_visit generic_proxy_visit
+#define bseg_fini  generic_proxy__fini
+#define bseg_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_bool(BytesSegments *__restrict self) {

@@ -25,6 +25,7 @@
 #if defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || defined(__DEEMON__)
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
@@ -32,6 +33,7 @@
 
 /**/
 #include "../objects/seq/enumerate-cb.h"
+#include "runtime_error.h"
 
 /**/
 #include "kwlist.h"
@@ -385,6 +387,109 @@ DeeMA___seq_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject
 		return DeeSeq_InvokeMakeEnumerationWithIntRange(self, start, (size_t)-1);
 	}
 	return DeeSeq_InvokeMakeEnumeration(self);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_unpack___name[] = "__seq_unpack__";
+PUBLIC_CONST char const DeeMA___seq_unpack___doc[] = "(min:?Dint,max?:?Dint)->?DTuple";
+PUBLIC_CONST char const DeeMA_Sequence_unpack_name[] = "unpack";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_unpack__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DREF DeeTupleObject *result;
+	size_t min_count, max_count;
+	if (argc == 1) {
+		min_count = DeeObject_AsDirectSize(argv[0]);
+		if unlikely(min_count == (size_t)-1)
+			goto err;
+handle_single_count:
+		result = DeeTuple_NewUninitialized(min_count);
+		if unlikely(!result)
+			goto err;
+		if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_unpack))(self, min_count, result->t_elem))
+			goto err_r;
+	} else if (argc == 2) {
+		min_count = DeeObject_AsDirectSize(argv[0]);
+		if unlikely(min_count == (size_t)-1)
+			goto err;
+		max_count = DeeObject_AsDirectSize(argv[1]);
+		if unlikely(max_count == (size_t)-1)
+			goto err;
+		if unlikely(min_count >= max_count) {
+			if (min_count == max_count)
+				goto handle_single_count;
+			DeeError_Throwf(&DeeError_ValueError,
+			                "In __seq_unpack__: min(%" PRFuSIZ ") "
+			                "is greater than max(%" PRFuSIZ ")",
+			                min_count, max_count);
+			goto err;
+		}
+		result = DeeTuple_NewUninitialized(max_count);
+		if unlikely(!result)
+			goto err;
+		min_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_unpack_ex))(self, min_count, max_count, result->t_elem);
+		if unlikely(min_count == (size_t)-1)
+			goto err_r;
+		ASSERT(min_count <= max_count);
+		if (min_count < max_count)
+			result = DeeTuple_TruncateUninitialized(result, min_count);
+	} else {
+		err_invalid_argc("__seq_unpack__", argc, 1, 2);
+		goto err;
+	}
+	return (DeeObject *)result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
+err:
+	return NULL;
+}
+
+PUBLIC_CONST char const DeeMA___seq_unpackub___name[] = "__seq_unpackub__";
+PUBLIC_CONST char const DeeMA___seq_unpackub___doc[] = "(min:?Dint,max?:?Dint)->?Ert:NullableTuple";
+PUBLIC_CONST char const DeeMA_Sequence_unpackub_name[] = "unpackub";
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___seq_unpackub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv){
+	DREF DeeTupleObject *result;
+	size_t min_count, max_count;
+	if (argc == 1) {
+		min_count = DeeObject_AsDirectSize(argv[0]);
+		if unlikely(min_count == (size_t)-1)
+			goto err;
+		max_count = min_count;
+	} else if (argc == 2) {
+		min_count = DeeObject_AsDirectSize(argv[0]);
+		if unlikely(min_count == (size_t)-1)
+			goto err;
+		max_count = DeeObject_AsDirectSize(argv[1]);
+		if unlikely(max_count == (size_t)-1)
+			goto err;
+		if unlikely(min_count > max_count) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "In __seq_unpackub__: min(%" PRFuSIZ ") "
+			                "is greater than max(%" PRFuSIZ ")",
+			                min_count, max_count);
+			goto err;
+		}
+	} else {
+		err_invalid_argc("__seq_unpackub__", argc, 1, 2);
+		goto err;
+	}
+	result = DeeTuple_NewUninitialized(max_count);
+	if unlikely(!result)
+		goto err;
+	min_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_unpack_ub))(self, min_count, max_count, result->t_elem);
+	if unlikely(min_count == (size_t)-1)
+		goto err_r;
+	ASSERT(min_count <= max_count);
+	if (min_count < max_count)
+		result = DeeTuple_TruncateUninitialized(result, min_count);
+	Dee_DecrefNokill(&DeeTuple_Type);
+	Dee_Incref(&DeeNullableTuple_Type);
+	ASSERT(result->ob_type == &DeeTuple_Type);
+	result->ob_type = &DeeNullableTuple_Type;
+	return (DeeObject *)result;
+err_r:
+	DeeTuple_FreeUninitialized(result);
 err:
 	return NULL;
 }
@@ -1090,10 +1195,6 @@ DeeMA___seq_sort__(DeeObject *__restrict self, size_t argc, DeeObject *const *ar
 	if unlikely(!DeeNone_Check(key)
 	            ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort_with_key))(self, start, end, key)
 	            : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sort))(self, start, end))
-		goto err;
-	return_none;
-err:
-	return NULL;
 		goto err;
 	return_none;
 err:

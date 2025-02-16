@@ -119,8 +119,8 @@ ssegiter_next(StringSegmentsIterator *__restrict self) {
 }
 
 STATIC_ASSERT(offsetof(StringSegmentsIterator, s_str) == offsetof(ProxyObject, po_obj));
-#define ssegiter_fini  generic_proxy_fini
-#define ssegiter_visit generic_proxy_visit
+#define ssegiter_fini  generic_proxy__fini
+#define ssegiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_bool(StringSegmentsIterator *__restrict self) {
@@ -241,8 +241,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(StringSegments, s_str) == offsetof(ProxyObject, po_obj));
-#define sseg_fini  generic_proxy_fini
-#define sseg_visit generic_proxy_visit
+#define sseg_fini  generic_proxy__fini
+#define sseg_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_bool(StringSegments *__restrict self) {

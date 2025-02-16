@@ -49,11 +49,11 @@ DECL_BEGIN
 
 /* common: DefaultEnumeration */
 STATIC_ASSERT(offsetof(DefaultEnumeration, de_seq) == offsetof(ProxyObject, po_obj));
-#define DefaultEnumeration__init     generic_proxy_init
-#define DefaultEnumeration__fini     generic_proxy_fini
-#define DefaultEnumeration__visit    generic_proxy_visit
-#define DefaultEnumeration__copy     generic_proxy_copy_alias
-#define DefaultEnumeration__deepcopy generic_proxy_deepcopy
+#define DefaultEnumeration__init     generic_proxy__init
+#define DefaultEnumeration__fini     generic_proxy__fini
+#define DefaultEnumeration__visit    generic_proxy__visit
+#define DefaultEnumeration__copy     generic_proxy__copy_alias
+#define DefaultEnumeration__deepcopy generic_proxy__deepcopy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DefaultEnumeration__ctor(DefaultEnumeration *__restrict self) {
@@ -67,11 +67,11 @@ DefaultEnumeration__ctor(DefaultEnumeration *__restrict self) {
 STATIC_ASSERT(offsetof(DefaultEnumerationWithFilter, dewf_seq) == offsetof(ProxyObject3, po_obj1));
 STATIC_ASSERT(offsetof(DefaultEnumerationWithFilter, dewf_start) == offsetof(ProxyObject3, po_obj2));
 STATIC_ASSERT(offsetof(DefaultEnumerationWithFilter, dewf_end) == offsetof(ProxyObject3, po_obj3));
-#define DefaultEnumerationWithFilter__init     generic_proxy3_init
-#define DefaultEnumerationWithFilter__fini     generic_proxy3_fini
-#define DefaultEnumerationWithFilter__visit    generic_proxy3_visit
-#define DefaultEnumerationWithFilter__copy     generic_proxy3_copy_alias123
-#define DefaultEnumerationWithFilter__deepcopy generic_proxy3_deepcopy
+#define DefaultEnumerationWithFilter__init     generic_proxy3__init
+#define DefaultEnumerationWithFilter__fini     generic_proxy3__fini
+#define DefaultEnumerationWithFilter__visit    generic_proxy3__visit
+#define DefaultEnumerationWithFilter__copy     generic_proxy3__copy_alias123
+#define DefaultEnumerationWithFilter__deepcopy generic_proxy3__deepcopy
 STATIC_ASSERT(offsetof(DefaultEnumeration, de_seq) == offsetof(DefaultEnumerationWithFilter, dewf_seq));
 PRIVATE struct type_member tpconst DefaultEnumerationWithFilter__members[] = {
 	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT, offsetof(DefaultEnumerationWithFilter, dewf_start)),
@@ -94,8 +94,8 @@ DefaultEnumerationWithFilter__ctor(DefaultEnumerationWithFilter *__restrict self
 
 /* common: DefaultEnumerationWithIntFilter */
 STATIC_ASSERT(offsetof(DefaultEnumerationWithIntFilter, dewif_seq) == offsetof(ProxyObject, po_obj));
-#define DefaultEnumerationWithIntFilter__fini  generic_proxy_fini
-#define DefaultEnumerationWithIntFilter__visit generic_proxy_visit
+#define DefaultEnumerationWithIntFilter__fini  generic_proxy__fini
+#define DefaultEnumerationWithIntFilter__visit generic_proxy__visit
 PRIVATE struct type_member tpconst DefaultEnumerationWithIntFilter__members[] = {
 	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultEnumerationWithIntFilter, dewif_start)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultEnumerationWithIntFilter, dewif_end)),
@@ -129,7 +129,7 @@ DefaultEnumerationWithIntFilter__deepcopy(DefaultEnumerationWithIntFilter *__res
                                           DefaultEnumerationWithIntFilter *__restrict other) {
 	self->dewif_start = other->dewif_start;
 	self->dewif_end   = other->dewif_end;
-	return generic_proxy_deepcopy((ProxyObject *)self, (ProxyObject *)other);
+	return generic_proxy__deepcopy((ProxyObject *)self, (ProxyObject *)other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -137,7 +137,7 @@ DefaultEnumerationWithIntFilter__copy(DefaultEnumerationWithIntFilter *__restric
                                       DefaultEnumerationWithIntFilter *__restrict other) {
 	self->dewif_start = other->dewif_start;
 	self->dewif_end   = other->dewif_end;
-	return generic_proxy_copy_alias((ProxyObject *)self, (ProxyObject *)other);
+	return generic_proxy__copy_alias((ProxyObject *)self, (ProxyObject *)other);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -531,7 +531,7 @@ de_sos_gif__iter(DefaultEnumeration *__restrict self) {
 	result->disgi_index = 0;
 	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->de_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
-		goto err;
+		goto err_r;
 	ASSERT(result->disgi_tp_getitem_index || !result->disgi_end);
 	Dee_Incref(self->de_seq);
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFastPair_Type);
@@ -559,9 +559,9 @@ dewif_sos_gif__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	result->disgi_index = self->dewif_start;
 	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->dewif_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
-		goto err;
+		goto err_r;
 	if (result->disgi_end > self->dewif_end)
-		result->disgi_end > self->dewif_end;
+		result->disgi_end = self->dewif_end;
 	ASSERT(result->disgi_tp_getitem_index || !result->disgi_end);
 	Dee_Incref(self->dewif_seq);
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFastPair_Type);
@@ -588,7 +588,7 @@ de_sos_sotgi__iter(DefaultEnumeration *__restrict self) {
 	result->disgi_index = 0;
 	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->de_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
-		goto err;
+		goto err_r;
 	Dee_Incref(self->de_seq);
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndexPair_Type);
 	return result;
@@ -614,9 +614,9 @@ dewif_sos_sotgi__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	result->disgi_index = self->dewif_start;
 	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->dewif_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
-		goto err;
+		goto err_r;
 	if (result->disgi_end > self->dewif_end)
-		result->disgi_end > self->dewif_end;
+		result->disgi_end = self->dewif_end;
 	Dee_Incref(self->dewif_seq);
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndexPair_Type);
 	return result;
@@ -642,7 +642,7 @@ de_sos_sogi__iter(DefaultEnumeration *__restrict self) {
 	result->disgi_index = 0;
 	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->de_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
-		goto err;
+		goto err_r;
 	Dee_Incref(self->de_seq);
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
 	return result;
@@ -668,9 +668,9 @@ dewif_sos_soii__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	result->disgi_index = self->dewif_start;
 	result->disgi_end   = DeeObject_InvokeMethodHint(seq_operator_size, self->dewif_seq);
 	if unlikely(result->disgi_end == (size_t)-1)
-		goto err;
+		goto err_r;
 	if (result->disgi_end > self->dewif_end)
-		result->disgi_end > self->dewif_end;
+		result->disgi_end = self->dewif_end;
 	Dee_Incref(self->dewif_seq);
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
 	return result;
@@ -750,8 +750,6 @@ dewif_soii__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	Dee_Incref(self->dewif_seq);
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
 	return result;
-err_r:
-	DeeObject_FREE(result);
 err:
 	return NULL;
 }
@@ -839,10 +837,6 @@ dewf_sog__iter(DefaultEnumerationWithFilter *__restrict self) {
 	Dee_atomic_lock_init(&result->disg_lock);
 	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItemPair_Type);
 	return DeeGC_TRACK(DefaultIterator_WithSizeObAndGetItem, result);
-err_r_end:
-	Dee_Decref(result->disg_end);
-err_r:
-	DeeGCObject_FREE(result);
 err:
 	return NULL;
 }
@@ -954,9 +948,6 @@ de_mik_mog__iter(DefaultEnumeration *__restrict self) {
 	result->diikgi_seq = self->de_seq;
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
 	return result;
-err_r_no_next:
-	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
-	Dee_Decref(result->diikgi_iter);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -967,8 +958,12 @@ err:
 
 
 /* WithFilter: $with__map_iterkeys__and__map_operator_getitem */
-PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeAndGetItemIndex *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dewf_mik_mog__iter(DefaultEnumerationWithFilter *__restrict self) {
+	/* TODO: Custom iterator type: `DefaultIterator_WithIterKeysAndGetItemAndUnpackFilter' */
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
 }
 
 
@@ -1001,7 +996,7 @@ err:
 
 
 /* WithFilter: $with__map_iterkeys__and__map_operator_trygetitem */
-PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeAndGetItemIndex *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dewf_mik_motg__iter(DefaultEnumerationWithFilter *__restrict self) {
 	/* TODO: Custom iterator type */
 	(void)self;
@@ -1013,7 +1008,7 @@ dewf_mik_motg__iter(DefaultEnumerationWithFilter *__restrict self) {
 
 
 /* $with__map_enumerate */
-PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeAndGetItemIndex *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 de_me__iter(DefaultEnumeration *__restrict self) {
 	/* TODO: Custom iterator type */
 	(void)self;
@@ -1025,7 +1020,7 @@ de_me__iter(DefaultEnumeration *__restrict self) {
 
 
 /* WithFilter: $with__map_enumerate */
-PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeAndGetItemIndex *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dewf_mer__iter(DefaultEnumerationWithFilter *__restrict self) {
 	/* TODO: Custom iterator type */
 	(void)self;
@@ -3476,7 +3471,7 @@ err:
 #define de_weaf_fini      withrange_fini
 
 STATIC_ASSERT(offsetof(DefaultEnumeration_FullRange, defr_seq) == offsetof(ProxyObject, po_obj));
-#define fullrange_fini generic_proxy_fini
+#define fullrange_fini generic_proxy__fini
 
 PRIVATE NONNULL((1)) void DCALL
 withrange_fini(DefaultEnumeration_WithRange *__restrict self) {
@@ -3510,7 +3505,7 @@ withrange_fini(DefaultEnumeration_WithRange *__restrict self) {
 #define de_weaf_visit      withrange_visit
 
 STATIC_ASSERT(offsetof(DefaultEnumeration_FullRange, defr_seq) == offsetof(ProxyObject, po_obj));
-#define fullrange_visit generic_proxy_visit
+#define fullrange_visit generic_proxy__visit
 
 PRIVATE NONNULL((1, 2)) void DCALL
 withrange_visit(DefaultEnumeration_WithRange *__restrict self,

@@ -78,17 +78,17 @@ INTERN void*DCALL default__iter_next__unsupported(DeeObject*self) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
 	return NULL;
 }
-INTERN int DCALL default__nextpair__badalloc(void*self, void*) {
+INTERN int DCALL default__nextpair__badalloc(void*UNUSED(self), void*) {
 	return Dee_BadAlloc(sizeof(struct type_iterator));
 }
 INTERN int DCALL default__nextpair__unsupported(DeeObject*self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
 }
-INTERN void*DCALL default__nextkey__badalloc(void*self) {
+INTERN void*DCALL default__nextkey__badalloc(void*UNUSED(self)) {
 	Dee_BadAlloc(sizeof(struct type_iterator));
 	return NULL;
 }
-INTERN void*DCALL default__advance__badalloc(void*self, void*) {
+INTERN void*DCALL default__advance__badalloc(void*UNUSED(self), void*) {
 	Dee_BadAlloc(sizeof(struct type_iterator));
 	return NULL;
 }
@@ -96,7 +96,7 @@ INTERN void*DCALL default__advance__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
 	return NULL;
 }
-INTERN void*DCALL default__int__badalloc(void*self) {
+INTERN void*DCALL default__int__badalloc(void*UNUSED(self)) {
 	Dee_BadAlloc(sizeof(struct type_math));
 	return NULL;
 }
@@ -104,7 +104,7 @@ INTERN void*DCALL default__int__unsupported(DeeObject*self) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_INT);
 	return NULL;
 }
-INTERN int DCALL default__int32__badalloc(void*self, void*) {
+INTERN int DCALL default__int32__badalloc(void*UNUSED(self), void*) {
 	return Dee_BadAlloc(sizeof(struct type_math));
 }
 INTERN int DCALL default__int32__unsupported(DeeObject*self, void*) {
@@ -113,11 +113,11 @@ INTERN int DCALL default__int32__unsupported(DeeObject*self, void*) {
 INTERN int DCALL default__double__unsupported(DeeObject*self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_FLOAT);
 }
-INTERN void*DCALL default__hash__badalloc(void*self) {
+INTERN void*DCALL default__hash__badalloc(void*UNUSED(self)) {
 	Dee_BadAlloc(sizeof(struct type_cmp));
 	return NULL;
 }
-INTERN int DCALL default__compare_eq__badalloc(void*self, void*) {
+INTERN int DCALL default__compare_eq__badalloc(void*UNUSED(self), void*) {
 	return Dee_BadAlloc(sizeof(struct type_cmp));
 }
 INTERN int DCALL default__compare_eq__unsupported(DeeObject*self, void*) {
@@ -126,7 +126,7 @@ INTERN int DCALL default__compare_eq__unsupported(DeeObject*self, void*) {
 INTERN int DCALL default__compare__unsupported(DeeObject*self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_LO);
 }
-INTERN void*DCALL default__eq__badalloc(void*self, void*) {
+INTERN void*DCALL default__eq__badalloc(void*UNUSED(self), void*) {
 	Dee_BadAlloc(sizeof(struct type_cmp));
 	return NULL;
 }
@@ -154,7 +154,7 @@ INTERN void*DCALL default__ge__unsupported(DeeObject*self, void*) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GE);
 	return NULL;
 }
-INTERN void*DCALL default__iter__badalloc(void*self) {
+INTERN void*DCALL default__iter__badalloc(void*UNUSED(self)) {
 	Dee_BadAlloc(sizeof(struct type_seq));
 	return NULL;
 }
@@ -162,7 +162,7 @@ INTERN void*DCALL default__iter__unsupported(DeeObject*self) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	return NULL;
 }
-INTERN void*DCALL default__foreach__badalloc(void*self, void*, void*) {
+INTERN void*DCALL default__foreach__badalloc(void*UNUSED(self), void*, void*) {
 	Dee_BadAlloc(sizeof(struct type_seq));
 	return NULL;
 }
@@ -174,7 +174,7 @@ INTERN void*DCALL default__sizeob__unsupported(DeeObject*self) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SIZE);
 	return NULL;
 }
-INTERN void*DCALL default__contains__badalloc(void*self, void*) {
+INTERN void*DCALL default__contains__badalloc(void*UNUSED(self), void*) {
 	Dee_BadAlloc(sizeof(struct type_seq));
 	return NULL;
 }
@@ -190,7 +190,7 @@ INTERN void*DCALL default__getitem_string_hash__unsupported(DeeObject*self, void
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
 	return NULL;
 }
-INTERN void*DCALL default__getitem_string_len_hash__badalloc(void*self, void*, void*, void*) {
+INTERN void*DCALL default__getitem_string_len_hash__badalloc(void*UNUSED(self), void*, void*, void*) {
 	Dee_BadAlloc(sizeof(struct type_seq));
 	return NULL;
 }
@@ -198,19 +198,19 @@ INTERN void*DCALL default__getitem_string_len_hash__unsupported(DeeObject*self, 
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
 	return NULL;
 }
-INTERN int DCALL default__bounditem__badalloc(void*self, void*) {
+INTERN int DCALL default__bounditem__badalloc(void*UNUSED(self), void*) {
 	return Dee_BadAlloc(sizeof(struct type_seq));
 }
 INTERN int DCALL default__bounditem__unsupported(DeeObject*self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
 }
-INTERN int DCALL default__bounditem_string_hash__badalloc(void*self, void*, void*) {
+INTERN int DCALL default__bounditem_string_hash__badalloc(void*UNUSED(self), void*, void*) {
 	return Dee_BadAlloc(sizeof(struct type_seq));
 }
 INTERN int DCALL default__bounditem_string_hash__unsupported(DeeObject*self, void*, void*) {
 	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
 }
-INTERN int DCALL default__bounditem_string_len_hash__badalloc(void*self, void*, void*, void*) {
+INTERN int DCALL default__bounditem_string_len_hash__badalloc(void*UNUSED(self), void*, void*, void*) {
 	return Dee_BadAlloc(sizeof(struct type_seq));
 }
 INTERN int DCALL default__bounditem_string_len_hash__unsupported(DeeObject*self, void*, void*, void*) {
@@ -231,7 +231,7 @@ INTERN int DCALL default__setitem__unsupported(DeeObject*self, void*, void*) {
 INTERN int DCALL default__setitem_string_hash__unsupported(DeeObject*self, void*, void*, void*) {
 	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SETITEM);
 }
-INTERN int DCALL default__setitem_string_len_hash__badalloc(void*self, void*, void*, void*, void*) {
+INTERN int DCALL default__setitem_string_len_hash__badalloc(void*UNUSED(self), void*, void*, void*, void*) {
 	return Dee_BadAlloc(sizeof(struct type_seq));
 }
 INTERN int DCALL default__setitem_string_len_hash__unsupported(DeeObject*self, void*, void*, void*, void*) {
@@ -269,7 +269,7 @@ INTERN void*DCALL default__neg__unsupported(DeeObject*self) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_NEG);
 	return NULL;
 }
-INTERN void*DCALL default__add__badalloc(void*self, void*) {
+INTERN void*DCALL default__add__badalloc(void*UNUSED(self), void*) {
 	Dee_BadAlloc(sizeof(struct type_math));
 	return NULL;
 }
@@ -350,7 +350,7 @@ INTERN void*DCALL default__pow__unsupported(DeeObject*self, void*) {
 INTERN int DCALL default__inplace_pow__unsupported(DeeObject**self, void*) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_INPLACE_POW);
 }
-INTERN int DCALL default__inc__badalloc(void*self) {
+INTERN int DCALL default__inc__badalloc(void*UNUSED(self)) {
 	return Dee_BadAlloc(sizeof(struct type_math));
 }
 INTERN int DCALL default__inc__unsupported(DeeObject**self) {
@@ -359,7 +359,7 @@ INTERN int DCALL default__inc__unsupported(DeeObject**self) {
 INTERN int DCALL default__dec__unsupported(DeeObject**self) {
 	return err_unimplemented_operator(Dee_TYPE(*self), OPERATOR_DEC);
 }
-INTERN int DCALL default__enter__badalloc(void*self) {
+INTERN int DCALL default__enter__badalloc(void*UNUSED(self)) {
 	return Dee_BadAlloc(sizeof(struct type_with));
 }
 INTERN int DCALL default__enter__unsupported(DeeObject*self) {
@@ -367,6 +367,33 @@ INTERN int DCALL default__enter__unsupported(DeeObject*self) {
 }
 INTERN int DCALL default__leave__unsupported(DeeObject*self) {
 	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_LEAVE);
+}
+INTERN void*DCALL default__getattr__badalloc(void*UNUSED(self), void*) {
+	Dee_BadAlloc(sizeof(struct type_attr));
+	return NULL;
+}
+INTERN void*DCALL default__getattr_string_hash__badalloc(void*UNUSED(self), void*, void*) {
+	Dee_BadAlloc(sizeof(struct type_attr));
+	return NULL;
+}
+INTERN void*DCALL default__getattr_string_len_hash__badalloc(void*UNUSED(self), void*, void*, void*) {
+	Dee_BadAlloc(sizeof(struct type_attr));
+	return NULL;
+}
+INTERN int DCALL default__boundattr__badalloc(void*UNUSED(self), void*) {
+	return Dee_BadAlloc(sizeof(struct type_attr));
+}
+INTERN int DCALL default__boundattr_string_hash__badalloc(void*UNUSED(self), void*, void*) {
+	return Dee_BadAlloc(sizeof(struct type_attr));
+}
+INTERN int DCALL default__boundattr_string_len_hash__badalloc(void*UNUSED(self), void*, void*, void*) {
+	return Dee_BadAlloc(sizeof(struct type_attr));
+}
+INTERN int DCALL default__hasattr__unsupported(DeeObject*self, void*) {
+	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETATTR);
+}
+INTERN int DCALL default__setattr_string_len_hash__badalloc(void*UNUSED(self), void*, void*, void*, void*) {
+	return Dee_BadAlloc(sizeof(struct type_attr));
 }
 /*[[[end]]]*/
 /* clang-format on */
@@ -485,6 +512,21 @@ _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT] = {
 	/* dec                        */ (Dee_funptr_t)&default__dec__badalloc,
 	/* enter                      */ (Dee_funptr_t)&default__enter__badalloc,
 	/* leave                      */ (Dee_funptr_t)&default__leave__badalloc,
+	/* getattr                    */ (Dee_funptr_t)&default__getattr__badalloc,
+	/* getattr_string_hash        */ (Dee_funptr_t)&default__getattr_string_hash__badalloc,
+	/* getattr_string_len_hash    */ (Dee_funptr_t)&default__getattr_string_len_hash__badalloc,
+	/* boundattr                  */ (Dee_funptr_t)&default__boundattr__badalloc,
+	/* boundattr_string_hash      */ (Dee_funptr_t)&default__boundattr_string_hash__badalloc,
+	/* boundattr_string_len_hash  */ (Dee_funptr_t)&default__boundattr_string_len_hash__badalloc,
+	/* hasattr                    */ (Dee_funptr_t)&default__hasattr__badalloc,
+	/* hasattr_string_hash        */ (Dee_funptr_t)&default__hasattr_string_hash__badalloc,
+	/* hasattr_string_len_hash    */ (Dee_funptr_t)&default__hasattr_string_len_hash__badalloc,
+	/* delattr                    */ (Dee_funptr_t)&default__delattr__badalloc,
+	/* delattr_string_hash        */ (Dee_funptr_t)&default__delattr_string_hash__badalloc,
+	/* delattr_string_len_hash    */ (Dee_funptr_t)&default__delattr_string_len_hash__badalloc,
+	/* setattr                    */ (Dee_funptr_t)&default__setattr__badalloc,
+	/* setattr_string_hash        */ (Dee_funptr_t)&default__setattr_string_hash__badalloc,
+	/* setattr_string_len_hash    */ (Dee_funptr_t)&default__setattr_string_len_hash__badalloc,
 /*[[[end]]]*/
 	/* clang-format on */
 };
@@ -594,6 +636,21 @@ _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT] = {
 	/* dec                        */ (Dee_funptr_t)&default__dec__unsupported,
 	/* enter                      */ (Dee_funptr_t)&default__enter__unsupported,
 	/* leave                      */ (Dee_funptr_t)&default__leave__unsupported,
+	/* getattr                    */ NULL,
+	/* getattr_string_hash        */ NULL,
+	/* getattr_string_len_hash    */ NULL,
+	/* boundattr                  */ NULL,
+	/* boundattr_string_hash      */ NULL,
+	/* boundattr_string_len_hash  */ NULL,
+	/* hasattr                    */ (Dee_funptr_t)&default__hasattr__unsupported,
+	/* hasattr_string_hash        */ NULL,
+	/* hasattr_string_len_hash    */ NULL,
+	/* delattr                    */ NULL,
+	/* delattr_string_hash        */ NULL,
+	/* delattr_string_len_hash    */ NULL,
+	/* setattr                    */ NULL,
+	/* setattr_string_hash        */ NULL,
+	/* setattr_string_len_hash    */ NULL,
 /*[[[end]]]*/
 	/* clang-format on */
 };

@@ -38,8 +38,25 @@ struct default_map_getitem_with_enumerate_data {
 	DREF DeeObject *mgied_result; /* [?..1][out] Result value. */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_getitem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_getitem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	struct default_map_getitem_with_enumerate_data *data;
+	data = (struct default_map_getitem_with_enumerate_data *)arg;
+	temp = DeeObject_TryCompareEq(data->mgied_key, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0) {
+		if unlikely(!value)
+			return -3;
+		Dee_Incref(value);
+		data->mgied_result = value;
+		return -2;
+	}
+	return 0;
+err:
+	return -1;
+}
 #endif /* !DEFINED_default_map_getitem_with_enumerate_cb */
 )]
 
@@ -328,6 +345,20 @@ map_operator_trygetitem_index = {
 
 
 
+%[define(DEFINE_string_hash_equals_object =
+#ifndef DEFINED_string_hash_equals_object
+#define DEFINED_string_hash_equals_object
+PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL
+string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) {
+	if (DeeString_Check(rhs))
+		return (DeeString_Hash(rhs) == lhs_hash && strcmp(lhs, DeeString_STR(rhs)) == 0);
+	if (DeeBytes_Check(rhs))
+		return (strlen(lhs) == DeeBytes_SIZE(rhs) && bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0);
+	/* `string.operator ==' isn't implemented for any other types. */
+	return false;
+}
+#endif /* !DEFINED_string_hash_equals_object */
+)]
 
 %[define(DEFINE_default_map_getitem_string_hash_with_enumerate_cb =
 #ifndef DEFINED_default_map_getitem_string_hash_with_enumerate_cb
@@ -338,8 +369,21 @@ struct default_map_getitem_string_hash_with_enumerate_data {
 	DREF DeeObject *mgished_result; /* [?..1][out] Result value. */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_getitem_string_hash_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+DEFINE_string_hash_equals_object
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_getitem_string_hash_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_map_getitem_string_hash_with_enumerate_data *data;
+	data = (struct default_map_getitem_string_hash_with_enumerate_data *)arg;
+	if (string_hash_equals_object(data->mgished_key, data->mgished_hash, key)) {
+		if unlikely(!value)
+			return -3;
+		Dee_Incref(value);
+		data->mgished_result = value;
+		return -2;
+	}
+	return 0;
+}
 #endif /* !DEFINED_default_map_getitem_string_hash_with_enumerate_cb */
 )]
 
@@ -447,6 +491,21 @@ map_operator_trygetitem_string_hash = {
 
 
 
+%[define(DEFINE_string_len_hash_equals_object =
+#ifndef DEFINED_string_len_hash_equals_object
+#define DEFINED_string_len_hash_equals_object
+PRIVATE WUNUSED NONNULL((1, 4)) bool DCALL
+string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_hash, DeeObject *rhs) {
+	if (DeeString_Check(rhs))
+		return (DeeString_Hash(rhs) == lhs_hash && DeeString_EqualsBuf(rhs, lhs, lhs_len));
+	if (DeeBytes_Check(rhs))
+		return (lhs_len == DeeBytes_SIZE(rhs) && bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0);
+	/* `string.operator ==' isn't implemented for any other types. */
+	return false;
+}
+#endif /* !DEFINED_string_len_hash_equals_object */
+)]
+
 %[define(DEFINE_default_map_getitem_string_len_hash_with_enumerate_cb =
 #ifndef DEFINED_default_map_getitem_string_len_hash_with_enumerate_cb
 #define DEFINED_default_map_getitem_string_len_hash_with_enumerate_cb
@@ -457,8 +516,21 @@ struct default_map_getitem_string_len_hash_with_enumerate_data {
 	DREF DeeObject *mgislhed_result; /* [?..1][out] Result value. */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_getitem_string_len_hash_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+DEFINE_string_len_hash_equals_object
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_getitem_string_len_hash_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_map_getitem_string_len_hash_with_enumerate_data *data;
+	data = (struct default_map_getitem_string_len_hash_with_enumerate_data *)arg;
+	if (string_len_hash_equals_object(data->mgislhed_key, data->mgislhed_keylen, data->mgislhed_hash, key)) {
+		if unlikely(!value)
+			return -3;
+		Dee_Incref(value);
+		data->mgislhed_result = value;
+		return -2;
+	}
+	return 0;
+}
 #endif /* !DEFINED_default_map_getitem_string_len_hash_with_enumerate_cb */
 )]
 
@@ -576,8 +648,19 @@ map_operator_trygetitem_string_len_hash = {
 %[define(DEFINE_default_map_bounditem_with_enumerate_cb =
 #ifndef DEFINED_default_map_bounditem_with_enumerate_cb
 #define DEFINED_default_map_bounditem_with_enumerate_cb
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	(void)value;
+	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0)
+		return value ? -2 : -3; /* Stop iteration */
+	return 0;
+err:
+	return -1;
+}
 #endif /* !DEFINED_default_map_bounditem_with_enumerate_cb */
 )]
 

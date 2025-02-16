@@ -135,11 +135,11 @@ err:
 /* SeqFlat                                                              */
 /************************************************************************/
 STATIC_ASSERT(offsetof(SeqFlat, sf_seq) == offsetof(ProxyObject, po_obj));
-#define sf_copy  generic_proxy_copy_alias
-#define sf_deep  generic_proxy_deepcopy
-#define sf_init  generic_proxy_init
-#define sf_fini  generic_proxy_fini
-#define sf_visit generic_proxy_visit
+#define sf_copy  generic_proxy__copy_alias
+#define sf_deep  generic_proxy__deepcopy
+#define sf_init  generic_proxy__init
+#define sf_fini  generic_proxy__fini
+#define sf_visit generic_proxy__visit
 
 #define sf_foreachseq(self, cb, arg)         DeeSeq_OperatorForeach((self)->sf_seq, cb, arg)
 #define sf_foreachseq_reverse(self, cb, arg) DeeSeq_InvokeForeachReverse((self)->sf_seq, cb, arg)
@@ -905,7 +905,7 @@ STATIC_ASSERT(offsetof(SeqFlatIterator, sfi_baseiter) == offsetof(ProxyObject2, 
               offsetof(SeqFlatIterator, sfi_baseiter) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SeqFlatIterator, sfi_curriter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SeqFlatIterator, sfi_curriter) == offsetof(ProxyObject2, po_obj2));
-#define sfi_fini generic_proxy2_fini
+#define sfi_fini generic_proxy2__fini
 
 PRIVATE NONNULL((1)) int DCALL
 sfi_ctor(SeqFlatIterator *__restrict self) {

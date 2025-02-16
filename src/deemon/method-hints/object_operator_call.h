@@ -28,7 +28,7 @@ operator {
 [[wunused]] DREF DeeObject *
 tp_call([[nonnull]] DeeObject *self,
         size_t argc, DeeObject *const *argv)
-%{class {
+%{class using OPERATOR_CALL: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_CALL, argc, argv);
 }}
 %{using tp_call_kw: {
@@ -41,7 +41,7 @@ tp_call([[nonnull]] DeeObject *self,
 tp_call_kw([[nonnull]] DeeObject *self,
            size_t argc, DeeObject *const *argv,
            DeeObject *kw)
-%{class {
+%{class using OPERATOR_CALL: {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(THIS_TYPE, OPERATOR_CALL);
 	if unlikely(!func)

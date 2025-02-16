@@ -28,7 +28,7 @@ operator {
 [[wunused]] DREF DeeObject *
 tp_seq->tp_contains([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *item)
-%{class {
+%{class using OPERATOR_CONTAINS: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_CONTAINS, 1, &item);
 }} = OPERATOR_CONTAINS;
 

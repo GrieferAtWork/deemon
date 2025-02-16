@@ -45,12 +45,12 @@ DECL_BEGIN
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(SeqCombinations, sc_seq) == offsetof(ProxyObject, po_obj));
-#define sc_fini   generic_proxy_fini
-#define sc_visit  generic_proxy_visit
-#define src_fini  generic_proxy_fini
-#define src_visit generic_proxy_visit
-#define sp_fini   generic_proxy_fini
-#define sp_visit  generic_proxy_visit
+#define sc_fini   generic_proxy__fini
+#define sc_visit  generic_proxy__visit
+#define src_fini  generic_proxy__fini
+#define src_visit generic_proxy__visit
+#define sp_fini   generic_proxy__fini
+#define sp_visit  generic_proxy__visit
 
 #define src_ctor sc_ctor
 #define sp_ctor  sc_ctor
@@ -558,9 +558,9 @@ sci_fini(SeqCombinationsIterator *__restrict self) {
 }
 
 STATIC_ASSERT(offsetof(SeqCombinationsIterator, sci_com) == offsetof(ProxyObject, po_obj));
-#define sci_visit  generic_proxy_visit
-#define srci_visit generic_proxy_visit
-#define spi_visit  generic_proxy_visit
+#define sci_visit  generic_proxy__visit
+#define srci_visit generic_proxy__visit
+#define spi_visit  generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sci_unshare_view(SeqCombinationsIterator *__restrict self) {
@@ -1017,7 +1017,7 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(SeqCombinationsView, scv_iter) == offsetof(ProxyObject, po_obj));
-#define scv_visit generic_proxy_visit
+#define scv_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 scv_ctor(SeqCombinationsView *__restrict self) {

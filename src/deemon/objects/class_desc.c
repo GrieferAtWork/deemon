@@ -204,8 +204,8 @@ PRIVATE struct type_iterator coti_iterator = {
 };
 
 STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_desc) == offsetof(ProxyObject, po_obj));
-#define coti_fini  generic_proxy_fini
-#define coti_visit generic_proxy_visit
+#define coti_fini  generic_proxy__fini
+#define coti_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 coti_copy(ClassOperatorTableIterator *__restrict self,
@@ -334,8 +334,8 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 
 
 STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ProxyObject, po_obj));
-#define cot_fini  generic_proxy_fini
-#define cot_visit generic_proxy_visit
+#define cot_fini  generic_proxy__fini
+#define cot_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cot_init(ClassOperatorTable *__restrict self,
@@ -654,14 +654,14 @@ done:
 }
 
 STATIC_ASSERT(offsetof(ClassAttribute, ca_desc) == offsetof(ProxyObject, po_obj));
-#define ca_fini  generic_proxy_fini
-#define ca_visit generic_proxy_visit
+#define ca_fini  generic_proxy__fini
+#define ca_visit generic_proxy__visit
 STATIC_ASSERT(offsetof(ClassAttributeTable, ca_desc) == offsetof(ProxyObject, po_obj));
-#define cat_fini  generic_proxy_fini
-#define cat_visit generic_proxy_visit
+#define cat_fini  generic_proxy__fini
+#define cat_visit generic_proxy__visit
 STATIC_ASSERT(offsetof(ClassAttributeTableIterator, ca_desc) == offsetof(ProxyObject, po_obj));
-#define cati_fini  generic_proxy_fini
-#define cati_visit generic_proxy_visit
+#define cati_fini  generic_proxy__fini
+#define cati_visit generic_proxy__visit
 
 STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_desc) == offsetof(ClassAttributeTableIterator, ca_desc));
 STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_iter) == offsetof(ClassAttributeTableIterator, ca_iter));
@@ -2442,8 +2442,8 @@ typedef struct {
 } ObjectTable;
 
 STATIC_ASSERT(offsetof(ObjectTable, ot_owner) == offsetof(ProxyObject, po_obj));
-#define ot_fini  generic_proxy_fini
-#define ot_visit generic_proxy_visit
+#define ot_fini  generic_proxy__fini
+#define ot_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 ot_print(ObjectTable *__restrict self, Dee_formatprinter_t printer, void *arg) {
@@ -2953,8 +2953,8 @@ instancemember_copy(DeeInstanceMemberObject *__restrict self,
 }
 
 STATIC_ASSERT(offsetof(DeeInstanceMemberObject, im_type) == offsetof(ProxyObject, po_obj));
-#define instancemember_fini  generic_proxy_fini
-#define instancemember_visit generic_proxy_visit
+#define instancemember_fini  generic_proxy__fini
+#define instancemember_visit generic_proxy__visit
 
 PRIVATE struct type_method tpconst instancemember_methods[] = {
 	TYPE_KWMETHOD_F(STR_get, &instancemember_get, METHOD_FNOREFESCAPE,

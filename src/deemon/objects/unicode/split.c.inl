@@ -178,8 +178,8 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 
 
 STATIC_ASSERT(offsetof(StringSplitIterator, s_split) == offsetof(ProxyObject, po_obj));
-#define splititer_fini  generic_proxy_fini
-#define splititer_visit generic_proxy_visit
+#define splititer_fini  generic_proxy__fini
+#define splititer_visit generic_proxy__visit
 
 #define GET_SPLIT_NEXT(x) atomic_read(&(x)->s_next)
 
@@ -414,8 +414,8 @@ STATIC_ASSERT(offsetof(StringSplit, s_str) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringSplit, s_str) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(StringSplit, s_sep) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringSplit, s_sep) == offsetof(ProxyObject2, po_obj2));
-#define split_fini  generic_proxy2_fini
-#define split_visit generic_proxy2_visit
+#define split_fini  generic_proxy2__fini
+#define split_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 split_bool(StringSplit *__restrict self) {
@@ -952,8 +952,8 @@ PRIVATE struct type_seq linesplit_seq = {
 };
 
 STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(ProxyObject, po_obj));
-#define linesplit_fini  generic_proxy_fini
-#define linesplit_visit generic_proxy_visit
+#define linesplit_fini  generic_proxy__fini
+#define linesplit_visit generic_proxy__visit
 
 STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(StringSplit, s_str));
 #define linesplit_bool split_bool

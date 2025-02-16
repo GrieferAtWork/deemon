@@ -131,9 +131,9 @@ invset_ctor(SetInversion *__restrict self) {
 
 
 STATIC_ASSERT(offsetof(SetInversion, si_set) == offsetof(ProxyObject, po_obj));
-#define invset_init  generic_proxy_init
-#define invset_fini  generic_proxy_fini
-#define invset_visit generic_proxy_visit
+#define invset_init  generic_proxy__init
+#define invset_fini  generic_proxy__fini
+#define invset_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 invset_printrepr(SetInversion *__restrict self,
@@ -376,14 +376,14 @@ STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj2));
-#define su_fini  generic_proxy2_fini
-#define su_visit generic_proxy2_visit
+#define su_fini  generic_proxy2__fini
+#define su_visit generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(SetUnionIterator, sui_union) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnionIterator, sui_union) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetUnionIterator, sui_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnionIterator, sui_iter) == offsetof(ProxyObject2, po_obj2));
-#define suiter_fini generic_proxy2_fini
+#define suiter_fini generic_proxy2__fini
 
 PRIVATE NONNULL((1)) void DCALL
 suiter_clear(SetUnionIterator *__restrict self) {
@@ -758,9 +758,9 @@ STATIC_ASSERT(offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnion, su_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetUnion, su_b) == offsetof(ProxyObject2, po_obj2));
-#define su_init generic_proxy2_init
-#define su_copy generic_proxy2_copy_alias12
-#define su_deep generic_proxy2_deepcopy
+#define su_init generic_proxy2__init
+#define su_copy generic_proxy2__copy_alias12
+#define su_deep generic_proxy2__deepcopy
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetUnionIterator *DCALL
 su_iter(SetUnion *__restrict self) {
@@ -1100,11 +1100,11 @@ STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_a) == offsetof(ProxyObject2, 
               offsetof(SetSymmetricDifference, ssd_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetSymmetricDifference, ssd_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetSymmetricDifference, ssd_b) == offsetof(ProxyObject2, po_obj2));
-#define ssd_init  generic_proxy2_init
-#define ssd_copy  generic_proxy2_copy_alias12
-#define ssd_deep  generic_proxy2_deepcopy
-#define ssd_fini  generic_proxy2_fini
-#define ssd_visit generic_proxy2_visit
+#define ssd_init  generic_proxy2__init
+#define ssd_copy  generic_proxy2__copy_alias12
+#define ssd_deep  generic_proxy2__deepcopy
+#define ssd_fini  generic_proxy2__fini
+#define ssd_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetSymmetricDifferenceIterator *DCALL
 ssd_iter(SetSymmetricDifference *__restrict self) {
@@ -1252,8 +1252,8 @@ STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_intersect) == offsetof(Proxy
               offsetof(SetIntersectionIterator, sii_intersect) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetIntersectionIterator, sii_iter) == offsetof(ProxyObject2, po_obj2));
-#define siiter_fini  generic_proxy2_fini
-#define siiter_visit generic_proxy2_visit
+#define siiter_fini  generic_proxy2__fini
+#define siiter_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 siiter_ctor(SetIntersectionIterator *__restrict self) {
@@ -1345,11 +1345,11 @@ done:
 }
 
 STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(ProxyObject, po_obj));
-#define siiter_hash          generic_proxy_hash_recursive
-#define siiter_compare       generic_proxy_compare_recursive
-#define siiter_compare_eq    generic_proxy_compare_eq_recursive
-#define siiter_trycompare_eq generic_proxy_trycompare_eq_recursive
-#define siiter_cmp           generic_proxy_cmp_recursive
+#define siiter_hash          generic_proxy__hash_recursive
+#define siiter_compare       generic_proxy__compare_recursive
+#define siiter_compare_eq    generic_proxy__compare_eq_recursive
+#define siiter_trycompare_eq generic_proxy__trycompare_eq_recursive
+#define siiter_cmp           generic_proxy__cmp_recursive
 
 PRIVATE struct type_member tpconst siiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_intersect), "->?Ert:SetIntersection"),
@@ -1415,11 +1415,11 @@ STATIC_ASSERT(offsetof(SetIntersection, si_a) == offsetof(ProxyObject2, po_obj1)
               offsetof(SetIntersection, si_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(SetIntersection, si_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SetIntersection, si_b) == offsetof(ProxyObject2, po_obj2));
-#define si_init  generic_proxy2_init
-#define si_copy  generic_proxy2_copy_alias12
-#define si_deep  generic_proxy2_deepcopy
-#define si_fini  generic_proxy2_fini
-#define si_visit generic_proxy2_visit
+#define si_init  generic_proxy2__init
+#define si_copy  generic_proxy2__copy_alias12
+#define si_deep  generic_proxy2__deepcopy
+#define si_fini  generic_proxy2__fini
+#define si_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetIntersectionIterator *DCALL
 si_iter(SetIntersection *__restrict self) {
@@ -1643,11 +1643,11 @@ STATIC_ASSERT(offsetof(SetDifference, sd_b) == offsetof(SetUnion, su_b));
 
 STATIC_ASSERT(offsetof(SetDifference, sd_a) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SetDifference, sd_b) == offsetof(ProxyObject2, po_obj2));
-#define sd_init  generic_proxy2_init
-#define sd_copy  generic_proxy2_copy_alias12
-#define sd_deep  generic_proxy2_deepcopy
-#define sd_fini  generic_proxy2_fini
-#define sd_visit generic_proxy2_visit
+#define sd_init  generic_proxy2__init
+#define sd_copy  generic_proxy2__copy_alias12
+#define sd_deep  generic_proxy2__deepcopy
+#define sd_fini  generic_proxy2__fini
+#define sd_visit generic_proxy2__visit
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF SetDifferenceIterator *DCALL

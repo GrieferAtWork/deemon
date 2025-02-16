@@ -550,7 +550,11 @@ void __builtin_va_end(__builtin_va_list &__ap);
 #pragma warning(disable: 4710) /* Function not inlined (Emit for local varargs functions...) */
 #pragma warning(disable: 4711) /* Function inlined despite no `inline' keyword */
 #pragma warning(disable: 4201) /* nonstandard extension used: nameless struct/union (they're standard now...) */
-#ifndef __cplusplus
+#ifdef __cplusplus
+#pragma warning(disable: 4644) /* Annoying warning about use of `offsetof' in constant expressions (). */
+#define __SYSDECL_BEGIN __DECL_BEGIN
+#define __SYSDECL_END   __DECL_END
+#else /* __cplusplus */
 /* Disable some warnings that are caused by function redirections in system headers. */
 #define __REDIRECT_WSUPPRESS_BEGIN                                                        \
 	__pragma(warning(push))                                                               \
@@ -559,10 +563,7 @@ void __builtin_va_end(__builtin_va_list &__ap);
 /* Suppress warnings caused by C-mode redirections in system headers. */
 #define __SYSDECL_BEGIN __DECL_BEGIN __REDIRECT_WSUPPRESS_BEGIN
 #define __SYSDECL_END   __REDIRECT_WSUPPRESS_END __DECL_END
-#else /* !__cplusplus */
-#define __SYSDECL_BEGIN __DECL_BEGIN
-#define __SYSDECL_END   __DECL_END
-#endif /* __cplusplus */
+#endif /* !__cplusplus */
 
 
 /* Try to emulate gcc-style warning suppression directives. */

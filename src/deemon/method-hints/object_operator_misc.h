@@ -30,7 +30,7 @@ function unary(neg: string) {
 	print('[[export("DeeObject_{|T}', Neg, '")]]');
 	print("[[wunused]] DREF DeeObject *");
 	print("tp_math->tp_", neg, "([[nonnull]] DeeObject *self)");
-	print("%{class {");
+	print("%{class using OPERATOR_", NEG, ": {");
 	print("	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_", NEG, ", 0, NULL);");
 	print("}} = OPERATOR_", NEG, ";");
 	print;
@@ -43,20 +43,15 @@ function binaryMath(add: string) {
 	print('[[export("DeeObject_{|T}', Add, '")]]');
 	print("[[wunused]] DREF DeeObject *");
 	print("tp_math->tp_", add, "([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)");
-	print("%{class {");
+	print("%{class using OPERATOR_", ADD, ": {");
 	print("	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_", ADD, ", 1, &rhs);");
 	print("}} = OPERATOR_", ADD, ";");
 	print;
-	// TODO: "using [tp_init_copy, tp_", add, "]":
-	//       >> lhs = DeeObject_Copy(lhs);
-	//       >> DeeObject_InplaceAdd(&lhs, rhs);
-	//       >> return lhs;
-
 	print('[[export("DeeObject_{|T}Inplace', Add, '")]]');
 	print("[[tp_self(Dee_TYPE(*p_lhs))]]");
 	print("[[wunused]] int");
 	print("tp_math->tp_inplace_", add, "([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)");
-	print("%{class {");
+	print("%{class using OPERATOR_INPLACE_", ADD, ": {");
 	print("	DREF DeeObject *result;");
 	print("	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_", ADD, ", 1, &rhs);");
 	print("	Dee_Decref_unlikely(*p_lhs);");
@@ -88,7 +83,7 @@ function inplaceUnary(prefix: string, inc: string) {
 	print("[[tp_self(Dee_TYPE(*p_self))]]");
 	print("[[wunused]] int");
 	print("", prefix, "tp_", inc, "([[nonnull]] DeeObject **__restrict p_self)");
-	print("%{class {");
+	print("%{class using OPERATOR_", INC, ": {");
 	print("	DREF DeeObject *result;");
 	print("	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_self, OPERATOR_", INC, ", 0, NULL);");
 	print("	Dee_Decref_unlikely(*p_self);");
@@ -122,7 +117,7 @@ function enterLeave(enter: string) {
 	print('[[export("DeeObject_{|T}', Enter, '")]]');
 	print("[[wunused]] int");
 	print("tp_with->tp_", enter, "([[nonnull]] DeeObject *__restrict self)");
-	print("%{class {");
+	print("%{class using OPERATOR_", ENTER, ": {");
 	print("	DREF DeeObject *result;");
 	print("	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_", ENTER, ", 0, NULL);");
 	print("	if unlikely(!result)");
@@ -165,28 +160,28 @@ enterLeave("leave");
 [[export("DeeObject_{|T}Inv")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_inv([[nonnull]] DeeObject *self)
-%{class {
+%{class using OPERATOR_INV: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_INV, 0, NULL);
 }} = OPERATOR_INV;
 
 [[export("DeeObject_{|T}Pos")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_pos([[nonnull]] DeeObject *self)
-%{class {
+%{class using OPERATOR_POS: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_POS, 0, NULL);
 }} = OPERATOR_POS;
 
 [[export("DeeObject_{|T}Neg")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_neg([[nonnull]] DeeObject *self)
-%{class {
+%{class using OPERATOR_NEG: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_NEG, 0, NULL);
 }} = OPERATOR_NEG;
 
 [[export("DeeObject_{|T}Add")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_add([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_ADD: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_ADD, 1, &rhs);
 }} = OPERATOR_ADD;
 
@@ -194,7 +189,7 @@ tp_math->tp_add([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_add([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_ADD: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_ADD, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -217,7 +212,7 @@ err:
 [[export("DeeObject_{|T}Sub")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_sub([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_SUB: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SUB, 1, &rhs);
 }} = OPERATOR_SUB;
 
@@ -225,7 +220,7 @@ tp_math->tp_sub([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_sub([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_SUB: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SUB, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -248,7 +243,7 @@ err:
 [[export("DeeObject_{|T}Mul")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_mul([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_MUL: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MUL, 1, &rhs);
 }} = OPERATOR_MUL;
 
@@ -256,7 +251,7 @@ tp_math->tp_mul([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_mul([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_MUL: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_MUL, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -279,7 +274,7 @@ err:
 [[export("DeeObject_{|T}Div")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_div([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_DIV: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_DIV, 1, &rhs);
 }} = OPERATOR_DIV;
 
@@ -287,7 +282,7 @@ tp_math->tp_div([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_div([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_DIV: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_DIV, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -310,7 +305,7 @@ err:
 [[export("DeeObject_{|T}Mod")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_mod([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_MOD: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_MOD, 1, &rhs);
 }} = OPERATOR_MOD;
 
@@ -318,7 +313,7 @@ tp_math->tp_mod([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_mod([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_MOD: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_MOD, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -341,7 +336,7 @@ err:
 [[export("DeeObject_{|T}Shl")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_shl([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_SHL: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHL, 1, &rhs);
 }} = OPERATOR_SHL;
 
@@ -349,7 +344,7 @@ tp_math->tp_shl([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_shl([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_SHL: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SHL, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -372,7 +367,7 @@ err:
 [[export("DeeObject_{|T}Shr")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_shr([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_SHR: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_SHR, 1, &rhs);
 }} = OPERATOR_SHR;
 
@@ -380,7 +375,7 @@ tp_math->tp_shr([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_shr([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_SHR: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_SHR, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -403,7 +398,7 @@ err:
 [[export("DeeObject_{|T}And")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_and([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_AND: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_AND, 1, &rhs);
 }} = OPERATOR_AND;
 
@@ -411,7 +406,7 @@ tp_math->tp_and([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_and([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_AND: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_AND, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -434,7 +429,7 @@ err:
 [[export("DeeObject_{|T}Or")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_or([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_OR: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_OR, 1, &rhs);
 }} = OPERATOR_OR;
 
@@ -442,7 +437,7 @@ tp_math->tp_or([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_or([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_OR: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_OR, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -465,7 +460,7 @@ err:
 [[export("DeeObject_{|T}Xor")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_xor([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_XOR: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_XOR, 1, &rhs);
 }} = OPERATOR_XOR;
 
@@ -473,7 +468,7 @@ tp_math->tp_xor([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_xor([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_XOR: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_XOR, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -496,7 +491,7 @@ err:
 [[export("DeeObject_{|T}Pow")]]
 [[wunused]] DREF DeeObject *
 tp_math->tp_pow([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_POW: {
 	return_DeeClass_CallOperator(THIS_TYPE, lhs, OPERATOR_POW, 1, &rhs);
 }} = OPERATOR_POW;
 
@@ -504,7 +499,7 @@ tp_math->tp_pow([[nonnull]] DeeObject *lhs, [[nonnull]] DeeObject *rhs)
 [[tp_self(Dee_TYPE(*p_lhs))]]
 [[wunused]] int
 tp_math->tp_inplace_pow([[nonnull]] DeeObject **__restrict p_lhs, [[nonnull]] DeeObject *rhs)
-%{class {
+%{class using OPERATOR_INPLACE_POW: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_lhs, OPERATOR_INPLACE_POW, 1, &rhs);
 	Dee_Decref_unlikely(*p_lhs);
@@ -528,7 +523,7 @@ err:
 [[tp_self(Dee_TYPE(*p_self))]]
 [[wunused]] int
 tp_math->tp_inc([[nonnull]] DeeObject **__restrict p_self)
-%{class {
+%{class using OPERATOR_INC: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_self, OPERATOR_INC, 0, NULL);
 	Dee_Decref_unlikely(*p_self);
@@ -555,7 +550,7 @@ err:
 [[tp_self(Dee_TYPE(*p_self))]]
 [[wunused]] int
 tp_math->tp_dec([[nonnull]] DeeObject **__restrict p_self)
-%{class {
+%{class using OPERATOR_DEC: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, *p_self, OPERATOR_DEC, 0, NULL);
 	Dee_Decref_unlikely(*p_self);
@@ -581,7 +576,7 @@ err:
 [[export("DeeObject_{|T}Enter")]]
 [[wunused]] int
 tp_with->tp_enter([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_ENTER: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_ENTER, 0, NULL);
 	if unlikely(!result)
@@ -598,7 +593,7 @@ err:
 [[export("DeeObject_{|T}Leave")]]
 [[wunused]] int
 tp_with->tp_leave([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_LEAVE: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_LEAVE, 0, NULL);
 	if unlikely(!result)

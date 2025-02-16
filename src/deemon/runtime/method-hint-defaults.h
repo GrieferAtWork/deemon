@@ -704,6 +704,55 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_enumerate_index_re
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_enumerate_index_reverse__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__seq_enumerate_index_reverse__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end);
 
+/* seq_unpack */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callattr_unpack(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callmethodcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with_callkwmethodcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__unsupported(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__tp_asvector(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_foreach(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__seq_unpack__with__seq_operator_iter(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+
+/* seq_unpack_ex */
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callattr_unpack(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callmethodcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with_callkwmethodcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_foreach(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ex__with__seq_operator_iter(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+
+/* seq_unpack_ub */
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callattr_unpackub(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callattr___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callmethodcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with_callkwmethodcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+
 /* seq_trygetfirst */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_trygetfirst__with_callattr_first(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__seq_trygetfirst__with_callattr___seq_first__(DeeObject *__restrict self);
@@ -2978,13 +3027,52 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__se
 /* clang-format on */
 
 /* Backwards-compat */
-#define DeeSeq_DefaultOperatorTryGetItemIndexWithEmpty        default__seq_operator_trygetitem_index__empty
-#define DeeSeq_DefaultOperatorTryGetItemIndexWithError        default__seq_operator_trygetitem_index__unsupported
-#define DeeSeq_DefaultHasItemIndexWithSize                    default__seq_operator_hasitem_index__with__seq_operator_size
-#define DeeSeq_DefaultAllWithKeyWithSeqForeach                default__seq_all_with_key__with__seq_operator_foreach
-#define DeeSeq_DefaultAllWithRangeAndKeyWithSeqEnumerateIndex default__seq_all_with_range_and_key__with__seq_enumerate_index
-#define DeeSeq_DefaultAnyWithKeyWithSeqForeach                default__seq_any_with_key__with__seq_operator_foreach
-#define DeeSeq_DefaultAnyWithRangeAndKeyWithSeqEnumerateIndex default__seq_any_with_range_and_key__with__seq_enumerate_index
+#define DeeSeq_DefaultOperatorTryGetItemIndexWithEmpty                        default__seq_operator_trygetitem_index__empty
+#define DeeSeq_DefaultOperatorTryGetItemIndexWithError                        default__seq_operator_trygetitem_index__unsupported
+#define DeeSeq_DefaultHasItemIndexWithSize                                    default__seq_operator_hasitem_index__with__seq_operator_size
+#define DeeSeq_DefaultAllWithKeyWithSeqForeach                                default__seq_all_with_key__with__seq_operator_foreach
+#define DeeSeq_DefaultAllWithRangeAndKeyWithSeqEnumerateIndex                 default__seq_all_with_range_and_key__with__seq_enumerate_index
+#define DeeSeq_DefaultAnyWithKeyWithSeqForeach                                default__seq_any_with_key__with__seq_operator_foreach
+#define DeeSeq_DefaultAnyWithRangeAndKeyWithSeqEnumerateIndex                 default__seq_any_with_range_and_key__with__seq_enumerate_index
+#define DeeSeq_DefaultOperatorEqWithSeqCompareEq                              default__seq_operator_eq__with__seq_operator_compare_eq
+#define DeeSeq_DefaultOperatorNeWithSeqCompareEq                              default__seq_operator_ne__with__seq_operator_compare_eq
+#define DeeSeq_DefaultOperatorLoWithSeqCompare                                default__seq_operator_lo__with__seq_operator_compare
+#define DeeSeq_DefaultOperatorLeWithSeqCompare                                default__seq_operator_le__with__seq_operator_compare
+#define DeeSeq_DefaultOperatorGrWithSeqCompare                                default__seq_operator_gr__with__seq_operator_compare
+#define DeeSeq_DefaultOperatorGeWithSeqCompare                                default__seq_operator_ge__with__seq_operator_compare
+#define DeeSeq_DefaultCountWithSeqForeach                                     default__seq_count__with__seq_operator_foreach
+#define DeeSeq_DefaultCountWithKeyWithSeqForeach                              default__seq_count_with_key__with__seq_operator_foreach
+#define DeeSeq_DefaultCountWithRangeWithSeqEnumerateIndex                     default__seq_count_with_range__with__seq_enumerate_index
+#define DeeSeq_DefaultCountWithRangeAndKeyWithSeqEnumerateIndex               default__seq_count_with_range_and_key__with__seq_enumerate_index
+#define DeeSeq_DefaultContainsWithContains                                    default__seq_contains__with__seq_operator_foreach
+#define DeeSeq_DefaultContainsWithForeachDefault                              default__seq_contains__with__seq_operator_foreach
+#define DeeSeq_DefaultContainsWithKeyWithSeqForeach                           default__seq_contains_with_key__with__seq_operator_foreach
+#define DeeSeq_DefaultContainsWithRangeWithSeqEnumerateIndex                  default__seq_contains_with_range__with__seq_enumerate_index
+#define DeeSeq_DefaultContainsWithRangeAndKeyWithSeqEnumerateIndex            default__seq_contains_with_range_and_key__with__seq_enumerate_index
+#define DeeSeq_DefaultStartsWithWithSeqTryGetFirst                            default__seq_startswith__with__seq_trygetfirst
+#define DeeSeq_DefaultStartsWithWithKeyWithSeqTryGetFirst                     default__seq_startswith_with_key__with__seq_trygetfirst
+#define DeeSeq_DefaultStartsWithWithRangeWithSeqTryGetItemIndex               default__seq_startswith_with_range__with__seq_operator_trygetitem_index
+#define DeeSeq_DefaultStartsWithWithRangeAndKeyWithSeqTryGetItemIndex         default__seq_startswith_with_range_and_key__with__seq_operator_trygetitem_index
+#define DeeSeq_DefaultEndsWithWithSeqTryGetLast                               default__seq_endswith__with__seq_trygetlast
+#define DeeSeq_DefaultEndsWithWithKeyWithSeqTryGetLast                        default__seq_endswith_with_key__with__seq_trygetlast
+#define DeeSeq_DefaultEndsWithWithRangeWithSeqSizeAndSeqTryGetItemIndex       default__seq_endswith_with_range__with__seq_operator_size__and__operator_trygetitem_index
+#define DeeSeq_DefaultEndsWithWithRangeAndKeyWithSeqSizeAndSeqTryGetItemIndex default__seq_endswith_with_range_and_key__with__seq_operator_size__and__operator_trygetitem_index
+#define DeeSeq_DefaultFindWithSeqEnumerateIndex                               default__seq_find__with__seq_enumerate_index
+#define DeeSeq_DefaultFindWithKeyWithSeqEnumerateIndex                        default__seq_find_with_key__with__seq_enumerate_index
+#define DeeSeq_DefaultRFindWithSeqEnumerateIndexReverse                       default__seq_rfind__with__seq_enumerate_index_reverse
+#define DeeSeq_DefaultRFindWithKeyWithSeqEnumerateIndexReverse                default__seq_rfind_with_key__with__seq_enumerate_index_reverse
+
+#define DeeSeq_DefaultHashWithForeachDefault         default__seq_operator_hash__with__seq_operator_foreach
+#define DeeSeq_DefaultCompareEqWithForeachDefault    default__seq_operator_compare_eq__with__seq_operator_foreach
+#define DeeSeq_DefaultCompareWithForeachDefault      default__seq_operator_compare__with__seq_operator_foreach
+#define DeeSeq_DefaultTryCompareEqWithForeachDefault default__seq_operator_trycompare_eq__with__seq_operator_foreach
+#define DeeObject_DefaultEqWithCompareEqDefault      default__seq_operator_eq__with__seq_operator_compare_eq
+#define DeeObject_DefaultNeWithCompareEqDefault      default__seq_operator_ne__with__seq_operator_compare_eq
+#define DeeObject_DefaultLoWithCompareDefault        default__seq_operator_lo__with__seq_operator_compare
+#define DeeObject_DefaultLeWithCompareDefault        default__seq_operator_le__with__seq_operator_compare
+#define DeeObject_DefaultGrWithCompareDefault        default__seq_operator_gr__with__seq_operator_compare
+#define DeeObject_DefaultGeWithCompareDefault        default__seq_operator_ge__with__seq_operator_compare
+
 
 /* For backwards-compat !!! DEPRECATED !!! */
 #define default_seq_getfirst   default__seq_getfirst

@@ -189,8 +189,8 @@ again:
 }
 
 STATIC_ASSERT(offsetof(BytesFindIterator, bfi_find) == offsetof(ProxyObject, po_obj));
-#define bfi_fini  generic_proxy_fini
-#define bfi_visit generic_proxy_visit
+#define bfi_fini  generic_proxy__fini
+#define bfi_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_bool(BytesFindIterator *__restrict self) {
@@ -392,8 +392,8 @@ STATIC_ASSERT(offsetof(BytesFind, bf_bytes) == offsetof(ProxyObject2, po_obj1) |
               offsetof(BytesFind, bf_bytes) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(BytesFind, bf_other) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(BytesFind, bf_other) == offsetof(ProxyObject2, po_obj2));
-#define bf_fini  generic_proxy2_fini
-#define bf_visit generic_proxy2_visit
+#define bf_fini  generic_proxy2__fini
+#define bf_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF BytesFindIterator *DCALL
 bf_iter(BytesFind *__restrict self) {

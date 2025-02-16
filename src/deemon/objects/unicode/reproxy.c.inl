@@ -200,10 +200,10 @@ STATIC_ASSERT(offsetof(ReSequenceIterator, rsi_data) == offsetof(ProxyObject2, p
               offsetof(ReSequenceIterator, rsi_data) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(ReSequenceIterator, rsi_exec.rx_pattern) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(ReSequenceIterator, rsi_exec.rx_pattern) == offsetof(ProxyObject2, po_obj2));
-#define rebfaiter_fini  generic_proxy2_fini
-#define refaiter_fini   generic_proxy2_fini
-#define rebfaiter_visit generic_proxy2_visit
-#define refaiter_visit  generic_proxy2_visit
+#define rebfaiter_fini  generic_proxy2__fini
+#define refaiter_fini   generic_proxy2__fini
+#define rebfaiter_visit generic_proxy2__visit
+#define refaiter_visit  generic_proxy2__visit
 
 #define rebfaiter_bool refaiter_bool
 PRIVATE WUNUSED NONNULL((1)) int DCALL

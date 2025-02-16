@@ -232,8 +232,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(ProxyObject, po_obj));
-#define smapiter_fini  generic_proxy_fini
-#define smapiter_visit generic_proxy_visit
+#define smapiter_fini  generic_proxy__fini
+#define smapiter_visit generic_proxy__visit
 
 STATIC_ASSERT(offsetof(SharedMapIterator, smi_index) == offsetof(SharedVectorIterator, si_index));
 STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(SharedVectorIterator, si_seq));

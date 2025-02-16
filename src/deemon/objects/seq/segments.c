@@ -95,8 +95,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_obj));
-#define segiter_fini  generic_proxy_fini
-#define segiter_visit generic_proxy_visit
+#define segiter_fini  generic_proxy__fini
+#define segiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 segiter_next(SegmentsIterator *__restrict self) {
@@ -133,7 +133,7 @@ err_elem:
 }
 
 STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_obj));
-#define segiter_bool generic_proxy_bool
+#define segiter_bool generic_proxy__bool
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 segiter_getseq(SegmentsIterator *__restrict self) {
@@ -162,11 +162,11 @@ PRIVATE struct type_member tpconst segiter_members[] = {
 INTDEF DeeTypeObject SeqSegmentsIterator_Type;
 
 STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_obj));
-#define segiter_hash          generic_proxy_hash_recursive
-#define segiter_compare_eq    generic_proxy_compare_eq_recursive
-#define segiter_compare       generic_proxy_compare_recursive
-#define segiter_trycompare_eq generic_proxy_trycompare_eq_recursive
-#define segiter_cmp           generic_proxy_cmp_recursive
+#define segiter_hash          generic_proxy__hash_recursive
+#define segiter_compare_eq    generic_proxy__compare_eq_recursive
+#define segiter_compare       generic_proxy__compare_recursive
+#define segiter_trycompare_eq generic_proxy__trycompare_eq_recursive
+#define segiter_cmp           generic_proxy__cmp_recursive
 
 INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),

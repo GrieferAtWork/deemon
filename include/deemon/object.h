@@ -5335,7 +5335,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use t
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Unpack()' */
 (DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
-
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* Enumerate valid keys/indices of "self", as well as their current value.
  * @return: * : Sum of return values of `*proc'
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
@@ -5358,19 +5358,20 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeObject_EnumerateIndex)(DeeObject *__restrict self, Dee_seq_enumerate_index_t proc,
                                  void *arg, size_t start, size_t end);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 /* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
  * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
  * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [1..1] objects)
  * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
-DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
+DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int /* DEPRECATED after "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" -- use DeeObject_InvokeMethodHint(seq_unpack) instead */
 (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t dst_length,
                          /*out*/ DREF DeeObject **__restrict dst);
 
 /* @return: * : The actual # of objects written to `dst' (always in range [dst_length_min, dst_length_max])
  * @return: (size_t)-1: Error */
-DFUNDEF WUNUSED NONNULL((1)) size_t
+DFUNDEF WUNUSED NONNULL((1)) size_t /* DEPRECATED after "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" -- use DeeObject_InvokeMethodHint(seq_unpack_ex) instead */
 (DCALL DeeObject_UnpackEx)(DeeObject *__restrict self,
                            size_t dst_length_min, size_t dst_length_max,
                            /*out*/ DREF DeeObject **__restrict dst);
@@ -5382,7 +5383,7 @@ DFUNDEF WUNUSED NONNULL((1)) size_t
  * are NOT skipped.
  * @return: 0 : Success (`dst' now contains exactly `dst_length' references to [0..1] objects)
  * @return: -1: An error was thrown (`dst' may have been modified, but contains no references) */
-DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
+DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int /* DEPRECATED after "CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS" -- use DeeObject_InvokeMethodHint(seq_unpack_ub) instead */
 (DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t dst_length,
                                     /*out*/ DREF DeeObject **__restrict dst);
 

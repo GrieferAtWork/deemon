@@ -88,18 +88,18 @@ function gen(isEq: bool) {
 	print('__seq_compare', _eq, '__.seq_operator_compare', _eq, '([[nonnull]] DeeObject *lhs,');
 	print('             ', ___, '                       ', ___, ' [[nonnull]] DeeObject *rhs)');
 	print('%{unsupported(auto)}');
-	if (isEq) {
-		print('%{$empty = "default__seq_operator_compare__empty"}');
-	} else {
-		print('%{$empty = {');
-		print('	int rhs_nonempty = CALL_DEPENDENCY(seq_operator_bool, rhs);');
-		print('	if unlikely(rhs_nonempty < 0)');
-		print('		goto err;');
-		print('	return rhs_nonempty ? -1 : 0;');
-		print('err:');
-		print('	return Dee_COMPARE_ERR;');
-		print('}}');
-	}
+if (isEq) {
+	print('%{$empty = "default__seq_operator_compare__empty"}');
+} else {
+	print('%{$empty = {');
+	print('	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);');
+	print('	if unlikely(rhs_nonempty < 0)');
+	print('		goto err;');
+	print('	return rhs_nonempty ? -1 : 0;');
+	print('err:');
+	print('	return Dee_COMPARE_ERR;');
+	print('}}');
+}
 
 if (isEq) {
 	print('%{$with__seq_operator_eq = {');
@@ -763,12 +763,12 @@ if (isEq) {
 	print('		data.scf_sg_ogetitem = REQUIRE_DEPENDENCY(seq_operator_getitem);');
 	print('		foreach_result = (*rhs_seq_operator_foreach)(rhs, &seq_compare', eq, '__lhs_sizeob_and_getitem__rhs_foreach__cb, &data);');
 	print('		ASSERT(data.scf_sg_osize == lhs_sizeob);');
-	print('		if (result == ', SEQ_COMPARE_FOREACH_RESULT_EQUAL, ') {');
+	print('		if (foreach_result == ', SEQ_COMPARE_FOREACH_RESULT_EQUAL, ') {');
 	print('			int temp = DeeObject_CmpLoAsBool(data.scf_sg_oindex, lhs_sizeob);');
 	print('			if unlikely(temp < 0) {');
-	print('				result = ', SEQ_COMPARE_FOREACH_RESULT_ERROR, ';');
+	print('				foreach_result = ', SEQ_COMPARE_FOREACH_RESULT_ERROR, ';');
 	print('			} else if (temp) {');
-	print('				result = ', SEQ_COMPARE_FOREACH_RESULT_LESS, ';');
+	print('				foreach_result = ', SEQ_COMPARE_FOREACH_RESULT_LESS, ';');
 	print('			}');
 	print('		}');
 	print('		Dee_Decref(data.scf_sg_oindex);');
@@ -851,7 +851,7 @@ __seq_compare__.seq_operator_compare([[nonnull]] DeeObject *lhs,
                                      [[nonnull]] DeeObject *rhs)
 %{unsupported(auto)}
 %{$empty = {
-	int rhs_nonempty = CALL_DEPENDENCY(seq_operator_bool, rhs);
+	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
 	return rhs_nonempty ? -1 : 0;
@@ -1373,12 +1373,12 @@ err:
 		data.scf_sg_ogetitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 		foreach_result = (*rhs_seq_operator_foreach)(rhs, &seq_compare__lhs_sizeob_and_getitem__rhs_foreach__cb, &data);
 		ASSERT(data.scf_sg_osize == lhs_sizeob);
-		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
+		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
 			int temp = DeeObject_CmpLoAsBool(data.scf_sg_oindex, lhs_sizeob);
 			if unlikely(temp < 0) {
-				result = SEQ_COMPARE_FOREACH_RESULT_ERROR;
+				foreach_result = SEQ_COMPARE_FOREACH_RESULT_ERROR;
 			} else if (temp) {
-				result = SEQ_COMPARE_FOREACH_RESULT_LESS;
+				foreach_result = SEQ_COMPARE_FOREACH_RESULT_LESS;
 			}
 		}
 		Dee_Decref(data.scf_sg_oindex);
@@ -1822,12 +1822,12 @@ err:
 		data.scf_sg_ogetitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 		foreach_result = (*rhs_seq_operator_foreach)(rhs, &seq_compareeq__lhs_sizeob_and_getitem__rhs_foreach__cb, &data);
 		ASSERT(data.scf_sg_osize == lhs_sizeob);
-		if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
 			int temp = DeeObject_CmpLoAsBool(data.scf_sg_oindex, lhs_sizeob);
 			if unlikely(temp < 0) {
-				result = SEQ_COMPAREEQ_FOREACH_RESULT_ERROR;
+				foreach_result = SEQ_COMPAREEQ_FOREACH_RESULT_ERROR;
 			} else if (temp) {
-				result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
+				foreach_result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
 			}
 		}
 		Dee_Decref(data.scf_sg_oindex);

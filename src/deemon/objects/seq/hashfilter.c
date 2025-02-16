@@ -37,8 +37,8 @@
 DECL_BEGIN
 
 STATIC_ASSERT(offsetof(HashFilter, f_seq) == offsetof(ProxyObject, po_obj));
-#define filter_fini  generic_proxy_fini
-#define filter_visit generic_proxy_visit
+#define filter_fini  generic_proxy__fini
+#define filter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_ctor(HashFilterIterator *__restrict self) {
@@ -174,7 +174,7 @@ err:
 }
 
 STATIC_ASSERT(offsetof(HashFilterIterator, fi_iter) == offsetof(ProxyObject, po_obj));
-#define filteriterator_compare generic_proxy_compare_recursive
+#define filteriterator_compare generic_proxy__compare_recursive
 
 PRIVATE struct type_cmp filteriterator_cmp = {
 	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,

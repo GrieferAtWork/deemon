@@ -76,6 +76,9 @@ err:
 
 
 
+/* Enumerate valid keys/indices of "self", as well as their current value.
+ * @return: * : Sum of return values of `*cb'
+ * @return: -1: An error occurred during iteration (or potentially inside of `*cb') */
 [[wunused]] Dee_ssize_t
 __seq_enumerate__.seq_enumerate([[nonnull]] DeeObject *__restrict self,
                                 [[nonnull]] Dee_seq_enumerate_t cb,
@@ -305,7 +308,7 @@ err_temp_indexob:
 	return temp;
 err_indexob:
 	Dee_Decref(indexob);
-err:
+/*err:*/
 	return -1;
 }}
 %{$with__seq_enumerate_index = {
@@ -367,6 +370,17 @@ default_seq_enumerate_index_with_counter__and__seq_foreach_cb(void *arg, DeeObje
 #endif /* !DEFINED_default_seq_enumerate_index_with_counter__and__seq_foreach_cb */
 )]
 
+
+
+/* Same as `seq_enumerate()', but only valid when "self" uses integers for indices
+ * or is a mapping where all keys are integers. In the former case, [start,end)
+ * can be given in order to allow the implementation to only enumerate indices that
+ * fall within that range (though an implementation is allowed to simply ignore these
+ * arguments)
+ * If you want to always enumerate all indices (like is also done by `seq_enumerate',
+ * then simply pass `start = 0, end = (size_t)-1')
+ * @return: * : Sum of return values of `*cb'
+ * @return: -1: An error occurred during iteration (or potentially inside of `*cb') */
 [[wunused]] Dee_ssize_t
 __seq_enumerate__.seq_enumerate_index([[nonnull]] DeeObject *__restrict self,
                                       [[nonnull]] Dee_seq_enumerate_index_t cb,

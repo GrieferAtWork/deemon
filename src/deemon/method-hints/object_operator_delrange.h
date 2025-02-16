@@ -29,12 +29,12 @@ operator {
 tp_seq->tp_delrange([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *start,
                     [[nonnull]] DeeObject *end)
-%{class {
+%{class using OPERATOR_DELRANGE: {
 	DREF DeeObject *result;
 	DeeObject *args[2];
 	args[0] = start;
 	args[1] = end;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_GETRANGE, 2, args);
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_DELRANGE, 2, args);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
 	return 0;
 err:
@@ -81,7 +81,7 @@ err:
 
 
 
-[[export("DeeObject_{|T}DelRangeN")]]
+[[export("DeeObject_{|T}DelRangeIndexN")]]
 [[wunused]] int
 tp_seq->tp_delrange_index_n([[nonnull]] DeeObject *self,
                             Dee_ssize_t start)
@@ -94,8 +94,6 @@ tp_seq->tp_delrange_index_n([[nonnull]] DeeObject *self,
 	result = CALL_DEPENDENCY(tp_seq->tp_delrange, self, startob, Dee_None);
 	Dee_Decref(startob); /* Would be "_likely", but DeeInt_NewSSize() re-uses values. */
 	return result;
-err_startob:
-	Dee_Decref(startob); /* Would be "_likely", but DeeInt_NewSSize() re-uses values. */
 err:
 	return -1;
 }} = OPERATOR_DELRANGE;

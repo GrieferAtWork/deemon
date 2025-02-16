@@ -44,6 +44,7 @@ typedef struct {
 	DREF DeeObject *dssg_end;   /* [1..1][const] Enumeration stop index. */
 } DefaultSequence_WithSizeAndGetItem;
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *dstsg_seq;    /* [1..1][const] The sequence being iterated. */
@@ -53,6 +54,7 @@ typedef struct {
 	DREF DeeObject *dstsg_end;    /* [1..1][const] Enumeration stop index. */
 	DeeTypeObject  *dstsg_tp_seq; /* [1..1][const] The type to pass to `dstsg_tp_tgetitem'. */
 } DefaultSequence_WithTSizeAndGetItem;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 typedef struct {
 	OBJECT_HEAD
@@ -70,6 +72,7 @@ typedef struct {
 	size_t          dsial_limit; /* [const] Max # of items to enumerate starting with `dsial_start' */
 } DefaultSequence_WithIterAndLimit;
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *dsti_seq;    /* [1..1][const] The sequence being iterated. */
@@ -79,15 +82,18 @@ typedef struct {
 	size_t          dsti_limit;  /* [const] Max # of items to enumerate starting with `dsti_start' (but enumeration may stop earlier than that) */
 	DeeTypeObject  *dsti_tp_seq; /* [1..1][const] The type to pass to `dsti_tp_titer'. */
 } DefaultSequence_WithTIterAndLimit;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type;     /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type; /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type;  /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type;          /* DefaultSequence_WithSizeAndGetItem */
-INTDEF DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type;         /* DefaultSequence_WithTSizeAndGetItem */
 INTDEF DeeTypeObject DefaultSequence_WithIter_Type;                    /* DefaultSequence_WithIter */
 INTDEF DeeTypeObject DefaultSequence_WithIterAndLimit_Type;            /* DefaultSequence_WithIterAndLimit */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+INTDEF DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type;         /* DefaultSequence_WithTSizeAndGetItem */
 INTDEF DeeTypeObject DefaultSequence_WithTIterAndLimit_Type;           /* DefaultSequence_WithTIterAndLimit */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DECL_END
 

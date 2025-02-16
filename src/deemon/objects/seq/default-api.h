@@ -38,9 +38,9 @@
 #include "../../../../include/deemon/class.h"
 #endif /* !LOCAL_FOR_VARIANTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DECL_BEGIN
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* How default API functions from "Sequence", "Set" and "Mapping" are implemented.
  *
  * This structure gets lazily calculated when it is first needed, based on features
@@ -1900,8 +1900,12 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_sub__(De
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_and__(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default_map___inplace_xor__(DeeObject *self, size_t argc, DeeObject *const *argv);
 #define default_map___inplace_or__ default_map___inplace_add__
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DECL_END
+#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+/* For backwards compat macros */
+#include "../../runtime/method-hint-defaults.h"
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_API_H */

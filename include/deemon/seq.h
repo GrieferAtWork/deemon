@@ -281,11 +281,11 @@ DeeRange_NewInt(Dee_ssize_t begin, Dee_ssize_t end, Dee_ssize_t step);
 
 /* Functions used to implement special sequence expressions,
  * such as `x + ...' (as `DeeSeq_Sum'), etc. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Sum(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Any(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_All(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Sum(DeeObject *__restrict self); /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_sum, self) */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Any(DeeObject *__restrict self);             /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_any, self) */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_All(DeeObject *__restrict self);             /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_all, self) */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self);            /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_min, self) */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self);            /* DEPRECATED! -- use DeeObject_InvokeMethodHint(seq_max, self) */
 
 
 /* Possible return values for `DeeType_GetSeqClass()' */

@@ -275,9 +275,11 @@
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_call.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_cmp.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_contains.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_delattr.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_delitem.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_delrange.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_float.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_getattr.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_getitem.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_getrange.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_hash.h" />
@@ -287,6 +289,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_moveassign.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_next.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_repr.h" />
+		<ClInclude Include="..\src\deemon\method-hints\object_operator_setattr.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_setitem.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_setrange.h" />
 		<ClInclude Include="..\src\deemon\method-hints\object_operator_size.h" />
@@ -347,6 +350,7 @@
 		<ClInclude Include="..\src\deemon\method-hints\seq_startswith.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_sum.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_unpack.h" />
+		<ClInclude Include="..\src\deemon\method-hints\seq_unpack_ub.h" />
 		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_frozen.h" />
 		<ClInclude Include="..\src\deemon\method-hints\set_insert.h" />

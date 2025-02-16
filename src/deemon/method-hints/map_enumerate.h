@@ -54,7 +54,7 @@ __map_enumerate__.map_enumerate([[nonnull]] DeeObject *__restrict self,
                                 [[nonnull]] Dee_seq_enumerate_t cb,
                                 void *arg)
 %{unsupported({
-	return err_map_unsupportedf(self, "__map_enumerate__(<cb>)");
+	return err_map_unsupportedf(self, "__map_enumerate__(<callback>)");
 })}
 %{$empty = "default__set_operator_foreach_pair__empty"}
 /*%{$with__set_operator_foreach_pair = {
@@ -150,7 +150,9 @@ __map_enumerate__.map_enumerate_range([[nonnull]] DeeObject *self,
                                       [[nonnull]] Dee_seq_enumerate_t cb, void *arg,
                                       [[nonnull]] DeeObject *start,
                                       [[nonnull]] DeeObject *end)
-%{unsupported({ return err_map_unsupportedf(self, "__map_enumerate__(<cb>, %r, %r)", start, end); })}
+%{unsupported({
+	return err_map_unsupportedf(self, "__map_enumerate__(<callable>, %r, %r)", start, end);
+})}
 %{$empty = 0}
 %{$with__map_enumerate = [[prefix(DEFINE_map_enumerate_with_filter_cb)]] {
 	struct map_enumerate_with_filter_data data;

@@ -158,8 +158,8 @@ DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
 
 
 STATIC_ASSERT(offsetof(DeeObjMethodObject, om_this) == offsetof(ProxyObject, po_obj));
-#define objmethod_fini  generic_proxy_fini
-#define objmethod_visit generic_proxy_visit
+#define objmethod_fini  generic_proxy__fini
+#define objmethod_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_call(DeeObjMethodObject *self, size_t argc, DeeObject *const *argv) {
@@ -525,8 +525,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(DocKwdsIterator, dki_kwds) == offsetof(ProxyObject, po_obj));
-#define dockwdsiter_fini  generic_proxy_fini
-#define dockwdsiter_visit generic_proxy_visit
+#define dockwdsiter_fini  generic_proxy__fini
+#define dockwdsiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 dockwdsiter_hash(DocKwdsIterator *self) {
@@ -617,8 +617,8 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 
 
 STATIC_ASSERT(offsetof(DocKwds, dk_owner) == offsetof(ProxyObject, po_obj));
-#define dockwds_fini  generic_proxy_fini
-#define dockwds_visit generic_proxy_visit
+#define dockwds_fini  generic_proxy__fini
+#define dockwds_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DocKwdsIterator *DCALL
 dockwds_iter(DocKwds *__restrict self) {
@@ -1663,8 +1663,8 @@ done:
 }
 
 STATIC_ASSERT(offsetof(DeeClsMemberObject, cm_type) == offsetof(ProxyObject, po_obj));
-#define clsmember_fini  generic_proxy_fini
-#define clsmember_visit generic_proxy_visit
+#define clsmember_fini  generic_proxy__fini
+#define clsmember_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 clsmember_print(DeeClsMemberObject *__restrict self,

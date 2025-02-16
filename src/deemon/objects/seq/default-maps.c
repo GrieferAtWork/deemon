@@ -28,6 +28,7 @@
 #include <deemon/map.h>
 #include <deemon/method-hints.h>
 #include <deemon/none.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/thread.h>
 
@@ -112,11 +113,11 @@ STATIC_ASSERT(offsetof(MapUnion, mu_a) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapUnion, mu_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapUnion, mu_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapUnion, mu_b) == offsetof(ProxyObject2, po_obj2));
-#define mu_copy  generic_proxy2_copy_alias12
-#define mu_deep  generic_proxy2_deepcopy
-#define mu_init  generic_proxy2_init
-#define mu_fini  generic_proxy2_fini
-#define mu_visit generic_proxy2_visit
+#define mu_copy  generic_proxy2__copy_alias12
+#define mu_deep  generic_proxy2__deepcopy
+#define mu_init  generic_proxy2__init
+#define mu_fini  generic_proxy2__fini
+#define mu_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mu_ctor(MapUnion *__restrict self) {
@@ -462,7 +463,7 @@ STATIC_ASSERT(offsetof(MapUnionIterator, mui_union) == offsetof(ProxyObject2, po
               offsetof(MapUnionIterator, mui_union) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapUnionIterator, mui_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapUnionIterator, mui_iter) == offsetof(ProxyObject2, po_obj2));
-#define muiter_fini generic_proxy2_fini
+#define muiter_fini generic_proxy2__fini
 
 PRIVATE NONNULL((1)) void DCALL
 muiter_clear(MapUnionIterator *__restrict self) {
@@ -925,11 +926,11 @@ STATIC_ASSERT(offsetof(MapIntersection, mi_map) == offsetof(ProxyObject2, po_obj
               offsetof(MapIntersection, mi_map) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapIntersection, mi_keys) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapIntersection, mi_keys) == offsetof(ProxyObject2, po_obj2));
-#define mi_copy  generic_proxy2_copy_alias12
-#define mi_deep  generic_proxy2_deepcopy
-#define mi_init  generic_proxy2_init
-#define mi_fini  generic_proxy2_fini
-#define mi_visit generic_proxy2_visit
+#define mi_copy  generic_proxy2__copy_alias12
+#define mi_deep  generic_proxy2__deepcopy
+#define mi_init  generic_proxy2__init
+#define mi_fini  generic_proxy2__fini
+#define mi_visit generic_proxy2__visit
 
 #define MAP_CONTAINSANY_FOREACH__FOUND SSIZE_MIN
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -1233,15 +1234,15 @@ STATIC_ASSERT(offsetof(MapIntersectionIterator, mii_iter) == offsetof(ProxyObjec
               offsetof(MapIntersectionIterator, mii_iter) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapIntersectionIterator, mii_intersect) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapIntersectionIterator, mii_intersect) == offsetof(ProxyObject2, po_obj2));
-#define miiter_fini  generic_proxy2_fini
-#define miiter_visit generic_proxy2_visit
+#define miiter_fini  generic_proxy2__fini
+#define miiter_visit generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(MapIntersectionIterator, mii_iter) == offsetof(ProxyObject, po_obj));
-#define miiter_hash          generic_proxy_hash_recursive
-#define miiter_compare       generic_proxy_compare_recursive
-#define miiter_compare_eq    generic_proxy_compare_eq_recursive
-#define miiter_trycompare_eq generic_proxy_trycompare_eq_recursive
-#define miiter_cmp           generic_proxy_cmp_recursive
+#define miiter_hash          generic_proxy__hash_recursive
+#define miiter_compare       generic_proxy__compare_recursive
+#define miiter_compare_eq    generic_proxy__compare_eq_recursive
+#define miiter_trycompare_eq generic_proxy__trycompare_eq_recursive
+#define miiter_cmp           generic_proxy__cmp_recursive
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 miiter_nextpair(MapIntersectionIterator *__restrict self,
@@ -1357,14 +1358,14 @@ STATIC_ASSERT(offsetof(MapDifference, md_map) == offsetof(ProxyObject2, po_obj1)
               offsetof(MapDifference, md_map) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj2));
-#define md_copy  generic_proxy2_copy_alias12
-#define md_deep  generic_proxy2_deepcopy
-#define md_fini  generic_proxy2_fini
-#define md_visit generic_proxy2_visit
+#define md_copy  generic_proxy2__copy_alias12
+#define md_deep  generic_proxy2__deepcopy
+#define md_fini  generic_proxy2__fini
+#define md_visit generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(MapDifference, md_map) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj2));
-#define md_init generic_proxy2_init
+#define md_init generic_proxy2__init
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 md_ctor(MapDifference *__restrict self) {
@@ -1598,15 +1599,15 @@ STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_iter) == offsetof(ProxyObject2
               offsetof(MapDifferenceIterator, mdi_iter) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_diff) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapDifferenceIterator, mdi_diff) == offsetof(ProxyObject2, po_obj2));
-#define mditer_fini  generic_proxy2_fini
-#define mditer_visit generic_proxy2_visit
+#define mditer_fini  generic_proxy2__fini
+#define mditer_visit generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_iter) == offsetof(ProxyObject, po_obj));
-#define mditer_hash          generic_proxy_hash_recursive
-#define mditer_compare       generic_proxy_compare_recursive
-#define mditer_compare_eq    generic_proxy_compare_eq_recursive
-#define mditer_trycompare_eq generic_proxy_trycompare_eq_recursive
-#define mditer_cmp           generic_proxy_cmp_recursive
+#define mditer_hash          generic_proxy__hash_recursive
+#define mditer_compare       generic_proxy__compare_recursive
+#define mditer_compare_eq    generic_proxy__compare_eq_recursive
+#define mditer_trycompare_eq generic_proxy__trycompare_eq_recursive
+#define mditer_cmp           generic_proxy__cmp_recursive
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mditer_nextpair(MapDifferenceIterator *__restrict self,
@@ -1722,11 +1723,11 @@ STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_a) == offsetof(ProxyObject2, 
               offsetof(MapSymmetricDifference, msd_a) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapSymmetricDifference, msd_b) == offsetof(ProxyObject2, po_obj2));
-#define msd_copy  generic_proxy2_copy_alias12
-#define msd_deep  generic_proxy2_deepcopy
-#define msd_init  generic_proxy2_init
-#define msd_fini  generic_proxy2_fini
-#define msd_visit generic_proxy2_visit
+#define msd_copy  generic_proxy2__copy_alias12
+#define msd_deep  generic_proxy2__deepcopy
+#define msd_init  generic_proxy2__init
+#define msd_fini  generic_proxy2__fini
+#define msd_visit generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_a) == offsetof(MapUnion, mu_a) ||
               offsetof(MapSymmetricDifference, msd_a) == offsetof(MapUnion, mu_b));
@@ -2282,7 +2283,7 @@ STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_symdiff) == offsetof
               offsetof(MapSymmetricDifferenceIterator, msdi_symdiff) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(ProxyObject2, po_obj2));
-#define msditer_fini generic_proxy2_fini
+#define msditer_fini generic_proxy2__fini
 
 #if 1
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_lock) == offsetof(MapUnionIterator, mui_lock));

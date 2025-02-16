@@ -167,14 +167,14 @@ err:
 	return -1;
 }
 
-#define di_gi_fini    generic_proxy_fini
-#define di_sgi_fini   generic_proxy_fini
-#define di_sgif_fini  generic_proxy_fini
-#define di_stgi_fini  generic_proxy_fini
-#define di_gi_visit   generic_proxy_visit
-#define di_sgi_visit  generic_proxy_visit
-#define di_sgif_visit generic_proxy_visit
-#define di_stgi_visit generic_proxy_visit
+#define di_gi_fini    generic_proxy__fini
+#define di_sgi_fini   generic_proxy__fini
+#define di_sgif_fini  generic_proxy__fini
+#define di_stgi_fini  generic_proxy__fini
+#define di_gi_visit   generic_proxy__visit
+#define di_sgi_visit  generic_proxy__visit
+#define di_sgif_visit generic_proxy__visit
+#define di_stgi_visit generic_proxy__visit
 
 #define di_sgi_hash  di_gi_hash
 #define di_sgif_hash di_gi_hash
@@ -2382,7 +2382,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == of
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj2));
-#define di_ikgim_fini    generic_proxy2_fini
+#define di_ikgim_fini    generic_proxy2__fini
 #define di_iktrgim_fini  di_ikgim_fini
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktrgis_fini  di_ikgim_fini
@@ -2397,7 +2397,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == of
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject2, po_obj2));
-#define di_ikgim_visit    generic_proxy2_visit
+#define di_ikgim_visit    generic_proxy2__visit
 #define di_iktrgim_visit  di_ikgim_visit
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktrgis_visit  di_ikgim_visit
@@ -2409,7 +2409,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
-#define di_ikgis_hash    generic_proxy_hash_recursive
+#define di_ikgis_hash    generic_proxy__hash_recursive
 #define di_iktrgim_hash  di_ikgis_hash
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktrgis_hash  di_ikgis_hash
@@ -2421,7 +2421,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
-#define di_ikgim_compare_eq    generic_proxy_compare_eq_recursive
+#define di_ikgim_compare_eq    generic_proxy__compare_eq_recursive
 #define di_iktrgim_compare_eq  di_ikgim_compare_eq
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktrgis_compare_eq  di_ikgim_compare_eq
@@ -2433,7 +2433,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
-#define di_ikgim_compare    generic_proxy_compare_recursive
+#define di_ikgim_compare    generic_proxy__compare_recursive
 #define di_iktrgim_compare  di_ikgim_compare
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktrgis_compare  di_ikgim_compare
@@ -2445,7 +2445,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == offsetof(ProxyObject, po_obj));
-#define di_ikgim_trycompare_eq    generic_proxy_trycompare_eq_recursive
+#define di_ikgim_trycompare_eq    generic_proxy__trycompare_eq_recursive
 #define di_iktrgim_trycompare_eq  di_ikgim_trycompare_eq
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define di_iktrgis_trycompare_eq  di_ikgim_trycompare_eq
@@ -2467,7 +2467,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 #define di_iktgis_cmp   di_ikgim_cmp
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #if 1
-#define di_ikgim_cmp generic_proxy_cmp_recursive
+#define di_ikgim_cmp generic_proxy__cmp_recursive
 #else
 PRIVATE struct type_cmp di_ikgis_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&di_ikgis_hash,
@@ -3549,7 +3549,7 @@ di_ncpl_iter_next(DefaultIterator_WithNextAndCounterAndLimit *self) {
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounter, dinc_iter) ==
               offsetof(ProxyObject, po_obj));
-#define di_ncp_bool generic_proxy_bool
+#define di_ncp_bool generic_proxy__bool
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 di_ncpl_bool(DefaultIterator_WithNextAndCounterAndLimit *self) {
@@ -4052,8 +4052,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(DefaultIterator_PairSubItem, dipsi_iter) == offsetof(ProxyObject, po_obj));
-#define di_nv_advance generic_proxy_iter_advance
-#define di_nk_advance generic_proxy_iter_advance
+#define di_nv_advance generic_proxy__iter_advance
+#define di_nk_advance generic_proxy__iter_advance
 
 #define di_nv_iter_next di_nk_iter_next
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

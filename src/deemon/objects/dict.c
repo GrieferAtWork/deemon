@@ -98,8 +98,8 @@ typedef struct {
 INTDEF DeeTypeObject DictIterator_Type;
 
 STATIC_ASSERT(offsetof(DictIterator, di_dict) == offsetof(ProxyObject, po_obj));
-#define diter_fini  generic_proxy_fini
-#define diter_visit generic_proxy_visit
+#define diter_fini  generic_proxy__fini
+#define diter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_ctor(DictIterator *__restrict self) {
@@ -4533,8 +4533,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(DictIterator, di_dict) == offsetof(ProxyObject, po_obj));
-#define dictiterator_fini  generic_proxy_fini
-#define dictiterator_visit generic_proxy_visit
+#define dictiterator_fini  generic_proxy__fini
+#define dictiterator_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 dictiterator_hash(DictIterator *self) {

@@ -959,8 +959,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(TupleIterator, ti_tuple) == offsetof(ProxyObject, po_obj));
-#define tuple_iterator_fini  generic_proxy_fini
-#define tuple_iterator_visit generic_proxy_visit
+#define tuple_iterator_fini  generic_proxy__fini
+#define tuple_iterator_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_iterator_next(TupleIterator *__restrict self) {

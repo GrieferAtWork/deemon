@@ -28,6 +28,7 @@
 #include <deemon/list.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
@@ -96,7 +97,9 @@ again:
 	if (tp_seq->tp_seq &&
 	    tp_seq->tp_seq->tp_getitem_index_fast &&
 	    tp_seq->tp_seq->tp_size_fast) {
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 have_operators:
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 		self->fsq_self               = seq;
 		self->fsq_getitem_index_fast = tp_seq->tp_seq->tp_getitem_index_fast;
 		return (*tp_seq->tp_seq->tp_size_fast)(seq);
@@ -104,13 +107,16 @@ have_operators:
 		tp_seq = DeeSuper_TYPE(seq);
 		seq    = DeeSuper_SELF(seq);
 		goto again;
-	} else if (!tp_seq->tp_seq && (DeeType_InheritSize(tp_seq) ||
+	}
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	else if (!tp_seq->tp_seq && (DeeType_InheritSize(tp_seq) ||
 	                               DeeType_InheritGetItem(tp_seq))) {
 		if (tp_seq->tp_seq &&
 		    tp_seq->tp_seq->tp_getitem_index_fast &&
 		    tp_seq->tp_seq->tp_size_fast)
 			goto have_operators;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	return (size_t)-1;
 }
 
@@ -170,15 +176,15 @@ PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     /*[out]*/ size_t *__restrict p_length) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeNO_foreach_t tp_foreach = DeeType_RequireSupportedNativeOperator(tp_self, foreach);
 	struct foreach_seq_as_heap_vector_data data;
-	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
-	              unlikely(DeeType_InheritIter(tp_self)))) {
+	if unlikely(!tp_foreach) {
 		err_unimplemented_operator(tp_self, OPERATOR_ITER);
 		goto err;
 	}
 
 	/* Try to use "tp_size_fast" to get a good guess regarding the initial buffer size. */
-	if likely(tp_self->tp_seq->tp_size_fast) {
+	if likely(tp_self->tp_seq && tp_self->tp_seq->tp_size_fast) {
 		data.sahvd_alloc = (*tp_self->tp_seq->tp_size_fast)(self);
 		if (data.sahvd_alloc == (size_t)-1)
 			data.sahvd_alloc = 16;
@@ -194,7 +200,7 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 	}
 
 	/* Check if the type supports the "tp_asvector" extension. */
-	if (tp_self->tp_seq->tp_asvector) {
+	if (tp_self->tp_seq && tp_self->tp_seq->tp_asvector) {
 		DREF DeeObject **new_vector;
 again_asvector:
 		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_alloc, data.sahvd_vector);
@@ -217,7 +223,7 @@ again_asvector:
 
 	/* Fallback: use "tp_foreach" to enumerate sequence items. */
 	data.sahvd_size = 0;
-	if unlikely((*tp_self->tp_seq->tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
+	if unlikely((*tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
 		goto err_vector_data;
 	ASSERT(data.sahvd_size <= data.sahvd_alloc);
 
@@ -270,15 +276,15 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 #endif /* !Dee_MallocUsableSize */
 {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeNO_foreach_t tp_foreach = DeeType_RequireSupportedNativeOperator(tp_self, foreach);
 	struct foreach_seq_as_heap_vector_data data;
-	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
-	              unlikely(DeeType_InheritIter(tp_self)))) {
+	if unlikely(!tp_foreach) {
 		err_unimplemented_operator(tp_self, OPERATOR_ITER);
 		goto err;
 	}
 
 	/* Try to use "tp_size_fast" to get a good guess regarding the initial buffer size. */
-	if likely(tp_self->tp_seq->tp_size_fast) {
+	if likely(tp_self->tp_seq && tp_self->tp_seq->tp_size_fast) {
 		data.sahvd_alloc = (*tp_self->tp_seq->tp_size_fast)(self);
 		if (data.sahvd_alloc == (size_t)-1)
 			data.sahvd_alloc = 16;
@@ -294,7 +300,7 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 	}
 
 	/* Check if the type supports the "tp_asvector" extension. */
-	if (tp_self->tp_seq->tp_asvector) {
+	if (tp_self->tp_seq && tp_self->tp_seq->tp_asvector) {
 		DREF DeeObject **new_vector;
 again_asvector:
 		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_alloc, data.sahvd_vector);
@@ -314,7 +320,7 @@ again_asvector:
 
 	/* Fallback: use "tp_foreach" to enumerate sequence items. */
 	data.sahvd_size = 0;
-	if unlikely((*tp_self->tp_seq->tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
+	if unlikely((*tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
 		goto err_vector_data;
 	ASSERT(data.sahvd_size <= data.sahvd_alloc);
 
@@ -381,9 +387,9 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 #endif /* !Dee_MallocUsableSize */
 {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeNO_foreach_t tp_foreach = DeeType_RequireSupportedNativeOperator(tp_self, foreach);
 	struct foreach_seq_as_heap_vector_data data;
-	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
-	              unlikely(DeeType_InheritIter(tp_self)))) {
+	if unlikely(!tp_foreach) {
 		err_unimplemented_operator(tp_self, OPERATOR_ITER);
 		goto err;
 	}
@@ -397,7 +403,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
 
 	/* Try to use "tp_size_fast" to get a good guess regarding the initial buffer size. */
-	if likely(tp_self->tp_seq->tp_size_fast) {
+	if likely(tp_self->tp_seq && tp_self->tp_seq->tp_size_fast) {
 		size_t min_alloc;
 		min_alloc = (*tp_self->tp_seq->tp_size_fast)(self);
 		if (min_alloc != (size_t)-1 && min_alloc > data.sahvd_alloc) {
@@ -411,7 +417,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 	}
 
 	/* Check if the type supports the "tp_asvector" extension. */
-	if (tp_self->tp_seq->tp_asvector) {
+	if (tp_self->tp_seq && tp_self->tp_seq->tp_asvector) {
 		DREF DeeObject **new_vector;
 again_asvector:
 		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self, data.sahvd_alloc, data.sahvd_vector);
@@ -431,7 +437,7 @@ again_asvector:
 
 	/* Fallback: use "tp_foreach" to enumerate sequence items. */
 	data.sahvd_size = 0;
-	if unlikely((*tp_self->tp_seq->tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
+	if unlikely((*tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
 		goto err_writeback_data;
 	ASSERT(data.sahvd_size <= data.sahvd_alloc);
 
@@ -490,9 +496,9 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 #endif /* !Dee_MallocUsableSize */
 {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
+	DeeNO_foreach_t tp_foreach = DeeType_RequireSupportedNativeOperator(tp_self, foreach);
 	struct foreach_seq_as_heap_vector_data data;
-	if unlikely(!(likely(tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
-	              unlikely(DeeType_InheritIter(tp_self)))) {
+	if unlikely(!tp_foreach) {
 		err_unimplemented_operator(tp_self, OPERATOR_ITER);
 		goto err;
 	}
@@ -507,7 +513,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
 
 	/* Try to use "tp_size_fast" to get a good guess regarding the initial buffer size. */
-	if likely(tp_self->tp_seq->tp_size_fast) {
+	if likely(tp_self->tp_seq && tp_self->tp_seq->tp_size_fast) {
 		size_t min_alloc;
 		min_alloc = (*tp_self->tp_seq->tp_size_fast)(self);
 		if (min_alloc != (size_t)-1 && !OVERFLOW_UADD(min_alloc, offset, &min_alloc)) {
@@ -523,7 +529,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 	}
 
 	/* Check if the type supports the "tp_asvector" extension. */
-	if (tp_self->tp_seq->tp_asvector) {
+	if (tp_self->tp_seq && tp_self->tp_seq->tp_asvector) {
 		DREF DeeObject **new_vector;
 again_asvector:
 		data.sahvd_size = (*tp_self->tp_seq->tp_asvector)(self,
@@ -553,7 +559,7 @@ again_asvector:
 	/* Use `DeeObject_Foreach()' */
 	data.sahvd_size = offset;
 	ASSERT(data.sahvd_size <= data.sahvd_alloc);
-	if unlikely((*tp_self->tp_seq->tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
+	if unlikely((*tp_foreach)(self, &foreach_seq_as_heap_vector_cb, &data))
 		goto err_writeback_data;
 	ASSERT(data.sahvd_size <= data.sahvd_alloc);
 	ASSERT(data.sahvd_size >= offset);

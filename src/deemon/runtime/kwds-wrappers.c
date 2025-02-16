@@ -92,8 +92,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(DeeBlackListKwdsIterator, blki_map) == offsetof(ProxyObject, po_obj));
-#define blvi_fini  generic_proxy_fini
-#define blvi_visit generic_proxy_visit
+#define blvi_fini  generic_proxy__fini
+#define blvi_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) struct kwds_entry *DCALL
 blvi_nextiter(DeeBlackListKwdsIterator *__restrict self) {
@@ -1108,9 +1108,9 @@ INTDEF DeeTypeObject DeeBlackListKwIterator_Type;
 
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_map) == offsetof(ProxyObject2, po_obj2));
-#define blmi_copy  generic_proxy2_copy_recursive1_alias2
-#define blmi_fini  generic_proxy2_fini
-#define blmi_visit generic_proxy2_visit
+#define blmi_copy  generic_proxy2__copy_recursive1_alias2
+#define blmi_fini  generic_proxy2__fini
+#define blmi_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blmi_nextpair(DeeBlackListKwIterator *__restrict self,
@@ -1175,11 +1175,11 @@ PRIVATE struct type_iterator blmi_iterator = {
 };
 
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject, po_obj));
-#define blmi_hash          generic_proxy_hash_recursive
-#define blmi_compare       generic_proxy_compare_recursive
-#define blmi_compare_eq    generic_proxy_compare_eq_recursive
-#define blmi_trycompare_eq generic_proxy_trycompare_eq_recursive
-#define blmi_cmp           generic_proxy_cmp_recursive
+#define blmi_hash          generic_proxy__hash_recursive
+#define blmi_compare       generic_proxy__compare_recursive
+#define blmi_compare_eq    generic_proxy__compare_eq_recursive
+#define blmi_trycompare_eq generic_proxy__trycompare_eq_recursive
+#define blmi_cmp           generic_proxy__cmp_recursive
 
 PRIVATE struct type_member tpconst blmi_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwIterator, mi_map), "->?Ert:BlackListKw"),
@@ -1461,8 +1461,8 @@ STATIC_ASSERT(offsetof(DeeBlackListKwObject, blkw_code) == offsetof(ProxyObject2
               offsetof(DeeBlackListKwObject, blkw_code) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(DeeBlackListKwObject, blkw_kw) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DeeBlackListKwObject, blkw_kw) == offsetof(ProxyObject2, po_obj2));
-#define blkw_fini  generic_proxy2_fini
-#define blkw_visit generic_proxy2_visit
+#define blkw_fini  generic_proxy2__fini
+#define blkw_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 blkw_bool_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {

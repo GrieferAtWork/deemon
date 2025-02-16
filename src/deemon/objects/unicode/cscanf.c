@@ -524,8 +524,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(StringScanIterator, si_scanner) == offsetof(ProxyObject, po_obj));
-#define ssi_fini  generic_proxy_fini_likely /* likely: it was probably only created for iteration, in which case it'll be destroyed with us. */
-#define ssi_visit generic_proxy_visit
+#define ssi_fini  generic_proxy__fini_likely /* likely: it was probably only created for iteration, in which case it'll be destroyed with us. */
+#define ssi_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 ssi_hash(StringScanIterator *self) {
@@ -626,8 +626,8 @@ STATIC_ASSERT(offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj1
               offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj2));
-#define ss_fini  generic_proxy2_fini_normal_unlikely /* unlikely: it's probably a string constant */
-#define ss_visit generic_proxy2_visit
+#define ss_fini  generic_proxy2__fini_normal_unlikely /* unlikely: it's probably a string constant */
+#define ss_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF StringScanIterator *DCALL
 ss_iter(StringScanner *__restrict self) {

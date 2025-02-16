@@ -27,7 +27,7 @@ operator {
 [[export("DeeObject_{|T}Iter")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_ITER: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_ITER, 0, NULL);
 }}
 %{using tp_seq->tp_foreach: {
@@ -113,25 +113,15 @@ err:
 
 
 
-%[define(DECLARE_default_foreach_pair_with_foreach_cb =
-#ifndef DECLARED_default_foreach_pair_with_foreach_cb
-#define DECLARED_default_foreach_pair_with_foreach_cb
+%[define(DEFINE_default_foreach_pair_with_foreach_cb =
+#ifndef DEFINED_default_foreach_pair_with_foreach_cb
+#define DEFINED_default_foreach_pair_with_foreach_cb
 struct default_foreach_pair_with_foreach_data {
 	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
 	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem);
-#endif /* !DECLARED_default_foreach_pair_with_foreach_cb */
-)]
-
-
-%[define(DEFINE_default_foreach_pair_with_foreach_cb =
-DECLARE_default_foreach_pair_with_foreach_cb
-#ifndef DEFINED_default_foreach_pair_with_foreach_cb
-#define DEFINED_default_foreach_pair_with_foreach_cb
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
 	struct default_foreach_pair_with_foreach_data *data;
 	Dee_ssize_t result;

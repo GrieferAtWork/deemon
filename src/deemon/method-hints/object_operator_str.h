@@ -51,7 +51,7 @@ err:
 /*[[export("DeeObject_{|T}Str")]]*/ /* Requires custom handling for recursion */
 [[wunused]] DREF DeeObject *
 tp_cast.tp_str([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_STR: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_STR, 0, NULL);
 	if (DeeObject_AssertTypeExact(result, &DeeString_Type))
@@ -62,7 +62,9 @@ err_r:
 err:
 	return NULL;
 }}
-%{class by_print: [[prefix(DEFINE_instance_call_with_file_writer)]] {
+%{class using CLASS_OPERATOR_PRINT:
+	[[prefix(DEFINE_instance_call_with_file_writer)]]
+{
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(THIS_TYPE, CLASS_OPERATOR_PRINT);
 	if unlikely(!func)
@@ -137,9 +139,10 @@ err:
 [[wunused]] Dee_ssize_t
 tp_cast.tp_print([[nonnull]] DeeObject *__restrict self,
                  [[nonnull]] Dee_formatprinter_t printer, void *arg)
-%{class {
+%{class using OPERATOR_STR:{
 	Dee_ssize_t result;
-	DREF DeeObject *strval = IF_TYPED_ELSE(tusrtype__str(tp_self, self), usrtype__str(self));
+	DREF DeeObject *strval = IF_TYPED_ELSE(tusrtype__str__with__STR(tp_self, self),
+	                                       usrtype__str__with__STR(self));
 	if unlikely(!strval)
 		goto err;
 	result = DeeObject_Print(strval, printer, arg);
@@ -148,7 +151,9 @@ tp_cast.tp_print([[nonnull]] DeeObject *__restrict self,
 err:
 	return -1;
 }}
-%{class by_print: [[prefix(DEFINE_instance_call_with_file_printer)]] {
+%{class using CLASS_OPERATOR_PRINT:
+	[[prefix(DEFINE_instance_call_with_file_printer)]]
+{
 	Dee_ssize_t result;
 	DREF DeeObject *func = DeeClass_GetOperator(THIS_TYPE, CLASS_OPERATOR_PRINT);
 	if unlikely(!func)

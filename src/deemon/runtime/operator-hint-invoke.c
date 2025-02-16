@@ -497,7 +497,7 @@ DeeObject_DelRangeIndex(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) {
 }
 
 PUBLIC ATTR_HOT WUNUSED NONNULL((1)) int DCALL
-DeeObject_DelRangeN(DeeObject *self, Dee_ssize_t start) {
+DeeObject_DelRangeIndexN(DeeObject *self, Dee_ssize_t start) {
 	DeeNO_delrange_index_n_t tp_delrange_index_n;
 	if unlikely(!Dee_TYPE(self)->tp_seq || (tp_delrange_index_n = Dee_TYPE(self)->tp_seq->tp_delrange_index_n) == NULL)
 		tp_delrange_index_n = DeeType_RequireNativeOperator(Dee_TYPE(self), delrange_index_n);
@@ -1382,7 +1382,7 @@ DeeObject_TDelRangeIndex(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t st
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeObject_TDelRangeN(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start) {
+DeeObject_TDelRangeIndexN(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start) {
 	DeeNO_delrange_index_n_t tp_delrange_index_n;
 	if unlikely(!tp_self->tp_seq || (tp_delrange_index_n = tp_self->tp_seq->tp_delrange_index_n) == NULL) {
 		tp_delrange_index_n = DeeType_RequireNativeOperator(tp_self, delrange_index_n);

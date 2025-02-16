@@ -52,6 +52,29 @@
 
 DECL_BEGIN
 
+PRIVATE struct type_cmp instance_builtin_cmp = {
+	/* .tp_hash          = */ &instance_builtin_hash,
+	/* .tp_compare_eq    = */ &instance_builtin_compare_eq,
+	/* .tp_compare       = */ &instance_builtin_compare,
+	/* .tp_trycompare_eq = */ &instance_builtin_trycompare_eq,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_eq            = */ &default__eq__with__compare_eq,
+	/* .tp_ne            = */ &default__ne__with__compare_eq,
+	/* .tp_lo            = */ &default__lo__with__compare,
+	/* .tp_le            = */ &default__le__with__compare,
+	/* .tp_gr            = */ &default__gr__with__compare,
+	/* .tp_ge            = */ &default__ge__with__compare
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_eq            = */ &instance_builtin_eq,
+	/* .tp_ne            = */ &instance_builtin_ne,
+	/* .tp_lo            = */ &instance_builtin_lo,
+	/* .tp_le            = */ &instance_builtin_le,
+	/* .tp_gr            = */ &instance_builtin_gr,
+	/* .tp_ge            = */ &instance_builtin_ge
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+};
+
+
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_operator_class_inherited(DeeTypeObject *__restrict type_type,
                             DeeTypeObject *__restrict type,
@@ -3621,6 +3644,7 @@ instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc,
 
 
 /* Builtin hash & comparison support. */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN WUNUSED NONNULL((1, 2)) dhash_t DCALL
 instance_builtin_thash(DeeTypeObject *tp_self,
                        DeeObject *__restrict self) {
@@ -3647,49 +3671,6 @@ instance_builtin_thash(DeeTypeObject *tp_self,
 	return result;
 }
 
-
-
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-impl_instance_builtin_compare(DeeTypeObject *tp_self,
-                              DeeObject *self,
-                              DeeObject *other) {
-	struct instance_desc *instance, *other_instance;
-	struct class_desc *desc;
-	uint16_t i, size;
-	int temp;
-	ASSERT(DeeObject_InstanceOf(other, tp_self));
-	desc           = DeeClass_DESC(tp_self);
-	instance       = DeeInstance_DESC(desc, self);
-	other_instance = DeeInstance_DESC(desc, other);
-	size           = desc->cd_desc->cd_imemb_size;
-	Dee_instance_desc_lock_read(instance);
-	for (i = 0; i < size; ++i) {
-		DREF DeeObject *lhs_val;
-		DREF DeeObject *rhs_val;
-		lhs_val = instance->id_vtab[i];
-		rhs_val = other_instance->id_vtab[i];
-		if (lhs_val != rhs_val) {
-			if (!lhs_val || !rhs_val) {
-				Dee_instance_desc_lock_endread(instance);
-				return lhs_val ? 1 : -1; /* Different NULL values. */
-			}
-			Dee_Incref(lhs_val);
-			Dee_Incref(rhs_val);
-			Dee_instance_desc_lock_endread(instance);
-
-			/* Compare the two members. */
-			temp = DeeObject_Compare(lhs_val, rhs_val);
-			Dee_Decref(rhs_val);
-			Dee_Decref(lhs_val);
-			if (temp != 0)
-				return temp; /* Error, or non-equal */
-			Dee_instance_desc_lock_read(instance);
-		}
-	}
-	Dee_instance_desc_lock_endread(instance);
-	return 0; /* All elements are equal */
-}
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 impl_instance_builtin_compare_eq(DeeTypeObject *tp_self,
@@ -3852,7 +3833,7 @@ impl_instance_builtin_gr(DeeTypeObject *tp_self,
                          DeeObject *other) {
 	int result = impl_instance_builtin_le(tp_self, self, other);
 	if (result >= 0)
-		result = !result;
+		result = result ? 0 : 1;
 	return result;
 }
 
@@ -3862,13 +3843,54 @@ impl_instance_builtin_ge(DeeTypeObject *tp_self,
                          DeeObject *other) {
 	int result = impl_instance_builtin_lo(tp_self, self, other);
 	if (result >= 0)
-		result = !result;
+		result = result ? 0 : 1;
 	return result;
 }
 
 
 #define DeeType_HasBaseForCompare(self) \
 	(DeeType_Base(self) && DeeType_Base(self) != &DeeObject_Type)
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+impl_instance_builtin_compare(DeeTypeObject *tp_self,
+                              DeeObject *self,
+                              DeeObject *other) {
+	struct instance_desc *instance, *other_instance;
+	struct class_desc *desc;
+	uint16_t i, size;
+	int temp;
+	ASSERT(DeeObject_InstanceOf(other, tp_self));
+	desc           = DeeClass_DESC(tp_self);
+	instance       = DeeInstance_DESC(desc, self);
+	other_instance = DeeInstance_DESC(desc, other);
+	size           = desc->cd_desc->cd_imemb_size;
+	Dee_instance_desc_lock_read(instance);
+	for (i = 0; i < size; ++i) {
+		DREF DeeObject *lhs_val;
+		DREF DeeObject *rhs_val;
+		lhs_val = instance->id_vtab[i];
+		rhs_val = other_instance->id_vtab[i];
+		if (lhs_val != rhs_val) {
+			if (!lhs_val || !rhs_val) {
+				Dee_instance_desc_lock_endread(instance);
+				return lhs_val ? 1 : -1; /* Different NULL values. */
+			}
+			Dee_Incref(lhs_val);
+			Dee_Incref(rhs_val);
+			Dee_instance_desc_lock_endread(instance);
+
+			/* Compare the two members. */
+			temp = DeeObject_Compare(lhs_val, rhs_val);
+			Dee_Decref(rhs_val);
+			Dee_Decref(lhs_val);
+			if (temp != 0)
+				return temp; /* Error, or non-equal */
+			Dee_instance_desc_lock_read(instance);
+		}
+	}
+	Dee_instance_desc_lock_endread(instance);
+	return 0; /* All elements are equal */
+}
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_tcompare(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {
@@ -4186,20 +4208,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instance_builtin_ge(DeeObject *self, DeeObject *other) {
 	return instance_builtin_tge(Dee_TYPE(self), self, other);
 }
-
-INTERN struct type_cmp instance_builtin_cmp = {
-	/* .tp_hash          = */ &instance_builtin_hash,
-	/* .tp_compare_eq    = */ &instance_builtin_compare_eq,
-	/* .tp_compare       = */ &instance_builtin_compare,
-	/* .tp_trycompare_eq = */ &instance_builtin_trycompare_eq,
-	/* .tp_eq            = */ &instance_builtin_eq,
-	/* .tp_ne            = */ &instance_builtin_ne,
-	/* .tp_lo            = */ &instance_builtin_lo,
-	/* .tp_le            = */ &instance_builtin_le,
-	/* .tp_gr            = */ &instance_builtin_gr,
-	/* .tp_ge            = */ &instance_builtin_ge
-};
-
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -4315,8 +4324,6 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instance_next(DeeObject *__restrict self) {
 	return instance_tnext(Dee_TYPE(self), self);
 }
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-
 
 #ifdef __OPTIMIZE_SIZE__
 #define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op)  \
@@ -4351,7 +4358,6 @@ instance_next(DeeObject *__restrict self) {
 		return instance_txxx(Dee_TYPE(self), self, other);                       \
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tadd, instance_add, OPERATOR_ADD)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tsub, instance_sub, OPERATOR_SUB)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tmul, instance_mul, OPERATOR_MUL)
@@ -4371,10 +4377,8 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgr, instance_gr, OPERATOR_GR)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tge, instance_ge, OPERATOR_GE)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tcontains, instance_contains, OPERATOR_CONTAINS)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetitem, instance_getitem, OPERATOR_GETITEM)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetattr, instance_getattr, OPERATOR_GETATTR)
 #undef DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 
 #ifdef __OPTIMIZE_SIZE__
 #define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
@@ -4460,7 +4464,6 @@ DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetrange, instance_getrange, 
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tenter, instance_enter, OPERATOR_ENTER)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tleave, instance_leave, OPERATOR_LEAVE)
 #undef DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 #ifdef __OPTIMIZE_SIZE__
 #define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
@@ -4501,11 +4504,9 @@ DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tleave, instance_leave, OPER
 		return instance_txxx(Dee_TYPE(self), self, other);                           \
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tassign, instance_assign, OPERATOR_ASSIGN)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tmoveassign, instance_moveassign, OPERATOR_MOVEASSIGN)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelitem, instance_delitem, OPERATOR_DELITEM)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelattr, instance_delattr, OPERATOR_DELATTR)
 #undef DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT
 
@@ -4556,14 +4557,11 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelattr, instance_delattr,
 		return instance_txxx(Dee_TYPE(self), self, other, other2);                    \
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetitem, instance_setitem, OPERATOR_SETITEM)
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelrange, instance_delrange, OPERATOR_DELRANGE)
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetattr, instance_setattr, OPERATOR_SETATTR)
 #undef DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #ifdef __OPTIMIZE_SIZE__
 #define DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL                                 \

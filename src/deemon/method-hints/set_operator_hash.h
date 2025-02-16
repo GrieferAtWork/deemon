@@ -34,8 +34,11 @@ err:
 %[define(DEFINE_default_set_hash_with_foreach_cb =
 #ifndef DEFINED_default_set_hash_with_foreach_cb
 #define DEFINED_default_set_hash_with_foreach_cb
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_set_hash_with_foreach_cb(void *arg, DeeObject *elem);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_set_hash_with_foreach_cb(void *arg, DeeObject *elem) {
+	*(Dee_hash_t *)arg ^= DeeObject_Hash(elem);
+	return 0;
+}
 #endif /* !DEFINED_default_set_hash_with_foreach_cb */
 )]
 

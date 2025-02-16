@@ -88,8 +88,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(GCSetIterator, gsi_set) == offsetof(ProxyObject, po_obj));
-#define gcsetiterator_fini  generic_proxy_fini
-#define gcsetiterator_visit generic_proxy_visit
+#define gcsetiterator_fini  generic_proxy__fini
+#define gcsetiterator_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcsetiterator_next(GCSetIterator *__restrict self) {

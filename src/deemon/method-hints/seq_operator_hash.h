@@ -39,8 +39,20 @@ struct default_seq_hash_with_foreach_data {
 	bool       sqhwf_nonempty; /* True after the first element */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_seq_hash_with_foreach_data *data;
+	Dee_hash_t elem_hash;
+	data = (struct default_seq_hash_with_foreach_data *)arg;
+	elem_hash = DeeObject_Hash(elem);
+	if (data->sqhwf_nonempty) {
+		data->sqhwf_result = Dee_HashCombine(data->sqhwf_result, elem_hash);
+	} else {
+		data->sqhwf_result = elem_hash;
+		data->sqhwf_nonempty = true;
+	}
+	return 0;
+}
 #endif /* !DEFINED_default_seq_hash_with_foreach_cb */
 )]
 

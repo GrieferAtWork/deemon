@@ -869,6 +869,23 @@ PUBLIC DeeObject DeeMapping_EmptyInstance = {
 	OBJECT_HEAD_INIT(&DeeMapping_Type)
 };
 
+
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+/* Wrapper for `DeeObject_BoolInherited(DeeObject_InvokeMethodHint(map_operator_contains, self, key))' */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeMap_OperatorContainsAsBool(DeeObject *self,
+                              DeeObject *key) {
+	DREF DeeObject *result;
+	result = DeeObject_InvokeMethodHint(map_operator_contains, self, key);
+	if unlikely(!result)
+		goto err;
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_MAP_C */

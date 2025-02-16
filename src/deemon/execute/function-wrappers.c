@@ -167,8 +167,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FunctionStaticsIterator, fsi_func) == offsetof(ProxyObject, po_obj));
-#define funcstaticsiter_fini  generic_proxy_fini
-#define funcstaticsiter_visit generic_proxy_visit
+#define funcstaticsiter_fini  generic_proxy__fini
+#define funcstaticsiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcstaticsiter_bool(FunctionStaticsIterator *__restrict self) {
@@ -470,9 +470,9 @@ err:
 
 
 STATIC_ASSERT(offsetof(FunctionStatics, fs_func) == offsetof(ProxyObject, po_obj));
-#define funcstatics_copy  generic_proxy_copy_alias
-#define funcstatics_fini  generic_proxy_fini
-#define funcstatics_visit generic_proxy_visit
+#define funcstatics_copy  generic_proxy__copy_alias
+#define funcstatics_fini  generic_proxy__fini
+#define funcstatics_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 funcstatics_enumerate_index(FunctionStatics *self, Dee_seq_enumerate_index_t proc,
@@ -725,8 +725,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FunctionSymbolsByNameIterator, fsbni_seq) == offsetof(ProxyObject, po_obj));
-#define funcsymbolsbynameiter_fini  generic_proxy_fini
-#define funcsymbolsbynameiter_visit generic_proxy_visit
+#define funcsymbolsbynameiter_fini  generic_proxy__fini
+#define funcsymbolsbynameiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 funcsymbolsbynameiter_bool(FunctionSymbolsByNameIterator *__restrict self) {
@@ -1441,8 +1441,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FunctionSymbolsByName, fsbn_func) == offsetof(ProxyObject, po_obj));
-#define funcsymbolsbyname_fini  generic_proxy_fini
-#define funcsymbolsbyname_visit generic_proxy_visit
+#define funcsymbolsbyname_fini  generic_proxy__fini
+#define funcsymbolsbyname_visit generic_proxy__visit
 
 
 PRIVATE struct type_seq funcsymbolsbyname_seq = {
@@ -1747,8 +1747,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq) == offsetof(ProxyObject, po_obj));
-#define yfuncsymbolsbynameiter_fini  generic_proxy_fini
-#define yfuncsymbolsbynameiter_visit generic_proxy_visit
+#define yfuncsymbolsbynameiter_fini  generic_proxy__fini
+#define yfuncsymbolsbynameiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbynameiter_bool(YieldFunctionSymbolsByNameIterator *__restrict self) {
@@ -2528,8 +2528,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(YieldFunctionSymbolsByName, yfsbn_yfunc) == offsetof(ProxyObject, po_obj));
-#define yfuncsymbolsbyname_fini  generic_proxy_fini
-#define yfuncsymbolsbyname_visit generic_proxy_visit
+#define yfuncsymbolsbyname_fini  generic_proxy__fini
+#define yfuncsymbolsbyname_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
 yfuncsymbolsbyname_getfunc(YieldFunctionSymbolsByName *__restrict self) {
@@ -2824,9 +2824,9 @@ STATIC_ASSERT(offsetof(FrameArgs, fa_frame) == offsetof(ProxyObject2, po_obj1) |
               offsetof(FrameArgs, fa_frame) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(FrameArgs, fa_code) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(FrameArgs, fa_code) == offsetof(ProxyObject2, po_obj2));
-#define frameargs_copy  generic_proxy2_copy_alias12
-#define frameargs_fini  generic_proxy2_fini
-#define frameargs_visit generic_proxy2_visit
+#define frameargs_copy  generic_proxy2__copy_alias12
+#define frameargs_fini  generic_proxy2__fini
+#define frameargs_visit generic_proxy2__visit
 
 PRIVATE struct type_seq frameargs_seq = {
 	/* .tp_iter               = */ NULL,
@@ -3140,8 +3140,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FrameLocals, fl_frame) == offsetof(ProxyObject, po_obj));
-#define framelocals_fini  generic_proxy_fini
-#define framelocals_visit generic_proxy_visit
+#define framelocals_fini  generic_proxy__fini
+#define framelocals_visit generic_proxy__visit
 
 PRIVATE struct type_method tpconst framelocals_methods[] = {
 	TYPE_METHOD_HINTREF(seq_xchitem),
@@ -3400,9 +3400,9 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FrameStack, fs_frame) == offsetof(ProxyObject, po_obj));
-#define framestack_copy  generic_proxy_copy_alias
-#define framestack_fini  generic_proxy_fini
-#define framestack_visit generic_proxy_visit
+#define framestack_copy  generic_proxy__copy_alias
+#define framestack_fini  generic_proxy__fini
+#define framestack_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 framestack_enumerate_index(FrameStack *__restrict self, Dee_seq_enumerate_index_t proc,
@@ -3850,8 +3850,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(FrameSymbolsByNameIterator, frsbni_seq) == offsetof(ProxyObject, po_obj));
-#define framesymbolsbynameiter_fini  generic_proxy_fini
-#define framesymbolsbynameiter_visit generic_proxy_visit
+#define framesymbolsbynameiter_fini  generic_proxy__fini
+#define framesymbolsbynameiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framesymbolsbynameiter_bool(FrameSymbolsByNameIterator *__restrict self) {
@@ -5077,8 +5077,8 @@ STATIC_ASSERT(offsetof(FrameSymbolsByName, frsbn_frame) == offsetof(ProxyObject2
               offsetof(FrameSymbolsByName, frsbn_frame) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(FrameSymbolsByName, frsbn_func) == offsetof(ProxyObject2, po_obj2));
-#define framesymbolsbyname_fini  generic_proxy2_fini
-#define framesymbolsbyname_visit generic_proxy2_visit
+#define framesymbolsbyname_fini  generic_proxy2__fini
+#define framesymbolsbyname_visit generic_proxy2__visit
 
 
 PRIVATE struct type_seq framesymbolsbyname_seq = {

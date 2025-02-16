@@ -95,8 +95,8 @@ rosetiterator_copy(RoSetIterator *__restrict self,
 }
 
 STATIC_ASSERT(offsetof(RoSetIterator, rosi_set) == offsetof(ProxyObject, po_obj));
-#define rosetiterator_fini  generic_proxy_fini
-#define rosetiterator_visit generic_proxy_visit
+#define rosetiterator_fini  generic_proxy__fini
+#define rosetiterator_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_bool(RoSetIterator *__restrict self) {

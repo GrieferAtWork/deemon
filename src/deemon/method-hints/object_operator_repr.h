@@ -27,7 +27,7 @@ operator {
 /*[[export("DeeObject_{|T}Repr")]]*/ /* Requires custom handling for recursion */
 [[wunused]] DREF DeeObject *
 tp_cast.tp_repr([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_REPR: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_REPR, 0, NULL);
 	if (DeeObject_AssertTypeExact(result, &DeeString_Type))
@@ -38,7 +38,9 @@ err_r:
 err:
 	return NULL;
 }}
-%{class by_printrepr: [[prefix(DEFINE_instance_call_with_file_writer)]] {
+%{class using CLASS_OPERATOR_PRINTREPR:
+	[[prefix(DEFINE_instance_call_with_file_writer)]]
+{
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(THIS_TYPE, CLASS_OPERATOR_PRINTREPR);
 	if unlikely(!func)
@@ -68,9 +70,10 @@ err:
 [[wunused]] Dee_ssize_t
 tp_cast.tp_printrepr([[nonnull]] DeeObject *__restrict self,
                      [[nonnull]] Dee_formatprinter_t printer, void *arg)
-%{class {
+%{class using OPERATOR_REPR: {
 	Dee_ssize_t result;
-	DREF DeeObject *strval = IF_TYPED_ELSE(tusrtype__repr(tp_self, self), usrtype__repr(self));
+	DREF DeeObject *strval = IF_TYPED_ELSE(tusrtype__repr__with__REPR(tp_self, self),
+	                                       usrtype__repr__with__REPR(self));
 	if unlikely(!strval)
 		goto err;
 	result = DeeObject_Print(strval, printer, arg);
@@ -79,7 +82,9 @@ tp_cast.tp_printrepr([[nonnull]] DeeObject *__restrict self,
 err:
 	return -1;
 }}
-%{class by_print: [[prefix(DEFINE_instance_call_with_file_printer)]] {
+%{class using CLASS_OPERATOR_PRINTREPR:
+	[[prefix(DEFINE_instance_call_with_file_printer)]]
+{
 	Dee_ssize_t result;
 	DREF DeeObject *func = DeeClass_GetOperator(THIS_TYPE, CLASS_OPERATOR_PRINTREPR);
 	if unlikely(!func)

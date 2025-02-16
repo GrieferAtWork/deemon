@@ -131,7 +131,7 @@ err:
 	return key;
 err_key_nokill:
 	Dee_DecrefNokill(key); /* *Nokill because caller still has a reference */
-err:
+/*err:*/
 	return NULL;
 }} {
 	return LOCAL_CALLATTR(self, 1, &key);

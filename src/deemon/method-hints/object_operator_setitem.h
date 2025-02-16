@@ -29,7 +29,7 @@ operator {
 tp_seq->tp_setitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index,
                    [[nonnull]] DeeObject *value)
-%{class {
+%{class using OPERATOR_SETITEM: {
 	DREF DeeObject *result;
 	DeeObject *args[2];
 	args[0] = index;

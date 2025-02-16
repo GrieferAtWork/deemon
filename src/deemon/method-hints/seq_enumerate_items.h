@@ -178,7 +178,7 @@ seq_makeenumeration_with_intrange = {
 	seq_makeenumeration = REQUIRE(seq_makeenumeration);
 	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
 		return &$empty;
-	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__getitem_index_fast)
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast)
 		return &$with__seq_operator_size__and__operator_getitem_index_fast;
 	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &$with__seq_operator_size__and__seq_operator_trygetitem_index;
@@ -202,7 +202,7 @@ seq_makeenumeration_with_range = {
 	seq_makeenumeration = REQUIRE(seq_makeenumeration);
 	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
 		return &$empty;
-	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__getitem_index_fast ||
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast ||
 	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index ||
 	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index ||
 	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem_index)

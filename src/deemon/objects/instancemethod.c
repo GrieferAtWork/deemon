@@ -82,14 +82,14 @@ STATIC_ASSERT(offsetof(InstanceMethod, im_func) == offsetof(ProxyObject2, po_obj
               offsetof(InstanceMethod, im_func) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj2));
-#define im_fini          generic_proxy2_fini
-#define im_visit         generic_proxy2_visit
-#define im_copy          generic_proxy2_copy_alias12
-#define im_deepcopy      generic_proxy2_deepcopy
-#define im_hash          generic_proxy2_hash_recursive_ordered
-#define im_compare_eq    generic_proxy2_compare_eq_recursive
-#define im_trycompare_eq generic_proxy2_trycompare_eq_recursive
-#define im_cmp           generic_proxy2_cmp_recursive_ordered
+#define im_fini          generic_proxy2__fini
+#define im_visit         generic_proxy2__visit
+#define im_copy          generic_proxy2__copy_alias12
+#define im_deepcopy      generic_proxy2__deepcopy
+#define im_hash          generic_proxy2__hash_recursive_ordered
+#define im_compare_eq    generic_proxy2__compare_eq_recursive
+#define im_trycompare_eq generic_proxy2__trycompare_eq_recursive
+#define im_cmp           generic_proxy2__cmp_recursive_ordered
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_init_kw(InstanceMethod *__restrict self, size_t argc,

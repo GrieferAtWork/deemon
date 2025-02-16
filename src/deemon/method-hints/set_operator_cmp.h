@@ -47,7 +47,7 @@ for (local lo, ge, alias: {
 	print('%{unsupported(auto)}');
 if (lo in ["lo", "ge"]) {
 	print('%{$empty = {');
-	print('	int rhs_nonempty = CALL_DEPENDENCY(seq_operator_bool, rhs);');
+	print('	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);');
 	print('	if unlikely(rhs_nonempty < 0)');
 	print('		goto err;');
 	print('	return_bool(rhs_nonempty ', lo == "lo" ? '!=' : '==', ' 0);');
@@ -134,7 +134,7 @@ __set_lo__.set_operator_lo([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto)}
 %{$empty = {
-	int rhs_nonempty = CALL_DEPENDENCY(seq_operator_bool, rhs);
+	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
 	return_bool(rhs_nonempty != 0);
@@ -299,7 +299,7 @@ __set_ge__.set_operator_ge([[nonnull]] DeeObject *lhs,
                            [[nonnull]] DeeObject *rhs)
 %{unsupported(auto)}
 %{$empty = {
-	int rhs_nonempty = CALL_DEPENDENCY(seq_operator_bool, rhs);
+	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
 	return_bool(rhs_nonempty == 0);

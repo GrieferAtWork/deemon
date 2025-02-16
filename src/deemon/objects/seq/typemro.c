@@ -91,10 +91,10 @@ err:
 }
 
 STATIC_ASSERT(offsetof(TypeMROIterator, tmi_mro.tp_mro_orig) == offsetof(ProxyObject, po_obj));
-#define typemroiter_fini    generic_proxy_fini_unlikely /* Unlikely because types are usually referenced elsewhere */
-#define typebasesiter_fini  generic_proxy_fini_unlikely /* Unlikely because types are usually referenced elsewhere */
-#define typemroiter_visit   generic_proxy_visit
-#define typebasesiter_visit generic_proxy_visit
+#define typemroiter_fini    generic_proxy__fini_unlikely /* Unlikely because types are usually referenced elsewhere */
+#define typebasesiter_fini  generic_proxy__fini_unlikely /* Unlikely because types are usually referenced elsewhere */
+#define typemroiter_visit   generic_proxy__visit
+#define typebasesiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemroiter_bool(TypeMROIterator *__restrict self) {
@@ -448,10 +448,10 @@ err:
 
 
 STATIC_ASSERT(offsetof(TypeMRO, tm_type) == offsetof(ProxyObject, po_obj));
-#define typebases_fini  generic_proxy_fini_unlikely /* Unlikely because types are usually referenced elsewhere */
-#define typemro_fini    generic_proxy_fini_unlikely /* Unlikely because types are usually referenced elsewhere */
-#define typebases_visit generic_proxy_visit
-#define typemro_visit   generic_proxy_visit
+#define typebases_fini  generic_proxy__fini_unlikely /* Unlikely because types are usually referenced elsewhere */
+#define typemro_fini    generic_proxy__fini_unlikely /* Unlikely because types are usually referenced elsewhere */
+#define typebases_visit generic_proxy__visit
+#define typemro_visit   generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 typemro_bool(TypeMRO *__restrict self) {

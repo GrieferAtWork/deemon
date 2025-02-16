@@ -36,10 +36,6 @@ __seq_sort__(start=!0,end:?Dint=!A!Dint!PSIZE_MAX,key:?DCallable=!N) {
 	return_none;
 err:
 	return NULL;
-		goto err;
-	return_none;
-err:
-	return NULL;
 }
 
 

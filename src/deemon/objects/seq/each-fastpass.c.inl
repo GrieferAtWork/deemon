@@ -266,17 +266,17 @@ LOCAL_seX(foreach)(LOCAL_SeqEach *self, Dee_foreach_t proc, void *arg) {
 	return DeeObject_Foreach(self->se_seq, &LOCAL_seX(foreach_cb), &data);
 }
 
-struct LOCAL_seX(enumerate_data) {
+struct LOCAL_seX(mh_seq_enumerate_data) {
 	LOCAL_SeqEach  *seXed_me;   /* [1..1] The related seq-each operator */
 	Dee_seq_enumerate_t seXed_proc; /* [1..1] User-defined callback */
 	void           *seXed_arg;  /* [?..?] User-defined cookie */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-LOCAL_seX(enumerate_cb)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+LOCAL_seX(mh_seq_enumerate_cb)(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
 	Dee_ssize_t result;
-	struct LOCAL_seX(enumerate_data) *data;
-	data = (struct LOCAL_seX(enumerate_data) *)arg;
+	struct LOCAL_seX(mh_seq_enumerate_data) *data;
+	data = (struct LOCAL_seX(mh_seq_enumerate_data) *)arg;
 	if unlikely(!value)
 		return (*data->seXed_proc)(data->seXed_arg, index, value);
 	value = LOCAL_seX(transform)(data->seXed_me, value);
@@ -290,25 +290,25 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-LOCAL_seX(enumerate)(LOCAL_SeqEach *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
-	struct LOCAL_seX(enumerate_data) data;
+LOCAL_seX(mh_seq_enumerate)(LOCAL_SeqEach *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
+	struct LOCAL_seX(mh_seq_enumerate_data) data;
 	data.seXed_me   = self;
 	data.seXed_proc = proc;
 	data.seXed_arg  = arg;
-	return DeeObject_Enumerate(self->se_seq, &LOCAL_seX(enumerate_cb), &data);
+	return DeeObject_InvokeMethodHint(seq_enumerate, self->se_seq, &LOCAL_seX(mh_seq_enumerate_cb), &data);
 }
 
-struct LOCAL_seX(enumerate_index_data) {
-	LOCAL_SeqEach        *seXeid_me;   /* [1..1] The related seq-each operator */
+struct LOCAL_seX(mh_seq_enumerate_index_data) {
+	LOCAL_SeqEach            *seXeid_me;   /* [1..1] The related seq-each operator */
 	Dee_seq_enumerate_index_t seXeid_proc; /* [1..1] User-defined callback */
-	void                 *seXeid_arg;  /* [?..?] User-defined cookie */
+	void                     *seXeid_arg;  /* [?..?] User-defined cookie */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-LOCAL_seX(enumerate_index_cb)(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+LOCAL_seX(mh_seq_enumerate_index_cb)(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	Dee_ssize_t result;
-	struct LOCAL_seX(enumerate_index_data) *data;
-	data = (struct LOCAL_seX(enumerate_index_data) *)arg;
+	struct LOCAL_seX(mh_seq_enumerate_index_data) *data;
+	data = (struct LOCAL_seX(mh_seq_enumerate_index_data) *)arg;
 	if unlikely(!value)
 		return (*data->seXeid_proc)(data->seXeid_arg, index, value);
 	value = LOCAL_seX(transform)(data->seXeid_me, value);
@@ -322,14 +322,15 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-LOCAL_seX(enumerate_index)(LOCAL_SeqEach *__restrict self, Dee_seq_enumerate_index_t proc,
+LOCAL_seX(mh_seq_enumerate_index)(LOCAL_SeqEach *__restrict self, Dee_seq_enumerate_index_t proc,
                            void *arg, size_t start, size_t end) {
-	struct LOCAL_seX(enumerate_index_data) data;
+	struct LOCAL_seX(mh_seq_enumerate_index_data) data;
 	data.seXeid_me   = self;
 	data.seXeid_proc = proc;
 	data.seXeid_arg  = arg;
-	return DeeObject_EnumerateIndex(self->se_seq, &LOCAL_seX(enumerate_index_cb),
-	                                &data, start, end);
+	return DeeObject_InvokeMethodHint(seq_enumerate_index, self->se_seq,
+	                                  &LOCAL_seX(mh_seq_enumerate_index_cb),
+	                                  &data, start, end);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -758,6 +759,20 @@ LOCAL_seX(getitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t 
 #endif /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 
 
+#ifndef DEFINED_seX_methods
+#define DEFINED_seX_methods
+PRIVATE struct type_method seX_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+	TYPE_METHOD_END
+};
+#endif /* !DEFINED_seX_methods */
+
+PRIVATE struct type_method_hint LOCAL_seX(method_hints)[] = {
+	TYPE_METHOD_HINT(seq_enumerate, &LOCAL_seX(mh_seq_enumerate)),
+	TYPE_METHOD_HINT(seq_enumerate_index, &LOCAL_seX(mh_seq_enumerate_index)),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_seq LOCAL_seX(seq) = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&LOCAL_seX(iter),
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
@@ -778,13 +793,9 @@ PRIVATE struct type_seq LOCAL_seX(seq) = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&LOCAL_seX(setrange),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&LOCAL_seX(foreach),
 	/* .tp_foreach_pair               = */ &DeeObject_DefaultForeachPairWithForeach,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&LOCAL_seX(enumerate),
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&LOCAL_seX(enumerate_index),
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iterkeys,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&LOCAL_seX(mh_seq_enumerate),
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&LOCAL_seX(mh_seq_enumerate_index),
 	/* .tp_iterkeys                   = */ NULL,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(bounditem),
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(hasitem),
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
@@ -1249,13 +1260,13 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	/* .tp_attr          = */ &LOCAL_seX(attr),
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ seX_methods,
 	/* .tp_getsets       = */ NULL, /* TODO: Access to the arguments vector */
 	/* .tp_members       = */ LOCAL_seX(members),
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ LOCAL_seX(class_members),
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ LOCAL_seX(method_hints),
 #ifdef DEFINE_SeqEachGetAttr
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&LOCAL_seX(call_kw),
 #else /* DEFINE_SeqEachGetAttr */
@@ -1481,7 +1492,7 @@ PRIVATE struct type_cmp LOCAL_ssX(cmp) = {
 };
 
 STATIC_ASSERT(offsetof(SeqEachBase, se_seq) == offsetof(ProxyObject, po_obj));
-#define ssw_size_fast generic_proxy_size_fast
+#define ssw_size_fast generic_proxy__size_fast
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_ssX(bounditem)(LOCAL_SeqEach *self, DeeObject *index) {

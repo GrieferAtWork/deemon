@@ -39,10 +39,22 @@ __map_delitem__.map_operator_delitem([[nonnull]] DeeObject *self,
 %{unsupported(auto("operator del[]"))}
 %{$empty = 0}
 %{$with__map_remove = {
-	// TODO
+	int result = CALL_DEPENDENCY(map_remove, self, key);
+	if (result > 0)
+		result = 0;
+	return result;
 }}
 %{$with__map_removekeys = {
-	// TODO
+	int result;
+	DREF DeeTupleObject *keys = DeeTuple_NewUninitialized(1);
+	if unlikely(!keys)
+		goto err;
+	keys->t_elem[0] = key;
+	result = CALL_DEPENDENCY(map_removekeys, self, (DeeObject *)keys);
+	DeeTuple_DecrefSymbolic((DeeObject *)keys);
+	return result;
+err:
+	return -1;
 }}
 %{$with__map_operator_delitem_index__and__map_operator_delitem_string_len_hash = {
 	size_t key_value;

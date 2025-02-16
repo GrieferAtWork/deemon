@@ -311,8 +311,8 @@ PRIVATE struct type_iterator scfi_iterator = {
 };
 
 STATIC_ASSERT(offsetof(StringFindIterator, sfi_find) == offsetof(ProxyObject, po_obj));
-#define sfi_fini  generic_proxy_fini
-#define sfi_visit generic_proxy_visit
+#define sfi_fini  generic_proxy__fini
+#define sfi_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_bool(StringFindIterator *__restrict self) {
@@ -543,8 +543,8 @@ STATIC_ASSERT(offsetof(StringFind, sf_str) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringFind, sf_str) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(StringFind, sf_needle) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringFind, sf_needle) == offsetof(ProxyObject2, po_obj2));
-#define sf_fini  generic_proxy2_fini
-#define sf_visit generic_proxy2_visit
+#define sf_fini  generic_proxy2__fini
+#define sf_visit generic_proxy2__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF StringFindIterator *DCALL
 sf_iter(StringFind *__restrict self) {

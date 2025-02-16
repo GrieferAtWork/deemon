@@ -100,6 +100,9 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_makeenumeration_with_range_t mh_seq_makeenumeration_with_range;
 	DeeMH_seq_foreach_reverse_t mh_seq_foreach_reverse;
 	DeeMH_seq_enumerate_index_reverse_t mh_seq_enumerate_index_reverse;
+	DeeMH_seq_unpack_t mh_seq_unpack;
+	DeeMH_seq_unpack_ex_t mh_seq_unpack_ex;
+	DeeMH_seq_unpack_ub_t mh_seq_unpack_ub;
 	DeeMH_seq_trygetfirst_t mh_seq_trygetfirst;
 	DeeMH_seq_getfirst_t mh_seq_getfirst;
 	DeeMH_seq_boundfirst_t mh_seq_boundfirst;
@@ -286,11 +289,15 @@ struct Dee_type_mh_cache {
 /*[[[end]]]*/
 	/* clang-format on */
 
+#define _DeeType_HasTraitHint___seq_getitem_always_bound__(self) 0 /* TODO: "public static final __seq_getitem_always_bound__: bool = true;" (__seq_getitem__ never throws UnboundItem) */
+
+#define DeeType_HasTraitHint(self, name) _DeeType_HasTraitHint_##name(self)
+
 	/* Method hint attribute data caches.
 	 * All of these are [0..1][lock(WRITE_ONCE)]
 	 *
 	 * The effectively valid variant is applicable only when specific
-	 * default impl are linked to operators above. For example:
+	 * default impls are linked to method hints above. For example:
 	 * >> mhc___seq_all__.c_object:
 	 * >> [valid_if(mh_seq_all == &default__seq_all__with_callobjectcache___seq_all__ ||
 	 * >>           mh_seq_all_with_key == &default__seq_all_with_key__with_callobjectcache___seq_all__ ||
@@ -300,7 +307,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 130
+#define MHC_COUNT 132
 #define MHC_FIRST mhc___seq_bool__
 	union mhc_slot mhc___seq_bool__;
 	union mhc_slot mhc___seq_size__;
@@ -326,6 +333,8 @@ struct Dee_type_mh_cache {
 	union mhc_slot mhc___seq_inplace_mul__;
 	union mhc_slot mhc___seq_enumerate__;
 	union mhc_slot mhc___seq_enumerate_items__;
+	union mhc_slot mhc___seq_unpack__;
+	union mhc_slot mhc___seq_unpackub__;
 	union mhc_slot mhc_get___seq_first__;
 	union mhc_slot mhc_del___seq_first__;
 	union mhc_slot mhc_set___seq_first__;

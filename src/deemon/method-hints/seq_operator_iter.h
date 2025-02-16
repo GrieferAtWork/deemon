@@ -207,10 +207,6 @@ err:
 	result->diikgi_tp_getitem = REQUIRE_DEPENDENCY(map_operator_getitem);
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
 	return (DREF DeeObject *)result;
-err_r_iter_no_iter_next:
-	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
-/*err_r_iter:*/
-	Dee_Decref(result->diikgi_iter);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -493,7 +489,7 @@ __seq_iter__.seq_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
                                        void *arg)
 %{$empty = 0}
-%{$with__seq_operator_foreach = [[prefix(DECLARE_default_foreach_pair_with_foreach_cb)]] {
+%{$with__seq_operator_foreach = [[prefix(DEFINE_default_foreach_pair_with_foreach_cb)]] {
 	struct default_foreach_pair_with_foreach_data data;
 	data.dfpwf_cb  = cb;
 	data.dfpwf_arg = arg;

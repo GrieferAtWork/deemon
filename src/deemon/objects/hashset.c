@@ -1429,8 +1429,8 @@ hashsetiterator_copy(HashSetIterator *__restrict self,
 }
 
 STATIC_ASSERT(offsetof(HashSetIterator, hsi_set) == offsetof(ProxyObject, po_obj));
-#define hashsetiterator_fini  generic_proxy_fini
-#define hashsetiterator_visit generic_proxy_visit
+#define hashsetiterator_fini  generic_proxy__fini
+#define hashsetiterator_visit generic_proxy__visit
 
 INTDEF DeeTypeObject HashSetIterator_Type;
 

@@ -20,7 +20,7 @@
 
 /* !!!!!!!!!!!!!!!!!!
  * After making changes to this file (or any of the files %[include]-ed below), you must run:
- * >> deemon -F include/deemon/method-hints.h include/deemon/operator-hints.h src/deemon/runtime/method-hint-defaults.h src/deemon/runtime/method-hint-defaults.c src/deemon/runtime/method-hints.h src/deemon/runtime/method-hints.c src/deemon/runtime/method-hint-select.h src/deemon/runtime/method-hint-select.c src/deemon/runtime/method-hint-wrappers.c src/deemon/runtime/operator-hints.c src/deemon/runtime/operator-hint-defaults.c src/deemon/runtime/operator-hint-errors.h src/deemon/runtime/operator-hint-errors.c src/deemon/runtime/operator-hint-invoke.c src/deemon/runtime/strings.h
+ * >> deemon -F include/deemon/method-hints.h include/deemon/operator-hints.h src/deemon/objects/generic-proxy.h src/deemon/objects/generic-proxy.c src/deemon/runtime/method-hint-defaults.h src/deemon/runtime/method-hint-defaults.c src/deemon/runtime/method-hints.h src/deemon/runtime/method-hints.c src/deemon/runtime/method-hint-select.h src/deemon/runtime/method-hint-select.c src/deemon/runtime/method-hint-wrappers.c src/deemon/runtime/operator-hints.c src/deemon/runtime/operator-hint-defaults.c src/deemon/runtime/operator-hint-errors.h src/deemon/runtime/operator-hint-errors.c src/deemon/runtime/operator-hint-invoke.c src/deemon/runtime/strings.h
  */
 
 /************************************************************************/
@@ -47,6 +47,9 @@
 %[include("object_operator_delrange.h")]
 %[include("object_operator_setrange.h")]
 %[include("object_operator_misc.h")]
+%[include("object_operator_getattr.h")]
+%[include("object_operator_delattr.h")]
+%[include("object_operator_setattr.h")]
 
 
 /************************************************************************/
@@ -108,9 +111,8 @@
  *      problem)
  */
 
-// TODO: seq_unpack      (replaces "tp_seq->tp_unpack")
-// TODO: seq_unpack_ex   (replaces "tp_seq->tp_unpack_ex")
-// TODO: seq_unpack_ub   (replaces "tp_seq->tp_unpack_ub")
+%[include("seq_unpack.h")]
+%[include("seq_unpack_ub.h")]
 
 %[include("seq_first.h")]
 %[include("seq_last.h")]

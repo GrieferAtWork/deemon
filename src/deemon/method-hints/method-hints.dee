@@ -98,11 +98,24 @@ final class NativeMethodParam {
 				typAfter: typAfter);
 	}
 
+	public function CstrForBody(body: string) {
+		return name in body ? Cstr : Cstr_UNUSED;
+	}
+
 	public property Cstr: string = {
 		get(): string {
 			if (typ.endswith("*"))
 				return typ + name + typAfter;
 			return f"{typ} {name}{typAfter}";
+		}
+	};
+
+	public property Cstr_UNUSED: string = {
+		get(): string {
+			local UNUSED_name = f"UNUSED({name})";
+			if (typ.endswith("*"))
+				return typ + UNUSED_name + typAfter;
+			return f"{typ} {UNUSED_name}{typAfter}";
 		}
 	};
 };
@@ -210,8 +223,10 @@ final class NativeMethodImpl {
 
 @@Print @text to stdout, replacing $-prefixes in identifiers with @dollarName,
 @@while also calling function-style macros from @formatMacros when encountered
-function printUserText(text: string, dollarName: string,
-                       formatMacros: {string: Callable | string} = none) {
+function formatUserText(text: string, dollarName: string,
+                        formatMacros: {string: Callable | string} = none)
+		: string {
+	File.Writer result;
 	local i = 0, end = #text, flushStart = 0;
 	while (i < end) {
 		local ch = text[i];
@@ -254,20 +269,20 @@ function printUserText(text: string, dollarName: string,
 					++symEnd;
 				local symbol = text[symStart:symEnd];
 				if (symbol.startswith("$")) {
-					print text[flushStart:symStart],;
-					print dollarName,;
-					print symbol[1:],;
+					print result: text[flushStart:symStart],;
+					print result: dollarName,;
+					print result: symbol[1:],;
 					flushStart = i = symEnd;
 					continue;
 				} else {
 					local formatMacro: Callable | string | none = formatMacros.get(symbol);
 					if (formatMacro is string) {
-						print text[flushStart:symStart],;
-						print formatMacro,;
+						print result: text[flushStart:symStart],;
+						print result: formatMacro,;
 						flushStart = i = symEnd;
 						continue;
 					} else if (formatMacro !is none) {
-						print text[flushStart:symStart],;
+						print result: text[flushStart:symStart],;
 						final local parser = _SpecParser(
 							data: text,
 							dataLen: end,
@@ -305,7 +320,7 @@ function printUserText(text: string, dollarName: string,
 						}
 						parser.require(")");
 						try {
-							print formatMacro(args...),;
+							print result: formatMacro(args...),;
 						} catch (...) {
 							print File.stderr: "While expanding", repr symbol;
 							throw;
@@ -315,8 +330,8 @@ function printUserText(text: string, dollarName: string,
 					} else {
 						local userMacro: string | none = MACROS.get(symbol);
 						if (userMacro !is none) {
-							print text[flushStart:symStart],;
-							printUserText(userMacro, dollarName, formatMacros);
+							print result: text[flushStart:symStart],;
+							print result: formatUserText(userMacro, dollarName, formatMacros),;
 							flushStart = i = symEnd;
 							continue;
 						}
@@ -327,7 +342,8 @@ function printUserText(text: string, dollarName: string,
 			break;
 		}
 	}
-	print text[flushStart:],;
+	print result: text[flushStart:],;
+	return result.string;
 }
 
 final class OperatorSpec {
@@ -396,14 +412,6 @@ final class NativeMethod {
 		return " ".join(attributes);
 	}
 
-	public property Cparams: string = {
-		get(): string -> ", ".join(params.each.Cstr);
-	};
-
-	public property Cargs: string = {
-		get(): string -> ", ".join(params.each.name);
-	};
-
 	public normalizeSymbolName(name: string): string {
 		if (name.startswith("$"))
 			return f"default__{this.name}__{name[1:]}";
@@ -417,7 +425,8 @@ final class NativeMethod {
 			impl.optimize(this);
 	}
 
-	public printDecl(name: string, lineFeedBeforeName: bool = false) {
+	public printDecl(name: string, lineFeedBeforeName: bool = false,
+	                 bodyHint: string | none = none) {
 		local attrib = getReturnAttrib();
 		if (attrib)
 			print(attrib, " "),;
@@ -435,9 +444,9 @@ final class NativeMethod {
 			if (cc)
 				print(cc, " "),;
 		}
-		print(name, "("),;
-		print(", ".join(params.each.Cstr)),;
-		print(")"),;
+		print(name, "(", ", ".join(bodyHint !is none
+			? params.each.CstrForBody(bodyHint)
+			: params.each.Cstr), ")"),;
 	}
 
 	public printFunctionPointerType(name: string = "") {
@@ -475,16 +484,14 @@ final class NativeMethod {
 		assert impl.alias is none;
 		local dollarName = f"default__{this.name}__";
 		for (local prefix: impl.implPrefix) {
-			if (BEGIN_PREFIX(prefix)) {
-				printUserText(prefix, dollarName, formatMacros);
-				print;
-			}
+			if (BEGIN_PREFIX(prefix))
+				print formatUserText(prefix, dollarName, formatMacros);
 		}
 		print("INTERN "),;
-		printDecl(name, lineFeedBeforeName: true);
+		local body = formatUserText(impl.impl, dollarName, formatMacros);
+		printDecl(name, lineFeedBeforeName: true, bodyHint: body);
 		print(" "),;
-		printUserText(impl.impl, dollarName, formatMacros);
-		print;
+		print(body);
 	}
 
 	public printMHTypedef() {
@@ -679,12 +686,10 @@ final class NativeMethod {
 
 	public printMhInitSelectImpl() {
 		assert selectImpl !is none;
-		print(f"INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_{name}_t DCALL");
-		print(f"mh_select_{name}(DeeTypeObject *self, DeeTypeObject *orig_type) \{"),;
 		local usedSelectImpl = selectImpl;
 		if (usedSelectImpl.startswith("{") && usedSelectImpl.endswith("}"))
 			usedSelectImpl = usedSelectImpl[1:-1];
-		printUserText(usedSelectImpl, f"default__{name}__", {
+		local body = formatUserText(usedSelectImpl, f"default__{name}__", {
 			"THIS_TYPE": "self",
 			"ORIG_TYPE": "orig_type",
 			"SEQ_CLASS": "DeeType_GetSeqClass(self)",
@@ -701,6 +706,11 @@ final class NativeMethod {
 			"Dee_type_seq_has_custom_tp_foreach":
 				(x) -> f"{x}->tp_foreach && !DeeType_IsDefaultForeach({x}->tp_foreach)",
 		});
+		print(f"INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_{name}_t DCALL");
+		print(f"mh_select_{name}(DeeTypeObject *{
+				body.recontains(r"\bself\b") ? "self" : ""}, DeeTypeObject *{
+				body.recontains(r"\borig_type\b") ? "orig_type" : ""}) \{"),;
+		print(body),;
 		print("	return NULL;");
 		print("}");
 		print;
@@ -837,11 +847,9 @@ final class MethodHint: WeakRefAble {
 		print(f"PUBLIC_CONST char const DeeMA_{name}_doc[] = {repr doc};");
 		for (local alias: aliases)
 			print(f"PUBLIC_CONST char const DeeMA_{alias.name}_name[] = {repr alias.attr};");
-		print("PUBLIC "),;
-		call2native.printDecl(f"DeeMA_{name}", lineFeedBeforeName: true);
 		local tpSelfExpr = call2native.tpSelfExpr;
 		local preloadedDependencies: {string...} = HashSet();
-		printUserText(call2native.callAttrImpl.impl, "$", {
+		local body = formatUserText(call2native.callAttrImpl.impl, "$", {
 			"THIS_TYPE": tpSelfExpr,
 			"CALL_DEPENDENCY": (dep, args...) -> {
 				if (dep in preloadedDependencies)
@@ -860,7 +868,11 @@ final class MethodHint: WeakRefAble {
 						tpSelfExpr}, {dep});";
 			},
 		});
-		print;
+		print("PUBLIC "),;
+		call2native.printDecl(f"DeeMA_{name}",
+				lineFeedBeforeName: true,
+				bodyHint: body);
+		print(body);
 		print;
 	}
 }
@@ -868,7 +880,11 @@ final class MethodHint: WeakRefAble {
 
 
 function simplifyNativeOperatorNamePart(part: string): string {
-	return part[part.rfind(".") + 1:].lsstrip("tp_").replace(".", "_");
+	return part[part.rfind(".") + 1:]
+			.lsstrip("tp_")
+			.lsstrip("CLASS_")
+			.lsstrip("OPERATOR_")
+			.replace(".", "_");
 }
 
 final class NativeOperatorName {
@@ -879,6 +895,13 @@ final class NativeOperatorName {
 	public property TNO_id: string = {
 		get(): string {
 			return f"Dee_TNO_{name}";
+		}
+	}
+
+	public property OPERATOR_name: string = {
+		get(): string {
+			assert table is none, f"Expected '{locExpr}' to be an operator name";
+			return field;
 		}
 	}
 
@@ -923,8 +946,8 @@ final class NativeOperatorImpl {
 
 	public _makeTyped(): NativeOperatorImpl {
 		return NativeOperatorImpl(
-			dependencies: dependencies,
-			impl: impl._makeTyped());
+				dependencies: dependencies,
+				impl: impl._makeTyped());
 	}
 }
 
@@ -938,7 +961,7 @@ final class NativeOperator {
 	public member params: {NativeMethodParam...} = []; /* { ... } */
 	public member tpSelfExpr: string;                  /* "Dee_TYPE(self)" */
 	public member impls: {NativeOperatorImpl...} = []; /* { ... } */
-	public member usrtypeImpls: {string: NativeMethodImpl} = Dict();
+	public member usrtypeImpls: {NativeOperatorImpl...} = [];
 	public member typed: NativeOperator | none = none;
 	public member namePrefix: string = "";
 	public member operatorName: string = ""; /* OPERATOR_ITER (empty string if not assigned) */
@@ -962,10 +985,7 @@ final class NativeOperator {
 				params.each._withoutRestrict()...),
 			tpSelfExpr: "tp_self",
 			impls: Tuple(impls.each._makeTyped()),
-			usrtypeImpls: Dict(
-				for (local uImplName, impl: usrtypeImpls)
-					(uImplName, impl._makeTyped())
-			),
+			usrtypeImpls: Tuple(usrtypeImpls.each._makeTyped()),
 			namePrefix: "t"
 		);
 	}
@@ -982,14 +1002,6 @@ final class NativeOperator {
 			attributes.append(f"NONNULL{_T}(({", ".join(nonnullIndices)}))");
 		return " ".join(attributes);
 	}
-
-	public property Cparams: string = {
-		get(): string -> ", ".join(params.each.Cstr);
-	};
-
-	public property Cargs: string = {
-		get(): string -> ", ".join(params.each.name);
-	};
 
 	public optimize() {
 		if (!tpSelfExpr)
@@ -1015,7 +1027,8 @@ final class NativeOperator {
 		print(");");
 	}
 
-	public printDecl(name: string, lineFeedBeforeName: bool = false) {
+	public printDecl(name: string, lineFeedBeforeName: bool = false,
+	                 bodyHint: string | none = none) {
 		local attrib = getReturnAttrib();
 		if (attrib)
 			print(attrib, " "),;
@@ -1033,7 +1046,9 @@ final class NativeOperator {
 			if (cc)
 				print(cc, " "),;
 		}
-		print(name, "(", ", ".join(params.each.Cstr), ")"),;
+		print(name, "(", ", ".join(bodyHint !is none
+			? params.each.CstrForBody(bodyHint)
+			: params.each.Cstr), ")"),;
 	}
 
 	public printFunctionPointerType(name: string = "") {
@@ -1058,8 +1073,10 @@ final class NativeOperator {
 		}
 	}
 
-	function nativeSymbolNameForUrstypeImpl(uImplName: string, impl: NativeMethodImpl): string {
-		return f"{namePrefix}usrtype__{name.name}{uImplName ? "__" : ""}{uImplName}";
+	function nativeSymbolNameForUrstypeImpl(impl: NativeOperatorImpl): string {
+		return f"{namePrefix}usrtype__{name.name}__with__{
+			"__and__".join(impl.dependencies.each.name)
+		}";
 	}
 
 	function nativeSymbolNameForImpl(impl: NativeOperatorImpl): string {
@@ -1069,13 +1086,8 @@ final class NativeOperator {
 	}
 
 	function enumerateNamesAndImpls(): {(string, NativeOperatorImpl)...} {
-		for (local uImplName, impl: usrtypeImpls) {
-			yield (
-				nativeSymbolNameForUrstypeImpl(uImplName, impl),
-				NativeOperatorImpl(
-					dependencies: { NativeOperatorName(field: "tp_class") },
-					impl: impl)
-			);
+		for (local impl: usrtypeImpls) {
+			yield (nativeSymbolNameForUrstypeImpl(impl), impl);
 		}
 		for (local impl: impls) {
 			yield (nativeSymbolNameForImpl(impl), impl);
@@ -1115,8 +1127,8 @@ final class NativeOperator {
 		if (usrtypeImpls) {
 			print(f"#define isusrtype__{name.name}({nameFieldBase}) ({
 				" || ".join(
-					for (local uImplName, impl: usrtypeImpls)
-						f"({nameFieldBase}) == &{nativeSymbolNameForUrstypeImpl(uImplName, impl)}"
+					for (local impl: usrtypeImpls)
+						f"({nameFieldBase}) == &{nativeSymbolNameForUrstypeImpl(impl)}"
 				)
 			})");
 		}
@@ -1145,14 +1157,13 @@ final class NativeOperator {
 		assert impl.alias is none;
 		for (local prefix: impl.implPrefix) {
 			if (BEGIN_PREFIX(prefix))
-				printUserText(prefix, "$", formatMacros);
-			print;
+				print(formatUserText(prefix, "$", formatMacros));
 		}
+		local body = formatUserText(impl.impl, "$", formatMacros);
 		print("INTERN "),;
-		printDecl(name, lineFeedBeforeName: true);
+		printDecl(name, lineFeedBeforeName: true, bodyHint: body);
 		print(" "),;
-		printUserText(impl.impl, "$", formatMacros);
-		print;
+		print(body);
 		print;
 	}
 
@@ -1327,7 +1338,9 @@ function printMethodHintDefs() {
 		for (local none, native: hint.nativeHints) {
 			print(f"Dee_DEFINE_TYPE_METHOD_HINT_FUNC({
 				native.getReturnAttrib("_T")
-			}, {native.returnType}, {native.cc}, {native.name}, ({native.Cparams}))");
+			}, {native.returnType}, {native.cc}, {native.name}, ({
+				", ".join(native.params.each.Cstr)
+			}))");
 		}
 		print;
 	}
@@ -1337,7 +1350,9 @@ function printMethodHintDefs() {
 		for (local none, native: ANONYMOUS_METHOD_HINTS) {
 			print(f"Dee_DEFINE_TYPE_METHOD_HINT_FUNC({
 				native.getReturnAttrib("_T")
-			}, {native.returnType}, {native.cc}, {native.name}, ({native.Cparams}))");
+			}, {native.returnType}, {native.cc}, {native.name}, ({
+				", ".join(native.params.each.Cstr)
+			}))");
 		}
 	}
 }
@@ -1550,10 +1565,11 @@ function printNativeOperatorHintSpecs() {
 		local methods: {(OperatorSpec, NativeMethod)...} | none =
 			nativeMethodsByOperatorName.get(name);
 		if (methods !is none) {
+			local mapped: {string...} = HashSet();
 			for (local none, method /*: NativeMethod*/: methods) {
 				for (local customImplName, customImpl /*: NativeMethodImpl*/: method.customImpls) {
 					local customImplInheritAs: string | none = customImpl.inheritAs;
-					if (customImplInheritAs !is none)
+					if (customImplInheritAs !is none && mapped.insert(customImplName))
 						yield (customImplName, customImplInheritAs);
 				}
 			}
@@ -1562,6 +1578,23 @@ function printNativeOperatorHintSpecs() {
 
 
 	for (local name, method: NATIVE_OPERATORS) {
+		if (method.usrtypeImpls) {
+			print(f"PRIVATE struct oh_init_spec_class tpconst oh_class_{
+					name.name}[{#method.usrtypeImpls + 1}] = \{");
+			for (local impl/*: NativeOperatorImpl*/: method.usrtypeImpls) {
+				local deps = Tuple(impl.dependencies.each.OPERATOR_name);
+				local dep1 = #deps >= 1 ? deps[0] : "OPERATOR_USERCOUNT";
+				local dep2 = #deps >= 2 ? deps[1] : "OPERATOR_USERCOUNT";
+				local symName = method.nativeSymbolNameForUrstypeImpl(impl);
+				if (#deps >= 3) {
+					throw Error(f"Max 2 dependencies are supported for default operators, but {
+							repr symName} has {#deps}");
+				}
+				print(f"	OH_INIT_SPEC_CLASS_INIT(&{symName}, {dep1}, {dep2}),");
+			}
+			print(f"	OH_INIT_SPEC_CLASS_END");
+			print(f"\};");
+		}
 		if (method.impls) {
 			print(f"PRIVATE struct oh_init_spec_impl tpconst oh_impls_{
 					name.name}[{#method.impls + 1}] = \{");
@@ -1613,7 +1646,7 @@ function printNativeOperatorHintSpecs() {
 	}
 	print("INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[", #NATIVE_OPERATORS, "] = {");
 	local longestNameLength = NATIVE_OPERATORS.keys.each.locExpr.length > ...;
-	for (local name, method: NATIVE_OPERATORS) {
+	for (local name, method /*: NativeOperator*/: NATIVE_OPERATORS) {
 		local nativeMethods: {(OperatorSpec, NativeMethod)...} | none =
 				nativeMethodsByOperatorName.get(name);
 		print("	/* ", name.locExpr.ljust(longestNameLength), " */ OH_INIT_SPEC_INIT("),;
@@ -1622,6 +1655,7 @@ function printNativeOperatorHintSpecs() {
 			? "DeeTypeObject"
 			: f"struct type_{name.table.lsstrip("tp_")}";
 		print(f", offsetof({subTableTypeName}, {name.field}), "),;
+		print(method.usrtypeImpls ? f"oh_class_{name.name}" : "NULL", ", "),;
 		print(method.impls ? f"oh_impls_{name.name}" : "NULL", ", "),;
 		print(nativeMethods ? f"oh_mhints_{name.name}" : "NULL", ", "),;
 		print(getInheritAsMappings(name) ? f"oh_inherit_{name.name}" : "NULL"),;
@@ -1675,7 +1709,8 @@ class ErrorMethodKey {
 		print(cc, " ", name, "(", firstParam),;
 		if (!firstParam.endswith("*"))
 			print(" "),;
-		print("self", ((
+		print(body.recontains(r"\bself\b") ? "self" : "UNUSED(self)"),;
+		print(((
 			for (local x: paramTypes[1:]) ", " + x
 		) + ...) ?? "", ") ", body),;
 		print;
@@ -1794,6 +1829,55 @@ function printNativeOperatorHintUnsupportedTable() {
 		} else {
 			print(f"NULL,");
 		}
+	}
+}
+
+@@Call like @printProxyObjectMethodHintWrapper("seq_operator_bool")
+@@
+@@prints:
+@@> INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__seq_operator_bool(ProxyObject *__restrict self); /* DeeObject_InvokeMethodHint(self->po_obj, seq_operator_bool) */
+function printProxyObjectMethodHintWrapper(hintName: string, impl: bool = false) {
+	local wrapperName = f"generic_proxy__{hintName}";
+	RESET_PREFIX();
+	local nativeMethod: NativeMethod = NATIVE_METHOD_HINTS[hintName];
+	print(impl ? "INTERN" : "INTDEF", " "),;
+	local attrib = nativeMethod.getReturnAttrib();
+	if (attrib)
+		print(attrib, " "),;
+	print nativeMethod.returnType,;
+	if (impl) {
+		if (nativeMethod.cc) {
+			if (!nativeMethod.returnType.endswith("*"))
+				print " ",;
+			print nativeMethod.cc,;
+		}
+		print;
+	} else {
+		if (!nativeMethod.returnType.endswith("*"))
+			print " ",;
+		if (nativeMethod.cc)
+			print(nativeMethod.cc, " "),;
+	}
+	print(wrapperName, "("),;
+	local firstParam: NativeMethodParam = nativeMethod.params.first;
+	print("ProxyObject *",
+		"__restrict" in firstParam.typ ? "__restrict " : "",
+		firstParam.name),;
+	print("".join(
+		for (local x: nativeMethod.params[1:].each.Cstr)
+			f", {x}"
+	)),;
+	print(")"),;
+	local implBody = f"DeeObject_InvokeMethodHint({hintName}, {firstParam.name}->po_obj{"".join(
+		for (local x: nativeMethod.params[1:].each.name)
+			f", {x}"
+	)})";
+	if (impl) {
+		print("{");
+		print(f"	return {implBody};");
+		print("}");
+	} else {
+		print(f"; /* {implBody} */");
 	}
 }
 
@@ -2536,68 +2620,37 @@ done:
 
 	@@Parses the `...` in contents in `%{...}` of a native operator definition
 	public parseNativeOperatorImplementation(method: NativeOperator) {
-		if (tok == "using") {
+		local isClass = false;
+		if (tok == "class") {
+			isClass = true;
 			next();
-			local impl: NativeOperatorImpl = NativeOperatorImpl(
-					dependencies: parseNativeOperatorNames().frozen);
-			if (tok == ":") {
-				next();
-				resetContext();
-				parseAttribs();
-				require("{");
-				local implStart = tokStart;
-				local implEnd = data.findmatch("{", "}", implStart + 1);
-				if (implEnd < 0)
-					err(f"Missing '\}' to terminate implementation of '{method.name.locExpr}'");
-				++implEnd;
-				impl.impl = NativeMethodImpl(
-						data[implStart:implEnd].strip(),
-						implPrefix: attrib.prefix,
-						inheritAs: attrib.inheritAs);
-				tokEnd = implEnd;
-				next();
-			} else if (tok == "=") {
-				next();
-				impl.impl = NativeMethodImpl(alias: parseSymbol());
-			} else {
-				err(f"Expected ':' or '=' after dependency in native operator implementation, but for {repr tok}");
-			}
-			method.impls.append(impl);
-		} else if (tok == "class") {
-			local uImplName = "";
-			next();
-			if (tok != "{") {
-				uImplName = parseSymbol();
-				skip(":");
-			}
-			if (uImplName in method.usrtypeImpls) {
-				err(f"User-type implementation {repr uImplName
-					} already defined for '{method.name.locExpr}'");
-			}
-			local impl: NativeMethodImpl;
-			if (tok == "=") {
-				next();
-				impl = NativeMethodImpl(alias: parseSymbol());
-			} else {
-				resetContext();
-				parseAttribs();
-				require("{");
-				local implStart = tokStart;
-				local implEnd = data.findmatch("{", "}", implStart + 1);
-				if (implEnd < 0)
-					err(f"Missing '\}' to terminate implementation of '{method.name.locExpr}'");
-				++implEnd;
-				impl = NativeMethodImpl(
-						data[implStart:implEnd].strip(),
-						implPrefix: attrib.prefix,
-						inheritAs: attrib.inheritAs);
-				tokEnd = implEnd;
-				next();
-			}
-			method.usrtypeImpls[uImplName] = impl;
-		} else {
-			err(f"Expected 'using' or 'class' for native operator implementation, but got {repr tok}");
 		}
+		skip("using");
+		local impl: NativeOperatorImpl = NativeOperatorImpl(
+				dependencies: parseNativeOperatorNames().frozen);
+		if (tok == ":") {
+			next();
+			resetContext();
+			parseAttribs();
+			require("{");
+			local implStart = tokStart;
+			local implEnd = data.findmatch("{", "}", implStart + 1);
+			if (implEnd < 0)
+				err(f"Missing '\}' to terminate implementation of '{method.name.locExpr}'");
+			++implEnd;
+			impl.impl = NativeMethodImpl(
+					data[implStart:implEnd].strip(),
+					implPrefix: attrib.prefix,
+					inheritAs: attrib.inheritAs);
+			tokEnd = implEnd;
+			next();
+		} else if (tok == "=") {
+			next();
+			impl.impl = NativeMethodImpl(alias: parseSymbol());
+		} else {
+			err(f"Expected ':' or '=' after dependency in native operator implementation, but for {repr tok}");
+		}
+		(isClass ? method.usrtypeImpls : method.impls).append(impl);
 	}
 
 	public parseNativeOperator() {
@@ -2904,6 +2957,10 @@ function loadMethodHints() {
 		native.optimize();
 	for (local none, native: NATIVE_OPERATORS)
 		native.optimize();
+
+	/* Prevent GC-slowdown during exit (I really need to re-write
+	 * the GC search system so it runs in linear time...) */
+	Error.AppExit.atexit(() -> Error.AppExit.exit(0));
 }
 
 loadMethodHints();

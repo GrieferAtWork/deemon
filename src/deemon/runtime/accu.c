@@ -31,6 +31,7 @@
 #include <deemon/list.h>
 #include <deemon/none-operator.h>
 #include <deemon/none.h>
+#include <deemon/operator-hints.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
@@ -135,20 +136,16 @@ list_add(DeeListObject *me, DeeObject *other);
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
-	DREF DeeObject *(DCALL *tp_add)(DeeObject *self, DeeObject *other);
 	DeeObject *first = self->acu_value.v_object;
 	DeeTypeObject *tp_first = Dee_TYPE(first);
-	if unlikely((!tp_first->tp_math || !tp_first->tp_math->tp_add) &&
-	            !DeeType_InheritAdd(tp_first)) {
+	DeeNO_add_t tp_add = DeeType_RequireSupportedNativeOperator(tp_first, add);
+	if unlikely(!tp_add) {
 		err_unimplemented_operator(tp_first, OPERATOR_ADD);
 		goto err;
 	}
-	ASSERT(tp_first->tp_math);
-	tp_add = tp_first->tp_math->tp_add;
-	ASSERT(tp_add);
 
 	/* Select special (more efficient) implementations for specific types. */
-	if (tp_add == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_cat) {
+	if (tp_add == (DeeNO_add_t)&string_cat) {
 		Dee_ssize_t result;
 		unicode_printer_init(&self->acu_value.v_string);
 		self->acu_mode = Dee_ACCU_STRING;
@@ -157,7 +154,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		if unlikely(result < 0)
 			goto err;
 		return unicode_printer_printobject(&self->acu_value.v_string, second);
-	} else if (tp_add == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_add) {
+	} else if (tp_add == (DeeNO_add_t)&bytes_add) {
 		Dee_ssize_t result;
 		bytes_printer_init(&self->acu_value.v_bytes);
 		self->acu_mode = Dee_ACCU_BYTES;
@@ -166,7 +163,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		if unlikely(result < 0)
 			goto err;
 		return bytes_printer_printobject(&self->acu_value.v_bytes, second);
-	} else if (tp_add == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_add) {
+	} else if (tp_add == (DeeNO_add_t)&int_add) {
 		int64_t intval1, intval2;
 		if unlikely(!DeeInt_Check(second))
 			goto fallback;
@@ -189,7 +186,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		self->acu_mode = Dee_ACCU_INT;
 #endif /* !HAVE_Dee_ACCU_INT64 */
 #ifdef HAVE_Dee_ACCU_FLOAT
-	} else if (tp_add == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_add) {
+	} else if (tp_add == (DeeNO_add_t)&float_add) {
 		double second_value;
 		if (DeeObject_AsDouble(second, &second_value))
 			goto err;
@@ -197,7 +194,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		self->acu_mode = Dee_ACCU_FLOAT;
 		Dee_Decref(first);
 #endif /* HAVE_Dee_ACCU_FLOAT */
-	} else if (tp_add == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_concat) {
+	} else if (tp_add == (DeeNO_add_t)&tuple_concat) {
 		if (!DeeObject_IsShared(first)) {
 			/* Can re-use the initial "first" tuple as an in-place buffer. */
 			self->acu_value.v_tuple.tb_size  = DeeTuple_SIZE(first);
@@ -221,7 +218,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 				goto err;
 		}
 		return Dee_tuple_builder_appenditems(&self->acu_value.v_tuple, second);
-	} else if (tp_add == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_add) {
+	} else if (tp_add == (DeeNO_add_t)&list_add) {
 		DREF DeeObject *combine;
 		combine = DeeList_ConcatInherited(first, second);
 		if unlikely(!combine) {
@@ -232,7 +229,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		ASSERT(!DeeObject_IsShared(combine));
 		self->acu_value.v_object = combine;
 		self->acu_mode = Dee_ACCU_LIST;
-	} else if (tp_add == (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&_DeeNone_NewRef2) {
+	} else if (tp_add == (DeeNO_add_t)&_DeeNone_NewRef2) {
 		Dee_Decref_unlikely(first);
 		self->acu_mode = Dee_ACCU_NONE;
 	} else {

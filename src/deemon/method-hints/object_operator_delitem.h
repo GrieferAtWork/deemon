@@ -28,7 +28,7 @@ operator {
 [[wunused]] int
 tp_seq->tp_delitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
-%{class {
+%{class using OPERATOR_DELITEM: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_DELITEM, 1, &index);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */

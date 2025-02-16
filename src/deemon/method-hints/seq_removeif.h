@@ -131,9 +131,9 @@ err:
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 

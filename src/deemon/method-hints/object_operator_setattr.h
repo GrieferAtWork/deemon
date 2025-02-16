@@ -19,26 +19,58 @@
  */
 
 /************************************************************************/
-/* deemon.Object.operator move:=()                                      */
+/* deemon.Object.operator .= ()                                         */
 /************************************************************************/
 
 operator {
 
-/* TODO: This operator can only be inherited into types with the "TP_FINHERITCTOR" flag set! */
-[[export("DeeObject_{|T}MoveAssign")]]
 [[wunused]] int
-tp_init.tp_move_assign([[nonnull]] DeeObject *self,
-                       [[nonnull]] DeeObject *value)
-%{class using OPERATOR_MOVEASSIGN: {
+tp_attr->tp_setattr([[nonnull]] DeeObject *self,
+                    [[nonnull]] DeeObject *attr,
+                    [[nonnull]] DeeObject *value)
+%{class using OPERATOR_SETATTR: {
 	DREF DeeObject *result;
-	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_MOVEASSIGN, 1, &value);
-	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
+	DeeObject *args[2];
+	args[0] = attr;
+	args[1] = value;
+	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_SETATTR, 2, args);
+	Dee_Decref_unlikely(result); /* *_unlikely because it's probably `Dee_None' */
 	return 0;
 err:
 	return -1;
-}}
-%{using tp_init.tp_assign: { /* TODO: Directly alias */
-	return CALL_DEPENDENCY(tp_init.tp_assign, self, value);
-}} = OPERATOR_MOVEASSIGN;
+}} /*= OPERATOR_SETATTR*/;
+
+[[wunused]] int
+tp_attr->tp_setattr_string_hash([[nonnull]] DeeObject *self,
+                                [[nonnull]] char const *attr, Dee_hash_t hash,
+                                [[nonnull]] DeeObject *value)
+%{using tp_attr->tp_setattr: {
+	int result;
+	DREF DeeObject *attrob = DeeString_NewWithHash(attr, hash);
+	if unlikely(!attrob)
+		goto err;
+	result = CALL_DEPENDENCY(tp_attr->tp_setattr, self, attrob, value);
+	Dee_Decref_likely(attrob);
+	return result;
+err:
+	return -1;
+}} /*= OPERATOR_SETATTR*/;
+
+[[wunused]] int
+tp_attr->tp_setattr_string_len_hash([[nonnull]] DeeObject *self,
+                                    [[nonnull]] char const *attr,
+                                    size_t attrlen, Dee_hash_t hash,
+                                    [[nonnull]] DeeObject *value)
+%{using tp_attr->tp_setattr: {
+	int result;
+	DREF DeeObject *attrob = DeeString_NewSizedWithHash(attr, attrlen, hash);
+	if unlikely(!attrob)
+		goto err;
+	result = CALL_DEPENDENCY(tp_attr->tp_setattr, self, attrob, value);
+	Dee_Decref_likely(attrob);
+	return result;
+err:
+	return -1;
+}} /*= OPERATOR_SETATTR*/;
 
 } /* operator */

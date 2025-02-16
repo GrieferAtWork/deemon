@@ -27,7 +27,7 @@ operator {
 [[export("DeeObject_{|T}IterNext")]]
 [[wunused]] DREF DeeObject *
 tp_iter_next([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_ITERNEXT: {
 	DREF DeeObject *result;
 #ifdef __OPTIMIZE_SIZE__
 	result = DeeClass_CallOperator(THIS_TYPE, OPERATOR_ITERNEXT, 0, NULL);

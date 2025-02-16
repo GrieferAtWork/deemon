@@ -523,8 +523,8 @@ typedef struct {
 INTDEF DeeTypeObject RoDictIterator_Type;
 
 STATIC_ASSERT(offsetof(RoDictIterator, rodi_dict) == offsetof(ProxyObject, po_obj));
-#define rditer_fini  generic_proxy_fini
-#define rditer_visit generic_proxy_visit
+#define rditer_fini  generic_proxy__fini
+#define rditer_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rditer_ctor(RoDictIterator *__restrict self) {
@@ -2282,8 +2282,8 @@ rodictiterator_copy(RoDictIterator *__restrict self,
 }
 
 STATIC_ASSERT(offsetof(RoDictIterator, rodi_dict) == offsetof(ProxyObject, po_obj));
-#define rodictiterator_fini  generic_proxy_fini
-#define rodictiterator_visit generic_proxy_visit
+#define rodictiterator_fini  generic_proxy__fini
+#define rodictiterator_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rodictiterator_bool(RoDictIterator *__restrict self) {

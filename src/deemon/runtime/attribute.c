@@ -30,6 +30,7 @@
 #include <deemon/mro.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/operator-hints.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* bzero(), ... */

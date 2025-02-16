@@ -59,8 +59,15 @@ err:
 %[define(DEFINE_default_contains_with_foreach_cb =
 #ifndef DEFINED_default_contains_with_foreach_cb
 #define DEFINED_default_contains_with_foreach_cb
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_contains_with_foreach_cb(void *arg, DeeObject *elem);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
+	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		return -1;
+	if (temp == 0)
+		return -2;
+	return 0;
+}
 #endif /* !DEFINED_default_contains_with_foreach_cb */
 )]
 

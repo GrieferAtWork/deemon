@@ -290,9 +290,9 @@ INTERN DeeObject SeqRemoveIfWithRemoveAllItem_DummyInstance = {
 };
 
 STATIC_ASSERT(offsetof(SeqRemoveIfWithRemoveAllKey, sriwrak_should) == offsetof(ProxyObject, po_obj));
-#define seq_removeif_with_removeall_key_init  generic_proxy_init
-#define seq_removeif_with_removeall_key_fini  generic_proxy_fini
-#define seq_removeif_with_removeall_key_visit generic_proxy_visit
+#define seq_removeif_with_removeall_key_init  generic_proxy__init
+#define seq_removeif_with_removeall_key_fini  generic_proxy__fini
+#define seq_removeif_with_removeall_key_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 seq_removeif_with_removeall_key_printrepr(SeqRemoveIfWithRemoveAllKey *__restrict self,

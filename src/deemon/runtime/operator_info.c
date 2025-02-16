@@ -36,6 +36,7 @@
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/string.h>
@@ -868,6 +869,15 @@ check_effective_opname_with_copy:
 			}
 			break;
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define HANDLE_MATH_FOO_WITH_INPLACE_FOO(NAME, Name, name)                                         \
+		case OPERATOR_INPLACE_##NAME:                                                              \
+			if (self->tp_math->tp_inplace_##name == &DeeObject_DefaultInplace##Name##With##Name) { \
+				effective_opname = OPERATOR_##NAME;                                                \
+				goto check_effective_opname_with_copy;                                             \
+			}                                                                                      \
+			break
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define HANDLE_MATH_FOO_WITH_INPLACE_FOO(NAME, Name, name)                                         \
 		case OPERATOR_##NAME:                                                                      \
 			if (self->tp_math->tp_##name == &DeeObject_Default##Name##WithInplace##Name) {         \
@@ -881,6 +891,7 @@ check_effective_opname_with_copy:
 				goto check_effective_opname_with_copy;                                             \
 			}                                                                                      \
 			break
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 		HANDLE_MATH_FOO_WITH_INPLACE_FOO(ADD, Add, add);
 		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SUB, Sub, sub);
 		HANDLE_MATH_FOO_WITH_INPLACE_FOO(MUL, Mul, mul);
@@ -975,6 +986,7 @@ DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, Dee_operator_t name) 
 	return DeeType_GetOperatorOrigin(self, name) == self;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_FindOperatorGroupOrigin(DeeTypeObject const *__restrict self,
                                 ptrdiff_t const *offsetof_funptrv, size_t offsetof_funptrc) {
@@ -1080,6 +1092,7 @@ find_erase_and_insert_origin(DeeTypeObject const *__restrict self) {
 	/* Shouldn't get here... */
 	return (DeeTypeObject *)self;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 /* Return the type from `self' inherited its operator `name'.
  * If `name' wasn't inherited, or isn't defined, simply re-return `self'.
@@ -1106,6 +1119,15 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	case OPERATOR_DESTRUCTOR:
 		return (DeeTypeObject *)self;
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	default: {
+		if (name < Dee_OPERATOR_USERCOUNT) {
+			enum Dee_tno_id tno_id = DeeType_GetTnoOfOperator(name);
+			if (tno_id < Dee_TNO_COUNT)
+				return DeeType_GetNativeOperatorOrigin((DeeTypeObject *)self, tno_id);
+		}
+	}	break;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	case OPERATOR_STR: {
 		PRIVATE ptrdiff_t const str_group[] = {
 			offsetof(DeeTypeObject, tp_cast.tp_str),
@@ -1711,6 +1733,7 @@ find_origin_of_compare_default:
 	}	break;
 
 	default: break;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	}
 
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
@@ -1726,7 +1749,9 @@ find_origin_of_compare_default:
 		}
 		return NULL; /* No such operator */
 	}
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 find_origin_with_info:
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	my_ptr = DeeType_GetOpPointer(self, info);
 	if (my_ptr == NULL)
 		return NULL; /* Operator not implemented (Shouldn't get here...) */

@@ -614,8 +614,8 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 
 
 STATIC_ASSERT(offsetof(CachedSeq_WithIter_Iterator, cswii_cache) == offsetof(ProxyObject, po_obj));
-#define cswiiter_fini  generic_proxy_fini
-#define cswiiter_visit generic_proxy_visit
+#define cswiiter_fini  generic_proxy__fini
+#define cswiiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswiiter_ctor(CachedSeq_WithIter_Iterator *__restrict self) {
@@ -632,14 +632,14 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cswiiter_copy(CachedSeq_WithIter_Iterator *__restrict self,
               CachedSeq_WithIter_Iterator *__restrict other) {
 	self->cswii_index = atomic_read(&other->cswii_index);
-	return generic_proxy_copy_alias((ProxyObject *)self, (ProxyObject *)other);
+	return generic_proxy__copy_alias((ProxyObject *)self, (ProxyObject *)other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cswiiter_deep(CachedSeq_WithIter_Iterator *__restrict self,
               CachedSeq_WithIter_Iterator *__restrict other) {
 	self->cswii_index = atomic_read(&other->cswii_index);
-	return generic_proxy_deepcopy((ProxyObject *)self, (ProxyObject *)other);
+	return generic_proxy__deepcopy((ProxyObject *)self, (ProxyObject *)other);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

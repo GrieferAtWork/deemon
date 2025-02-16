@@ -28,7 +28,7 @@ operator {
 [[wunused]] DREF DeeObject *
 tp_seq->tp_getitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
-%{class {
+%{class using OPERATOR_GETITEM: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_GETITEM, 1, &index);
 }}
 %{using tp_seq->tp_trygetitem: {
@@ -756,7 +756,6 @@ err:
 	return -1;
 }}
 %{using tp_seq->tp_trygetitem: {
-	int result;
 	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem, self, index);
 	if unlikely(!value)
 		goto err;
@@ -841,7 +840,6 @@ err:
 	return -1;
 }}
 %{using tp_seq->tp_trygetitem_index: {
-	int result;
 	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_index, self, index);
 	if unlikely(!value)
 		goto err;
@@ -876,7 +874,6 @@ err:
 tp_seq->tp_hasitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash)
 %{using tp_seq->tp_trygetitem_string_hash: {
-	int result;
 	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_hash, self, key, hash);
 	if unlikely(!value)
 		goto err;
@@ -910,7 +907,6 @@ tp_seq->tp_hasitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
                                    size_t keylen, Dee_hash_t hash)
 %{using tp_seq->tp_trygetitem_string_len_hash: {
-	int result;
 	DREF DeeObject *value = CALL_DEPENDENCY(tp_seq->tp_trygetitem_string_len_hash, self, key, keylen, hash);
 	if unlikely(!value)
 		goto err;

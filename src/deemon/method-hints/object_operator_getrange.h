@@ -29,7 +29,7 @@ operator {
 tp_seq->tp_getrange([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *start,
                     [[nonnull]] DeeObject *end)
-%{class {
+%{class using OPERATOR_GETRANGE: {
 	DeeObject *args[2];
 	args[0] = start;
 	args[1] = end;
@@ -89,8 +89,6 @@ tp_seq->tp_getrange_index_n([[nonnull]] DeeObject *self,
 	result = CALL_DEPENDENCY(tp_seq->tp_getrange, self, startob, Dee_None);
 	Dee_Decref(startob); /* Would be "_likely", but DeeInt_NewSSize() re-uses values. */
 	return result;
-err_startob:
-	Dee_Decref(startob); /* Would be "_likely", but DeeInt_NewSSize() re-uses values. */
 err:
 	return NULL;
 }} = OPERATOR_GETRANGE;

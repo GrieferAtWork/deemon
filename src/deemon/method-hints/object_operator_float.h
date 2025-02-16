@@ -28,7 +28,7 @@ operator {
 [[wunused]] int
 tp_math->tp_double([[nonnull]] DeeObject *__restrict self,
                    [[nonnull]] double *__restrict p_result)
-%{class {
+%{class using OPERATOR_FLOAT: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_FLOAT, 0, NULL);
 	if (DeeObject_AssertTypeExact(result, &DeeFloat_Type))

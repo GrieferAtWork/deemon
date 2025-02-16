@@ -27,7 +27,7 @@ operator {
 /*[[export("DeeObject_{|T}Bool")]]*/ /* Custom handling for likely "bool"-optimization */
 [[wunused]] int
 tp_cast.tp_bool([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_BOOL: {
 	int retval;
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_BOOL, 0, NULL);

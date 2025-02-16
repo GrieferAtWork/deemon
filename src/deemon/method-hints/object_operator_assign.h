@@ -29,7 +29,7 @@ operator {
 [[wunused]] int
 tp_init.tp_assign([[nonnull]] DeeObject *self,
                   [[nonnull]] DeeObject *value)
-%{class {
+%{class using OPERATOR_ASSIGN: {
 	DREF DeeObject *result;
 	store_DeeClass_CallOperator(err, result, THIS_TYPE, self, OPERATOR_ASSIGN, 1, &value);
 	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */

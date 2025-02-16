@@ -107,13 +107,13 @@ function printBody(name: string,
 
 	print('%{unsupported({');
 if (isFind) {
-	print('	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");');
+	print('	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);');
 	print('	return (size_t)Dee_COMPARE_ERR;');
 } else if (isPosition) {
-	print('	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");');
+	print('	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);');
 	print('	return (size_t)Dee_COMPARE_ERR;');
 } else if (isRange) {
-	print('	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");');
+	print('	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);');
 }
 	print('})}');
 	print('%{$empty = {');
@@ -375,7 +375,7 @@ __seq_bfind__.seq_bfind([[nonnull]] DeeObject *self,
                         [[nonnull]] DeeObject *item,
                         size_t start, size_t end)
 %{unsupported({
-	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
 })}
 %{$empty = {
@@ -460,7 +460,7 @@ __seq_bfind__.seq_bfind_with_key([[nonnull]] DeeObject *self,
                                  size_t start, size_t end,
                                  [[nonnull]] DeeObject *key)
 %{unsupported({
-	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
 })}
 %{$empty = {
@@ -551,7 +551,7 @@ __seq_bposition__.seq_bposition([[nonnull]] DeeObject *self,
                                 [[nonnull]] DeeObject *item,
                                 size_t start, size_t end)
 %{unsupported({
-	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
 })}
 %{$empty = {
@@ -638,7 +638,7 @@ __seq_bposition__.seq_bposition_with_key([[nonnull]] DeeObject *self,
                                          size_t start, size_t end,
                                          [[nonnull]] DeeObject *key)
 %{unsupported({
-	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
 })}
 %{$empty = {
@@ -732,7 +732,7 @@ __seq_brange__.seq_brange([[nonnull]] DeeObject *self,
                           size_t start, size_t end,
                           [[nonnull]] size_t result_range[2])
 %{unsupported({
-	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 })}
 %{$empty = {
 	result_range[0] = 0;
@@ -876,7 +876,7 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
                                    [[nonnull]] DeeObject *key,
                                    [[nonnull]] size_t result_range[2])
 %{unsupported({
-	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 })}
 %{$empty = {
 	result_range[0] = 0;

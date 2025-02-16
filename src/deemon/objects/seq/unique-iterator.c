@@ -370,14 +370,14 @@ STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, p
               offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj2));
 STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj2));
-#define dswk_copy  generic_proxy2_copy_alias12
-#define dswk_deep  generic_proxy2_deepcopy
-#define dswk_fini  generic_proxy2_fini
-#define dswk_visit generic_proxy2_visit
+#define dswk_copy  generic_proxy2__copy_alias12
+#define dswk_deep  generic_proxy2__deepcopy
+#define dswk_fini  generic_proxy2__fini
+#define dswk_visit generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj2));
-#define dswk_init generic_proxy2_init
+#define dswk_init generic_proxy2__init
 
 PRIVATE WUNUSED NONNULL((1)) DREF DistinctIteratorWithKey *DCALL
 dswk_iter(DistinctSetWithKey *__restrict self) {

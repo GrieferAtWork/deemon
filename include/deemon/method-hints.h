@@ -141,6 +141,9 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_makeenumeration_with_range,
 	Dee_TMH_seq_foreach_reverse,
 	Dee_TMH_seq_enumerate_index_reverse,
+	Dee_TMH_seq_unpack,
+	Dee_TMH_seq_unpack_ex,
+	Dee_TMH_seq_unpack_ub,
 	Dee_TMH_seq_trygetfirst,
 	Dee_TMH_seq_getfirst,
 	Dee_TMH_seq_boundfirst,
@@ -421,6 +424,13 @@ typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_enumerate_inde
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_makeenumeration_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_makeenumeration_with_intrange_t)(DeeObject *__restrict self, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_makeenumeration_with_range_t)(DeeObject *self, DeeObject *start, DeeObject *end);
+
+/* Sequence_unpack, unpack, __seq_unpack__, explicit_seq_unpack */
+typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *DeeMH_seq_unpack_t)(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);
+typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *DeeMH_seq_unpack_ex_t)(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
+
+/* Sequence_unpackub, unpackub, __seq_unpackub__, explicit_seq_unpackub */
+typedef WUNUSED_T NONNULL_T((1, 4)) size_t (DCALL *DeeMH_seq_unpack_ub_t)(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]);
 
 /* Sequence_first, __seq_first__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_trygetfirst_t)(DeeObject *__restrict self);
@@ -932,6 +942,40 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_enumerate__(DeeObject *__
 DDATDEF char const DeeMA___seq_enumerate_items___name[]; /* "__seq_enumerate_items__" */
 DDATDEF char const DeeMA___seq_enumerate_items___doc[];  /* "(start?:?X2?Dint?O,end?:?X2?Dint?O)->?S?T2?Dint" */
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___seq_unpack___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_unpack___name[]; /* "__seq_unpack__" */
+DDATDEF char const DeeMA___seq_unpack___doc[];  /* "(min:?Dint,max?:?Dint)->?DTuple" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_unpack__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Sequence_unpack_flags DeeMA___seq_unpack___flags
+#define DeeMA_Sequence_unpack_doc   DeeMA___seq_unpack___doc
+#define DeeMA_Sequence_unpack       DeeMA___seq_unpack__
+DDATDEF char const DeeMA_Sequence_unpack_name[]; /* "unpack" */
+#define DeeMA_unpack_flags DeeMA_Sequence_unpack_flags
+#define DeeMA_unpack_name  DeeMA_Sequence_unpack_name
+#define DeeMA_unpack_doc   DeeMA_Sequence_unpack_doc
+#define DeeMA_unpack       DeeMA_Sequence_unpack
+#define DeeMA_explicit_seq_unpack_flags DeeMA___seq_unpack___flags
+#define DeeMA_explicit_seq_unpack_name  DeeMA___seq_unpack___name
+#define DeeMA_explicit_seq_unpack_doc   DeeMA___seq_unpack___doc
+#define DeeMA_explicit_seq_unpack       DeeMA___seq_unpack__
+
+#define DeeMA___seq_unpackub___flags Dee_TYPE_METHOD_FNORMAL
+DDATDEF char const DeeMA___seq_unpackub___name[]; /* "__seq_unpackub__" */
+DDATDEF char const DeeMA___seq_unpackub___doc[];  /* "(min:?Dint,max?:?Dint)->?Ert:NullableTuple" */
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_unpackub__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Sequence_unpackub_flags DeeMA___seq_unpackub___flags
+#define DeeMA_Sequence_unpackub_doc   DeeMA___seq_unpackub___doc
+#define DeeMA_Sequence_unpackub       DeeMA___seq_unpackub__
+DDATDEF char const DeeMA_Sequence_unpackub_name[]; /* "unpackub" */
+#define DeeMA_unpackub_flags DeeMA_Sequence_unpackub_flags
+#define DeeMA_unpackub_name  DeeMA_Sequence_unpackub_name
+#define DeeMA_unpackub_doc   DeeMA_Sequence_unpackub_doc
+#define DeeMA_unpackub       DeeMA_Sequence_unpackub
+#define DeeMA_explicit_seq_unpackub_flags DeeMA___seq_unpackub___flags
+#define DeeMA_explicit_seq_unpackub_name  DeeMA___seq_unpackub___name
+#define DeeMA_explicit_seq_unpackub_doc   DeeMA___seq_unpackub___doc
+#define DeeMA_explicit_seq_unpackub       DeeMA___seq_unpackub__
 
 #define DeeMA___seq_any___flags Dee_TYPE_METHOD_FKWDS
 DDATDEF char const DeeMA___seq_any___name[]; /* "__seq_any__" */
@@ -2768,12 +2812,12 @@ LOCAL ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 #define Dee_mh_seq_enumerate_index_reverse_t   DeeMH_seq_enumerate_index_reverse_t
 #define Dee_mh_seq_foreach_reverse_t           DeeMH_seq_foreach_reverse_t
 #define Dee_mh_seq_operator_trygetitem_index_t DeeMH_seq_operator_trygetitem_index_t
+#define Dee_mh_map_setdefault_t                DeeMH_map_setdefault_t
 
 
 /* For backwards-compat !!! DEPRECATED !!! */
 #define DeeSeq_OperatorContainsAsBool DeeSeq_InvokeContains
 #define DeeSet_OperatorContainsAsBool DeeSeq_InvokeContains
-/*#define DeeMap_OperatorContainsAsBool DeeMap_OperatorHasItem*/ /* TODO: This would be wrong; must check for bound */
 
 
 #/* For backwards-compat !!! DEPRECATED !!! */
@@ -4135,8 +4179,14 @@ DeeType_GetMethodHint(DeeTypeObject *__restrict self, enum Dee_tmh_id id);
 
 
 /* Forward-compatibility */
-#define Dee_TMH_seq_enumerate_index   Dee_TMH_seq_operator_enumerate_index
-#define Dee_mh_seq_enumerate_index_t  Dee_mh_seq_operator_enumerate_index_t
+#define DeeMH___seq_enumerate__                                          DeeMH_explicit_seq_enumerate
+#define DeeMH___seq_enumerate___name                                     DeeMH_explicit_seq_enumerate_name
+#define DeeMH___seq_enumerate___doc                                      DeeMH_explicit_seq_enumerate_doc
+#define _Dee_TMH_WRAPPER_FLAGS___seq_enumerate__                         _Dee_TMH_WRAPPER_FLAGS_explicit_seq_enumerate
+#define Dee_TMH_seq_enumerate                                            Dee_TMH_seq_operator_enumerate
+#define Dee_mh_seq_enumerate_t                                           Dee_mh_seq_operator_enumerate_t
+#define Dee_TMH_seq_enumerate_index                                      Dee_TMH_seq_operator_enumerate_index
+#define Dee_mh_seq_enumerate_index_t                                     Dee_mh_seq_operator_enumerate_index_t
 #endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 

@@ -40,10 +40,10 @@
 
 DECL_BEGIN
 
-#define ds_mk_copy     generic_proxy_copy_alias
-#define ds_mv_copy     generic_proxy_copy_alias
-#define ds_mv_deepcopy generic_proxy_deepcopy
-#define ds_mk_deepcopy generic_proxy_deepcopy
+#define ds_mk_copy     generic_proxy__copy_alias
+#define ds_mv_copy     generic_proxy__copy_alias
+#define ds_mv_deepcopy generic_proxy__deepcopy
+#define ds_mk_deepcopy generic_proxy__deepcopy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_mk_init(DefaultSequence_MapProxy *__restrict self,
@@ -67,10 +67,10 @@ err:
 	return -1;
 }
 
-#define ds_mv_fini  generic_proxy_fini
-#define ds_mk_fini  generic_proxy_fini
-#define ds_mv_visit generic_proxy_visit
-#define ds_mk_visit generic_proxy_visit
+#define ds_mv_fini  generic_proxy__fini
+#define ds_mk_fini  generic_proxy__fini
+#define ds_mv_visit generic_proxy__visit
+#define ds_mk_visit generic_proxy__visit
 
 PRIVATE NONNULL((1)) DREF DeeObject *DCALL
 ds_mk_iter(DefaultSequence_MapProxy *__restrict self) {

@@ -28,7 +28,7 @@ operator {
 [[export("DeeObject_{|T}SizeOb")]]
 [[wunused]] DREF DeeObject *
 tp_seq->tp_sizeob([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_SIZE: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_SIZE, 0, NULL);
 }}
 %{using tp_seq->tp_size: {
@@ -60,6 +60,7 @@ err:
 [[wunused]] size_t
 tp_seq->tp_size_fast([[nonnull]] DeeObject *__restrict self)
 %{using []: {
+	(void)self;
 	return (size_t)-1; /* Not fast */
 }} = OPERATOR_SIZE;
 

@@ -3570,6 +3570,34 @@ DeeType_GetSeqClass(DeeTypeObject const *__restrict self) {
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Sum(DeeObject *__restrict self) {
+	return DeeObject_InvokeMethodHint(seq_sum, self);
+}
+
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeSeq_Any(DeeObject *__restrict self) {
+	return DeeObject_InvokeMethodHint(seq_any, self);
+}
+
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeSeq_All(DeeObject *__restrict self) {
+	return DeeObject_InvokeMethodHint(seq_all, self);
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Min(DeeObject *self) {
+	return DeeObject_InvokeMethodHint(seq_min, self);
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Max(DeeObject *self) {
+	return DeeObject_InvokeMethodHint(seq_max, self);
+}
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_C */

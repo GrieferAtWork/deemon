@@ -30,7 +30,7 @@ tp_seq->tp_setrange([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *start,
                     [[nonnull]] DeeObject *end,
                     [[nonnull]] DeeObject *values)
-%{class {
+%{class using OPERATOR_SETRANGE: {
 	DREF DeeObject *result;
 	DeeObject *args[3];
 	args[0] = start;
@@ -98,8 +98,6 @@ tp_seq->tp_setrange_index_n([[nonnull]] DeeObject *self,
 	result = CALL_DEPENDENCY(tp_seq->tp_setrange, self, startob, Dee_None, values);
 	Dee_Decref(startob); /* Would be "_likely", but DeeInt_NewSSize() re-uses values. */
 	return result;
-err_startob:
-	Dee_Decref(startob); /* Would be "_likely", but DeeInt_NewSSize() re-uses values. */
 err:
 	return -1;
 }} = OPERATOR_SETRANGE;

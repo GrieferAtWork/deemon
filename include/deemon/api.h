@@ -555,12 +555,12 @@ DECL_END
  *                       cause any problems because the ABI specifies that any CLEANUP is done by
  *                       the CALLER of a function (and argument registers/locations are allocated
  *                       left-to-right).
- * DCALL_RETURN_COMMON: When defined, a function:
- *                      >> size_t DCALL foo(int a, int b);
- *                      can safely be called like (so-long as the return value fits into an "int"):
- *                      >> int result = (*(int(DCALL *)(int, int))&foo)(10, 20);
- *                 iow: Integer return types <= sizeof(__REGISTER_TYPE__) are passed via the same
- *                      register (or registers that shadow/alias each other). */
+ * DCALL_RETURN_COMMON:  When defined, a function:
+ *                       >> size_t DCALL foo(int a, int b);
+ *                       can safely be called like (so-long as the return value fits into an "int"):
+ *                       >> int result = (*(int(DCALL *)(int, int))&foo)(10, 20);
+ *                  iow: Integer return types <= sizeof(__REGISTER_TYPE__) are always passed via
+ *                       the same register(s) (or registers that shadow/alias each other). */
 #ifndef DCALL
 #if defined(__i386__) && !defined(__x86_64__)
 #define DCALL __ATTR_STDCALL
@@ -670,15 +670,19 @@ DFUNDEF ATTR_NORETURN void (DCALL _DeeAssert_XFail)(char const *expr, char const
 DFUNDEF ATTR_NORETURN void (_DeeAssert_XFailf)(char const *expr, char const *file, int line, char const *format, ...);
 DECL_END
 
+#define _Dee_XFatal(expr)       _DeeAssert_XFail(expr, __FILE__, __LINE__)
+#define _Dee_XFatalf(expr, ...) _DeeAssert_XFailf(expr, __FILE__, __LINE__, __VA_ARGS__)
 #ifdef Dee_BREAKPOINT_IS_NOOP
-#define _Dee_Fatal(expr)       _DeeAssert_Fail(expr, __FILE__, __LINE__)
-#define _Dee_Fatalf(expr, ...) _DeeAssert_Failf(expr, __FILE__, __LINE__, __VA_ARGS__)
+#define _Dee_Fatal(expr)       _DeeAssert_XFail(expr, __FILE__, __LINE__)
+#define _Dee_Fatalf(expr, ...) _DeeAssert_XFailf(expr, __FILE__, __LINE__, __VA_ARGS__)
 #else /* Dee_BREAKPOINT_IS_NOOP */
 #define _Dee_Fatal(expr)       (_DeeAssert_Fail(expr, __FILE__, __LINE__), Dee_BREAKPOINT())
 #define _Dee_Fatalf(expr, ...) (_DeeAssert_Failf(expr, __FILE__, __LINE__, __VA_ARGS__), Dee_BREAKPOINT())
 #endif /* !Dee_BREAKPOINT_IS_NOOP */
-#define Dee_Fatal()     _Dee_Fatal(NULL)
-#define Dee_Fatalf(...) _Dee_Fatalf(NULL, __VA_ARGS__)
+#define Dee_Fatal()      _Dee_Fatal(NULL)
+#define Dee_Fatalf(...)  _Dee_Fatalf(NULL, __VA_ARGS__)
+#define Dee_XFatal()     _Dee_XFatal(NULL)
+#define Dee_XFatalf(...) _Dee_XFatalf(NULL, __VA_ARGS__)
 
 #ifndef Dee_ASSERT
 #if !defined(NDEBUG) && !defined(NDEBUG_ASSERT)

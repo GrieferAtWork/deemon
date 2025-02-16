@@ -174,10 +174,17 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		Dee_atomic_rwlock_cinit(&result->fl_lock);
 		FixedList_InitEnumerate_SetAllocatedSize(result, size);
 		/* (x as Sequence).enumerate((index, value?) -> fl_init_enumerate_cb(index, value)) */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+		if unlikely(DeeObject_InvokeMethodHint(seq_enumerate_index, sizeob_or_seq,
+		                                       &fl_init_enumerate_cb,
+		                                       &result, 0, (size_t)-1))
+			goto err_r_elem;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 		if unlikely((*DeeSeq_Type.tp_seq->tp_enumerate_index)(sizeob_or_seq,
 		                                                      &fl_init_enumerate_cb,
 		                                                      &result, 0, (size_t)-1))
 			goto err_r_elem;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 		result->fl_size = size;
 	}
 /*done:*/

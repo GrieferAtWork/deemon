@@ -168,9 +168,9 @@ err:
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 
@@ -199,13 +199,11 @@ __seq_removeall__.seq_removeall_with_key([[nonnull]] DeeObject *self,
 	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicateWithKey_Type);
 	result = CALL_DEPENDENCY(seq_removeif, self, (DeeObject *)pred, start, end, max);
 	Dee_Decref_likely(pred);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return result ? 1 : 0;
+	return result;
 err_pred:
 	DeeObject_FREE(pred);
 err:
-	return -1;
+	return (size_t)-1;
 }}
 %{$with__seq_operator_size__and__seq_remove_with_key = {
 	PRELOAD_DEPENDENCY(seq_remove_with_key)
@@ -316,9 +314,9 @@ err:
 	result = LOCAL_CALLATTRF(self, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 seq_removeall = {

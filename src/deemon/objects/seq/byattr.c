@@ -45,9 +45,9 @@ byattr_ctor(MapByAttr *__restrict self) {
 	return 0;
 }
 
-#define byattr_copy generic_proxy_copy_alias
-#define byattr_deep generic_proxy_deepcopy
-#define byattr_init generic_proxy_init
+#define byattr_copy generic_proxy__copy_alias
+#define byattr_deep generic_proxy__deepcopy
+#define byattr_init generic_proxy__init
 
 struct byattr_enumattr_foreach_data {
 	MapByAttr *befd_self;
@@ -85,23 +85,23 @@ byattr_enumattr(DeeTypeObject *tp_self, MapByAttr *self,
 	                             &cookie);
 }
 
-#define byattr_fini                      generic_proxy_fini
-#define byattr_visit                     generic_proxy_visit
-#define byattr_getattr                   generic_proxy_getitem
-#define byattr_delattr                   generic_proxy_delitem
-#define byattr_setattr                   generic_proxy_setitem
-#define byattr_hasattr                   generic_proxy_hasitem
-#define byattr_boundattr                 generic_proxy_bounditem
-#define byattr_getattr_string_hash       generic_proxy_getitem_string_hash
-#define byattr_delattr_string_hash       generic_proxy_delitem_string_hash
-#define byattr_setattr_string_hash       generic_proxy_setitem_string_hash
-#define byattr_hasattr_string_hash       generic_proxy_hasitem_string_hash
-#define byattr_boundattr_string_hash     generic_proxy_bounditem_string_hash
-#define byattr_getattr_string_len_hash   generic_proxy_getitem_string_len_hash
-#define byattr_delattr_string_len_hash   generic_proxy_delitem_string_len_hash
-#define byattr_setattr_string_len_hash   generic_proxy_setitem_string_len_hash
-#define byattr_hasattr_string_len_hash   generic_proxy_hasitem_string_len_hash
-#define byattr_boundattr_string_len_hash generic_proxy_bounditem_string_len_hash
+#define byattr_fini                      generic_proxy__fini
+#define byattr_visit                     generic_proxy__visit
+#define byattr_getattr                   generic_proxy__map_operator_getitem
+#define byattr_delattr                   generic_proxy__map_operator_delitem
+#define byattr_setattr                   generic_proxy__map_operator_setitem
+#define byattr_hasattr                   generic_proxy__map_operator_hasitem
+#define byattr_boundattr                 generic_proxy__map_operator_bounditem
+#define byattr_getattr_string_hash       generic_proxy__map_operator_getitem_string_hash
+#define byattr_delattr_string_hash       generic_proxy__map_operator_delitem_string_hash
+#define byattr_setattr_string_hash       generic_proxy__map_operator_setitem_string_hash
+#define byattr_hasattr_string_hash       generic_proxy__map_operator_hasitem_string_hash
+#define byattr_boundattr_string_hash     generic_proxy__map_operator_bounditem_string_hash
+#define byattr_getattr_string_len_hash   generic_proxy__map_operator_getitem_string_len_hash
+#define byattr_delattr_string_len_hash   generic_proxy__map_operator_delitem_string_len_hash
+#define byattr_setattr_string_len_hash   generic_proxy__map_operator_setitem_string_len_hash
+#define byattr_hasattr_string_len_hash   generic_proxy__map_operator_hasitem_string_len_hash
+#define byattr_boundattr_string_len_hash generic_proxy__map_operator_bounditem_string_len_hash
 
 
 PRIVATE struct type_attr byattr_attr = {
@@ -178,7 +178,7 @@ INTERN DeeTypeObject MapByAttr_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&byattr_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &generic_proxy_cmp_recursive,
+	/* .tp_cmp           = */ &generic_proxy__cmp_recursive,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ NULL,

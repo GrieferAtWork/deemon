@@ -222,6 +222,22 @@ INTDEF int DCALL default__enter__badalloc(void*);
 #define default__leave__badalloc default__enter__badalloc
 INTDEF int DCALL default__enter__unsupported(DeeObject*);
 INTDEF int DCALL default__leave__unsupported(DeeObject*);
+INTDEF void*DCALL default__getattr__badalloc(void*, void*);
+INTDEF void*DCALL default__getattr_string_hash__badalloc(void*, void*, void*);
+INTDEF void*DCALL default__getattr_string_len_hash__badalloc(void*, void*, void*, void*);
+INTDEF int DCALL default__boundattr__badalloc(void*, void*);
+#define default__hasattr__badalloc default__boundattr__badalloc
+#define default__delattr__badalloc default__boundattr__badalloc
+INTDEF int DCALL default__boundattr_string_hash__badalloc(void*, void*, void*);
+#define default__hasattr_string_hash__badalloc default__boundattr_string_hash__badalloc
+#define default__delattr_string_hash__badalloc default__boundattr_string_hash__badalloc
+#define default__setattr__badalloc default__boundattr_string_hash__badalloc
+INTDEF int DCALL default__boundattr_string_len_hash__badalloc(void*, void*, void*, void*);
+#define default__hasattr_string_len_hash__badalloc default__boundattr_string_len_hash__badalloc
+#define default__delattr_string_len_hash__badalloc default__boundattr_string_len_hash__badalloc
+#define default__setattr_string_hash__badalloc default__boundattr_string_len_hash__badalloc
+INTDEF int DCALL default__hasattr__unsupported(DeeObject*, void*);
+INTDEF int DCALL default__setattr_string_len_hash__badalloc(void*, void*, void*, void*, void*);
 /*[[[end]]]*/
 /* clang-format on */
 

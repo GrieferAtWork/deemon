@@ -28,7 +28,7 @@ operator {
 [[custom_unsupported_impl_name(default__hash__unsupported)]]
 [[wunused]] Dee_hash_t
 tp_cmp->tp_hash([[nonnull]] DeeObject *__restrict self)
-%{class {
+%{class using OPERATOR_HASH: {
 	DREF DeeObject *func, *result;
 	dhash_t result_value;
 	int temp;
@@ -49,6 +49,26 @@ fallback_handled:
 	               ERROR_PRINT_DOHANDLE);
 fallback:
 	return DeeObject_HashGeneric(self);
+}}
+%{class using []: {
+	uint16_t i;
+	DREF DeeObject *member;
+	struct class_desc *desc = DeeClass_DESC(THIS_TYPE);
+	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	Dee_instance_desc_lock_read(instance);
+	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
+		member = instance->id_vtab[i];
+		if (!member)
+			continue;
+		Dee_Incref(member);
+		Dee_instance_desc_lock_endread(instance);
+		result = Dee_HashCombine(result, DeeObject_Hash(member));
+		Dee_Decref(member);
+		Dee_instance_desc_lock_read(instance);
+	}
+	Dee_instance_desc_lock_endread(instance);
+	return result;
 }}
 /*%{using []: { // Not done here since that would break inheritance
 	return DeeObject_HashGeneric(self);

@@ -45,8 +45,8 @@ typedef struct {
 INTDEF DeeTypeObject StringOrdinals_Type;
 
 STATIC_ASSERT(offsetof(StringOrdinals, so_str) == offsetof(ProxyObject, po_obj));
-#define stringordinals_fini  generic_proxy_fini
-#define stringordinals_visit generic_proxy_visit
+#define stringordinals_fini  generic_proxy__fini
+#define stringordinals_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinals_ctor(StringOrdinals *__restrict self) {

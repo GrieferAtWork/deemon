@@ -135,6 +135,21 @@ typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_inc_t)(DeeObject **__restrict
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_dec_t)(DeeObject **__restrict p_self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_enter_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeNO_leave_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_getattr_t)(DeeObject *self, DeeObject *attr);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_getattr_string_hash_t)(DeeObject *self, char const *attr, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeNO_getattr_string_len_hash_t)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_boundattr_t)(DeeObject *self, DeeObject *attr);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_boundattr_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_boundattr_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_hasattr_t)(DeeObject *self, DeeObject *attr);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_hasattr_string_hash_t)(DeeObject *self, char const *key, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_hasattr_string_len_hash_t)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_delattr_t)(DeeObject *self, DeeObject *attr);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_delattr_string_hash_t)(DeeObject *self, char const *attr, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_delattr_string_len_hash_t)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) int (DCALL *DeeNO_setattr_t)(DeeObject *self, DeeObject *attr, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1, 2, 4)) int (DCALL *DeeNO_setattr_string_hash_t)(DeeObject *self, char const *attr, Dee_hash_t hash, DeeObject *value);
+typedef WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *DeeNO_setattr_string_len_hash_t)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -243,6 +258,21 @@ enum Dee_tno_id {
 	Dee_TNO_dec,
 	Dee_TNO_enter,
 	Dee_TNO_leave,
+	Dee_TNO_getattr,
+	Dee_TNO_getattr_string_hash,
+	Dee_TNO_getattr_string_len_hash,
+	Dee_TNO_boundattr,
+	Dee_TNO_boundattr_string_hash,
+	Dee_TNO_boundattr_string_len_hash,
+	Dee_TNO_hasattr,
+	Dee_TNO_hasattr_string_hash,
+	Dee_TNO_hasattr_string_len_hash,
+	Dee_TNO_delattr,
+	Dee_TNO_delattr_string_hash,
+	Dee_TNO_delattr_string_len_hash,
+	Dee_TNO_setattr,
+	Dee_TNO_setattr_string_hash,
+	Dee_TNO_setattr_string_len_hash,
 /*[[[end]]]*/
 	/* clang-format on */
 	Dee_TNO_COUNT
@@ -309,9 +339,9 @@ INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
  *          is `default__*__with__*', and dependencies could not be written
  *          due to OOM, though in this case, no error is thrown) */
 INTDEF WUNUSED NONNULL((1, 2, 4)) bool
-(DCALL DeeType_InheritOperatorWithoutHints)(DeeTypeObject *__restrict from,
-                                            DeeTypeObject *__restrict into,
-                                            enum Dee_tno_id id, Dee_funptr_t impl);
+(DCALL DeeType_InheritNativeOperatorWithoutHints)(DeeTypeObject *__restrict from,
+                                                  DeeTypeObject *__restrict into,
+                                                  enum Dee_tno_id id, Dee_funptr_t impl);
 
 /* Same as `DeeType_GetNativeOperatorWithoutHints', but also load operators
  * from method hints (though don't inherit them from base-types, yet). */
@@ -346,6 +376,27 @@ INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT];
  * whatever is indicative of an error in the context of the native operator. */
 INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperator)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
+
+
+/* Returns the ID of some native operator that should always be present
+ * (as an impl `!= DeeType_GetNativeOperatorUnsupported(return)') in
+ * types that are considered to be implementing `op'.
+ * Returns `Dee_TNO_COUNT' when the operator does not have a native variant
+ * The caller must ensure that `op < Dee_OPERATOR_USERCOUNT' */
+INTDEF enum Dee_tno_id const _DeeType_GetTnoOfOperator[Dee_OPERATOR_USERCOUNT];
+#define DeeType_GetTnoOfOperator(op) _DeeType_GetTnoOfOperator[op]
+
+
+/* Find the type where native operator "id" has been inherited from.
+ * This function correctly handles:
+ * - when "id" is implemented as an alias for another operator (in which case it
+ *   return the origin of the operator's first dependency, or "self" if there are
+ *   no dependencies)
+ * - when "id" is implemented using a method hint, return the origin of that hint
+ * - when "id" is not implemented at all, return "NULL" */
+INTDEF WUNUSED NONNULL((1)) DeeTypeObject *
+(DCALL DeeType_GetNativeOperatorOrigin)(DeeTypeObject *__restrict self, enum Dee_tno_id id);
+
 
 /* Returns the impl for "id" that calls `err_unimplemented_operator()'.
  * Returns "NULL" if "id" doesn't define a user-code ID */
@@ -509,6 +560,21 @@ INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT]
 #define _Dee_TNO_PATH_dec(_)                        PATH2(_, tp_math, tp_dec)
 #define _Dee_TNO_PATH_enter(_)                      PATH2(_, tp_with, tp_enter)
 #define _Dee_TNO_PATH_leave(_)                      PATH2(_, tp_with, tp_leave)
+#define _Dee_TNO_PATH_getattr(_)                    PATH2(_, tp_attr, tp_getattr)
+#define _Dee_TNO_PATH_getattr_string_hash(_)        PATH2(_, tp_attr, tp_getattr_string_hash)
+#define _Dee_TNO_PATH_getattr_string_len_hash(_)    PATH2(_, tp_attr, tp_getattr_string_len_hash)
+#define _Dee_TNO_PATH_boundattr(_)                  PATH2(_, tp_attr, tp_boundattr)
+#define _Dee_TNO_PATH_boundattr_string_hash(_)      PATH2(_, tp_attr, tp_boundattr_string_hash)
+#define _Dee_TNO_PATH_boundattr_string_len_hash(_)  PATH2(_, tp_attr, tp_boundattr_string_len_hash)
+#define _Dee_TNO_PATH_hasattr(_)                    PATH2(_, tp_attr, tp_hasattr)
+#define _Dee_TNO_PATH_hasattr_string_hash(_)        PATH2(_, tp_attr, tp_hasattr_string_hash)
+#define _Dee_TNO_PATH_hasattr_string_len_hash(_)    PATH2(_, tp_attr, tp_hasattr_string_len_hash)
+#define _Dee_TNO_PATH_delattr(_)                    PATH2(_, tp_attr, tp_delattr)
+#define _Dee_TNO_PATH_delattr_string_hash(_)        PATH2(_, tp_attr, tp_delattr_string_hash)
+#define _Dee_TNO_PATH_delattr_string_len_hash(_)    PATH2(_, tp_attr, tp_delattr_string_len_hash)
+#define _Dee_TNO_PATH_setattr(_)                    PATH2(_, tp_attr, tp_setattr)
+#define _Dee_TNO_PATH_setattr_string_hash(_)        PATH2(_, tp_attr, tp_setattr_string_hash)
+#define _Dee_TNO_PATH_setattr_string_len_hash(_)    PATH2(_, tp_attr, tp_setattr_string_len_hash)
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -516,106 +582,106 @@ INTDEF Dee_funptr_t tpconst _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT]
 /* clang-format off */
 /*[[[deemon (printNativeOperatorHintDecls from "...src.deemon.method-hints.method-hints")();]]]*/
 /* tp_init.tp_assign */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__assign__with__ASSIGN(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__assign(DeeObject *self, DeeObject *value);
-#define isusrtype__assign(tp_assign) ((tp_assign) == &usrtype__assign)
-#define maketyped__assign(tp_assign) ((tp_assign) == &usrtype__assign ? &tusrtype__assign : &tdefault__assign)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__assign__with__ASSIGN(DeeObject *self, DeeObject *value);
+#define isusrtype__assign(tp_assign) ((tp_assign) == &usrtype__assign__with__ASSIGN)
+#define maketyped__assign(tp_assign) ((tp_assign) == &usrtype__assign__with__ASSIGN ? &tusrtype__assign__with__ASSIGN : &tdefault__assign)
 
 /* tp_init.tp_move_assign */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__move_assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__move_assign__with__MOVEASSIGN(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__move_assign__with__assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__move_assign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__move_assign(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__move_assign__with__MOVEASSIGN(DeeObject *self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__move_assign__with__assign(DeeObject *self, DeeObject *value);
-#define isusrtype__move_assign(tp_move_assign) ((tp_move_assign) == &usrtype__move_assign)
+#define isusrtype__move_assign(tp_move_assign) ((tp_move_assign) == &usrtype__move_assign__with__MOVEASSIGN)
 #define isdefault__move_assign(tp_move_assign) ((tp_move_assign) == &default__move_assign__with__assign)
-#define maketyped__move_assign(tp_move_assign) ((tp_move_assign) == &usrtype__move_assign ? &tusrtype__move_assign : (tp_move_assign) == &default__move_assign__with__assign ? &tdefault__move_assign__with__assign : &tdefault__move_assign)
+#define maketyped__move_assign(tp_move_assign) ((tp_move_assign) == &usrtype__move_assign__with__MOVEASSIGN ? &tusrtype__move_assign__with__MOVEASSIGN : (tp_move_assign) == &default__move_assign__with__assign ? &tdefault__move_assign__with__assign : &tdefault__move_assign)
 
 /* tp_cast.tp_str */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__str(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__str__by_print(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__str__with__STR(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__str__with__PRINT(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__str__with__print(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__str(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__str(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__str__by_print(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__str__with__STR(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__str__with__PRINT(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__str__with__print(DeeObject *__restrict self);
-#define isusrtype__str(tp_str) ((tp_str) == &usrtype__str || (tp_str) == &usrtype__str__by_print)
+#define isusrtype__str(tp_str) ((tp_str) == &usrtype__str__with__STR || (tp_str) == &usrtype__str__with__PRINT)
 #define isdefault__str(tp_str) ((tp_str) == &default__str__with__print)
-#define maketyped__str(tp_str) ((tp_str) == &usrtype__str ? &tusrtype__str : (tp_str) == &usrtype__str__by_print ? &tusrtype__str__by_print : (tp_str) == &default__str__with__print ? &tdefault__str__with__print : &tdefault__str)
+#define maketyped__str(tp_str) ((tp_str) == &usrtype__str__with__STR ? &tusrtype__str__with__STR : (tp_str) == &usrtype__str__with__PRINT ? &tusrtype__str__with__PRINT : (tp_str) == &default__str__with__print ? &tdefault__str__with__print : &tdefault__str)
 
 /* tp_cast.tp_print */
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tusrtype__print(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tusrtype__print__by_print(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tusrtype__print__with__STR(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tusrtype__print__with__PRINT(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__print__with__str(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__print(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL usrtype__print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL usrtype__print__by_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL usrtype__print__with__STR(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL usrtype__print__with__PRINT(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__print__with__str(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-#define isusrtype__print(tp_print) ((tp_print) == &usrtype__print || (tp_print) == &usrtype__print__by_print)
+#define isusrtype__print(tp_print) ((tp_print) == &usrtype__print__with__STR || (tp_print) == &usrtype__print__with__PRINT)
 #define isdefault__print(tp_print) ((tp_print) == &default__print__with__str)
-#define maketyped__print(tp_print) ((tp_print) == &usrtype__print ? &tusrtype__print : (tp_print) == &usrtype__print__by_print ? &tusrtype__print__by_print : (tp_print) == &default__print__with__str ? &tdefault__print__with__str : &tdefault__print)
+#define maketyped__print(tp_print) ((tp_print) == &usrtype__print__with__STR ? &tusrtype__print__with__STR : (tp_print) == &usrtype__print__with__PRINT ? &tusrtype__print__with__PRINT : (tp_print) == &default__print__with__str ? &tdefault__print__with__str : &tdefault__print)
 
 /* tp_cast.tp_repr */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__repr(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__repr__by_printrepr(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__repr__with__REPR(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__repr__with__PRINTREPR(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__repr__with__printrepr(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__repr(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__repr(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__repr__by_printrepr(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__repr__with__REPR(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__repr__with__PRINTREPR(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__repr__with__printrepr(DeeObject *__restrict self);
-#define isusrtype__repr(tp_repr) ((tp_repr) == &usrtype__repr || (tp_repr) == &usrtype__repr__by_printrepr)
+#define isusrtype__repr(tp_repr) ((tp_repr) == &usrtype__repr__with__REPR || (tp_repr) == &usrtype__repr__with__PRINTREPR)
 #define isdefault__repr(tp_repr) ((tp_repr) == &default__repr__with__printrepr)
-#define maketyped__repr(tp_repr) ((tp_repr) == &usrtype__repr ? &tusrtype__repr : (tp_repr) == &usrtype__repr__by_printrepr ? &tusrtype__repr__by_printrepr : (tp_repr) == &default__repr__with__printrepr ? &tdefault__repr__with__printrepr : &tdefault__repr)
+#define maketyped__repr(tp_repr) ((tp_repr) == &usrtype__repr__with__REPR ? &tusrtype__repr__with__REPR : (tp_repr) == &usrtype__repr__with__PRINTREPR ? &tusrtype__repr__with__PRINTREPR : (tp_repr) == &default__repr__with__printrepr ? &tdefault__repr__with__printrepr : &tdefault__repr)
 
 /* tp_cast.tp_printrepr */
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tusrtype__printrepr(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tusrtype__printrepr__by_print(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tusrtype__printrepr__with__REPR(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tusrtype__printrepr__with__PRINTREPR(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__printrepr__with__repr(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__printrepr(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL usrtype__printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL usrtype__printrepr__by_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL usrtype__printrepr__with__REPR(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL usrtype__printrepr__with__PRINTREPR(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__printrepr__with__repr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-#define isusrtype__printrepr(tp_printrepr) ((tp_printrepr) == &usrtype__printrepr || (tp_printrepr) == &usrtype__printrepr__by_print)
+#define isusrtype__printrepr(tp_printrepr) ((tp_printrepr) == &usrtype__printrepr__with__REPR || (tp_printrepr) == &usrtype__printrepr__with__PRINTREPR)
 #define isdefault__printrepr(tp_printrepr) ((tp_printrepr) == &default__printrepr__with__repr)
-#define maketyped__printrepr(tp_printrepr) ((tp_printrepr) == &usrtype__printrepr ? &tusrtype__printrepr : (tp_printrepr) == &usrtype__printrepr__by_print ? &tusrtype__printrepr__by_print : (tp_printrepr) == &default__printrepr__with__repr ? &tdefault__printrepr__with__repr : &tdefault__printrepr)
+#define maketyped__printrepr(tp_printrepr) ((tp_printrepr) == &usrtype__printrepr__with__REPR ? &tusrtype__printrepr__with__REPR : (tp_printrepr) == &usrtype__printrepr__with__PRINTREPR ? &tusrtype__printrepr__with__PRINTREPR : (tp_printrepr) == &default__printrepr__with__repr ? &tdefault__printrepr__with__repr : &tdefault__printrepr)
 
 /* tp_cast.tp_bool */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__bool(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__bool__with__BOOL(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__bool(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__bool(DeeObject *__restrict self);
-#define isusrtype__bool(tp_bool) ((tp_bool) == &usrtype__bool)
-#define maketyped__bool(tp_bool) ((tp_bool) == &usrtype__bool ? &tusrtype__bool : &tdefault__bool)
+INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__bool__with__BOOL(DeeObject *__restrict self);
+#define isusrtype__bool(tp_bool) ((tp_bool) == &usrtype__bool__with__BOOL)
+#define maketyped__bool(tp_bool) ((tp_bool) == &usrtype__bool__with__BOOL ? &tusrtype__bool__with__BOOL : &tdefault__bool)
 
 /* tp_call */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__call(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__call__with__CALL(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__call__with__call_kw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__call(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__call(DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__call__with__CALL(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__call__with__call_kw(DeeObject *self, size_t argc, DeeObject *const *argv);
-#define isusrtype__call(tp_call) ((tp_call) == &usrtype__call)
+#define isusrtype__call(tp_call) ((tp_call) == &usrtype__call__with__CALL)
 #define isdefault__call(tp_call) ((tp_call) == &default__call__with__call_kw)
-#define maketyped__call(tp_call) ((tp_call) == &usrtype__call ? &tusrtype__call : (tp_call) == &default__call__with__call_kw ? &tdefault__call__with__call_kw : &tdefault__call)
+#define maketyped__call(tp_call) ((tp_call) == &usrtype__call__with__CALL ? &tusrtype__call__with__CALL : (tp_call) == &default__call__with__call_kw ? &tdefault__call__with__call_kw : &tdefault__call)
 
 /* tp_call_kw */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__call_kw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__call_kw__with__CALL(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__call_kw__with__call(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__call_kw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__call_kw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__call_kw__with__CALL(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__call_kw__with__call(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define isusrtype__call_kw(tp_call_kw) ((tp_call_kw) == &usrtype__call_kw)
+#define isusrtype__call_kw(tp_call_kw) ((tp_call_kw) == &usrtype__call_kw__with__CALL)
 #define isdefault__call_kw(tp_call_kw) ((tp_call_kw) == &default__call_kw__with__call)
-#define maketyped__call_kw(tp_call_kw) ((tp_call_kw) == &usrtype__call_kw ? &tusrtype__call_kw : (tp_call_kw) == &default__call_kw__with__call ? &tdefault__call_kw__with__call : &tdefault__call_kw)
+#define maketyped__call_kw(tp_call_kw) ((tp_call_kw) == &usrtype__call_kw__with__CALL ? &tusrtype__call_kw__with__CALL : (tp_call_kw) == &default__call_kw__with__call ? &tdefault__call_kw__with__call : &tdefault__call_kw)
 
 /* tp_iter_next */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__iter_next(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__iter_next__with__ITERNEXT(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter_next__with__nextpair(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter_next(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__iter_next(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__iter_next__with__ITERNEXT(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_next__with__nextpair(DeeObject *__restrict self);
-#define isusrtype__iter_next(tp_iter_next) ((tp_iter_next) == &usrtype__iter_next)
+#define isusrtype__iter_next(tp_iter_next) ((tp_iter_next) == &usrtype__iter_next__with__ITERNEXT)
 #define isdefault__iter_next(tp_iter_next) ((tp_iter_next) == &default__iter_next__with__nextpair)
-#define maketyped__iter_next(tp_iter_next) ((tp_iter_next) == &usrtype__iter_next ? &tusrtype__iter_next : (tp_iter_next) == &default__iter_next__with__nextpair ? &tdefault__iter_next__with__nextpair : &tdefault__iter_next)
+#define maketyped__iter_next(tp_iter_next) ((tp_iter_next) == &usrtype__iter_next__with__ITERNEXT ? &tusrtype__iter_next__with__ITERNEXT : (tp_iter_next) == &default__iter_next__with__nextpair ? &tdefault__iter_next__with__nextpair : &tdefault__iter_next)
 
 /* tp_iterator->tp_nextpair */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__nextpair__with__iter_next(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject *key_and_value[2]);
@@ -656,18 +722,18 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL default__advance__with__iter_next(DeeOb
 #define maketyped__advance(tp_advance) ((tp_advance) == &default__advance__with__nextkey ? &tdefault__advance__with__nextkey : (tp_advance) == &default__advance__with__nextvalue ? &tdefault__advance__with__nextvalue : (tp_advance) == &default__advance__with__nextpair ? &tdefault__advance__with__nextpair : (tp_advance) == &default__advance__with__iter_next ? &tdefault__advance__with__iter_next : &tdefault__advance)
 
 /* tp_math->tp_int */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__int(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__int__with__INT(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__int__with__int64(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__int__with__int32(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__int__with__double(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__int(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__int(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__int__with__INT(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__int__with__int64(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__int__with__int32(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__int__with__double(DeeObject *__restrict self);
-#define isusrtype__int(tp_int) ((tp_int) == &usrtype__int)
+#define isusrtype__int(tp_int) ((tp_int) == &usrtype__int__with__INT)
 #define isdefault__int(tp_int) ((tp_int) == &default__int__with__int64 || (tp_int) == &default__int__with__int32 || (tp_int) == &default__int__with__double)
-#define maketyped__int(tp_int) ((tp_int) == &usrtype__int ? &tusrtype__int : (tp_int) == &default__int__with__int64 ? &tdefault__int__with__int64 : (tp_int) == &default__int__with__int32 ? &tdefault__int__with__int32 : (tp_int) == &default__int__with__double ? &tdefault__int__with__double : &tdefault__int)
+#define maketyped__int(tp_int) ((tp_int) == &usrtype__int__with__INT ? &tusrtype__int__with__INT : (tp_int) == &default__int__with__int64 ? &tdefault__int__with__int64 : (tp_int) == &default__int__with__int32 ? &tdefault__int__with__int32 : (tp_int) == &default__int__with__double ? &tdefault__int__with__double : &tdefault__int)
 
 /* tp_math->tp_int32 */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__int32__with__int64(DeeTypeObject *tp_self, DeeObject *self, int32_t *p_result);
@@ -692,42 +758,48 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__int64__with__double(DeeObject 
 #define maketyped__int64(tp_int64) ((tp_int64) == &default__int64__with__int32 ? &tdefault__int64__with__int32 : (tp_int64) == &default__int64__with__int ? &tdefault__int64__with__int : (tp_int64) == &default__int64__with__double ? &tdefault__int64__with__double : &tdefault__int64)
 
 /* tp_math->tp_double */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__double(DeeTypeObject *tp_self, DeeObject *self, double *p_result);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__double__with__FLOAT(DeeTypeObject *tp_self, DeeObject *self, double *p_result);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__double__with__int(DeeTypeObject *tp_self, DeeObject *self, double *p_result);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__double__with__int64(DeeTypeObject *tp_self, DeeObject *self, double *p_result);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__double__with__int32(DeeTypeObject *tp_self, DeeObject *self, double *p_result);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__double(DeeTypeObject *tp_self, DeeObject *self, double *p_result);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__double(DeeObject *__restrict self, double *__restrict p_result);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__double__with__FLOAT(DeeObject *__restrict self, double *__restrict p_result);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__double__with__int(DeeObject *__restrict self, double *__restrict p_result);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__double__with__int64(DeeObject *__restrict self, double *__restrict p_result);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__double__with__int32(DeeObject *__restrict self, double *__restrict p_result);
-#define isusrtype__double(tp_double) ((tp_double) == &usrtype__double)
+#define isusrtype__double(tp_double) ((tp_double) == &usrtype__double__with__FLOAT)
 #define isdefault__double(tp_double) ((tp_double) == &default__double__with__int || (tp_double) == &default__double__with__int64 || (tp_double) == &default__double__with__int32)
-#define maketyped__double(tp_double) ((tp_double) == &usrtype__double ? &tusrtype__double : (tp_double) == &default__double__with__int ? &tdefault__double__with__int : (tp_double) == &default__double__with__int64 ? &tdefault__double__with__int64 : (tp_double) == &default__double__with__int32 ? &tdefault__double__with__int32 : &tdefault__double)
+#define maketyped__double(tp_double) ((tp_double) == &usrtype__double__with__FLOAT ? &tusrtype__double__with__FLOAT : (tp_double) == &default__double__with__int ? &tdefault__double__with__int : (tp_double) == &default__double__with__int64 ? &tdefault__double__with__int64 : (tp_double) == &default__double__with__int32 ? &tdefault__double__with__int32 : &tdefault__double)
 
 /* tp_cmp->tp_hash */
-INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL tusrtype__hash(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL tusrtype__hash__with__HASH(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL tusrtype__hash__with__(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL tdefault__hash(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL usrtype__hash(DeeObject *__restrict self);
-#define isusrtype__hash(tp_hash) ((tp_hash) == &usrtype__hash)
-#define maketyped__hash(tp_hash) ((tp_hash) == &usrtype__hash ? &tusrtype__hash : &tdefault__hash)
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL usrtype__hash__with__HASH(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL usrtype__hash__with__(DeeObject *__restrict self);
+#define isusrtype__hash(tp_hash) ((tp_hash) == &usrtype__hash__with__HASH || (tp_hash) == &usrtype__hash__with__)
+#define maketyped__hash(tp_hash) ((tp_hash) == &usrtype__hash__with__HASH ? &tusrtype__hash__with__HASH : (tp_hash) == &usrtype__hash__with__ ? &tusrtype__hash__with__ : &tdefault__hash)
 
 /* tp_cmp->tp_compare_eq */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__compare_eq__with__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare_eq__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare_eq__with__eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare_eq__with__ne(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare_eq__with__lo__and__gr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare_eq__with__le__and__ge(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__compare_eq__with__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare_eq__with__compare(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare_eq__with__eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare_eq__with__ne(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare_eq__with__lo__and__gr(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare_eq__with__le__and__ge(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__compare_eq(tp_compare_eq) ((tp_compare_eq) == &usrtype__compare_eq__with__)
 #define isdefault__compare_eq(tp_compare_eq) ((tp_compare_eq) == &default__compare_eq__with__compare || (tp_compare_eq) == &default__compare_eq__with__eq || (tp_compare_eq) == &default__compare_eq__with__ne || (tp_compare_eq) == &default__compare_eq__with__lo__and__gr || (tp_compare_eq) == &default__compare_eq__with__le__and__ge)
-#define maketyped__compare_eq(tp_compare_eq) ((tp_compare_eq) == &default__compare_eq__with__compare ? &tdefault__compare_eq__with__compare : (tp_compare_eq) == &default__compare_eq__with__eq ? &tdefault__compare_eq__with__eq : (tp_compare_eq) == &default__compare_eq__with__ne ? &tdefault__compare_eq__with__ne : (tp_compare_eq) == &default__compare_eq__with__lo__and__gr ? &tdefault__compare_eq__with__lo__and__gr : (tp_compare_eq) == &default__compare_eq__with__le__and__ge ? &tdefault__compare_eq__with__le__and__ge : &tdefault__compare_eq)
+#define maketyped__compare_eq(tp_compare_eq) ((tp_compare_eq) == &usrtype__compare_eq__with__ ? &tusrtype__compare_eq__with__ : (tp_compare_eq) == &default__compare_eq__with__compare ? &tdefault__compare_eq__with__compare : (tp_compare_eq) == &default__compare_eq__with__eq ? &tdefault__compare_eq__with__eq : (tp_compare_eq) == &default__compare_eq__with__ne ? &tdefault__compare_eq__with__ne : (tp_compare_eq) == &default__compare_eq__with__lo__and__gr ? &tdefault__compare_eq__with__lo__and__gr : (tp_compare_eq) == &default__compare_eq__with__le__and__ge ? &tdefault__compare_eq__with__le__and__ge : &tdefault__compare_eq)
 
 /* tp_cmp->tp_compare */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__compare__with__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare__with__eq__and__lo(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare__with__eq__and__le(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare__with__eq__and__gr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
@@ -739,6 +811,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare__with__ne__and__ge
 #define tdefault__compare__with__lo__and__gr (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))&tdefault__compare_eq__with__lo__and__gr)
 #define tdefault__compare__with__le__and__ge (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))&tdefault__compare_eq__with__le__and__ge)
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__compare__with__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare__with__eq__and__lo(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare__with__eq__and__le(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare__with__eq__and__gr(DeeObject *lhs, DeeObject *rhs);
@@ -749,99 +822,103 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare__with__ne__and__gr(Dee
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__compare__with__ne__and__ge(DeeObject *lhs, DeeObject *rhs);
 #define default__compare__with__lo__and__gr (*(int (DCALL *)(DeeObject *, DeeObject *))&default__compare_eq__with__lo__and__gr)
 #define default__compare__with__le__and__ge (*(int (DCALL *)(DeeObject *, DeeObject *))&default__compare_eq__with__le__and__ge)
+#define isusrtype__compare(tp_compare) ((tp_compare) == &usrtype__compare__with__)
 #define isdefault__compare(tp_compare) ((tp_compare) == &default__compare__with__eq__and__lo || (tp_compare) == &default__compare__with__eq__and__le || (tp_compare) == &default__compare__with__eq__and__gr || (tp_compare) == &default__compare__with__eq__and__ge || (tp_compare) == &default__compare__with__ne__and__lo || (tp_compare) == &default__compare__with__ne__and__le || (tp_compare) == &default__compare__with__ne__and__gr || (tp_compare) == &default__compare__with__ne__and__ge || (tp_compare) == &default__compare__with__lo__and__gr || (tp_compare) == &default__compare__with__le__and__ge)
-#define maketyped__compare(tp_compare) ((tp_compare) == &default__compare__with__eq__and__lo ? &tdefault__compare__with__eq__and__lo : (tp_compare) == &default__compare__with__eq__and__le ? &tdefault__compare__with__eq__and__le : (tp_compare) == &default__compare__with__eq__and__gr ? &tdefault__compare__with__eq__and__gr : (tp_compare) == &default__compare__with__eq__and__ge ? &tdefault__compare__with__eq__and__ge : (tp_compare) == &default__compare__with__ne__and__lo ? &tdefault__compare__with__ne__and__lo : (tp_compare) == &default__compare__with__ne__and__le ? &tdefault__compare__with__ne__and__le : (tp_compare) == &default__compare__with__ne__and__gr ? &tdefault__compare__with__ne__and__gr : (tp_compare) == &default__compare__with__ne__and__ge ? &tdefault__compare__with__ne__and__ge : (tp_compare) == &default__compare__with__lo__and__gr ? &tdefault__compare__with__lo__and__gr : (tp_compare) == &default__compare__with__le__and__ge ? &tdefault__compare__with__le__and__ge : &tdefault__compare)
+#define maketyped__compare(tp_compare) ((tp_compare) == &usrtype__compare__with__ ? &tusrtype__compare__with__ : (tp_compare) == &default__compare__with__eq__and__lo ? &tdefault__compare__with__eq__and__lo : (tp_compare) == &default__compare__with__eq__and__le ? &tdefault__compare__with__eq__and__le : (tp_compare) == &default__compare__with__eq__and__gr ? &tdefault__compare__with__eq__and__gr : (tp_compare) == &default__compare__with__eq__and__ge ? &tdefault__compare__with__eq__and__ge : (tp_compare) == &default__compare__with__ne__and__lo ? &tdefault__compare__with__ne__and__lo : (tp_compare) == &default__compare__with__ne__and__le ? &tdefault__compare__with__ne__and__le : (tp_compare) == &default__compare__with__ne__and__gr ? &tdefault__compare__with__ne__and__gr : (tp_compare) == &default__compare__with__ne__and__ge ? &tdefault__compare__with__ne__and__ge : (tp_compare) == &default__compare__with__lo__and__gr ? &tdefault__compare__with__lo__and__gr : (tp_compare) == &default__compare__with__le__and__ge ? &tdefault__compare__with__le__and__ge : &tdefault__compare)
 
 /* tp_cmp->tp_trycompare_eq */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__trycompare_eq__with__(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__trycompare_eq__with__compare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__trycompare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__trycompare_eq__with__(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__trycompare_eq__with__compare_eq(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__trycompare_eq(tp_trycompare_eq) ((tp_trycompare_eq) == &usrtype__trycompare_eq__with__)
 #define isdefault__trycompare_eq(tp_trycompare_eq) ((tp_trycompare_eq) == &default__trycompare_eq__with__compare_eq)
-#define maketyped__trycompare_eq(tp_trycompare_eq) ((tp_trycompare_eq) == &default__trycompare_eq__with__compare_eq ? &tdefault__trycompare_eq__with__compare_eq : &tdefault__trycompare_eq)
+#define maketyped__trycompare_eq(tp_trycompare_eq) ((tp_trycompare_eq) == &usrtype__trycompare_eq__with__ ? &tusrtype__trycompare_eq__with__ : (tp_trycompare_eq) == &default__trycompare_eq__with__compare_eq ? &tdefault__trycompare_eq__with__compare_eq : &tdefault__trycompare_eq)
 
 /* tp_cmp->tp_eq */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__eq__with__EQ(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__eq__with__ne(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__eq__with__compare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__eq__with__EQ(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__eq__with__ne(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__eq__with__compare_eq(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__eq(tp_eq) ((tp_eq) == &usrtype__eq)
+#define isusrtype__eq(tp_eq) ((tp_eq) == &usrtype__eq__with__EQ)
 #define isdefault__eq(tp_eq) ((tp_eq) == &default__eq__with__ne || (tp_eq) == &default__eq__with__compare_eq)
-#define maketyped__eq(tp_eq) ((tp_eq) == &usrtype__eq ? &tusrtype__eq : (tp_eq) == &default__eq__with__ne ? &tdefault__eq__with__ne : (tp_eq) == &default__eq__with__compare_eq ? &tdefault__eq__with__compare_eq : &tdefault__eq)
+#define maketyped__eq(tp_eq) ((tp_eq) == &usrtype__eq__with__EQ ? &tusrtype__eq__with__EQ : (tp_eq) == &default__eq__with__ne ? &tdefault__eq__with__ne : (tp_eq) == &default__eq__with__compare_eq ? &tdefault__eq__with__compare_eq : &tdefault__eq)
 
 /* tp_cmp->tp_ne */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__ne(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__ne__with__NE(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__ne__with__eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__ne__with__compare_eq(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__ne(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__ne(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__ne__with__NE(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__ne__with__eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__ne__with__compare_eq(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__ne(tp_ne) ((tp_ne) == &usrtype__ne)
+#define isusrtype__ne(tp_ne) ((tp_ne) == &usrtype__ne__with__NE)
 #define isdefault__ne(tp_ne) ((tp_ne) == &default__ne__with__eq || (tp_ne) == &default__ne__with__compare_eq)
-#define maketyped__ne(tp_ne) ((tp_ne) == &usrtype__ne ? &tusrtype__ne : (tp_ne) == &default__ne__with__eq ? &tdefault__ne__with__eq : (tp_ne) == &default__ne__with__compare_eq ? &tdefault__ne__with__compare_eq : &tdefault__ne)
+#define maketyped__ne(tp_ne) ((tp_ne) == &usrtype__ne__with__NE ? &tusrtype__ne__with__NE : (tp_ne) == &default__ne__with__eq ? &tdefault__ne__with__eq : (tp_ne) == &default__ne__with__compare_eq ? &tdefault__ne__with__compare_eq : &tdefault__ne)
 
 /* tp_cmp->tp_lo */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__lo(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__lo__with__LO(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__lo__with__ge(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__lo__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__lo(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__lo(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__lo__with__LO(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__lo__with__ge(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__lo__with__compare(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__lo(tp_lo) ((tp_lo) == &usrtype__lo)
+#define isusrtype__lo(tp_lo) ((tp_lo) == &usrtype__lo__with__LO)
 #define isdefault__lo(tp_lo) ((tp_lo) == &default__lo__with__ge || (tp_lo) == &default__lo__with__compare)
-#define maketyped__lo(tp_lo) ((tp_lo) == &usrtype__lo ? &tusrtype__lo : (tp_lo) == &default__lo__with__ge ? &tdefault__lo__with__ge : (tp_lo) == &default__lo__with__compare ? &tdefault__lo__with__compare : &tdefault__lo)
+#define maketyped__lo(tp_lo) ((tp_lo) == &usrtype__lo__with__LO ? &tusrtype__lo__with__LO : (tp_lo) == &default__lo__with__ge ? &tdefault__lo__with__ge : (tp_lo) == &default__lo__with__compare ? &tdefault__lo__with__compare : &tdefault__lo)
 
 /* tp_cmp->tp_le */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__le(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__le__with__LE(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__le__with__gr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__le__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__le(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__le(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__le__with__LE(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__le__with__gr(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__le__with__compare(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__le(tp_le) ((tp_le) == &usrtype__le)
+#define isusrtype__le(tp_le) ((tp_le) == &usrtype__le__with__LE)
 #define isdefault__le(tp_le) ((tp_le) == &default__le__with__gr || (tp_le) == &default__le__with__compare)
-#define maketyped__le(tp_le) ((tp_le) == &usrtype__le ? &tusrtype__le : (tp_le) == &default__le__with__gr ? &tdefault__le__with__gr : (tp_le) == &default__le__with__compare ? &tdefault__le__with__compare : &tdefault__le)
+#define maketyped__le(tp_le) ((tp_le) == &usrtype__le__with__LE ? &tusrtype__le__with__LE : (tp_le) == &default__le__with__gr ? &tdefault__le__with__gr : (tp_le) == &default__le__with__compare ? &tdefault__le__with__compare : &tdefault__le)
 
 /* tp_cmp->tp_gr */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__gr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__gr__with__GR(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__gr__with__le(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__gr__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__gr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__gr(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__gr__with__GR(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__gr__with__le(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__gr__with__compare(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__gr(tp_gr) ((tp_gr) == &usrtype__gr)
+#define isusrtype__gr(tp_gr) ((tp_gr) == &usrtype__gr__with__GR)
 #define isdefault__gr(tp_gr) ((tp_gr) == &default__gr__with__le || (tp_gr) == &default__gr__with__compare)
-#define maketyped__gr(tp_gr) ((tp_gr) == &usrtype__gr ? &tusrtype__gr : (tp_gr) == &default__gr__with__le ? &tdefault__gr__with__le : (tp_gr) == &default__gr__with__compare ? &tdefault__gr__with__compare : &tdefault__gr)
+#define maketyped__gr(tp_gr) ((tp_gr) == &usrtype__gr__with__GR ? &tusrtype__gr__with__GR : (tp_gr) == &default__gr__with__le ? &tdefault__gr__with__le : (tp_gr) == &default__gr__with__compare ? &tdefault__gr__with__compare : &tdefault__gr)
 
 /* tp_cmp->tp_ge */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__ge(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__ge__with__GE(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__ge__with__lo(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__ge__with__compare(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__ge(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__ge(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__ge__with__GE(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__ge__with__lo(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__ge__with__compare(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__ge(tp_ge) ((tp_ge) == &usrtype__ge)
+#define isusrtype__ge(tp_ge) ((tp_ge) == &usrtype__ge__with__GE)
 #define isdefault__ge(tp_ge) ((tp_ge) == &default__ge__with__lo || (tp_ge) == &default__ge__with__compare)
-#define maketyped__ge(tp_ge) ((tp_ge) == &usrtype__ge ? &tusrtype__ge : (tp_ge) == &default__ge__with__lo ? &tdefault__ge__with__lo : (tp_ge) == &default__ge__with__compare ? &tdefault__ge__with__compare : &tdefault__ge)
+#define maketyped__ge(tp_ge) ((tp_ge) == &usrtype__ge__with__GE ? &tusrtype__ge__with__GE : (tp_ge) == &default__ge__with__lo ? &tdefault__ge__with__lo : (tp_ge) == &default__ge__with__compare ? &tdefault__ge__with__compare : &tdefault__ge)
 
 /* tp_seq->tp_iter */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__iter(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__iter__with__ITER(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter__with__foreach(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter__with__foreach_pair(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__iter(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__iter__with__ITER(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter__with__foreach(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter__with__foreach_pair(DeeObject *__restrict self);
-#define isusrtype__iter(tp_iter) ((tp_iter) == &usrtype__iter)
+#define isusrtype__iter(tp_iter) ((tp_iter) == &usrtype__iter__with__ITER)
 #define isdefault__iter(tp_iter) ((tp_iter) == &default__iter__with__foreach || (tp_iter) == &default__iter__with__foreach_pair)
-#define maketyped__iter(tp_iter) ((tp_iter) == &usrtype__iter ? &tusrtype__iter : &tdefault__iter)
+#define maketyped__iter(tp_iter) ((tp_iter) == &usrtype__iter__with__ITER ? &tusrtype__iter__with__ITER : &tdefault__iter)
 
 /* tp_seq->tp_foreach */
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL tdefault__foreach__with__iter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t cb, void *arg);
@@ -862,14 +939,14 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL default__foreach_pair__with__it
 #define maketyped__foreach_pair(tp_foreach_pair) ((tp_foreach_pair) == &default__foreach_pair__with__foreach ? &tdefault__foreach_pair__with__foreach : (tp_foreach_pair) == &default__foreach_pair__with__iter ? &tdefault__foreach_pair__with__iter : &tdefault__foreach_pair)
 
 /* tp_seq->tp_sizeob */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__sizeob(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__sizeob__with__SIZE(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__sizeob__with__size(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__sizeob(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__sizeob(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__sizeob__with__SIZE(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__sizeob__with__size(DeeObject *__restrict self);
-#define isusrtype__sizeob(tp_sizeob) ((tp_sizeob) == &usrtype__sizeob)
+#define isusrtype__sizeob(tp_sizeob) ((tp_sizeob) == &usrtype__sizeob__with__SIZE)
 #define isdefault__sizeob(tp_sizeob) ((tp_sizeob) == &default__sizeob__with__size)
-#define maketyped__sizeob(tp_sizeob) ((tp_sizeob) == &usrtype__sizeob ? &tusrtype__sizeob : (tp_sizeob) == &default__sizeob__with__size ? &tdefault__sizeob__with__size : &tdefault__sizeob)
+#define maketyped__sizeob(tp_sizeob) ((tp_sizeob) == &usrtype__sizeob__with__SIZE ? &tusrtype__sizeob__with__SIZE : (tp_sizeob) == &default__sizeob__with__size ? &tdefault__sizeob__with__size : &tdefault__sizeob)
 
 /* tp_seq->tp_size */
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__size__with__sizeob(DeeTypeObject *tp_self, DeeObject *self);
@@ -885,14 +962,14 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL default__size_fast__with__(DeeObject *_
 #define isdefault__size_fast(tp_size_fast) ((tp_size_fast) == &default__size_fast__with__)
 
 /* tp_seq->tp_contains */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__contains(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__contains__with__CONTAINS(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__contains(DeeTypeObject *tp_self, DeeObject *self, DeeObject *item);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__contains(DeeObject *self, DeeObject *item);
-#define isusrtype__contains(tp_contains) ((tp_contains) == &usrtype__contains)
-#define maketyped__contains(tp_contains) ((tp_contains) == &usrtype__contains ? &tusrtype__contains : &tdefault__contains)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__contains__with__CONTAINS(DeeObject *self, DeeObject *item);
+#define isusrtype__contains(tp_contains) ((tp_contains) == &usrtype__contains__with__CONTAINS)
+#define maketyped__contains(tp_contains) ((tp_contains) == &usrtype__contains__with__CONTAINS ? &tusrtype__contains__with__CONTAINS : &tdefault__contains)
 
 /* tp_seq->tp_getitem */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__getitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__getitem__with__GETITEM(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__trygetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__getitem_index__and__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__getitem_index__and__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
@@ -900,16 +977,16 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with_
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__getitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem__with__getitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__getitem(DeeObject *self, DeeObject *index);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__getitem__with__GETITEM(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__trygetitem(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__getitem_index__and__getitem_string_len_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__getitem_index__and__getitem_string_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__getitem_index(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__getitem_string_len_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getitem__with__getitem_string_hash(DeeObject *self, DeeObject *index);
-#define isusrtype__getitem(tp_getitem) ((tp_getitem) == &usrtype__getitem)
+#define isusrtype__getitem(tp_getitem) ((tp_getitem) == &usrtype__getitem__with__GETITEM)
 #define isdefault__getitem(tp_getitem) ((tp_getitem) == &default__getitem__with__trygetitem || (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_len_hash || (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_hash || (tp_getitem) == &default__getitem__with__getitem_index || (tp_getitem) == &default__getitem__with__getitem_string_len_hash || (tp_getitem) == &default__getitem__with__getitem_string_hash)
-#define maketyped__getitem(tp_getitem) ((tp_getitem) == &usrtype__getitem ? &tusrtype__getitem : (tp_getitem) == &default__getitem__with__trygetitem ? &tdefault__getitem__with__trygetitem : (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_len_hash ? &tdefault__getitem__with__getitem_index__and__getitem_string_len_hash : (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_hash ? &tdefault__getitem__with__getitem_index__and__getitem_string_hash : (tp_getitem) == &default__getitem__with__getitem_index ? &tdefault__getitem__with__getitem_index : (tp_getitem) == &default__getitem__with__getitem_string_len_hash ? &tdefault__getitem__with__getitem_string_len_hash : (tp_getitem) == &default__getitem__with__getitem_string_hash ? &tdefault__getitem__with__getitem_string_hash : &tdefault__getitem)
+#define maketyped__getitem(tp_getitem) ((tp_getitem) == &usrtype__getitem__with__GETITEM ? &tusrtype__getitem__with__GETITEM : (tp_getitem) == &default__getitem__with__trygetitem ? &tdefault__getitem__with__trygetitem : (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_len_hash ? &tdefault__getitem__with__getitem_index__and__getitem_string_len_hash : (tp_getitem) == &default__getitem__with__getitem_index__and__getitem_string_hash ? &tdefault__getitem__with__getitem_index__and__getitem_string_hash : (tp_getitem) == &default__getitem__with__getitem_index ? &tdefault__getitem__with__getitem_index : (tp_getitem) == &default__getitem__with__getitem_string_len_hash ? &tdefault__getitem__with__getitem_string_len_hash : (tp_getitem) == &default__getitem__with__getitem_string_hash ? &tdefault__getitem__with__getitem_string_hash : &tdefault__getitem)
 
 /* tp_seq->tp_trygetitem */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__trygetitem__with__getitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
@@ -1117,22 +1194,22 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasitem_string_len_hash__with_
 #define maketyped__hasitem_string_len_hash(tp_hasitem_string_len_hash) ((tp_hasitem_string_len_hash) == &default__hasitem_string_len_hash__with__trygetitem_string_len_hash ? &tdefault__hasitem_string_len_hash__with__trygetitem_string_len_hash : (tp_hasitem_string_len_hash) == &default__hasitem_string_len_hash__with__bounditem_string_len_hash ? &tdefault__hasitem_string_len_hash__with__bounditem_string_len_hash : (tp_hasitem_string_len_hash) == &default__hasitem_string_len_hash__with__hasitem ? &tdefault__hasitem_string_len_hash__with__hasitem : (tp_hasitem_string_len_hash) == &default__hasitem_string_len_hash__with__hasitem_string_hash ? &tdefault__hasitem_string_len_hash__with__hasitem_string_hash : &tdefault__hasitem_string_len_hash)
 
 /* tp_seq->tp_delitem */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__delitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__delitem__with__DELITEM(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem__with__delitem_index__and__delitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem__with__delitem_index__and__delitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem__with__delitem_index(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem__with__delitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem__with__delitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__delitem(DeeObject *self, DeeObject *index);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__delitem__with__DELITEM(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delitem__with__delitem_index__and__delitem_string_len_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delitem__with__delitem_index__and__delitem_string_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delitem__with__delitem_index(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delitem__with__delitem_string_len_hash(DeeObject *self, DeeObject *index);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delitem__with__delitem_string_hash(DeeObject *self, DeeObject *index);
-#define isusrtype__delitem(tp_delitem) ((tp_delitem) == &usrtype__delitem)
+#define isusrtype__delitem(tp_delitem) ((tp_delitem) == &usrtype__delitem__with__DELITEM)
 #define isdefault__delitem(tp_delitem) ((tp_delitem) == &default__delitem__with__delitem_index__and__delitem_string_len_hash || (tp_delitem) == &default__delitem__with__delitem_index__and__delitem_string_hash || (tp_delitem) == &default__delitem__with__delitem_index || (tp_delitem) == &default__delitem__with__delitem_string_len_hash || (tp_delitem) == &default__delitem__with__delitem_string_hash)
-#define maketyped__delitem(tp_delitem) ((tp_delitem) == &usrtype__delitem ? &tusrtype__delitem : (tp_delitem) == &default__delitem__with__delitem_index__and__delitem_string_len_hash ? &tdefault__delitem__with__delitem_index__and__delitem_string_len_hash : (tp_delitem) == &default__delitem__with__delitem_index__and__delitem_string_hash ? &tdefault__delitem__with__delitem_index__and__delitem_string_hash : (tp_delitem) == &default__delitem__with__delitem_index ? &tdefault__delitem__with__delitem_index : (tp_delitem) == &default__delitem__with__delitem_string_len_hash ? &tdefault__delitem__with__delitem_string_len_hash : (tp_delitem) == &default__delitem__with__delitem_string_hash ? &tdefault__delitem__with__delitem_string_hash : &tdefault__delitem)
+#define maketyped__delitem(tp_delitem) ((tp_delitem) == &usrtype__delitem__with__DELITEM ? &tusrtype__delitem__with__DELITEM : (tp_delitem) == &default__delitem__with__delitem_index__and__delitem_string_len_hash ? &tdefault__delitem__with__delitem_index__and__delitem_string_len_hash : (tp_delitem) == &default__delitem__with__delitem_index__and__delitem_string_hash ? &tdefault__delitem__with__delitem_index__and__delitem_string_hash : (tp_delitem) == &default__delitem__with__delitem_index ? &tdefault__delitem__with__delitem_index : (tp_delitem) == &default__delitem__with__delitem_string_len_hash ? &tdefault__delitem__with__delitem_string_len_hash : (tp_delitem) == &default__delitem__with__delitem_string_hash ? &tdefault__delitem__with__delitem_string_hash : &tdefault__delitem)
 
 /* tp_seq->tp_delitem_index */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__delitem_index__with__delitem(DeeTypeObject *tp_self, DeeObject *self, size_t index);
@@ -1158,22 +1235,22 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delitem_string_len_hash__with_
 #define maketyped__delitem_string_len_hash(tp_delitem_string_len_hash) ((tp_delitem_string_len_hash) == &default__delitem_string_len_hash__with__delitem ? &tdefault__delitem_string_len_hash__with__delitem : (tp_delitem_string_len_hash) == &default__delitem_string_len_hash__with__delitem_string_hash ? &tdefault__delitem_string_len_hash__with__delitem_string_hash : &tdefault__delitem_string_len_hash)
 
 /* tp_seq->tp_setitem */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tusrtype__setitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tusrtype__setitem__with__SETITEM(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__setitem__with__setitem_index__and__setitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__setitem__with__setitem_index__and__setitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__setitem__with__setitem_index(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__setitem__with__setitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__setitem__with__setitem_string_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__setitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL usrtype__setitem(DeeObject *self, DeeObject *index, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL usrtype__setitem__with__SETITEM(DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__setitem__with__setitem_index__and__setitem_string_len_hash(DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__setitem__with__setitem_index__and__setitem_string_hash(DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__setitem__with__setitem_index(DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__setitem__with__setitem_string_len_hash(DeeObject *self, DeeObject *index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__setitem__with__setitem_string_hash(DeeObject *self, DeeObject *index, DeeObject *value);
-#define isusrtype__setitem(tp_setitem) ((tp_setitem) == &usrtype__setitem)
+#define isusrtype__setitem(tp_setitem) ((tp_setitem) == &usrtype__setitem__with__SETITEM)
 #define isdefault__setitem(tp_setitem) ((tp_setitem) == &default__setitem__with__setitem_index__and__setitem_string_len_hash || (tp_setitem) == &default__setitem__with__setitem_index__and__setitem_string_hash || (tp_setitem) == &default__setitem__with__setitem_index || (tp_setitem) == &default__setitem__with__setitem_string_len_hash || (tp_setitem) == &default__setitem__with__setitem_string_hash)
-#define maketyped__setitem(tp_setitem) ((tp_setitem) == &usrtype__setitem ? &tusrtype__setitem : (tp_setitem) == &default__setitem__with__setitem_index__and__setitem_string_len_hash ? &tdefault__setitem__with__setitem_index__and__setitem_string_len_hash : (tp_setitem) == &default__setitem__with__setitem_index__and__setitem_string_hash ? &tdefault__setitem__with__setitem_index__and__setitem_string_hash : (tp_setitem) == &default__setitem__with__setitem_index ? &tdefault__setitem__with__setitem_index : (tp_setitem) == &default__setitem__with__setitem_string_len_hash ? &tdefault__setitem__with__setitem_string_len_hash : (tp_setitem) == &default__setitem__with__setitem_string_hash ? &tdefault__setitem__with__setitem_string_hash : &tdefault__setitem)
+#define maketyped__setitem(tp_setitem) ((tp_setitem) == &usrtype__setitem__with__SETITEM ? &tusrtype__setitem__with__SETITEM : (tp_setitem) == &default__setitem__with__setitem_index__and__setitem_string_len_hash ? &tdefault__setitem__with__setitem_index__and__setitem_string_len_hash : (tp_setitem) == &default__setitem__with__setitem_index__and__setitem_string_hash ? &tdefault__setitem__with__setitem_index__and__setitem_string_hash : (tp_setitem) == &default__setitem__with__setitem_index ? &tdefault__setitem__with__setitem_index : (tp_setitem) == &default__setitem__with__setitem_string_len_hash ? &tdefault__setitem__with__setitem_string_len_hash : (tp_setitem) == &default__setitem__with__setitem_string_hash ? &tdefault__setitem__with__setitem_string_hash : &tdefault__setitem)
 
 /* tp_seq->tp_setitem_index */
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL tdefault__setitem_index__with__setitem(DeeTypeObject *tp_self, DeeObject *self, size_t index, DeeObject *value);
@@ -1199,14 +1276,14 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setitem_string_len_hash__wi
 #define maketyped__setitem_string_len_hash(tp_setitem_string_len_hash) ((tp_setitem_string_len_hash) == &default__setitem_string_len_hash__with__setitem ? &tdefault__setitem_string_len_hash__with__setitem : (tp_setitem_string_len_hash) == &default__setitem_string_len_hash__with__setitem_string_hash ? &tdefault__setitem_string_len_hash__with__setitem_string_hash : &tdefault__setitem_string_len_hash)
 
 /* tp_seq->tp_getrange */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tusrtype__getrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tusrtype__getrange__with__GETRANGE(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tdefault__getrange__with__getrange_index__and__getrange_index_n(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL tdefault__getrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL usrtype__getrange(DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL usrtype__getrange__with__GETRANGE(DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL default__getrange__with__getrange_index__and__getrange_index_n(DeeObject *self, DeeObject *start, DeeObject *end);
-#define isusrtype__getrange(tp_getrange) ((tp_getrange) == &usrtype__getrange)
+#define isusrtype__getrange(tp_getrange) ((tp_getrange) == &usrtype__getrange__with__GETRANGE)
 #define isdefault__getrange(tp_getrange) ((tp_getrange) == &default__getrange__with__getrange_index__and__getrange_index_n)
-#define maketyped__getrange(tp_getrange) ((tp_getrange) == &usrtype__getrange ? &tusrtype__getrange : (tp_getrange) == &default__getrange__with__getrange_index__and__getrange_index_n ? &tdefault__getrange__with__getrange_index__and__getrange_index_n : &tdefault__getrange)
+#define maketyped__getrange(tp_getrange) ((tp_getrange) == &usrtype__getrange__with__GETRANGE ? &tusrtype__getrange__with__GETRANGE : (tp_getrange) == &default__getrange__with__getrange_index__and__getrange_index_n ? &tdefault__getrange__with__getrange_index__and__getrange_index_n : &tdefault__getrange)
 
 /* tp_seq->tp_getrange_index */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__getrange_index__with__getrange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
@@ -1223,14 +1300,14 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__getrange_index_n__wit
 #define maketyped__getrange_index_n(tp_getrange_index_n) ((tp_getrange_index_n) == &default__getrange_index_n__with__getrange ? &tdefault__getrange_index_n__with__getrange : &tdefault__getrange_index_n)
 
 /* tp_seq->tp_delrange */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tusrtype__delrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tusrtype__delrange__with__DELRANGE(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__delrange__with__delrange_index__and__delrange_index_n(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__delrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL usrtype__delrange(DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL usrtype__delrange__with__DELRANGE(DeeObject *self, DeeObject *start, DeeObject *end);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL default__delrange__with__delrange_index__and__delrange_index_n(DeeObject *self, DeeObject *start, DeeObject *end);
-#define isusrtype__delrange(tp_delrange) ((tp_delrange) == &usrtype__delrange)
+#define isusrtype__delrange(tp_delrange) ((tp_delrange) == &usrtype__delrange__with__DELRANGE)
 #define isdefault__delrange(tp_delrange) ((tp_delrange) == &default__delrange__with__delrange_index__and__delrange_index_n)
-#define maketyped__delrange(tp_delrange) ((tp_delrange) == &usrtype__delrange ? &tusrtype__delrange : (tp_delrange) == &default__delrange__with__delrange_index__and__delrange_index_n ? &tdefault__delrange__with__delrange_index__and__delrange_index_n : &tdefault__delrange)
+#define maketyped__delrange(tp_delrange) ((tp_delrange) == &usrtype__delrange__with__DELRANGE ? &tusrtype__delrange__with__DELRANGE : (tp_delrange) == &default__delrange__with__delrange_index__and__delrange_index_n ? &tdefault__delrange__with__delrange_index__and__delrange_index_n : &tdefault__delrange)
 
 /* tp_seq->tp_delrange_index */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__delrange_index__with__delrange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
@@ -1247,14 +1324,14 @@ INTDEF WUNUSED NONNULL((1)) int DCALL default__delrange_index_n__with__delrange(
 #define maketyped__delrange_index_n(tp_delrange_index_n) ((tp_delrange_index_n) == &default__delrange_index_n__with__delrange ? &tdefault__delrange_index_n__with__delrange : &tdefault__delrange_index_n)
 
 /* tp_seq->tp_setrange */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL tusrtype__setrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL tusrtype__setrange__with__SETRANGE(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL tdefault__setrange__with__setrange_index__and__setrange_index_n(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL tdefault__setrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL usrtype__setrange(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL usrtype__setrange__with__SETRANGE(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL default__setrange__with__setrange_index__and__setrange_index_n(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *values);
-#define isusrtype__setrange(tp_setrange) ((tp_setrange) == &usrtype__setrange)
+#define isusrtype__setrange(tp_setrange) ((tp_setrange) == &usrtype__setrange__with__SETRANGE)
 #define isdefault__setrange(tp_setrange) ((tp_setrange) == &default__setrange__with__setrange_index__and__setrange_index_n)
-#define maketyped__setrange(tp_setrange) ((tp_setrange) == &usrtype__setrange ? &tusrtype__setrange : (tp_setrange) == &default__setrange__with__setrange_index__and__setrange_index_n ? &tdefault__setrange__with__setrange_index__and__setrange_index_n : &tdefault__setrange)
+#define maketyped__setrange(tp_setrange) ((tp_setrange) == &usrtype__setrange__with__SETRANGE ? &tusrtype__setrange__with__SETRANGE : (tp_setrange) == &default__setrange__with__setrange_index__and__setrange_index_n ? &tdefault__setrange__with__setrange_index__and__setrange_index_n : &tdefault__setrange)
 
 /* tp_seq->tp_setrange_index */
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL tdefault__setrange_index__with__setrange(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
@@ -1271,383 +1348,679 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL default__setrange_index_n__with__setran
 #define maketyped__setrange_index_n(tp_setrange_index_n) ((tp_setrange_index_n) == &default__setrange_index_n__with__setrange ? &tdefault__setrange_index_n__with__setrange : &tdefault__setrange_index_n)
 
 /* tp_math->tp_inv */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__inv(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__inv__with__INV(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__inv(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__inv(DeeObject *self);
-#define isusrtype__inv(tp_inv) ((tp_inv) == &usrtype__inv)
-#define maketyped__inv(tp_inv) ((tp_inv) == &usrtype__inv ? &tusrtype__inv : &tdefault__inv)
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__inv__with__INV(DeeObject *self);
+#define isusrtype__inv(tp_inv) ((tp_inv) == &usrtype__inv__with__INV)
+#define maketyped__inv(tp_inv) ((tp_inv) == &usrtype__inv__with__INV ? &tusrtype__inv__with__INV : &tdefault__inv)
 
 /* tp_math->tp_pos */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__pos(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__pos__with__POS(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__pos(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__pos(DeeObject *self);
-#define isusrtype__pos(tp_pos) ((tp_pos) == &usrtype__pos)
-#define maketyped__pos(tp_pos) ((tp_pos) == &usrtype__pos ? &tusrtype__pos : &tdefault__pos)
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__pos__with__POS(DeeObject *self);
+#define isusrtype__pos(tp_pos) ((tp_pos) == &usrtype__pos__with__POS)
+#define maketyped__pos(tp_pos) ((tp_pos) == &usrtype__pos__with__POS ? &tusrtype__pos__with__POS : &tdefault__pos)
 
 /* tp_math->tp_neg */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__neg(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__neg__with__NEG(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__neg(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__neg(DeeObject *self);
-#define isusrtype__neg(tp_neg) ((tp_neg) == &usrtype__neg)
-#define maketyped__neg(tp_neg) ((tp_neg) == &usrtype__neg ? &tusrtype__neg : &tdefault__neg)
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__neg__with__NEG(DeeObject *self);
+#define isusrtype__neg(tp_neg) ((tp_neg) == &usrtype__neg__with__NEG)
+#define maketyped__neg(tp_neg) ((tp_neg) == &usrtype__neg__with__NEG ? &tusrtype__neg__with__NEG : &tdefault__neg)
 
 /* tp_math->tp_add */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__add(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__add__with__ADD(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__add(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__add(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__add(tp_add) ((tp_add) == &usrtype__add)
-#define maketyped__add(tp_add) ((tp_add) == &usrtype__add ? &tusrtype__add : &tdefault__add)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__add__with__ADD(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__add(tp_add) ((tp_add) == &usrtype__add__with__ADD)
+#define maketyped__add(tp_add) ((tp_add) == &usrtype__add__with__ADD ? &tusrtype__add__with__ADD : &tdefault__add)
 
 /* tp_math->tp_inplace_add */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_add(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_add__with__INPLACE_ADD(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_add__with__add(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_add(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_add(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_add__with__INPLACE_ADD(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_add__with__add(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_add(tp_inplace_add) ((tp_inplace_add) == &usrtype__inplace_add)
+#define isusrtype__inplace_add(tp_inplace_add) ((tp_inplace_add) == &usrtype__inplace_add__with__INPLACE_ADD)
 #define isdefault__inplace_add(tp_inplace_add) ((tp_inplace_add) == &default__inplace_add__with__add)
-#define maketyped__inplace_add(tp_inplace_add) ((tp_inplace_add) == &usrtype__inplace_add ? &tusrtype__inplace_add : (tp_inplace_add) == &default__inplace_add__with__add ? &tdefault__inplace_add__with__add : &tdefault__inplace_add)
+#define maketyped__inplace_add(tp_inplace_add) ((tp_inplace_add) == &usrtype__inplace_add__with__INPLACE_ADD ? &tusrtype__inplace_add__with__INPLACE_ADD : (tp_inplace_add) == &default__inplace_add__with__add ? &tdefault__inplace_add__with__add : &tdefault__inplace_add)
 
 /* tp_math->tp_sub */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__sub(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__sub__with__SUB(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__sub(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__sub(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__sub(tp_sub) ((tp_sub) == &usrtype__sub)
-#define maketyped__sub(tp_sub) ((tp_sub) == &usrtype__sub ? &tusrtype__sub : &tdefault__sub)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__sub__with__SUB(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__sub(tp_sub) ((tp_sub) == &usrtype__sub__with__SUB)
+#define maketyped__sub(tp_sub) ((tp_sub) == &usrtype__sub__with__SUB ? &tusrtype__sub__with__SUB : &tdefault__sub)
 
 /* tp_math->tp_inplace_sub */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_sub(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_sub__with__INPLACE_SUB(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_sub__with__sub(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_sub(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_sub(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_sub__with__INPLACE_SUB(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_sub__with__sub(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_sub(tp_inplace_sub) ((tp_inplace_sub) == &usrtype__inplace_sub)
+#define isusrtype__inplace_sub(tp_inplace_sub) ((tp_inplace_sub) == &usrtype__inplace_sub__with__INPLACE_SUB)
 #define isdefault__inplace_sub(tp_inplace_sub) ((tp_inplace_sub) == &default__inplace_sub__with__sub)
-#define maketyped__inplace_sub(tp_inplace_sub) ((tp_inplace_sub) == &usrtype__inplace_sub ? &tusrtype__inplace_sub : (tp_inplace_sub) == &default__inplace_sub__with__sub ? &tdefault__inplace_sub__with__sub : &tdefault__inplace_sub)
+#define maketyped__inplace_sub(tp_inplace_sub) ((tp_inplace_sub) == &usrtype__inplace_sub__with__INPLACE_SUB ? &tusrtype__inplace_sub__with__INPLACE_SUB : (tp_inplace_sub) == &default__inplace_sub__with__sub ? &tdefault__inplace_sub__with__sub : &tdefault__inplace_sub)
 
 /* tp_math->tp_mul */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__mul(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__mul__with__MUL(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__mul(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__mul(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__mul(tp_mul) ((tp_mul) == &usrtype__mul)
-#define maketyped__mul(tp_mul) ((tp_mul) == &usrtype__mul ? &tusrtype__mul : &tdefault__mul)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__mul__with__MUL(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__mul(tp_mul) ((tp_mul) == &usrtype__mul__with__MUL)
+#define maketyped__mul(tp_mul) ((tp_mul) == &usrtype__mul__with__MUL ? &tusrtype__mul__with__MUL : &tdefault__mul)
 
 /* tp_math->tp_inplace_mul */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_mul(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_mul__with__INPLACE_MUL(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mul__with__mul(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mul(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_mul(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_mul__with__INPLACE_MUL(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_mul__with__mul(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_mul(tp_inplace_mul) ((tp_inplace_mul) == &usrtype__inplace_mul)
+#define isusrtype__inplace_mul(tp_inplace_mul) ((tp_inplace_mul) == &usrtype__inplace_mul__with__INPLACE_MUL)
 #define isdefault__inplace_mul(tp_inplace_mul) ((tp_inplace_mul) == &default__inplace_mul__with__mul)
-#define maketyped__inplace_mul(tp_inplace_mul) ((tp_inplace_mul) == &usrtype__inplace_mul ? &tusrtype__inplace_mul : (tp_inplace_mul) == &default__inplace_mul__with__mul ? &tdefault__inplace_mul__with__mul : &tdefault__inplace_mul)
+#define maketyped__inplace_mul(tp_inplace_mul) ((tp_inplace_mul) == &usrtype__inplace_mul__with__INPLACE_MUL ? &tusrtype__inplace_mul__with__INPLACE_MUL : (tp_inplace_mul) == &default__inplace_mul__with__mul ? &tdefault__inplace_mul__with__mul : &tdefault__inplace_mul)
 
 /* tp_math->tp_div */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__div(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__div__with__DIV(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__div(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__div(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__div(tp_div) ((tp_div) == &usrtype__div)
-#define maketyped__div(tp_div) ((tp_div) == &usrtype__div ? &tusrtype__div : &tdefault__div)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__div__with__DIV(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__div(tp_div) ((tp_div) == &usrtype__div__with__DIV)
+#define maketyped__div(tp_div) ((tp_div) == &usrtype__div__with__DIV ? &tusrtype__div__with__DIV : &tdefault__div)
 
 /* tp_math->tp_inplace_div */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_div(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_div__with__INPLACE_DIV(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_div__with__div(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_div(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_div(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_div__with__INPLACE_DIV(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_div__with__div(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_div(tp_inplace_div) ((tp_inplace_div) == &usrtype__inplace_div)
+#define isusrtype__inplace_div(tp_inplace_div) ((tp_inplace_div) == &usrtype__inplace_div__with__INPLACE_DIV)
 #define isdefault__inplace_div(tp_inplace_div) ((tp_inplace_div) == &default__inplace_div__with__div)
-#define maketyped__inplace_div(tp_inplace_div) ((tp_inplace_div) == &usrtype__inplace_div ? &tusrtype__inplace_div : (tp_inplace_div) == &default__inplace_div__with__div ? &tdefault__inplace_div__with__div : &tdefault__inplace_div)
+#define maketyped__inplace_div(tp_inplace_div) ((tp_inplace_div) == &usrtype__inplace_div__with__INPLACE_DIV ? &tusrtype__inplace_div__with__INPLACE_DIV : (tp_inplace_div) == &default__inplace_div__with__div ? &tdefault__inplace_div__with__div : &tdefault__inplace_div)
 
 /* tp_math->tp_mod */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__mod(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__mod__with__MOD(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__mod(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__mod(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__mod(tp_mod) ((tp_mod) == &usrtype__mod)
-#define maketyped__mod(tp_mod) ((tp_mod) == &usrtype__mod ? &tusrtype__mod : &tdefault__mod)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__mod__with__MOD(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__mod(tp_mod) ((tp_mod) == &usrtype__mod__with__MOD)
+#define maketyped__mod(tp_mod) ((tp_mod) == &usrtype__mod__with__MOD ? &tusrtype__mod__with__MOD : &tdefault__mod)
 
 /* tp_math->tp_inplace_mod */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_mod(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_mod__with__INPLACE_MOD(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mod__with__mod(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_mod(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_mod(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_mod__with__INPLACE_MOD(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_mod__with__mod(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_mod(tp_inplace_mod) ((tp_inplace_mod) == &usrtype__inplace_mod)
+#define isusrtype__inplace_mod(tp_inplace_mod) ((tp_inplace_mod) == &usrtype__inplace_mod__with__INPLACE_MOD)
 #define isdefault__inplace_mod(tp_inplace_mod) ((tp_inplace_mod) == &default__inplace_mod__with__mod)
-#define maketyped__inplace_mod(tp_inplace_mod) ((tp_inplace_mod) == &usrtype__inplace_mod ? &tusrtype__inplace_mod : (tp_inplace_mod) == &default__inplace_mod__with__mod ? &tdefault__inplace_mod__with__mod : &tdefault__inplace_mod)
+#define maketyped__inplace_mod(tp_inplace_mod) ((tp_inplace_mod) == &usrtype__inplace_mod__with__INPLACE_MOD ? &tusrtype__inplace_mod__with__INPLACE_MOD : (tp_inplace_mod) == &default__inplace_mod__with__mod ? &tdefault__inplace_mod__with__mod : &tdefault__inplace_mod)
 
 /* tp_math->tp_shl */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__shl(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__shl__with__SHL(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__shl(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__shl(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__shl(tp_shl) ((tp_shl) == &usrtype__shl)
-#define maketyped__shl(tp_shl) ((tp_shl) == &usrtype__shl ? &tusrtype__shl : &tdefault__shl)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__shl__with__SHL(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__shl(tp_shl) ((tp_shl) == &usrtype__shl__with__SHL)
+#define maketyped__shl(tp_shl) ((tp_shl) == &usrtype__shl__with__SHL ? &tusrtype__shl__with__SHL : &tdefault__shl)
 
 /* tp_math->tp_inplace_shl */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_shl(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_shl__with__INPLACE_SHL(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shl__with__shl(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shl(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_shl(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_shl__with__INPLACE_SHL(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_shl__with__shl(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_shl(tp_inplace_shl) ((tp_inplace_shl) == &usrtype__inplace_shl)
+#define isusrtype__inplace_shl(tp_inplace_shl) ((tp_inplace_shl) == &usrtype__inplace_shl__with__INPLACE_SHL)
 #define isdefault__inplace_shl(tp_inplace_shl) ((tp_inplace_shl) == &default__inplace_shl__with__shl)
-#define maketyped__inplace_shl(tp_inplace_shl) ((tp_inplace_shl) == &usrtype__inplace_shl ? &tusrtype__inplace_shl : (tp_inplace_shl) == &default__inplace_shl__with__shl ? &tdefault__inplace_shl__with__shl : &tdefault__inplace_shl)
+#define maketyped__inplace_shl(tp_inplace_shl) ((tp_inplace_shl) == &usrtype__inplace_shl__with__INPLACE_SHL ? &tusrtype__inplace_shl__with__INPLACE_SHL : (tp_inplace_shl) == &default__inplace_shl__with__shl ? &tdefault__inplace_shl__with__shl : &tdefault__inplace_shl)
 
 /* tp_math->tp_shr */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__shr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__shr__with__SHR(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__shr(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__shr(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__shr(tp_shr) ((tp_shr) == &usrtype__shr)
-#define maketyped__shr(tp_shr) ((tp_shr) == &usrtype__shr ? &tusrtype__shr : &tdefault__shr)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__shr__with__SHR(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__shr(tp_shr) ((tp_shr) == &usrtype__shr__with__SHR)
+#define maketyped__shr(tp_shr) ((tp_shr) == &usrtype__shr__with__SHR ? &tusrtype__shr__with__SHR : &tdefault__shr)
 
 /* tp_math->tp_inplace_shr */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_shr(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_shr__with__INPLACE_SHR(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shr__with__shr(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_shr(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_shr(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_shr__with__INPLACE_SHR(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_shr__with__shr(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_shr(tp_inplace_shr) ((tp_inplace_shr) == &usrtype__inplace_shr)
+#define isusrtype__inplace_shr(tp_inplace_shr) ((tp_inplace_shr) == &usrtype__inplace_shr__with__INPLACE_SHR)
 #define isdefault__inplace_shr(tp_inplace_shr) ((tp_inplace_shr) == &default__inplace_shr__with__shr)
-#define maketyped__inplace_shr(tp_inplace_shr) ((tp_inplace_shr) == &usrtype__inplace_shr ? &tusrtype__inplace_shr : (tp_inplace_shr) == &default__inplace_shr__with__shr ? &tdefault__inplace_shr__with__shr : &tdefault__inplace_shr)
+#define maketyped__inplace_shr(tp_inplace_shr) ((tp_inplace_shr) == &usrtype__inplace_shr__with__INPLACE_SHR ? &tusrtype__inplace_shr__with__INPLACE_SHR : (tp_inplace_shr) == &default__inplace_shr__with__shr ? &tdefault__inplace_shr__with__shr : &tdefault__inplace_shr)
 
 /* tp_math->tp_and */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__and(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__and__with__AND(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__and(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__and(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__and(tp_and) ((tp_and) == &usrtype__and)
-#define maketyped__and(tp_and) ((tp_and) == &usrtype__and ? &tusrtype__and : &tdefault__and)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__and__with__AND(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__and(tp_and) ((tp_and) == &usrtype__and__with__AND)
+#define maketyped__and(tp_and) ((tp_and) == &usrtype__and__with__AND ? &tusrtype__and__with__AND : &tdefault__and)
 
 /* tp_math->tp_inplace_and */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_and(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_and__with__INPLACE_AND(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_and__with__and(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_and(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_and(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_and__with__INPLACE_AND(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_and__with__and(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_and(tp_inplace_and) ((tp_inplace_and) == &usrtype__inplace_and)
+#define isusrtype__inplace_and(tp_inplace_and) ((tp_inplace_and) == &usrtype__inplace_and__with__INPLACE_AND)
 #define isdefault__inplace_and(tp_inplace_and) ((tp_inplace_and) == &default__inplace_and__with__and)
-#define maketyped__inplace_and(tp_inplace_and) ((tp_inplace_and) == &usrtype__inplace_and ? &tusrtype__inplace_and : (tp_inplace_and) == &default__inplace_and__with__and ? &tdefault__inplace_and__with__and : &tdefault__inplace_and)
+#define maketyped__inplace_and(tp_inplace_and) ((tp_inplace_and) == &usrtype__inplace_and__with__INPLACE_AND ? &tusrtype__inplace_and__with__INPLACE_AND : (tp_inplace_and) == &default__inplace_and__with__and ? &tdefault__inplace_and__with__and : &tdefault__inplace_and)
 
 /* tp_math->tp_or */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__or(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__or__with__OR(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__or(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__or(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__or(tp_or) ((tp_or) == &usrtype__or)
-#define maketyped__or(tp_or) ((tp_or) == &usrtype__or ? &tusrtype__or : &tdefault__or)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__or__with__OR(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__or(tp_or) ((tp_or) == &usrtype__or__with__OR)
+#define maketyped__or(tp_or) ((tp_or) == &usrtype__or__with__OR ? &tusrtype__or__with__OR : &tdefault__or)
 
 /* tp_math->tp_inplace_or */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_or(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_or__with__INPLACE_OR(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_or__with__or(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_or(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_or(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_or__with__INPLACE_OR(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_or__with__or(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_or(tp_inplace_or) ((tp_inplace_or) == &usrtype__inplace_or)
+#define isusrtype__inplace_or(tp_inplace_or) ((tp_inplace_or) == &usrtype__inplace_or__with__INPLACE_OR)
 #define isdefault__inplace_or(tp_inplace_or) ((tp_inplace_or) == &default__inplace_or__with__or)
-#define maketyped__inplace_or(tp_inplace_or) ((tp_inplace_or) == &usrtype__inplace_or ? &tusrtype__inplace_or : (tp_inplace_or) == &default__inplace_or__with__or ? &tdefault__inplace_or__with__or : &tdefault__inplace_or)
+#define maketyped__inplace_or(tp_inplace_or) ((tp_inplace_or) == &usrtype__inplace_or__with__INPLACE_OR ? &tusrtype__inplace_or__with__INPLACE_OR : (tp_inplace_or) == &default__inplace_or__with__or ? &tdefault__inplace_or__with__or : &tdefault__inplace_or)
 
 /* tp_math->tp_xor */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__xor(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__xor__with__XOR(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__xor(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__xor(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__xor(tp_xor) ((tp_xor) == &usrtype__xor)
-#define maketyped__xor(tp_xor) ((tp_xor) == &usrtype__xor ? &tusrtype__xor : &tdefault__xor)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__xor__with__XOR(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__xor(tp_xor) ((tp_xor) == &usrtype__xor__with__XOR)
+#define maketyped__xor(tp_xor) ((tp_xor) == &usrtype__xor__with__XOR ? &tusrtype__xor__with__XOR : &tdefault__xor)
 
 /* tp_math->tp_inplace_xor */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_xor(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_xor__with__INPLACE_XOR(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_xor__with__xor(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_xor(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_xor(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_xor__with__INPLACE_XOR(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_xor__with__xor(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_xor(tp_inplace_xor) ((tp_inplace_xor) == &usrtype__inplace_xor)
+#define isusrtype__inplace_xor(tp_inplace_xor) ((tp_inplace_xor) == &usrtype__inplace_xor__with__INPLACE_XOR)
 #define isdefault__inplace_xor(tp_inplace_xor) ((tp_inplace_xor) == &default__inplace_xor__with__xor)
-#define maketyped__inplace_xor(tp_inplace_xor) ((tp_inplace_xor) == &usrtype__inplace_xor ? &tusrtype__inplace_xor : (tp_inplace_xor) == &default__inplace_xor__with__xor ? &tdefault__inplace_xor__with__xor : &tdefault__inplace_xor)
+#define maketyped__inplace_xor(tp_inplace_xor) ((tp_inplace_xor) == &usrtype__inplace_xor__with__INPLACE_XOR ? &tusrtype__inplace_xor__with__INPLACE_XOR : (tp_inplace_xor) == &default__inplace_xor__with__xor ? &tdefault__inplace_xor__with__xor : &tdefault__inplace_xor)
 
 /* tp_math->tp_pow */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__pow(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__pow__with__POW(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__pow(DeeTypeObject *tp_self, DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__pow(DeeObject *lhs, DeeObject *rhs);
-#define isusrtype__pow(tp_pow) ((tp_pow) == &usrtype__pow)
-#define maketyped__pow(tp_pow) ((tp_pow) == &usrtype__pow ? &tusrtype__pow : &tdefault__pow)
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__pow__with__POW(DeeObject *lhs, DeeObject *rhs);
+#define isusrtype__pow(tp_pow) ((tp_pow) == &usrtype__pow__with__POW)
+#define maketyped__pow(tp_pow) ((tp_pow) == &usrtype__pow__with__POW ? &tusrtype__pow__with__POW : &tdefault__pow)
 
 /* tp_math->tp_inplace_pow */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_pow(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__inplace_pow__with__INPLACE_POW(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_pow__with__pow(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__inplace_pow(DeeTypeObject *tp_self, DeeObject **p_lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_pow(DeeObject **__restrict p_lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__inplace_pow__with__INPLACE_POW(DeeObject **__restrict p_lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__inplace_pow__with__pow(DeeObject **__restrict p_lhs, DeeObject *rhs);
-#define isusrtype__inplace_pow(tp_inplace_pow) ((tp_inplace_pow) == &usrtype__inplace_pow)
+#define isusrtype__inplace_pow(tp_inplace_pow) ((tp_inplace_pow) == &usrtype__inplace_pow__with__INPLACE_POW)
 #define isdefault__inplace_pow(tp_inplace_pow) ((tp_inplace_pow) == &default__inplace_pow__with__pow)
-#define maketyped__inplace_pow(tp_inplace_pow) ((tp_inplace_pow) == &usrtype__inplace_pow ? &tusrtype__inplace_pow : (tp_inplace_pow) == &default__inplace_pow__with__pow ? &tdefault__inplace_pow__with__pow : &tdefault__inplace_pow)
+#define maketyped__inplace_pow(tp_inplace_pow) ((tp_inplace_pow) == &usrtype__inplace_pow__with__INPLACE_POW ? &tusrtype__inplace_pow__with__INPLACE_POW : (tp_inplace_pow) == &default__inplace_pow__with__pow ? &tdefault__inplace_pow__with__pow : &tdefault__inplace_pow)
 
 /* tp_math->tp_inc */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__inc(DeeTypeObject *tp_self, DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__inc__with__INC(DeeTypeObject *tp_self, DeeObject **p_self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc__with__inplace_add(DeeTypeObject *tp_self, DeeObject **p_self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc__with__add(DeeTypeObject *tp_self, DeeObject **p_self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__inc(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__inc(DeeObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__inc__with__INC(DeeObject **__restrict p_self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__inc__with__inplace_add(DeeObject **__restrict p_self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__inc__with__add(DeeObject **__restrict p_self);
-#define isusrtype__inc(tp_inc) ((tp_inc) == &usrtype__inc)
+#define isusrtype__inc(tp_inc) ((tp_inc) == &usrtype__inc__with__INC)
 #define isdefault__inc(tp_inc) ((tp_inc) == &default__inc__with__inplace_add || (tp_inc) == &default__inc__with__add)
-#define maketyped__inc(tp_inc) ((tp_inc) == &usrtype__inc ? &tusrtype__inc : (tp_inc) == &default__inc__with__inplace_add ? &tdefault__inc__with__inplace_add : (tp_inc) == &default__inc__with__add ? &tdefault__inc__with__add : &tdefault__inc)
+#define maketyped__inc(tp_inc) ((tp_inc) == &usrtype__inc__with__INC ? &tusrtype__inc__with__INC : (tp_inc) == &default__inc__with__inplace_add ? &tdefault__inc__with__inplace_add : (tp_inc) == &default__inc__with__add ? &tdefault__inc__with__add : &tdefault__inc)
 
 /* tp_math->tp_dec */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__dec(DeeTypeObject *tp_self, DeeObject **p_self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__dec__with__DEC(DeeTypeObject *tp_self, DeeObject **p_self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec__with__inplace_sub(DeeTypeObject *tp_self, DeeObject **p_self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec__with__sub(DeeTypeObject *tp_self, DeeObject **p_self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__dec(DeeTypeObject *tp_self, DeeObject **p_self);
-INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__dec(DeeObject **__restrict p_self);
+INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__dec__with__DEC(DeeObject **__restrict p_self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__dec__with__inplace_sub(DeeObject **__restrict p_self);
 INTDEF WUNUSED NONNULL((1)) int DCALL default__dec__with__sub(DeeObject **__restrict p_self);
-#define isusrtype__dec(tp_dec) ((tp_dec) == &usrtype__dec)
+#define isusrtype__dec(tp_dec) ((tp_dec) == &usrtype__dec__with__DEC)
 #define isdefault__dec(tp_dec) ((tp_dec) == &default__dec__with__inplace_sub || (tp_dec) == &default__dec__with__sub)
-#define maketyped__dec(tp_dec) ((tp_dec) == &usrtype__dec ? &tusrtype__dec : (tp_dec) == &default__dec__with__inplace_sub ? &tdefault__dec__with__inplace_sub : (tp_dec) == &default__dec__with__sub ? &tdefault__dec__with__sub : &tdefault__dec)
+#define maketyped__dec(tp_dec) ((tp_dec) == &usrtype__dec__with__DEC ? &tusrtype__dec__with__DEC : (tp_dec) == &default__dec__with__inplace_sub ? &tdefault__dec__with__inplace_sub : (tp_dec) == &default__dec__with__sub ? &tdefault__dec__with__sub : &tdefault__dec)
 
 /* tp_with->tp_enter */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__enter(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__enter__with__ENTER(DeeTypeObject *tp_self, DeeObject *self);
 #define tdefault__enter__with__leave (*(int (DCALL *)(DeeTypeObject *, DeeObject *))&_DeeNone_reti0_2)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__enter(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__enter(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__enter__with__ENTER(DeeObject *__restrict self);
 #define default__enter__with__leave (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
-#define isusrtype__enter(tp_enter) ((tp_enter) == &usrtype__enter)
+#define isusrtype__enter(tp_enter) ((tp_enter) == &usrtype__enter__with__ENTER)
 #define isdefault__enter(tp_enter) ((tp_enter) == &default__enter__with__leave)
-#define maketyped__enter(tp_enter) ((tp_enter) == &usrtype__enter ? &tusrtype__enter : &tdefault__enter)
+#define maketyped__enter(tp_enter) ((tp_enter) == &usrtype__enter__with__ENTER ? &tusrtype__enter__with__ENTER : &tdefault__enter)
 
 /* tp_with->tp_leave */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__leave(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL tusrtype__leave__with__LEAVE(DeeTypeObject *tp_self, DeeObject *self);
 #define tdefault__leave__with__enter (*(int (DCALL *)(DeeTypeObject *, DeeObject *))&_DeeNone_reti0_2)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL tdefault__leave(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__leave(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__leave__with__LEAVE(DeeObject *__restrict self);
 #define default__leave__with__enter (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)
-#define isusrtype__leave(tp_leave) ((tp_leave) == &usrtype__leave)
+#define isusrtype__leave(tp_leave) ((tp_leave) == &usrtype__leave__with__LEAVE)
 #define isdefault__leave(tp_leave) ((tp_leave) == &default__leave__with__enter)
-#define maketyped__leave(tp_leave) ((tp_leave) == &usrtype__leave ? &tusrtype__leave : &tdefault__leave)
+#define maketyped__leave(tp_leave) ((tp_leave) == &usrtype__leave__with__LEAVE ? &tusrtype__leave__with__LEAVE : &tdefault__leave)
+
+/* tp_attr->tp_getattr */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tusrtype__getattr__with__GETATTR(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getattr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL usrtype__getattr__with__GETATTR(DeeObject *self, DeeObject *attr);
+#define isusrtype__getattr(tp_getattr) ((tp_getattr) == &usrtype__getattr__with__GETATTR)
+#define maketyped__getattr(tp_getattr) ((tp_getattr) == &usrtype__getattr__with__GETATTR ? &tusrtype__getattr__with__GETATTR : &tdefault__getattr)
+
+/* tp_attr->tp_getattr_string_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getattr_string_hash__with__getattr(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getattr_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getattr_string_hash__with__getattr(DeeObject *self, char const *attr, Dee_hash_t hash);
+#define isdefault__getattr_string_hash(tp_getattr_string_hash) ((tp_getattr_string_hash) == &default__getattr_string_hash__with__getattr)
+#define maketyped__getattr_string_hash(tp_getattr_string_hash) ((tp_getattr_string_hash) == &default__getattr_string_hash__with__getattr ? &tdefault__getattr_string_hash__with__getattr : &tdefault__getattr_string_hash)
+
+/* tp_attr->tp_getattr_string_len_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getattr_string_len_hash__with__getattr(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL tdefault__getattr_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__getattr_string_len_hash__with__getattr(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+#define isdefault__getattr_string_len_hash(tp_getattr_string_len_hash) ((tp_getattr_string_len_hash) == &default__getattr_string_len_hash__with__getattr)
+#define maketyped__getattr_string_len_hash(tp_getattr_string_len_hash) ((tp_getattr_string_len_hash) == &default__getattr_string_len_hash__with__getattr ? &tdefault__getattr_string_len_hash__with__getattr : &tdefault__getattr_string_len_hash)
+
+/* tp_attr->tp_boundattr */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__boundattr__with__getattr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__boundattr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__boundattr__with__getattr(DeeObject *self, DeeObject *attr);
+#define isdefault__boundattr(tp_boundattr) ((tp_boundattr) == &default__boundattr__with__getattr)
+#define maketyped__boundattr(tp_boundattr) ((tp_boundattr) == &default__boundattr__with__getattr ? &tdefault__boundattr__with__getattr : &tdefault__boundattr)
+
+/* tp_attr->tp_boundattr_string_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__boundattr_string_hash__with__getattr_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__boundattr_string_hash__with__boundattr(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__boundattr_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__boundattr_string_hash__with__getattr_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__boundattr_string_hash__with__boundattr(DeeObject *self, char const *key, Dee_hash_t hash);
+#define isdefault__boundattr_string_hash(tp_boundattr_string_hash) ((tp_boundattr_string_hash) == &default__boundattr_string_hash__with__getattr_string_hash || (tp_boundattr_string_hash) == &default__boundattr_string_hash__with__boundattr)
+#define maketyped__boundattr_string_hash(tp_boundattr_string_hash) ((tp_boundattr_string_hash) == &default__boundattr_string_hash__with__getattr_string_hash ? &tdefault__boundattr_string_hash__with__getattr_string_hash : (tp_boundattr_string_hash) == &default__boundattr_string_hash__with__boundattr ? &tdefault__boundattr_string_hash__with__boundattr : &tdefault__boundattr_string_hash)
+
+/* tp_attr->tp_boundattr_string_len_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__boundattr_string_len_hash__with__getattr_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__boundattr_string_len_hash__with__boundattr(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__boundattr_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__boundattr_string_len_hash__with__getattr_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__boundattr_string_len_hash__with__boundattr(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+#define isdefault__boundattr_string_len_hash(tp_boundattr_string_len_hash) ((tp_boundattr_string_len_hash) == &default__boundattr_string_len_hash__with__getattr_string_len_hash || (tp_boundattr_string_len_hash) == &default__boundattr_string_len_hash__with__boundattr)
+#define maketyped__boundattr_string_len_hash(tp_boundattr_string_len_hash) ((tp_boundattr_string_len_hash) == &default__boundattr_string_len_hash__with__getattr_string_len_hash ? &tdefault__boundattr_string_len_hash__with__getattr_string_len_hash : (tp_boundattr_string_len_hash) == &default__boundattr_string_len_hash__with__boundattr ? &tdefault__boundattr_string_len_hash__with__boundattr : &tdefault__boundattr_string_len_hash)
+
+/* tp_attr->tp_hasattr */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasattr__with__boundattr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasattr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasattr__with__boundattr(DeeObject *self, DeeObject *attr);
+#define isdefault__hasattr(tp_hasattr) ((tp_hasattr) == &default__hasattr__with__boundattr)
+#define maketyped__hasattr(tp_hasattr) ((tp_hasattr) == &default__hasattr__with__boundattr ? &tdefault__hasattr__with__boundattr : &tdefault__hasattr)
+
+/* tp_attr->tp_hasattr_string_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasattr_string_hash__with__boundattr_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasattr_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasattr_string_hash__with__boundattr_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
+#define isdefault__hasattr_string_hash(tp_hasattr_string_hash) ((tp_hasattr_string_hash) == &default__hasattr_string_hash__with__boundattr_string_hash)
+#define maketyped__hasattr_string_hash(tp_hasattr_string_hash) ((tp_hasattr_string_hash) == &default__hasattr_string_hash__with__boundattr_string_hash ? &tdefault__hasattr_string_hash__with__boundattr_string_hash : &tdefault__hasattr_string_hash)
+
+/* tp_attr->tp_hasattr_string_len_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasattr_string_len_hash__with__boundattr_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__hasattr_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__hasattr_string_len_hash__with__boundattr_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+#define isdefault__hasattr_string_len_hash(tp_hasattr_string_len_hash) ((tp_hasattr_string_len_hash) == &default__hasattr_string_len_hash__with__boundattr_string_len_hash)
+#define maketyped__hasattr_string_len_hash(tp_hasattr_string_len_hash) ((tp_hasattr_string_len_hash) == &default__hasattr_string_len_hash__with__boundattr_string_len_hash ? &tdefault__hasattr_string_len_hash__with__boundattr_string_len_hash : &tdefault__hasattr_string_len_hash)
+
+/* tp_attr->tp_delattr */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tusrtype__delattr__with__DELATTR(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delattr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL usrtype__delattr__with__DELATTR(DeeObject *self, DeeObject *attr);
+#define isusrtype__delattr(tp_delattr) ((tp_delattr) == &usrtype__delattr__with__DELATTR)
+#define maketyped__delattr(tp_delattr) ((tp_delattr) == &usrtype__delattr__with__DELATTR ? &tusrtype__delattr__with__DELATTR : &tdefault__delattr)
+
+/* tp_attr->tp_delattr_string_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delattr_string_hash__with__delattr(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delattr_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delattr_string_hash__with__delattr(DeeObject *self, char const *attr, Dee_hash_t hash);
+#define isdefault__delattr_string_hash(tp_delattr_string_hash) ((tp_delattr_string_hash) == &default__delattr_string_hash__with__delattr)
+#define maketyped__delattr_string_hash(tp_delattr_string_hash) ((tp_delattr_string_hash) == &default__delattr_string_hash__with__delattr ? &tdefault__delattr_string_hash__with__delattr : &tdefault__delattr_string_hash)
+
+/* tp_attr->tp_delattr_string_len_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delattr_string_len_hash__with__delattr(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL tdefault__delattr_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__delattr_string_len_hash__with__delattr(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+#define isdefault__delattr_string_len_hash(tp_delattr_string_len_hash) ((tp_delattr_string_len_hash) == &default__delattr_string_len_hash__with__delattr)
+#define maketyped__delattr_string_len_hash(tp_delattr_string_len_hash) ((tp_delattr_string_len_hash) == &default__delattr_string_len_hash__with__delattr ? &tdefault__delattr_string_len_hash__with__delattr : &tdefault__delattr_string_len_hash)
+
+/* tp_attr->tp_setattr */
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tusrtype__setattr__with__SETATTR(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL tdefault__setattr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL usrtype__setattr__with__SETATTR(DeeObject *self, DeeObject *attr, DeeObject *value);
+#define isusrtype__setattr(tp_setattr) ((tp_setattr) == &usrtype__setattr__with__SETATTR)
+#define maketyped__setattr(tp_setattr) ((tp_setattr) == &usrtype__setattr__with__SETATTR ? &tusrtype__setattr__with__SETATTR : &tdefault__setattr)
+
+/* tp_attr->tp_setattr_string_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL tdefault__setattr_string_hash__with__setattr(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL tdefault__setattr_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL default__setattr_string_hash__with__setattr(DeeObject *self, char const *attr, Dee_hash_t hash, DeeObject *value);
+#define isdefault__setattr_string_hash(tp_setattr_string_hash) ((tp_setattr_string_hash) == &default__setattr_string_hash__with__setattr)
+#define maketyped__setattr_string_hash(tp_setattr_string_hash) ((tp_setattr_string_hash) == &default__setattr_string_hash__with__setattr ? &tdefault__setattr_string_hash__with__setattr : &tdefault__setattr_string_hash)
+
+/* tp_attr->tp_setattr_string_len_hash */
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int DCALL tdefault__setattr_string_len_hash__with__setattr(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 6)) int DCALL tdefault__setattr_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL default__setattr_string_len_hash__with__setattr(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+#define isdefault__setattr_string_len_hash(tp_setattr_string_len_hash) ((tp_setattr_string_len_hash) == &default__setattr_string_len_hash__with__setattr)
+#define maketyped__setattr_string_len_hash(tp_setattr_string_len_hash) ((tp_setattr_string_len_hash) == &default__setattr_string_len_hash__with__setattr ? &tdefault__setattr_string_len_hash__with__setattr : &tdefault__setattr_string_len_hash)
 /*[[[end]]]*/
 /* clang-format on */
 
 
-/* Backward compat */
-#define instance_tassign             tusrtype__assign
-#define instance_assign              usrtype__assign
-#define instance_tmoveassign         tusrtype__move_assign
-#define instance_moveassign          usrtype__move_assign
-#define instance_tstr                tusrtype__str
-#define instance_str                 usrtype__str
-#define instance_trepr               tusrtype__repr
-#define instance_repr                usrtype__repr
-#define instance_tprint              tusrtype__print
-#define instance_print               usrtype__print
-#define instance_tprintrepr          tusrtype__printrepr
-#define instance_printrepr           usrtype__printrepr
-#define instance_tstr_by_print       tusrtype__str__by_print
-#define instance_str_by_print        usrtype__str__by_print
-#define instance_trepr_by_print      tusrtype__repr__by_printrepr
-#define instance_repr_by_print       usrtype__repr__by_printrepr
-#define instance_tprint_by_print     tusrtype__print__by_print
-#define instance_print_by_print      usrtype__print__by_print
-#define instance_tprintrepr_by_print tusrtype__printrepr__by_print
-#define instance_printrepr_by_print  usrtype__printrepr__by_print
-#define instance_tbool               tusrtype__bool
-#define instance_bool                usrtype__bool
-#define instance_tcall               tusrtype__call
-#define instance_call                usrtype__call
-#define instance_tcallkw             tusrtype__call_kw
-#define instance_callkw              usrtype__call_kw
-#define instance_tnext               tusrtype__iter_next
-#define instance_next                usrtype__iter_next
-#define instance_tint                tusrtype__int
-#define instance_int                 usrtype__int
-#define instance_tdouble             tusrtype__double
-#define instance_double              usrtype__double
-#define instance_tinv                tusrtype__inv
-#define instance_inv                 usrtype__inv
-#define instance_tpos                tusrtype__pos
-#define instance_pos                 usrtype__pos
-#define instance_tneg                tusrtype__neg
-#define instance_neg                 usrtype__neg
-#define instance_tadd                tusrtype__add
-#define instance_add                 usrtype__add
-#define instance_tsub                tusrtype__sub
-#define instance_sub                 usrtype__sub
-#define instance_tmul                tusrtype__mul
-#define instance_mul                 usrtype__mul
-#define instance_tdiv                tusrtype__div
-#define instance_div                 usrtype__div
-#define instance_tmod                tusrtype__mod
-#define instance_mod                 usrtype__mod
-#define instance_tshl                tusrtype__shl
-#define instance_shl                 usrtype__shl
-#define instance_tshr                tusrtype__shr
-#define instance_shr                 usrtype__shr
-#define instance_tand                tusrtype__and
-#define instance_and                 usrtype__and
-#define instance_tor                 tusrtype__or
-#define instance_or                  usrtype__or
-#define instance_txor                tusrtype__xor
-#define instance_xor                 usrtype__xor
-#define instance_tpow                tusrtype__pow
-#define instance_pow                 usrtype__pow
-#define instance_tinc                tusrtype__inc
-#define instance_inc                 usrtype__inc
-#define instance_tdec                tusrtype__dec
-#define instance_dec                 usrtype__dec
-#define instance_tiadd               tusrtype__inplace_add
-#define instance_iadd                usrtype__inplace_add
-#define instance_tisub               tusrtype__inplace_sub
-#define instance_isub                usrtype__inplace_sub
-#define instance_timul               tusrtype__inplace_mul
-#define instance_imul                usrtype__inplace_mul
-#define instance_tidiv               tusrtype__inplace_div
-#define instance_idiv                usrtype__inplace_div
-#define instance_timod               tusrtype__inplace_mod
-#define instance_imod                usrtype__inplace_mod
-#define instance_tishl               tusrtype__inplace_shl
-#define instance_ishl                usrtype__inplace_shl
-#define instance_tishr               tusrtype__inplace_shr
-#define instance_ishr                usrtype__inplace_shr
-#define instance_tiand               tusrtype__inplace_and
-#define instance_iand                usrtype__inplace_and
-#define instance_tior                tusrtype__inplace_or
-#define instance_ior                 usrtype__inplace_or
-#define instance_tixor               tusrtype__inplace_xor
-#define instance_ixor                usrtype__inplace_xor
-#define instance_tipow               tusrtype__inplace_pow
-#define instance_ipow                usrtype__inplace_pow
-#define instance_thash               tusrtype__hash
-#define instance_hash                usrtype__hash
-#define instance_teq                 tusrtype__eq
-#define instance_eq                  usrtype__eq
-#define instance_tne                 tusrtype__ne
-#define instance_ne                  usrtype__ne
-#define instance_tlo                 tusrtype__lo
-#define instance_lo                  usrtype__lo
-#define instance_tle                 tusrtype__le
-#define instance_le                  usrtype__le
-#define instance_tgr                 tusrtype__gr
-#define instance_gr                  usrtype__gr
-#define instance_tge                 tusrtype__ge
-#define instance_ge                  usrtype__ge
-#define instance_titer               tusrtype__iter
-#define instance_iter                usrtype__iter
-#define instance_tsize               tusrtype__sizeob
-#define instance_size                usrtype__sizeob
-#define instance_tcontains           tusrtype__contains
-#define instance_contains            usrtype__contains
-#define instance_tgetitem            tusrtype__getitem
-#define instance_getitem             usrtype__getitem
-#define instance_tdelitem            tusrtype__delitem
-#define instance_delitem             usrtype__delitem
-#define instance_tsetitem            tusrtype__setitem
-#define instance_setitem             usrtype__setitem
-#define instance_tgetrange           tusrtype__getrange
-#define instance_getrange            usrtype__getrange
-#define instance_tdelrange           tusrtype__delrange
-#define instance_delrange            usrtype__delrange
-#define instance_tsetrange           tusrtype__setrange
-#define instance_setrange            usrtype__setrange
-#define instance_tenter              tusrtype__enter
-#define instance_enter               usrtype__enter
-#define instance_tleave              tusrtype__leave
-#define instance_leave               usrtype__leave
+/* Backward compat -- DEPRECATED! */
+#define DeeObject_DefaultEqWithNe                      default__eq__with__ne
+#define DeeObject_DefaultNeWithEq                      default__ne__with__eq
+#define DeeObject_DefaultLoWithGe                      default__lo__with__ge
+#define DeeObject_DefaultLeWithGr                      default__le__with__gr
+#define DeeObject_DefaultGrWithLe                      default__gr__with__le
+#define DeeObject_DefaultGeWithLo                      default__ge__with__lo
+#define DeeObject_DefaultIntWithDouble                 default__int__with__double
+#define DeeObject_DefaultDoubleWithInt                 default__double__with__int
+#define DeeObject_DefaultDoubleWithInt32               default__double__with__int32
+#define DeeObject_DefaultDoubleWithInt64               default__double__with__int64
+#define DeeObject_DefaultInplaceAddWithAdd             default__inplace_add__with__add
+#define DeeObject_DefaultInplaceSubWithSub             default__inplace_sub__with__sub
+#define DeeObject_DefaultInplaceMulWithMul             default__inplace_mul__with__mul
+#define DeeObject_DefaultInplaceDivWithDiv             default__inplace_div__with__div
+#define DeeObject_DefaultInplaceModWithMod             default__inplace_mod__with__mod
+#define DeeObject_DefaultInplaceShlWithShl             default__inplace_shl__with__shl
+#define DeeObject_DefaultInplaceShrWithShr             default__inplace_shr__with__shr
+#define DeeObject_DefaultInplaceAndWithAnd             default__inplace_and__with__and
+#define DeeObject_DefaultInplaceOrWithOr               default__inplace_or__with__or
+#define DeeObject_DefaultInplaceXorWithXor             default__inplace_xor__with__xor
+#define DeeObject_DefaultInplacePowWithPow             default__inplace_pow__with__pow
+#define DeeObject_DefaultEqWithCompareEq               default__eq__with__compare_eq
+#define DeeObject_DefaultNeWithCompareEq               default__ne__with__compare_eq
+#define DeeObject_DefaultLoWithCompare                 default__lo__with__compare
+#define DeeObject_DefaultLeWithCompare                 default__le__with__compare
+#define DeeObject_DefaultGrWithCompare                 default__gr__with__compare
+#define DeeObject_DefaultGeWithCompare                 default__ge__with__compare
+#define DeeObject_DefaultHasItemWithHasItemIndex       default__hasitem__with__hasitem_index
+#define DeeObject_DefaultTryGetItemWithTryGetItemIndex default__trygetitem__with__trygetitem_index
+#define DeeObject_DefaultIterAdvanceWithIterNextKey    default__advance__with__nextkey
+#define DeeObject_DefaultForeachPairWithForeach        default__foreach_pair__with__foreach
+
+
+/* Backward compat -- DEPRECATED! */
+#define instance_tassign                tusrtype__assign__with__ASSIGN
+#define instance_assign                 usrtype__assign__with__ASSIGN
+#define instance_tmoveassign            tusrtype__move_assign__with__MOVEASSIGN
+#define instance_moveassign             usrtype__move_assign__with__MOVEASSIGN
+#define instance_tstr                   tusrtype__str__with__STR
+#define instance_str                    usrtype__str__with__STR
+#define instance_trepr                  tusrtype__repr__with__REPR
+#define instance_repr                   usrtype__repr__with__REPR
+#define instance_tprint                 tusrtype__print__with__STR
+#define instance_print                  usrtype__print__with__STR
+#define instance_tprintrepr             tusrtype__printrepr__with__REPR
+#define instance_printrepr              usrtype__printrepr__with__REPR
+#define instance_tstr_by_print          tusrtype__str__with__PRINT
+#define instance_str_by_print           usrtype__str__with__PRINT
+#define instance_trepr_by_print         tusrtype__repr__with__PRINTREPR
+#define instance_repr_by_print          usrtype__repr__with__PRINTREPR
+#define instance_tprint_by_print        tusrtype__print__with__PRINT
+#define instance_print_by_print         usrtype__print__with__PRINT
+#define instance_tprintrepr_by_print    tusrtype__printrepr__with__PRINTREPR
+#define instance_printrepr_by_print     usrtype__printrepr__with__PRINTREPR
+#define instance_tbool                  tusrtype__bool__with__BOOL
+#define instance_bool                   usrtype__bool__with__BOOL
+#define instance_tcall                  tusrtype__call__with__CALL
+#define instance_call                   usrtype__call__with__CALL
+#define instance_tcallkw                tusrtype__call_kw__with__CALL
+#define instance_callkw                 usrtype__call_kw__with__CALL
+#define instance_tnext                  tusrtype__iter_next__with__ITERNEXT
+#define instance_next                   usrtype__iter_next__with__ITERNEXT
+#define instance_tint                   tusrtype__int__with__INT
+#define instance_int                    usrtype__int__with__INT
+#define instance_tdouble                tusrtype__double__with__FLOAT
+#define instance_double                 usrtype__double__with__FLOAT
+#define instance_tinv                   tusrtype__inv__with__INV
+#define instance_inv                    usrtype__inv__with__INV
+#define instance_tpos                   tusrtype__pos__with__POS
+#define instance_pos                    usrtype__pos__with__POS
+#define instance_tneg                   tusrtype__neg__with__NEG
+#define instance_neg                    usrtype__neg__with__NEG
+#define instance_tadd                   tusrtype__add__with__ADD
+#define instance_add                    usrtype__add__with__ADD
+#define instance_tsub                   tusrtype__sub__with__SUB
+#define instance_sub                    usrtype__sub__with__SUB
+#define instance_tmul                   tusrtype__mul__with__MUL
+#define instance_mul                    usrtype__mul__with__MUL
+#define instance_tdiv                   tusrtype__div__with__DIV
+#define instance_div                    usrtype__div__with__DIV
+#define instance_tmod                   tusrtype__mod__with__MOD
+#define instance_mod                    usrtype__mod__with__MOD
+#define instance_tshl                   tusrtype__shl__with__SHL
+#define instance_shl                    usrtype__shl__with__SHL
+#define instance_tshr                   tusrtype__shr__with__SHR
+#define instance_shr                    usrtype__shr__with__SHR
+#define instance_tand                   tusrtype__and__with__AND
+#define instance_and                    usrtype__and__with__AND
+#define instance_tor                    tusrtype__or__with__OR
+#define instance_or                     usrtype__or__with__OR
+#define instance_txor                   tusrtype__xor__with__XOR
+#define instance_xor                    usrtype__xor__with__XOR
+#define instance_tpow                   tusrtype__pow__with__POW
+#define instance_pow                    usrtype__pow__with__POW
+#define instance_tinc                   tusrtype__inc__with__INC
+#define instance_inc                    usrtype__inc__with__INC
+#define instance_tdec                   tusrtype__dec__with__DEC
+#define instance_dec                    usrtype__dec__with__DEC
+#define instance_tiadd                  tusrtype__inplace_add__with__INPLACE_ADD
+#define instance_iadd                   usrtype__inplace_add__with__INPLACE_ADD
+#define instance_tisub                  tusrtype__inplace_sub__with__INPLACE_SUB
+#define instance_isub                   usrtype__inplace_sub__with__INPLACE_SUB
+#define instance_timul                  tusrtype__inplace_mul__with__INPLACE_MUL
+#define instance_imul                   usrtype__inplace_mul__with__INPLACE_MUL
+#define instance_tidiv                  tusrtype__inplace_div__with__INPLACE_DIV
+#define instance_idiv                   usrtype__inplace_div__with__INPLACE_DIV
+#define instance_timod                  tusrtype__inplace_mod__with__INPLACE_MOD
+#define instance_imod                   usrtype__inplace_mod__with__INPLACE_MOD
+#define instance_tishl                  tusrtype__inplace_shl__with__INPLACE_SHL
+#define instance_ishl                   usrtype__inplace_shl__with__INPLACE_SHL
+#define instance_tishr                  tusrtype__inplace_shr__with__INPLACE_SHR
+#define instance_ishr                   usrtype__inplace_shr__with__INPLACE_SHR
+#define instance_tiand                  tusrtype__inplace_and__with__INPLACE_AND
+#define instance_iand                   usrtype__inplace_and__with__INPLACE_AND
+#define instance_tior                   tusrtype__inplace_or__with__INPLACE_OR
+#define instance_ior                    usrtype__inplace_or__with__INPLACE_OR
+#define instance_tixor                  tusrtype__inplace_xor__with__INPLACE_XOR
+#define instance_ixor                   usrtype__inplace_xor__with__INPLACE_XOR
+#define instance_tipow                  tusrtype__inplace_pow__with__INPLACE_POW
+#define instance_ipow                   usrtype__inplace_pow__with__INPLACE_POW
+#define instance_thash                  tusrtype__hash__with__HASH
+#define instance_hash                   usrtype__hash__with__HASH
+#define instance_builtin_thash          tusrtype__hash__with__
+#define instance_builtin_hash           usrtype__hash__with__
+#define instance_builtin_tcompare       tusrtype__compare__with__
+#define instance_builtin_compare        usrtype__compare__with__
+#define instance_builtin_tcompare_eq    tusrtype__compare_eq__with__
+#define instance_builtin_compare_eq     usrtype__compare_eq__with__
+#define instance_builtin_ttrycompare_eq tusrtype__trycompare_eq__with__
+#define instance_builtin_trycompare_eq  usrtype__trycompare_eq__with__
+#define instance_teq                    tusrtype__eq__with__EQ
+#define instance_eq                     usrtype__eq__with__EQ
+#define instance_tne                    tusrtype__ne__with__NE
+#define instance_ne                     usrtype__ne__with__NE
+#define instance_tlo                    tusrtype__lo__with__LO
+#define instance_lo                     usrtype__lo__with__LO
+#define instance_tle                    tusrtype__le__with__LE
+#define instance_le                     usrtype__le__with__LE
+#define instance_tgr                    tusrtype__gr__with__GR
+#define instance_gr                     usrtype__gr__with__GR
+#define instance_tge                    tusrtype__ge__with__GE
+#define instance_ge                     usrtype__ge__with__GE
+#define instance_titer                  tusrtype__iter__with__ITER
+#define instance_iter                   usrtype__iter__with__ITER
+#define instance_tsize                  tusrtype__sizeob__with__SIZE
+#define instance_size                   usrtype__sizeob__with__SIZE
+#define instance_tcontains              tusrtype__contains__with__CONTAINS
+#define instance_contains               usrtype__contains__with__CONTAINS
+#define instance_tgetitem               tusrtype__getitem__with__GETITEM
+#define instance_getitem                usrtype__getitem__with__GETITEM
+#define instance_tdelitem               tusrtype__delitem__with__DELITEM
+#define instance_delitem                usrtype__delitem__with__DELITEM
+#define instance_tsetitem               tusrtype__setitem__with__SETITEM
+#define instance_setitem                usrtype__setitem__with__SETITEM
+#define instance_tgetrange              tusrtype__getrange__with__GETRANGE
+#define instance_getrange               usrtype__getrange__with__GETRANGE
+#define instance_tdelrange              tusrtype__delrange__with__DELRANGE
+#define instance_delrange               usrtype__delrange__with__DELRANGE
+#define instance_tsetrange              tusrtype__setrange__with__SETRANGE
+#define instance_setrange               usrtype__setrange__with__SETRANGE
+#define instance_tgetattr               tusrtype__getattr__with__GETATTR
+#define instance_getattr                usrtype__getattr__with__GETATTR
+#define instance_tdelattr               tusrtype__delattr__with__DELATTR
+#define instance_delattr                usrtype__delattr__with__DELATTR
+#define instance_tsetattr               tusrtype__setattr__with__SETATTR
+#define instance_setattr                usrtype__setattr__with__SETATTR
+#define instance_tenter                 tusrtype__enter__with__ENTER
+#define instance_enter                  usrtype__enter__with__ENTER
+#define instance_tleave                 tusrtype__leave__with__LEAVE
+#define instance_leave                  usrtype__leave__with__LEAVE
+
+/* Backward compat -- DEPRECATED! */
+#define DeeType_InheritStr(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_str) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_print))
+#define DeeType_InheritRepr(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_repr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_printrepr))
+#define DeeType_InheritBool(self)         DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_bool)
+#define DeeType_InheritCall(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_call) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_call_kw))
+#define DeeType_InheritInt(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int32) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_int64) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_double))
+#define DeeType_InheritInv(self)          DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inv)
+#define DeeType_InheritPos(self)          DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_pos)
+#define DeeType_InheritNeg(self)          DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_neg)
+#define DeeType_InheritAdd(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_add) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_sub) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_add) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_sub) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inc) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_dec))
+#define DeeType_InheritMul(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_mul) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_mul))
+#define DeeType_InheritDiv(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_div) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_div))
+#define DeeType_InheritMod(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_mod) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_mod))
+#define DeeType_InheritShl(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_shl) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_shl))
+#define DeeType_InheritShr(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_shr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_shr))
+#define DeeType_InheritAnd(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_and) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_and))
+#define DeeType_InheritOr(self)           (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_or) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_or))
+#define DeeType_InheritXor(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_xor) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_xor))
+#define DeeType_InheritPow(self)          (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_pow) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_inplace_pow))
+#define DeeType_InheritCompare(self)      (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_hash) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_eq) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_ne) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_lo) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_le) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_gr) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_ge) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_compare_eq) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_compare) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_trycompare_eq))
+#define DeeType_InheritIterNext(self)     DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_iter_next)
+#define DeeType_InheritIter(self)         DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_iter)
+#define DeeType_InheritSize(self)         DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_sizeob)
+#define DeeType_InheritContains(self)     DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_contains)
+#define DeeType_InheritGetItem(self)      DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_getitem)
+#define DeeType_InheritDelItem(self)      DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_delitem)
+#define DeeType_InheritSetItem(self)      DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_setitem)
+#define DeeType_InheritGetRange(self)     DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_getrange)
+#define DeeType_InheritDelRange(self)     DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_delrange)
+#define DeeType_InheritSetRange(self)     DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_setrange)
+#define DeeType_InheritWith(self)         (DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_enter) && DeeType_GetNativeOperatorWithoutUnsupported(self, Dee_TNO_leave))
+
+/* Backward compat -- DEPRECATED! */
+#define DeeType_InvokeInitAssign(tp_self, self, other)                                           (*maketyped__assign((tp_self)->tp_init.tp_assign))(tp_self, self, other)
+#define DeeType_InvokeInitMoveAssign(tp_self, self, other)                                       (*maketyped__move_assign((tp_self)->tp_init.tp_move_assign))(tp_self, self, other)
+#define DeeType_InvokeCastStr(tp_self, self)                                                     (*maketyped__str((tp_self)->tp_cast.tp_str))(tp_self, self)
+#define DeeType_InvokeCastPrint(tp_self, self, printer, arg)                                     (*maketyped__print((tp_self)->tp_cast.tp_print))(tp_self, self, printer, arg)
+#define DeeType_InvokeCastRepr(tp_self, self)                                                    (*maketyped__repr((tp_self)->tp_cast.tp_repr))(tp_self, self)
+#define DeeType_InvokeCastPrintRepr(tp_self, self, printer, arg)                                 (*maketyped__printrepr((tp_self)->tp_cast.tp_printrepr))(tp_self, self, printer, arg)
+#define DeeType_InvokeCastBool(tp_self, self)                                                    (*maketyped__bool((tp_self)->tp_cast.tp_bool))(tp_self, self)
+#define DeeType_InvokeIterNext(tp_self, self)                                                    (*maketyped__iter_next((tp_self)->tp_iter_next))(tp_self, self)
+#define DeeType_InvokeIterNextPair(tp_self, self, key_and_value)                                 (*maketyped__nextpair((tp_self)->tp_iterator->tp_nextpair))(tp_self, self, key_and_value)
+#define DeeType_InvokeIterNextKey(tp_self, self)                                                 (*maketyped__nextkey((tp_self)->tp_iterator->tp_nextkey))(tp_self, self)
+#define DeeType_InvokeIterNextValue(tp_self, self)                                               (*maketyped__nextvalue((tp_self)->tp_iterator->tp_nextvalue))(tp_self, self)
+#define DeeType_InvokeIterAdvance(tp_self, self, step)                                           (*maketyped__advance((tp_self)->tp_iterator->tp_advance))(tp_self, self, step)
+#define DeeType_InvokeCall(tp_self, self, argc, argv)                                            (*maketyped__call((tp_self)->tp_call))(tp_self, self, argc, argv)
+#define DeeType_InvokeCallKw(tp_self, self, argc, argv, kw)                                      (*maketyped__call_kw((tp_self)->tp_call_kw))(tp_self, self, argc, argv, kw)
+#define DeeType_InvokeMathInt32(tp_self, self, result)                                           (*maketyped__int32((tp_self)->tp_math->tp_int32))(tp_self, self, result)
+#define DeeType_InvokeMathInt64(tp_self, self, result)                                           (*maketyped__int64((tp_self)->tp_math->tp_int64))(tp_self, self, result)
+#define DeeType_InvokeMathDouble(tp_self, self, result)                                          (*maketyped__double((tp_self)->tp_math->tp_double))(tp_self, self, result)
+#define DeeType_InvokeMathInt(tp_self, self)                                                     (*maketyped__int((tp_self)->tp_math->tp_int))(tp_self, self)
+#define DeeType_InvokeMathInv(tp_self, self)                                                     (*maketyped__inv((tp_self)->tp_math->tp_inv))(tp_self, self)
+#define DeeType_InvokeMathPos(tp_self, self)                                                     (*maketyped__pos((tp_self)->tp_math->tp_pos))(tp_self, self)
+#define DeeType_InvokeMathNeg(tp_self, self)                                                     (*maketyped__neg((tp_self)->tp_math->tp_neg))(tp_self, self)
+#define DeeType_InvokeMathAdd(tp_self, self, other)                                              (*maketyped__add((tp_self)->tp_math->tp_add))(tp_self, self, other)
+#define DeeType_InvokeMathSub(tp_self, self, other)                                              (*maketyped__sub((tp_self)->tp_math->tp_sub))(tp_self, self, other)
+#define DeeType_InvokeMathMul(tp_self, self, other)                                              (*maketyped__mul((tp_self)->tp_math->tp_mul))(tp_self, self, other)
+#define DeeType_InvokeMathDiv(tp_self, self, other)                                              (*maketyped__div((tp_self)->tp_math->tp_div))(tp_self, self, other)
+#define DeeType_InvokeMathMod(tp_self, self, other)                                              (*maketyped__mod((tp_self)->tp_math->tp_mod))(tp_self, self, other)
+#define DeeType_InvokeMathShl(tp_self, self, other)                                              (*maketyped__shl((tp_self)->tp_math->tp_shl))(tp_self, self, other)
+#define DeeType_InvokeMathShr(tp_self, self, other)                                              (*maketyped__shr((tp_self)->tp_math->tp_shr))(tp_self, self, other)
+#define DeeType_InvokeMathAnd(tp_self, self, other)                                              (*maketyped__and((tp_self)->tp_math->tp_and))(tp_self, self, other)
+#define DeeType_InvokeMathOr(tp_self, self, other)                                               (*maketyped__or((tp_self)->tp_math->tp_or))(tp_self, self, other)
+#define DeeType_InvokeMathXor(tp_self, self, other)                                              (*maketyped__xor((tp_self)->tp_math->tp_xor))(tp_self, self, other)
+#define DeeType_InvokeMathPow(tp_self, self, other)                                              (*maketyped__pow((tp_self)->tp_math->tp_pow))(tp_self, self, other)
+#define DeeType_InvokeMathInc(tp_self, p_self)                                                   (*maketyped__inc((tp_self)->tp_math->tp_inc))(tp_self, p_self)
+#define DeeType_InvokeMathDec(tp_self, p_self)                                                   (*maketyped__dec((tp_self)->tp_math->tp_dec))(tp_self, p_self)
+#define DeeType_InvokeMathInplaceAdd(tp_self, p_self, other)                                     (*maketyped__inplace_add((tp_self)->tp_math->tp_inplace_add))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceSub(tp_self, p_self, other)                                     (*maketyped__inplace_sub((tp_self)->tp_math->tp_inplace_sub))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceMul(tp_self, p_self, other)                                     (*maketyped__inplace_mul((tp_self)->tp_math->tp_inplace_mul))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceDiv(tp_self, p_self, other)                                     (*maketyped__inplace_div((tp_self)->tp_math->tp_inplace_div))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceMod(tp_self, p_self, other)                                     (*maketyped__inplace_mod((tp_self)->tp_math->tp_inplace_mod))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceShl(tp_self, p_self, other)                                     (*maketyped__inplace_shl((tp_self)->tp_math->tp_inplace_shl))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceShr(tp_self, p_self, other)                                     (*maketyped__inplace_shr((tp_self)->tp_math->tp_inplace_shr))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceAnd(tp_self, p_self, other)                                     (*maketyped__inplace_and((tp_self)->tp_math->tp_inplace_and))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceOr(tp_self, p_self, other)                                      (*maketyped__inplace_or((tp_self)->tp_math->tp_inplace_or))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplaceXor(tp_self, p_self, other)                                     (*maketyped__inplace_xor((tp_self)->tp_math->tp_inplace_xor))(tp_self, p_self, other)
+#define DeeType_InvokeMathInplacePow(tp_self, p_self, other)                                     (*maketyped__inplace_pow((tp_self)->tp_math->tp_inplace_pow))(tp_self, p_self, other)
+#define DeeType_InvokeCmpHash(tp_self, self)                                                     (*maketyped__hash((tp_self)->tp_cmp->tp_hash))(tp_self, self)
+#define DeeType_InvokeCmpEq(tp_self, self, other)                                                (*maketyped__eq((tp_self)->tp_cmp->tp_eq))(tp_self, self, other)
+#define DeeType_InvokeCmpNe(tp_self, self, other)                                                (*maketyped__ne((tp_self)->tp_cmp->tp_ne))(tp_self, self, other)
+#define DeeType_InvokeCmpLo(tp_self, self, other)                                                (*maketyped__lo((tp_self)->tp_cmp->tp_lo))(tp_self, self, other)
+#define DeeType_InvokeCmpLe(tp_self, self, other)                                                (*maketyped__le((tp_self)->tp_cmp->tp_le))(tp_self, self, other)
+#define DeeType_InvokeCmpGr(tp_self, self, other)                                                (*maketyped__gr((tp_self)->tp_cmp->tp_gr))(tp_self, self, other)
+#define DeeType_InvokeCmpGe(tp_self, self, other)                                                (*maketyped__ge((tp_self)->tp_cmp->tp_ge))(tp_self, self, other)
+#define DeeType_InvokeCmpCompareEq(tp_self, self, other)                                         (*maketyped__compare_eq((tp_self)->tp_cmp->tp_compare_eq))(tp_self, self, other)
+#define DeeType_InvokeCmpCompare(tp_self, self, other)                                           (*maketyped__compare((tp_self)->tp_cmp->tp_compare))(tp_self, self, other)
+#define DeeType_InvokeCmpTryCompareEq(tp_self, self, other)                                      (*maketyped__trycompare_eq((tp_self)->tp_cmp->tp_trycompare_eq))(tp_self, self, other)
+#define DeeType_InvokeSeqIter(tp_self, self)                                                     (*maketyped__iter((tp_self)->tp_seq->tp_iter))(tp_self, self)
+#define DeeType_InvokeSeqSizeOb(tp_self, self)                                                   (*maketyped__sizeob((tp_self)->tp_seq->tp_sizeob))(tp_self, self)
+#define DeeType_InvokeSeqContains(tp_self, self, other)                                          (*maketyped__contains((tp_self)->tp_seq->tp_contains))(tp_self, self, other)
+#define DeeType_InvokeSeqGetItem(tp_self, self, index)                                           (*maketyped__getitem((tp_self)->tp_seq->tp_getitem))(tp_self, self, index)
+#define DeeType_InvokeSeqDelItem(tp_self, self, index)                                           (*maketyped__delitem((tp_self)->tp_seq->tp_delitem))(tp_self, self, index)
+#define DeeType_InvokeSeqSetItem(tp_self, self, index, value)                                    (*maketyped__setitem((tp_self)->tp_seq->tp_setitem))(tp_self, self, index, value)
+#define DeeType_InvokeSeqGetRange(tp_self, self, start, end)                                     (*maketyped__getrange((tp_self)->tp_seq->tp_getrange))(tp_self, self, start, end)
+#define DeeType_InvokeSeqDelRange(tp_self, self, start, end)                                     (*maketyped__delrange((tp_self)->tp_seq->tp_delrange))(tp_self, self, start, end)
+#define DeeType_InvokeSeqSetRange(tp_self, self, start, end, values)                             (*maketyped__setrange((tp_self)->tp_seq->tp_setrange))(tp_self, self, start, end, values)
+#define DeeType_InvokeSeqForeach(tp_self, self, proc, arg)                                       (*maketyped__foreach((tp_self)->tp_seq->tp_foreach))(tp_self, self, proc, arg)
+#define DeeType_InvokeSeqForeachPair(tp_self, self, proc, arg)                                   (*maketyped__foreach_pair((tp_self)->tp_seq->tp_foreach_pair))(tp_self, self, proc, arg)
+#define DeeType_InvokeSeqBoundItem(tp_self, self, index)                                         (*maketyped__bounditem((tp_self)->tp_seq->tp_bounditem))(tp_self, self, index)
+#define DeeType_InvokeSeqHasItem(tp_self, self, index)                                           (*maketyped__hasitem((tp_self)->tp_seq->tp_hasitem))(tp_self, self, index)
+#define DeeType_InvokeSeqSize(tp_self, self)                                                     (*maketyped__size((tp_self)->tp_seq->tp_size))(tp_self, self)
+#define DeeType_InvokeSeqSizeFast(tp_self, self)                                                 (*(tp_self)->tp_seq->tp_size)(self)
+#define DeeType_InvokeSeqGetItemIndex(tp_self, self, index)                                      (*maketyped__getitem_index((tp_self)->tp_seq->tp_getitem_index))(tp_self, self, index)
+#define DeeType_InvokeSeqDelItemIndex(tp_self, self, index)                                      (*maketyped__delitem_index((tp_self)->tp_seq->tp_delitem_index))(tp_self, self, index)
+#define DeeType_InvokeSeqSetItemIndex(tp_self, self, index, value)                               (*maketyped__setitem_index((tp_self)->tp_seq->tp_setitem_index))(tp_self, self, index, value)
+#define DeeType_InvokeSeqBoundItemIndex(tp_self, self, index)                                    (*maketyped__bounditem_index((tp_self)->tp_seq->tp_bounditem_index))(tp_self, self, index)
+#define DeeType_InvokeSeqHasItemIndex(tp_self, self, index)                                      (*maketyped__hasitem_index((tp_self)->tp_seq->tp_hasitem_index))(tp_self, self, index)
+#define DeeType_InvokeSeqGetRangeIndex(tp_self, self, start, end)                                (*maketyped__getrange_index((tp_self)->tp_seq->tp_getrange_index))(tp_self, self, start, end)
+#define DeeType_InvokeSeqDelRangeIndex(tp_self, self, start, end)                                (*maketyped__delrange_index((tp_self)->tp_seq->tp_delrange_index))(tp_self, self, start, end)
+#define DeeType_InvokeSeqSetRangeIndex(tp_self, self, start, end, value)                         (*maketyped__setrange_index((tp_self)->tp_seq->tp_setrange_index))(tp_self, self, start, end, value)
+#define DeeType_InvokeSeqGetRangeIndexN(tp_self, self, start)                                    (*maketyped__getrange_index_n((tp_self)->tp_seq->tp_getrange_index_n))(tp_self, self, start)
+#define DeeType_InvokeSeqDelRangeIndexN(tp_self, self, start)                                    (*maketyped__delrange_index_n((tp_self)->tp_seq->tp_delrange_index_n))(tp_self, self, start)
+#define DeeType_InvokeSeqSetRangeIndexN(tp_self, self, start, value)                             (*maketyped__setrange_index_n((tp_self)->tp_seq->tp_setrange_index_n))(tp_self, self, start, value)
+#define DeeType_InvokeSeqTryGetItem(tp_self, self, index)                                        (*maketyped__trygetitem((tp_self)->tp_seq->tp_trygetitem))(tp_self, self, index)
+#define DeeType_InvokeSeqTryGetItemIndex(tp_self, self, index)                                   (*maketyped__trygetitem_index((tp_self)->tp_seq->tp_trygetitem_index))(tp_self, self, index)
+#define DeeType_InvokeSeqTryGetItemStringHash(tp_self, self, key, hash)                          (*maketyped__trygetitem_string_hash((tp_self)->tp_seq->tp_trygetitem_string_hash))(tp_self, self, key, hash)
+#define DeeType_InvokeSeqGetItemStringHash(tp_self, self, key, hash)                             (*maketyped__getitem_string_hash((tp_self)->tp_seq->tp_getitem_string_hash))(tp_self, self, key, hash)
+#define DeeType_InvokeSeqDelItemStringHash(tp_self, self, key, hash)                             (*maketyped__delitem_string_hash((tp_self)->tp_seq->tp_delitem_string_hash))(tp_self, self, key, hash)
+#define DeeType_InvokeSeqSetItemStringHash(tp_self, self, key, hash, value)                      (*maketyped__setitem_string_hash((tp_self)->tp_seq->tp_setitem_string_hash))(tp_self, self, key, hash, value)
+#define DeeType_InvokeSeqBoundItemStringHash(tp_self, self, key, hash)                           (*maketyped__bounditem_string_hash((tp_self)->tp_seq->tp_bounditem_string_hash))(tp_self, self, key, hash)
+#define DeeType_InvokeSeqHasItemStringHash(tp_self, self, key, hash)                             (*maketyped__hasitem_string_hash((tp_self)->tp_seq->tp_hasitem_string_hash))(tp_self, self, key, hash)
+#define DeeType_InvokeSeqTryGetItemStringLenHash(tp_self, self, key, keylen, hash)               (*maketyped__trygetitem_string_len_hash((tp_self)->tp_seq->tp_trygetitem_string_len_hash))(tp_self, self, key, keylen, hash)
+#define DeeType_InvokeSeqGetItemStringLenHash(tp_self, self, key, keylen, hash)                  (*maketyped__getitem_string_len_hash((tp_self)->tp_seq->tp_getitem_string_len_hash))(tp_self, self, key, keylen, hash)
+#define DeeType_InvokeSeqDelItemStringLenHash(tp_self, self, key, keylen, hash)                  (*maketyped__delitem_string_len_hash((tp_self)->tp_seq->tp_delitem_string_len_hash))(tp_self, self, key, keylen, hash)
+#define DeeType_InvokeSeqSetItemStringLenHash(tp_self, self, key, keylen, hash, value)           (*maketyped__setitem_string_len_hash((tp_self)->tp_seq->tp_setitem_string_len_hash))(tp_self, self, key, keylen, hash, value)
+#define DeeType_InvokeSeqBoundItemStringLenHash(tp_self, self, key, keylen, hash)                (*maketyped__bounditem_string_len_hash((tp_self)->tp_seq->tp_bounditem_string_len_hash))(tp_self, self, key, keylen, hash)
+#define DeeType_InvokeSeqHasItemStringLenHash(tp_self, self, key, keylen, hash)                  (*maketyped__hasitem_string_len_hash((tp_self)->tp_seq->tp_hasitem_string_len_hash))(tp_self, self, key, keylen, hash)
+#define DeeType_InvokeAttrGetAttr(tp_self, self, name)                                           (*maketyped__getattr((tp_self)->tp_attr->tp_getattr))(tp_self, self, name)
+#define DeeType_InvokeAttrDelAttr(tp_self, self, name)                                           (*maketyped__delattr((tp_self)->tp_attr->tp_delattr))(tp_self, self, name)
+#define DeeType_InvokeAttrSetAttr(tp_self, self, name, value)                                    (*maketyped__setattr((tp_self)->tp_attr->tp_setattr))(tp_self, self, name, value)
+#define DeeType_InvokeWithEnter(tp_self, self)                                                   (*maketyped__enter((tp_self)->tp_with->tp_enter))(tp_self, self)
+#define DeeType_InvokeWithLeave(tp_self, self)                                                   (*maketyped__leave((tp_self)->tp_with->tp_leave))(tp_self, self)
+
+#define DeeType_invoke_attr_tp_getattr(tp_self, tp_getattr, self, name)        (*maketyped__getattr(tp_getattr))(tp_self, self, name)
+#define DeeType_invoke_attr_tp_delattr(tp_self, tp_delattr, self, name)        (*maketyped__delattr(tp_delattr))(tp_self, self, name)
+#define DeeType_invoke_attr_tp_setattr(tp_self, tp_setattr, self, name, value) (*maketyped__setattr(tp_setattr))(tp_self, self, name, value)
+
 
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -1660,6 +2033,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL usrtype__leave(DeeObject *__restrict self)
 	((self)->tp_field ? (self)->tp_field : require(self) ? (self)->tp_field : NULL)
 
 #define _DeeType_RequireSupportedNativeOperator__int(self)              DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_math, tp_int, DeeType_InheritInt)
+#define _DeeType_RequireSupportedNativeOperator__add(self)              DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_math, tp_add, DeeType_InheritAdd)
 #define _DeeType_RequireSupportedNativeOperator__iter(self)             DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_iter, DeeType_InheritIter)
 #define _DeeType_RequireSupportedNativeOperator__foreach(self)          DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_foreach, DeeType_InheritIter)
 #define _DeeType_RequireSupportedNativeOperator__foreach_pair(self)     DEE_PRIVATE_DeeType_RequireSupportedNativeOperator_2(self, tp_seq, tp_foreach_pair, DeeType_InheritIter)

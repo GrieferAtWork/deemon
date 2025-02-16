@@ -30,11 +30,13 @@
 #include <deemon/format.h>
 #include <deemon/method-hints.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
+#include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../seq_functions.h"
@@ -110,11 +112,11 @@ se_ctor(SeqEachBase *__restrict self) {
 	return 0;
 }
 
-#define se_copy  generic_proxy_copy_alias
-#define se_deep  generic_proxy_deepcopy
-#define se_init  generic_proxy_init
-#define se_fini  generic_proxy_fini
-#define se_visit generic_proxy_visit
+#define se_copy  generic_proxy__copy_alias
+#define se_deep  generic_proxy__deepcopy
+#define se_init  generic_proxy__init
+#define se_fini  generic_proxy__fini
+#define se_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 se_foreach_assign_cb(void *arg, DeeObject *elem) {
@@ -2226,8 +2228,8 @@ DEFINE_SEW_BINARY(sew_ge, OPERATOR_GE)
 
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 #define sew_contains DeeSeq_DefaultContainsWithForeachDefault
-#define sew_size     generic_proxy_size
-#define sew_sizeob   generic_proxy_sizeob
+#define sew_size     generic_proxy__seq_operator_size
+#define sew_sizeob   generic_proxy__seq_operator_sizeob
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 DEFINE_SEW_BINARY(sew_contains, OPERATOR_CONTAINS)
 DEFINE_SEW_BINARY(sew_sizeob, OPERATOR_GETITEM)
@@ -2383,7 +2385,22 @@ PRIVATE struct type_math seo_math = {
 };
 
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+PRIVATE struct type_cmp sew_cmp = {
+	/* .tp_hash          = */ &DeeSeq_DefaultHashWithForeachDefault,
+	/* .tp_compare_eq    = */ &DeeSeq_DefaultCompareEqWithForeachDefault,
+	/* .tp_compare       = */ &DeeSeq_DefaultCompareWithForeachDefault,
+	/* .tp_trycompare_eq = */ &DeeSeq_DefaultTryCompareEqWithForeachDefault,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo            = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le            = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompareDefault,
+};
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define sew_cmp DeeSeq_DefaultCmpWithForeachDefault
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 PRIVATE struct type_cmp sew_cmp = {
 	/* .tp_hash          = */ NULL,
@@ -2510,17 +2527,17 @@ seo_foreach(SeqEachOperator *__restrict self, Dee_foreach_t proc, void *arg) {
 	return DeeObject_Foreach(self->se_seq, &seo_foreach_cb, &data);
 }
 
-struct seo_enumerate_data {
+struct seo_mh_seq_enumerate_data {
 	SeqEachOperator *seoed_me;   /* [1..1] The related seq-each operator */
 	Dee_seq_enumerate_t  seoed_proc; /* [1..1] User-defined callback */
 	void            *seoed_arg;  /* [?..?] User-defined cookie */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seo_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+seo_mh_seq_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
 	Dee_ssize_t result;
-	struct seo_enumerate_data *data;
-	data = (struct seo_enumerate_data *)arg;
+	struct seo_mh_seq_enumerate_data *data;
+	data = (struct seo_mh_seq_enumerate_data *)arg;
 	if unlikely(!value)
 		return (*data->seoed_proc)(data->seoed_arg, index, value);
 	value = seo_transform(data->seoed_me, value);
@@ -2534,25 +2551,25 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seo_enumerate(SeqEachOperator *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
-	struct seo_enumerate_data data;
+seo_mh_seq_enumerate(SeqEachOperator *__restrict self, Dee_seq_enumerate_t proc, void *arg) {
+	struct seo_mh_seq_enumerate_data data;
 	data.seoed_me   = self;
 	data.seoed_proc = proc;
 	data.seoed_arg  = arg;
-	return DeeObject_Enumerate(self->se_seq, &seo_enumerate_cb, &data);
+	return DeeObject_InvokeMethodHint(seq_enumerate, self->se_seq, &seo_mh_seq_enumerate_cb, &data);
 }
 
-struct seo_enumerate_index_data {
-	SeqEachOperator      *seoeid_me;   /* [1..1] The related seq-each operator */
+struct seo_mh_seq_enumerate_index_data {
+	SeqEachOperator          *seoeid_me;   /* [1..1] The related seq-each operator */
 	Dee_seq_enumerate_index_t seoeid_proc; /* [1..1] User-defined callback */
-	void                 *seoeid_arg;  /* [?..?] User-defined cookie */
+	void                     *seoeid_arg;  /* [?..?] User-defined cookie */
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-seo_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
+seo_mh_seq_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	Dee_ssize_t result;
-	struct seo_enumerate_index_data *data;
-	data = (struct seo_enumerate_index_data *)arg;
+	struct seo_mh_seq_enumerate_index_data *data;
+	data = (struct seo_mh_seq_enumerate_index_data *)arg;
 	if unlikely(!value)
 		return (*data->seoeid_proc)(data->seoeid_arg, index, value);
 	value = seo_transform(data->seoeid_me, value);
@@ -2566,14 +2583,15 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-seo_enumerate_index(SeqEachOperator *__restrict self, Dee_seq_enumerate_index_t proc,
-                    void *arg, size_t start, size_t end) {
-	struct seo_enumerate_index_data data;
+seo_mh_seq_enumerate_index(SeqEachOperator *__restrict self, Dee_seq_enumerate_index_t proc,
+                           void *arg, size_t start, size_t end) {
+	struct seo_mh_seq_enumerate_index_data data;
 	data.seoeid_me   = self;
 	data.seoeid_proc = proc;
 	data.seoeid_arg  = arg;
-	return DeeObject_EnumerateIndex(self->se_seq, &seo_enumerate_index_cb,
-	                                &data, start, end);
+	return DeeObject_InvokeMethodHint(seq_enumerate_index, self->se_seq,
+	                                  &seo_mh_seq_enumerate_index_cb,
+	                                  &data, start, end);
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -2666,7 +2684,7 @@ seo_delrange_index(SeqEachOperator *self, Dee_ssize_t start, Dee_ssize_t end) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_delrange_index_n(SeqEachOperator *self, Dee_ssize_t start) {
 	return (int)seo_foreach(self, &se_foreach_delrange_index_n_cb,
-	                              (void *)(uintptr_t)(size_t)start);
+	                        (void *)(uintptr_t)(size_t)start);
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
@@ -2976,11 +2994,9 @@ err_r:
 }
 
 STATIC_ASSERT(offsetof(SeqEachBase, se_seq) == offsetof(ProxyObject, po_obj));
-#define sew_size_fast generic_proxy_size_fast
+#define sew_size_fast generic_proxy__size_fast
 
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-#define sew_iterkeys generic_proxy_iterkeys
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seo_getitem(SeqEachOperator *self, DeeObject *index) {
 	DREF DeeObject *result = DeeObject_GetItem(self->se_seq, index);
@@ -3121,13 +3137,9 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
 	/* .tp_foreach_pair               = */ &DeeObject_DefaultForeachPairWithForeach,
-	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&seo_enumerate,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&seo_enumerate_index,
-#ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
-	/* .tp_iterkeys                   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iterkeys,
-#else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+	/* .tp_enumerate                  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_t, void *))&seo_mh_seq_enumerate,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&seo_mh_seq_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
-#endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_hasitem,
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
@@ -3433,7 +3445,7 @@ PRIVATE struct type_cmp sso_cmp = {
 };
 
 STATIC_ASSERT(offsetof(SeqEachBase, se_seq) == offsetof(ProxyObject, po_obj));
-#define ssw_size_fast generic_proxy_size_fast
+#define ssw_size_fast generic_proxy__size_fast
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sso_bounditem(SeqEachOperator *self, DeeObject *index) {
@@ -3747,18 +3759,18 @@ err:
 
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_each) == offsetof(ProxyObject2, po_obj2));
-#define sewi_copy  generic_proxy2_copy_recursive1_alias2 /* Copy "ei_iter", alias "ei_each" */
-#define sewi_deep  generic_proxy2_deepcopy
-#define sewi_fini  generic_proxy2_fini
-#define sewi_visit generic_proxy2_visit
+#define sewi_copy  generic_proxy2__copy_recursive1_alias2 /* Copy "ei_iter", alias "ei_each" */
+#define sewi_deep  generic_proxy2__deepcopy
+#define sewi_fini  generic_proxy2__fini
+#define sewi_visit generic_proxy2__visit
 
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject, po_obj));
-#define sewi_bool generic_proxy_bool
+#define sewi_bool generic_proxy__bool
 
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject, po_obj));
-#define sewi_compare_eq    generic_proxy_compare_eq_recursive
-#define sewi_compare       generic_proxy_compare_recursive
-#define sewi_trycompare_eq generic_proxy_trycompare_eq_recursive
+#define sewi_compare_eq    generic_proxy__compare_eq_recursive
+#define sewi_compare       generic_proxy__compare_recursive
+#define sewi_trycompare_eq generic_proxy__trycompare_eq_recursive
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachBase *DCALL
 sewi_nii_getseq(SeqEachIterator *__restrict self) {

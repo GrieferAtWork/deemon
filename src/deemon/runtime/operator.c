@@ -42,6 +42,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/operator-hints.h>
 #include <deemon/rodict.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
@@ -3031,6 +3032,7 @@ err:
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #ifdef DEFINE_TYPED_OPERATORS
 #define COPY_SELF() DeeObject_TCopy(tp_self, self)
 #else /* DEFINE_TYPED_OPERATORS */
@@ -3143,7 +3145,6 @@ err:
 #undef COPY_SELF
 
 /* Default wrappers for implementing inplace math operators using their non-inplace variants. */
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(Name, NAME)       \
 	DEFINE_INTERNAL_OPERATOR(int, DefaultInplace##Name##With##Name,    \
 	                         (DeeObject **p_self, DeeObject *other)) { \
@@ -3170,7 +3171,6 @@ DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(Or, OR)
 DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(Xor, XOR)
 DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR(Pow, POW)
 #undef DEFINE_DEFAULT_INPLACE_FOO_WITH_FOO_OPERATOR
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultInplaceAddWithInplaceSub,
                          (DREF DeeObject **p_self, DeeObject *other)) {
@@ -3329,7 +3329,6 @@ xinvoke_not(/*[0..1],inherit(always)*/ DREF DeeObject *ob) {
 }
 
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSeq_HandleHashError(DeeObject *self);
 INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSet_HandleHashError(DeeObject *self);
 INTDEF NONNULL((1)) Dee_hash_t DCALL DeeMap_HandleHashError(DeeObject *self);
@@ -13702,7 +13701,6 @@ empty_range:
 err:
 	return -1;
 }
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -14478,7 +14476,6 @@ err:
 
 
 
-#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #ifndef DEFINE_TYPED_OPERATORS
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 default_map_contains_with_forach_cb(void *arg, DeeObject *key,
@@ -16259,7 +16256,6 @@ DEFINE_OPERATOR(Dee_ssize_t, ForeachPair,
 		return DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg);
 	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
 }
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 /* Enumerate valid keys/indices of "self", as well as their current value.
  * @return: * : Sum of return values of `*proc'
@@ -16309,7 +16305,10 @@ DEFINE_OPERATOR(Dee_ssize_t, EnumerateIndex,
 	                       "Cannot enumerate non-sequence type `%r'",
 	                       tp_self);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+
+#if !defined(CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS) || !defined(DEFINE_TYPED_OPERATORS)
 
 /* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.
  * This operator follows `DeeObject_Foreach()' semantics, in that unbound items are skipped.
@@ -16318,6 +16317,9 @@ DEFINE_OPERATOR(Dee_ssize_t, EnumerateIndex,
 DEFINE_OPERATOR(int, Unpack,
                 (DeeObject *__restrict self, size_t dst_length,
                  /*out*/ DREF DeeObject **__restrict dst)) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	return DeeObject_InvokeMethodHint(seq_unpack, self, dst_length, dst);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_unpack) ||
 	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_unpack))
@@ -16325,6 +16327,7 @@ DEFINE_OPERATOR(int, Unpack,
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Cannot unpack non-sequence type `%r'",
 	                       tp_self);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
 /* @return: * : The actual # of objects written to `dst' (always in range [dst_length_min, dst_length_max])
@@ -16333,6 +16336,9 @@ DEFINE_OPERATOR(size_t, UnpackEx,
                 (DeeObject *__restrict self,
                  size_t dst_length_min, size_t dst_length_max,
                  /*out*/ DREF DeeObject **__restrict dst)) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	return DeeObject_InvokeMethodHint(seq_unpack_ex, self, dst_length_min, dst_length_max, dst);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_unpack_ex) ||
 	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_unpack_ex))
@@ -16340,6 +16346,7 @@ DEFINE_OPERATOR(size_t, UnpackEx,
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Cannot unpack non-sequence type `%r'",
 	                       tp_self);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
 /* Similar to `DeeObject_Unpack()', but does not skip unbound items. Instead,
@@ -16352,6 +16359,9 @@ DEFINE_OPERATOR(size_t, UnpackEx,
 DEFINE_OPERATOR(int, UnpackWithUnbound,
                 (DeeObject *__restrict self, size_t dst_length,
                  /*out*/ DREF DeeObject **__restrict dst)) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	return DeeObject_InvokeMethodHint(seq_unpack_ub, self, dst_length, dst_length, dst);
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	LOAD_TP_SELF;
 	if likely(likely(tp_self->tp_seq && tp_self->tp_seq->tp_unpack_ub) ||
 	          unlikely(DeeType_InheritIter(tp_self) && tp_self->tp_seq->tp_unpack_ub))
@@ -16359,7 +16369,9 @@ DEFINE_OPERATOR(int, UnpackWithUnbound,
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Cannot unpack non-sequence type `%r'",
 	                       tp_self);
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS || !DEFINE_TYPED_OPERATORS */
 
 
 #ifndef DEFINE_TYPED_OPERATORS

@@ -257,8 +257,15 @@ default__seq_operator_bool__unsupported(DeeObject *__restrict self) {
 	return err_seq_unsupportedf(self, "operator bool()");
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_seq_bool_with_foreach_cb(void *arg, DeeObject *elem);
+#ifndef DEFINED_default_seq_bool_with_foreach_cb
+#define DEFINED_default_seq_bool_with_foreach_cb
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_bool_with_foreach_cb(void *arg, DeeObject *elem) {
+	(void)arg;
+	(void)elem;
+	return -2;
+}
+#endif /* !DEFINED_default_seq_bool_with_foreach_cb */
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__seq_operator_foreach(DeeObject *__restrict self) {
 	Dee_ssize_t foreach_status;
@@ -350,7 +357,7 @@ default__seq_operator_sizeob__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_operator_sizeob__empty(DeeObject *__restrict self) { return_reference_(DeeInt_Zero); }
+default__seq_operator_sizeob__empty(DeeObject *__restrict UNUSED(self)) { return_reference_(DeeInt_Zero); }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_sizeob__with__seq_operator_size(DeeObject *__restrict self) {
@@ -466,7 +473,7 @@ default__seq_operator_iter__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_operator_iter__empty(DeeObject *__restrict self) { return_empty_iterator; }
+default__seq_operator_iter__empty(DeeObject *__restrict UNUSED(self)) { return_empty_iterator; }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self) {
@@ -657,10 +664,6 @@ default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem(DeeObj
 	result->diikgi_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_getitem);
 	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
 	return (DREF DeeObject *)result;
-err_r_iter_no_iter_next:
-	err_unimplemented_operator(Dee_TYPE(result->diikgi_iter), OPERATOR_ITERNEXT);
-/*err_r_iter:*/
-	Dee_Decref(result->diikgi_iter);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -938,16 +941,35 @@ default__seq_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach_pair))(self, cb, arg);
 }
 
-#ifndef DECLARED_default_foreach_pair_with_foreach_cb
-#define DECLARED_default_foreach_pair_with_foreach_cb
+#ifndef DEFINED_default_foreach_pair_with_foreach_cb
+#define DEFINED_default_foreach_pair_with_foreach_cb
 struct default_foreach_pair_with_foreach_data {
 	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
 	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem);
-#endif /* !DECLARED_default_foreach_pair_with_foreach_cb */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_foreach_pair_with_foreach_data *data;
+	Dee_ssize_t result;
+	data = (struct default_foreach_pair_with_foreach_data *)arg;
+	if likely(DeeTuple_Check(elem) && DeeTuple_SIZE(elem) == 2) {
+		result = (*data->dfpwf_cb)(data->dfpwf_arg,
+		                           DeeTuple_GET(elem, 0),
+		                           DeeTuple_GET(elem, 1));
+	} else {
+		DREF DeeObject *pair[2];
+		if unlikely(DeeObject_Unpack(elem, 2, pair))
+			goto err;
+		result = (*data->dfpwf_cb)(data->dfpwf_arg, pair[0], pair[1]);
+		Dee_Decref_unlikely(pair[1]);
+		Dee_Decref_unlikely(pair[0]);
+	}
+	return result;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_foreach_pair_with_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_operator_foreach_pair__with__seq_operator_foreach(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
 	struct default_foreach_pair_with_foreach_data data;
@@ -1181,7 +1203,7 @@ default__seq_operator_trygetitem(DeeObject *self, DeeObject *index) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_operator_trygetitem__empty(DeeObject *self, DeeObject *index) {
+default__seq_operator_trygetitem__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(index)) {
 	return ITER_DONE;
 }
 
@@ -1214,7 +1236,7 @@ default__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t index)
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_operator_trygetitem_index__empty(DeeObject *__restrict self, size_t index) {
+default__seq_operator_trygetitem_index__empty(DeeObject *__restrict UNUSED(self), size_t UNUSED(index)) {
 	return ITER_DONE;
 }
 
@@ -1677,7 +1699,7 @@ default__seq_operator_setitem__unsupported(DeeObject *self, DeeObject *index, De
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-default__seq_operator_setitem__empty(DeeObject *self, DeeObject *index, DeeObject *value) {
+default__seq_operator_setitem__empty(DeeObject *self, DeeObject *index, DeeObject *UNUSED(value)) {
 	return err_index_out_of_bounds_ob(self, index);
 }
 
@@ -1754,7 +1776,7 @@ default__seq_operator_setitem_index__unsupported(DeeObject *self, size_t index, 
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-default__seq_operator_setitem_index__empty(DeeObject *self, size_t index, DeeObject *value) {
+default__seq_operator_setitem_index__empty(DeeObject *self, size_t index, DeeObject *UNUSED(value)) {
 	return err_index_out_of_bounds(self, index, 0);
 }
 
@@ -1820,7 +1842,7 @@ default__seq_operator_getrange__unsupported(DeeObject *self, DeeObject *start, D
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_operator_getrange__empty(DeeObject *self, DeeObject *start, DeeObject *end) {
+default__seq_operator_getrange__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(start), DeeObject *UNUSED(end)) {
 	return_empty_seq;
 }
 
@@ -1884,7 +1906,7 @@ default__seq_operator_getrange_index__unsupported(DeeObject *self, Dee_ssize_t s
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_operator_getrange_index__empty(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) {
+default__seq_operator_getrange_index__empty(DeeObject *UNUSED(self), Dee_ssize_t UNUSED(start), Dee_ssize_t UNUSED(end)) {
 	return_empty_seq;
 }
 
@@ -2048,7 +2070,7 @@ default__seq_operator_getrange_index_n__unsupported(DeeObject *self, Dee_ssize_t
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_operator_getrange_index_n__empty(DeeObject *self, Dee_ssize_t start) {
+default__seq_operator_getrange_index_n__empty(DeeObject *UNUSED(self), Dee_ssize_t UNUSED(start)) {
 	return_empty_seq;
 }
 
@@ -2375,7 +2397,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__seq_operator_delrange_index__with__seq_operator_size__and__seq_erase(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) {
+default__seq_operator_delrange_index__with__seq_operator_size__and__seq_erase(DeeObject *self, Dee_ssize_t start, Dee_ssize_t UNUSED(end)) {
 	size_t size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(size == (size_t)-1)
 		goto err;
@@ -2847,7 +2869,7 @@ default__seq_operator_hash__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
-default__seq_operator_hash__empty(DeeObject *__restrict self) {
+default__seq_operator_hash__empty(DeeObject *__restrict UNUSED(self)) {
 	return DEE_HASHOF_EMPTY_SEQUENCE;
 }
 
@@ -2858,8 +2880,20 @@ struct default_seq_hash_with_foreach_data {
 	bool       sqhwf_nonempty; /* True after the first element */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_seq_hash_with_foreach_data *data;
+	Dee_hash_t elem_hash;
+	data = (struct default_seq_hash_with_foreach_data *)arg;
+	elem_hash = DeeObject_Hash(elem);
+	if (data->sqhwf_nonempty) {
+		data->sqhwf_result = Dee_HashCombine(data->sqhwf_result, elem_hash);
+	} else {
+		data->sqhwf_result = elem_hash;
+		data->sqhwf_nonempty = true;
+	}
+	return 0;
+}
 #endif /* !DEFINED_default_seq_hash_with_foreach_cb */
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 default__seq_operator_hash__with__seq_operator_foreach(DeeObject *__restrict self) {
@@ -3159,8 +3193,8 @@ default__seq_operator_compare__unsupported(DeeObject *lhs, DeeObject *rhs) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_compare__empty(DeeObject *lhs, DeeObject *rhs) {
-	int rhs_nonempty = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_bool))(rhs);
+default__seq_operator_compare__empty(DeeObject *UNUSED(lhs), DeeObject *rhs) {
+	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
 	return rhs_nonempty ? -1 : 0;
@@ -3705,12 +3739,12 @@ default__seq_operator_compare__with__seq_operator_sizeob__and__seq_operator_geti
 		data.scf_sg_ogetitem = cached_seq_operator_getitem;
 		foreach_result = (*rhs_seq_operator_foreach)(rhs, &seq_compare__lhs_sizeob_and_getitem__rhs_foreach__cb, &data);
 		ASSERT(data.scf_sg_osize == lhs_sizeob);
-		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
+		if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
 			int temp = DeeObject_CmpLoAsBool(data.scf_sg_oindex, lhs_sizeob);
 			if unlikely(temp < 0) {
-				result = SEQ_COMPARE_FOREACH_RESULT_ERROR;
+				foreach_result = SEQ_COMPARE_FOREACH_RESULT_ERROR;
 			} else if (temp) {
-				result = SEQ_COMPARE_FOREACH_RESULT_LESS;
+				foreach_result = SEQ_COMPARE_FOREACH_RESULT_LESS;
 			}
 		}
 		Dee_Decref(data.scf_sg_oindex);
@@ -4258,12 +4292,12 @@ default__seq_operator_compare_eq__with__seq_operator_sizeob__and__seq_operator_g
 		data.scf_sg_ogetitem = cached_seq_operator_getitem;
 		foreach_result = (*rhs_seq_operator_foreach)(rhs, &seq_compareeq__lhs_sizeob_and_getitem__rhs_foreach__cb, &data);
 		ASSERT(data.scf_sg_osize == lhs_sizeob);
-		if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
 			int temp = DeeObject_CmpLoAsBool(data.scf_sg_oindex, lhs_sizeob);
 			if unlikely(temp < 0) {
-				result = SEQ_COMPAREEQ_FOREACH_RESULT_ERROR;
+				foreach_result = SEQ_COMPAREEQ_FOREACH_RESULT_ERROR;
 			} else if (temp) {
-				result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
+				foreach_result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
 			}
 		}
 		Dee_Decref(data.scf_sg_oindex);
@@ -4352,7 +4386,7 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_trycompare_eq__empty(DeeObject *lhs, DeeObject *rhs) {
+default__seq_operator_trycompare_eq__empty(DeeObject *UNUSED(lhs), DeeObject *rhs) {
 	int rhs_nonempty;
 	DeeMH_seq_operator_bool_t rhs_seq_operator_bool = DeeType_RequireMethodHint(Dee_TYPE(rhs), seq_operator_bool);
 	if (rhs_seq_operator_bool == &default__seq_operator_bool__unsupported)
@@ -4979,7 +5013,7 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__seq_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) { return err_seq_unsupportedf(self, "__seq_enumerate__(...)"); }
+default__seq_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_t UNUSED(cb), void *UNUSED(arg)) { return err_seq_unsupportedf(self, "__seq_enumerate__(...)"); }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
@@ -5214,7 +5248,7 @@ err_temp_indexob:
 	return temp;
 err_indexob:
 	Dee_Decref(indexob);
-err:
+/*err:*/
 	return -1;
 }
 
@@ -5318,7 +5352,7 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__seq_enumerate_index__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) { return err_seq_unsupportedf(self, "__seq_enumerate__(..., %" PRFuSIZ ", %" PRFuSIZ ")", start, end); }
+default__seq_enumerate_index__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_index_t UNUSED(cb), void *UNUSED(arg), size_t start, size_t end) { return err_seq_unsupportedf(self, "__seq_enumerate__(..., %" PRFuSIZ ", %" PRFuSIZ ")", start, end); }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate_index__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) {
@@ -5533,7 +5567,7 @@ default__seq_makeenumeration__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_makeenumeration__empty(DeeObject *__restrict self) {
+default__seq_makeenumeration__empty(DeeObject *__restrict UNUSED(self)) {
 	return_empty_seq;
 }
 
@@ -5603,7 +5637,7 @@ default__seq_makeenumeration_with_intrange__unsupported(DeeObject *__restrict se
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_intrange__empty(DeeObject *__restrict self, size_t start, size_t end) {
+default__seq_makeenumeration_with_intrange__empty(DeeObject *__restrict UNUSED(self), size_t UNUSED(start), size_t UNUSED(end)) {
 	return_empty_seq;
 }
 
@@ -5694,7 +5728,7 @@ default__seq_makeenumeration_with_range__unsupported(DeeObject *self, DeeObject 
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__empty(DeeObject *self, DeeObject *start, DeeObject *end) {
+default__seq_makeenumeration_with_range__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(start), DeeObject *UNUSED(end)) {
 	return_empty_seq;
 }
 
@@ -6038,6 +6072,813 @@ err:
 }
 
 
+/* seq_unpack */
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with_callattr_unpack(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str_unpack, PCKuSIZ, count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	if (DeeTuple_SIZE(resultob) != count) {
+		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return 0;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_unpack__, PCKuSIZ, count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	if (DeeTuple_SIZE(resultob) != count) {
+		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return 0;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	DREF DeeObject *resultob = DeeObject_ThisCallf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpack__.c_object, self, PCKuSIZ, count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	if (DeeTuple_SIZE(resultob) != count) {
+		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return 0;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return -1;
+}
+
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with_callmethodcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	DREF DeeObject *resultob = DeeObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpack__.c_method, self, PCKuSIZ, count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	if (DeeTuple_SIZE(resultob) != count) {
+		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return 0;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with_callkwmethodcache___seq_unpack__(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	DREF DeeObject *resultob = DeeKwObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpack__.c_kwmethod, self, PCKuSIZ, count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	if (DeeTuple_SIZE(resultob) != count) {
+		err_invalid_unpack_size(resultob, count, DeeTuple_SIZE(resultob));
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return 0;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return -1;
+}
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__unsupported(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict UNUSED(result)[]) {
+	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ")", count);
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__empty(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict UNUSED(result)[]) {
+	if unlikely(count != 0)
+		return err_invalid_unpack_size(self, count, 0);
+	return 0;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with__seq_unpack_ex(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	size_t real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_unpack_ex))(self, count, count, result);
+	if likely(real_count != (size_t)-1)
+		real_count = 0;
+	return (int)(Dee_ssize_t)real_count;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with__tp_asvector(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	size_t real_count = (*Dee_TYPE(self)->tp_seq->tp_asvector)(self, count, result);
+	if likely(real_count == count)
+		return 0;
+	err_invalid_unpack_size(self, count, real_count);
+	if (real_count < count)
+		Dee_Decrefv(result, real_count);
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	DeeNO_getitem_index_fast_t getitem_index_fast = Dee_TYPE(self)->tp_seq->tp_getitem_index_fast;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count != count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return err_invalid_unpack_size(self, count, real_count);
+	}
+	for (i = 0; i < real_count; ++i) {
+		DREF DeeObject *item = (*getitem_index_fast)(self, i);
+		if unlikely(!item) {
+			/* This can only mean that the size changed, because we're
+			 * allowed to assume "__seq_getitem_always_bound__" */
+			Dee_Decrefv(result, i);
+			return err_invalid_unpack_size(self, count, i);
+		}
+		result[i] = item; /* Inherit reference */
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) { /* requires: __seq_getitem_always_bound__ */
+	DeeMH_seq_operator_trygetitem_index_t cached_seq_operator_trygetitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index);;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count != count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return err_invalid_unpack_size(self, count, real_count);
+	}
+	for (i = 0; i < real_count; ++i) {
+		DREF DeeObject *item = (*cached_seq_operator_trygetitem_index)(self, i);
+		if unlikely(!ITER_ISOK(item)) {
+			Dee_Decrefv(result, i);
+			if unlikely(!item)
+				goto err;
+			/* This can only mean that the size changed, because we're
+			 * allowed to assume "__seq_getitem_always_bound__" */
+			return err_invalid_unpack_size(self, count, i);
+		}
+		result[i] = item; /* Inherit reference */
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) { /* requires: __seq_getitem_always_bound__ */
+	DeeMH_seq_operator_getitem_index_t cached_seq_operator_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index);;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count != count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return err_invalid_unpack_size(self, count, real_count);
+	}
+	for (i = 0; i < real_count; ++i) {
+		DREF DeeObject *item = (*cached_seq_operator_getitem_index)(self, i);
+		if unlikely(!item) {
+			Dee_Decrefv(result, i);
+			/* This can only mean that the size changed, because we're
+			 * allowed to assume "__seq_getitem_always_bound__" */
+			if (DeeError_Catch(&DeeError_IndexError))
+				return err_invalid_unpack_size(self, count, i);
+			goto err;
+		}
+		result[i] = item; /* Inherit reference */
+	}
+	return 0;
+err:
+	return -1;
+}
+
+#ifndef DEFINED_default_unpack_with_foreach_cb
+#define DEFINED_default_unpack_with_foreach_cb
+struct default_unpack_with_foreach_data {
+	size_t           duqfd_count;  /* Remaining destination length */
+	DREF DeeObject **duqfd_result; /* [?..?][0..duqfd_count] Pointer to next destination */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_unpack_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_unpack_with_foreach_data *data;
+	data = (struct default_unpack_with_foreach_data *)arg;
+	if likely(data->duqfd_count) {
+		Dee_Incref(elem);
+		*data->duqfd_result = elem;
+		--data->duqfd_count;
+		++data->duqfd_result;
+	}
+	return 1;
+}
+#endif /* !DEFINED_default_unpack_with_foreach_cb */
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with__seq_operator_foreach(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	Dee_ssize_t foreach_status;
+	struct default_unpack_with_foreach_data data;
+	data.duqfd_count  = count;
+	data.duqfd_result = result;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_unpack_with_foreach_cb, &data);
+	if unlikely(foreach_status < 0)
+		goto err;
+	ASSERT(((size_t)foreach_status == (size_t)(data.duqfd_result - result)) ||
+	       ((size_t)foreach_status > count));
+	if likely((size_t)foreach_status == count)
+		return 0;
+	Dee_Decrefv(result, (size_t)(data.duqfd_result - result));
+	err_invalid_unpack_size(self, count, (size_t)foreach_status);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+default__seq_unpack__with__seq_operator_iter(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]) {
+	size_t i, remainder;
+	DREF DeeObject *elem;
+	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	for (i = 0; i < count; ++i) {
+		elem = DeeObject_IterNext(iter);
+		if unlikely(!ITER_ISOK(elem)) {
+			if (elem)
+				err_invalid_unpack_size(self, count, i);
+			goto err_iter_result_i;
+		}
+		result[i] = elem; /* Inherit reference. */
+	}
+
+	/* Check to make sure that the iterator actually ends here. */
+	remainder = DeeObject_IterAdvance(iter, (size_t)-2);
+	if unlikely(remainder != 0) {
+		if unlikely(remainder == (size_t)-1)
+			goto err_iter_result_i;
+		if (OVERFLOW_UADD(remainder, count, &remainder))
+			remainder = (size_t)-1;
+		err_invalid_unpack_size(self, count, remainder);
+		goto err_iter_result_i;
+	}
+	Dee_Decref(iter);
+	return 0;
+err_iter_result_i:
+	Dee_Decrefv(result, i);
+/*err_iter:*/
+	Dee_Decref(iter);
+err:
+	return -1;
+}
+
+
+/* seq_unpack_ex */
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with_callattr_unpack(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str_unpack, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return result_count;
+err_r:
+	Dee_Decref(resultob);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with_callattr___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_unpack__, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return result_count;
+err_r:
+	Dee_Decref(resultob);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with_callobjectcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob = DeeObject_ThisCallf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpack__.c_object, self, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return result_count;
+err_r:
+	Dee_Decref(resultob);
+err:
+	return (size_t)-1;
+}
+
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with_callmethodcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob = DeeObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpack__.c_method, self, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return result_count;
+err_r:
+	Dee_Decref(resultob);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with_callkwmethodcache___seq_unpack__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob = DeeKwObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpack__.c_kwmethod, self, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (DeeObject_AssertTypeExact(resultob, &DeeTuple_Type))
+		goto err_r;
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	memcpyc(result, DeeTuple_ELEM(resultob), result_count, sizeof(DREF DeeObject *));
+	DeeTuple_DecrefSymbolic(resultob);
+	return result_count;
+err_r:
+	Dee_Decref(resultob);
+err:
+	return (size_t)-1;
+}
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict UNUSED(result)[]) {
+	return err_seq_unsupportedf(self, "__seq_unpack__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict UNUSED(result)[]) {
+	if unlikely(min_count > 0)
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
+	return 0;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t real_count = (*Dee_TYPE(self)->tp_seq->tp_asvector)(self, max_count, result);
+	if unlikely(real_count < min_count || real_count > max_count) {
+		if (real_count < min_count) 
+			Dee_Decrefv(result, real_count);
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+	}
+	return real_count;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	DeeNO_getitem_index_fast_t getitem_index_fast = Dee_TYPE(self)->tp_seq->tp_getitem_index_fast;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count < min_count || real_count > max_count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+	}
+	for (i = 0; i < real_count; ++i) {
+		DREF DeeObject *item = (*getitem_index_fast)(self, i);
+		if unlikely(!item) {
+			/* This can only mean that the size changed, because we're
+			 * allowed to assume "__seq_getitem_always_bound__" */
+			if (i >= min_count)
+				return i;
+			Dee_Decrefv(result, i);
+			return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+		}
+		result[i] = item; /* Inherit reference */
+	}
+	return real_count;
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) { /* requires: __seq_getitem_always_bound__ */
+	DeeMH_seq_operator_trygetitem_index_t cached_seq_operator_trygetitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index);;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count < min_count || real_count > max_count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+	}
+	for (i = 0; i < real_count; ++i) {
+		DREF DeeObject *item = (*cached_seq_operator_trygetitem_index)(self, i);
+		if unlikely(!ITER_ISOK(item)) {
+			Dee_Decrefv(result, i);
+			if unlikely(!item)
+				goto err;
+			/* This can only mean that the size changed, because we're
+			 * allowed to assume "__seq_getitem_always_bound__" */
+			if (i >= min_count)
+				return i;
+			return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+		}
+		result[i] = item; /* Inherit reference */
+	}
+	return real_count;
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) { /* requires: __seq_getitem_always_bound__ */
+	DeeMH_seq_operator_getitem_index_t cached_seq_operator_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index);;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count < min_count || real_count > max_count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+	}
+	for (i = 0; i < real_count; ++i) {
+		DREF DeeObject *item = (*cached_seq_operator_getitem_index)(self, i);
+		if unlikely(!item) {
+			Dee_Decrefv(result, i);
+			/* This can only mean that the size changed, because we're
+			 * allowed to assume "__seq_getitem_always_bound__" */
+			if (DeeError_Catch(&DeeError_IndexError)) {
+				if (i >= min_count)
+					return i;
+				return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+			}
+			goto err;
+		}
+		result[i] = item; /* Inherit reference */
+	}
+	return real_count;
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with__seq_operator_foreach(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	Dee_ssize_t foreach_status;
+	struct default_unpack_with_foreach_data data;
+	data.duqfd_count  = max_count;
+	data.duqfd_result = result;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_unpack_with_foreach_cb, &data);
+	if unlikely(foreach_status < 0)
+		goto err;
+	ASSERT(((size_t)foreach_status == (size_t)(data.duqfd_result - result)) ||
+	       ((size_t)foreach_status > max_count));
+	if likely((size_t)foreach_status >= min_count && (size_t)foreach_status <= max_count)
+		return (size_t)foreach_status;
+	Dee_Decrefv(result, (size_t)(data.duqfd_result - result));
+	err_invalid_unpack_size_minmax(self, min_count, max_count, (size_t)foreach_status);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ex__with__seq_operator_iter(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t i, remainder;
+	DREF DeeObject *elem;
+	DREF DeeObject *iter = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_iter))(self);
+	if unlikely(!iter)
+		goto err;
+	for (i = 0; i < max_count; ++i) {
+		elem = DeeObject_IterNext(iter);
+		if (!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err_iter_result_i;
+			if likely(i >= min_count) {
+				Dee_Decref(iter);
+				return i;
+			}
+			err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+			goto err_iter_result_i;
+		}
+		result[i] = elem; /* Inherit reference. */
+	}
+
+	/* Check to make sure that the iterator actually ends here. */
+	remainder = DeeObject_IterAdvance(iter, (size_t)-2);
+	if unlikely(remainder != 0) {
+		if unlikely(remainder == (size_t)-1)
+			goto err_iter_result_i;
+		if (OVERFLOW_UADD(remainder, max_count, &remainder))
+			remainder = (size_t)-1;
+		err_invalid_unpack_size_minmax(self, min_count, max_count, remainder);
+		goto err_iter_result_i;
+	}
+	Dee_Decref(iter);
+	return max_count;
+err_iter_result_i:
+	Dee_Decrefv(result, i);
+/*err_iter:*/
+	Dee_Decref(iter);
+err:
+	return (size_t)-1;
+}
+
+
+/* seq_unpack_ub */
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__with_callattr_unpackub(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob;
+	resultob = min_count == max_count ? DeeObject_CallAttrf(self, (DeeObject *)&str_unpackub, PCKuSIZ, min_count)
+	                                  : DeeObject_CallAttrf(self, (DeeObject *)&str_unpackub, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (!DeeObject_InstanceOfExact(resultob, &DeeTuple_Type) &&
+	    !DeeObject_InstanceOfExact(resultob, &DeeNullableTuple_Type)) {
+		DeeObject_TypeAssertFailed2(resultob, &DeeTuple_Type, &DeeNullableTuple_Type);
+		goto err_r;
+	}
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */
+	Dee_XMovrefv(result, DeeTuple_ELEM(resultob), result_count);
+	Dee_Decref_likely(resultob);
+	return result_count;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__with_callattr___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob;
+	resultob = min_count == max_count ? DeeObject_CallAttrf(self, (DeeObject *)&str___seq_unpackub__, PCKuSIZ, min_count)
+	                                  : DeeObject_CallAttrf(self, (DeeObject *)&str___seq_unpackub__, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (!DeeObject_InstanceOfExact(resultob, &DeeTuple_Type) &&
+	    !DeeObject_InstanceOfExact(resultob, &DeeNullableTuple_Type)) {
+		DeeObject_TypeAssertFailed2(resultob, &DeeTuple_Type, &DeeNullableTuple_Type);
+		goto err_r;
+	}
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */
+	Dee_XMovrefv(result, DeeTuple_ELEM(resultob), result_count);
+	Dee_Decref_likely(resultob);
+	return result_count;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__with_callobjectcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob;
+	resultob = min_count == max_count ? DeeObject_ThisCallf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpackub__.c_object, self, PCKuSIZ, min_count)
+	                                  : DeeObject_ThisCallf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpackub__.c_object, self, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (!DeeObject_InstanceOfExact(resultob, &DeeTuple_Type) &&
+	    !DeeObject_InstanceOfExact(resultob, &DeeNullableTuple_Type)) {
+		DeeObject_TypeAssertFailed2(resultob, &DeeTuple_Type, &DeeNullableTuple_Type);
+		goto err_r;
+	}
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */
+	Dee_XMovrefv(result, DeeTuple_ELEM(resultob), result_count);
+	Dee_Decref_likely(resultob);
+	return result_count;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return (size_t)-1;
+}
+
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__with_callmethodcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob;
+	resultob = min_count == max_count ? DeeObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpackub__.c_method, self, PCKuSIZ, min_count)
+	                                  : DeeObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpackub__.c_method, self, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (!DeeObject_InstanceOfExact(resultob, &DeeTuple_Type) &&
+	    !DeeObject_InstanceOfExact(resultob, &DeeNullableTuple_Type)) {
+		DeeObject_TypeAssertFailed2(resultob, &DeeTuple_Type, &DeeNullableTuple_Type);
+		goto err_r;
+	}
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */
+	Dee_XMovrefv(result, DeeTuple_ELEM(resultob), result_count);
+	Dee_Decref_likely(resultob);
+	return result_count;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__with_callkwmethodcache___seq_unpackub__(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	size_t result_count;
+	DREF DeeObject *resultob;
+	resultob = min_count == max_count ? DeeKwObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpackub__.c_kwmethod, self, PCKuSIZ, min_count)
+	                                  : DeeKwObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_unpackub__.c_kwmethod, self, PCKuSIZ PCKuSIZ, min_count, max_count);
+	if unlikely(!resultob)
+		goto err;
+	if (!DeeObject_InstanceOfExact(resultob, &DeeTuple_Type) &&
+	    !DeeObject_InstanceOfExact(resultob, &DeeNullableTuple_Type)) {
+		DeeObject_TypeAssertFailed2(resultob, &DeeTuple_Type, &DeeNullableTuple_Type);
+		goto err_r;
+	}
+	result_count = DeeTuple_SIZE(resultob);
+	if (result_count < min_count || result_count > max_count) {
+		err_invalid_unpack_size_minmax(resultob, min_count, max_count, result_count);
+		goto err_r;
+	}
+	/* XXX: DeeNullableTuple_DecrefSymbolic(resultob); */
+	Dee_XMovrefv(result, DeeTuple_ELEM(resultob), result_count);
+	Dee_Decref_likely(resultob);
+	return result_count;
+err_r:
+	Dee_Decref_likely(resultob);
+err:
+	return (size_t)-1;
+}
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__unsupported(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict UNUSED(result)[]) {
+	return err_seq_unsupportedf(self, "__seq_unpackub__(%" PRFuSIZ ", %" PRFuSIZ ")", min_count, max_count);
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__empty(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict UNUSED(result)[]) {
+	if unlikely(min_count > 0)
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, 0);
+	return 0;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__with__seq_operator_size__and__operator_getitem_index_fast(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	DeeNO_getitem_index_fast_t getitem_index_fast = Dee_TYPE(self)->tp_seq->tp_getitem_index_fast;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count < min_count || real_count > max_count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+	}
+	for (i = 0; i < real_count; ++i)
+		result[i] = (*getitem_index_fast)(self, i); /* Inherit reference */
+	return real_count;
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_trygetitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	DeeMH_seq_operator_trygetitem_index_t cached_seq_operator_trygetitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_trygetitem_index);;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count < min_count || real_count > max_count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+	}
+	for (i = 0; i < real_count; ++i) {
+		DREF DeeObject *item = (*cached_seq_operator_trygetitem_index)(self, i);
+		if unlikely(!ITER_ISOK(item)) {
+			if unlikely(!item)
+				goto err_result_i;
+			item = NULL; /* Unbound */
+		}
+		result[i] = item; /* Inherit reference */
+	}
+	return real_count;
+err_result_i:
+	Dee_XDecrefv(result, i);
+err:
+	return (size_t)-1;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+default__seq_unpack_ub__with__seq_operator_size__and__seq_operator_getitem_index(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *__restrict result[]) {
+	DeeMH_seq_operator_getitem_index_t cached_seq_operator_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index);;
+	size_t i, real_count = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	ASSERTF(max_count < (size_t)-1, "If this was really true, how did you alloc that buffer?");
+	if unlikely(real_count < min_count || real_count > max_count) {
+		if unlikely(real_count == (size_t)-1)
+			goto err;
+		return (size_t)err_invalid_unpack_size_minmax(self, min_count, max_count, real_count);
+	}
+	for (i = 0; i < real_count; ++i) {
+		DREF DeeObject *item = (*cached_seq_operator_getitem_index)(self, i);
+		if unlikely(!item) {
+			if (DeeError_Catch(&DeeError_UnboundItem)) {
+				/* It's just unbound (which is allowed) */
+			} else if (DeeError_Catch(&DeeError_IndexError)) {
+				/* Early sequence end (sequence may have been truncated) */
+				if (i >= min_count)
+					return i;
+				err_invalid_unpack_size_minmax(self, min_count, max_count, i);
+				goto err_result_i;
+			} else {
+				goto err_result_i;
+			}
+		}
+		result[i] = item; /* Inherit reference */
+	}
+	return real_count;
+err_result_i:
+	Dee_XDecrefv(result, i);
+err:
+	return (size_t)-1;
+}
+
+
 /* seq_trygetfirst */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_trygetfirst__with_callattr_first(DeeObject *__restrict self) {
@@ -6070,7 +6911,7 @@ default__seq_trygetfirst__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetfirst__empty(DeeObject *__restrict self) {
+default__seq_trygetfirst__empty(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
@@ -6182,7 +7023,7 @@ default__seq_boundfirst__with_callobjectcache___seq_first__(DeeObject *__restric
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__seq_boundfirst__empty(DeeObject *__restrict self) {
+default__seq_boundfirst__empty(DeeObject *__restrict UNUSED(self)) {
 	return Dee_BOUND_MISSING;
 }
 
@@ -6261,7 +7102,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_setfirst__unsupported(DeeObject *self, DeeObject *value) { return err_seq_unsupportedf(self, "first = %r", value); }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_setfirst__empty(DeeObject *self, DeeObject *value) { return err_empty_sequence(self); }
+default__seq_setfirst__empty(DeeObject *self, DeeObject *UNUSED(value)) { return err_empty_sequence(self); }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_setfirst__with__seq_operator_setitem_index(DeeObject *self, DeeObject *value) {
@@ -6301,7 +7142,7 @@ default__seq_trygetlast__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_trygetlast__empty(DeeObject *__restrict self) {
+default__seq_trygetlast__empty(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
@@ -6429,7 +7270,7 @@ default__seq_boundlast__with_callobjectcache___seq_last__(DeeObject *__restrict 
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__seq_boundlast__empty(DeeObject *__restrict self) {
+default__seq_boundlast__empty(DeeObject *__restrict UNUSED(self)) {
 	return Dee_BOUND_MISSING;
 }
 
@@ -6519,7 +7360,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_setlast__unsupported(DeeObject *self, DeeObject *value) { return err_seq_unsupportedf(self, "last = %r", value); }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_setlast__empty(DeeObject *self, DeeObject *value) { return err_empty_sequence(self); }
+default__seq_setlast__empty(DeeObject *self, DeeObject *UNUSED(value)) { return err_empty_sequence(self); }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_setlast__with__seq_operator_size__and__seq_operator_setitem_index(DeeObject *self, DeeObject *value) {
@@ -9010,7 +9851,7 @@ default__seq_sum__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum__empty(DeeObject *__restrict self) {
+default__seq_sum__empty(DeeObject *__restrict UNUSED(self)) {
 	return_none;
 }
 
@@ -9064,7 +9905,7 @@ default__seq_sum_with_range__unsupported(DeeObject *__restrict self, size_t star
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum_with_range__empty(DeeObject *__restrict self, size_t start, size_t end) {
+default__seq_sum_with_range__empty(DeeObject *__restrict UNUSED(self), size_t UNUSED(start), size_t UNUSED(end)) {
 	return_none;
 }
 
@@ -9639,8 +10480,15 @@ err:
 
 #ifndef DEFINED_default_contains_with_foreach_cb
 #define DEFINED_default_contains_with_foreach_cb
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_contains_with_foreach_cb(void *arg, DeeObject *elem);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
+	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		return -1;
+	if (temp == 0)
+		return -2;
+	return 0;
+}
 #endif /* !DEFINED_default_contains_with_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_contains__with__seq_operator_foreach(DeeObject *self, DeeObject *item) {
@@ -9842,8 +10690,15 @@ default__seq_contains_with_range__unsupported(DeeObject *self, DeeObject *item, 
 
 #ifndef DEFINED_default_contains_with_foreach_cb
 #define DEFINED_default_contains_with_foreach_cb
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_contains_with_foreach_cb(void *arg, DeeObject *elem);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_contains_with_foreach_cb(void *arg, DeeObject *elem) {
+	int temp = DeeObject_TryCompareEq((DeeObject *)arg, elem);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		return -1;
+	if (temp == 0)
+		return -2;
+	return 0;
+}
 #endif /* !DEFINED_default_contains_with_foreach_cb */
 #ifndef DEFINED_seq_contains_enumerate_cb
 #define DEFINED_seq_contains_enumerate_cb
@@ -10013,7 +10868,7 @@ default__seq_operator_contains__unsupported(DeeObject *self, DeeObject *item) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_operator_contains__empty(DeeObject *self, DeeObject *item) {
+default__seq_operator_contains__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item)) {
 	return_false;
 }
 
@@ -10078,7 +10933,7 @@ default__seq_locate__unsupported(DeeObject *self, DeeObject *match, DeeObject *d
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_locate__empty(DeeObject *self, DeeObject *match, DeeObject *def) {
+default__seq_locate__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(match), DeeObject *def) {
 	return_reference_(def);
 }
 
@@ -10150,7 +11005,7 @@ default__seq_locate_with_range__unsupported(DeeObject *self, DeeObject *match, s
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-default__seq_locate_with_range__empty(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def) {
+default__seq_locate_with_range__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(match), size_t UNUSED(start), size_t UNUSED(end), DeeObject *def) {
 	return_reference_(def);
 }
 
@@ -10247,7 +11102,7 @@ default__seq_rlocate__unsupported(DeeObject *self, DeeObject *match, DeeObject *
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_rlocate__empty(DeeObject *self, DeeObject *match, DeeObject *def) {
+default__seq_rlocate__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(match), DeeObject *def) {
 	return_reference_(def);
 }
 
@@ -10342,7 +11197,7 @@ default__seq_rlocate_with_range__unsupported(DeeObject *self, DeeObject *match, 
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-default__seq_rlocate_with_range__empty(DeeObject *self, DeeObject *match, size_t start, size_t end, DeeObject *def) {
+default__seq_rlocate_with_range__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(match), size_t UNUSED(start), size_t UNUSED(end), DeeObject *def) {
 	return_reference_(def);
 }
 
@@ -13051,9 +13906,9 @@ default__seq_removeall__with_callattr_removeall(DeeObject *self, DeeObject *item
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_removeall, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -13062,9 +13917,9 @@ default__seq_removeall__with_callattr___seq_removeall__(DeeObject *self, DeeObje
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_removeall__, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -13073,9 +13928,9 @@ default__seq_removeall__with_callobjectcache___seq_removeall__(DeeObject *self, 
 	result = DeeObject_ThisCallf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeall__.c_object, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
@@ -13085,9 +13940,9 @@ default__seq_removeall__with_callmethodcache___seq_removeall__(DeeObject *self, 
 	result = DeeObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeall__.c_method, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -13096,9 +13951,9 @@ default__seq_removeall__with_callkwmethodcache___seq_removeall__(DeeObject *self
 	result = DeeKwObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeall__.c_kwmethod, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, item, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
@@ -13236,9 +14091,9 @@ default__seq_removeall_with_key__with_callattr_removeall(DeeObject *self, DeeObj
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_removeall, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
@@ -13247,9 +14102,9 @@ default__seq_removeall_with_key__with_callattr___seq_removeall__(DeeObject *self
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_removeall__, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
@@ -13258,9 +14113,9 @@ default__seq_removeall_with_key__with_callobjectcache___seq_removeall__(DeeObjec
 	result = DeeObject_ThisCallf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeall__.c_object, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
@@ -13270,9 +14125,9 @@ default__seq_removeall_with_key__with_callmethodcache___seq_removeall__(DeeObjec
 	result = DeeObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeall__.c_method, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
@@ -13281,9 +14136,9 @@ default__seq_removeall_with_key__with_callkwmethodcache___seq_removeall__(DeeObj
 	result = DeeKwObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeall__.c_kwmethod, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ "o", item, start, end, max, key);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
@@ -13293,7 +14148,7 @@ default__seq_removeall_with_key__unsupported(DeeObject *self, DeeObject *item, s
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
-default__seq_removeall_with_key__empty(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t max, DeeObject *key) {
+default__seq_removeall_with_key__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end), size_t UNUSED(max), DeeObject *UNUSED(key)) {
 	return 0;
 }
 
@@ -13314,13 +14169,11 @@ default__seq_removeall_with_key__with__seq_removeif(DeeObject *self, DeeObject *
 	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicateWithKey_Type);
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, (DeeObject *)pred, start, end, max);
 	Dee_Decref_likely(pred);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return result ? 1 : 0;
+	return result;
 err_pred:
 	DeeObject_FREE(pred);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
@@ -13442,9 +14295,9 @@ default__seq_removeif__with_callattr_removeif(DeeObject *self, DeeObject *should
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str_removeif, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -13453,9 +14306,9 @@ default__seq_removeif__with_callattr___seq_removeif__(DeeObject *self, DeeObject
 	result = DeeObject_CallAttrf(self, (DeeObject *)&str___seq_removeif__, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -13464,9 +14317,9 @@ default__seq_removeif__with_callobjectcache___seq_removeif__(DeeObject *self, De
 	result = DeeObject_ThisCallf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeif__.c_object, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
@@ -13476,9 +14329,9 @@ default__seq_removeif__with_callmethodcache___seq_removeif__(DeeObject *self, De
 	result = DeeObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeif__.c_method, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -13487,9 +14340,9 @@ default__seq_removeif__with_callkwmethodcache___seq_removeif__(DeeObject *self, 
 	result = DeeKwObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_removeif__.c_kwmethod, self, "o" PCKuSIZ PCKuSIZ PCKuSIZ, should, start, end, max);
 	if unlikely(!result)
 		goto err;
-	return DeeObject_BoolInherited(result);
+	return DeeObject_AsDirectSizeInherited(result);
 err:
-	return -1;
+	return (size_t)-1;
 }
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
@@ -14490,28 +15343,28 @@ err:
 
 /* seq_sorted_with_key */
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_sorted_with_key__with_callattr_sorted(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+default__seq_sorted_with_key__with_callattr_sorted(DeeObject *self, size_t start, size_t end, DeeObject *UNUSED(key)) {
 	return DeeObject_CallAttrf(self, (DeeObject *)&str_sorted, PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_sorted_with_key__with_callattr___seq_sorted__(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+default__seq_sorted_with_key__with_callattr___seq_sorted__(DeeObject *self, size_t start, size_t end, DeeObject *UNUSED(key)) {
 	return DeeObject_CallAttrf(self, (DeeObject *)&str___seq_sorted__, PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_sorted_with_key__with_callobjectcache___seq_sorted__(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+default__seq_sorted_with_key__with_callobjectcache___seq_sorted__(DeeObject *self, size_t start, size_t end, DeeObject *UNUSED(key)) {
 	return DeeObject_ThisCallf(Dee_TYPE(self)->tp_mhcache->mhc___seq_sorted__.c_object, self, PCKuSIZ PCKuSIZ, start, end);
 }
 
 #ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_sorted_with_key__with_callmethodcache___seq_sorted__(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+default__seq_sorted_with_key__with_callmethodcache___seq_sorted__(DeeObject *self, size_t start, size_t end, DeeObject *UNUSED(key)) {
 	return DeeObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_sorted__.c_method, self, PCKuSIZ PCKuSIZ, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_sorted_with_key__with_callkwmethodcache___seq_sorted__(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+default__seq_sorted_with_key__with_callkwmethodcache___seq_sorted__(DeeObject *self, size_t start, size_t end, DeeObject *UNUSED(key)) {
 	return DeeKwObjMethod_CallFuncf(Dee_TYPE(self)->tp_mhcache->mhc___seq_sorted__.c_kwmethod, self, PCKuSIZ PCKuSIZ, start, end);
 }
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
@@ -14721,12 +15574,12 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_bfind__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-default__seq_bfind__empty(DeeObject *self, DeeObject *item, size_t start, size_t end) {
+default__seq_bfind__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end)) {
 	return (size_t)-1;
 }
 
@@ -14895,13 +15748,13 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-default__seq_bfind_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+default__seq_bfind_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *UNUSED(key)) {
+	err_seq_unsupportedf(self, "__seq_bfind__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-default__seq_bfind_with_key__empty(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+default__seq_bfind_with_key__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end), DeeObject *UNUSED(key)) {
 	return (size_t)-1;
 }
 
@@ -15063,7 +15916,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 default__seq_bposition__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end) {
-	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
 }
 
@@ -15219,8 +16072,8 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-default__seq_bposition_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+default__seq_bposition_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *UNUSED(key)) {
+	err_seq_unsupportedf(self, "__seq_bposition__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 	return (size_t)Dee_COMPARE_ERR;
 }
 
@@ -15413,12 +16266,12 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
-default__seq_brange__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t result_range[2]) {
-	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+default__seq_brange__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t UNUSED(result_range)[2]) {
+	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
-default__seq_brange__empty(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t result_range[2]) {
+default__seq_brange__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end), size_t result_range[2]) {
 	result_range[0] = 0;
 	result_range[1] = 0;
 	return 0;
@@ -15655,12 +16508,12 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2, 5, 6)) int DCALL
-default__seq_brange_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]) {
-	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ", item, start, end)");
+default__seq_brange_with_key__unsupported(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *UNUSED(key), size_t UNUSED(result_range)[2]) {
+	return err_seq_unsupportedf(self, "__seq_brange__(%r, %" PRFuSIZ ", %" PRFuSIZ ")", item, start, end);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5, 6)) int DCALL
-default__seq_brange_with_key__empty(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]) {
+default__seq_brange_with_key__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(item), size_t UNUSED(start), size_t UNUSED(end), DeeObject *UNUSED(key), size_t result_range[2]) {
 	result_range[0] = 0;
 	result_range[1] = 0;
 	return 0;
@@ -15890,40 +16743,6 @@ default__set_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_pair_
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_foreach_pair))(self, cb, arg);
 }
 
-#ifndef DECLARED_default_foreach_pair_with_foreach_cb
-#define DECLARED_default_foreach_pair_with_foreach_cb
-struct default_foreach_pair_with_foreach_data {
-	Dee_foreach_pair_t dfpwf_cb;  /* [1..1] Underlying callback. */
-	void              *dfpwf_arg; /* Cookie for `dfpwf_cb' */
-};
-
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem);
-#endif /* !DECLARED_default_foreach_pair_with_foreach_cb */
-#ifndef DEFINED_default_foreach_pair_with_foreach_cb
-#define DEFINED_default_foreach_pair_with_foreach_cb
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
-	struct default_foreach_pair_with_foreach_data *data;
-	Dee_ssize_t result;
-	data = (struct default_foreach_pair_with_foreach_data *)arg;
-	if likely(DeeTuple_Check(elem) && DeeTuple_SIZE(elem) == 2) {
-		result = (*data->dfpwf_cb)(data->dfpwf_arg,
-		                           DeeTuple_GET(elem, 0),
-		                           DeeTuple_GET(elem, 1));
-	} else {
-		DREF DeeObject *pair[2];
-		if unlikely(DeeObject_Unpack(elem, 2, pair))
-			goto err;
-		result = (*data->dfpwf_cb)(data->dfpwf_arg, pair[0], pair[1]);
-		Dee_Decref_unlikely(pair[1]);
-		Dee_Decref_unlikely(pair[0]);
-	}
-	return result;
-err:
-	return -1;
-}
-#endif /* !DEFINED_default_foreach_pair_with_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__set_operator_foreach_pair__with__set_operator_foreach(DeeObject *__restrict self, Dee_foreach_pair_t cb, void *arg) {
 	struct default_foreach_pair_with_foreach_data data;
@@ -15968,7 +16787,7 @@ default__set_operator_sizeob__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__set_operator_sizeob__empty(DeeObject *__restrict self) { return_reference_(DeeInt_Zero); }
+default__set_operator_sizeob__empty(DeeObject *__restrict UNUSED(self)) { return_reference_(DeeInt_Zero); }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__set_operator_sizeob__with__set_operator_size(DeeObject *__restrict self) {
@@ -16095,14 +16914,17 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
-default__set_operator_hash__empty(DeeObject *__restrict self) {
+default__set_operator_hash__empty(DeeObject *__restrict UNUSED(self)) {
 	return DEE_HASHOF_EMPTY_SEQUENCE;
 }
 
 #ifndef DEFINED_default_set_hash_with_foreach_cb
 #define DEFINED_default_set_hash_with_foreach_cb
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_set_hash_with_foreach_cb(void *arg, DeeObject *elem);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_set_hash_with_foreach_cb(void *arg, DeeObject *elem) {
+	*(Dee_hash_t *)arg ^= DeeObject_Hash(elem);
+	return 0;
+}
 #endif /* !DEFINED_default_set_hash_with_foreach_cb */
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 default__set_operator_hash__with__set_operator_foreach(DeeObject *__restrict self) {
@@ -16429,8 +17251,8 @@ default__set_operator_lo__unsupported(DeeObject *lhs, DeeObject *rhs) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__set_operator_lo__empty(DeeObject *lhs, DeeObject *rhs) {
-	int rhs_nonempty = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_bool))(rhs);
+default__set_operator_lo__empty(DeeObject *UNUSED(lhs), DeeObject *rhs) {
+	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
 	return_bool(rhs_nonempty != 0);
@@ -16509,7 +17331,7 @@ default__set_operator_le__unsupported(DeeObject *lhs, DeeObject *rhs) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__set_operator_le__empty(DeeObject *lhs, DeeObject *rhs) {
+default__set_operator_le__empty(DeeObject *UNUSED(lhs), DeeObject *UNUSED(rhs)) {
 	return_true;
 }
 
@@ -16573,7 +17395,7 @@ default__set_operator_gr__unsupported(DeeObject *lhs, DeeObject *rhs) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__set_operator_gr__empty(DeeObject *lhs, DeeObject *rhs) {
+default__set_operator_gr__empty(DeeObject *UNUSED(lhs), DeeObject *UNUSED(rhs)) {
 	return_false;
 }
 
@@ -16642,8 +17464,8 @@ default__set_operator_ge__unsupported(DeeObject *lhs, DeeObject *rhs) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__set_operator_ge__empty(DeeObject *lhs, DeeObject *rhs) {
-	int rhs_nonempty = (*DeeType_RequireMethodHint(Dee_TYPE(lhs), seq_operator_bool))(rhs);
+default__set_operator_ge__empty(DeeObject *UNUSED(lhs), DeeObject *rhs) {
+	int rhs_nonempty = DeeObject_InvokeMethodHint(seq_operator_bool, rhs);
 	if unlikely(rhs_nonempty < 0)
 		goto err;
 	return_bool(rhs_nonempty == 0);
@@ -17448,7 +18270,7 @@ default__set_unify__with__seq_operator_foreach__and__seq_append(DeeObject *self,
 	return key;
 err_key_nokill:
 	Dee_DecrefNokill(key); /* *Nokill because caller still has a reference */
-err:
+/*err:*/
 	return NULL;
 }
 
@@ -18002,7 +18824,7 @@ default__set_pop_with_default__unsupported(DeeObject *self, DeeObject *default_)
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__set_pop_with_default__empty(DeeObject *self, DeeObject *default_) {
+default__set_pop_with_default__empty(DeeObject *UNUSED(self), DeeObject *default_) {
 	return_reference_(default_);
 }
 
@@ -18152,8 +18974,25 @@ struct default_map_getitem_with_enumerate_data {
 	DREF DeeObject *mgied_result; /* [?..1][out] Result value. */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_getitem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_getitem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	struct default_map_getitem_with_enumerate_data *data;
+	data = (struct default_map_getitem_with_enumerate_data *)arg;
+	temp = DeeObject_TryCompareEq(data->mgied_key, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0) {
+		if unlikely(!value)
+			return -3;
+		Dee_Incref(value);
+		data->mgied_result = value;
+		return -2;
+	}
+	return 0;
+err:
+	return -1;
+}
 #endif /* !DEFINED_default_map_getitem_with_enumerate_cb */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_getitem__with__map_enumerate(DeeObject *self, DeeObject *key) {
@@ -18183,7 +19022,7 @@ default__map_operator_trygetitem(DeeObject *self, DeeObject *key) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_trygetitem__empty(DeeObject *self, DeeObject *key) {
+default__map_operator_trygetitem__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(key)) {
 	return ITER_DONE;
 }
 
@@ -18308,7 +19147,7 @@ default__map_operator_trygetitem_index(DeeObject *self, size_t key) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_operator_trygetitem_index__empty(DeeObject *self, size_t key) {
+default__map_operator_trygetitem_index__empty(DeeObject *UNUSED(self), size_t UNUSED(key)) {
 	return ITER_DONE;
 }
 
@@ -18333,13 +19172,13 @@ default__map_operator_getitem_string_hash(DeeObject *self, char const *key, Dee_
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_getitem_string_hash__unsupported(DeeObject *self, char const *key, Dee_hash_t hash) {
+default__map_operator_getitem_string_hash__unsupported(DeeObject *self, char const *key, Dee_hash_t UNUSED(hash)) {
 	err_map_unsupportedf(self, "operator [](%q)", key);
 	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_getitem_string_hash__empty(DeeObject *self, char const *key, Dee_hash_t hash) {
+default__map_operator_getitem_string_hash__empty(DeeObject *self, char const *key, Dee_hash_t UNUSED(hash)) {
 	err_unknown_key_str(self, key);
 	return NULL;
 }
@@ -18352,8 +19191,32 @@ struct default_map_getitem_string_hash_with_enumerate_data {
 	DREF DeeObject *mgished_result; /* [?..1][out] Result value. */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_getitem_string_hash_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+#ifndef DEFINED_string_hash_equals_object
+#define DEFINED_string_hash_equals_object
+PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL
+string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) {
+	if (DeeString_Check(rhs))
+		return (DeeString_Hash(rhs) == lhs_hash && strcmp(lhs, DeeString_STR(rhs)) == 0);
+	if (DeeBytes_Check(rhs))
+		return (strlen(lhs) == DeeBytes_SIZE(rhs) && bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0);
+	/* `string.operator ==' isn't implemented for any other types. */
+	return false;
+}
+#endif /* !DEFINED_string_hash_equals_object */
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_getitem_string_hash_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_map_getitem_string_hash_with_enumerate_data *data;
+	data = (struct default_map_getitem_string_hash_with_enumerate_data *)arg;
+	if (string_hash_equals_object(data->mgished_key, data->mgished_hash, key)) {
+		if unlikely(!value)
+			return -3;
+		Dee_Incref(value);
+		data->mgished_result = value;
+		return -2;
+	}
+	return 0;
+}
 #endif /* !DEFINED_default_map_getitem_string_hash_with_enumerate_cb */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 default__map_operator_getitem_string_hash__with__map_enumerate(DeeObject *self, char const *key, Dee_hash_t hash) {
@@ -18397,7 +19260,7 @@ default__map_operator_trygetitem_string_hash(DeeObject *self, char const *key, D
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_trygetitem_string_hash__empty(DeeObject *self, char const *key, Dee_hash_t hash) {
+default__map_operator_trygetitem_string_hash__empty(DeeObject *UNUSED(self), char const *UNUSED(key), Dee_hash_t UNUSED(hash)) {
 	return ITER_DONE;
 }
 
@@ -18439,13 +19302,13 @@ default__map_operator_getitem_string_len_hash(DeeObject *self, char const *key, 
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_operator_getitem_string_len_hash__unsupported(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+default__map_operator_getitem_string_len_hash__unsupported(DeeObject *self, char const *key, size_t keylen, Dee_hash_t UNUSED(hash)) {
 	err_map_unsupportedf(self, "operator [](%$q)", keylen, key);
 	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_operator_getitem_string_len_hash__empty(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+default__map_operator_getitem_string_len_hash__empty(DeeObject *self, char const *key, size_t keylen, Dee_hash_t UNUSED(hash)) {
 	err_unknown_key_str_len(self, key, keylen);
 	return NULL;
 }
@@ -18459,8 +19322,32 @@ struct default_map_getitem_string_len_hash_with_enumerate_data {
 	DREF DeeObject *mgislhed_result; /* [?..1][out] Result value. */
 };
 
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_getitem_string_len_hash_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+#ifndef DEFINED_string_len_hash_equals_object
+#define DEFINED_string_len_hash_equals_object
+PRIVATE WUNUSED NONNULL((1, 4)) bool DCALL
+string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_hash, DeeObject *rhs) {
+	if (DeeString_Check(rhs))
+		return (DeeString_Hash(rhs) == lhs_hash && DeeString_EqualsBuf(rhs, lhs, lhs_len));
+	if (DeeBytes_Check(rhs))
+		return (lhs_len == DeeBytes_SIZE(rhs) && bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0);
+	/* `string.operator ==' isn't implemented for any other types. */
+	return false;
+}
+#endif /* !DEFINED_string_len_hash_equals_object */
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_getitem_string_len_hash_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_map_getitem_string_len_hash_with_enumerate_data *data;
+	data = (struct default_map_getitem_string_len_hash_with_enumerate_data *)arg;
+	if (string_len_hash_equals_object(data->mgislhed_key, data->mgislhed_keylen, data->mgislhed_hash, key)) {
+		if unlikely(!value)
+			return -3;
+		Dee_Incref(value);
+		data->mgislhed_result = value;
+		return -2;
+	}
+	return 0;
+}
 #endif /* !DEFINED_default_map_getitem_string_len_hash_with_enumerate_cb */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_operator_getitem_string_len_hash__with__map_enumerate(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
@@ -18505,7 +19392,7 @@ default__map_operator_trygetitem_string_len_hash(DeeObject *self, char const *ke
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_operator_trygetitem_string_len_hash__empty(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+default__map_operator_trygetitem_string_len_hash__empty(DeeObject *UNUSED(self), char const *UNUSED(key), size_t UNUSED(keylen), Dee_hash_t UNUSED(hash)) {
 	return ITER_DONE;
 }
 
@@ -18554,14 +19441,25 @@ default__map_operator_bounditem__unsupported(DeeObject *self, DeeObject *key) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_bounditem__empty(DeeObject *self, DeeObject *key) {
+default__map_operator_bounditem__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(key)) {
 	return Dee_BOUND_MISSING;
 }
 
 #ifndef DEFINED_default_map_bounditem_with_enumerate_cb
 #define DEFINED_default_map_bounditem_with_enumerate_cb
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value);
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_bounditem_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	(void)value;
+	temp = DeeObject_TryCompareEq((DeeObject *)arg, key);
+	if unlikely(temp == Dee_COMPARE_ERR)
+		goto err;
+	if (temp == 0)
+		return value ? -2 : -3; /* Stop iteration */
+	return 0;
+err:
+	return -1;
+}
 #endif /* !DEFINED_default_map_bounditem_with_enumerate_cb */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_bounditem__with__map_enumerate(DeeObject *self, DeeObject *key) {
@@ -18625,7 +19523,7 @@ default__map_operator_bounditem_index__unsupported(DeeObject *self, size_t key) 
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__map_operator_bounditem_index__empty(DeeObject *self, size_t key) {
+default__map_operator_bounditem_index__empty(DeeObject *UNUSED(self), size_t UNUSED(key)) {
 	return Dee_BOUND_MISSING;
 }
 
@@ -18673,7 +19571,7 @@ default__map_operator_bounditem_string_hash__unsupported(DeeObject *self, char c
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_bounditem_string_hash__empty(DeeObject *self, char const *key, Dee_hash_t hash) {
+default__map_operator_bounditem_string_hash__empty(DeeObject *UNUSED(self), char const *UNUSED(key), Dee_hash_t UNUSED(hash)) {
 	return Dee_BOUND_MISSING;
 }
 
@@ -18721,7 +19619,7 @@ default__map_operator_bounditem_string_len_hash__unsupported(DeeObject *self, ch
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__map_operator_bounditem_string_len_hash__empty(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+default__map_operator_bounditem_string_len_hash__empty(DeeObject *UNUSED(self), char const *UNUSED(key), size_t UNUSED(keylen), Dee_hash_t UNUSED(hash)) {
 	return Dee_BOUND_MISSING;
 }
 
@@ -18875,12 +19773,24 @@ default__map_operator_delitem__unsupported(DeeObject *self, DeeObject *key) {
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_delitem__with__map_remove(DeeObject *self, DeeObject *key) {
-	// TODO
+	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_remove))(self, key);
+	if (result > 0)
+		result = 0;
+	return result;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_delitem__with__map_removekeys(DeeObject *self, DeeObject *key) {
-	// TODO
+	int result;
+	DREF DeeTupleObject *keys = DeeTuple_NewUninitialized(1);
+	if unlikely(!keys)
+		goto err;
+	keys->t_elem[0] = key;
+	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_removekeys))(self, (DeeObject *)keys);
+	DeeTuple_DecrefSymbolic((DeeObject *)keys);
+	return result;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -18971,7 +19881,7 @@ default__map_operator_delitem_string_hash(DeeObject *self, char const *key, Dee_
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_delitem_string_hash__unsupported(DeeObject *self, char const *key, Dee_hash_t hash) {
+default__map_operator_delitem_string_hash__unsupported(DeeObject *self, char const *key, Dee_hash_t UNUSED(hash)) {
 	return err_map_unsupportedf(self, "operator del[](%q)", key);
 }
 
@@ -18997,7 +19907,7 @@ default__map_operator_delitem_string_len_hash(DeeObject *self, char const *key, 
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__map_operator_delitem_string_len_hash__unsupported(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
+default__map_operator_delitem_string_len_hash__unsupported(DeeObject *self, char const *key, size_t keylen, Dee_hash_t UNUSED(hash)) {
 	return err_map_unsupportedf(self, "operator del[](%$q)", keylen, key);
 }
 
@@ -19189,7 +20099,7 @@ default__map_operator_setitem_string_hash(DeeObject *self, char const *key, Dee_
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
-default__map_operator_setitem_string_hash__unsupported(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value) {
+default__map_operator_setitem_string_hash__unsupported(DeeObject *self, char const *key, Dee_hash_t UNUSED(hash), DeeObject *UNUSED(value)) {
 	return err_map_unsupportedf(self, "operator []=(%q)", key);
 }
 
@@ -19222,7 +20132,7 @@ default__map_operator_setitem_string_len_hash(DeeObject *self, char const *key, 
 }
 
 INTERN WUNUSED NONNULL((1, 5)) int DCALL
-default__map_operator_setitem_string_len_hash__unsupported(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
+default__map_operator_setitem_string_len_hash__unsupported(DeeObject *self, char const *key, size_t keylen, Dee_hash_t UNUSED(hash), DeeObject *UNUSED(value)) {
 	return err_map_unsupportedf(self, "operator []=(%$q)", keylen, key);
 }
 
@@ -19283,7 +20193,7 @@ default__map_operator_contains__unsupported(DeeObject *self, DeeObject *key) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__map_operator_contains__empty(DeeObject *self, DeeObject *key) {
+default__map_operator_contains__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(key)) {
 	return_false;
 }
 
@@ -19338,7 +20248,7 @@ default__map_keys__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_keys__empty(DeeObject *__restrict self) {
+default__map_keys__empty(DeeObject *__restrict UNUSED(self)) {
 	return_reference_(Dee_EmptySet);
 }
 
@@ -19454,7 +20364,7 @@ default__map_values__unsupported(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_values__empty(DeeObject *__restrict self) {
+default__map_values__empty(DeeObject *__restrict UNUSED(self)) {
 	return_empty_seq;
 }
 
@@ -19594,8 +20504,8 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__map_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
-	return err_map_unsupportedf(self, "__map_enumerate__(<cb>)");
+default__map_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_t UNUSED(cb), void *UNUSED(arg)) {
+	return err_map_unsupportedf(self, "__map_enumerate__(<callback>)");
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -19713,7 +20623,9 @@ err:
 #endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 
 INTERN WUNUSED NONNULL((1, 2, 4, 5)) Dee_ssize_t DCALL
-default__map_enumerate_range__unsupported(DeeObject *self, Dee_seq_enumerate_t cb, void *arg, DeeObject *start, DeeObject *end) { return err_map_unsupportedf(self, "__map_enumerate__(<cb>, %r, %r)", start, end); }
+default__map_enumerate_range__unsupported(DeeObject *self, Dee_seq_enumerate_t UNUSED(cb), void *UNUSED(arg), DeeObject *start, DeeObject *end) {
+	return err_map_unsupportedf(self, "__map_enumerate__(<callable>, %r, %r)", start, end);
+}
 
 #ifndef DEFINED_map_enumerate_with_filter_cb
 #define DEFINED_map_enumerate_with_filter_cb
@@ -19755,7 +20667,7 @@ default__map_enumerate_range__with__map_enumerate(DeeObject *self, Dee_seq_enume
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4, 5)) Dee_ssize_t DCALL
-default__map_enumerate_range__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *self, Dee_seq_enumerate_t cb, void *arg, DeeObject *start, DeeObject *end) {
+default__map_enumerate_range__with__map_iterkeys__and__map_operator_trygetitem(DeeObject *self, Dee_seq_enumerate_t cb, void *arg, DeeObject *UNUSED(start), DeeObject *UNUSED(end)) {
 	/* TODO */
 	(void)self;
 	(void)cb;
@@ -21992,7 +22904,7 @@ default__map_pop_with_default__unsupported(DeeObject *self, DeeObject *key, DeeO
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__map_pop_with_default__empty(DeeObject *self, DeeObject *key, DeeObject *default_) {
+default__map_pop_with_default__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(key), DeeObject *default_) {
 	return_reference_(default_);
 }
 
@@ -22048,7 +22960,7 @@ default__map_popitem__unsupported(DeeObject *self) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__map_popitem__empty(DeeObject *self) {
+default__map_popitem__empty(DeeObject *UNUSED(self)) {
 	return_none;
 }
 

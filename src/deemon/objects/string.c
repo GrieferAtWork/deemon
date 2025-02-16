@@ -30,6 +30,7 @@
 #include <deemon/format.h>
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
+#include <deemon/operator-hints.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -1095,8 +1096,8 @@ typedef struct {
 #define READ_ITER_PTR(x) atomic_read(&(x)->si_iter.ptr)
 
 STATIC_ASSERT(offsetof(StringIterator, si_string) == offsetof(ProxyObject, po_obj));
-#define stringiter_fini  generic_proxy_fini
-#define stringiter_visit generic_proxy_visit
+#define stringiter_fini  generic_proxy__fini
+#define stringiter_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_next(StringIterator *__restrict self) {

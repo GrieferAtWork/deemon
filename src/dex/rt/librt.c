@@ -51,6 +51,7 @@
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/mapfile.h>
+#include <deemon/method-hints.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
@@ -2107,7 +2108,11 @@ librt_get_IterWithNextAndUnpackFilter_Type_f(size_t UNUSED(argc), DeeObject *con
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_IterWithNextKey_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	return_cached(get_type_of(DeeObject_InvokeMethodHint(map_iterkeys, &object_with_iter_formap)));
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	return_cached(get_type_of(DeeObject_IterKeys(&object_with_iter_formap)));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

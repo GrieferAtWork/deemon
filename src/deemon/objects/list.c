@@ -4340,8 +4340,8 @@ err:
 }
 
 STATIC_ASSERT(offsetof(ListIterator, li_list) == offsetof(ProxyObject, po_obj));
-#define li_fini  generic_proxy_fini_unlikely /* Lists are usually referenced externally; else you'd use a Tuple */
-#define li_visit generic_proxy_visit
+#define li_fini  generic_proxy__fini_unlikely /* Lists are usually referenced externally; else you'd use a Tuple */
+#define li_visit generic_proxy__visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_bool(ListIterator *__restrict self) {

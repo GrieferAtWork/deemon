@@ -27,6 +27,7 @@
 #include <deemon/gc.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
+#include <deemon/operator-hints.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
 #include <deemon/thread.h>
@@ -50,6 +51,7 @@ DECL_BEGIN
 /************************************************************************/
 
 #define ds_sgif_copy ds_sgi_copy
+#define ds_stgi_copy ds_sgi_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_sgi_copy(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
             DefaultSequence_WithSizeAndGetItemIndex *__restrict other) {
@@ -61,19 +63,8 @@ ds_sgi_copy(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ds_stgi_copy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
-             DefaultSequence_WithTSizeAndGetItem *__restrict other) {
-	Dee_Incref(other->dstsg_seq);
-	self->dstsg_seq         = other->dstsg_seq;
-	self->dstsg_tp_tgetitem = other->dstsg_tp_tgetitem;
-	self->dstsg_start       = other->dstsg_start;
-	self->dstsg_end         = other->dstsg_end;
-	self->dstsg_tp_seq      = other->dstsg_tp_seq;
-	return 0;
-}
-
 #define ds_sgif_deepcopy ds_sgi_deepcopy
+#define ds_stgi_deepcopy ds_sgi_deepcopy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_sgi_deepcopy(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
                 DefaultSequence_WithSizeAndGetItemIndex *__restrict other) {
@@ -88,14 +79,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ds_stgi_deepcopy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
-                 DefaultSequence_WithTSizeAndGetItem *__restrict other) {
-	self->dstsg_tp_seq = other->dstsg_tp_seq;
-	return ds_sgi_deepcopy((DefaultSequence_WithSizeAndGetItemIndex *)self,
-	                       (DefaultSequence_WithSizeAndGetItemIndex *)other);
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
             size_t argc, DeeObject *const *argv) {
@@ -105,10 +88,9 @@ ds_sgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	                  &self->dssgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dssgi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index) &&
-	    !DeeType_InheritGetItem(seqtyp))
+	self->dssgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, getitem_index);
+	if unlikely(!self->dssgi_tp_getitem_index)
 		goto err_no_getitem;
-	self->dssgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index;
 	Dee_Incref(self->dssgi_seq);
 	return 0;
 err_no_getitem:
@@ -126,8 +108,7 @@ ds_sgif_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	                  &self->dssgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dssgi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast) &&
-	    (!DeeType_InheritGetItem(seqtyp) || !seqtyp->tp_seq->tp_getitem_index_fast))
+	if unlikely(!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem_index_fast)
 		goto err_no_getitem;
 	self->dssgi_tp_getitem_index = seqtyp->tp_seq->tp_getitem_index_fast;
 	Dee_Incref(self->dssgi_seq);
@@ -147,10 +128,9 @@ ds_stgi_init(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	                  &self->dssgi_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dssgi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_trygetitem_index) &&
-	    !DeeType_InheritGetItem(seqtyp))
+	self->dssgi_tp_getitem_index = DeeType_RequireSupportedNativeOperator(seqtyp, trygetitem_index);
+	if unlikely(!self->dssgi_tp_getitem_index)
 		goto err_no_getitem;
-	self->dssgi_tp_getitem_index = seqtyp->tp_seq->tp_trygetitem_index;
 	Dee_Incref(self->dssgi_seq);
 	return 0;
 err_no_getitem:
@@ -494,6 +474,7 @@ err_obb:
 	return ITER_DONE;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 ds_sgi_getseq(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 	DeeTypeMRO mro;
@@ -550,9 +531,20 @@ ds_stgi_getseq(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 			return tp;
 	}
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_delitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	size_t used_index;
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return DeeObject_InvokeMethodHint(seq_operator_delitem_index, self->dssgi_seq, used_index);
+err_obb:
+	return err_index_out_of_bounds((DeeObject *)self, index, ds_sgi_size(self));
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	DeeTypeObject *tp = ds_sgi_getseq(self);
 	if (tp->tp_seq->tp_delitem_index) {
 		size_t used_index;
@@ -565,8 +557,13 @@ ds_sgi_delitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, s
 	return err_unimplemented_operator(tp, OPERATOR_DELITEM);
 err_obb:
 	return err_index_out_of_bounds((DeeObject *)self, index, ds_sgi_size(self));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define ds_sgif_delitem_index ds_sgi_delitem_index
+#define ds_stgi_delitem_index ds_sgi_delitem_index
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgif_delitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
 	DeeTypeObject *tp = ds_sgif_getseq(self);
@@ -598,10 +595,21 @@ ds_stgi_delitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, 
 err_obb:
 	return err_index_out_of_bounds((DeeObject *)self, index, ds_stgi_size(self));
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 ds_sgi_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
                      size_t index, DeeObject *value) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	size_t used_index;
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return DeeObject_InvokeMethodHint(seq_operator_setitem_index, self->dssgi_seq, used_index, value);
+err_obb:
+	return err_index_out_of_bounds((DeeObject *)self, index, ds_sgi_size(self));
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	DeeTypeObject *tp = ds_sgi_getseq(self);
 	if (tp->tp_seq->tp_setitem_index) {
 		size_t used_index;
@@ -614,8 +622,13 @@ ds_sgi_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	return err_unimplemented_operator(Dee_TYPE(self->dssgi_seq), OPERATOR_SETITEM);
 err_obb:
 	return err_index_out_of_bounds((DeeObject *)self, index, ds_sgi_size(self));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define ds_sgif_setitem_index ds_sgi_setitem_index
+#define ds_stgi_setitem_index ds_sgi_setitem_index
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 ds_sgif_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
                       size_t index, DeeObject *value) {
@@ -649,15 +662,28 @@ ds_stgi_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 err_obb:
 	return err_index_out_of_bounds((DeeObject *)self, index, ds_stgi_size(self));
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+/* // Can't be used because our end offset may be greater than `Sequence.length(dssgi_seq)'
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_sgif_getitem_index_fast(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
 	ASSERT(index < (self->dssgi_end - self->dssgi_start));
 	return (*self->dssgi_tp_getitem_index)(self->dssgi_seq, self->dssgi_start + index);
 }
+*/
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	size_t used_index;
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return DeeObject_InvokeMethodHint(seq_operator_bounditem_index, self->dssgi_seq, used_index);
+err_obb:
+	return Dee_BOUND_MISSING; /* Item doesn't exist */
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	size_t used_index;
 	DeeTypeObject *tp = ds_sgi_getseq(self);
 	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
@@ -667,8 +693,13 @@ ds_sgi_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	return DeeType_InvokeSeqBoundItemIndex(tp, self->dssgi_seq, used_index);
 err_obb:
 	return Dee_BOUND_MISSING; /* Item doesn't exist */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define ds_sgif_bounditem_index ds_sgi_bounditem_index
+#define ds_stgi_bounditem_index ds_sgi_bounditem_index
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgif_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
 	size_t used_index;
@@ -694,9 +725,20 @@ ds_stgi_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self
 err_obb:
 	return Dee_BOUND_MISSING; /* Item doesn't exist */
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_hasitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	size_t used_index;
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return DeeObject_InvokeMethodHint(seq_operator_hasitem_index, self->dssgi_seq, used_index);
+err_obb:
+	return 0; /* Item doesn't exist */
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	size_t used_index;
 	DeeTypeObject *tp = ds_sgi_getseq(self);
 	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
@@ -706,8 +748,13 @@ ds_sgi_hasitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, s
 	return DeeType_InvokeSeqHasItemIndex(tp, self->dssgi_seq, used_index);
 err_obb:
 	return 0; /* Item doesn't exist */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define ds_sgif_hasitem_index ds_sgi_hasitem_index
+#define ds_stgi_hasitem_index ds_sgi_hasitem_index
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgif_hasitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
 	size_t used_index;
@@ -733,6 +780,7 @@ ds_stgi_hasitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, 
 err_obb:
 	return 0; /* Item doesn't exist */
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_WithSizeAndGetItemIndex *DCALL
 ds_sgi_getrange_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
@@ -961,7 +1009,7 @@ PRIVATE struct type_seq ds_sgif_seq = {
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index,
-	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index_fast,
+	/* .tp_getitem_index_fast         = */ NULL, /*(DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index_fast,*/
 	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_delitem_index,
 	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_sgif_setitem_index,
 	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_bounditem_index,
@@ -1198,12 +1246,16 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 
 /************************************************************************/
 /* DefaultSequence_WithSizeAndGetItem_Type                              */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* DefaultSequence_WithTSizeAndGetItem_Type                             */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /************************************************************************/
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 STATIC_ASSERT(offsetof(DefaultSequence_WithSizeAndGetItem, dssg_seq) == offsetof(DefaultSequence_WithTSizeAndGetItem, dstsg_seq));
 STATIC_ASSERT(offsetof(DefaultSequence_WithSizeAndGetItem, dssg_start) == offsetof(DefaultSequence_WithTSizeAndGetItem, dstsg_start));
 STATIC_ASSERT(offsetof(DefaultSequence_WithSizeAndGetItem, dssg_end) == offsetof(DefaultSequence_WithTSizeAndGetItem, dstsg_end));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_sg_copy(DefaultSequence_WithSizeAndGetItem *__restrict self,
@@ -1218,6 +1270,7 @@ ds_sg_copy(DefaultSequence_WithSizeAndGetItem *__restrict self,
 	return 0;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_tsg_copy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
             DefaultSequence_WithTSizeAndGetItem *__restrict other) {
@@ -1225,6 +1278,7 @@ ds_tsg_copy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
 	return ds_sg_copy((DefaultSequence_WithSizeAndGetItem *)self,
 	                  (DefaultSequence_WithSizeAndGetItem *)other);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_sg_deepcopy(DefaultSequence_WithSizeAndGetItem *__restrict self,
@@ -1248,6 +1302,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_tsg_deepcopy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
                 DefaultSequence_WithTSizeAndGetItem *__restrict other) {
@@ -1255,6 +1310,7 @@ ds_tsg_deepcopy(DefaultSequence_WithTSizeAndGetItem *__restrict self,
 	return ds_sg_deepcopy((DefaultSequence_WithSizeAndGetItem *)self,
 	                      (DefaultSequence_WithSizeAndGetItem *)other);
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sg_init(DefaultSequence_WithSizeAndGetItem *__restrict self,
@@ -1264,10 +1320,9 @@ ds_sg_init(DefaultSequence_WithSizeAndGetItem *__restrict self,
 	                  &self->dssg_seq, &self->dssg_start, &self->dssg_end))
 		goto err;
 	seqtyp = Dee_TYPE(self->dssg_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_getitem) &&
-	    !DeeType_InheritGetItem(seqtyp))
+	self->dssg_tp_getitem = DeeType_RequireSupportedNativeOperator(seqtyp, getitem);
+	if unlikely(!self->dssg_tp_getitem)
 		goto err_no_getitem;
-	self->dssg_tp_getitem = seqtyp->tp_seq->tp_getitem;
 	Dee_Incref(self->dssg_seq);
 	Dee_Incref(self->dssg_start);
 	Dee_Incref(self->dssg_end);
@@ -1278,6 +1333,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 generic_tp_tgetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	return (*tp_self->tp_seq->tp_getitem)(self, index);
@@ -1310,8 +1366,11 @@ err_no_getitem:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define ds_tsg_fini ds_sg_fini
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE NONNULL((1)) void DCALL
 ds_sg_fini(DefaultSequence_WithSizeAndGetItem *__restrict self) {
 	Dee_Decref(self->dssg_seq);
@@ -1319,7 +1378,9 @@ ds_sg_fini(DefaultSequence_WithSizeAndGetItem *__restrict self) {
 	Dee_Decref(self->dssg_end);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define ds_tsg_visit ds_sg_visit
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE NONNULL((1, 2)) void DCALL
 ds_sg_visit(DefaultSequence_WithSizeAndGetItem *__restrict self,
             dvisit_t proc, void *arg) {
@@ -1348,6 +1409,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeObAndTGetItem *DCALL
 ds_tsg_iter(DefaultSequence_WithTSizeAndGetItem *__restrict self) {
 	DREF DefaultIterator_WithSizeObAndTGetItem *result;
@@ -1368,14 +1430,19 @@ ds_tsg_iter(DefaultSequence_WithTSizeAndGetItem *__restrict self) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define ds_tsg_sizeob ds_sg_sizeob
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_sg_sizeob(DefaultSequence_WithSizeAndGetItem *__restrict self) {
 	return DeeObject_Sub(self->dssg_end, self->dssg_start);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define ds_tsg_mapindex(self, index) ds_sg_mapindex((DefaultSequence_WithSizeAndGetItem *)(self), index)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ds_sg_mapindex(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
 	int temp;
@@ -1406,6 +1473,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ds_tsg_getitem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 	DREF DeeObject *result;
@@ -1418,9 +1486,21 @@ ds_tsg_getitem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_sg_delitem(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	int result;
+	DREF DeeObject *used_index = ds_sg_mapindex(self, index);
+	if unlikely(!used_index)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_operator_delitem, self->dssg_seq, used_index);
+	Dee_Decref(used_index);
+	return result;
+err:
+	return -1;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	struct type_seq *tp_seq = Dee_TYPE(self->dssg_seq)->tp_seq;
 	ASSERT(tp_seq);
 	ASSERT(tp_seq->tp_getitem);
@@ -1437,8 +1517,10 @@ ds_sg_delitem(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
 	return err_unimplemented_operator(Dee_TYPE(self->dssg_seq), OPERATOR_DELITEM);
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_tsg_delitem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 	struct type_seq *tp_seq = self->dstsg_tp_seq->tp_seq;
@@ -1460,10 +1542,22 @@ ds_tsg_delitem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 ds_sg_setitem(DefaultSequence_WithSizeAndGetItem *self,
               DeeObject *index, DeeObject *value) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	int result;
+	DREF DeeObject *used_index = ds_sg_mapindex(self, index);
+	if unlikely(!used_index)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_operator_setitem, self->dssg_seq, used_index, value);
+	Dee_Decref(used_index);
+	return result;
+err:
+	return -1;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	struct type_seq *tp_seq = Dee_TYPE(self->dssg_seq)->tp_seq;
 	ASSERT(tp_seq);
 	ASSERT(tp_seq->tp_getitem);
@@ -1480,8 +1574,10 @@ ds_sg_setitem(DefaultSequence_WithSizeAndGetItem *self,
 	return err_unimplemented_operator(Dee_TYPE(self->dssg_seq), OPERATOR_SETITEM);
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 ds_tsg_setitem(DefaultSequence_WithTSizeAndGetItem *self,
                DeeObject *index, DeeObject *value) {
@@ -1504,6 +1600,7 @@ ds_tsg_setitem(DefaultSequence_WithTSizeAndGetItem *self,
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DefaultSequence_WithSizeAndGetItem *DCALL
 ds_sg_getrange(DefaultSequence_WithSizeAndGetItem *self, DeeObject *start, DeeObject *end) {
@@ -1541,6 +1638,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DefaultSequence_WithTSizeAndGetItem *DCALL
 ds_tsg_getrange(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *start, DeeObject *end) {
 	int temp;
@@ -1577,6 +1675,7 @@ err_clamed_start_end_and_pair:
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_sg_foreach(DefaultSequence_WithSizeAndGetItem *self, Dee_foreach_t proc, void *arg) {
@@ -1759,6 +1858,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ds_tsg_foreach(DefaultSequence_WithTSizeAndGetItem *self, Dee_foreach_t proc, void *arg) {
 	DREF DeeObject *index;
@@ -1939,9 +2039,21 @@ err_index:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_sg_bounditem(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	int result;
+	DREF DeeObject *used_index = ds_sg_mapindex(self, index);
+	if unlikely(!used_index)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_operator_bounditem, self->dssg_seq, used_index);
+	Dee_Decref(used_index);
+	return result;
+err:
+	return Dee_BOUND_ERR;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	int result;
 	DREF DeeObject *used_index;
 	struct type_seq *tp_seq = Dee_TYPE(self->dssg_seq)->tp_seq;
@@ -1957,8 +2069,10 @@ ds_sg_bounditem(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
 	return result;
 err:
 	return Dee_BOUND_ERR;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_tsg_bounditem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 	int result;
@@ -1979,9 +2093,22 @@ ds_tsg_bounditem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 err:
 	return Dee_BOUND_ERR;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_sg_hasitem(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	int result;
+	DREF DeeObject *used_index;
+	used_index = ds_sg_mapindex(self, index);
+	if unlikely(!used_index)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_operator_hasitem, self->dssg_seq, used_index);
+	Dee_Decref(used_index);
+	return result;
+err:
+	return -1;
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	int result;
 	DREF DeeObject *used_index;
 	struct type_seq *tp_seq = Dee_TYPE(self->dssg_seq)->tp_seq;
@@ -1997,8 +2124,10 @@ ds_sg_hasitem(DefaultSequence_WithSizeAndGetItem *self, DeeObject *index) {
 	return result;
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ds_tsg_hasitem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 	int result;
@@ -2019,6 +2148,7 @@ ds_tsg_hasitem(DefaultSequence_WithTSizeAndGetItem *self, DeeObject *index) {
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 PRIVATE struct type_seq ds_sg_seq = {
@@ -2054,6 +2184,7 @@ PRIVATE struct type_seq ds_sg_seq = {
 	/* .tp_setrange_index_n   = */ NULL,
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE struct type_seq ds_tsg_seq = {
 	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_tsg_iter,
 	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_tsg_sizeob,
@@ -2095,17 +2226,29 @@ PRIVATE struct type_member tpconst ds_tsg_members[] = {
 	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(DefaultSequence_WithTSizeAndGetItem, dstsg_end)),
 	TYPE_MEMBER_END
 };
+#else /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+PRIVATE struct type_member tpconst ds_sg_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultSequence_WithSizeAndGetItem, dssg_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT, offsetof(DefaultSequence_WithSizeAndGetItem, dssg_start)),
+	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(DefaultSequence_WithSizeAndGetItem, dssg_end)),
+	TYPE_MEMBER_END
+};
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE struct type_member tpconst ds_sg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeObAndGetItem_Type),
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultSequence_WithTSizeAndGetItem_Type),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_MEMBER_END
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE struct type_member tpconst ds_tsg_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeObAndTGetItem_Type),
 	TYPE_MEMBER_END
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2153,6 +2296,7 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type = {
 	/* .tp_class_members = */ ds_sg_class_members
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithTSizeAndGetItem",
@@ -2198,6 +2342,7 @@ INTERN DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ ds_tsg_class_members
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
@@ -2225,38 +2370,43 @@ INTERN DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type = {
 /************************************************************************/
 /* DefaultSequence_WithIter_Type                                        */
 /* DefaultSequence_WithIterAndLimit_Type                                */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 /* DefaultSequence_WithTIterAndLimit_Type                               */
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(DefaultSequence_WithIterAndLimit, dsial_seq) == offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_seq));
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 STATIC_ASSERT(offsetof(DefaultSequence_WithIterAndLimit, dsial_seq) == offsetof(DefaultSequence_WithTIterAndLimit, dsti_seq));
 STATIC_ASSERT(offsetof(DefaultSequence_WithIterAndLimit, dsial_start) == offsetof(DefaultSequence_WithTIterAndLimit, dsti_start));
 STATIC_ASSERT(offsetof(DefaultSequence_WithIterAndLimit, dsial_limit) == offsetof(DefaultSequence_WithTIterAndLimit, dsti_limit));
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_seq) == offsetof(DefaultSequence_WithIterAndLimit, dsial_seq));
 STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_tp_iter) == offsetof(DefaultSequence_WithIterAndLimit, dsial_tp_iter));
 
-#define ds_ial_copy      ds_sgi_copy
+#define ds_ial_copy     ds_sgi_copy
+#define ds_ial_deepcopy ds_sgi_deepcopy
+#define ds_i_copy       ds_ial_copy
+#define ds_i_deepcopy   ds_ial_deepcopy
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define ds_tial_copy     ds_stgi_copy
-#define ds_ial_deepcopy  ds_sgi_deepcopy
 #define ds_tial_deepcopy ds_stgi_deepcopy
-#define ds_i_copy        ds_ial_copy
-#define ds_i_deepcopy    ds_ial_deepcopy
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_i_init(DefaultSequence_WithIter *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	DeeTypeObject *seqtyp;
+	DeeTypeObject *itertyp;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqWithIter", &self->dsi_seq))
 		goto err;
-	seqtyp = Dee_TYPE(self->dsi_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_iter) &&
-	    !DeeType_InheritIter(seqtyp))
+	itertyp = Dee_TYPE(self->dsi_seq);
+	self->dsi_tp_iter = DeeType_RequireSupportedNativeOperator(itertyp, iter);
+	if unlikely(!self->dsi_tp_iter)
 		goto err_no_getitem;
-	self->dsi_tp_iter = seqtyp->tp_seq->tp_iter;
 	Dee_Incref(self->dsi_seq);
 	return 0;
 err_no_getitem:
-	err_unimplemented_operator(seqtyp, OPERATOR_ITER);
+	err_unimplemented_operator(itertyp, OPERATOR_ITER);
 err:
 	return -1;
 }
@@ -2264,23 +2414,23 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_ial_init(DefaultSequence_WithIterAndLimit *__restrict self,
             size_t argc, DeeObject *const *argv) {
-	DeeTypeObject *seqtyp;
+	DeeTypeObject *itertyp;
 	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ UNPuSIZ ":_SeqWithIterAndLimit",
 	                  &self->dsial_seq, &self->dsial_start, &self->dsial_limit))
 		goto err;
-	seqtyp = Dee_TYPE(self->dsial_seq);
-	if ((!seqtyp->tp_seq || !seqtyp->tp_seq->tp_iter) &&
-	    !DeeType_InheritIter(seqtyp))
+	itertyp = Dee_TYPE(self->dsial_seq);
+	self->dsial_tp_iter = DeeType_RequireSupportedNativeOperator(itertyp, iter);
+	if unlikely(!self->dsial_tp_iter)
 		goto err_no_getitem;
-	self->dsial_tp_iter = seqtyp->tp_seq->tp_iter;
 	Dee_Incref(self->dsial_seq);
 	return 0;
 err_no_getitem:
-	err_unimplemented_operator(seqtyp, OPERATOR_ITER);
+	err_unimplemented_operator(itertyp, OPERATOR_ITER);
 err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 generic_tp_titer(DeeTypeObject *tp_self, DeeObject *self) {
 	return (*tp_self->tp_seq->tp_iter)(self);
@@ -2311,15 +2461,18 @@ err_no_getitem:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 
 
-#define ds_i_fini     ds_sgi_fini
-#define ds_ial_fini   ds_sgi_fini
+#define ds_i_fini    ds_sgi_fini
+#define ds_ial_fini  ds_sgi_fini
+#define ds_i_visit   ds_sgi_visit
+#define ds_ial_visit ds_sgi_visit
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define ds_tial_fini  ds_sgi_fini
-#define ds_i_visit    ds_sgi_visit
-#define ds_ial_visit  ds_sgi_visit
 #define ds_tial_visit ds_sgi_visit
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_i_iter(DefaultSequence_WithIter *__restrict self) {
@@ -2363,6 +2516,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_tial_iter(DefaultSequence_WithTIterAndLimit *__restrict self) {
 	DREF DefaultIterator_WithNextAndLimit *result;
@@ -2399,6 +2553,7 @@ err_iter:
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 ds_ial_size(DefaultSequence_WithIterAndLimit *__restrict self) {
@@ -2426,6 +2581,7 @@ err:
 	return (size_t)-1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 ds_tial_size(DefaultSequence_WithTIterAndLimit *__restrict self) {
 	DREF DeeObject *iter;
@@ -2451,6 +2607,7 @@ err_iter:
 err:
 	return (size_t)-1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_ial_getitem_index(DefaultSequence_WithIterAndLimit *__restrict self, size_t index) {
@@ -2492,6 +2649,7 @@ err_obb:
 	goto err;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_tial_getitem_index(DefaultSequence_WithTIterAndLimit *__restrict self, size_t index) {
 	size_t iter_status;
@@ -2531,6 +2689,7 @@ err_obb:
 	err_index_out_of_bounds((DeeObject *)self, index, self->dsti_limit);
 	goto err;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_ial_getrange_index(DefaultSequence_WithIterAndLimit *__restrict self,
@@ -2562,6 +2721,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_tial_getrange_index(DefaultSequence_WithTIterAndLimit *__restrict self,
                        Dee_ssize_t start, Dee_ssize_t end) {
@@ -2592,6 +2752,7 @@ ds_tial_getrange_index(DefaultSequence_WithTIterAndLimit *__restrict self,
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_WithIterAndLimit *DCALL
 ds_ial_getrange_index_n(DefaultSequence_WithIterAndLimit *__restrict self,
@@ -2624,6 +2785,7 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_WithTIterAndLimit *DCALL
 ds_tial_getrange_index_n(DefaultSequence_WithTIterAndLimit *__restrict self,
                          Dee_ssize_t start) {
@@ -2654,6 +2816,7 @@ ds_tial_getrange_index_n(DefaultSequence_WithTIterAndLimit *__restrict self,
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE struct type_seq ds_i_seq = {
 	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_i_iter,
@@ -2692,6 +2855,7 @@ PRIVATE struct type_seq ds_ial_seq = {
 	/* .tp_setrange_index_n   = */ NULL,
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 PRIVATE struct type_seq ds_tial_seq = {
 	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_tial_iter,
 	/* .tp_sizeob             = */ NULL,
@@ -2734,11 +2898,26 @@ PRIVATE struct type_member tpconst ds_tial_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultSequence_WithIterAndLimit, dsial_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+PRIVATE struct type_member tpconst ds_ial_members[] = {
+	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT, offsetof(DefaultSequence_WithIterAndLimit, dsial_start)),
+	TYPE_MEMBER_FIELD("__size__", STRUCT_OBJECT, offsetof(DefaultSequence_WithIterAndLimit, dsial_limit)),
+#define ds_i_members (ds_ial_members + 2)
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultSequence_WithIterAndLimit, dsial_seq), "->?DSequence"),
+	TYPE_MEMBER_END
+};
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 PRIVATE struct type_member tpconst ds_ial_class_members[] = {
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	TYPE_MEMBER_CONST(STR_Typed, &DefaultSequence_WithTIterAndLimit_Type),
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #if 1 /* Not always true, but is generally the case. */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+#define ds_tial_class_members ds_ial_class_members
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #define ds_tial_class_members (ds_ial_class_members + 1)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithNextAndLimit_Type),
 #else
 #define ds_tial_class_members NULL
@@ -2838,6 +3017,7 @@ INTERN DeeTypeObject DefaultSequence_WithIterAndLimit_Type = {
 	/* .tp_class_members = */ ds_ial_class_members,
 };
 
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 INTERN DeeTypeObject DefaultSequence_WithTIterAndLimit_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqWithTIterAndLimit",
@@ -2883,6 +3063,7 @@ INTERN DeeTypeObject DefaultSequence_WithTIterAndLimit_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ ds_tial_class_members,
 };
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 
 DECL_END
 
