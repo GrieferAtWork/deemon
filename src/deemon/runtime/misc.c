@@ -1558,7 +1558,7 @@ PUBLIC void
 	DBG_ALIGNMENT_ENABLE();
 }
 
-#if defined(_MSC_VER) && _MSC_VER <= 1916 /* Might work for newer versions, too. But untested */
+#if defined(_MSC_VER) && _MSC_VER <= 1942 /* Might work for newer versions, too. But untested */
 
 #define no_mans_land_size 4
 struct _CrtMemBlockHeader {
