@@ -24,13 +24,15 @@
 
 operator {
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] DREF DeeObject *
 tp_attr->tp_getattr([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *attr)
 %{class using OPERATOR_GETATTR: {
 	return_DeeClass_CallOperator(THIS_TYPE, self, OPERATOR_GETATTR, 1, &attr);
-}} /*= OPERATOR_GETATTR*/;
+}} = OPERATOR_GETATTR;
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] DREF DeeObject *
 tp_attr->tp_getattr_string_hash([[nonnull]] DeeObject *self,
                                 [[nonnull]] char const *attr, Dee_hash_t hash)
@@ -44,8 +46,9 @@ tp_attr->tp_getattr_string_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return NULL;
-}} /*= OPERATOR_GETATTR*/;
+}} = OPERATOR_GETATTR;
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] DREF DeeObject *
 tp_attr->tp_getattr_string_len_hash([[nonnull]] DeeObject *self,
                                     [[nonnull]] char const *attr,
@@ -60,13 +63,14 @@ tp_attr->tp_getattr_string_len_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return NULL;
-}} /*= OPERATOR_GETATTR*/;
+}} = OPERATOR_GETATTR;
 
 
 
 
 
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_boundattr([[nonnull]] DeeObject *self,
                       [[nonnull]] DeeObject *attr)
@@ -81,9 +85,10 @@ tp_attr->tp_boundattr([[nonnull]] DeeObject *self,
 	if (DeeError_Catch(&DeeError_AttributeError))
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
-}} /*= OPERATOR_GETATTR*/;
+}} = OPERATOR_GETATTR;
 
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_boundattr_string_hash([[nonnull]] DeeObject *self,
                                   [[nonnull]] char const *key,
@@ -110,10 +115,11 @@ tp_attr->tp_boundattr_string_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return Dee_BOUND_ERR;
-}} /*= OPERATOR_GETATTR*/;
+}} = OPERATOR_GETATTR;
 
 
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_boundattr_string_len_hash([[nonnull]] DeeObject *self,
                                       [[nonnull]] char const *key,
@@ -140,11 +146,12 @@ tp_attr->tp_boundattr_string_len_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return Dee_BOUND_ERR;
-}} /*= OPERATOR_GETATTR*/;
+}} = OPERATOR_GETATTR;
 
 
 
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_hasattr([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *attr)
@@ -154,15 +161,17 @@ tp_attr->tp_hasattr([[nonnull]] DeeObject *self,
 }} = OPERATOR_GETATTR;
 
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_hasattr_string_hash([[nonnull]] DeeObject *self,
                                 [[nonnull]] char const *key, Dee_hash_t hash)
 %{using tp_attr->tp_boundattr_string_hash: {
 	int result = CALL_DEPENDENCY(tp_attr->tp_boundattr_string_hash, self, key, hash);
 	return Dee_BOUND_ASHAS(result);
-}} /*= OPERATOR_GETATTR*/;
+}} = OPERATOR_GETATTR;
 
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_hasattr_string_len_hash([[nonnull]] DeeObject *self,
                                     [[nonnull]] char const *key,
@@ -170,7 +179,7 @@ tp_attr->tp_hasattr_string_len_hash([[nonnull]] DeeObject *self,
 %{using tp_attr->tp_boundattr_string_len_hash: {
 	int result = CALL_DEPENDENCY(tp_attr->tp_boundattr_string_len_hash, self, key, keylen, hash);
 	return Dee_BOUND_ASHAS(result);
-}} /*= OPERATOR_GETATTR*/;
+}} = OPERATOR_GETATTR;
 
 
 } /* operator */

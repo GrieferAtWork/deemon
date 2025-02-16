@@ -24,6 +24,7 @@
 
 operator {
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_setattr([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *attr,
@@ -38,8 +39,9 @@ tp_attr->tp_setattr([[nonnull]] DeeObject *self,
 	return 0;
 err:
 	return -1;
-}} /*= OPERATOR_SETATTR*/;
+}} = OPERATOR_SETATTR;
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_setattr_string_hash([[nonnull]] DeeObject *self,
                                 [[nonnull]] char const *attr, Dee_hash_t hash,
@@ -54,8 +56,9 @@ tp_attr->tp_setattr_string_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return -1;
-}} /*= OPERATOR_SETATTR*/;
+}} = OPERATOR_SETATTR;
 
+[[custom_unsupported_impl_name(NULL)]]
 [[wunused]] int
 tp_attr->tp_setattr_string_len_hash([[nonnull]] DeeObject *self,
                                     [[nonnull]] char const *attr,
@@ -71,6 +74,6 @@ tp_attr->tp_setattr_string_len_hash([[nonnull]] DeeObject *self,
 	return result;
 err:
 	return -1;
-}} /*= OPERATOR_SETATTR*/;
+}} = OPERATOR_SETATTR;
 
 } /* operator */

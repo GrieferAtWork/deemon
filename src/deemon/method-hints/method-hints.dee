@@ -1831,7 +1831,11 @@ function printNativeOperatorHintUnsupportedTable() {
 	for (local none, nativeOperator /*: NativeOperator*/: NATIVE_OPERATORS) {
 		print(f"	/* {nativeOperator.name.name.ljust(longestNameLength)} */ "),;
 		if (nativeOperator.customUnsupportedImplName) {
-			print(f"(Dee_funptr_t)&{nativeOperator.customUnsupportedImplName},");
+			if (nativeOperator.customUnsupportedImplName == "NULL") {
+				print(f"NULL,");
+			} else {
+				print(f"(Dee_funptr_t)&{nativeOperator.customUnsupportedImplName},");
+			}
 		} else if (nativeOperator.operatorName) {
 			print(f"(Dee_funptr_t)&default__{nativeOperator.name.name}__unsupported,");
 		} else {
@@ -2101,6 +2105,16 @@ next_dependencies:;
 		} &{cb} \}", i == (#assignments - 1) ? " */" : "");
 	}
 	print("#define Dee_TNO_ASSIGN_MAXLEN ", longestChainLength.length);
+}
+
+@@Print the initializer of `_DeeType_GetOperatorOfTno`
+function printGetOperatorOfTnoInit() {
+	RESET_PREFIX();
+	local longestNameLength = NATIVE_OPERATORS.keys.each.TNO_id.length > ...;
+	for (local name, nativeOperator: NATIVE_OPERATORS) {
+		print(f"	/* {f"[{name.TNO_id}]".ljust(longestNameLength + 2)} = */ ",
+			nativeOperator.operatorName ?: "OPERATOR_USERCOUNT", ",");
+	}
 }
 
 

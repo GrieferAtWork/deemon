@@ -392,9 +392,6 @@ INTERN int DCALL default__boundattr_string_hash__badalloc(void*UNUSED(self), voi
 INTERN int DCALL default__boundattr_string_len_hash__badalloc(void*UNUSED(self), void*, void*, void*) {
 	return Dee_BadAlloc(sizeof(struct type_attr));
 }
-INTERN int DCALL default__hasattr__unsupported(DeeObject*self, void*) {
-	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETATTR);
-}
 INTERN int DCALL default__setattr_string_len_hash__badalloc(void*UNUSED(self), void*, void*, void*, void*) {
 	return Dee_BadAlloc(sizeof(struct type_attr));
 }
@@ -645,7 +642,7 @@ _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT] = {
 	/* boundattr                  */ NULL,
 	/* boundattr_string_hash      */ NULL,
 	/* boundattr_string_len_hash  */ NULL,
-	/* hasattr                    */ (Dee_funptr_t)&default__hasattr__unsupported,
+	/* hasattr                    */ NULL,
 	/* hasattr_string_hash        */ NULL,
 	/* hasattr_string_len_hash    */ NULL,
 	/* delattr                    */ NULL,

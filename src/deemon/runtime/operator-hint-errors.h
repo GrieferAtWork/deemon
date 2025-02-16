@@ -236,7 +236,6 @@ INTDEF int DCALL default__boundattr_string_len_hash__badalloc(void*, void*, void
 #define default__hasattr_string_len_hash__badalloc default__boundattr_string_len_hash__badalloc
 #define default__delattr_string_len_hash__badalloc default__boundattr_string_len_hash__badalloc
 #define default__setattr_string_hash__badalloc default__boundattr_string_len_hash__badalloc
-INTDEF int DCALL default__hasattr__unsupported(DeeObject*, void*);
 INTDEF int DCALL default__setattr_string_len_hash__badalloc(void*, void*, void*, void*, void*);
 /*[[[end]]]*/
 /* clang-format on */

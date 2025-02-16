@@ -1615,9 +1615,20 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) bool
 		}
 	}
 
-	/* TODO: Log operator names as per the inverse of "_DeeType_GetTnoOfOperator" */
-	Dee_DPRINTF("[RT] Inherit operator '%u' from '%s' into '%s' [ptr: %p]\n",
-	            (unsigned int)id, from->tp_name, into->tp_name, *(void **)&impl);
+#ifndef Dee_DPRINT_IS_NOOP
+	{
+		struct Dee_opinfo const *info;
+		Dee_operator_t op = DeeType_GetOperatorOfTno(id);
+		info = op < OPERATOR_USERCOUNT
+		       ? DeeTypeType_GetOperatorById(Dee_TYPE(from), op)
+		       : NULL;
+		Dee_DPRINTF("[RT] Inherit '%s.operator %s' into '%s' [tno: %u, ptr: %p]\n",
+		            from->tp_name ? from->tp_name : "<anonymous>",
+		            info ? info->oi_sname : "?",
+		            into->tp_name ? into->tp_name : "<anonymous>",
+		            (unsigned int)id, *(void **)&impl);
+	}
+#endif /* !Dee_DPRINT_IS_NOOP */
 
 	/* It's OK if the last write fails (because we still hand the correct pointer
 	 * to our caller), but it's not OK if any of the intermediate writes fail (as
@@ -1906,6 +1917,126 @@ INTERN_CONST enum Dee_tno_id const _DeeType_GetTnoOfOperator[Dee_OPERATOR_USERCO
 	/* [OPERATOR_003B_ENUMATTR]    = */ Dee_TNO_COUNT,
 	/* [OPERATOR_003C_ENTER]       = */ Dee_TNO_enter,
 	/* [OPERATOR_003D_LEAVE]       = */ Dee_TNO_leave,
+};
+
+INTERN Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT] = {
+/* clang-format off */
+/*[[[deemon (printGetOperatorOfTnoInit from "..method-hints.method-hints")();]]]*/
+	/* [Dee_TNO_assign]                     = */ OPERATOR_ASSIGN,
+	/* [Dee_TNO_move_assign]                = */ OPERATOR_MOVEASSIGN,
+	/* [Dee_TNO_str]                        = */ OPERATOR_STR,
+	/* [Dee_TNO_print]                      = */ OPERATOR_STR,
+	/* [Dee_TNO_repr]                       = */ OPERATOR_REPR,
+	/* [Dee_TNO_printrepr]                  = */ OPERATOR_REPR,
+	/* [Dee_TNO_bool]                       = */ OPERATOR_BOOL,
+	/* [Dee_TNO_call]                       = */ OPERATOR_CALL,
+	/* [Dee_TNO_call_kw]                    = */ OPERATOR_CALL,
+	/* [Dee_TNO_iter_next]                  = */ OPERATOR_ITERNEXT,
+	/* [Dee_TNO_nextpair]                   = */ OPERATOR_ITERNEXT,
+	/* [Dee_TNO_nextkey]                    = */ OPERATOR_ITERNEXT,
+	/* [Dee_TNO_nextvalue]                  = */ OPERATOR_ITERNEXT,
+	/* [Dee_TNO_advance]                    = */ OPERATOR_ITERNEXT,
+	/* [Dee_TNO_int]                        = */ OPERATOR_INT,
+	/* [Dee_TNO_int32]                      = */ OPERATOR_INT,
+	/* [Dee_TNO_int64]                      = */ OPERATOR_INT,
+	/* [Dee_TNO_double]                     = */ OPERATOR_FLOAT,
+	/* [Dee_TNO_hash]                       = */ OPERATOR_HASH,
+	/* [Dee_TNO_compare_eq]                 = */ OPERATOR_EQ,
+	/* [Dee_TNO_compare]                    = */ OPERATOR_LO,
+	/* [Dee_TNO_trycompare_eq]              = */ OPERATOR_EQ,
+	/* [Dee_TNO_eq]                         = */ OPERATOR_EQ,
+	/* [Dee_TNO_ne]                         = */ OPERATOR_NE,
+	/* [Dee_TNO_lo]                         = */ OPERATOR_LO,
+	/* [Dee_TNO_le]                         = */ OPERATOR_LE,
+	/* [Dee_TNO_gr]                         = */ OPERATOR_GR,
+	/* [Dee_TNO_ge]                         = */ OPERATOR_GE,
+	/* [Dee_TNO_iter]                       = */ OPERATOR_ITER,
+	/* [Dee_TNO_foreach]                    = */ OPERATOR_ITER,
+	/* [Dee_TNO_foreach_pair]               = */ OPERATOR_ITER,
+	/* [Dee_TNO_sizeob]                     = */ OPERATOR_SIZE,
+	/* [Dee_TNO_size]                       = */ OPERATOR_SIZE,
+	/* [Dee_TNO_size_fast]                  = */ OPERATOR_SIZE,
+	/* [Dee_TNO_contains]                   = */ OPERATOR_CONTAINS,
+	/* [Dee_TNO_getitem]                    = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_trygetitem]                 = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_getitem_index_fast]         = */ OPERATOR_USERCOUNT,
+	/* [Dee_TNO_getitem_index]              = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_trygetitem_index]           = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_getitem_string_hash]        = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_trygetitem_string_hash]     = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_getitem_string_len_hash]    = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_trygetitem_string_len_hash] = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_bounditem]                  = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_bounditem_index]            = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_bounditem_string_hash]      = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_bounditem_string_len_hash]  = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_hasitem]                    = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_hasitem_index]              = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_hasitem_string_hash]        = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_hasitem_string_len_hash]    = */ OPERATOR_GETITEM,
+	/* [Dee_TNO_delitem]                    = */ OPERATOR_DELITEM,
+	/* [Dee_TNO_delitem_index]              = */ OPERATOR_DELITEM,
+	/* [Dee_TNO_delitem_string_hash]        = */ OPERATOR_DELITEM,
+	/* [Dee_TNO_delitem_string_len_hash]    = */ OPERATOR_DELITEM,
+	/* [Dee_TNO_setitem]                    = */ OPERATOR_SETITEM,
+	/* [Dee_TNO_setitem_index]              = */ OPERATOR_SETITEM,
+	/* [Dee_TNO_setitem_string_hash]        = */ OPERATOR_SETITEM,
+	/* [Dee_TNO_setitem_string_len_hash]    = */ OPERATOR_SETITEM,
+	/* [Dee_TNO_getrange]                   = */ OPERATOR_GETRANGE,
+	/* [Dee_TNO_getrange_index]             = */ OPERATOR_GETRANGE,
+	/* [Dee_TNO_getrange_index_n]           = */ OPERATOR_GETRANGE,
+	/* [Dee_TNO_delrange]                   = */ OPERATOR_DELRANGE,
+	/* [Dee_TNO_delrange_index]             = */ OPERATOR_DELRANGE,
+	/* [Dee_TNO_delrange_index_n]           = */ OPERATOR_DELRANGE,
+	/* [Dee_TNO_setrange]                   = */ OPERATOR_SETRANGE,
+	/* [Dee_TNO_setrange_index]             = */ OPERATOR_SETRANGE,
+	/* [Dee_TNO_setrange_index_n]           = */ OPERATOR_SETRANGE,
+	/* [Dee_TNO_inv]                        = */ OPERATOR_INV,
+	/* [Dee_TNO_pos]                        = */ OPERATOR_POS,
+	/* [Dee_TNO_neg]                        = */ OPERATOR_NEG,
+	/* [Dee_TNO_add]                        = */ OPERATOR_ADD,
+	/* [Dee_TNO_inplace_add]                = */ OPERATOR_INPLACE_ADD,
+	/* [Dee_TNO_sub]                        = */ OPERATOR_SUB,
+	/* [Dee_TNO_inplace_sub]                = */ OPERATOR_INPLACE_SUB,
+	/* [Dee_TNO_mul]                        = */ OPERATOR_MUL,
+	/* [Dee_TNO_inplace_mul]                = */ OPERATOR_INPLACE_MUL,
+	/* [Dee_TNO_div]                        = */ OPERATOR_DIV,
+	/* [Dee_TNO_inplace_div]                = */ OPERATOR_INPLACE_DIV,
+	/* [Dee_TNO_mod]                        = */ OPERATOR_MOD,
+	/* [Dee_TNO_inplace_mod]                = */ OPERATOR_INPLACE_MOD,
+	/* [Dee_TNO_shl]                        = */ OPERATOR_SHL,
+	/* [Dee_TNO_inplace_shl]                = */ OPERATOR_INPLACE_SHL,
+	/* [Dee_TNO_shr]                        = */ OPERATOR_SHR,
+	/* [Dee_TNO_inplace_shr]                = */ OPERATOR_INPLACE_SHR,
+	/* [Dee_TNO_and]                        = */ OPERATOR_AND,
+	/* [Dee_TNO_inplace_and]                = */ OPERATOR_INPLACE_AND,
+	/* [Dee_TNO_or]                         = */ OPERATOR_OR,
+	/* [Dee_TNO_inplace_or]                 = */ OPERATOR_INPLACE_OR,
+	/* [Dee_TNO_xor]                        = */ OPERATOR_XOR,
+	/* [Dee_TNO_inplace_xor]                = */ OPERATOR_INPLACE_XOR,
+	/* [Dee_TNO_pow]                        = */ OPERATOR_POW,
+	/* [Dee_TNO_inplace_pow]                = */ OPERATOR_INPLACE_POW,
+	/* [Dee_TNO_inc]                        = */ OPERATOR_INC,
+	/* [Dee_TNO_dec]                        = */ OPERATOR_DEC,
+	/* [Dee_TNO_enter]                      = */ OPERATOR_ENTER,
+	/* [Dee_TNO_leave]                      = */ OPERATOR_LEAVE,
+	/* [Dee_TNO_getattr]                    = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_getattr_string_hash]        = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_getattr_string_len_hash]    = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_boundattr]                  = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_boundattr_string_hash]      = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_boundattr_string_len_hash]  = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_hasattr]                    = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_hasattr_string_hash]        = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_hasattr_string_len_hash]    = */ OPERATOR_GETATTR,
+	/* [Dee_TNO_delattr]                    = */ OPERATOR_DELATTR,
+	/* [Dee_TNO_delattr_string_hash]        = */ OPERATOR_DELATTR,
+	/* [Dee_TNO_delattr_string_len_hash]    = */ OPERATOR_DELATTR,
+	/* [Dee_TNO_setattr]                    = */ OPERATOR_SETATTR,
+	/* [Dee_TNO_setattr_string_hash]        = */ OPERATOR_SETATTR,
+	/* [Dee_TNO_setattr_string_len_hash]    = */ OPERATOR_SETATTR,
+/*[[[end]]]*/
+/* clang-format on */
 };
 
 

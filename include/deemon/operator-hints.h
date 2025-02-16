@@ -398,6 +398,10 @@ INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
 INTDEF enum Dee_tno_id const _DeeType_GetTnoOfOperator[Dee_OPERATOR_USERCOUNT];
 #define DeeType_GetTnoOfOperator(op) _DeeType_GetTnoOfOperator[op]
 
+/* The inverse of `DeeType_GetTnoOfOperator' */
+INTDEF Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT];
+#define DeeType_GetOperatorOfTno(id) _DeeType_GetOperatorOfTno[id]
+
 
 /* Find the type where native operator "id" has been inherited from.
  * This function correctly handles:
