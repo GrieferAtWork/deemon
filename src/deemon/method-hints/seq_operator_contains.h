@@ -97,8 +97,10 @@ err:
 		goto err_trycatch;
 	real_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key_and_value[0]);
 	Dee_Decref(key_and_value[0]);
-	if unlikely(!real_value) {
+	if unlikely(!ITER_ISOK(real_value)) {
 		Dee_Decref(key_and_value[1]);
+		if (real_value == ITER_DONE)
+			return 0;
 		goto err;
 	}
 	result = DeeObject_TryCompareEq(key_and_value[1], real_value);

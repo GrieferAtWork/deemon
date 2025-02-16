@@ -10462,8 +10462,10 @@ default__seq_contains__with__map_operator_trygetitem(DeeObject *self, DeeObject 
 		goto err_trycatch;
 	real_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem))(self, key_and_value[0]);
 	Dee_Decref(key_and_value[0]);
-	if unlikely(!real_value) {
+	if unlikely(!ITER_ISOK(real_value)) {
 		Dee_Decref(key_and_value[1]);
+		if (real_value == ITER_DONE)
+			return 0;
 		goto err;
 	}
 	result = DeeObject_TryCompareEq(key_and_value[1], real_value);

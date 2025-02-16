@@ -1968,6 +1968,134 @@ function printSpecialTypeMhCacheBody(impl: string) {
 }
 
 
+@@Prints the "Dee_TNO_ASSIGN_MAXLEN" macro
+function print_TNO_ASSIGN_MAXLEN() {
+	class DependencyChain {
+		this = default;
+		public member length: int;
+
+		@@The operator being assigned
+		public member name: NativeOperatorName;
+
+		@@The method to assign
+		public member method: string;
+
+		operator == (rhs: DependencyChain): bool -> length == rhs.length;
+		operator != (rhs: DependencyChain): bool -> length != rhs.length;
+		operator <  (rhs: DependencyChain): bool -> length <  rhs.length;
+		operator <= (rhs: DependencyChain): bool -> length <= rhs.length;
+		operator >  (rhs: DependencyChain): bool -> length >  rhs.length;
+		operator >= (rhs: DependencyChain): bool -> length >= rhs.length;
+
+		public addBefore(chain: DependencyChain) {
+			length += chain.length;
+			before.append(chain);
+		}
+
+		public property assignments: {(string, string)...} = {
+			get(): {(string, string)...} {
+				local result = [];
+				for (local x: before)
+					result.extend(x.assignments);
+				result.append((name.name, method));
+				return result;
+			}
+		}
+
+		public printRepr(indent: string = "") {
+			for (local x: before)
+				x.printRepr(">" + indent);
+			print("/* >", indent, " ", name, " = &", method, " // ", length, " */");
+		}
+
+		@@Assignments that happen before @name is assigned
+		public member before: {DependencyChain...} = [];
+	}
+
+	class OperatorImplChain {
+		this = default;
+		@@This operator (e.g. "tp_cmp->tp_compare")
+		public member name: NativeOperatorName;
+
+		@@Ways in which this operator can be implemented
+		@@>	{
+		@@>		HashSet.Frozen({
+		@@>			OperatorImplChain(name: "tp_cmp->tp_eq", using: ...),
+		@@>			OperatorImplChain(name: "tp_cmp->tp_lo", using: ...),
+		@@>		})
+		@@>	}
+		public member using: {{OperatorImplChain...}...} = [];
+
+		function getLongestChainLength(): DependencyChain | none {
+			return _getLongestChainLength(HashSet({ name }), HashSet());
+		}
+		function _getLongestChainLength(
+				unassigned: HashSet with NativeOperatorName,
+				assigned: HashSet with NativeOperatorName
+		): DependencyChain | none {
+			local result: DependencyChain | none = none;
+			local addedNotAssigned: HashSet with NativeOperatorName = HashSet();
+			for (local dependencies: using) {
+				for (local dependency: dependencies) {
+					if (dependency.name in unassigned)
+						goto next_dependencies;
+				}
+				local chainWithDependencies: DependencyChain = DependencyChain(1, name,
+						f"default__{name.name}__with__{
+							"__and__".join(dependencies.each.name.name)}");
+				unassigned.insertall(dependencies.each.name);
+				addedNotAssigned.insertall(dependencies.each.name);
+				local newAssigned = copy assigned;
+				for (local dependency: dependencies) {
+					try {
+						if (newAssigned.insert(name)) {
+							local depChain: DependencyChain = dependency
+									._getLongestChainLength(unassigned, newAssigned);
+							chainWithDependencies.addBefore(depChain);
+						}
+					} @[interrupt] catch (...) {
+						print File.stderr: "HERE", name, " -> ", dependency.name;
+						throw;
+					}
+				}
+				if (result is none || result.length < chainWithDependencies.length)
+					result = chainWithDependencies;
+next_dependencies:;
+			}
+			unassigned.removeall(addedNotAssigned);
+			return result;
+		}
+	}
+
+	local chains: {NativeOperatorName: OperatorImplChain} = Dict();
+	function _getOperatorImplChain(name: NativeOperatorName): OperatorImplChain {
+		local result: OperatorImplChain | none = chains.get(name);
+		if (result is none)
+			chains[name] = result = OperatorImplChain(name: name);
+		return result;
+	}
+	for (local name, nativeOperator: NATIVE_OPERATORS) {
+		local chain = _getOperatorImplChain(name);
+		for (local impl /*: NativeOperatorImpl*/: nativeOperator.impls) {
+			local deps = Tuple(impl.dependencies.map(_getOperatorImplChain));
+			if (deps)
+				chain.using.append(deps);
+		}
+	}
+	local longestChainLength = chains.values.each.getLongestChainLength() > ...;
+	local isFirst = true;
+	local assignments = longestChainLength.assignments;
+	local longestAssignmentNameLength = assignments.each.first.length > ...;
+	for (local i, _data: assignments.reversed().enumerate()) {
+		local name, cb = _data...;
+		print(i ? " * " : "/* ", f"\{ Dee_TNO_{
+			(name + ",").ljust(longestAssignmentNameLength + 1)
+		} &{cb} \}", i == (#assignments - 1) ? " */" : "");
+	}
+	print("#define Dee_TNO_ASSIGN_MAXLEN ", longestChainLength.length);
+}
+
+
 final class _SpecParserAttrib {
 	this = default;
 	public member kw: bool = false;
@@ -2971,5 +3099,6 @@ loadMethodHints();
 //printDefaultImpls();
 //printMhCacheNativeMembers();
 //printMhCacheAttributeMembers();
-printMethodAttributeImpls();
+//printMethodAttributeImpls();
+print_TNO_ASSIGN_MAXLEN();
 #endif /* __MAIN__ */

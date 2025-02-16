@@ -28,6 +28,7 @@
 #include <deemon/method-hints.h>
 #include <deemon/operator-hints.h>
 #include <deemon/seq.h>
+#include <deemon/system-features.h>
 #include <deemon/util/atomic.h>
 
 /**/
@@ -1409,6 +1410,105 @@ type_tno_has_nondefault(DeeTypeObject const *__restrict self, enum Dee_tno_id id
 }
 
 
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+Dee_tno_assign_contains(struct Dee_tno_assign const actions[Dee_TNO_ASSIGN_MAXLEN],
+                        size_t actions_count, enum Dee_tno_id id) {
+	size_t i;
+	for (i = 0; i < actions_count; ++i) {
+		if (actions[i].tnoa_id == id)
+			return true;
+	}
+	return false;
+}
+
+INTERN WUNUSED NONNULL((1)) size_t
+(DCALL do_DeeType_SelectMissingNativeOperator)(DeeTypeObject const *__restrict self, enum Dee_tno_id id,
+                                               struct Dee_tno_assign actions[Dee_TNO_ASSIGN_MAXLEN],
+                                               size_t actions_count) {
+#ifdef Dee_Allocac
+	struct Dee_tno_assign *winner_actions = (struct Dee_tno_assign *)Dee_Allocac(Dee_TNO_ASSIGN_MAXLEN - actions_count,
+	                                                                             sizeof(struct Dee_tno_assign));
+#else /* Dee_Allocac */
+	struct Dee_tno_assign winner_actions[Dee_TNO_ASSIGN_MAXLEN];
+#endif /* !Dee_Allocac */
+	size_t impl_i, winner_action_count;
+	struct oh_init_spec const *specs = &oh_init_specs[id];
+	struct oh_init_spec_impl const *impls = specs->ohis_impls;
+	if unlikely(!impls)
+		return 0;
+	ASSERT(!Dee_tno_assign_contains(actions, actions_count, id));
+	actions[actions_count].tnoa_id = id;
+
+	winner_action_count = (size_t)-1;
+	for (impl_i = 0; impls[impl_i].ohisi_impl; ++impl_i) {
+		size_t dep_i, dependency_score;
+		struct oh_init_spec_impl const *impl = &impls[impl_i];
+		enum Dee_tno_id missing_dependencies[2];
+		actions[actions_count].tnoa_cb = impl->ohisi_impl;
+
+		/* Load dependencies of this impl. */
+		missing_dependencies[0] = (enum Dee_tno_id)impl->ohisi_dep1;
+		missing_dependencies[1] = (enum Dee_tno_id)impl->ohisi_dep2;
+		for (dep_i = 0; dep_i < COMPILER_LENOF(missing_dependencies); ++dep_i) {
+			if (missing_dependencies[dep_i] >= Dee_TNO_COUNT)
+				break; /* No more dependencies... */
+			if (Dee_tno_assign_contains(actions, actions_count, missing_dependencies[dep_i])) {
+				/* Implementation has a dependencies that is already being assigned,
+				 * but will be assigned *AFTER* the action we are currently filling.
+				 *
+				 * iow: if we were to allow use of this dependency, there would not
+				 *      only be a dependency loop (that would most definitely result
+				 *      in a hard stack-overflow if we allowed it), but there would
+				 *      be a moment where an operator was assigned with a dependency
+				 *      that hasn't already been assigned. */
+				goto next_implementation;
+			}
+			if (type_tno_has_nondefault(self, missing_dependencies[dep_i]))
+				missing_dependencies[dep_i] = Dee_TNO_COUNT; /* Dependency is present (or already being assigned) */
+		}
+
+		/* Handle the case where the first dependency was resolved. */
+		if (missing_dependencies[0] == Dee_TNO_COUNT) {
+			missing_dependencies[0] = missing_dependencies[1];
+			missing_dependencies[1] = Dee_TNO_COUNT;
+		}
+
+		/* Check for optimal case: all dependencies are natively present */
+		if (missing_dependencies[0] == Dee_TNO_COUNT)
+			return actions_count + 1;
+
+		/* Slow path: recursively generate assignment instructions for dependencies. */
+		dependency_score = actions_count + 1;
+		for (dep_i = 0; dep_i < COMPILER_LENOF(missing_dependencies); ++dep_i) {
+			if (missing_dependencies[dep_i] >= Dee_TNO_COUNT)
+				break; /* No more dependencies... */
+			dependency_score = do_DeeType_SelectMissingNativeOperator(self, missing_dependencies[dep_i],
+			                                                          actions, dependency_score);
+			if (dependency_score == 0) /* Implementation not possible due to missing dependencies */
+				goto next_implementation;
+		}
+
+		/* See if we got a better winner impl! */
+		if (winner_action_count > dependency_score) {
+			winner_action_count = dependency_score;
+			memcpyc(winner_actions, actions + actions_count,
+			        winner_action_count - actions_count,
+			        sizeof(struct Dee_tno_assign));
+		}
+next_implementation:;
+	}
+
+	/* Use the winner (if we have one) */
+	if (winner_action_count != (size_t)-1) {
+		memcpyc(actions + actions_count, winner_actions,
+		        winner_action_count - actions_count,
+		        sizeof(struct Dee_tno_assign));
+		return winner_action_count;
+	}
+
+	/* Fallback: no implementation possible */
+	return 0;
+}
 
 /* Looking at related operators that actually *are* present,
  * and assuming that `id' isn't implemented, return the most
@@ -1429,66 +1529,7 @@ type_tno_has_nondefault(DeeTypeObject const *__restrict self, enum Dee_tno_id id
 INTERN WUNUSED NONNULL((1)) size_t
 (DCALL DeeType_SelectMissingNativeOperator)(DeeTypeObject const *__restrict self, enum Dee_tno_id id,
                                             struct Dee_tno_assign actions[Dee_TNO_ASSIGN_MAXLEN]) {
-	size_t i;
-	struct oh_init_spec const *specs = &oh_init_specs[id];
-	struct oh_init_spec_impl const *impls = specs->ohis_impls;
-	if unlikely(!impls)
-		return 0;
-
-	/* Step #1: prefer those with dependencies that are all: not IS_OPERATOR_HINT_DEAFULT_IMPL */
-	for (i = 0; impls[i].ohisi_impl; ++i) {
-		struct oh_init_spec_impl const *impl = &impls[i];
-		if (impl->ohisi_dep1 < Dee_TNO_COUNT &&
-		    !type_tno_has_nondefault(self, (enum Dee_tno_id)impl->ohisi_dep1))
-			continue;
-		if (impl->ohisi_dep2 < Dee_TNO_COUNT &&
-		    !type_tno_has_nondefault(self, (enum Dee_tno_id)impl->ohisi_dep2))
-			continue;
-		/* Found an impl where all dependencies are provided natively -> use it! */
-		actions[0].tnoa_id = id;
-		actions[0].tnoa_cb = impl->ohisi_impl;
-		return 1;
-	}
-
-	/* Step #2: prefer those that were defined first in /src/method-hints/*.h
-	 * For this case, we must also account for transitive dependencies. */
-#if Dee_TNO_ASSIGN_MAXLEN > 1
-	for (i = 0; impls[i].ohisi_impl; ++i) {
-		size_t result = 1;
-		struct oh_init_spec_impl const *impl = &impls[i];
-		ASSERTF(impl->ohisi_dep1 < Dee_TNO_COUNT || impl->ohisi_dep2 < Dee_TNO_COUNT,
-		        "The no-dependencies case should have been handled above");
-		if (impl->ohisi_dep1 < Dee_TNO_COUNT &&
-		    !type_tno_has_nondefault(self, (enum Dee_tno_id)impl->ohisi_dep1)) {
-			size_t dep_n_actions;
-			dep_n_actions = DeeType_SelectMissingNativeOperator(self,
-			                                                    (enum Dee_tno_id)impl->ohisi_dep1,
-			                                                    actions + result);
-			if (!dep_n_actions)
-				continue;
-			result += dep_n_actions;
-		}
-		if (impl->ohisi_dep2 < Dee_TNO_COUNT &&
-		    !type_tno_has_nondefault(self, (enum Dee_tno_id)impl->ohisi_dep2)) {
-			size_t dep_n_actions;
-			dep_n_actions = DeeType_SelectMissingNativeOperator(self,
-			                                                    (enum Dee_tno_id)impl->ohisi_dep2,
-			                                                    actions + result);
-			if (!dep_n_actions)
-				continue;
-			result += dep_n_actions;
-		}
-
-		/* All dependencies are being fulfilled -> use this impl! */
-		ASSERTF(result >= 2, "At least 2 actions, else the first loop should have handled this one");
-		actions[0].tnoa_id = id;
-		actions[0].tnoa_cb = impl->ohisi_impl;
-		return result;
-	}
-#endif /* Dee_TNO_ASSIGN_MAXLEN > 1 */
-
-	/* Fallback: no implementation possible */
-	return 0;
+	return do_DeeType_SelectMissingNativeOperator(self, id, actions, 0);
 }
 
 /* Wrapper around `DeeType_SelectMissingNativeOperator' that checks if the

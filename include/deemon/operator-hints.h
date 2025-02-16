@@ -298,7 +298,19 @@ struct Dee_tno_assign {
  * Shorter version is:
  *  - default__hasitem_index__with__bounditem_index
  *  - default__bounditem_index__with__getitem_index */
-#define Dee_TNO_ASSIGN_MAXLEN 3 /* TODO: Dynamically calculate */
+/*[[[deemon (print_TNO_ASSIGN_MAXLEN from "...src.deemon.method-hints.method-hints")();]]]*/
+/* { Dee_TNO_hasitem_string_len_hash,   &default__hasitem_string_len_hash__with__bounditem_string_len_hash }
+ * { Dee_TNO_bounditem_string_len_hash, &default__bounditem_string_len_hash__with__bounditem_string_hash }
+ * { Dee_TNO_bounditem_string_hash,     &default__bounditem_string_hash__with__getitem_string_hash }
+ * { Dee_TNO_getitem_string_hash,       &default__getitem_string_hash__with__trygetitem_string_hash }
+ * { Dee_TNO_trygetitem_string_hash,    &default__trygetitem_string_hash__with__trygetitem }
+ * { Dee_TNO_trygetitem,                &default__trygetitem__with__getitem }
+ * { Dee_TNO_getitem,                   &default__getitem__with__getitem_index }
+ * { Dee_TNO_getitem_index,             &default__getitem_index__with__size__and__getitem_index_fast }
+ * { Dee_TNO_size,                      &default__size__with__sizeob } */
+#define Dee_TNO_ASSIGN_MAXLEN 9
+/*[[[end]]]*/
+
 
 
 /* Looking at related operators that actually *are* present,
