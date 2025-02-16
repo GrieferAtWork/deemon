@@ -1374,6 +1374,10 @@ type_tno_tryset(DeeTypeObject const *__restrict self,
 				Dee_Free(new_table);
 				table = atomic_read((byte_t **)table);
 			} else {
+#ifndef NDEBUG
+				if (!(self->tp_flags & TP_FHEAP))
+					Dee_UntrackAlloc(new_table);
+#endif /* !NDEBUG */
 				table = new_table;
 			}
 			ASSERT(table);
@@ -1611,8 +1615,10 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) bool
 		}
 	}
 
+	/* TODO: Log operator names as per the inverse of "_DeeType_GetTnoOfOperator" */
 	Dee_DPRINTF("[RT] Inherit operator '%u' from '%s' into '%s' [ptr: %p]\n",
 	            (unsigned int)id, from->tp_name, into->tp_name, *(void **)&impl);
+
 	/* It's OK if the last write fails (because we still hand the correct pointer
 	 * to our caller), but it's not OK if any of the intermediate writes fail (as
 	 * in that case, the returned callback would try to access unallocated memory) */

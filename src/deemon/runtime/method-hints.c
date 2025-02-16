@@ -461,6 +461,10 @@ read_from_mhcache:
 		ASSERT(mhcache);
 		goto read_from_mhcache;
 	}
+#ifndef NDEBUG
+	if (!(self->tp_flags & TP_FHEAP))
+		Dee_UntrackAlloc(mhcache);
+#endif /* !NDEBUG */
 	result = DeeType_GetUncachedMethodHint(self, id);
 	if likely(!is_oom_operator_impl(id, result))
 		Dee_type_mh_cache_sethint(mhcache, id, result);
