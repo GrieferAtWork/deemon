@@ -1536,6 +1536,29 @@ INTERN WUNUSED NONNULL((1)) size_t
 	return do_DeeType_SelectMissingNativeOperator(self, id, actions, 0);
 }
 
+/* Return an actual, user-defined operator "id"
+ * (*NOT* allowing stuff like `default__size__with__sizeob')
+ * Also never returns `DeeType_GetNativeOperatorOOM()' or
+ * `DeeType_GetNativeOperatorUnsupported()' */
+INTERN WUNUSED NONNULL((1)) Dee_funptr_t
+(DCALL DeeType_GetNativeOperatorWithoutDefaults)(DeeTypeObject *__restrict self, enum Dee_tno_id id) {
+	Dee_funptr_t result = type_tno_get(self, id);
+	if (result) {
+		/* Check if `result' might be a default operator implementation. */
+		struct oh_init_spec const *specs = &oh_init_specs[id];
+		struct oh_init_spec_impl const *impls = specs->ohis_impls;
+		if (impls) {
+			for (; impls->ohisi_impl; ++impls) {
+				if (result == impls->ohisi_impl) {
+					result = NULL;
+					break;
+				}
+			}
+		}
+	}
+	return result;
+}
+
 /* Wrapper around `DeeType_SelectMissingNativeOperator' that checks if the
  * operator is already defined, and if not: see if can be substituted via
  * some other set of native operators (in which case: do that substitution

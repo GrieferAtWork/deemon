@@ -2217,22 +2217,27 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 					continue;
 			}
 
-			/* See if the type implements the relevant native operator. */
-			result = DeeType_GetNativeOperatorWithoutHints(self, iter->miso_tno);
+			/* See if the type implements the relevant native operator.
+			 * Important: don't accept "result" if it's something like default__size__with__sizeob!
+			 *            operator aliasing must happen a second time using method hint selection.
+			 * Otherwise, `REQUIRE(seq_operator_size)' would return `default__size__with__sizeob'
+			 * instead of `default__seq_operator_size__with__seq_operator_sizeob', which would then
+			 * lead to a whole chain of stuff breaking. */
+			result = DeeType_GetNativeOperatorWithoutDefaults(self, iter->miso_tno);
 
 			/* TODO: I think this "&& result != ospec->misos_default" check isn't necessary.
 			 *       Instead, types like "DeeSeq_Type" should just statically provided a
 			 *       pre-populated "struct Dee_type_mh_cache" that is filled with all of
 			 *       the *__empty callbacks. */
-			if (result /*&& result != ospec->misos_default*/ &&
-			    likely(result != DeeType_GetNativeOperatorOOM(iter->miso_tno))) {
+			if (result /*&& result != ospec->misos_default*/ /*&&
+			    likely(result != DeeType_GetNativeOperatorOOM(iter->miso_tno))*/) {
 				/* Check if "result" can be inherited from "self" into "orig_type".
 				 * Only if it can be, can we actually use this operator to implement
 				 * the method hint. */
 				if (self == orig_type ||
 				    DeeType_InheritNativeOperatorWithoutHints(self, orig_type,
-				                                        iter->miso_tno,
-				                                        result))
+				                                              iter->miso_tno,
+				                                              result))
 					return result;
 			}
 		}

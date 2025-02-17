@@ -117,6 +117,16 @@
 %[include("seq_first.h")]
 %[include("seq_last.h")]
 
+/* TODO: Similar to the old method hint system, the new system
+ *       should try to cache the optimal impls for first/last/...
+ *       when "Sequence.first" is directly invoked:
+ *       >> class MyClass: Sequence {
+ *       >>     property __seq_first__ = { get() -> 42; }
+ *       >> }
+ *       >> print MyClass().first; // Should cache `seq_getfirst' in `MyClass.tp_cache["first"]'
+ */
+
+
 %[include("seq_cached.h")]
 %[include("seq_frozen.h")]
 
