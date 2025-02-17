@@ -26,7 +26,7 @@ __seq_insert__(index:?Dint,item) {
 	size_t index;
 	DeeObject *item;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "|" UNPuSIZ ":__seq_insert__",
+	                    UNPuSIZ "o:__seq_insert__",
 	                    &index, &item))
 		goto err;
 	if unlikely(CALL_DEPENDENCY(seq_insert, self, index, item))

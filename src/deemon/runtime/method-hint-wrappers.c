@@ -908,7 +908,7 @@ DeeMA___seq_insert__(DeeObject *__restrict self, size_t argc, DeeObject *const *
 	size_t index;
 	DeeObject *item;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "|" UNPuSIZ ":__seq_insert__",
+	                    UNPuSIZ "o:__seq_insert__",
 	                    &index, &item))
 		goto err;
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_insert))(self, index, item))
@@ -926,7 +926,7 @@ DeeMA___seq_insertall__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	size_t index;
 	DeeObject *items;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_items,
-	                    UNPuSIZ "|" UNPuSIZ ":__seq_insertall__",
+	                    UNPuSIZ "o:__seq_insertall__",
 	                    &index, &items))
 		goto err;
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_insertall))(self, index, items))
@@ -990,7 +990,7 @@ DeeMA___seq_xchitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	size_t index;
 	DeeObject *item;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_item,
-	                    UNPuSIZ "|" UNPuSIZ ":__seq_xchitem__",
+	                    UNPuSIZ "o:__seq_xchitem__",
 	                    &index, &item))
 		goto err;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_xchitem_index))(self, index, item);

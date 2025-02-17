@@ -26,7 +26,7 @@ __seq_insertall__(index:?Dint,items:?S?O) {
 	size_t index;
 	DeeObject *items;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__index_items,
-	                    UNPuSIZ "|" UNPuSIZ ":__seq_insertall__",
+	                    UNPuSIZ "o:__seq_insertall__",
 	                    &index, &items))
 		goto err;
 	if unlikely(CALL_DEPENDENCY(seq_insertall, self, index, items))
