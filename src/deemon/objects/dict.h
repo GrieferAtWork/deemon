@@ -39,6 +39,11 @@
 #endif /* !SIZE_MAX */
 #endif /* !SIZE_MAX */
 
+#undef DICT_NDEBUG
+#if defined(NDEBUG) || 0 /* TODO: Change this "0" to a "1" once dicts have become stable enough. */
+#define DICT_NDEBUG
+#endif /* NDEBUG */
+
 DECL_BEGIN
 
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_DICTS

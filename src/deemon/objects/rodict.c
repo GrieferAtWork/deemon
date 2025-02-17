@@ -46,6 +46,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/align.h>
+
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -80,6 +82,73 @@ typedef DeeRoDictObject RoDict;
 /************************************************************************/
 /* RODICT HELPERS                                                       */
 /************************************************************************/
+
+
+#ifdef DICT_NDEBUG
+#define rodict_verify(self) (void)0
+#else /* DICT_NDEBUG */
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+rodict_verify(RoDict *__restrict self) {
+	size_t i, real_vused;
+	shift_t hidxio;
+	ASSERT(self->rd_vsize <= self->rd_hmask);
+	ASSERT(IS_POWER_OF_TWO(self->rd_hmask + 1));
+	ASSERT(self->rd_htab == _DeeRoDict_GetRealVTab(self) + self->rd_vsize);
+	hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
+	ASSERT(/*hidxio >= 0 &&*/ hidxio < DEE_DICT_HIDXIO_COUNT);
+	ASSERT(self->rd_hidxget == Dee_dict_hidxio[hidxio].dhxio_get);
+	for (i = Dee_dict_vidx_tovirt(0), real_vused = 0;
+	     Dee_dict_vidx_virt_lt_real(i, self->rd_vsize); ++i) {
+		struct Dee_dict_item *item = &_DeeRoDict_GetVirtVTab(self)[i];
+		if (item->di_key) {
+			ASSERT_OBJECT(item->di_key);
+			ASSERT_OBJECT(item->di_value);
+			++real_vused;
+		}
+	}
+	ASSERTF(real_vused == self->rd_vsize,
+	        "RODICT: vtab key count=%" PRFuSIZ " differs from rd_vsize=%" PRFuSIZ,
+	        real_vused, self->rd_vsize);
+	for (i = 0; i <= self->rd_hmask; ++i) {
+		Dee_dict_vidx_t vidx;
+		vidx = (*self->rd_hidxget)(self->rd_htab, i);
+		if (vidx == Dee_DICT_HTAB_EOF)
+			continue;
+		Dee_dict_vidx_virt2real(&vidx);
+		ASSERTF(vidx < self->rd_vsize,
+		        "RODICT: htab[%" PRFuSIZ "] points out-of-bounds: %" PRFuSIZ " >= %" PRFuSIZ,
+		        i, vidx, self->rd_vsize);
+	}
+	for (i = 0;; ++i) {
+		Dee_dict_vidx_t vidx;
+		ASSERTF(i <= self->rd_hmask, "RODICT: htab contains no EOF pointers (infinite loop would occur on non-present item lookup)");
+		vidx = (*self->rd_hidxget)(self->rd_htab, i);
+		if (vidx == Dee_DICT_HTAB_EOF)
+			break;
+	}
+	for (i = Dee_dict_vidx_tovirt(0), real_vused = 0;
+	     Dee_dict_vidx_virt_lt_real(i, self->rd_vsize); ++i) {
+		Dee_hash_t hs, perturb;
+		struct Dee_dict_item *item = &_DeeRoDict_GetVirtVTab(self)[i];
+		if (!item->di_key)
+			continue;
+		_DeeRoDict_HashIdxInit(self, &hs, &perturb, item->di_hash);
+		for (;; _DeeRoDict_HashIdxAdv(self, &hs, &perturb)) {
+			Dee_dict_vidx_t vidx;
+			struct Dee_dict_item *hitem;
+			vidx = _DeeRoDict_HTabGet(self, hs);
+			ASSERTF(vidx != Dee_DICT_HTAB_EOF,
+			        "RODICT: End-of-hash-chain[hash:%#" PRFxSIZ "] before item idx=%" PRFuSIZ ",count=%" PRFuSIZ " <%r:%r> was found",
+			        item->di_hash, Dee_dict_vidx_toreal(i), self->rd_vsize,
+			        item->di_key, item->di_value);
+			hitem = &_DeeRoDict_GetVirtVTab(self)[vidx];
+			if (hitem == item)
+				break;
+		}
+	}
+}
+#endif /* !DICT_NDEBUG */
+
 
 PRIVATE ATTR_NOINLINE NONNULL((1, 2)) void DCALL
 rodict_htab_decafter(RoDict *__restrict me, Dee_dict_sethidx_t hidxset,
@@ -218,6 +287,7 @@ Dee_rodict_builder_pack(struct Dee_rodict_builder *__restrict self) {
 		DeeObject_Init(result, &DeeRoDict_Type);
 	}
 	DBG_memset(self, 0xcc, sizeof(struct Dee_rodict_builder));
+	rodict_verify(result);
 	return result;
 }
 
@@ -368,9 +438,10 @@ Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restr
 				size_t n_after = (dict->rd_vsize - 1) - Dee_dict_vidx_toreal(vtab_idx);
 				ASSERT(n_after > 0);
 				memmovedownc(item, item + 1, n_after, sizeof(struct Dee_dict_item));
-				rodict_htab_decafter(dict, me->rdb_hidxset, vtab_idx);
+				rodict_htab_decafter(dict, me->rdb_hidxset, vtab_idx /*+ 1*/); /* +1 doesn't matter here */
 				item = &_DeeRoDict_GetRealVTab(dict)[dict->rd_vsize - 1];
 				item->di_hash = hash;
+				(*me->rdb_hidxset)(dict->rd_htab, result_htab_idx, Dee_dict_vidx_tovirt(dict->rd_vsize - 1));
 			}
 			ASSERT(item->di_hash == hash);
 			item->di_key   = key;   /* Inherit reference */
@@ -498,6 +569,7 @@ again:
 	result->rd_hmask   = hmask;
 	result->rd_hidxget = Dee_dict_hidxio[dst_hidxio].dhxio_get;
 	DeeObject_Init(result, &DeeRoDict_Type);
+	rodict_verify(result);
 	return (DREF DeeObject *)result;
 err:
 	return NULL;
@@ -771,6 +843,7 @@ rodict_deepcopy(RoDict *__restrict self) {
 	/* Must rebuild the hash-table since deep-copied keys may have different hashs. */
 	rodict_htab_rebuild(result, Dee_dict_hidxio[hidxio].dhxio_set);
 	DeeObject_Init(result, &DeeRoDict_Type);
+	rodict_verify(result);
 	return result;
 err_r_items_before_i_and_key_at_i:
 	Dee_Decref(_DeeRoDict_GetRealVTab(result)[i].di_key);

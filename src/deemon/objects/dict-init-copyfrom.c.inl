@@ -160,6 +160,7 @@ again:
 #ifdef DICT_INITFROM_NEEDSLOCK
 	Dee_atomic_rwlock_init(&self->d_lock);
 #endif /* DICT_INITFROM_NEEDSLOCK */
+	dict_verify(self);
 	return 0;
 err:
 	return -1;

@@ -438,11 +438,6 @@ PUBLIC_TPCONST struct Dee_dict_hidxio_struct tpconst Dee_dict_hidxio[DEE_DICT_HI
 	/* [3] = */ IF_DEE_DICT_HIDXIO_COUNT_GE_4({ &Dee_dict_gethidx64, &Dee_dict_sethidx64, &Dee_dict_movhidx64, NULL, &Dee_dict_dwnhidx64 },)
 };
 
-#undef DICT_NDEBUG
-#if defined(NDEBUG) || 0 /* TODO: Change this "0" to a "1" once dicts have become stable enough. */
-#define DICT_NDEBUG
-#endif /* NDEBUG */
-
 #define NULL_IF__DeeDict_EmptyTab(/*real*/ p) \
 	((p) == (struct Dee_dict_item *)_DeeDict_EmptyTab ? NULL : (p))
 
@@ -1721,6 +1716,7 @@ dict_init_fromrodict(Dict *__restrict self, DeeRoDictObject *__restrict other) {
 			Dee_Incref(item->di_key);
 			Dee_Incref(item->di_value);
 		}
+		dict_verify(self);
 	}
 	return result;
 }
@@ -2108,6 +2104,7 @@ dict_initfrom_seq(Dict *__restrict self, DeeObject *seq) {
 	foreach_status = DeeObject_ForeachPair(seq, &dict_fromsequence_foreach_cb, self);
 	if unlikely(foreach_status < 0)
 		goto err_self;
+	dict_verify(self);
 	return 0;
 err_self:
 	dict_fini(self);
