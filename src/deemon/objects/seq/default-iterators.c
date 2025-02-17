@@ -213,11 +213,13 @@ again:
 		result = (*self->digi_tp_getitem_index)(self->digi_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError))
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			++new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			return ITER_DONE;
-		if (!DeeError_Catch(&DeeError_UnboundItem))
+		} else {
 			goto err;
-		++new_index;
+		}
 	}
 	if (!atomic_cmpxch_or_write(&self->digi_index, old_index, new_index + 1)) {
 		Dee_Decref(result);
@@ -239,11 +241,13 @@ again:
 		result = (*self->digi_tp_getitem_index)(self->digi_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError))
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			++new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			return ITER_DONE;
-		if (!DeeError_Catch(&DeeError_UnboundItem))
+		} else {
 			goto err;
-		++new_index;
+		}
 	}
 	if (!atomic_cmpxch_or_write(&self->digi_index, old_index, new_index + 1)) {
 		Dee_Decref(result);
@@ -267,11 +271,13 @@ again:
 		result = (*self->disgi_tp_getitem_index)(self->disgi_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError))
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			++new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			return ITER_DONE;
-		if (!DeeError_Catch(&DeeError_UnboundItem))
+		} else {
 			goto err;
-		++new_index;
+		}
 	}
 	if (!atomic_cmpxch_or_write(&self->disgi_index, old_index, new_index + 1)) {
 		Dee_Decref(result);
@@ -295,11 +301,13 @@ again:
 		result = (*self->disgi_tp_getitem_index)(self->disgi_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError))
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			++new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			return ITER_DONE;
-		if (!DeeError_Catch(&DeeError_UnboundItem))
+		} else {
 			goto err;
-		++new_index;
+		}
 	}
 	if (!atomic_cmpxch_or_write(&self->disgi_index, old_index, new_index + 1)) {
 		Dee_Decref(result);
@@ -1089,14 +1097,15 @@ again:
 		result = (*self->dig_tp_getitem)(self->dig_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError)) {
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			if (DeeObject_Inc(&new_index))
+				goto err_new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			Dee_Decref(new_index);
 			return ITER_DONE;
+		} else {
+			goto err_new_index;
 		}
-		if (!DeeError_Catch(&DeeError_UnboundItem))
-			goto err_new_index;
-		if (DeeObject_Inc(&new_index))
-			goto err_new_index;
 	}
 	if (DeeObject_Inc(&new_index))
 		goto err_new_index_result;
@@ -1132,14 +1141,15 @@ again:
 		result = (*self->dig_tp_getitem)(self->dig_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError)) {
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			if (DeeObject_Inc(&new_index))
+				goto err_new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			Dee_Decref(new_index);
 			return ITER_DONE;
+		} else {
+			goto err_new_index;
 		}
-		if (!DeeError_Catch(&DeeError_UnboundItem))
-			goto err_new_index;
-		if (DeeObject_Inc(&new_index))
-			goto err_new_index;
 	}
 	if (DeeObject_Inc(&new_index))
 		goto err_new_index_result;
@@ -1177,14 +1187,15 @@ again:
 		result = (*self->ditg_tp_tgetitem)(self->ditg_tp_seq, self->ditg_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError)) {
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			if (DeeObject_Inc(&new_index))
+				goto err_new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			Dee_Decref(new_index);
 			return ITER_DONE;
+		} else {
+			goto err_new_index;
 		}
-		if (!DeeError_Catch(&DeeError_UnboundItem))
-			goto err_new_index;
-		if (DeeObject_Inc(&new_index))
-			goto err_new_index;
 	}
 	if (DeeObject_Inc(&new_index))
 		goto err_new_index_result;
@@ -1607,14 +1618,15 @@ again:
 		result = (*self->disg_tp_getitem)(self->disg_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError)) {
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			if (DeeObject_Inc(&new_index))
+				goto err_new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			Dee_Decref(new_index);
 			return ITER_DONE;
+		} else {
+			goto err_new_index;
 		}
-		if (!DeeError_Catch(&DeeError_UnboundItem))
-			goto err_new_index;
-		if (DeeObject_Inc(&new_index))
-			goto err_new_index;
 	}
 	if (DeeObject_Inc(&new_index))
 		goto err_new_index_result;
@@ -1657,14 +1669,15 @@ again:
 		result = (*self->disg_tp_getitem)(self->disg_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError)) {
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			if (DeeObject_Inc(&new_index))
+				goto err_new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			Dee_Decref(new_index);
 			return ITER_DONE;
+		} else {
+			goto err_new_index;
 		}
-		if (!DeeError_Catch(&DeeError_UnboundItem))
-			goto err_new_index;
-		if (DeeObject_Inc(&new_index))
-			goto err_new_index;
 	}
 	result_index = DeeObject_Copy(new_index);
 	if unlikely(!result_index)
@@ -1714,14 +1727,15 @@ again:
 		result = (*self->distg_tp_tgetitem)(self->distg_tp_seq, self->distg_seq, new_index);
 		if (result)
 			break;
-		if (DeeError_Catch(&DeeError_IndexError)) {
+		if (DeeError_Catch(&DeeError_UnboundItem)) {
+			if (DeeObject_Inc(&new_index))
+				goto err_new_index;
+		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			Dee_Decref(new_index);
 			return ITER_DONE;
+		} else {
+			goto err_new_index;
 		}
-		if (!DeeError_Catch(&DeeError_UnboundItem))
-			goto err_new_index;
-		if (DeeObject_Inc(&new_index))
-			goto err_new_index;
 	}
 	if (DeeObject_Inc(&new_index))
 		goto err_new_index_result;
