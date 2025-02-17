@@ -421,6 +421,44 @@ final class NativeMethod {
 	public member _methodHint: WeakRef with MethodHint | none = none;
 	public property methodHint: MethodHint | none = { get() -> _methodHint.value; };
 
+	@@True if this method needs something like `tdefault__map_enumerate__with_callobjectcache___map_enumerate__`
+	public property hasTypedCallAttrCacheImpl: bool = {
+		get(): bool {
+			return unsupportedImpl !is none &&
+			       callAttrImpl.alias is none &&
+			       methodHint.allAttributes;
+		}
+	}
+
+	public member _tCallAttrImpl: NativeMethod | none = none;
+	@@Typed variant of this native method, for the purpose of defining
+	@@methods such as `tdefault__map_enumerate__with_callobjectcache___map_enumerate__`
+	public property tCallAttrImpl: NativeMethod = {
+		get(): NativeMethod {
+			if (_tCallAttrImpl is none) {
+				_tCallAttrImpl = NativeMethod(
+						wunused: wunused,
+						returnType: returnType,
+						cc: cc,
+						name: name,
+						params: {
+							NativeMethodParam(
+									typ: "DeeTypeObject *",
+									name: "tp_self",
+									nonnull: true),
+							params.each._withoutRestrict()...
+						},
+						callAttrImpl: callAttrImpl.alias is none
+								? callAttrImpl
+								: NativeMethodImpl(alias: f"t{callAttrImpl.alias}"),
+						getsetMember: getsetMember,
+						operatorSpecs: operatorSpecs,
+				);
+			}
+			return _tCallAttrImpl;
+		}
+	}
+
 	@@Enumerate all impls as the name by which they get declared, and the actual impl
 	public property allImpls: {(string, NativeMethodImpl)...} = {
 		get(): {(string, NativeMethodImpl)...} {
@@ -580,6 +618,12 @@ final class NativeMethod {
 		if (methodHint.allAttributes) {
 			local hintAttr = methodHint.attr;
 			printIntdefDeclOrAlias(f"default__{name}__with_callobjectcache_{hintAttr}", callAttrImpl);
+			if (hasTypedCallAttrCacheImpl) {
+				local tMethod = tCallAttrImpl;
+				tMethod.printIntdefDeclOrAlias(
+						f"tdefault__{name}__with_callobjectcache_{hintAttr}",
+						tMethod.callAttrImpl);
+			}
 		}
 		if (unsupportedImpl !is none)
 			printIntdefDeclOrAlias(f"default__{name}__unsupported", unsupportedImpl);
@@ -628,8 +672,28 @@ final class NativeMethod {
 		}
 		if (hasWithCallCacheDefaultImpls) {
 			local hintAttr = methodHint.attr;
+			local usedCallAttrImpl: NativeMethodImpl = callAttrImpl;
+			local callCacheName = f"default__{name}__with_callobjectcache_{hintAttr}";
+			if (hasTypedCallAttrCacheImpl) {
+				local selfExpr = params.first.name;
+				local selfExprInd = params.first.typ.count("*");
+				if (selfExprInd >= 2)
+					selfExpr = f"{"*" * (selfExprInd - 1)}{selfExpr}";
+				local tpSelfExpr = f"Dee_TYPE({selfExpr})";
+				usedCallAttrImpl = copy usedCallAttrImpl;
+				usedCallAttrImpl.impl =
+					f"\{\n"
+					f"#ifdef __OPTIMIZE_SIZE__\n"
+					f"	return t{callCacheName}({tpSelfExpr}{"".join(
+						for (local x: params) f", {x.name}"
+					)});\n"
+					f"#else /* __OPTIMIZE_SIZE__ */\n"
+					f"	{usedCallAttrImpl.impl.strip().strip("{}").strip()}\n"
+					f"#endif /* !__OPTIMIZE_SIZE__ */\n"
+					f"\}";
+			}
 			if (methodHint.getset) {
-				printInternImpl(f"default__{name}__with_callobjectcache_{hintAttr}", callAttrImpl, {
+				printInternImpl(callCacheName, usedCallAttrImpl, {
 					"LOCAL_GETATTR": (self) ->
 						f"DeeObject_Call(Dee_TYPE({self})->tp_mhcache->mhc_get_{
 							hintAttr}, 1, (DeeObject *const *)&{self})",
@@ -650,7 +714,7 @@ final class NativeMethod {
 							hintAttr}, {self}, {", ".join(args)})",
 				});
 			} else {
-				printInternImpl(f"default__{name}__with_callobjectcache_{hintAttr}", callAttrImpl, {
+				printInternImpl(callCacheName, usedCallAttrImpl, {
 					"LOCAL_GETATTR": (self) ->
 						f"DeeInstanceMethod_New(Dee_TYPE({self})->tp_mhcache->mhc_{
 							hintAttr}, {self})",
@@ -702,6 +766,52 @@ final class NativeMethod {
 				printInternImpl(name, impl, makeImplBodyMacros());
 				print;
 			}
+		}
+		print;
+	}
+
+	public printTypedDefaultImpls() {
+		if (!hasTypedCallAttrCacheImpl)
+			return;
+		print(f"/* {name} */");
+		local methodHint = this.methodHint;
+		local hintAttr = methodHint.attr;
+		local tMethod = tCallAttrImpl;
+		local tpSelfExpr = tMethod.params.first.name;
+		if (methodHint.getset) {
+			tMethod.printInternImpl(f"tdefault__{name}__with_callobjectcache_{hintAttr}", tMethod.callAttrImpl, {
+				"LOCAL_GETATTR": (self) ->
+					f"DeeObject_Call({tpSelfExpr}->tp_mhcache->mhc_get_{
+						hintAttr}, 1, (DeeObject *const *)&{self})",
+				"LOCAL_BOUNDATTR": (self) ->
+					f"call_getter_for_bound({tpSelfExpr}->tp_mhcache->mhc_get_{
+						hintAttr}, {self})",
+				"LOCAL_DELATTR": (self) ->
+					f"call_delete({tpSelfExpr}->tp_mhcache->mhc_del_{
+						hintAttr}, {self})",
+				"LOCAL_SETATTR": (self, value) ->
+					f"call_setter({tpSelfExpr}->tp_mhcache->mhc_set_{
+						hintAttr}, {self}, {value})",
+				"LOCAL_CALLATTR": (self, argc, argv) ->
+					f"call_getter_result({tpSelfExpr}->tp_mhcache->mhc_get_{
+						hintAttr}, {self}, {argc}, {argv})",
+				"LOCAL_CALLATTRF": (self, args...) ->
+					f"call_getter_resultf({tpSelfExpr}->tp_mhcache->mhc_get_{
+						hintAttr}, {self}, {", ".join(args)})",
+			});
+		} else {
+			tMethod.printInternImpl(f"tdefault__{name}__with_callobjectcache_{hintAttr}", tMethod.callAttrImpl, {
+				"LOCAL_GETATTR": (self) ->
+					f"DeeInstanceMethod_New({tpSelfExpr}->tp_mhcache->mhc_{
+						hintAttr}, {self})",
+				"LOCAL_BOUNDATTR": (self) -> f"Dee_BOUND_YES",
+				"LOCAL_CALLATTR": (self, argc, argv) ->
+					f"DeeObject_ThisCall({tpSelfExpr}->tp_mhcache->mhc_{
+						hintAttr}, {self}, {argc}, {argv})",
+				"LOCAL_CALLATTRF": (self, args...) ->
+					f"DeeObject_ThisCallf({tpSelfExpr}->tp_mhcache->mhc_{
+						hintAttr}, {self}, {", ".join(args)})",
+			});
 		}
 		print;
 	}
@@ -1395,6 +1505,12 @@ function printDefaultImpls() {
 		native.printDefaultImpls();
 }
 
+function printTypedDefaultImpls() {
+	RESET_PREFIX();
+	for (local none, native: NATIVE_METHOD_HINTS)
+		native.printTypedDefaultImpls();
+}
+
 function printMhCacheNativeMembers() {
 	RESET_PREFIX();
 	for (local none, native: NATIVE_METHOD_HINTS)
@@ -2069,16 +2185,18 @@ function printSuperMethodHintWrappers(impl: bool) {
 			}
 
 			/* Check if the database is able to return "Dee_SUPER_METHOD_HINT_CC_WITH_TYPE" */
-			local needWithTyped = false;
-			for (local operatorSpec/*: OperatorSpec*/: nativeMethod.operatorSpecs) {
-				local operatorName: NativeOperatorName = NativeOperatorName(
-						table: operatorSpec.operatorTable,
-						field: operatorSpec.operatorField);
-				local nativeOperator: NativeOperator | none =
-						NATIVE_OPERATORS.get(operatorName);
-				if (nativeOperator !is none && nativeOperator.hasMakeTypedMacro) {
-					needWithTyped = true;
-					break;
+			local needWithTyped = nativeMethod.hasTypedCallAttrCacheImpl;
+			if (!needWithTyped) {
+				for (local operatorSpec/*: OperatorSpec*/: nativeMethod.operatorSpecs) {
+					local operatorName: NativeOperatorName = NativeOperatorName(
+							table: operatorSpec.operatorTable,
+							field: operatorSpec.operatorField);
+					local nativeOperator: NativeOperator | none =
+							NATIVE_OPERATORS.get(operatorName);
+					if (nativeOperator !is none && nativeOperator.hasMakeTypedMacro) {
+						needWithTyped = true;
+						break;
+					}
 				}
 			}
 
@@ -2210,6 +2328,12 @@ function printMhSuperMap() {
 
 		/* Figure out typed-mappings */
 		local typedImpls: {string: string} = Dict();
+		if (nativeMethod.hasTypedCallAttrCacheImpl) {
+			local callCacheName = f"default__{
+					nativeMethod.name}__with_callobjectcache_{
+					nativeMethod.methodHint.attr}";
+			typedImpls[callCacheName] = f"t{callCacheName}";
+		}
 		for (local operatorSpec/*: OperatorSpec*/: nativeMethod.operatorSpecs) {
 			local operatorName: NativeOperatorName = NativeOperatorName(
 					table: operatorSpec.operatorTable,

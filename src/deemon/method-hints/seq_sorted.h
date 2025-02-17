@@ -236,7 +236,7 @@ err_base:
 err:
 	return NULL;
 }} {
-	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
+	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
 }
 
 

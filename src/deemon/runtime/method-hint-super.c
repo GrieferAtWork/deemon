@@ -727,6 +727,8 @@ super_mh__seq_enumerate(DeeSuperObject *__restrict self, Dee_seq_enumerate_t cb,
 		return (*(DeeMH_seq_enumerate_t)specs.smh_cb)(self->s_self, cb, arg);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_enumerate_t)specs.smh_cb)((DeeObject *)self, cb, arg);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_seq_enumerate_t, void *))specs.smh_cb)(self->s_type, self->s_self, cb, arg);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -741,6 +743,8 @@ super_mh__seq_enumerate_index(DeeSuperObject *__restrict self, Dee_seq_enumerate
 		return (*(DeeMH_seq_enumerate_index_t)specs.smh_cb)(self->s_self, cb, arg, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_enumerate_index_t)specs.smh_cb)((DeeObject *)self, cb, arg, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_seq_enumerate_index_t, void *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, cb, arg, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -755,6 +759,8 @@ super_mh__seq_makeenumeration(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_makeenumeration_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_makeenumeration_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -769,6 +775,8 @@ super_mh__seq_makeenumeration_with_range(DeeSuperObject *self, DeeObject *start,
 		return (*(DeeMH_seq_makeenumeration_with_range_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_makeenumeration_with_range_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -783,6 +791,8 @@ super_mh__seq_makeenumeration_with_intrange(DeeSuperObject *__restrict self, siz
 		return (*(DeeMH_seq_makeenumeration_with_intrange_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_makeenumeration_with_intrange_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -797,6 +807,8 @@ super_mh__seq_unpack(DeeSuperObject *__restrict self, size_t count, DREF DeeObje
 		return (*(DeeMH_seq_unpack_t)specs.smh_cb)(self->s_self, count, result);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_unpack_t)specs.smh_cb)((DeeObject *)self, count, result);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, DREF DeeObject **))specs.smh_cb)(self->s_type, self->s_self, count, result);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -811,6 +823,8 @@ super_mh__seq_unpack_ex(DeeSuperObject *__restrict self, size_t min_count, size_
 		return (*(DeeMH_seq_unpack_ex_t)specs.smh_cb)(self->s_self, min_count, max_count, result);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_unpack_ex_t)specs.smh_cb)((DeeObject *)self, min_count, max_count, result);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DREF DeeObject **))specs.smh_cb)(self->s_type, self->s_self, min_count, max_count, result);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -825,6 +839,8 @@ super_mh__seq_unpack_ub(DeeSuperObject *__restrict self, size_t min_count, size_
 		return (*(DeeMH_seq_unpack_ub_t)specs.smh_cb)(self->s_self, min_count, max_count, result);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_unpack_ub_t)specs.smh_cb)((DeeObject *)self, min_count, max_count, result);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DREF DeeObject **))specs.smh_cb)(self->s_type, self->s_self, min_count, max_count, result);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -839,6 +855,8 @@ super_mh__seq_trygetfirst(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_trygetfirst_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_trygetfirst_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -853,6 +871,8 @@ super_mh__seq_getfirst(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_getfirst_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_getfirst_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -867,6 +887,8 @@ super_mh__seq_boundfirst(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_boundfirst_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_boundfirst_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -881,6 +903,8 @@ super_mh__seq_delfirst(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_delfirst_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_delfirst_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -895,6 +919,8 @@ super_mh__seq_setfirst(DeeSuperObject *self, DeeObject *value) {
 		return (*(DeeMH_seq_setfirst_t)specs.smh_cb)(self->s_self, value);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_setfirst_t)specs.smh_cb)((DeeObject *)self, value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, value);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -909,6 +935,8 @@ super_mh__seq_trygetlast(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_trygetlast_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_trygetlast_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -923,6 +951,8 @@ super_mh__seq_getlast(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_getlast_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_getlast_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -937,6 +967,8 @@ super_mh__seq_boundlast(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_boundlast_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_boundlast_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -951,6 +983,8 @@ super_mh__seq_dellast(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_dellast_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_dellast_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -965,6 +999,8 @@ super_mh__seq_setlast(DeeSuperObject *self, DeeObject *value) {
 		return (*(DeeMH_seq_setlast_t)specs.smh_cb)(self->s_self, value);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_setlast_t)specs.smh_cb)((DeeObject *)self, value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, value);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -979,6 +1015,8 @@ super_mh__seq_cached(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_cached_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_cached_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -993,6 +1031,8 @@ super_mh__seq_frozen(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_frozen_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_frozen_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1007,6 +1047,8 @@ super_mh__seq_any(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_any_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_any_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1021,6 +1063,8 @@ super_mh__seq_any_with_key(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_seq_any_with_key_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_any_with_key_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1035,6 +1079,8 @@ super_mh__seq_any_with_range(DeeSuperObject *__restrict self, size_t start, size
 		return (*(DeeMH_seq_any_with_range_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_any_with_range_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1049,6 +1095,8 @@ super_mh__seq_any_with_range_and_key(DeeSuperObject *self, size_t start, size_t 
 		return (*(DeeMH_seq_any_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_any_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1063,6 +1111,8 @@ super_mh__seq_all(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_all_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_all_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1077,6 +1127,8 @@ super_mh__seq_all_with_key(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_seq_all_with_key_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_all_with_key_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1091,6 +1143,8 @@ super_mh__seq_all_with_range(DeeSuperObject *__restrict self, size_t start, size
 		return (*(DeeMH_seq_all_with_range_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_all_with_range_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1105,6 +1159,8 @@ super_mh__seq_all_with_range_and_key(DeeSuperObject *self, size_t start, size_t 
 		return (*(DeeMH_seq_all_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_all_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1119,6 +1175,8 @@ super_mh__seq_parity(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_parity_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_parity_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1133,6 +1191,8 @@ super_mh__seq_parity_with_key(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_seq_parity_with_key_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_parity_with_key_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1147,6 +1207,8 @@ super_mh__seq_parity_with_range(DeeSuperObject *__restrict self, size_t start, s
 		return (*(DeeMH_seq_parity_with_range_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_parity_with_range_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1161,6 +1223,8 @@ super_mh__seq_parity_with_range_and_key(DeeSuperObject *self, size_t start, size
 		return (*(DeeMH_seq_parity_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_parity_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1175,6 +1239,8 @@ super_mh__seq_reduce(DeeSuperObject *self, DeeObject *combine) {
 		return (*(DeeMH_seq_reduce_t)specs.smh_cb)(self->s_self, combine);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_reduce_t)specs.smh_cb)((DeeObject *)self, combine);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, combine);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1189,6 +1255,8 @@ super_mh__seq_reduce_with_init(DeeSuperObject *self, DeeObject *combine, DeeObje
 		return (*(DeeMH_seq_reduce_with_init_t)specs.smh_cb)(self->s_self, combine, init);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_reduce_with_init_t)specs.smh_cb)((DeeObject *)self, combine, init);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, combine, init);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1203,6 +1271,8 @@ super_mh__seq_reduce_with_range(DeeSuperObject *self, DeeObject *combine, size_t
 		return (*(DeeMH_seq_reduce_with_range_t)specs.smh_cb)(self->s_self, combine, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_reduce_with_range_t)specs.smh_cb)((DeeObject *)self, combine, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, combine, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1217,6 +1287,8 @@ super_mh__seq_reduce_with_range_and_init(DeeSuperObject *self, DeeObject *combin
 		return (*(DeeMH_seq_reduce_with_range_and_init_t)specs.smh_cb)(self->s_self, combine, start, end, init);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_reduce_with_range_and_init_t)specs.smh_cb)((DeeObject *)self, combine, start, end, init);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, combine, start, end, init);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1231,6 +1303,8 @@ super_mh__seq_min(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_min_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_min_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1245,6 +1319,8 @@ super_mh__seq_min_with_key(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_seq_min_with_key_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_min_with_key_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1259,6 +1335,8 @@ super_mh__seq_min_with_range(DeeSuperObject *__restrict self, size_t start, size
 		return (*(DeeMH_seq_min_with_range_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_min_with_range_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1273,6 +1351,8 @@ super_mh__seq_min_with_range_and_key(DeeSuperObject *self, size_t start, size_t 
 		return (*(DeeMH_seq_min_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_min_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1287,6 +1367,8 @@ super_mh__seq_max(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_max_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_max_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1301,6 +1383,8 @@ super_mh__seq_max_with_key(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_seq_max_with_key_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_max_with_key_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1315,6 +1399,8 @@ super_mh__seq_max_with_range(DeeSuperObject *__restrict self, size_t start, size
 		return (*(DeeMH_seq_max_with_range_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_max_with_range_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1329,6 +1415,8 @@ super_mh__seq_max_with_range_and_key(DeeSuperObject *self, size_t start, size_t 
 		return (*(DeeMH_seq_max_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_max_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1343,6 +1431,8 @@ super_mh__seq_sum(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_sum_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_sum_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1357,6 +1447,8 @@ super_mh__seq_sum_with_range(DeeSuperObject *__restrict self, size_t start, size
 		return (*(DeeMH_seq_sum_with_range_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_sum_with_range_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1371,6 +1463,8 @@ super_mh__seq_count(DeeSuperObject *self, DeeObject *item) {
 		return (*(DeeMH_seq_count_t)specs.smh_cb)(self->s_self, item);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_count_t)specs.smh_cb)((DeeObject *)self, item);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1385,6 +1479,8 @@ super_mh__seq_count_with_key(DeeSuperObject *self, DeeObject *item, DeeObject *k
 		return (*(DeeMH_seq_count_with_key_t)specs.smh_cb)(self->s_self, item, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_count_with_key_t)specs.smh_cb)((DeeObject *)self, item, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1399,6 +1495,8 @@ super_mh__seq_count_with_range(DeeSuperObject *self, DeeObject *item, size_t sta
 		return (*(DeeMH_seq_count_with_range_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_count_with_range_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1413,6 +1511,8 @@ super_mh__seq_count_with_range_and_key(DeeSuperObject *self, DeeObject *item, si
 		return (*(DeeMH_seq_count_with_range_and_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_count_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1427,6 +1527,8 @@ super_mh__seq_contains(DeeSuperObject *self, DeeObject *item) {
 		return (*(DeeMH_seq_contains_t)specs.smh_cb)(self->s_self, item);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_contains_t)specs.smh_cb)((DeeObject *)self, item);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1441,6 +1543,8 @@ super_mh__seq_contains_with_key(DeeSuperObject *self, DeeObject *item, DeeObject
 		return (*(DeeMH_seq_contains_with_key_t)specs.smh_cb)(self->s_self, item, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_contains_with_key_t)specs.smh_cb)((DeeObject *)self, item, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1455,6 +1559,8 @@ super_mh__seq_contains_with_range(DeeSuperObject *self, DeeObject *item, size_t 
 		return (*(DeeMH_seq_contains_with_range_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_contains_with_range_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1469,6 +1575,8 @@ super_mh__seq_contains_with_range_and_key(DeeSuperObject *self, DeeObject *item,
 		return (*(DeeMH_seq_contains_with_range_and_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_contains_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1499,6 +1607,8 @@ super_mh__seq_locate(DeeSuperObject *self, DeeObject *match, DeeObject *def) {
 		return (*(DeeMH_seq_locate_t)specs.smh_cb)(self->s_self, match, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_locate_t)specs.smh_cb)((DeeObject *)self, match, def);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, match, def);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1513,6 +1623,8 @@ super_mh__seq_locate_with_range(DeeSuperObject *self, DeeObject *match, size_t s
 		return (*(DeeMH_seq_locate_with_range_t)specs.smh_cb)(self->s_self, match, start, end, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_locate_with_range_t)specs.smh_cb)((DeeObject *)self, match, start, end, def);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, match, start, end, def);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1527,6 +1639,8 @@ super_mh__seq_rlocate(DeeSuperObject *self, DeeObject *match, DeeObject *def) {
 		return (*(DeeMH_seq_rlocate_t)specs.smh_cb)(self->s_self, match, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_rlocate_t)specs.smh_cb)((DeeObject *)self, match, def);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, match, def);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1541,6 +1655,8 @@ super_mh__seq_rlocate_with_range(DeeSuperObject *self, DeeObject *match, size_t 
 		return (*(DeeMH_seq_rlocate_with_range_t)specs.smh_cb)(self->s_self, match, start, end, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_rlocate_with_range_t)specs.smh_cb)((DeeObject *)self, match, start, end, def);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, match, start, end, def);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1555,6 +1671,8 @@ super_mh__seq_startswith(DeeSuperObject *self, DeeObject *item) {
 		return (*(DeeMH_seq_startswith_t)specs.smh_cb)(self->s_self, item);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_startswith_t)specs.smh_cb)((DeeObject *)self, item);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1569,6 +1687,8 @@ super_mh__seq_startswith_with_key(DeeSuperObject *self, DeeObject *item, DeeObje
 		return (*(DeeMH_seq_startswith_with_key_t)specs.smh_cb)(self->s_self, item, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_startswith_with_key_t)specs.smh_cb)((DeeObject *)self, item, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1583,6 +1703,8 @@ super_mh__seq_startswith_with_range(DeeSuperObject *self, DeeObject *item, size_
 		return (*(DeeMH_seq_startswith_with_range_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_startswith_with_range_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1597,6 +1719,8 @@ super_mh__seq_startswith_with_range_and_key(DeeSuperObject *self, DeeObject *ite
 		return (*(DeeMH_seq_startswith_with_range_and_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_startswith_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1611,6 +1735,8 @@ super_mh__seq_endswith(DeeSuperObject *self, DeeObject *item) {
 		return (*(DeeMH_seq_endswith_t)specs.smh_cb)(self->s_self, item);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_endswith_t)specs.smh_cb)((DeeObject *)self, item);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1625,6 +1751,8 @@ super_mh__seq_endswith_with_key(DeeSuperObject *self, DeeObject *item, DeeObject
 		return (*(DeeMH_seq_endswith_with_key_t)specs.smh_cb)(self->s_self, item, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_endswith_with_key_t)specs.smh_cb)((DeeObject *)self, item, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1639,6 +1767,8 @@ super_mh__seq_endswith_with_range(DeeSuperObject *self, DeeObject *item, size_t 
 		return (*(DeeMH_seq_endswith_with_range_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_endswith_with_range_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1653,6 +1783,8 @@ super_mh__seq_endswith_with_range_and_key(DeeSuperObject *self, DeeObject *item,
 		return (*(DeeMH_seq_endswith_with_range_and_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_endswith_with_range_and_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1667,6 +1799,8 @@ super_mh__seq_find(DeeSuperObject *self, DeeObject *item, size_t start, size_t e
 		return (*(DeeMH_seq_find_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_find_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1681,6 +1815,8 @@ super_mh__seq_find_with_key(DeeSuperObject *self, DeeObject *item, size_t start,
 		return (*(DeeMH_seq_find_with_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_find_with_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1695,6 +1831,8 @@ super_mh__seq_rfind(DeeSuperObject *self, DeeObject *item, size_t start, size_t 
 		return (*(DeeMH_seq_rfind_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_rfind_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1709,6 +1847,8 @@ super_mh__seq_rfind_with_key(DeeSuperObject *self, DeeObject *item, size_t start
 		return (*(DeeMH_seq_rfind_with_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_rfind_with_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1723,6 +1863,8 @@ super_mh__seq_erase(DeeSuperObject *__restrict self, size_t index, size_t count)
 		return (*(DeeMH_seq_erase_t)specs.smh_cb)(self->s_self, index, count);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_erase_t)specs.smh_cb)((DeeObject *)self, index, count);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, index, count);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1737,6 +1879,8 @@ super_mh__seq_insert(DeeSuperObject *self, size_t index, DeeObject *item) {
 		return (*(DeeMH_seq_insert_t)specs.smh_cb)(self->s_self, index, item);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_insert_t)specs.smh_cb)((DeeObject *)self, index, item);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, index, item);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1751,6 +1895,8 @@ super_mh__seq_insertall(DeeSuperObject *self, size_t index, DeeObject *items) {
 		return (*(DeeMH_seq_insertall_t)specs.smh_cb)(self->s_self, index, items);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_insertall_t)specs.smh_cb)((DeeObject *)self, index, items);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, index, items);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1765,6 +1911,8 @@ super_mh__seq_pushfront(DeeSuperObject *self, DeeObject *item) {
 		return (*(DeeMH_seq_pushfront_t)specs.smh_cb)(self->s_self, item);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_pushfront_t)specs.smh_cb)((DeeObject *)self, item);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1779,6 +1927,8 @@ super_mh__seq_append(DeeSuperObject *self, DeeObject *item) {
 		return (*(DeeMH_seq_append_t)specs.smh_cb)(self->s_self, item);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_append_t)specs.smh_cb)((DeeObject *)self, item);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1793,6 +1943,8 @@ super_mh__seq_extend(DeeSuperObject *self, DeeObject *items) {
 		return (*(DeeMH_seq_extend_t)specs.smh_cb)(self->s_self, items);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_extend_t)specs.smh_cb)((DeeObject *)self, items);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, items);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1807,6 +1959,8 @@ super_mh__seq_xchitem_index(DeeSuperObject *self, size_t index, DeeObject *item)
 		return (*(DeeMH_seq_xchitem_index_t)specs.smh_cb)(self->s_self, index, item);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_xchitem_index_t)specs.smh_cb)((DeeObject *)self, index, item);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, index, item);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1821,6 +1975,8 @@ super_mh__seq_clear(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_seq_clear_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_clear_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1835,6 +1991,8 @@ super_mh__seq_pop(DeeSuperObject *self, Dee_ssize_t index) {
 		return (*(DeeMH_seq_pop_t)specs.smh_cb)(self->s_self, index);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_pop_t)specs.smh_cb)((DeeObject *)self, index);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, Dee_ssize_t))specs.smh_cb)(self->s_type, self->s_self, index);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1849,6 +2007,8 @@ super_mh__seq_remove(DeeSuperObject *self, DeeObject *item, size_t start, size_t
 		return (*(DeeMH_seq_remove_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_remove_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1863,6 +2023,8 @@ super_mh__seq_remove_with_key(DeeSuperObject *self, DeeObject *item, size_t star
 		return (*(DeeMH_seq_remove_with_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_remove_with_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1877,6 +2039,8 @@ super_mh__seq_rremove(DeeSuperObject *self, DeeObject *item, size_t start, size_
 		return (*(DeeMH_seq_rremove_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_rremove_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1891,6 +2055,8 @@ super_mh__seq_rremove_with_key(DeeSuperObject *self, DeeObject *item, size_t sta
 		return (*(DeeMH_seq_rremove_with_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_rremove_with_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1905,6 +2071,8 @@ super_mh__seq_removeall(DeeSuperObject *self, DeeObject *item, size_t start, siz
 		return (*(DeeMH_seq_removeall_t)specs.smh_cb)(self->s_self, item, start, end, max);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_removeall_t)specs.smh_cb)((DeeObject *)self, item, start, end, max);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end, max);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1919,6 +2087,8 @@ super_mh__seq_removeall_with_key(DeeSuperObject *self, DeeObject *item, size_t s
 		return (*(DeeMH_seq_removeall_with_key_t)specs.smh_cb)(self->s_self, item, start, end, max, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_removeall_with_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, max, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, max, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1933,6 +2103,8 @@ super_mh__seq_removeif(DeeSuperObject *self, DeeObject *should, size_t start, si
 		return (*(DeeMH_seq_removeif_t)specs.smh_cb)(self->s_self, should, start, end, max);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_removeif_t)specs.smh_cb)((DeeObject *)self, should, start, end, max);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, should, start, end, max);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1947,6 +2119,8 @@ super_mh__seq_resize(DeeSuperObject *self, size_t newsize, DeeObject *filler) {
 		return (*(DeeMH_seq_resize_t)specs.smh_cb)(self->s_self, newsize, filler);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_resize_t)specs.smh_cb)((DeeObject *)self, newsize, filler);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, newsize, filler);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1961,6 +2135,8 @@ super_mh__seq_fill(DeeSuperObject *self, size_t start, size_t end, DeeObject *fi
 		return (*(DeeMH_seq_fill_t)specs.smh_cb)(self->s_self, start, end, filler);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_fill_t)specs.smh_cb)((DeeObject *)self, start, end, filler);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, filler);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1975,6 +2151,8 @@ super_mh__seq_reverse(DeeSuperObject *self, size_t start, size_t end) {
 		return (*(DeeMH_seq_reverse_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_reverse_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -1989,6 +2167,8 @@ super_mh__seq_reversed(DeeSuperObject *self, size_t start, size_t end) {
 		return (*(DeeMH_seq_reversed_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_reversed_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2003,6 +2183,8 @@ super_mh__seq_sort(DeeSuperObject *self, size_t start, size_t end) {
 		return (*(DeeMH_seq_sort_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_sort_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2017,6 +2199,8 @@ super_mh__seq_sort_with_key(DeeSuperObject *self, size_t start, size_t end, DeeO
 		return (*(DeeMH_seq_sort_with_key_t)specs.smh_cb)(self->s_self, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_sort_with_key_t)specs.smh_cb)((DeeObject *)self, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2031,6 +2215,8 @@ super_mh__seq_sorted(DeeSuperObject *self, size_t start, size_t end) {
 		return (*(DeeMH_seq_sorted_t)specs.smh_cb)(self->s_self, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_sorted_t)specs.smh_cb)((DeeObject *)self, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2045,6 +2231,8 @@ super_mh__seq_sorted_with_key(DeeSuperObject *self, size_t start, size_t end, De
 		return (*(DeeMH_seq_sorted_with_key_t)specs.smh_cb)(self->s_self, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_sorted_with_key_t)specs.smh_cb)((DeeObject *)self, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2059,6 +2247,8 @@ super_mh__seq_bfind(DeeSuperObject *self, DeeObject *item, size_t start, size_t 
 		return (*(DeeMH_seq_bfind_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_bfind_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2073,6 +2263,8 @@ super_mh__seq_bfind_with_key(DeeSuperObject *self, DeeObject *item, size_t start
 		return (*(DeeMH_seq_bfind_with_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_bfind_with_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2087,6 +2279,8 @@ super_mh__seq_bposition(DeeSuperObject *self, DeeObject *item, size_t start, siz
 		return (*(DeeMH_seq_bposition_t)specs.smh_cb)(self->s_self, item, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_bposition_t)specs.smh_cb)((DeeObject *)self, item, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, item, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2101,6 +2295,8 @@ super_mh__seq_bposition_with_key(DeeSuperObject *self, DeeObject *item, size_t s
 		return (*(DeeMH_seq_bposition_with_key_t)specs.smh_cb)(self->s_self, item, start, end, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_bposition_with_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2115,6 +2311,8 @@ super_mh__seq_brange(DeeSuperObject *self, DeeObject *item, size_t start, size_t
 		return (*(DeeMH_seq_brange_t)specs.smh_cb)(self->s_self, item, start, end, result_range);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_brange_t)specs.smh_cb)((DeeObject *)self, item, start, end, result_range);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, size_t*))specs.smh_cb)(self->s_type, self->s_self, item, start, end, result_range);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2129,6 +2327,8 @@ super_mh__seq_brange_with_key(DeeSuperObject *self, DeeObject *item, size_t star
 		return (*(DeeMH_seq_brange_with_key_t)specs.smh_cb)(self->s_self, item, start, end, key, result_range);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_seq_brange_with_key_t)specs.smh_cb)((DeeObject *)self, item, start, end, key, result_range);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, size_t, size_t, DeeObject *, size_t*))specs.smh_cb)(self->s_type, self->s_self, item, start, end, key, result_range);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2551,6 +2751,8 @@ super_mh__set_frozen(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_set_frozen_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_set_frozen_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2565,6 +2767,8 @@ super_mh__set_unify(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_set_unify_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_set_unify_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2579,6 +2783,8 @@ super_mh__set_insert(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_set_insert_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_set_insert_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2593,6 +2799,8 @@ super_mh__set_insertall(DeeSuperObject *self, DeeObject *keys) {
 		return (*(DeeMH_set_insertall_t)specs.smh_cb)(self->s_self, keys);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_set_insertall_t)specs.smh_cb)((DeeObject *)self, keys);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, keys);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2607,6 +2815,8 @@ super_mh__set_remove(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_set_remove_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_set_remove_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2621,6 +2831,8 @@ super_mh__set_removeall(DeeSuperObject *self, DeeObject *keys) {
 		return (*(DeeMH_set_removeall_t)specs.smh_cb)(self->s_self, keys);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_set_removeall_t)specs.smh_cb)((DeeObject *)self, keys);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, keys);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2635,6 +2847,8 @@ super_mh__set_pop(DeeSuperObject *self) {
 		return (*(DeeMH_set_pop_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_set_pop_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -2649,6 +2863,8 @@ super_mh__set_pop_with_default(DeeSuperObject *self, DeeObject *default_) {
 		return (*(DeeMH_set_pop_with_default_t)specs.smh_cb)(self->s_self, default_);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_set_pop_with_default_t)specs.smh_cb)((DeeObject *)self, default_);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, default_);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3063,6 +3279,8 @@ super_mh__map_keys(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_map_keys_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_keys_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3077,6 +3295,8 @@ super_mh__map_iterkeys(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_map_iterkeys_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_iterkeys_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3091,6 +3311,8 @@ super_mh__map_values(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_map_values_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_values_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3105,6 +3327,8 @@ super_mh__map_itervalues(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_map_itervalues_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_itervalues_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3135,6 +3359,8 @@ super_mh__map_enumerate_range(DeeSuperObject *self, Dee_seq_enumerate_t cb, void
 		return (*(DeeMH_map_enumerate_range_t)specs.smh_cb)(self->s_self, cb, arg, start, end);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_enumerate_range_t)specs.smh_cb)((DeeObject *)self, cb, arg, start, end);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_seq_enumerate_t, void *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, cb, arg, start, end);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3445,6 +3671,8 @@ super_mh__map_frozen(DeeSuperObject *__restrict self) {
 		return (*(DeeMH_map_frozen_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_frozen_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3459,6 +3687,8 @@ super_mh__map_setold(DeeSuperObject *self, DeeObject *key, DeeObject *value) {
 		return (*(DeeMH_map_setold_t)specs.smh_cb)(self->s_self, key, value);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_setold_t)specs.smh_cb)((DeeObject *)self, key, value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key, value);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3473,6 +3703,8 @@ super_mh__map_setold_ex(DeeSuperObject *self, DeeObject *key, DeeObject *value) 
 		return (*(DeeMH_map_setold_ex_t)specs.smh_cb)(self->s_self, key, value);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_setold_ex_t)specs.smh_cb)((DeeObject *)self, key, value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key, value);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3487,6 +3719,8 @@ super_mh__map_setnew(DeeSuperObject *self, DeeObject *key, DeeObject *value) {
 		return (*(DeeMH_map_setnew_t)specs.smh_cb)(self->s_self, key, value);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_setnew_t)specs.smh_cb)((DeeObject *)self, key, value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key, value);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3501,6 +3735,8 @@ super_mh__map_setnew_ex(DeeSuperObject *self, DeeObject *key, DeeObject *value) 
 		return (*(DeeMH_map_setnew_ex_t)specs.smh_cb)(self->s_self, key, value);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_setnew_ex_t)specs.smh_cb)((DeeObject *)self, key, value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key, value);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3515,6 +3751,8 @@ super_mh__map_setdefault(DeeSuperObject *self, DeeObject *key, DeeObject *value)
 		return (*(DeeMH_map_setdefault_t)specs.smh_cb)(self->s_self, key, value);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_setdefault_t)specs.smh_cb)((DeeObject *)self, key, value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key, value);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3529,6 +3767,8 @@ super_mh__map_update(DeeSuperObject *self, DeeObject *items) {
 		return (*(DeeMH_map_update_t)specs.smh_cb)(self->s_self, items);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_update_t)specs.smh_cb)((DeeObject *)self, items);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, items);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3543,6 +3783,8 @@ super_mh__map_remove(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_map_remove_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_remove_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3557,6 +3799,8 @@ super_mh__map_removekeys(DeeSuperObject *self, DeeObject *keys) {
 		return (*(DeeMH_map_removekeys_t)specs.smh_cb)(self->s_self, keys);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_removekeys_t)specs.smh_cb)((DeeObject *)self, keys);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, keys);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3571,6 +3815,8 @@ super_mh__map_pop(DeeSuperObject *self, DeeObject *key) {
 		return (*(DeeMH_map_pop_t)specs.smh_cb)(self->s_self, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_pop_t)specs.smh_cb)((DeeObject *)self, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3585,6 +3831,8 @@ super_mh__map_pop_with_default(DeeSuperObject *self, DeeObject *key, DeeObject *
 		return (*(DeeMH_map_pop_with_default_t)specs.smh_cb)(self->s_self, key, default_);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_pop_with_default_t)specs.smh_cb)((DeeObject *)self, key, default_);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key, default_);
 	default: break;
 	}
 	__builtin_unreachable();
@@ -3599,6 +3847,8 @@ super_mh__map_popitem(DeeSuperObject *self) {
 		return (*(DeeMH_map_popitem_t)specs.smh_cb)(self->s_self);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
 		return (*(DeeMH_map_popitem_t)specs.smh_cb)((DeeObject *)self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
 	default: break;
 	}
 	__builtin_unreachable();
