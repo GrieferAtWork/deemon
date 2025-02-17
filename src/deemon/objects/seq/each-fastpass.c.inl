@@ -1284,11 +1284,7 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	/* .tp_attr          = */ &LOCAL_seX(attr),
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
-#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 	/* .tp_methods       = */ sew_methods,
-#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
-	/* .tp_methods       = */ NULL,
-#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getsets       = */ NULL, /* TODO: Access to the arguments vector */
 	/* .tp_members       = */ LOCAL_seX(members),
 	/* .tp_class_methods = */ NULL,
