@@ -290,6 +290,7 @@ struct Dee_type_mh_cache {
 	/* clang-format on */
 
 #define _DeeType_HasTraitHint___seq_getitem_always_bound__(self) 0 /* TODO: "public static final __seq_getitem_always_bound__: bool = true;" (__seq_getitem__ never throws UnboundItem) */
+#define _DeeType_HasTraitHint___map_getitem_always_bound__(self) 0 /* TODO: "public static final __map_getitem_always_bound__: bool = true;" (__map_getitem__ never throws UnboundItem) */
 
 #define DeeType_HasTraitHint(self, name) _DeeType_HasTraitHint_##name(self)
 

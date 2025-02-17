@@ -75,7 +75,8 @@ map_iterkeys = {
 	map_enumerate = REQUIRE(map_enumerate);
 	if (map_enumerate == &default__map_enumerate__empty)
 		return &$empty;
-	if (map_enumerate != REQUIRE(set_operator_foreach_pair)) {
+	if (DeeType_HasTraitHint(THIS_TYPE, __map_getitem_always_bound__) ||
+	    map_enumerate == REQUIRE(set_operator_foreach_pair)) {
 		DeeMH_set_operator_iter_t set_operator_iter = REQUIRE(set_operator_iter);
 		if (set_operator_iter == &default__set_operator_iter__empty)
 			return &$empty;
