@@ -2022,6 +2022,11 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[233] = {
 /* clang-format on */
 
 
+#undef SEARCH_IN_TYPE_FOR_ATTRIBUTES
+#if 1
+#define SEARCH_IN_TYPE_FOR_ATTRIBUTES
+#endif
+
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2, 3, 4)) Dee_funptr_t DCALL
 mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict info,
@@ -2031,10 +2036,20 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 	switch (info->ai_type) {
 
 	case Dee_ATTRINFO_CUSTOM:
+#ifndef SEARCH_IN_TYPE_FOR_ATTRIBUTES
+		/* Even if a type overrides "operator getattr", look at `tp_methods' and `tp_class' to see
+		 * if it defines attributes (which could the be accessed like "MyClass.__seq_find__(seq)") */
+		return DeeType_GetExplicitMethodHint((DeeTypeObject *)info->ai_decl, id);
+#else /* !SEARCH_IN_TYPE_FOR_ATTRIBUTES */
 		/* Don't accept user-defined "operator getattr" */
 		return NULL;
+#endif /* SEARCH_IN_TYPE_FOR_ATTRIBUTES */
 
+#ifdef SEARCH_IN_TYPE_FOR_ATTRIBUTES
+	case Dee_ATTRINFO_INSTANCE_METHOD:
+#else /* SEARCH_IN_TYPE_FOR_ATTRIBUTES */
 	case Dee_ATTRINFO_METHOD:
+#endif /* !SEARCH_IN_TYPE_FOR_ATTRIBUTES */
 		if (specs->mis_attr_kind == MH_KIND_METHOD) {
 			/* It's a deemon method written in C -- check if the
 			 * type overwrites it using an explicit method hint. */
@@ -2054,15 +2069,19 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 				atomic_cmpxch(&cache->c_method, NULL, info->ai_value.v_method->m_func);
 			}
 			return info->ai_value.v_method->m_flag & Dee_TYPE_METHOD_FKWDS
-			       ? specs->mis_withcache_method
-			       : specs->mis_withcache_kwmethod;
+			       ? specs->mis_withcache_kwmethod
+			       : specs->mis_withcache_method;
 #else /* CONFIG_HAVE_MH_CALLMETHODCACHE */
 			result = withattr;
 #endif /* !CONFIG_HAVE_MH_CALLMETHODCACHE */
 		}
 		break;
 
+#ifdef SEARCH_IN_TYPE_FOR_ATTRIBUTES
+	case Dee_ATTRINFO_INSTANCE_GETSET:
+#else /* SEARCH_IN_TYPE_FOR_ATTRIBUTES */
 	case Dee_ATTRINFO_GETSET:
+#endif /* !SEARCH_IN_TYPE_FOR_ATTRIBUTES */
 		if (specs->mis_attr_kind != MH_KIND_METHOD) {
 			/* It's a deemon getset written in C -- check if the
 			 * type overwrites it using an explicit method hint. */
@@ -2092,7 +2111,11 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 		}
 		break;
 
+#ifdef SEARCH_IN_TYPE_FOR_ATTRIBUTES
+	case Dee_ATTRINFO_INSTANCE_ATTR:
+#else /* SEARCH_IN_TYPE_FOR_ATTRIBUTES */
 	case Dee_ATTRINFO_ATTR:
+#endif /* !SEARCH_IN_TYPE_FOR_ATTRIBUTES */
 		/* Optimization when a user-defined class defines a function/property  */
 		if (specs->mis_attr_kind != MH_KIND_METHOD
 		    ? ((info->ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FREADONLY)) ==
@@ -2164,6 +2187,47 @@ DeeType_GetPrivateMethodHint(DeeTypeObject *self, DeeTypeObject *orig_type, enum
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
+findattr_for_method_hint(DeeTypeObject *__restrict self,
+                         /*string*/ DeeObject *__restrict attr,
+                         struct Dee_attrinfo *__restrict retinfo) {
+#ifdef SEARCH_IN_TYPE_FOR_ATTRIBUTES
+	if (!DeeObject_TFindPrivateAttrInfo(Dee_TYPE(self), (DeeObject *)self, attr, retinfo))
+		goto nope;
+	if (retinfo->ai_decl != (DeeObject *)self)
+		goto nope;
+	switch (retinfo->ai_type) {
+	case Dee_ATTRINFO_CUSTOM:
+	case Dee_ATTRINFO_INSTANCE_METHOD:
+	case Dee_ATTRINFO_INSTANCE_GETSET:
+	case Dee_ATTRINFO_INSTANCE_MEMBER:
+	case Dee_ATTRINFO_INSTANCE_ATTR:
+		/* Only recognize instance attributes:
+		 * >> class MyClass1 {
+		 * >>     function __seq_size__() { return 42; }
+		 * >> }
+		 * >> class MyClass2 {
+		 * >>     static function __seq_size__(self: MyClass2) { return 43; }
+		 * >> }
+		 * >>
+		 * >> print Sequence.length(MyClass1()); // 42
+		 * >> print Sequence.length(MyClass2()); // Error: not supported...
+		 *
+		 * iow: if a properly named attribute exists, but is defined
+		 *      statically, then it doesn't count as a valid way of
+		 *      implementing the method hint. */
+		break;
+	default:
+		goto nope;
+	}
+	return true;
+nope:
+	return false;
+#else /* SEARCH_IN_TYPE_FOR_ATTRIBUTES */
+	return DeeObject_TFindPrivateAttrInfo(self, NULL, attr, retinfo);
+#endif /* !SEARCH_IN_TYPE_FOR_ATTRIBUTES */
+}
+
 
 /* Same as `DeeType_GetPrivateMethodHint', but only check for attributes
  * without doing any default substitutions.
@@ -2178,7 +2242,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 
 	/* Check if the type "self" implements attributes that can be used to implement the method hint. */
 	if (specs->mis_attr_prim &&
-	    DeeObject_TFindPrivateAttrInfo(self, NULL, (DeeObject *)specs->mis_attr_prim, &info)) {
+	    findattr_for_method_hint(self, (DeeObject *)specs->mis_attr_prim, &info)) {
 		Dee_funptr_t result;
 		result = mh_init_from_attribute(orig_type, &info, specs, specs->mis_withattr_prim, id);
 		if (result)
@@ -2193,7 +2257,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 				if (DeeType_GetSeqClass(self) != iter->missa_seqclass)
 					continue;
 			}
-			if (DeeObject_TFindPrivateAttrInfo(self, NULL, (DeeObject *)iter->missa_attrib, &info)) {
+			if (findattr_for_method_hint(self, (DeeObject *)iter->missa_attrib, &info)) {
 				Dee_funptr_t result;
 				result = mh_init_from_attribute(orig_type, &info, specs, iter->missa_withattr, id);
 				if (result)
@@ -2225,11 +2289,31 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 			 * lead to a whole chain of stuff breaking. */
 			result = DeeType_GetNativeOperatorWithoutDefaults(self, iter->miso_tno);
 
-			/* TODO: I think this "&& result != ospec->misos_default" check isn't necessary.
-			 *       Instead, types like "DeeSeq_Type" should just statically provided a
-			 *       pre-populated "struct Dee_type_mh_cache" that is filled with all of
-			 *       the *__empty callbacks. */
-			if (result /*&& result != ospec->misos_default*/ /*&&
+			/* Don't accept the operator if it is the default method hint invocation wrapper.
+			 * This is necessary to prevent infinite recursion in code like:
+			 * >> import * from deemon;
+			 * >> class MyClass: Sequence {}
+			 * >>
+			 * >> for (local x: MyClass())
+			 * >>     print repr x;
+			 *
+			 * With this extra check, the above code fails with an error:
+			 * >> SequenceError: type MyClass does not support: Sequence.operator iter()
+			 *
+			 * Without this extra check, "MyClass" would be configured as:
+			 * - tp_seq->tp_iter = &default__seq_operator_iter
+			 * - tp_mhcache->mh_seq_operator_iter = &default__seq_operator_iter
+			 * ... meaning that "default__seq_operator_iter" would infinitely
+			 *     recurse back on itself.
+			 *
+			 * Obviously, this still won't handle the case where the user manually
+			 * implements "operator iter" as a call to the default sequence impl:
+			 * >> class MyClass: Sequence { operator iter() -> Sequence.__iter__(this); }
+			 *
+			 * But in this case, it's much more obvious, *and* we get a stack overflow
+			 * in user-code (meaning that deemon won't hard-crash)
+			 */
+			if (result && result != ospec->misos_default /*&&
 			    likely(result != DeeType_GetNativeOperatorOOM(iter->miso_tno))*/) {
 				/* Check if "result" can be inherited from "self" into "orig_type".
 				 * Only if it can be, can we actually use this operator to implement
