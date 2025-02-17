@@ -3007,21 +3007,10 @@ PUBLIC NONNULL((1, 3)) bool
 (DCALL DeeType_GetMethodHintForSuper)(struct Dee_super_object *__restrict super, enum Dee_tmh_id id,
                                       struct Dee_super_method_hint *__restrict result) {
 	struct mh_super_map const *specs;
-	DeeObject *super_self = DeeSuper_SELF(super);
 	DeeTypeObject *view_type = DeeSuper_TYPE(super);
-	DeeTypeObject *real_type = Dee_TYPE(super_self);
-	Dee_funptr_t view_impl, real_impl;
-	view_impl = DeeType_GetMethodHint(view_type, id);
+	Dee_funptr_t view_impl = DeeType_GetMethodHint(view_type, id);
 	if unlikely(!view_impl)
 		return false;
-	real_impl = DeeType_GetMethodHint(real_type, id);
-	if (real_impl == view_impl) {
-		/* Same impl between view- and real- types
-		 * -> Can just invoke callback by passing `DeeSuper_SELF()' */
-		result->smh_cb = view_impl;
-		result->smh_cc = Dee_SUPER_METHOD_HINT_CC_WITH_SELF;
-		return true;
-	}
 
 	/* Abstract types must "by definition" accept any type of object as "self"
 	 * As such, we can *always* invoke the method hint implemented here by just
@@ -3059,8 +3048,8 @@ PUBLIC NONNULL((1, 3)) bool
 		}
 	}
 
-	/* Check for callbacks that should be invoke by
-	 * injecting an extra "tp_self" argument. */
+	/* Check for callbacks that should be invoke
+	 * by injecting an extra "tp_self" argument. */
 	if (specs->msm_with_type) {
 		struct mh_super_map_typed const *iter = specs->msm_with_type;
 		for (; iter->msmr_regular; ++iter) {
@@ -3076,8 +3065,12 @@ PUBLIC NONNULL((1, 3)) bool
 	 *           super-object support. As such, better be safe and
 	 *           invoke the *real* impl of the target type (even
 	 *           if that means that we loose type information) */
-	result->smh_cb = real_impl;
-	result->smh_cc = Dee_SUPER_METHOD_HINT_CC_WITH_SELF;
+	{
+		DeeObject *super_self = DeeSuper_SELF(super);
+		DeeTypeObject *real_type = Dee_TYPE(super_self);
+		result->smh_cb = DeeType_GetMethodHint(real_type, id);
+		result->smh_cc = Dee_SUPER_METHOD_HINT_CC_WITH_SELF;
+	}
 	return true;
 }
 

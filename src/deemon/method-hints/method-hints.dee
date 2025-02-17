@@ -580,12 +580,6 @@ final class NativeMethod {
 		if (methodHint.allAttributes) {
 			local hintAttr = methodHint.attr;
 			printIntdefDeclOrAlias(f"default__{name}__with_callobjectcache_{hintAttr}", callAttrImpl);
-			if (!methodHint.getset) {
-				print("#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE");
-				printIntdefDeclOrAlias(f"default__{name}__with_callmethodcache_{hintAttr}", callAttrImpl);
-				printIntdefDeclOrAlias(f"default__{name}__with_callkwmethodcache_{hintAttr}", callAttrImpl);
-				print("#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */");
-			}
 		}
 		if (unsupportedImpl !is none)
 			printIntdefDeclOrAlias(f"default__{name}__unsupported", unsupportedImpl);
@@ -638,68 +632,38 @@ final class NativeMethod {
 				printInternImpl(f"default__{name}__with_callobjectcache_{hintAttr}", callAttrImpl, {
 					"LOCAL_GETATTR": (self) ->
 						f"DeeObject_Call(Dee_TYPE({self})->tp_mhcache->mhc_get_{
-							hintAttr}.c_object, 1, (DeeObject *const *)&{self})",
+							hintAttr}, 1, (DeeObject *const *)&{self})",
 					"LOCAL_BOUNDATTR": (self) ->
 						f"call_getter_for_bound(Dee_TYPE({self})->tp_mhcache->mhc_get_{
-							hintAttr}.c_object, {self})",
+							hintAttr}, {self})",
 					"LOCAL_DELATTR": (self) ->
 						f"call_delete(Dee_TYPE({self})->tp_mhcache->mhc_del_{
-							hintAttr}.c_object, {self})",
+							hintAttr}, {self})",
 					"LOCAL_SETATTR": (self, value) ->
 						f"call_setter(Dee_TYPE({self})->tp_mhcache->mhc_set_{
-							hintAttr}.c_object, {self}, {value})",
+							hintAttr}, {self}, {value})",
 					"LOCAL_CALLATTR": (self, argc, argv) ->
 						f"call_getter_result(Dee_TYPE({self})->tp_mhcache->mhc_get_{
-							hintAttr}.c_object, {self}, {argc}, {argv})",
+							hintAttr}, {self}, {argc}, {argv})",
 					"LOCAL_CALLATTRF": (self, args...) ->
 						f"call_getter_resultf(Dee_TYPE({self})->tp_mhcache->mhc_get_{
-							hintAttr}.c_object, {self}, {", ".join(args)})",
+							hintAttr}, {self}, {", ".join(args)})",
 				});
-				print;
 			} else {
 				printInternImpl(f"default__{name}__with_callobjectcache_{hintAttr}", callAttrImpl, {
 					"LOCAL_GETATTR": (self) ->
 						f"DeeInstanceMethod_New(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_object, {self})",
+							hintAttr}, {self})",
 					"LOCAL_BOUNDATTR": (self) -> f"Dee_BOUND_YES",
 					"LOCAL_CALLATTR": (self, argc, argv) ->
 						f"DeeObject_ThisCall(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_object, {self}, {argc}, {argv})",
+							hintAttr}, {self}, {argc}, {argv})",
 					"LOCAL_CALLATTRF": (self, args...) ->
 						f"DeeObject_ThisCallf(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_object, {self}, {", ".join(args)})",
+							hintAttr}, {self}, {", ".join(args)})",
 				});
-				print;
-
-				print("#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE");
-				printInternImpl(f"default__{name}__with_callmethodcache_{hintAttr}", callAttrImpl, {
-					"LOCAL_GETATTR": (self) ->
-						f"DeeObjMethod_New(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_method, {self})",
-					"LOCAL_BOUNDATTR": (self) -> f"Dee_BOUND_YES",
-					"LOCAL_CALLATTR": (self, argc, argv) ->
-						f"DeeObjMethod_CallFunc(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_method, {self}, {argc}, {argv})",
-					"LOCAL_CALLATTRF": (self, args...) ->
-						f"DeeObjMethod_CallFuncf(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_method, {self}, {", ".join(args)})",
-				});
-				print;
-				printInternImpl(f"default__{name}__with_callkwmethodcache_{hintAttr}", callAttrImpl, {
-					"LOCAL_GETATTR": (self) ->
-						f"DeeKwObjMethod_New(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_kwmethod, {self})",
-					"LOCAL_BOUNDATTR": (self) -> f"Dee_BOUND_YES",
-					"LOCAL_CALLATTR": (self, argc, argv) ->
-						f"DeeKwObjMethod_CallFunc(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_kwmethod, {self}, {argc}, {argv}, NULL)",
-					"LOCAL_CALLATTRF": (self, args...) ->
-						f"DeeKwObjMethod_CallFuncf(Dee_TYPE({self})->tp_mhcache->mhc_{
-							hintAttr}.c_kwmethod, {self}, {", ".join(args)})",
-				});
-				print("#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */");
-				print;
 			}
+			print;
 		}
 		if (unsupportedImpl !is none && unsupportedImpl.alias is none) {
 			printInternImpl(f"default__{name}__unsupported", unsupportedImpl);
@@ -1450,7 +1414,7 @@ function printMhCacheAttributeMembers() {
 		for (local name: all) {
 			if (name == all.first)
 				print("#define MHC_FIRST ", name);
-			print("\tunion mhc_slot ", name, ";");
+			print("\tDREF DeeObject *", name, ";");
 			if (name == all.last)
 				print("#define MHC_LAST ", name);
 		}
@@ -1568,10 +1532,6 @@ function printMhInitSpecs() {
 			: f"MH_KIND_GETSET_{native.getsetMember.upper()}"),;
 		print(", ", methodHint is none ? "NULL" : f"&default__{
 				native.name}__with_callobjectcache_{methodHint.attr}"),;
-		print(", ", (methodHint is none || methodHint.getset) ? "NULL" :
-				f"&default__{native.name}__with_callmethodcache_{methodHint.attr}"),;
-		print(", ", (methodHint is none || methodHint.getset) ? "NULL" :
-				f"&default__{native.name}__with_callkwmethodcache_{methodHint.attr}"),;
 		print(", ", !native.selectImpl ? "NULL" : f"&mh_select_{native.name}"),;
 		print("),");
 	}
@@ -1777,7 +1737,7 @@ function getCTypeSuperSimplified(typ: string, after: string = ""): string {
 
 
 
-class ErrorMethodKey {
+final class ErrorMethodKey {
 	this = default;
 	@@Return type, as per @getCTypeSimplified
 	public member returnType: string;
@@ -2267,6 +2227,10 @@ function printMhSuperMap() {
 				}
 			}
 		}
+
+		/* TODO: Must also replace stuff like "default__map_enumerate__with_callobjectcache___map_enumerate__"
+		 *       with a custom impl "tdefault__map_enumerate__with_callobjectcache___map_enumerate__", because
+		 *       (iow: a typed version), since this is required for super-calls. */
 
 		if (typedImpls) {
 			nativeMethodsWith__msm_with_type.insert(name);
