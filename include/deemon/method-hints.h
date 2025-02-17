@@ -137,8 +137,8 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_enumerate,
 	Dee_TMH_seq_enumerate_index,
 	Dee_TMH_seq_makeenumeration,
-	Dee_TMH_seq_makeenumeration_with_intrange,
 	Dee_TMH_seq_makeenumeration_with_range,
+	Dee_TMH_seq_makeenumeration_with_intrange,
 	Dee_TMH_seq_foreach_reverse,
 	Dee_TMH_seq_enumerate_index_reverse,
 	Dee_TMH_seq_unpack,
@@ -422,8 +422,8 @@ typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_enumerate_inde
 
 /* __seq_enumerate_items__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_makeenumeration_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_makeenumeration_with_intrange_t)(DeeObject *__restrict self, size_t start, size_t end);
 typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_makeenumeration_with_range_t)(DeeObject *self, DeeObject *start, DeeObject *end);
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_makeenumeration_with_intrange_t)(DeeObject *__restrict self, size_t start, size_t end);
 
 /* Sequence_unpack, unpack, __seq_unpack__, explicit_seq_unpack */
 typedef WUNUSED_T NONNULL_T((1, 3)) int (DCALL *DeeMH_seq_unpack_t)(DeeObject *__restrict self, size_t count, DREF DeeObject *__restrict result[]);

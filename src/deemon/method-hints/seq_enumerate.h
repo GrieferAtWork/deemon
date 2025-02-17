@@ -318,7 +318,7 @@ err_indexob:
 	(void)arg;
 	return DeeError_NOTIMPLEMENTED();
 }}
-%{$with__counter__and__seq_operator_foreach =
+%{$with__seq_operator_foreach__and__counter =
 [[prefix(DEFINE_default_seq_enumerate_with_counter__and__seq_foreach_cb)]] {
 	struct default_seq_enumerate_with_counter__and__seq_foreach_data data;
 	data.dewcaf_cb      = cb;
@@ -519,7 +519,7 @@ err:
 	(void)end;
 	return DeeError_NOTIMPLEMENTED();
 }}
-%{$with__counter__and__seq_operator_foreach =
+%{$with__seq_operator_foreach__and__counter =
 [[prefix(DEFINE_default_seq_enumerate_index_with_counter__and__seq_foreach_cb)]] {
 	struct default_seq_enumerate_index_with_counter__and__seq_foreach_data data;
 	Dee_ssize_t result;
@@ -589,7 +589,7 @@ use_seq_operator_foreach:
 			return &$with__seq_operator_getitem_index;
 		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem)
 			return &$with__seq_operator_getitem;
-		return &$with__counter__and__seq_operator_foreach;
+		return &$with__seq_operator_foreach__and__counter;
 	}
 };
 
@@ -607,8 +607,8 @@ seq_enumerate_index = {
 	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem_index ||
 	    seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem)
 		return &$with__seq_operator_getitem_index;
-	if (seq_enumerate == &default__seq_enumerate__with__counter__and__seq_operator_foreach)
-		return &$with__counter__and__seq_operator_foreach;
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
+		return &$with__seq_operator_foreach__and__counter;
 	if (seq_enumerate)
 		return &$with__seq_enumerate;
 };

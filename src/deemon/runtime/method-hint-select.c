@@ -762,7 +762,7 @@ use_seq_operator_foreach:
 			return &default__seq_enumerate__with__seq_operator_getitem_index;
 		if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem)
 			return &default__seq_enumerate__with__seq_operator_getitem;
-		return &default__seq_enumerate__with__counter__and__seq_operator_foreach;
+		return &default__seq_enumerate__with__seq_operator_foreach__and__counter;
 	}
 	return NULL;
 }
@@ -782,8 +782,8 @@ mh_select_seq_enumerate_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem_index ||
 	    seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem)
 		return &default__seq_enumerate_index__with__seq_operator_getitem_index;
-	if (seq_enumerate == &default__seq_enumerate__with__counter__and__seq_operator_foreach)
-		return &default__seq_enumerate_index__with__counter__and__seq_operator_foreach;
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
+		return &default__seq_enumerate_index__with__seq_operator_foreach__and__counter;
 	if (seq_enumerate)
 		return &default__seq_enumerate_index__with__seq_enumerate;
 	return NULL;
@@ -791,23 +791,78 @@ mh_select_seq_enumerate_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_t DCALL
 mh_select_seq_makeenumeration(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
-	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+	DeeMH_seq_enumerate_t seq_enumerate = (DeeMH_seq_enumerate_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate);
+	if (seq_enumerate == &default__seq_enumerate__empty)
 		return &default__seq_makeenumeration__empty;
-	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_size__and__operator_getitem_index_fast)
 		return &default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast;
-	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_trygetitem_index)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_size__and__seq_operator_trygetitem_index)
 		return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index;
-	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_size__and__seq_operator_getitem_index)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_size__and__seq_operator_getitem_index)
 		return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index;
-	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_sizeob__and__seq_operator_getitem)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_sizeob__and__seq_operator_getitem)
 		return &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem;
-	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem_index)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem_index)
 		return &default__seq_makeenumeration__with__seq_operator_getitem_index;
-	if (seq_operator_foreach == &default__seq_operator_foreach__with__seq_operator_getitem)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem)
 		return &default__seq_makeenumeration__with__seq_operator_getitem;
-	if (seq_operator_foreach)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
 		return &default__seq_makeenumeration__with__seq_operator_iter__and__counter;
+	if (seq_enumerate) {
+		/* The "$with__seq_enumerate" impl is super-inefficient
+		 * See if we can *maybe* still use one of the "$with__*size*__and__*getitem*" impls. */
+		DeeMH_seq_operator_size_t seq_operator_size = (DeeMH_seq_operator_size_t)DeeType_GetMethodHint(orig_type, Dee_TMH_seq_operator_size);
+		if (seq_operator_size == &default__seq_operator_size__empty)
+			return &default__seq_makeenumeration__empty;
+		if (seq_operator_size != &default__seq_operator_size__unsupported &&
+		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach &&
+		    seq_operator_size != &default__seq_operator_size__with__seq_operator_foreach_pair &&
+		    seq_operator_size != &default__seq_operator_size__with__map_enumerate) {
+			DeeMH_seq_operator_getitem_t seq_operator_getitem = (DeeMH_seq_operator_getitem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem);
+			if (seq_operator_getitem) {
+				/* Yes! We *do* also have a getitem operator!
+				 * Now just make sure that it's O(1), and then we can actually use it! */
+				if (seq_operator_getitem == &default__seq_operator_getitem__empty)
+					return &default__seq_makeenumeration__empty;
+				if (seq_operator_getitem == &default__seq_operator_getitem__with__seq_operator_getitem_index) {
+					DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = (DeeMH_seq_operator_getitem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_getitem_index);
+					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
+						return &default__seq_makeenumeration__empty;
+					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_operator_foreach)
+						goto use__seq_enumerate;
+					if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__map_enumerate)
+						goto use__seq_enumerate;
+					return &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index;
+				}
+				return &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem;
+			}
+		}
+use__seq_enumerate:
+		return &default__seq_makeenumeration__with__seq_enumerate;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_with_range_t DCALL
+mh_select_seq_makeenumeration_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_makeenumeration_t seq_makeenumeration;
+	if ((DeeMH_seq_makeenumeration_with_intrange_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_makeenumeration_with_intrange))
+		return &default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange;
+	seq_makeenumeration = (DeeMH_seq_makeenumeration_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_makeenumeration);
+
+	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
+		return &default__seq_makeenumeration_with_range__empty;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem_index ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_iter__and__counter ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_enumerate)
+		return &default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem)
+		return &default__seq_makeenumeration_with_range__with__seq_operator_sizeob__and__seq_operator_getitem;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem)
+		return &default__seq_makeenumeration_with_range__with__seq_operator_getitem;
 	return NULL;
 }
 
@@ -826,37 +881,15 @@ mh_select_seq_makeenumeration_with_intrange(DeeTypeObject *self, DeeTypeObject *
 		return &default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__seq_operator_trygetitem_index;
 	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index)
 		return &default__seq_makeenumeration_with_intrange__with__seq_operator_size__and__seq_operator_getitem_index;
-	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem)
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem ||
+	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem)
 		return &default__seq_makeenumeration_with_intrange__with__seq_makeenumeration_with_range;
 	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem_index)
 		return &default__seq_makeenumeration_with_intrange__with__seq_operator_getitem_index;
-	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem)
-		return &default__seq_makeenumeration_with_intrange__with__seq_makeenumeration_with_range;
 	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_iter__and__counter)
 		return &default__seq_makeenumeration_with_intrange__with__seq_operator_iter__and__counter;
-	return NULL;
-}
-
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_makeenumeration_with_range_t DCALL
-mh_select_seq_makeenumeration_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	DeeMH_seq_makeenumeration_t seq_makeenumeration;
-	if ((DeeMH_seq_makeenumeration_with_intrange_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_seq_makeenumeration_with_intrange))
-		return &default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange;
-
-	seq_makeenumeration = (DeeMH_seq_makeenumeration_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_makeenumeration);
-	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
-		return &default__seq_makeenumeration_with_range__empty;
-	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__operator_getitem_index_fast ||
-	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_trygetitem_index ||
-	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_size__and__seq_operator_getitem_index ||
-	    seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem_index)
-		return &default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange;
-	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_sizeob__and__seq_operator_getitem)
-		return &default__seq_makeenumeration_with_range__with__seq_operator_sizeob__and__seq_operator_getitem;
-	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_getitem)
-		return &default__seq_makeenumeration_with_range__with__seq_operator_getitem;
-	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_operator_iter__and__counter)
-		return &default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange;
+	if (seq_makeenumeration == &default__seq_makeenumeration__with__seq_enumerate)
+		return &default__seq_makeenumeration_with_intrange__with__seq_enumerate_index;
 	return NULL;
 }
 
@@ -1156,7 +1189,7 @@ mh_select_seq_cached(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem_index ||
 	    seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem)
 		return &default__seq_cached__with__seq_operator_getitem;
-	if (seq_enumerate == &default__seq_enumerate__with__counter__and__seq_operator_foreach)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
 		return &default__seq_cached__with__seq_operator_iter;
 	if (seq_enumerate) {
 		// TODO: If "!__seq_getitem_always_bound__", must return `$with__*seq_operator_getitem'

@@ -5287,7 +5287,7 @@ err:
 }
 #endif /* !DEFINED_default_seq_enumerate_with_counter__and__seq_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__seq_enumerate__with__counter__and__seq_operator_foreach(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
+default__seq_enumerate__with__seq_operator_foreach__and__counter(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
 	struct default_seq_enumerate_with_counter__and__seq_foreach_data data;
 	data.dewcaf_cb      = cb;
 	data.dewcaf_arg     = arg;
@@ -5522,7 +5522,7 @@ default_seq_enumerate_index_with_counter__and__seq_foreach_cb(void *arg, DeeObje
 }
 #endif /* !DEFINED_default_seq_enumerate_index_with_counter__and__seq_foreach_cb */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-default__seq_enumerate_index__with__counter__and__seq_operator_foreach(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) {
+default__seq_enumerate_index__with__seq_operator_foreach__and__counter(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) {
 	struct default_seq_enumerate_index_with_counter__and__seq_foreach_data data;
 	Dee_ssize_t result;
 	data.deiwcaf_cb    = cb;
@@ -5606,6 +5606,80 @@ default__seq_makeenumeration__with__seq_operator_iter__and__counter(DeeObject *_
 	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_operator_iter__and__counter, self);
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_makeenumeration__with__seq_enumerate(DeeObject *__restrict self) {
+	return (DREF DeeObject *)DefaultEnumeration_New(&DefaultEnumeration__with__seq_enumerate, self);
+}
+
+
+/* seq_makeenumeration_with_range */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__with_callattr___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
+	DeeObject *args[2];
+	args[0] = start;
+	args[1] = end;
+	return DeeObject_CallAttr(self, (DeeObject *)&str___seq_enumerate_items__, 2, args);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__with_callobjectcache___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
+	DeeObject *args[2];
+	args[0] = start;
+	args[1] = end;
+	return DeeObject_ThisCall(Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate_items__.c_object, self, 2, args);
+}
+
+#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__with_callmethodcache___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
+	DeeObject *args[2];
+	args[0] = start;
+	args[1] = end;
+	return DeeObjMethod_CallFunc(Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate_items__.c_method, self, 2, args);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__with_callkwmethodcache___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
+	DeeObject *args[2];
+	args[0] = start;
+	args[1] = end;
+	return DeeKwObjMethod_CallFunc(Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate_items__.c_kwmethod, self, 2, args, NULL);
+}
+#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__unsupported(DeeObject *self, DeeObject *start, DeeObject *end) {
+	err_seq_unsupportedf(self, "__seq_enumerate_items__(%r, %r)", start, end);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(start), DeeObject *UNUSED(end)) {
+	return_empty_seq;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange(DeeObject *self, DeeObject *start, DeeObject *end) {
+	size_t start_index, end_index;
+	if (DeeObject_AsSize(start, &start_index))
+		goto err;
+	if (DeeObject_AsSize(end, &end_index))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration_with_intrange))(self, start_index, end_index);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_range__with__seq_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
+	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end);
+}
+
 
 /* seq_makeenumeration_with_intrange */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -5685,73 +5759,9 @@ default__seq_makeenumeration_with_intrange__with__seq_operator_iter__and__counte
 	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter, self, start, end);
 }
 
-
-/* seq_makeenumeration_with_range */
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__with_callattr___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	return DeeObject_CallAttr(self, (DeeObject *)&str___seq_enumerate_items__, 2, args);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__with_callobjectcache___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	return DeeObject_ThisCall(Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate_items__.c_object, self, 2, args);
-}
-
-#ifdef CONFIG_HAVE_MH_CALLMETHODCACHE
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__with_callmethodcache___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	return DeeObjMethod_CallFunc(Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate_items__.c_method, self, 2, args);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__with_callkwmethodcache___seq_enumerate_items__(DeeObject *self, DeeObject *start, DeeObject *end) {
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	return DeeKwObjMethod_CallFunc(Dee_TYPE(self)->tp_mhcache->mhc___seq_enumerate_items__.c_kwmethod, self, 2, args, NULL);
-}
-#endif /* CONFIG_HAVE_MH_CALLMETHODCACHE */
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__unsupported(DeeObject *self, DeeObject *start, DeeObject *end) {
-	err_seq_unsupportedf(self, "__seq_enumerate_items__(%r, %r)", start, end);
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__empty(DeeObject *UNUSED(self), DeeObject *UNUSED(start), DeeObject *UNUSED(end)) {
-	return_empty_seq;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__with__seq_makeenumeration_with_intrange(DeeObject *self, DeeObject *start, DeeObject *end) {
-	size_t start_index, end_index;
-	if (DeeObject_AsSize(start, &start_index))
-		goto err;
-	if (DeeObject_AsSize(end, &end_index))
-		goto err;
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration_with_intrange))(self, start_index, end_index);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__with__seq_operator_sizeob__and__seq_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-default__seq_makeenumeration_with_range__with__seq_operator_getitem(DeeObject *self, DeeObject *start, DeeObject *end) {
-	return (DREF DeeObject *)DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end);
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+default__seq_makeenumeration_with_intrange__with__seq_enumerate_index(DeeObject *__restrict self, size_t start, size_t end) {
+	return (DREF DeeObject *)DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_enumerate_index, self, start, end);
 }
 
 

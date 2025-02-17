@@ -96,8 +96,8 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_enumerate_t mh_seq_enumerate;
 	DeeMH_seq_enumerate_index_t mh_seq_enumerate_index;
 	DeeMH_seq_makeenumeration_t mh_seq_makeenumeration;
-	DeeMH_seq_makeenumeration_with_intrange_t mh_seq_makeenumeration_with_intrange;
 	DeeMH_seq_makeenumeration_with_range_t mh_seq_makeenumeration_with_range;
+	DeeMH_seq_makeenumeration_with_intrange_t mh_seq_makeenumeration_with_intrange;
 	DeeMH_seq_foreach_reverse_t mh_seq_foreach_reverse;
 	DeeMH_seq_enumerate_index_reverse_t mh_seq_enumerate_index_reverse;
 	DeeMH_seq_unpack_t mh_seq_unpack;

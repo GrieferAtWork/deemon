@@ -698,7 +698,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-fl_enumerate_index(FixedList *self, Dee_seq_enumerate_index_t proc,
+fl_mh_seq_enumerate_index(FixedList *self, Dee_seq_enumerate_index_t proc,
                    void *arg, size_t start, size_t end) {
 	size_t i;
 	Dee_ssize_t temp, result = 0;
@@ -1283,6 +1283,9 @@ PRIVATE struct type_method tpconst fl_methods[] = {
 	TYPE_METHOD_HINTREF(seq_fill),
 	TYPE_METHOD_HINTREF(seq_reverse),
 	TYPE_METHOD_HINTREF(seq_clear),
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_END
 };
 
@@ -1303,6 +1306,7 @@ PRIVATE struct type_method_hint tpconst fl_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_fill, &fl_mh_fill, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_reverse, &fl_mh_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_clear, &fl_mh_clear, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index, &fl_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_END
 };
 
@@ -1319,7 +1323,7 @@ PRIVATE struct type_seq fl_seq = {
 	/* .tp_foreach                    = */ NULL,
 	/* .tp_foreach_pair               = */ NULL,
 	/* .tp_enumerate                  = */ NULL,
-	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&fl_enumerate_index,
+	/* .tp_enumerate_index            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_seq_enumerate_index_t, void *, size_t, size_t))&fl_mh_seq_enumerate_index,
 	/* .tp_iterkeys                   = */ NULL,
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,

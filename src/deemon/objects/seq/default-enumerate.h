@@ -134,6 +134,8 @@ INTDEF DeeTypeObject DefaultEnumeration__with__seq_operator_getitem;            
 INTDEF DeeTypeObject DefaultEnumerationWithFilter__with__seq_operator_getitem;                                     /* dewf_sog__*:        seq_operator_getitem */
 INTDEF DeeTypeObject DefaultEnumeration__with__seq_operator_iter__and__counter;                                    /* de_soi__*:          seq_operator_iter */
 INTDEF DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter;                       /* dewif_soi__*:       seq_operator_iter */
+INTDEF DeeTypeObject DefaultEnumeration__with__seq_enumerate;                                                      /* de_se__*:           seq_enumerate */
+INTDEF DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_enumerate_index;                                   /* dewif_sei__*:       seq_enumerate_index */
 
 /* For Mapping */
 /*TDEF DeeTypeObject DefaultEnumeration__with__set_operator_iter__and__unpack;                        * de_toi__*:        set_operator_iter  <Not needed; can use identity for this one> (for Mappings) */

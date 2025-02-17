@@ -67,7 +67,7 @@ seq_cached = {
 	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem_index ||
 	    seq_enumerate == &default__seq_enumerate__with__seq_operator_getitem)
 		return &$with__seq_operator_getitem;
-	if (seq_enumerate == &default__seq_enumerate__with__counter__and__seq_operator_foreach)
+	if (seq_enumerate == &default__seq_enumerate__with__seq_operator_foreach__and__counter)
 		return &$with__seq_operator_iter;
 	if (seq_enumerate) {
 		// TODO: If "!__seq_getitem_always_bound__", must return `$with__*seq_operator_getitem'
