@@ -3071,7 +3071,10 @@ mh_select_map_itervalues(DeeTypeObject *self, DeeTypeObject *orig_type) {
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_enumerate_t DCALL
 mh_select_map_enumerate(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;
-	DeeMH_map_iterkeys_t map_iterkeys = (DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys);
+	DeeMH_map_iterkeys_t map_iterkeys;
+	/*if (REQUIRE_NODEFAULT(map_enumerate_range))
+		return &$with__map_enumerate_range;*/
+	map_iterkeys = (DeeMH_map_iterkeys_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_iterkeys);
 	if (map_iterkeys) {
 		if (map_iterkeys == &default__map_iterkeys__empty)
 			return &default__map_enumerate__empty;

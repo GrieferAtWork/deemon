@@ -74,6 +74,34 @@ err:
 #endif /* !DEFINED_default_seq_enumerate_with_counter__and__seq_foreach_cb */
 )]
 
+%[define(DEFINE_default_enumerate_with_enumerate_index_cb =
+#ifndef DEFINED_default_enumerate_with_enumerate_index_cb
+#define DEFINED_default_enumerate_with_enumerate_index_cb
+struct default_enumerate_with_enumerate_index_data {
+	Dee_seq_enumerate_t dewei_cb;  /* [1..1] Wrapped callback. */
+	void               *dewei_arg; /* [?..?] Cookie for `dewei_cb' */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_enumerate_with_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	Dee_ssize_t result;
+	DREF DeeObject *indexob;
+	struct default_enumerate_with_enumerate_index_data *data;
+	data = (struct default_enumerate_with_enumerate_index_data *)arg;
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = (*data->dewei_cb)(data->dewei_arg, indexob, value);
+	Dee_Decref(indexob);
+	return result;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_enumerate_with_enumerate_index_cb */
+)]
+
+
+
 
 
 /* Enumerate valid keys/indices of "self", as well as their current value.
@@ -311,12 +339,11 @@ err_indexob:
 /*err:*/
 	return -1;
 }}
-%{using seq_enumerate_index: {
-	// TODO
-	(void)self;
-	(void)cb;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
+%{using seq_enumerate_index: [[prefix(DEFINE_default_enumerate_with_enumerate_index_cb)]] {
+	struct default_enumerate_with_enumerate_index_data data;
+	data.dewei_cb  = cb;
+	data.dewei_arg = arg;
+	return CALL_DEPENDENCY(seq_enumerate_index, self, &default_enumerate_with_enumerate_index_cb, &data, 0, (size_t)-1);
 }}
 %{$with__seq_operator_foreach__and__counter =
 [[prefix(DEFINE_default_seq_enumerate_with_counter__and__seq_foreach_cb)]] {
@@ -368,6 +395,34 @@ default_seq_enumerate_index_with_counter__and__seq_foreach_cb(void *arg, DeeObje
 	return (*data->deiwcaf_cb)(data->deiwcaf_arg, index, elem);
 }
 #endif /* !DEFINED_default_seq_enumerate_index_with_counter__and__seq_foreach_cb */
+)]
+
+
+
+%[define(DEFINE_default_enumerate_index_with_enumerate_cb =
+#ifndef DEFINED_default_enumerate_index_with_enumerate_cb
+#define DEFINED_default_enumerate_index_with_enumerate_cb
+struct default_enumerate_index_with_enumerate_data {
+	Dee_seq_enumerate_index_t deiwe_cb;    /* [1..1] Underlying callback. */
+	void                     *deiwe_arg;   /* [?..?] Cookie for `deiwe_cb' */
+	size_t                    deiwe_start; /* Enumeration start index */
+	size_t                    deiwe_end;   /* Enumeration end index */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_enumerate_index_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	size_t index;
+	struct default_enumerate_index_with_enumerate_data *data;
+	data = (struct default_enumerate_index_with_enumerate_data *)arg;
+	if (DeeObject_AsSize(key, &index)) /* TODO: Handle overflow (by skipping this item) */
+		goto err;
+	if (index >= data->deiwe_start && index < data->deiwe_end)
+		return (*data->deiwe_cb)(data->deiwe_arg, index, value);
+	return 0;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_enumerate_index_with_enumerate_cb */
 )]
 
 
@@ -510,14 +565,13 @@ err_temp:
 err:
 	return -1;
 }}
-%{using seq_enumerate: {
-	// TODO
-	(void)self;
-	(void)cb;
-	(void)arg;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+%{using seq_enumerate: [[prefix(DEFINE_default_enumerate_index_with_enumerate_cb)]] {
+	struct default_enumerate_index_with_enumerate_data data;
+	data.deiwe_cb    = cb;
+	data.deiwe_arg   = arg;
+	data.deiwe_start = start;
+	data.deiwe_end   = end;
+	return CALL_DEPENDENCY(seq_enumerate, self, &default_enumerate_index_with_enumerate_cb, &data);
 }}
 %{$with__seq_operator_foreach__and__counter =
 [[prefix(DEFINE_default_seq_enumerate_index_with_counter__and__seq_foreach_cb)]] {

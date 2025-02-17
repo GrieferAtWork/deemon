@@ -5015,13 +5015,35 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_t UNUSED(cb), void *UNUSED(arg)) { return err_seq_unsupportedf(self, "__seq_enumerate__(...)"); }
 
+#ifndef DEFINED_default_enumerate_with_enumerate_index_cb
+#define DEFINED_default_enumerate_with_enumerate_index_cb
+struct default_enumerate_with_enumerate_index_data {
+	Dee_seq_enumerate_t dewei_cb;  /* [1..1] Wrapped callback. */
+	void               *dewei_arg; /* [?..?] Cookie for `dewei_cb' */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_enumerate_with_enumerate_index_cb(void *arg, size_t index, DeeObject *value) {
+	Dee_ssize_t result;
+	DREF DeeObject *indexob;
+	struct default_enumerate_with_enumerate_index_data *data;
+	data = (struct default_enumerate_with_enumerate_index_data *)arg;
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = (*data->dewei_cb)(data->dewei_arg, indexob, value);
+	Dee_Decref(indexob);
+	return result;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_enumerate_with_enumerate_index_cb */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate__with__seq_enumerate_index(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
-	// TODO
-	(void)self;
-	(void)cb;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
+	struct default_enumerate_with_enumerate_index_data data;
+	data.dewei_cb  = cb;
+	data.dewei_arg = arg;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_enumerate_with_enumerate_index_cb, &data, 0, (size_t)-1);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -5354,15 +5376,37 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate_index__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_index_t UNUSED(cb), void *UNUSED(arg), size_t start, size_t end) { return err_seq_unsupportedf(self, "__seq_enumerate__(..., %" PRFuSIZ ", %" PRFuSIZ ")", start, end); }
 
+#ifndef DEFINED_default_enumerate_index_with_enumerate_cb
+#define DEFINED_default_enumerate_index_with_enumerate_cb
+struct default_enumerate_index_with_enumerate_data {
+	Dee_seq_enumerate_index_t deiwe_cb;    /* [1..1] Underlying callback. */
+	void                     *deiwe_arg;   /* [?..?] Cookie for `deiwe_cb' */
+	size_t                    deiwe_start; /* Enumeration start index */
+	size_t                    deiwe_end;   /* Enumeration end index */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+default_enumerate_index_with_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
+	size_t index;
+	struct default_enumerate_index_with_enumerate_data *data;
+	data = (struct default_enumerate_index_with_enumerate_data *)arg;
+	if (DeeObject_AsSize(key, &index)) /* TODO: Handle overflow (by skipping this item) */
+		goto err;
+	if (index >= data->deiwe_start && index < data->deiwe_end)
+		return (*data->deiwe_cb)(data->deiwe_arg, index, value);
+	return 0;
+err:
+	return -1;
+}
+#endif /* !DEFINED_default_enumerate_index_with_enumerate_cb */
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__seq_enumerate_index__with__seq_enumerate(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end) {
-	// TODO
-	(void)self;
-	(void)cb;
-	(void)arg;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	struct default_enumerate_index_with_enumerate_data data;
+	data.deiwe_cb    = cb;
+	data.deiwe_arg   = arg;
+	data.deiwe_start = start;
+	data.deiwe_end   = end;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate))(self, &default_enumerate_index_with_enumerate_cb, &data);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -20518,6 +20562,15 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default__map_enumerate__unsupported(DeeObject *__restrict self, Dee_seq_enumerate_t UNUSED(cb), void *UNUSED(arg)) {
 	return err_map_unsupportedf(self, "__map_enumerate__(<callback>)");
+}
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__map_enumerate__with__map_enumerate_range(DeeObject *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
+	/* TODO */
+	(void)self;
+	(void)cb;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

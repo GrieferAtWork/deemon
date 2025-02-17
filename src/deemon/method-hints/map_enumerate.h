@@ -61,6 +61,13 @@ __map_enumerate__.map_enumerate([[nonnull]] DeeObject *__restrict self,
 	// Not explicitly defined; we just directly alias "set_operator_foreach_pair"!
 	return CALL_DEPENDENCY(seq_operator_foreach_pair, self, cb, arg);
 }}*/
+%{using map_enumerate_range: {
+	/* TODO */
+	(void)self;
+	(void)cb;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}}
 %{$with__map_iterkeys__and__map_operator_trygetitem = {
 	Dee_ssize_t temp, result = 0;
 	DREF DeeObject *key;
@@ -187,7 +194,10 @@ err:
 
 map_enumerate = {
 	DeeMH_set_operator_foreach_pair_t set_operator_foreach_pair;
-	DeeMH_map_iterkeys_t map_iterkeys = REQUIRE_NODEFAULT(map_iterkeys);
+	DeeMH_map_iterkeys_t map_iterkeys;
+	/*if (REQUIRE_NODEFAULT(map_enumerate_range))
+		return &$with__map_enumerate_range;*/
+	map_iterkeys = REQUIRE_NODEFAULT(map_iterkeys);
 	if (map_iterkeys) {
 		if (map_iterkeys == &default__map_iterkeys__empty)
 			return &$empty;
