@@ -759,24 +759,48 @@ LOCAL_seX(getitem_string_len_hash)(LOCAL_SeqEach *self, char const *key, size_t 
 #endif /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 
 
-#ifndef DEFINED_seX_methods
-#define DEFINED_seX_methods
-PRIVATE struct type_method seX_methods[] = {
-	TYPE_METHOD_HINTREF(__seq_enumerate__),
-	TYPE_METHOD_END
-};
-#endif /* !DEFINED_seX_methods */
-
 PRIVATE struct type_method_hint LOCAL_seX(method_hints)[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &LOCAL_seX(mh_seq_enumerate)),
 	TYPE_METHOD_HINT(seq_enumerate_index, &LOCAL_seX(mh_seq_enumerate_index)),
+	/* TODO: These all still use the default `DeeObject_*' API -- change them to use the method hint API */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINT(seq_operator_iter, &LOCAL_seX(iter)),
+	TYPE_METHOD_HINT(seq_operator_foreach, &LOCAL_seX(foreach)),
+	TYPE_METHOD_HINT(seq_operator_getitem, &LOCAL_seX(getitem)),
+	TYPE_METHOD_HINT(seq_operator_trygetitem, &LOCAL_seX(trygetitem)),
+	TYPE_METHOD_HINT(seq_operator_bounditem, &LOCAL_seX(bounditem)),
+	TYPE_METHOD_HINT(seq_operator_hasitem, &LOCAL_seX(hasitem)),
+	TYPE_METHOD_HINT(seq_operator_delitem, &LOCAL_seX(delitem)),
+	TYPE_METHOD_HINT(seq_operator_setitem, &LOCAL_seX(setitem)),
+	TYPE_METHOD_HINT(seq_operator_getitem_index, &LOCAL_seX(getitem_index)),
+	TYPE_METHOD_HINT(seq_operator_trygetitem_index, &LOCAL_seX(trygetitem_index)),
+	TYPE_METHOD_HINT(seq_operator_bounditem_index, &LOCAL_seX(bounditem_index)),
+	TYPE_METHOD_HINT(seq_operator_hasitem_index, &LOCAL_seX(hasitem_index)),
+	TYPE_METHOD_HINT(seq_operator_delitem_index, &LOCAL_seX(delitem_index)),
+	TYPE_METHOD_HINT(seq_operator_setitem_index, &LOCAL_seX(setitem_index)),
+	TYPE_METHOD_HINT(seq_operator_getrange, &LOCAL_seX(getrange)),
+	TYPE_METHOD_HINT(seq_operator_delrange, &LOCAL_seX(delrange)),
+	TYPE_METHOD_HINT(seq_operator_setrange, &LOCAL_seX(setrange)),
+	TYPE_METHOD_HINT(seq_operator_getrange_index, &LOCAL_seX(getrange_index)),
+	TYPE_METHOD_HINT(seq_operator_delrange_index, &LOCAL_seX(delrange_index)),
+	TYPE_METHOD_HINT(seq_operator_setrange_index, &LOCAL_seX(setrange_index)),
+	TYPE_METHOD_HINT(seq_operator_getrange_index_n, &LOCAL_seX(getrange_index_n)),
+	TYPE_METHOD_HINT(seq_operator_delrange_index_n, &LOCAL_seX(delrange_index_n)),
+	TYPE_METHOD_HINT(seq_operator_setrange_index_n, &LOCAL_seX(setrange_index_n)),
+	TYPE_METHOD_HINT(seq_operator_size, &sew_size),
+	TYPE_METHOD_HINT(seq_operator_sizeob, &sew_sizeob),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_seq LOCAL_seX(seq) = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&LOCAL_seX(iter),
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_contains                   = */ &default__seq_operator_contains,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_contains,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&LOCAL_seX(getitem),
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
@@ -1260,7 +1284,11 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 	/* .tp_attr          = */ &LOCAL_seX(attr),
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ seX_methods,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_methods       = */ sew_methods,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	/* .tp_methods       = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getsets       = */ NULL, /* TODO: Access to the arguments vector */
 	/* .tp_members       = */ LOCAL_seX(members),
 	/* .tp_class_methods = */ NULL,

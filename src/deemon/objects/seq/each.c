@@ -2227,11 +2227,15 @@ DEFINE_SEW_BINARY(sew_ge, OPERATOR_GE)
 #endif /* !CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
 
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 #define sew_contains DeeSeq_DefaultContainsWithForeachDefault
-#define sew_size     generic_proxy__seq_operator_size
-#define sew_sizeob   generic_proxy__seq_operator_sizeob
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+#define sew_size   generic_proxy__seq_operator_size
+#define sew_sizeob generic_proxy__seq_operator_sizeob
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
+#ifndef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
 DEFINE_SEW_BINARY(sew_contains, OPERATOR_CONTAINS)
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 DEFINE_SEW_BINARY(sew_sizeob, OPERATOR_GETITEM)
 DEFINE_SEW_BINARY(sew_getitem, OPERATOR_GETITEM)
 DEFINE_SEW_TRINARY(sew_getrange, OPERATOR_GETRANGE)
@@ -3120,7 +3124,11 @@ seo_getitem_string_len_hash(SeqEachOperator *self, char const *key, size_t keyle
 PRIVATE struct type_seq seo_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seo_iter,
 	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_sizeob,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_contains                   = */ &default__seq_operator_contains,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_contains,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 #ifdef CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_getitem,
 #else /* CONFIG_HAVE_SEQEACHOPERATOR_IS_SEQLIKE */
@@ -3200,6 +3208,56 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&seo_hasitem_string_len_hash,
 };
 
+PRIVATE struct type_method tpconst sew_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINTREF(__seq_iter__),
+	TYPE_METHOD_HINTREF(__seq_getitem__),
+	TYPE_METHOD_HINTREF(__seq_delitem__),
+	TYPE_METHOD_HINTREF(__seq_setitem__),
+	TYPE_METHOD_HINTREF(__seq_getrange__),
+	TYPE_METHOD_HINTREF(__seq_delrange__),
+	TYPE_METHOD_HINTREF(__seq_setrange__),
+	TYPE_METHOD_HINTREF(__seq_size__),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst seo_method_hints[] = {
+	TYPE_METHOD_HINT(seq_enumerate, &seo_mh_seq_enumerate),
+	TYPE_METHOD_HINT(seq_enumerate_index, &seo_mh_seq_enumerate_index),
+	/* TODO: These all still use the default `DeeObject_*' API -- change them to use the method hint API */
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	TYPE_METHOD_HINT(seq_operator_iter, &seo_iter),
+	TYPE_METHOD_HINT(seq_operator_foreach, &seo_foreach),
+	TYPE_METHOD_HINT(seq_operator_getitem, &seo_getitem),
+	TYPE_METHOD_HINT(seq_operator_trygetitem, &seo_trygetitem),
+	TYPE_METHOD_HINT(seq_operator_bounditem, &seo_bounditem),
+	TYPE_METHOD_HINT(seq_operator_hasitem, &seo_hasitem),
+	TYPE_METHOD_HINT(seq_operator_delitem, &seo_delitem),
+	TYPE_METHOD_HINT(seq_operator_setitem, &seo_setitem),
+	TYPE_METHOD_HINT(seq_operator_getitem_index, &seo_getitem_index),
+	TYPE_METHOD_HINT(seq_operator_trygetitem_index, &seo_trygetitem_index),
+	TYPE_METHOD_HINT(seq_operator_bounditem_index, &seo_bounditem_index),
+	TYPE_METHOD_HINT(seq_operator_hasitem_index, &seo_hasitem_index),
+	TYPE_METHOD_HINT(seq_operator_delitem_index, &seo_delitem_index),
+	TYPE_METHOD_HINT(seq_operator_setitem_index, &seo_setitem_index),
+	TYPE_METHOD_HINT(seq_operator_getrange, &seo_getrange),
+	TYPE_METHOD_HINT(seq_operator_delrange, &seo_delrange),
+	TYPE_METHOD_HINT(seq_operator_setrange, &seo_setrange),
+	TYPE_METHOD_HINT(seq_operator_getrange_index, &seo_getrange_index),
+	TYPE_METHOD_HINT(seq_operator_delrange_index, &seo_delrange_index),
+	TYPE_METHOD_HINT(seq_operator_setrange_index, &seo_setrange_index),
+	TYPE_METHOD_HINT(seq_operator_getrange_index_n, &seo_getrange_index_n),
+	TYPE_METHOD_HINT(seq_operator_delrange_index_n, &seo_delrange_index_n),
+	TYPE_METHOD_HINT(seq_operator_setrange_index_n, &seo_setrange_index_n),
+	TYPE_METHOD_HINT(seq_operator_size, &sew_size),
+	TYPE_METHOD_HINT(seq_operator_sizeob, &sew_sizeob),
+#endif /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
+	TYPE_METHOD_HINT_END
+};
+
+
 #define seo_members se_members  /* TODO: Access to operator name & arguments */
 #define sso_members seo_members
 
@@ -3254,13 +3312,21 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_attr          = */ &seo_attr,
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_methods       = */ sew_methods,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_methods       = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ seo_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ seo_class_members,
+#ifdef CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS
+	/* .tp_method_hints  = */ seo_method_hints,
+#else /* CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_method_hints  = */ NULL,
+#endif /* !CONFIG_EXPERIMENTAL_UNIFIED_METHOD_HINTS */
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&sew_call_kw,
 };
 
